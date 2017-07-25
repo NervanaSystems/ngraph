@@ -27,8 +27,9 @@ class Op;
 class AssignableTensorOp;
 class ParallelOp;
 
-using op_ptr          = std::shared_ptr<Op>;
-using parallel_op_ptr = std::shared_ptr<ParallelOp>;
+using op_ptr                   = std::shared_ptr<Op>;
+using parallel_op_ptr          = std::shared_ptr<ParallelOp>;
+using assignable_tensor_op_ptr = std::shared_ptr<AssignableTensorOp>;
 
 //-----------------------------------------------------------------------------------------------
 // tensor_descriptions
@@ -172,10 +173,11 @@ public:
 
     //     # Default is to not collect Ops as they are created
     //     @staticmethod
+    //------------------------------------------------------------------------------------------
+    // _get_thread_ops
+    //     :return: The stack of Ops being collected.
+    //------------------------------------------------------------------------------------------
     //     def _get_thread_ops():
-    //         """
-    //         :return: The stack of Ops being collected.
-    //         """
     //         try:
     //             ops = get_thread_state().ops
     //         except AttributeError:
@@ -196,11 +198,12 @@ public:
     //     # have different semantics that don't work with a shared stack
     //     @staticmethod
     //     @contextmanager
+    //------------------------------------------------------------------------------------------
+    // all_ops
+    //     Collects all Ops created within the context. Does not hide ops created
+    //     in this context from parent contexts unless isolate is True.
+    //------------------------------------------------------------------------------------------
     //     def all_ops(ops=None, isolate=False):
-    //         """
-    //         Collects all Ops created within the context. Does not hide ops created
-    //         in this context from parent contexts unless isolate is True.
-    //         """
     //         if ops is None:
     //             ops = []
     //         try:
@@ -214,15 +217,17 @@ public:
     //                 parent.extend(ops)
 
     //     @staticmethod
+    //------------------------------------------------------------------------------------------
+    // all_op_references
+    //     Currently ops can have references to other ops anywhere in their __dict__, (not just
+    //     args, but the other typical places handled in serialization's `add_edges`). This
+    //     function iterates through an ops __dict__ attributes and finds all other ops
+    //     recursively.
+    //
+    //     This is more powerful than the ordered_ops method which only considers args and
+    //     control_deps.
+    //------------------------------------------------------------------------------------------
     //     def all_op_references(ops):
-    //         """
-    //         Currently ops can have references to other ops anywhere in their __dict__, (not just args,
-    //         but the other typical places handled in serialization's `add_edges`). This function
-    //         iterates through an ops __dict__ attributes and finds all other ops recursively.
-
-    //         This is more powerful than the ordered_ops method which only considers args and
-    //         control_deps.
-    //         """
     //         op_set = OrderedSet(ops)
 
     //         def add_op(op):
@@ -244,18 +249,19 @@ public:
     //         return op_set
 
     //     @staticmethod
+    //------------------------------------------------------------------------------------------
+    // ordered_ops
+    //     Topological sort of ops reachable from roots. Notes ngraph is using
+    //     depenency edges rather than dataflow edges, for example,
+    //     `top_sort(a -> b -> c) => [c, b, a]`.
+    //
+    //     Args:
+    //         roots: List of ops.
+    //
+    //     Returns:
+    //         A list of sorted ops.
+    //------------------------------------------------------------------------------------------
     //     def ordered_ops(roots):
-    //         """
-    //         Topological sort of ops reachable from roots. Notes ngraph is using
-    //         depenency edges rather than dataflow edges, for example,
-    //         `top_sort(a -> b -> c) => [c, b, a]`.
-
-    //         Args:
-    //             roots: List of ops.
-
-    //         Returns:
-    //             A list of sorted ops.
-    //         """
     //         ordered_ops = []
     //         available = OrderedSet()
     //         counts = dict()
@@ -294,16 +300,17 @@ public:
     //         return ordered_ops
 
     //     @staticmethod
+    //------------------------------------------------------------------------------------------
+    // visit_input_closure
+    //     Apply function `fun` in the topological sorted order of roots.
+    //
+    //     Args:
+    //         roots: List of ops.
+    //
+    //     Returns:
+    //         None
+    //------------------------------------------------------------------------------------------
     //     def visit_input_closure(roots, fun):
-    //         """
-    //         Apply function `fun` in the topological sorted order of roots.
-
-    //         Args:
-    //             roots: List of ops.
-
-    //         Returns:
-    //             None
-    //         """
     //         for op in Op.ordered_ops(roots):
     //             fun(op)
 
@@ -348,22 +355,23 @@ public:
 
     //         self.scope = None
 
+    //------------------------------------------------------------------------------------------
+    // copy_with_new_args
+    //     This method creates a new op given an original op and new args. The purpose here
+    //     is to replace args for an op with layout conversions as needed but keep the op the
+    //     same otherwise.
+    //------------------------------------------------------------------------------------------
     //     def copy_with_new_args(self, args):
-    //         """
-    //         This method creates a new op given an original op and new args. The purpose here
-    //         is to replace args for an op with layout conversions as needed but keep the op the same
-    //         otherwise.
-    //         """
     //         return (type(self))(*args)
 
+    //------------------------------------------------------------------------------------------
+    // _set_args
+    //     Internal function. Changes args.
+    //
+    //     Args:
+    //         args: The new arguments.
+    //------------------------------------------------------------------------------------------
     //     def _set_args(self, args):
-    //         """
-    //         Internal function. Changes args.
-
-    //         Args:
-    //             args: The new arguments.
-
-    //         """
     //         self._args = tuple(args)
     //         self.invalidate_property_cache('all_deps')
     //         self.invalidate_property_cache('call_info')
@@ -373,35 +381,35 @@ public:
     // return self.forwarded
     virtual op_ptr tensor();
 
-    // The op that provides the value for this op.
-
-    // For example, for a TensorValueOp, the op itself provides the value of the state,
-    // while for a SequenceOp, the last op in the sequence will provide the value, or,
-    // rather, the effective op comes from it.
-
-    // This op deprecates tensor, which does some strange things that require isinstance
-    // checks in a number of callers.
-
-    // Returns:
-    //     The op used for the value of this op.
+    //------------------------------------------------------------------------------------------
+    // effective_tensor_op
+    //     The op that provides the value for this op.
+    //
+    //     For example, for a TensorValueOp, the op itself provides the value of the state,
+    //     while for a SequenceOp, the last op in the sequence will provide the value, or,
+    //     rather, the effective op comes from it.
+    //
+    //     This op deprecates tensor, which does some strange things that require isinstance
+    //     checks in a number of callers.
+    //
+    //     Returns:
+    //         The op used for the value of this op.
+    //------------------------------------------------------------------------------------------
     virtual op_ptr effective_tensor_op();
 
     //     @property
+    //------------------------------------------------------------------------------------------
+    // states_read
+    //     Returns: All state read by this op.
+    //------------------------------------------------------------------------------------------
     //     def states_read(self):
-    //         """
-
-    //         Returns: All state read by this op.
-
-    //         """
     //         return OrderedSet()
 
     //     @property
     //     def states_written(self):
-    //         """
-
-    //         Returns: All state written by this op.
-
-    //         """
+    //------------------------------------------------------------------------------------------
+    //     Returns: All state written by this op.
+    //------------------------------------------------------------------------------------------
     //         return OrderedSet()
 
     //     def __str__(self):
@@ -424,67 +432,88 @@ public:
     //             For a constant, returns the constant value.
     //         return None
 
+    //------------------------------------------------------------------------------------------
     // Returns:
     //     True if this op is a tensor that the host can write to.
+    //------------------------------------------------------------------------------------------
     virtual bool is_input() const { return false; }
 
+    //------------------------------------------------------------------------------------------
     // Returns:
     //     True if this op is a tensor whose value is preserved from computation
     //     to computation.
+    //------------------------------------------------------------------------------------------
     virtual bool is_persistent() const { return false; }
 
+    //------------------------------------------------------------------------------------------
     // Returns:
     //     True if this op is a tensor that is trainable, i.e. is Op.variables
     //     will return it.
+    //------------------------------------------------------------------------------------------
     virtual bool is_trainable() const { return false; }
 
+    //------------------------------------------------------------------------------------------
     // Returns:
     //     True if this op is a placeholder, i.e. a place to attach a tensor.
+    //------------------------------------------------------------------------------------------
     virtual bool is_placeholder() const { return false; }
 
+    //------------------------------------------------------------------------------------------
     // Returns:
     //     True if this op is a tensor.
+    //------------------------------------------------------------------------------------------
     virtual bool is_tensor_op() const { return false; }
 
+    //------------------------------------------------------------------------------------------
     // Returns:
     //     True if this op is a scalar.
+    //------------------------------------------------------------------------------------------
     virtual bool is_scalar() const { return axes.size() == 0; }
 
+    //------------------------------------------------------------------------------------------
     // Returns:
     //     True if the Op executes on the device.
+    //------------------------------------------------------------------------------------------
     virtual bool is_device_op() const { return true; }
 
+    //------------------------------------------------------------------------------------------
     // Returns:
     //     True if the Op is commutative.
+    //------------------------------------------------------------------------------------------
     virtual bool is_commutative() const { return false; }
 
+    //------------------------------------------------------------------------------------------
     // Returns:
     //     True if this op's sole purpose is to influence the sequencing of other ops.
+    //------------------------------------------------------------------------------------------
     virtual bool is_sequencing_op() const { return false; }
 
+    //------------------------------------------------------------------------------------------
     // Returns:
     //     True if this op is state.
+    //------------------------------------------------------------------------------------------
     virtual bool is_state_op() const { return false; }
 
     //     @property
+    //------------------------------------------------------------------------------------------
+    //     Returns the scalar op version of this op.  Will be overridden by subclasses
+    //------------------------------------------------------------------------------------------
     //     def scalar_op(self):
-    //         """
-    //         Returns the scalar op version of this op.  Will be overridden by subclasses
-    //         """
     //         if not self.is_scalar:
     //             raise ValueError()
     //         return self
 
     //     @property
+    //------------------------------------------------------------------------------------------
+    // forward
+    //     If not None, self has been replaced with forward.
+    //
+    //     When set, invalidates cached tensor descriptions.
+    //
+    //     Returns:
+    //          None or the replacement.
+    //------------------------------------------------------------------------------------------
     //     def forward(self):
-    //         """
-    //         If not None, self has been replaced with forward.
-
-    //         When set, invalidates cached tensor descriptions.
-
-    //         Returns:
-    //              None or the replacement.
-    //         """
     //         return self._forward
 
     //     @forward.setter
@@ -504,13 +533,14 @@ public:
     //         value.metadata.update(self.metadata)
 
     //     @property
+    //------------------------------------------------------------------------------------------
+    // forwarded
+    //     Finds the op that handles this op.
+    //
+    //     Returns:
+    //          Follows forwarding to the op that should handle this op.
+    //------------------------------------------------------------------------------------------
     //     def forwarded(self):
-    //         """
-    //         Finds the op that handles this op.
-
-    //         Returns:
-    //              Follows forwarding to the op that should handle this op.
-    //         """
     //         result = self
     //         while True:
     //             if result._forward is None:
@@ -518,43 +548,43 @@ public:
     //             result = result._forward
 
     //     @cached_property
-    //     def all_deps(self):
+    //------------------------------------------------------------------------------------------
+    // all_deps
+    //     Returns:
+    //         All dependencies of the op, including args and control_deps.
+    //         `x.all_deps == OrderedSet(x.args) | x.control_deps`, setter
+    //         functions are used to maintain this invariant. However, user
+    //         outside of the Op class should still avoid changing x._all_deps,
+    //         x._control_deps and x._args directly.
+    //------------------------------------------------------------------------------------------
     std::set<op_ptr> all_deps() const
     {
-        //         """
-        //         Returns:
-        //             All dependencies of the op, including args and control_deps.
-        //             `x.all_deps == OrderedSet(x.args) | x.control_deps`, setter
-        //             functions are used to maintain this invariant. However, user
-        //             outside of the Op class should still avoid changing x._all_deps,
-        //             x._control_deps and x._args directly.
-        //         """
-        //         return OrderedSet(self.args) | self.control_deps
         std::set<op_ptr> rc;
         rc.insert(args.begin(), args.end());
         rc.insert(control_deps.begin(), control_deps.end());
         return rc;
     }
 
+    //------------------------------------------------------------------------------------------
+    //     Invalidates self.all_deps cache
+    //------------------------------------------------------------------------------------------
     void invalidate_property_cache(const std::string& property_name);
-    //     def invalidate_property_cache(self, property_name):
-    //         """
-    //         Invalidates self.all_deps cache
-    //         """
-    //         if property_name in self.__dict__:
-    //             del self.__dict__[property_name]
 
     //     @property
+    //------------------------------------------------------------------------------------------
+    // args
+    //     All the inputs to this node.
+    //------------------------------------------------------------------------------------------
     //     def args(self):
-    //         """All the inputs to this node."""
     //         return self._args
 
     //     @property
+    //------------------------------------------------------------------------------------------
+    // control_deps
+    //     Returns:
+    //         Control dependency of the op.
+    //------------------------------------------------------------------------------------------
     //     def control_deps(self):
-    //         """
-    //         Returns:
-    //             Control dependency of the op.
-    //         """
     //         return self._control_deps
 
     //------------------------------------------------------------------------------------------
@@ -566,14 +596,14 @@ public:
     //------------------------------------------------------------------------------------------
     void add_control_dep(op_ptr dep);
 
+    //------------------------------------------------------------------------------------------
+    // remove_control_dep
+    //     Remove an op from the list of ops that need to run before this op.
+    //
+    //     Args:
+    //         dep: The op.
+    //------------------------------------------------------------------------------------------
     //     def remove_control_dep(self, dep):
-    //         """
-    //         Remove an op from the list of ops that need to run before this op.
-    //
-    //         Args:
-    //             dep: The op.
-    //
-    //         """
     //         self.update_forwards()
     //         if dep.forwarded in self.control_deps:
     //             # update control_deps
@@ -581,17 +611,17 @@ public:
     //             # invalidate deps cache as self._control_deps is updated
     //             self.invalidate_property_cache('all_deps')
 
+    //------------------------------------------------------------------------------------------
+    // update_forwards
+    //     Replaces internal op references with their forwarded versions.
+    //
+    //     Any subclass that uses ops stored outside of args and all_deps
+    //     needs to override this method to update those additional ops.
+    //
+    //     This is mainly to reduce the number of places that need to explicitly check
+    //     for forwarding.
+    //------------------------------------------------------------------------------------------
     //     def update_forwards(self):
-    //         """
-    //         Replaces internal op references with their forwarded versions.
-    //
-    //         Any subclass that uses ops stored outside of args and all_deps
-    //         needs to override this method to update those additional ops.
-    //
-    //         This is mainly to reduce the number of places that need to explicitly check
-    //         for forwarding.
-
-    //         """
     //         # replace self._args with self._args's forwarded op
     //         args_forward = [op.forward for op in self.args]
     //         if any(forward is not None for forward in args_forward):
@@ -612,15 +642,15 @@ public:
     //         self.forward = as_op(rep)
 
     //     @property
+    //------------------------------------------------------------------------------------------
+    // deriv_handler
+    //     Overrides processing of this op for this derivative.
+    //
+    //     Returns:
+    //         The op that should be used to process this op. If no deriv_handler has been set,
+    //         self is returned.
+    //------------------------------------------------------------------------------------------
     //     def deriv_handler(self):
-    //         """
-    //         Overrides processing of this op for this derivative.
-
-    //         Returns:
-    //             The op that should be used to process this op. If no deriv_handler has been set,
-    //             self is returned.
-
-    //         """
     //         if self._deriv_handler is None:
     //             return self
     //         else:
@@ -633,52 +663,55 @@ public:
     //         self._deriv_handler = deriv_handler
 
     //     @property
+    //------------------------------------------------------------------------------------------
+    // defs
+    //     Returns:
+    //         For liveness analysis.  The storage associated with everything
+    //         in the returned list is modified when the Op is executed.
+    //------------------------------------------------------------------------------------------
     //     def defs(self):
-    //         """
-    //         Returns:
-    //             For liveness analysis.  The storage associated with everything
-    //             in the returned list is modified when the Op is executed.
-
-    //         """
     //         return [self]
 
+    //------------------------------------------------------------------------------------------
+    // variables
+    //     Return all trainable Ops used in computing this node.
+    //
+    //     Returns:
+    //         Set of trainable Ops.
+    //------------------------------------------------------------------------------------------
     //     def variables(self):
-    //         """
-    //         Return all trainable Ops used in computing this node.
-
-    //         Returns:
-    //             Set of trainable Ops.
-    //         """
     //         return OrderedSet([op.tensor for op in Op.ordered_ops([self])
     //                            if op.tensor.is_trainable])
 
+    //------------------------------------------------------------------------------------------
+    // placeholders
+    //     Return all placeholder Ops used in computing this node.
+    //
+    //     Returns:
+    //         Set of placeholder Ops.
+    //------------------------------------------------------------------------------------------
     //     def placeholders(self):
-    //         """
-    //         Return all placeholder Ops used in computing this node.
-
-    //         Returns:
-    //             Set of placeholder Ops.
-    //         """
     //         return OrderedSet([op.tensor for op in Op.ordered_ops([self])
     //                            if op.tensor.is_placeholder])
 
-    //     def tensor_description(self):
+    //------------------------------------------------------------------------------------------
+    // tensor_description
+    //------------------------------------------------------------------------------------------
     virtual tensor_description_ptr tensor_description();
-    //         return None
 
     //     @cachetools.cached({})
+    //------------------------------------------------------------------------------------------
+    //     Creates the TensorDescriptions (of this op or its arguments)
+    //     required to evaluate it.
+    //
+    //     The list is used to allocate buffers (in the transformers) and supply
+    //     values to the transform method (in the transform_call_info) method.
+    //
+    //     Only TensorDescriptions of the arguments are necessary.  A
+    //     TensorDescription of the output is generate by calling
+    //     self.tensor_description()
+    //------------------------------------------------------------------------------------------
     //     def call_info(self):
-    //         """
-    //         Creates the TensorDescriptions (of this op or its arguments)
-    //         required to evaluate it.
-
-    //         The list is used to allocate buffers (in the transformers) and supply
-    //         values to the transform method (in the transform_call_info) method.
-
-    //         Only TensorDescriptions of the arguments are necessary.  A
-    //         TensorDescription of the output is generate by calling
-    //         self.tensor_description()
-    //         """
     //         return list(tensor_descriptions(self.args))
 
     // virtual std::string name() const = 0;
@@ -691,6 +724,15 @@ public:
     std::vector<op_ptr> args;
     op_ptr              forwarded;
     Axes                axes;
+
+    // _deriv_handler = None
+    bool      _const;
+    uuid_type uuid;
+    bool      _is_constant;
+    bool      _is_persistent;
+    bool      _is_trainable;
+    // ??? style;
+    // ??? scope;
 };
 
 //================================================================================================
@@ -999,6 +1041,16 @@ public:
 class TensorOp : public Op
 {
 public:
+    TensorOp(std::vector<op_ptr> args        = {},
+             std::vector<Axis>   axes        = {},
+             const ElementType&  dtype       = element_type_float,
+             float               scale       = 1.0,
+             bool                is_value_op = false);
+
+    TensorOp(const Axes&   axes,
+             const ElementType&  dtype       = element_type_float);
+
+
     virtual ~TensorOp() {}
 
     //     def __init__(self, dtype=None, axes=None, scale=None, is_value_op=None, **kwargs):
@@ -1010,42 +1062,40 @@ public:
     //             self._axes = axes
     //             self.scale = scale
     //    TensorOp(ElementType, const std::vector<Axis>& axes, float scale=1.0, bool is_value_op=false);
-    TensorOp(std::vector<op_ptr> args        = {},
-             std::vector<Axis>   axes        = {},
-             float               scale       = 1.0,
-             bool                is_value_op = false);
     //     @property
     //     def is_tensor_op(self):
     //         return True
 
     //     @property
     //     @cachetools.cached(cache=dict())
+    //--------------------------------------------------------------------------------------------
+    // one
+    //     Returns a singleton constant 1 for this Op. Used by DerivOp to ensure that
+    //      we don't build unique backprop graphs for every variable.
+    //
+    //     Returns:
+    //         A unique constant 1 associated with this TensorOp.
+    //--------------------------------------------------------------------------------------------
     //     def one(self):
-    //         """
-    //         Returns a singleton constant 1 for this Op. Used by DerivOp to ensure that
-    //          we don't build unique backprop graphs for every variable.
-
-    //         Returns:
-    //             A unique constant 1 associated with this TensorOp.
-
-    //         """
     //         return as_op(1)
 
     //     @cachetools.cached({})
+    //--------------------------------------------------------------------------------------------
+    // adjoints
+    //     Returns a map containing the adjoints of this op with respect to other
+    //     ops.
+    //
+    //     Creates the map if it does not already exist.
+    //
+    //     Arguments:
+    //         error (TensorOp, optional): The tensor holding the error value
+    //             the derivative will be computed at. Must have the same axes as dependent.
+    //
+    //
+    //     Returns:
+    //         Map from Op to dSelf/dOp.
+    //--------------------------------------------------------------------------------------------
     //     def adjoints(self, error):
-    //         """
-    //         Returns a map containing the adjoints of this op with respect to other
-    //         ops.
-
-    //         Creates the map if it does not already exist.
-
-    //         Arguments:
-    //             error (TensorOp, optional): The tensor holding the error value
-    //                 the derivative will be computed at. Must have the same axes as dependent.
-
-    //         Returns:
-    //             Map from Op to dSelf/dOp.
-    //         """
     //         adjoints = {
     //             self.tensor: error,
     //         }
@@ -1193,13 +1243,13 @@ public:
     //         return self.axes
 
     //     @tdcache()
+    //--------------------------------------------------------------------------------------------
+    //     Returns a TensorDescription describing the output of this TensorOp
+    //
+    //     Returns:
+    //       TensorDescription for this op.
+    //--------------------------------------------------------------------------------------------
     //     def tensor_description(self):
-    //         """
-    //         Returns a TensorDescription describing the output of this TensorOp
-
-    //         Returns:
-    //           TensorDescription for this op.
-    //         """
     //         if "layout" in self.metadata:
     //             return TensorDescription(self.axes,
     //                                      op=self,
@@ -1217,11 +1267,9 @@ public:
 
     //     @property
     //     def axes(self):
-    //         """
-
-    //         Returns: The axes of the tensor.
-
-    //         """
+    //--------------------------------------------------------------------------------------------
+    //     Returns: The axes of the tensor.
+    //--------------------------------------------------------------------------------------------
     //         if self._axes is not None:
     //             return self._axes
     //         else:
@@ -1235,20 +1283,18 @@ public:
 
     //     @property
     //     def has_axes(self):
-    //         """
-
-    //         Returns: True if axes have been set.
-
-    //         """
+    //--------------------------------------------------------------------------------------------
+    //     Returns: True if axes have been set.
+    //--------------------------------------------------------------------------------------------
     //         return self._axes is not None
 
     //     def insert_axis(self, index, axis):
-    //         """
-    //         Inserts an axis
-    //         Arguments:
-    //             index   : Index to insert at
-    //             axis    : The Axis object to insert
-    //         """
+    //--------------------------------------------------------------------------------------------
+    //     Inserts an axis
+    //     Arguments:
+    //         index   : Index to insert at
+    //         axis    : The Axis object to insert
+    //--------------------------------------------------------------------------------------------
     //         if self._axes is None:
     //             raise ValueError()
     //         self._axes.insert(index, axis)
@@ -1259,41 +1305,41 @@ public:
     //         self._axes.append(axis)
 
     //     def generate_adjoints(self, adjoints, delta, *args):
-    //         """
-    //         With delta as the computation for the adjoint of this Op, incorporates delta into the
-    //         adjoints for thr args.
-
-    //         Args:
-    //             adjoints: dy/dOp for all ops involved in computing y.
-    //             delta: Backprop amount for this Op.
-    //             *args: The args of this Op.
-    //         """
+    //--------------------------------------------------------------------------------------------
+    //     With delta as the computation for the adjoint of this Op, incorporates delta into the
+    //     adjoints for thr args.
+    //
+    //     Args:
+    //         adjoints: dy/dOp for all ops involved in computing y.
+    //         delta: Backprop amount for this Op.
+    //         *args: The args of this Op.
+    //--------------------------------------------------------------------------------------------
     //         pass
 
     //     @property
     //     def shape(self):
-    //         """
-    //         This is required for parameter initializers in legacy neon code.  It
-    //         expects layers to implement a shape that it can use to pass through
-    //         layers.
-
-    //         Returns: self.axes
-    //         """
+    //--------------------------------------------------------------------------------------------
+    //     This is required for parameter initializers in legacy neon code.  It
+    //     expects layers to implement a shape that it can use to pass through
+    //     layers.
+    //
+    //     Returns: self.axes
+    //--------------------------------------------------------------------------------------------
     //         return self.axes
 
     //     def shape_dict(self):
-    //         """
+    //--------------------------------------------------------------------------------------------
     //         Retuns: shape of this tensor as a dictionary
-    //         """
+    //--------------------------------------------------------------------------------------------
     //         return self.axes.shape_dict()
 
     //     def mean(self, reduction_axes=None, out_axes=None):
-    //         """
-    //         Used in Neon front end.
-
-    //         Returns: mean(self)
-
-    //         """
+    //--------------------------------------------------------------------------------------------
+    // mean
+    //     Used in Neon front end.
+    //
+    //     Returns: mean(self)
+    //--------------------------------------------------------------------------------------------
     //         return mean(self, reduction_axes=reduction_axes, out_axes=out_axes)
 };
 
@@ -2205,13 +2251,15 @@ public:
 class AssignableTensorOp : public TensorOp
 {
 public:
-    AssignableTensorOp(std::shared_ptr<TensorInterface> value,
-                       bool                             is_constant,
-                       bool                             is_input,
-                       bool                             is_persistent,
-                       bool                             is_trainable,
-                       bool                             is_placeholder,
-                       const std::string&               graph_label_type);
+    AssignableTensorOp(std::shared_ptr<TensorInterface> value            = nullptr,
+                       const Axes&                      axes             = {},
+                       const ElementType&               dtype            = element_type_float,
+                       bool                             is_constant      = false,
+                       bool                             is_input         = false,
+                       bool                             is_persistent    = false,
+                       bool                             is_trainable     = false,
+                       bool                             is_placeholder   = false,
+                       const std::string&               graph_label_type = "");
     virtual ~AssignableTensorOp() {}
     //     def __init__(
     //             self,
@@ -2355,14 +2403,7 @@ public:
 //     Returns:
 //         AssignableTensorOp: The placeholder.
 //-----------------------------------------------------------------------------------------------
-// def placeholder(axes, dtype=None, initial_value=None, **kwargs):
-//     return AssignableTensorOp(graph_label_type="placeholder",
-//                               is_persistent=True,
-//                               is_input=True,
-//                               is_placeholder=True,
-//                               axes=axes, dtype=dtype,
-//                               initial_value=initial_value,
-//                               **kwargs)
+assignable_tensor_op_ptr placeholder(const Axes&, const ElementType& et = element_type_float);
 
 //-----------------------------------------------------------------------------------------------
 // temporary
@@ -2380,13 +2421,7 @@ public:
 //     Returns:
 //         AssignableTensorOp: The placeholder.
 //-----------------------------------------------------------------------------------------------
-// def temporary(axes, dtype=None, initial_value=None, **kwargs):
-//     if initial_value is not None:
-//         raise ValueError("Initial value for temporary is not currently supported")
-//     return AssignableTensorOp(graph_label_type="Temp",
-//                               axes=axes, dtype=dtype,
-//                               initial_value=initial_value,
-//                               **kwargs)
+assignable_tensor_op_ptr temporary(const Axes&, const ElementType& et = element_type_float);
 
 //-----------------------------------------------------------------------------------------------
 // persistent_tensor
@@ -2403,13 +2438,7 @@ public:
 //     Returns:
 //         AssignableTensorOp: The persistent storage.
 //-----------------------------------------------------------------------------------------------
-// def persistent_tensor(axes, dtype=None, initial_value=None, **kwargs):
-//     return AssignableTensorOp(graph_label_type="Persistent",
-//                               is_persistent=True,
-//                               is_input=True,
-//                               axes=axes, dtype=dtype,
-//                               initial_value=initial_value,
-//                               **kwargs)
+assignable_tensor_op_ptr persistent_tensor(const Axes&, const ElementType& et = element_type_float);
 
 //-----------------------------------------------------------------------------------------------
 // variable
@@ -2426,15 +2455,7 @@ public:
 //     Returns:
 //         AssignableTensorOp: The variable.
 //-----------------------------------------------------------------------------------------------
-// def variable(axes, dtype=None, initial_value=None, scope=None, **kwargs):
-//     return AssignableTensorOp(graph_label_type="Variable",
-//                               is_input=True,
-//                               is_persistent=True,
-//                               is_trainable=True,
-//                               axes=axes, dtype=dtype,
-//                               initial_value=initial_value,
-//                               scope=scope,
-//                               **kwargs)
+assignable_tensor_op_ptr variable(const Axes&, const ElementType& et = element_type_float);
 
 //================================================================================================
 // StackOp
@@ -4321,7 +4342,10 @@ op_ptr constant(T value, Axes* axes = nullptr, const ElementType& dtype = elemen
     auto              tensor = std::make_shared<Tensor<T>>(value);
     std::stringstream ss;
     ss << "<Const(" << value << ")>";
+    Axes tmp_axes = (axes ? *axes : Axes{});
     auto val = std::make_shared<AssignableTensorOp>(tensor,
+                                                    tmp_axes,
+                                                    dtype,
                                                     true,  // is_constant
                                                     false, // is_input
                                                     true,  // is_persistent
@@ -4361,8 +4385,9 @@ op_ptr as_op(T x)
     }
     else
     {
-        op_ptr op = constant(x);
-        rc        = std::make_shared<TensorValueOp>(op);
+        std::cout << __FILE__ << " " << __LINE__ << " unimplemented\n";
+        // op_ptr op = constant(x);
+        // rc        = std::make_shared<TensorValueOp>(op);
     }
 
     // if (std::is_base_of<AssignableTensorOp, T>::value)
