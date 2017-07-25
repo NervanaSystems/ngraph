@@ -170,29 +170,6 @@ Op::Op(std::vector<op_ptr> arg_list, op_ptr const_value, bool is_const)
     //         self.scope = None
 }
 
-// class Op(NameableValue):
-//     """
-//     Any operation that can be in an AST.
-
-//     Arguments:
-//         args: Values used by this node.
-//         const: The value of a constant Op, or None,
-//         constant (bool): The Op is constant.  Default False.
-//         forward: If not None, the node to use instead of this node.
-//         metadata: String key value dictionary for frontend metadata.
-//         kwargs: Args defined in related classes.
-
-//     Attributes:
-//         const: The value of a constant.
-//         constant (bool): The value is constant.
-//         control_deps (OrderedSet): Ops in addtion to args that must run before this op.
-//         persistent (bool): The value will be retained from computation to computation and
-//             not shared.  Always True if reference is set.
-//         metadata: Dictionary with of string keys and values used for attaching
-//             arbitrary metadata to nodes.
-//         trainable: The value is trainable.
-//     """
-
 //     # Default is to not collect Ops as they are created
 //     @staticmethod
 //     def _get_thread_ops():
@@ -1002,8 +979,18 @@ parallel_op_ptr doall(const std::vector<op_ptr>& ops)
 //           since those values will be supplied by a subclass, such as ValueOp.
 //         **kwargs: Arguments for related classes.
 //     """
-TensorOp::TensorOp(std::vector<op_ptr> args, std::vector<Axis> axes, float scale, bool is_value_op)
+TensorOp::TensorOp(std::vector<op_ptr> args,
+                   std::vector<Axis>   axes,
+                   const ElementType&  dtype,
+                   float               scale,
+                   bool                is_value_op)
     : Op(args)
+{
+}
+
+TensorOp::TensorOp(const Axes&   axes,
+             const ElementType&  dtype)
+    : Op(std::vector<op_ptr>())
 {
     //     def __init__(self, dtype=None, axes=None, scale=None, is_value_op=None, **kwargs):
     //         super(TensorOp, self).__init__(**kwargs)
@@ -2250,13 +2237,15 @@ ReorderAxes::ReorderAxes(op_ptr op, Axes axes)
 //         input (bool): The storage is used as an input.
 //     """
 AssignableTensorOp::AssignableTensorOp(std::shared_ptr<TensorInterface> value,
+                                       const Axes&                      ax,
+                                       const ElementType&               dtype,
                                        bool                             is_constant,
                                        bool                             is_input,
                                        bool                             is_persistent,
                                        bool                             is_trainable,
                                        bool                             is_placeholder,
                                        const std::string&               graph_label_type)
-    : TensorOp{}
+    : TensorOp{ax, dtype}
     , m_value{value}
     , m_is_constant{is_constant}
     , m_is_input{is_input}
@@ -2419,95 +2408,83 @@ AssignableTensorOp::AssignableTensorOp(std::shared_ptr<TensorInterface> value,
 //     return val;
 // };
 
-// def placeholder(axes, dtype=None, initial_value=None, **kwargs):
-//     """
-//     A place for a tensor to be supplied; typically used for computation arguments.
+assignable_tensor_op_ptr placeholder(const Axes& axes, const ElementType& dtype)
+{
+    return std::make_shared<AssignableTensorOp>(nullptr, // value
+                                                axes,
+                                                dtype,
+                                                false,        // is_constant
+                                                true,         // is_input
+                                                true,         // is_persistent
+                                                false,        // is_trainable
+                                                true,         // is_placeholder
+                                                "Placeholder" // graph_label_type
+    );
+}
 
-//     Args:
-//         axes (Axes): The axes of the placeholder.
-//         dtype (optional): The dtype of the placeholder.
-//         initial_value (optional): Deprecated. A host constant or callable. If callable, will
-//             be called to generate an initial value.
+assignable_tensor_op_ptr temporary(const Axes& axes, const ElementType& dtype)
+{
+    return std::make_shared<AssignableTensorOp>(nullptr, // value
+                                            axes,
+                                            dtype,
+                                            false,        // is_constant
+                                            false,        // is_input
+                                            false,        // is_persistent
+                                            false,        // is_trainable
+                                            false,        // is_placeholder
+                                            "Temporary"   // graph_label_type
+    );
 
-//     Returns:
-//         AssignableTensorOp: The placeholder.
-//     """
-//     return AssignableTensorOp(graph_label_type="placeholder",
-//                               is_persistent=True,
-//                               is_input=True,
-//                               is_placeholder=True,
-//                               axes=axes, dtype=dtype,
-//                               initial_value=initial_value,
-//                               **kwargs)
+    // if initial_value is not None:
+    //     raise ValueError("Initial value for temporary is not currently supported")
+    // return AssignableTensorOp(graph_label_type="Temp",
+    //                           axes=axes, dtype=dtype,
+    //                           initial_value=initial_value,
+    //                           **kwargs)
+}
 
-// def temporary(axes, dtype=None, initial_value=None, **kwargs):
-//     """
-//     Temporary storage.
+assignable_tensor_op_ptr persistent_tensor(const Axes& axes, const ElementType& dtype)
+{
+    return std::make_shared<AssignableTensorOp>(nullptr, // value
+                                            axes,
+                                            dtype,
+                                            false,        // is_constant
+                                            true,         // is_input
+                                            true,         // is_persistent
+                                            false,        // is_trainable
+                                            false,        // is_placeholder
+                                            "Persistent"  // graph_label_type
+    );
 
-//     Statically allocates storage that may be reused outside of the scope of the values.
+    // return AssignableTensorOp(graph_label_type="Persistent",
+    //                           is_persistent=True,
+    //                           is_input=True,
+    //                           axes=axes, dtype=dtype,
+    //                           initial_value=initial_value,
+    //                           **kwargs)
+}
 
-//     Args:
-//         axes (Axes): The axes of the storage.
-//         dtype (optional): The dtype of the storage.
-//         initial_value (optional): A host constant or callable. If callable, will
-//             be called to generate an initial value.
-//         constant (optional): Once initialization is complete, this tensor should not change.
-
-//     Returns:
-//         AssignableTensorOp: The placeholder.
-//     """
-//     if initial_value is not None:
-//         raise ValueError("Initial value for temporary is not currently supported")
-//     return AssignableTensorOp(graph_label_type="Temp",
-//                               axes=axes, dtype=dtype,
-//                               initial_value=initial_value,
-//                               **kwargs)
-
-// def persistent_tensor(axes, dtype=None, initial_value=None, **kwargs):
-//     """
-//     Persistent storage, not trainable.
-
-//     Storage that will retain its value from computation to computation.
-
-//     Args:
-//         axes (Axes): The axes of the persistent storage.
-//         dtype (optional): The dtype of the persistent storage.
-//         initial_value (optional): A host constant or callable. If callable, will
-//             be called to generate an initial value.
-
-//     Returns:
-//         AssignableTensorOp: The persistent storage.
-//     """
-//     return AssignableTensorOp(graph_label_type="Persistent",
-//                               is_persistent=True,
-//                               is_input=True,
-//                               axes=axes, dtype=dtype,
-//                               initial_value=initial_value,
-//                               **kwargs)
-
-// def variable(axes, dtype=None, initial_value=None, scope=None, **kwargs):
-//     """
-//     A trainable tensor.
-
-//     Args:
-//         axes (Axes): Axes for the variable.
-//         dtype (optional): The dtype for the tensor.
-//         initial_value: A constant or callable. If a callable, the callable
-//             will be called to provide an initial value.
-//         scope (optional): scope of variable, can be used to filter on when
-//                           selecting variables in an Op
-
-//     Returns:
-//         AssignableTensorOp: The variable.
-//     """
-//     return AssignableTensorOp(graph_label_type="Variable",
-//                               is_input=True,
-//                               is_persistent=True,
-//                               is_trainable=True,
-//                               axes=axes, dtype=dtype,
-//                               initial_value=initial_value,
-//                               scope=scope,
-//                               **kwargs)
+assignable_tensor_op_ptr variable(const Axes& axes, const ElementType& dtype)
+{
+    // return AssignableTensorOp(graph_label_type="Variable",
+    //                           is_input=True,
+    //                           is_persistent=True,
+    //                           is_trainable=True,
+    //                           axes=axes, dtype=dtype,
+    //                           initial_value=initial_value,
+    //                           scope=scope,
+    //                           **kwargs)
+    return std::make_shared<AssignableTensorOp>(nullptr, // value
+                                                axes,
+                                                dtype,
+                                                false,        // is_constant
+                                                true,         // is_input
+                                                true,         // is_persistent
+                                                true,         // is_trainable
+                                                false,        // is_placeholder
+                                                "Variable"    // graph_label_type
+    );
+}
 
 //================================================================================================
 // StackOp
