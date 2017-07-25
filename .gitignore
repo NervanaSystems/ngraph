@@ -1,0 +1,71 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.pyc
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# QT Creator
+*.creator
+*.config
+*.files
+*.includes
+*.creator.user*
+*.autosave
+
+.DS_Store
+@eaDir/
+.d/
+bin/
+*.log
+output/
+*.png
+*.jpg
+*.mp2
+*.mpg
+*.cpio
+*.wav
+doc/source/generated
+.cache/
+nervana_aeon.egg-info/
+
+# vim
+*.swp
+*.swo
+
+# setup.py intermediate files
+build/
+
+# makeenv and test intermediate files
+tmp/
+
+# Apple
+*.AppleDouble
+
+config_args.txt
+.nfs*
+venv/
+.vscode/
