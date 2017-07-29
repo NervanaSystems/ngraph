@@ -9,6 +9,7 @@ set (SRC
     transformers/ndarray.cpp
     strides.cpp
     tree.cpp
+    log.cpp
 )
 
 # file(GLOB DEPLOY_HEADERS_ABS *.hpp)
