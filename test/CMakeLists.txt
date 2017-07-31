@@ -23,6 +23,7 @@ ExternalProject_Add(
     # Disable install step
     INSTALL_COMMAND ""
     UPDATE_COMMAND ""
+    BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/gtest/src/gtest-build/googlemock/gtest/libgtest.a"
 )
 
 # Get GTest source and binary directories from CMake project
