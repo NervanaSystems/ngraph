@@ -19,8 +19,8 @@
 
 #include "gtest/gtest.h"
 
-#include "axes.hpp"
-#include "ndarray.hpp"
+#include "transformers/axes.hpp"
+#include "transformers/ndarray.hpp"
 
 using namespace std;
 

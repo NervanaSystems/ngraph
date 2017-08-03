@@ -1254,7 +1254,9 @@ axes_key_t TensorDescription::axes_key() const
     // hash_list.push_back(hash_combine(shape));
     hash_list.push_back(dtype.hash());
     hash_list.push_back(offset_hash(offset));
-#warning("add strides and layout to hash")
+
+    // TODO: add strides and layout to hash
+
     //     def axes_key(self):
     //         return (self.axes, self.shape, self.dtype, self.offset, self.strides, self.layout)
 
