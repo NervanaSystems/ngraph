@@ -1,32 +1,90 @@
+# Copyright 2017 Nervana Systems Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#-----------------------------------------------------------------------------------------------
+# Compiler-specific logic...
+#-----------------------------------------------------------------------------------------------
+
+# Default values...
+set(NGRAPH_CXX_WARNING_FLAGS "")
+
+# Compiler-specific logic...
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    include( ../cmake/clang_4_0_flags.cmake )
+else()
+    message(WARNING "CMAKE_CXX_COMPILER_ID='${CMAKE_CXX_COMPILER_ID}'.  CMAKE_CXX_COMPILER='${CMAKE_CXX_COMPILER}'.  The only supported compiler is 'clang', but the selected compiler is '${CMAKE_CXX_COMPILER}'.")
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+
+FOREACH(F IN LISTS NGRAPH_CXX_WARNING_FLAGS)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${F}")
+ENDFOREACH()
+
+#-----------------------------------------------------------------------------------------------
+
+get_filename_component( NGRAPH_INCLUDE_DIR . ABSOLUTE)
+set(NGRAPH_INCLUDE_DIR "${NGRAPH_INCLUDE_DIR}" PARENT_SCOPE)
+
 set (SRC
-    util.cpp
-    transformers/exop.cpp
-    transformers/op_graph.cpp
-    transformers/axes.cpp
-    transformers/mock_transformer.cpp
     element_type.cpp
     names.cpp
-    transformers/ndarray.cpp
     strides.cpp
     tree.cpp
+    util.cpp
+
+    transformers/axes.cpp
+    transformers/exop.cpp
+    transformers/mock_transformer.cpp
+    transformers/ndarray.cpp
+    transformers/op_graph.cpp
 )
 
-# file(GLOB DEPLOY_HEADERS_ABS *.hpp)
-# foreach(DEPLOY_HEADER ${DEPLOY_HEADERS_ABS})
-#     get_filename_component(FNAME ${DEPLOY_HEADER} NAME)
-#     set(DEPLOY_HEADERS ${DEPLOY_HEADERS} ${FNAME})
-# endforeach()
+# NOTE: We'd prefer to only have the .cpp files *in* the 'transformers' directory be compiled
+# with the 'transformers' directory in the include-path.  But it's hard to do that with
+# CMake versions lower than 3.1: see
+# https://stackoverflow.com/questions/9339851/can-one-add-further-source-files-to-an-executable-once-defined
+include_directories(
+    "${NGRAPH_INCLUDE_DIR}"
+    "${NGRAPH_INCLUDE_DIR}/transformers"
+    )
 
-# if (PYTHON_FOUND)
-# set(SRC ${SRC} api.cpp)
-# endif(PYTHON_FOUND)
-
-# set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
-# set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/../setup.py")
-# configure_file(${SETUP_PY_IN} ${SETUP_PY})
-
-include_directories(.)
 add_library(ngraph SHARED ${SRC})
 
-# install(TARGETS aeon DESTINATION lib)
-# install(FILES ${DEPLOY_HEADERS} DESTINATION include/aeon)
+#-----------------------------------------------------------------------------------------------
+# Installation logic...
+#-----------------------------------------------------------------------------------------------
+
+set(DEPLOY_SRC_HEADERS
+    element_type.hpp
+    names.hpp
+    strides.hpp
+    tree.hpp
+    util.hpp
+    uuid.hpp
+    )
+
+set(DEPLOY_SRC_TRANSFORMERS_HEADERS
+    transformers/axes.hpp
+    transformers/exop.hpp
+    transformers/mock.hpp
+    transformers/mock_transformer.hpp
+    transformers/ndarray.hpp
+    transformers/op_graph.hpp
+    )
+
+install(TARGETS ngraph DESTINATION lib)
+install(FILES ${DEPLOY_SRC_HEADERS} DESTINATION include/ngraph)
+install(FILES ${DEPLOY_SRC_TRANSFORMERS_HEADERS} DESTINATION include/ngraph/transformers)
+
