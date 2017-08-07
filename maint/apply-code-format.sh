@@ -1,0 +1,49 @@
+#!/bin/bash
+set -e
+set -u
+
+# Copyright 2017 Nervana Systems Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# NOTE: The results of `clang-format` depend _both_ of the following factors:
+# - The `.clang-format` file, and
+# - The particular version of the `clang-format` program being used.
+#
+# For this reason, this script specifies the exact version of clang-format to be used.
+
+declare CLANG_FORMAT_BASENAME="clang-format-3.9"
+
+declare THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+declare CLANG_FORMAT_PROG
+if ! CLANG_FORMAT_PROG="$(which "${CLANG_FORMAT_BASENAME}")"; then
+    echo "Unable to find program ${CLANG_FORMAT_BASENAME}" >&2
+    exit 1
+fi
+
+pushd "${THIS_SCRIPT_DIR}/.."
+
+declare ROOT_SUBDIR
+for ROOT_SUBDIR in src test; do
+    if ! [[ -d "${ROOT_SUBDIR}" ]]; then
+	echo "In directory '$(pwd)', no subdirectory named '${ROOT_SUBDIR}' was found." >&2
+	exit 1
+    fi
+
+    echo "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
+    find "${ROOT_SUBDIR}" -name '*.cpp' -or -name '*.hpp' | xargs "${CLANG_FORMAT_PROG}" -i -style=file
+    echo "Done."
+done
+
+popd
+
