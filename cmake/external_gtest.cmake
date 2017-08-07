@@ -14,17 +14,38 @@
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
-# Download and install GoogleTest
-ExternalProject_Add(
-    gtest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG     release-1.8.0
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/gtest
-    # Disable install step
-    INSTALL_COMMAND ""
-    UPDATE_COMMAND ""
-    BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/gtest/src/gtest-build/googlemock/gtest/libgtest.a"
-    )
+#----------------------------------------------------------------------------------------------------------
+# Download and install GoogleTest ...
+#----------------------------------------------------------------------------------------------------------
+
+SET(GTEST_GIT_REPO_URL https://github.com/google/googletest.git)
+SET(GTEST_GIT_LABEL release-1.8.0)
+
+# The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
+if (${CMAKE_VERSION} VERSION_LESS 3.2)
+    ExternalProject_Add(
+        gtest
+        GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
+        GIT_TAG ${GTEST_GIT_LABEL}
+        PREFIX ${CMAKE_CURRENT_BINARY_DIR}/gtest
+        # Disable install step
+        INSTALL_COMMAND ""
+        UPDATE_COMMAND ""
+        )
+else()
+    ExternalProject_Add(
+        gtest
+        GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
+        GIT_TAG ${GTEST_GIT_LABEL}
+        PREFIX ${CMAKE_CURRENT_BINARY_DIR}/gtest
+        # Disable install step
+        INSTALL_COMMAND ""
+        UPDATE_COMMAND ""
+        BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/gtest/src/gtest-build/googlemock/gtest/libgtest.a"
+        )
+endif()
+
+#----------------------------------------------------------------------------------------------------------
 
 # Get GTest source and binary directories from CMake project
 ExternalProject_Get_Property(gtest source_dir binary_dir)
