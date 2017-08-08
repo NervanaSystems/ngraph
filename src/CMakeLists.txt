@@ -19,6 +19,7 @@ set (SRC
     names.cpp
     strides.cpp
     tree.cpp
+    log.cpp
     util.cpp
 
     transformers/axes.cpp
