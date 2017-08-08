@@ -21,6 +21,8 @@
 #include "op_graph.hpp"
 #include "util.hpp"
 
+using namespace ngraph;
+
 //================================================================================================
 // InputDecl
 //================================================================================================
@@ -77,7 +79,7 @@ void InputDecl::value(OutputDecl* value)
     }
 }
 
-std::ostream& operator<<(std::ostream& out, const InputDecl& obj)
+std::ostream& ngraph::operator<<(std::ostream& out, const InputDecl& obj)
 {
     out << "Arg(" << obj.exop.name() << obj.pos << ")";
     return out;
@@ -142,7 +144,7 @@ void OutputDecl::write_view(tensor_view_decl_ptr view)
     }
 }
 
-std::ostream& operator<<(std::ostream& out, const OutputDecl& obj)
+std::ostream& ngraph::operator<<(std::ostream& out, const OutputDecl& obj)
 {
     out << "Val(" << obj.exop.name() << ":" << obj.pos << ")";
     return out;
@@ -191,7 +193,7 @@ ExOp::ExOp(ComputationDecl& cgraph, op_ptr _op, bool create_value)
     }
 }
 
-std::ostream& operator<<(std::ostream& out, const ExOp& obj)
+std::ostream& ngraph::operator<<(std::ostream& out, const ExOp& obj)
 {
     out << obj.op->name();
     std::vector<std::string> args;
@@ -833,7 +835,7 @@ std::string TensorDecl::buffer_name()
 //     return op->name();
 // }
 
-std::ostream& operator<<(std::ostream& out, const TensorDecl& obj)
+std::ostream& ngraph::operator<<(std::ostream& out, const TensorDecl& obj)
 {
     out << obj.tensor_description_base->name();
     return out;

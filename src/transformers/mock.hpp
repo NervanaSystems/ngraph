@@ -23,6 +23,9 @@
 
 #include "element_type.hpp"
 
+namespace ngraph
+{
+
 class ExecutionState;
 
 class Op;
@@ -175,3 +178,5 @@ public:
 // private:
 //     std::vector<op_ptr> m_all_deps;
 // };
+
+} // end of namespace ngraph

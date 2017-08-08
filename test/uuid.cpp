@@ -21,6 +21,7 @@
 #include "uuid.hpp"
 
 using namespace std;
+using namespace ngraph;
 
 TEST(uuid, zero)
 {

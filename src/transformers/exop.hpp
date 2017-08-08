@@ -27,6 +27,9 @@
 #include "op_graph.hpp"
 #include "axes.hpp"
 
+namespace ngraph
+{
+
 // forward declaration. This will hopefully go away
 class ExecutionGraph;
 class TensorDescription;
@@ -450,3 +453,5 @@ public:
     std::map<tensor_description_ptr, tensor_decl_ptr> tensor_decls;
     computation_decl_ptr                              computation_decl;
 };
+
+} // end namespace ngraph

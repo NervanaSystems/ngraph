@@ -22,6 +22,7 @@
 #include "strides.hpp"
 
 using namespace std;
+using namespace ngraph;
 
 TEST(strides, scalar_tree_ctor)
 {

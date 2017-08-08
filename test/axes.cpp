@@ -23,6 +23,7 @@
 #include "transformers/ndarray.hpp"
 
 using namespace std;
+using namespace ngraph;
 
 // axes for testing
 static auto ax_A = make_axis(2, "A");

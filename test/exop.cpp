@@ -22,6 +22,8 @@
 #include "transformers/mock.hpp"
 #include "transformers/mock_transformer.hpp"
 
+using namespace ngraph;
+
 TEST(exop, create)
 {
     // CpuTransformer      transformer;

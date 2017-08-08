@@ -27,7 +27,7 @@ set (SRC
     exop.cpp
     axes.cpp
     element_type.cpp
-    op.cpp
+    op_graph.cpp
     uuid.cpp
     names.cpp
     strides.cpp

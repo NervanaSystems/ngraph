@@ -20,4 +20,6 @@
 
 #include "names.hpp"
 
+using namespace ngraph;
+
 TEST(names, name) {}

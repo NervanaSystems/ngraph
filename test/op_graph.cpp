@@ -20,6 +20,8 @@
 
 #include "transformers/op_graph.hpp"
 
+using namespace ngraph;
+
 TEST(op_graph, constant)
 {
     float  expected_value = 42;
@@ -62,7 +64,7 @@ Axis N()
 TEST(op_graph, deriv_missing_connection)
 {
     //     x = ng.variable([N])
-    auto x = variable({N()});
+    // auto x = variable({N()});
     //     y = ng.variable([N])
     //     z = ng.variable([N])
 

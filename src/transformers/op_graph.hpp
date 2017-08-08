@@ -23,6 +23,9 @@
 #include "axes.hpp"
 #include "names.hpp"
 
+namespace ngraph
+{
+
 class Op;
 class AssignableTensorOp;
 class ParallelOp;
@@ -4427,3 +4430,5 @@ public:
     // private:
     //     std::vector<op_ptr> m_all_deps;
 };
+
+} // end namespace ngraph

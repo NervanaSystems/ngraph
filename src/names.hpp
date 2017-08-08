@@ -17,6 +17,9 @@
 #include <string>
 #include <map>
 
+namespace ngraph
+{
+
 //================================================================================================
 // NameableValue
 //     An Axis labels a dimension of a tensor. The op-graph uses
@@ -101,3 +104,6 @@ public:
     std::string m_short_name;
     std::string m_doc_string;
 };
+
+} // end namespace ngraph
+
