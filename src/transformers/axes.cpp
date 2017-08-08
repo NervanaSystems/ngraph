@@ -20,6 +20,8 @@
 #include "axes.hpp"
 #include "util.hpp"
 
+using namespace ngraph;
+
 slice::slice(int64_t start, int64_t stop, int64_t step)
     : m_start{(size_t)start}
     , m_stop{(size_t)stop}
@@ -90,12 +92,12 @@ size_t slice::sliced_length(size_t length) const
 //             raise TypeError("Could not cast {} to np.dtype".format(dtype))
 //     return dtype
 
-Axis make_axis(size_t length, const std::string& name, bool batch, bool recurrent)
+Axis ngraph::make_axis(size_t length, const std::string& name, bool batch, bool recurrent)
 {
     return Axis(length, name);
 }
 
-Axes make_axes(const std::vector<Axis>& axis_list)
+Axes ngraph::make_axes(const std::vector<Axis>& axis_list)
 {
     return Axes(axis_list);
 }
@@ -175,7 +177,7 @@ void Axis::length(size_t l)
     __length = l;
 }
 
-std::ostream& operator<<(std::ostream& out, const Axis& axis)
+std::ostream& ngraph::operator<<(std::ostream& out, const Axis& axis)
 {
     out << axis.to_string();
     return out;
@@ -238,7 +240,7 @@ bool Axis::operator<(const Axis& other) const
 // //         ))
 // }
 
-Axis slice_axis(const Axis& axis, const slice& s)
+Axis ngraph::slice_axis(const Axis& axis, const slice& s)
 {
     // _validate_slice(s)
 
@@ -263,7 +265,7 @@ Axis slice_axis(const Axis& axis, const slice& s)
 //     Returns:
 //         list of Axis: duplicate Axis found in arr
 //     """
-std::vector<std::string> duplicates(const std::vector<Axis>& ax)
+std::vector<std::string> ngraph::duplicates(const std::vector<Axis>& ax)
 {
     std::map<std::string, size_t> counts;
     std::vector<std::string>      rc;
@@ -835,7 +837,7 @@ bool Axes::operator<(const Axes& other) const
 //         """
 //         return int(np.prod(self.lengths))
 
-std::ostream& operator<<(std::ostream& out, const Axes& axes)
+std::ostream& ngraph::operator<<(std::ostream& out, const Axes& axes)
 {
     out << "Axes(";
     out << join(axes.axes, ", ");
@@ -1060,7 +1062,7 @@ FlattenedAxis::FlattenedAxis(const std::vector<Axis>& list, const std::string& n
     axes = list;
 }
 
-std::ostream& operator<<(std::ostream& out, const FlattenedAxis& obj)
+std::ostream& ngraph::operator<<(std::ostream& out, const FlattenedAxis& obj)
 {
     out << obj.to_string();
     return out;

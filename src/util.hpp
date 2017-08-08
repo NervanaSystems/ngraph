@@ -22,6 +22,9 @@
 #include <map>
 #include <iostream>
 
+namespace ngraph
+{
+
 class stopwatch;
 extern std::map<std::string, stopwatch*> stopwatch_statistics;
 
@@ -157,39 +160,38 @@ private:
     std::string              m_name;
 };
 
-namespace ngraph
+template <class InputIt, class BinaryOp>
+typename std::iterator_traits<InputIt>::value_type
+    reduce(InputIt first, InputIt last, BinaryOp op)
 {
-    template <class InputIt, class BinaryOp>
-    typename std::iterator_traits<InputIt>::value_type
-        reduce(InputIt first, InputIt last, BinaryOp op)
-    {
-        typename std::iterator_traits<InputIt>::value_type result;
+    typename std::iterator_traits<InputIt>::value_type result;
 
-        if (first == last)
+    if (first == last)
+    {
+        result = {};
+    }
+    else
+    {
+        result = *first++;
+        while (first != last)
         {
-            result = {};
+            result = op(result, *first);
+            first++;
         }
-        else
-        {
-            result = *first++;
-            while (first != last)
-            {
-                result = op(result, *first);
-                first++;
-            }
-        }
-        return result;
     }
-
-    template <typename T>
-    T plus(const T& a, const T& b)
-    {
-        return a + b;
-    }
-
-    template <typename T>
-    T mul(const T& a, const T& b)
-    {
-        return a * b;
-    }
+    return result;
 }
+
+template <typename T>
+T plus(const T& a, const T& b)
+{
+    return a + b;
+}
+
+template <typename T>
+T mul(const T& a, const T& b)
+{
+    return a * b;
+}
+
+} // end namespace ngraph

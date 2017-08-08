@@ -17,6 +17,9 @@
 #include "mock.hpp"
 #include "exop.hpp"
 
+namespace ngraph
+{
+
 //================================================================================================
 // CpuTransformer
 //================================================================================================
@@ -30,3 +33,5 @@ public:
 private:
     ExecutionState m_execution_state;
 };
+
+} // end namespace ngraph

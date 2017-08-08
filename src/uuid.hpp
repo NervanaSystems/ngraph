@@ -22,7 +22,12 @@
 
 static std::mt19937_64 random_generator;
 
-class uuid_type
+namespace ngraph
+{
+    class uuid_type;
+}
+
+class ngraph::uuid_type
 {
 public:
     uuid_type()

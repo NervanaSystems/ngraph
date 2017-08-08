@@ -21,7 +21,12 @@
 #include <string>
 #include <map>
 
-class ElementType
+namespace ngraph
+{
+    class ElementType;
+}
+
+class ngraph::ElementType
 {
 public:
     ElementType(size_t bitwidth, bool is_float, bool is_signed, const std::string& cname);
@@ -44,10 +49,10 @@ private:
     const std::string                         m_cname;
 };
 
-extern const ElementType element_type_float;
-extern const ElementType element_type_int8_t;
-extern const ElementType element_type_int32_t;
-extern const ElementType element_type_int64_t;
-extern const ElementType element_type_uint8_t;
-extern const ElementType element_type_uint32_t;
-extern const ElementType element_type_uint64_t;
+extern const ngraph::ElementType element_type_float;
+extern const ngraph::ElementType element_type_int8_t;
+extern const ngraph::ElementType element_type_int32_t;
+extern const ngraph::ElementType element_type_int64_t;
+extern const ngraph::ElementType element_type_uint8_t;
+extern const ngraph::ElementType element_type_uint32_t;
+extern const ngraph::ElementType element_type_uint64_t;

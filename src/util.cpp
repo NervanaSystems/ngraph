@@ -19,9 +19,9 @@
 
 using namespace std;
 
-map<string, stopwatch*> stopwatch_statistics;
+map<string, ngraph::stopwatch*> ngraph::stopwatch_statistics;
 
-void dump(ostream& out, const void* _data, size_t _size)
+void ngraph::dump(ostream& out, const void* _data, size_t _size)
 {
     auto           flags = out.flags();
     const uint8_t* data  = reinterpret_cast<const uint8_t*>(_data);
@@ -66,14 +66,14 @@ void dump(ostream& out, const void* _data, size_t _size)
     out.flags(flags);
 }
 
-std::string to_lower(const std::string& s)
+std::string ngraph::to_lower(const std::string& s)
 {
     std::string rc = s;
     std::transform(rc.begin(), rc.end(), rc.begin(), ::tolower);
     return rc;
 }
 
-string trim(const string& s)
+string ngraph::trim(const string& s)
 {
     string rc = s;
     // trim trailing spaces
@@ -92,7 +92,7 @@ string trim(const string& s)
     return rc;
 }
 
-vector<string> split(const string& src, char delimiter, bool do_trim)
+vector<string> ngraph::split(const string& src, char delimiter, bool do_trim)
 {
     size_t         pos;
     string         token;
@@ -120,7 +120,7 @@ vector<string> split(const string& src, char delimiter, bool do_trim)
     return rc;
 }
 
-size_t hash_combine(const std::vector<size_t>& list)
+size_t ngraph::hash_combine(const std::vector<size_t>& list)
 {
     size_t seed = 0;
     for (size_t v : list)

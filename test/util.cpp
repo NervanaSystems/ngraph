@@ -21,6 +21,7 @@
 #include "util.hpp"
 
 using namespace std;
+using namespace ngraph;
 
 TEST(util, split)
 {

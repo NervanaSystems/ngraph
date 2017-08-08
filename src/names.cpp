@@ -16,6 +16,8 @@
 
 #include "names.hpp"
 
+using namespace ngraph;
+
 size_t                               NameableValue::__counter = 0;
 std::map<std::string, NameableValue> NameableValue::__all_names;
 

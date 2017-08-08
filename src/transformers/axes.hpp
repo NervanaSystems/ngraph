@@ -28,6 +28,8 @@
 #include "strides.hpp"
 #include "uuid.hpp"
 
+namespace ngraph
+{
 class Axes;
 class Axis;
 class FlattenedAxis;
@@ -231,20 +233,6 @@ public:
     size_t        __length;
     static size_t __name_counter;
 };
-
-namespace std
-{
-    template <>
-    struct std::hash<Axis>
-    {
-        size_t operator()(const Axis& axis) const
-        {
-            std::hash<std::string> h1;
-            std::hash<size_t>      h2;
-            return hash_combine({h1(axis.name), h2(axis.length())});
-        }
-    };
-}
 
 //-----------------------------------------------------------------------------------------------
 // _sliced_length
@@ -721,24 +709,6 @@ public:
 private:
     void check_duplicates();
 };
-
-namespace std
-{
-    template <>
-    struct std::hash<Axes>
-    {
-        size_t operator()(const Axes& axes) const
-        {
-            std::hash<Axis>     h1;
-            std::vector<size_t> hashes;
-            for (auto axis : axes)
-            {
-                hashes.push_back(h1(axis));
-            }
-            return hash_combine(hashes);
-        }
-    };
-}
 
 //================================================================================================
 // DuplicateAxisNames
@@ -1518,3 +1488,37 @@ public:
     ngraph::tensor_stride  full_strides;
     tensor_description_ptr next_tensor_description;
 };
+
+} // end of namespace ngraph
+
+namespace std
+{
+    template <>
+    struct std::hash<ngraph::Axis>
+    {
+        size_t operator()(const ngraph::Axis& axis) const
+        {
+            std::hash<std::string> h1;
+            std::hash<size_t>      h2;
+            return ngraph::hash_combine({h1(axis.name), h2(axis.length())});
+        }
+    };
+}
+
+namespace std
+{
+    template <>
+    struct std::hash<ngraph::Axes>
+    {
+        size_t operator()(const ngraph::Axes& axes) const
+        {
+            std::hash<ngraph::Axis>     h1;
+            std::vector<size_t> hashes;
+            for (auto axis : axes)
+            {
+                hashes.push_back(h1(axis));
+            }
+            return ngraph::hash_combine(hashes);
+        }
+    };
+}

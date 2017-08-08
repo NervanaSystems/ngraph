@@ -18,6 +18,8 @@
 #include "axes.hpp"
 #include "util.hpp"
 
+using namespace ngraph;
+
 // def tensor_descriptions(args):
 //     """
 //     A list of tensor descriptions for Ops.
@@ -1913,7 +1915,7 @@ BroadcastOp::BroadcastOp(op_ptr x, Axes axes)
 //         dx_reordered = axes_with_order(dx, x.axes)
 //         x.generate_add_delta(adjoints, dx_reordered)
 
-op_ptr broadcast(op_ptr x, const Axes& axes)
+op_ptr ngraph::broadcast(op_ptr x, const Axes& axes)
 {
     // auto axes = make_axes(axis_list);
     op_ptr rc;
@@ -1928,7 +1930,7 @@ op_ptr broadcast(op_ptr x, const Axes& axes)
     return rc;
 }
 
-op_ptr axes_with_order(op_ptr x, const std::vector<Axis>& axis_list)
+op_ptr ngraph::axes_with_order(op_ptr x, const std::vector<Axis>& axis_list)
 {
     auto   axes = make_axes(axis_list);
     op_ptr rc;
