@@ -18,9 +18,9 @@
 
 #include "gtest/gtest.h"
 
-#include "exop.hpp"
-#include "mock.hpp"
-#include "mock_transformer.hpp"
+#include "transformers/exop.hpp"
+#include "transformers/mock.hpp"
+#include "transformers/mock_transformer.hpp"
 
 TEST(exop, create)
 {

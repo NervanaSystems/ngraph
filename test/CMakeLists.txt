@@ -11,35 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Enable ExternalProject CMake module
-include(ExternalProject)
+include_directories(
+    SYSTEM
+    "${GTEST_INCLUDE_DIR}"
+    )
 
-# Download and install GoogleTest
-ExternalProject_Add(
-    gtest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG     release-1.8.0
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/gtest
-    # Disable install step
-    INSTALL_COMMAND ""
-    UPDATE_COMMAND ""
-)
+include_directories(
+    "${NGRAPH_INCLUDE_DIR}"
+    )
 
-# Get GTest source and binary directories from CMake project
-ExternalProject_Get_Property(gtest source_dir binary_dir)
-
-# Create a libgtest target to be used as a dependency by test programs
-add_library(libgtest IMPORTED STATIC GLOBAL)
-add_dependencies(libgtest gtest)
-
-# Set libgtest properties
-set_target_properties(libgtest PROPERTIES
-    "IMPORTED_LOCATION" "${binary_dir}/googlemock/gtest/libgtest.a"
-    "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-)
-
-# I couldn't make it work with INTERFACE_INCLUDE_DIRECTORIES
-include_directories(SYSTEM "${source_dir}/googletest/include")
 set (SRC
     main.cpp
     util.cpp
@@ -53,12 +33,14 @@ set (SRC
     strides.cpp
 )
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
 
-add_executable(test ${SRC})
-target_link_libraries(test ngraph pthread libgtest)
-add_dependencies(test ngraph libgtest)
+add_executable(unit-test ${SRC})
+target_link_libraries(unit-test ngraph pthread libgtest)
+add_dependencies(unit-test ngraph libgtest)
 
-add_custom_target(runtest
-	COMMAND ${PROJECT_BINARY_DIR}/test/test
-	DEPENDS test)
+add_custom_target(check
+	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test
+	DEPENDS unit-test)
+

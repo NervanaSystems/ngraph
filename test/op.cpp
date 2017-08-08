@@ -18,7 +18,7 @@
 
 #include "gtest/gtest.h"
 
-#include "op_graph.hpp"
+#include "transformers/op_graph.hpp"
 
 TEST(op, constant)
 {
