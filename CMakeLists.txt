@@ -14,12 +14,20 @@
 # We require version 2.8.12 only because that's the lowest version of CMake on which
 # we've validate this repository.
 cmake_minimum_required (VERSION 2.8.12)
-cmake_policy(VERSION 2.8.12)
 
-project (ngraph
-    LANGUAGES CXX
-    )
+# Suppress an OS X-specific warning.
+if (POLICY CMP0042)
+    cmake_policy(SET CMP0042 OLD)
+endif()
 
+# Suppress a warning about not using the `project` command's `VERSION` argument.
+# Once we bump `cmake_minimum_required` to something >= 3.0, we can remove this
+# suppression and change how we specify the project's version number.
+if (POLICY CMP0048)
+    cmake_policy(SET CMP0048 OLD)
+endif()
+
+project (ngraph CXX)
 set(NGRAPH_VERSION 0.1)
 
 # These variables are undocumented but useful.
@@ -28,6 +36,29 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
+#-----------------------------------------------------------------------------------------------
+# Compiler-specific logic...
+#-----------------------------------------------------------------------------------------------
+
+# Default values...
+set(NGRAPH_CXX_WARNING_FLAGS "")
+
+# Compiler-specific logic...
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    include( cmake/clang_4_0_flags.cmake )
+else()
+    message(WARNING "CMAKE_CXX_COMPILER_ID='${CMAKE_CXX_COMPILER_ID}'.  CMAKE_CXX_COMPILER='${CMAKE_CXX_COMPILER}'.  The only supported compiler is 'clang', but the selected compiler is '${CMAKE_CXX_COMPILER}'.")
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+
+FOREACH(F IN LISTS NGRAPH_CXX_WARNING_FLAGS)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${F}")
+ENDFOREACH()
+
+#-----------------------------------------------------------------------------------------------
 
 # The following 'add_subdirectory' call:
 # - defines the 'libgtest' target.

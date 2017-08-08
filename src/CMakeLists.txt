@@ -11,29 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#-----------------------------------------------------------------------------------------------
-# Compiler-specific logic...
-#-----------------------------------------------------------------------------------------------
-
-# Default values...
-set(NGRAPH_CXX_WARNING_FLAGS "")
-
-# Compiler-specific logic...
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    include( ../cmake/clang_4_0_flags.cmake )
-else()
-    message(WARNING "CMAKE_CXX_COMPILER_ID='${CMAKE_CXX_COMPILER_ID}'.  CMAKE_CXX_COMPILER='${CMAKE_CXX_COMPILER}'.  The only supported compiler is 'clang', but the selected compiler is '${CMAKE_CXX_COMPILER}'.")
-endif()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-
-FOREACH(F IN LISTS NGRAPH_CXX_WARNING_FLAGS)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${F}")
-ENDFOREACH()
-
-#-----------------------------------------------------------------------------------------------
-
 get_filename_component( NGRAPH_INCLUDE_DIR . ABSOLUTE)
 set(NGRAPH_INCLUDE_DIR "${NGRAPH_INCLUDE_DIR}" PARENT_SCOPE)
 
