@@ -27,6 +27,8 @@ if (POLICY CMP0048)
     cmake_policy(SET CMP0048 OLD)
 endif()
 
+set(CMAKE_CXX_COMPILER "clang++")
+
 project (ngraph CXX)
 set(NGRAPH_VERSION 0.1)
 
