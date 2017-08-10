@@ -20,6 +20,7 @@ set (SRC
     strides.cpp
     tree.cpp
     util.cpp
+    log.cpp
 
     transformers/axes.cpp
     transformers/exop.cpp
