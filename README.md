@@ -5,9 +5,10 @@ TODO
 
 ## Build Environments
 
-| Operating System            | Compiler  | Status    | Additional packages required      |
-| --------------------------- | --------  | --------- | --------------------------------- |
-| Ubuntu 14.04.5 (LTS) 64-bit | CLang 3.9 | supported | `build-essential cmake clang-3.9` |
+| Operating System            | Compiler  | Build system           | Status                 | Additional packages required      |
+| --------------------------- | --------- | ---------------------- | ---------------------- | --------------------------------- |
+| Ubuntu 16.04 (LTS) 64-bit   | CLang 3.9 | CMake 3.5.1 + GNU Make | supported              | `build-essential cmake clang-3.9` |
+| Ubuntu 16.04 (LTS) 64-bit   | CLang 4.0 | CMake 3.5.1 + GNU Make | unsupported, but works | `build-essential cmake clang-4.0` |
 
 ## Steps
 

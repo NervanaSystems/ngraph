@@ -11,26 +11,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# We require version 2.8.12 only because that's the lowest version of CMake on which
+# We require version 3.5.1 only because that's the lowest version of CMake on which
 # we've validate this repository.
-cmake_minimum_required (VERSION 2.8.12)
+cmake_minimum_required (VERSION 3.5.1)
 
 # Suppress an OS X-specific warning.
 if (POLICY CMP0042)
     cmake_policy(SET CMP0042 OLD)
 endif()
 
-# Suppress a warning about not using the `project` command's `VERSION` argument.
-# Once we bump `cmake_minimum_required` to something >= 3.0, we can remove this
-# suppression and change how we specify the project's version number.
-if (POLICY CMP0048)
-    cmake_policy(SET CMP0048 OLD)
+if ("${CMAKE_CXX_COMPILER}" STREQUAL "")
+    # The user didn't indicate a compiler preference, to pick the compiler based on
+    # the personal preferences and convenience of the project's developers...
+    find_program(
+        CXX_COMPILER
+        NAMES
+        clang++-4.0
+        clang++-3.9
+        clang++
+        c++
+        NAMES_PER_DIR
+        DOC "Which C++ compiler to use when building `libngraph` and the tests."
+        )
+
+    if ("${CXX_COMPILER}" STREQUAL "CXX_COMPILER-NOTFOUND")
+        message(FATAL_ERROR "Unable to find a suitable c++ compiler.")
+    else()
+        message(STATUS "Using C++ compiler: '${CXX_COMPILER}'")
+        set(CMAKE_CXX_COMPILER "${CXX_COMPILER}")
+    endif()
 endif()
 
-set(CMAKE_CXX_COMPILER "clang++")
-
-project (ngraph CXX)
-set(NGRAPH_VERSION 0.1)
+project (ngraph
+    LANGUAGES CXX
+    VERSION 0.1
+    )
 
 # These variables are undocumented but useful.
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
