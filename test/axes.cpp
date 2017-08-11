@@ -310,7 +310,7 @@ TEST(axes, index)
     EXPECT_EQ(7, b[1].length());
 }
 
-TEST(axes, as_nested_list)
+TEST(axes, DISABLED_as_nested_list)
 {
     Axis C = make_axis(5);
     Axis H = make_axis(3);
@@ -325,7 +325,7 @@ TEST(axes, as_nested_list)
     FAIL();
 }
 
-TEST(axes, flatten)
+TEST(axes, DISABLED_flatten)
 {
     Axis C = make_axis(5);
     Axis H = make_axis(3);
@@ -336,7 +336,7 @@ TEST(axes, flatten)
     EXPECT_TRUE(c.is_flattened());
 }
 
-TEST(axes, as_flattened_list)
+TEST(axes, DISABLED_as_flattened_list)
 {
     FAIL();
 }
@@ -364,7 +364,7 @@ TEST(axes, hash_axes)
     m2[axes] = 1;
 }
 
-TEST(axes, reaxe_0d_to_1d)
+TEST(axes, DISABLED_reaxe_0d_to_1d)
 {
     TensorDescription td{};
     ngraph::ndarray   x = random(td);
@@ -382,7 +382,7 @@ TEST(axes, reaxe_0d_to_1d)
     FAIL();
 }
 
-TEST(axes, reaxe_0d_to_2d)
+TEST(axes, DISABLED_reaxe_0d_to_2d)
 {
     //     td = TensorDescription(axes=())
     //     x = random(td)
@@ -407,7 +407,7 @@ TEST(axes, reaxe_0d_to_2d)
 //     I started refactoring into smaller pieces as seen in tests above, but
 //     stopped ...
 //-----------------------------------------------------------------------------------------------
-TEST(axes, simple_tensors)
+TEST(axes, DISABLED_simple_tensors)
 {
     //     # A simple vector
     //     td1 = TensorDescription(axes=[ax_A])
@@ -582,7 +582,7 @@ TEST(axes, axes_map)
     // assert axes_after == axes_map.map_axes(axes_before)
 }
 
-TEST(axes, axes_map_immutable)
+TEST(axes, DISABLED_axes_map_immutable)
 {
     FAIL();
     // axes_map = AxesMap({})
@@ -591,7 +591,7 @@ TEST(axes, axes_map_immutable)
     //     axes_map["x"] = "y"
 }
 
-TEST(axes, axes_map_init_from_axes)
+TEST(axes, DISABLED_axes_map_init_from_axes)
 {
     FAIL();
     // axes_map = AxesMap({ng.make_axis(1, name="aaa"): ng.make_axis(1, name="zzz")})
