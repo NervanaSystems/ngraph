@@ -1,0 +1,27 @@
+# Environment to build and unit-test private-ngraph-cpp
+
+FROM ubuntu:16.04
+
+RUN apt-get update
+
+RUN apt-get install -y build-essential && \
+    apt-get clean autoclean && \
+    apt-get autoremove -y
+
+RUN apt-get install -y cmake && \
+    apt-get clean autoclean && \
+    apt-get autoremove -y
+
+RUN apt-get install -y clang-3.9 && \
+    apt-get clean autoclean && \
+    apt-get autoremove -y
+
+RUN apt-get install -y clang-format-3.9 && \
+    apt-get clean autoclean && \
+    apt-get autoremove -y
+
+RUN apt-get install -y git && \
+    apt-get clean autoclean && \
+    apt-get autoremove -y
+
+WORKDIR /root/ngraph-cpp-test
