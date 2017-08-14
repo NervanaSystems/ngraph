@@ -2,18 +2,21 @@
 # are added.
 
 DIR = $(realpath ../..)
-VOLUME = -v ${DIR}:/root/ngraph-cpp-test
+VOLUME = -v ${DIR}:/root/ngraph-cpp-test -v $$HOME/nervana/data:/root/nervana/data
 GIT_COMMIT = $(shell git rev-parse HEAD)
 BUILD_VERSION = ${GIT_COMMIT}_${PYTHON_VERSION}
 BUILD_DIR = ${DIR}/contrib/docker/.build-${BUILD_VERSION}
 
-NGRAPH_NGRAPH_CPP_CPU_IMG := $(shell docker images ngraph_cpp_cpu
+NGRAPH_CPP_CPU_IMG := $(shell docker images ngraph_cpp_cpu)
 
 CALLER_UID := $(shell id -u)
 CALLER_GID := $(shell id -g)
 
-# MKLDNN_ROOT=/usr/local
-# MY_PYTHONPATH=./:/root/ngraph-cpp-test/
+# default version is python 2, but can be switched to 3 from command
+# line
+PYTHON_VERSION = 2
+
+MY_PYTHONPATH=./:/root/ngraph-cpp-test/
 
 .PHONY: clean build_ngraph_cpp_cpu shell build_all
 
