@@ -21,6 +21,7 @@ set (SRC
     tree.cpp
     util.cpp
     log.cpp
+    ngraph.cpp
 
     transformers/axes.cpp
     transformers/exop.cpp
@@ -39,6 +40,12 @@ include_directories(
     )
 
 add_library(ngraph SHARED ${SRC})
+
+if ( APPLE )
+    set_property( TARGET ngraph PROPERTY PREFIX "lib" )
+    set_property( TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.so" )
+    set_property( TARGET ngraph PROPERTY SUFFIX "" )
+endif()
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
