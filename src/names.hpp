@@ -95,7 +95,7 @@ namespace ngraph
         //!-----------------------------------------------------------------------------------
         NameableValue& named(const std::string& name);
 
-        static size_t                               __counter;
+        static size_t __counter;
         static std::map<std::string, NameableValue> __all_names;
 
         std::string m_name;

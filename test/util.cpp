@@ -134,7 +134,9 @@ TEST(util, contains)
     EXPECT_FALSE(contains(v1, 8));
 }
 
-TEST(util, remove_from) {}
+TEST(util, remove_from)
+{
+}
 
 TEST(util, reduce)
 {

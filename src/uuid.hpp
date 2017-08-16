@@ -74,7 +74,6 @@ public:
     }
 
     bool operator!=(const uuid_type& other) const { return !(*this == other); }
-
     friend std::ostream& operator<<(std::ostream& out, const uuid_type& id)
     {
         out << id.to_string();

@@ -22,4 +22,6 @@
 
 using namespace ngraph;
 
-TEST(names, name) {}
+TEST(names, name)
+{
+}

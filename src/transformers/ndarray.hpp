@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "element_type.hpp"
 #include "strides.hpp"

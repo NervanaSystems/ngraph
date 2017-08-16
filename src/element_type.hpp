@@ -43,10 +43,10 @@ public:
 
 private:
     static std::map<std::string, ElementType> m_element_list;
-    size_t                                    m_bitwidth;
-    bool                                      m_is_float;
-    bool                                      m_is_signed;
-    const std::string                         m_cname;
+    size_t            m_bitwidth;
+    bool              m_is_float;
+    bool              m_is_signed;
+    const std::string m_cname;
 };
 
 extern const ngraph::ElementType element_type_float;

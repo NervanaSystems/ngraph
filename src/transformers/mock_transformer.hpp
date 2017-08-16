@@ -14,24 +14,21 @@
 
 #pragma once
 
-#include "mock.hpp"
 #include "exop.hpp"
+#include "mock.hpp"
 
 namespace ngraph
 {
-
-//================================================================================================
-// CpuTransformer
-//================================================================================================
-class CpuTransformer : public Transformer
-{
-public:
-    virtual ~CpuTransformer() {}
-
-    ExecutionState& execution_state() override { return m_execution_state; }
-
-private:
-    ExecutionState m_execution_state;
-};
+    //================================================================================================
+    // CpuTransformer
+    //================================================================================================
+    class CpuTransformer : public Transformer
+    {
+    public:
+        virtual ~CpuTransformer() {}
+        ExecutionState& execution_state() override { return m_execution_state; }
+    private:
+        ExecutionState m_execution_state;
+    };
 
 } // end namespace ngraph
