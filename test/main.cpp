@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <iostream>
 #include <chrono>
+#include <iostream>
 
 #include "gtest/gtest.h"
 

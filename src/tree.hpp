@@ -1,10 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <functional>
-#include <vector>
 #include <initializer_list>
 #include <iostream>
-#include <algorithm>
+#include <vector>
 
 #include "util.hpp"
 

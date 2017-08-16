@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdio>
-#include <vector>
 #include <initializer_list>
+#include <vector>
 
 #include "element_type.hpp"
 #include "tree.hpp"

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <map>
 #include <iomanip>
+#include <map>
 
 #include "util.hpp"
 

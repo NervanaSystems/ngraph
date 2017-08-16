@@ -27,7 +27,10 @@ const ngraph::ElementType element_type_uint64_t = ngraph::ElementType(64, false,
 
 std::map<std::string, ngraph::ElementType> ngraph::ElementType::m_element_list;
 
-ngraph::ElementType::ElementType(size_t bitwidth, bool is_float, bool is_signed, const std::string& cname)
+ngraph::ElementType::ElementType(size_t             bitwidth,
+                                 bool               is_float,
+                                 bool               is_signed,
+                                 const std::string& cname)
     : m_bitwidth{bitwidth}
     , m_is_float{is_float}
     , m_is_signed{is_signed}

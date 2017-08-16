@@ -15,10 +15,10 @@
 #pragma once
 
 #include <array>
-#include <random>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
-#include <cstring>
+#include <random>
 
 static std::mt19937_64 random_generator;
 
