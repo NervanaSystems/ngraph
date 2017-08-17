@@ -20,7 +20,7 @@ class NGraph
 {
 public:
     void add_params(const std::vector<std::string>& paramList);
-    const std::vector<std::string>& get_params() const { return m_params; }
+    const std::vector<std::string>& get_params() const;
     std::string get_name() const { return "NGraph Plugin"; }
 
 private:

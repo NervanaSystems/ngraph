@@ -29,3 +29,8 @@ void NGraph::add_params( const std::vector<std::string>& paramList )
     INFO << "Adding parameters";
     m_params.insert(m_params.end(), paramList.begin(), paramList.end());    
 }
+
+const std::vector<std::string>& NGraph::get_params() const
+{
+    return m_params;
+}
