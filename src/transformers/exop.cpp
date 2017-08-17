@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <cmath>
+#include <exception>
 #include <memory>
 #include <sstream>
-#include <exception>
-#include <cmath>
 
 #include "exop.hpp"
 #include "op_graph.hpp"
@@ -404,10 +404,10 @@ void ExOpBlock::add_ops(std::initializer_list<computation_op_ptr> roots, exop_pt
         }
     }
 
-    std::vector<op_ptr>                   available;
+    std::vector<op_ptr> available;
     std::map<op_ptr, size_t>              counts;
     std::map<op_ptr, std::vector<op_ptr>> parents;
-    std::vector<op_ptr>                   ready;
+    std::vector<op_ptr> ready;
 
     available.insert(available.end(), roots.begin(), roots.end());
     while (available.size() > 0)
@@ -1012,7 +1012,7 @@ tensor_decl_ptr ExecutionState::ensure_tensor_decl(ExecutionGraph&        execut
         bool is_constant     = false;
         bool is_compile_only = false;
 
-        tensor_decl                              = std::make_shared<TensorDecl>(execution_graph,
+        tensor_decl = std::make_shared<TensorDecl>(execution_graph,
                                                    tensor_description_base->element_type(),
                                                    tensor_description_base->tensor_size(),
                                                    tensor_description_base->is_persistent(),
@@ -1057,7 +1057,7 @@ tensor_decl_ptr ExecutionGraph::get_tensor_decl(op_ptr                 op,
         bool is_constant     = false;
         bool is_compile_only = false;
 
-        tensor_decl                           = std::make_shared<TensorDecl>(*this,
+        tensor_decl = std::make_shared<TensorDecl>(*this,
                                                    tensor_description_base->element_type(),
                                                    tensor_description_base->tensor_size(),
                                                    tensor_description_base->is_persistent(),

@@ -44,3 +44,10 @@ SpacesInSquareBrackets: false
 
 SortIncludes: false
 ReflowComments: true
+
+IncludeCategories:
+  - Regex:           '^".*'
+    Priority:        3
+  - Regex:           '^<.*'
+    Priority:        2
+SortIncludes: true

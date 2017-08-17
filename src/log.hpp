@@ -15,9 +15,9 @@
 
 #pragma once
 
+#include <deque>
 #include <sstream>
 #include <stdexcept>
-#include <deque>
 
 namespace nervana
 {

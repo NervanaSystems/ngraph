@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdio>
-#include <vector>
 #include <initializer_list>
+#include <vector>
 
 #include "element_type.hpp"
 #include "tree.hpp"
@@ -27,10 +27,9 @@ public:
                 ElementType                               et = element_type_float);
 
     const ElementType& get_type() const { return m_element_type; }
-
-    tensor_stride full_strides() const;
-    tensor_stride strides() const;
-    tensor_size   sizes() const;
+    tensor_stride      full_strides() const;
+    tensor_stride      strides() const;
+    tensor_size        sizes() const;
 
     tensor_size operator[](size_t index) const;
 
@@ -53,9 +52,8 @@ class ngraph::tensor_stride
 public:
     tensor_stride();
     const ElementType& get_type() const { return m_element_type; }
-
-    tensor_stride full_strides() const;
-    tensor_stride strides() const;
+    tensor_stride      full_strides() const;
+    tensor_stride      strides() const;
 
     tensor_stride reduce_strides() const;
 
