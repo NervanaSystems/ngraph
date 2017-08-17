@@ -19,7 +19,7 @@
 
 using namespace std;
 
-extern "C" int main(int argc, char** argv)
+int main(int argc, char** argv)
 {
     const char*   exclude = "--gtest_filter=-benchmark.*";
     vector<char*> argv_vector;

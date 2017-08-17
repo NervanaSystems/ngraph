@@ -22,6 +22,7 @@ include_directories(
 
 set (SRC
     main.cpp
+    build_graph.cpp
     util.cpp
     tensor.cpp
     exop.cpp
