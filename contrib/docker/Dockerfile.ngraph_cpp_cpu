@@ -4,24 +4,19 @@ FROM ubuntu:16.04
 
 RUN apt-get update
 
-RUN apt-get install -y build-essential && \
+RUN apt-get install -y build-essential cmake && \
     apt-get clean autoclean && \
     apt-get autoremove -y
 
-RUN apt-get install -y cmake && \
-    apt-get clean autoclean && \
-    apt-get autoremove -y
-
-RUN apt-get install -y clang-3.9 && \
-    apt-get clean autoclean && \
-    apt-get autoremove -y
-
-RUN apt-get install -y clang-format-3.9 && \
+RUN apt-get install -y clang-3.9 clang-format-3.9 && \
     apt-get clean autoclean && \
     apt-get autoremove -y
 
 RUN apt-get install -y git && \
     apt-get clean autoclean && \
     apt-get autoremove -y
+
+# Add chown_files script to avoid 
+ADD contrib/docker/chown_files.sh /tmp/chown_files.sh
 
 WORKDIR /root/ngraph-cpp-test
