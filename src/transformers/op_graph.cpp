@@ -14,8 +14,8 @@
 
 #include <sstream>
 
-#include "op_graph.hpp"
 #include "axes.hpp"
+#include "op_graph.hpp"
 #include "util.hpp"
 
 using namespace ngraph;
@@ -2794,7 +2794,9 @@ ElementWiseOp::ElementWiseOp()
 {
 }
 
-void ElementWiseOp::ElementWiseOp_init(std::vector<op_ptr>, Axes) {}
+void ElementWiseOp::ElementWiseOp_init(std::vector<op_ptr>, Axes)
+{
+}
 
 //================================================================================================
 // UnaryElementWiseOp

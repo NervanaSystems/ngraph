@@ -18,7 +18,7 @@
 
 using namespace ngraph;
 
-size_t                               NameableValue::__counter = 0;
+size_t NameableValue::__counter = 0;
 std::map<std::string, NameableValue> NameableValue::__all_names;
 
 NameableValue::NameableValue(const std::string& name,

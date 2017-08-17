@@ -1,5 +1,5 @@
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 
 #include "strides.hpp"
 #include "util.hpp"

@@ -1,10 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <functional>
-#include <vector>
 #include <initializer_list>
 #include <iostream>
-#include <algorithm>
+#include <vector>
 
 #include "util.hpp"
 
@@ -51,7 +51,6 @@ public:
     bool                     is_list() const { return m_is_list; }
     T                        get_value() const { return m_value; }
     const std::vector<tree>& get_list() const { return m_list; }
-
     static void traverse_tree(tree& s, std::function<void(T*)> func)
     {
         if (s.is_list())

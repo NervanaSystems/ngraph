@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <cassert>
+#include <cmath>
 #include <iostream>
 #include <sstream>
-#include <cmath>
-#include <cassert>
 
 #include "axes.hpp"
 #include "util.hpp"
@@ -268,7 +268,7 @@ Axis ngraph::slice_axis(const Axis& axis, const slice& s)
 std::vector<std::string> ngraph::duplicates(const std::vector<Axis>& ax)
 {
     std::map<std::string, size_t> counts;
-    std::vector<std::string>      rc;
+    std::vector<std::string> rc;
     for (const Axis& axis : ax)
     {
         auto it = counts.find(axis.name);

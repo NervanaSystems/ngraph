@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <vector>
-#include <string>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include "gtest/gtest.h"
 
@@ -134,7 +134,9 @@ TEST(util, contains)
     EXPECT_FALSE(contains(v1, 8));
 }
 
-TEST(util, remove_from) {}
+TEST(util, remove_from)
+{
+}
 
 TEST(util, reduce)
 {
