@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -10,12 +11,16 @@ namespace ngraph {
 class ValueDescriptor
 {
 public:
-    virtual std::shared_ptr<ValueType> value_type() const = 0;
+    using ptr_t = std::shared_ptr<ValueDescriptor>;
+
+    virtual ValueType::ptr_t value_type() const = 0;
 };
 
 class TensorDescriptor
 {
 public:
+    using ptr_t = std::shared_ptr<TensorDescriptor>;
+
     TensorDescriptor(const ElementType& element_type)
     : m_element_type(element_type)
     {}
@@ -26,60 +31,65 @@ protected:
 
 class TensorLayoutDescriptor
 {
-
+public:
+    using ptr_t = std::shared_ptr<TensorLayoutDescriptor>;
 };
 
 class TensorViewDescriptor : public ValueDescriptor
 {
 public:
-    TensorViewDescriptor(const std::shared_ptr<TensorViewType>& type)
+    using ptr_t = std::shared_ptr<TensorViewDescriptor>;
+
+    TensorViewDescriptor(const TensorViewType::ptr_t& type)
     : m_type(type)
     {}
 
     TensorViewDescriptor(const ElementType& element_type, const std::vector<value_size_t>& shape)
-    : TensorViewDescriptor(TensorViewType::make_shared(element_type, shape))
+    : TensorViewDescriptor(TensorViewType::make(element_type, shape))
     {}
 
-    static std::shared_ptr<TensorViewDescriptor> make_shared(const std::shared_ptr<TensorViewType>& type){
-        return std::shared_ptr<TensorViewDescriptor>(new TensorViewDescriptor(type));
+    static ptr_t make(const TensorViewType::ptr_t& type){
+        return ptr_t(new TensorViewDescriptor(type));
     }
 
-    static std::shared_ptr<TensorViewDescriptor> make_shared(const ElementType& element_type, const std::vector<value_size_t>& shape){
-        return std::shared_ptr<TensorViewDescriptor>(new TensorViewDescriptor(element_type, shape));
+    static ptr_t make(const ElementType& element_type, const std::vector<value_size_t>& shape){
+        return ptr_t(new TensorViewDescriptor(element_type, shape));
     }
 
-    std::shared_ptr<ValueType> value_type() const override {
+    ValueType::ptr_t value_type() const override {
         return m_type;
     }
 protected:
-    std::shared_ptr<TensorViewType> m_type;
-    std::shared_ptr<TensorDescriptor> m_tensor_descriptor;
-    std::shared_ptr<TensorLayoutDescriptor> m_tensor_layout_descriptor;
+    TensorViewType::ptr_t m_type;
+    TensorDescriptor::ptr_t m_tensor_descriptor;
+    TensorLayoutDescriptor::ptr_t m_tensor_layout_descriptor;
 };
 
 class TupleDescriptor : public ValueDescriptor
 {
 public:
-    TupleDescriptor(const std::vector<std::shared_ptr<ValueDescriptor>>& elements)
+    using ptr_t = std::shared_ptr<TupleDescriptor>;
+
+    TupleDescriptor(const std::vector<ValueDescriptor::ptr_t>& elements)
     : m_element_descriptors(elements)
     {
-        std::vector<std::shared_ptr<ValueType>> types;
+        std::vector<ValueType::ptr_t> types;
         for(auto elt : elements){
             types.push_back(elt->value_type());
         }
-        m_type = TupleType::make_shared(types);
+        m_type = TupleType::make(types);
     }
 
-    static std::shared_ptr<TupleDescriptor> make_shared(const std::vector<std::shared_ptr<ValueDescriptor>>& elements){
-        return std::shared_ptr<TupleDescriptor>(new TupleDescriptor(elements));
+    static ptr_t make(const std::vector<ValueDescriptor::ptr_t>& elements){
+        return ptr_t(new TupleDescriptor(elements));
     }
 
-    std::shared_ptr<ValueType> value_type() const override {
+    ValueType::ptr_t value_type() const override {
         return m_type;
     }
 protected:
-    std::shared_ptr<TupleType> m_type;
-    std::vector<std::shared_ptr<ValueDescriptor>> m_element_descriptors;
+    TupleType::ptr_t m_type;
+    std::vector<ValueDescriptor::ptr_t> m_element_descriptors;
 };
 
 } // End of NGRAPH

@@ -7,8 +7,21 @@ namespace ngraph {
 
 class Function
 {
-    std::vector<std::shared_ptr<ValueDescriptor>> m_arguments;
-    std::shared_ptr<ValueDescriptor> m_result;
+public:
+    using ptr_t = std::shared_ptr<Function>;
+
+    Function(const ValueType::ptr_t& return_type, const std::vector<ValueType::ptr_t>& argument_types)
+    : m_return_type(return_type)
+    , m_argument_types(argument_types)
+    {}
+
+    static ptr_t make(const ValueType::ptr_t& return_type, const std::vector<ValueType::ptr_t>& argument_types){
+        return ptr_t(new Function(return_type, argument_types));
+    }
+
+protected:
+    std::vector<std::shared_ptr<ValueType>> m_argument_types;
+    std::shared_ptr<ValueType> m_return_type;
 };
 
 
