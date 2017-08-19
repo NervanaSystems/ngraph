@@ -7,6 +7,9 @@
 
 namespace ngraph {
 
+class TensorViewDescriptor;
+class TupleDescriptor;
+
 using value_size_t = size_t;
 
 // Base type for ngraph values
@@ -20,6 +23,7 @@ class TensorViewType : public ValueType
 {
 public:
     using ptr_t = std::shared_ptr<TensorViewType>;
+    using descriptor_t = TensorViewDescriptor;
 
     TensorViewType(const ElementType& element_type, const std::vector<value_size_t>& shape)
     : m_element_type(element_type)
@@ -39,6 +43,7 @@ class TupleType : public ValueType
 {
 public:
     using ptr_t = std::shared_ptr<TupleType>;
+    using descriptor_t = TupleDescriptor;
 
     TupleType(const std::vector<ValueType::ptr_t>& element_types)
     : m_element_types(element_types)

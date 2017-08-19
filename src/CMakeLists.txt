@@ -27,6 +27,8 @@ set (SRC
     transformers/mock_transformer.cpp
     transformers/ndarray.cpp
     transformers/op_graph.cpp
+
+    values/function.cpp
 )
 
 # NOTE: We'd prefer to only have the .cpp files *in* the 'transformers' directory be compiled
