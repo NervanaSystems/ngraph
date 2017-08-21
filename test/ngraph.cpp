@@ -27,8 +27,8 @@ using namespace std;
 TEST(NGraph, loadTest)
 {
     // load the triangle library
-    void* pluginLib = dlopen("../src/libngraph.so", RTLD_LAZY);
-    if (!pluginLib)
+    void* ngraphImplLib = dlopen("../src/libngraph.so", RTLD_LAZY);
+    if (!ngraphImplLib)
     {
         std::cerr << "Cannot load library: " << dlerror() << '\n';
         ASSERT_FALSE(true);
@@ -38,33 +38,35 @@ TEST(NGraph, loadTest)
     dlerror();
 
     // Get the symbols
-    auto createPfn = reinterpret_cast<CreatePluginPfn>(dlsym(pluginLib, "create_plugin"));
+    auto createPfn =
+        reinterpret_cast<CreateNGraphObjPfn>(dlsym(ngraphImplLib, "create_ngraph_object"));
     ASSERT_FALSE(createPfn == nullptr);
 
-    auto destroyPfn = reinterpret_cast<DestroyPluginPfn>(dlsym(pluginLib, "destroy_plugin"));
+    auto destroyPfn =
+        reinterpret_cast<DestroyNGraphObjPfn>(dlsym(ngraphImplLib, "destroy_ngraph_object"));
     ASSERT_FALSE(destroyPfn == nullptr);
 
-    NGraph* pluginObj = createPfn();
+    NGraph* nGraphObj = createPfn();
 
     INFO << "Call a method on the Object";
-    ASSERT_EQ("NGraph Plugin", pluginObj->get_name());
-    INFO << "Plugin Name: " << pluginObj->get_name();
+    ASSERT_EQ("NGraph Implementation Object", nGraphObj->get_name());
+    INFO << "Object Name: " << nGraphObj->get_name();
 
     // Add some parameters
     const vector<string> TEST_PARAMS = {"param-1", "param-2", "param-3"};
 
-    pluginObj->add_params( TEST_PARAMS );
+    nGraphObj->add_params(TEST_PARAMS);
 
     // Get the list of params
-    auto& storedParams = pluginObj->get_params();
-    EXPECT_EQ( TEST_PARAMS.size(), storedParams.size() );
+    auto& storedParams = nGraphObj->get_params();
+    EXPECT_EQ(TEST_PARAMS.size(), storedParams.size());
     for (int i = 0; i < TEST_PARAMS.size(); i++)
     {
-        EXPECT_EQ( TEST_PARAMS[i], storedParams[i] );
+        EXPECT_EQ(TEST_PARAMS[i], storedParams[i]);
     }
 
-    INFO << "Destroy the Plugin Object";
-    destroyPfn(pluginObj);
+    INFO << "Destroy the NGraph Object";
+    destroyPfn(nGraphObj);
 
-    dlclose(pluginLib);
+    dlclose(ngraphImplLib);
 }

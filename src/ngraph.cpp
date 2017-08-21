@@ -14,20 +14,20 @@
 #include "ngraph.hpp"
 #include "log.hpp"
 
-NGraph* create_plugin()
+NGraph* create_ngraph_object()
 {
     return new NGraph();
 }
 
-void destroy_plugin(NGraph* pObj)
+void destroy_ngraph_object(NGraph* pObj)
 {
     delete pObj;
 }
 
-void NGraph::add_params( const std::vector<std::string>& paramList )
+void NGraph::add_params(const std::vector<std::string>& paramList)
 {
     INFO << "Adding parameters";
-    m_params.insert(m_params.end(), paramList.begin(), paramList.end());    
+    m_params.insert(m_params.end(), paramList.begin(), paramList.end());
 }
 
 const std::vector<std::string>& NGraph::get_params() const
