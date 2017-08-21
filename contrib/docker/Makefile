@@ -2,7 +2,7 @@
 # are added.
 
 DIR = $(realpath ../..)
-VOLUME = -v ${DIR}:/root/ngraph-cpp-test -v $$HOME/nervana/data:/root/nervana/data
+VOLUME = -v ${DIR}:/root/ngraph-cpp-test
 GIT_COMMIT = $(shell git rev-parse HEAD)
 BUILD_VERSION = ${GIT_COMMIT}_${PYTHON_VERSION}
 BUILD_DIR = ${DIR}/contrib/docker/.build-${BUILD_VERSION}
