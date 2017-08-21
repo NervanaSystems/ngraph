@@ -1,3 +1,4 @@
+#pragma once
 // ----------------------------------------------------------------------------
 // Copyright 2017 Nervana Systems Inc.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,28 +13,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <chrono>
-#include <iostream>
+#include <string>
+#include <vector>
 
-#include "gtest/gtest.h"
-#include "log.hpp"
-
-using namespace std;
-
-extern "C" int main(int argc, char** argv)
+class NGraph
 {
-    const char*   exclude = "--gtest_filter=-benchmark.*";
-    vector<char*> argv_vector;
-    argv_vector.push_back(argv[0]);
-    argv_vector.push_back((char*)exclude);
-    for (int i = 1; i < argc; i++)
-    {
-        argv_vector.push_back(argv[i]);
-    }
-    argc++;
+public:
+    void add_params(const std::vector<std::string>& paramList);
+    const std::vector<std::string>& get_params() const;
+    std::string                     get_name() const { return "NGraph Implementation Object"; }
+private:
+    std::vector<std::string> m_params;
+};
 
-    ::testing::InitGoogleTest(&argc, argv_vector.data());
-    int rc = RUN_ALL_TESTS();
+// Factory methods
+extern "C" NGraph* create_ngraph_object();
+extern "C" void destroy_ngraph_object(NGraph* pObj);
 
-    return rc;
-}
+// FUnction pointers to the factory methods
+typedef NGraph* (*CreateNGraphObjPfn)();
+typedef void (*DestroyNGraphObjPfn)(NGraph*);
