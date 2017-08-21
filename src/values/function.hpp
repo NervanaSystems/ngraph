@@ -1,8 +1,8 @@
 #pragma once
 
-#include "values/descriptors.hpp"
+#include "values/descriptor.hpp"
 #include "values/op.hpp"
-#include "values/types.hpp"
+#include "values/type.hpp"
 
 namespace ngraph {
 
@@ -14,13 +14,14 @@ public:
     using ptr_t = std::shared_ptr<Parameter>;
 
     static ptr_t make(Function& function, size_t index, const ValueType::ptr_t& output_type);
-protected:
+
     Parameter(Function& function, size_t index, const ValueType::ptr_t& output_type)
     : Op({}, output_type)
     , m_function(function)
     , m_index(index)
     {}
 
+protected:
     Function& m_function;
     size_t m_index;
 };
@@ -30,7 +31,6 @@ class Function
 public:
     using ptr_t = std::shared_ptr<Function>;
 
-protected:
     Function(const ValueType::ptr_t& return_type, 
              const std::vector<ValueType::ptr_t>& argument_types)
     : m_return_type(return_type)
@@ -42,7 +42,6 @@ protected:
         }
     }
 
-public:
     static ptr_t make(const ValueType::ptr_t& return_type, 
                       const std::vector<ValueType::ptr_t>& argument_types);
 

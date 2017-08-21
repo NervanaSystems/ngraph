@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "values/types.hpp"
+#include "values/type.hpp"
 
 namespace ngraph {
 
@@ -44,16 +44,16 @@ public:
     : m_type(type)
     {}
 
-    TensorViewDescriptor(const ElementType& element_type, const std::vector<value_size_t>& shape)
+    TensorViewDescriptor(const ElementType& element_type, const Shape& shape)
     : TensorViewDescriptor(TensorViewType::make(element_type, shape))
     {}
 
     static ptr_t make(const TensorViewType::ptr_t& type){
-        return ptr_t(new TensorViewDescriptor(type));
+        return ptr_t::make_shared(type);
     }
 
-    static ptr_t make(const ElementType& element_type, const std::vector<value_size_t>& shape){
-        return ptr_t(new TensorViewDescriptor(element_type, shape));
+    static ptr_t make(const ElementType& element_type, const Shape& shape){
+        return ptr_t::make_shared(element_type, shape);
     }
 
     ValueType::ptr_t value_type() const override {
@@ -81,7 +81,7 @@ public:
     }
 
     static ptr_t make(const std::vector<ValueDescriptor::ptr_t>& elements){
-        return ptr_t(new TupleDescriptor(elements));
+        return ptr_t::make_shared(elements);
     }
 
     ValueType::ptr_t value_type() const override {
