@@ -25,13 +25,8 @@ set (SRC
     build_graph.cpp
     util.cpp
     tensor.cpp
-    exop.cpp
-    axes.cpp
     element_type.cpp
-    op_graph.cpp
     uuid.cpp
-    names.cpp
-    strides.cpp
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")

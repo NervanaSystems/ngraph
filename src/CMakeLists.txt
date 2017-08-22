@@ -16,18 +16,9 @@ set(NGRAPH_INCLUDE_DIR "${NGRAPH_INCLUDE_DIR}" PARENT_SCOPE)
 
 set (SRC
     element_type.cpp
-    names.cpp
-    strides.cpp
     tree.cpp
     util.cpp
     log.cpp
-
-    transformers/axes.cpp
-    transformers/exop.cpp
-    transformers/mock_transformer.cpp
-    transformers/ndarray.cpp
-    transformers/op_graph.cpp
-
     values/function.cpp
     values/op.cpp
 )
@@ -49,20 +40,12 @@ add_library(ngraph SHARED ${SRC})
 
 set(DEPLOY_SRC_HEADERS
     element_type.hpp
-    names.hpp
-    strides.hpp
     tree.hpp
     util.hpp
     uuid.hpp
     )
 
 set(DEPLOY_SRC_TRANSFORMERS_HEADERS
-    transformers/axes.hpp
-    transformers/exop.hpp
-    transformers/mock.hpp
-    transformers/mock_transformer.hpp
-    transformers/ndarray.hpp
-    transformers/op_graph.hpp
     )
 
 install(TARGETS ngraph DESTINATION lib)
