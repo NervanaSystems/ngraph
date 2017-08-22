@@ -1,3 +1,17 @@
+// ----------------------------------------------------------------------------
+// Copyright 2017 Nervana Systems Inc.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// ----------------------------------------------------------------------------
+
 #pragma once
 
 #include <memory>
@@ -5,49 +19,13 @@
 #include "values/descriptor.hpp"
 #include "values/type.hpp"
 
-namespace ngraph {
-
-class Op
+namespace ngraph
 {
-public:
-    using ptr_t = std::shared_ptr<Op>;
-
-protected:
-    Op(const std::vector<ptr_t>& inputs, const ValueType::ptr_t output_type)
-    : m_inputs(inputs)
-    , m_output_type(output_type)
-    {}
-
-    std::vector<ptr_t> m_inputs;
-    ValueType::ptr_t m_output_type;
-};
-
-class Broadcast : public Op
-{
-public:
-    using ptr_t = std::shared_ptr<Broadcast>;
-
-    Broadcast(const Op::ptr_t& x, std::vector<size_t> dims)
-    : Op({x}, 0)
-    , m_dims(dims)
-    {}
-
-public:
-    static ptr_t make(const Op::ptr_t& x, std::vector<size_t> dims){
-        return ptr_t::make_shared(x, dims);
-    }
-
-protected:
-    std::vector<size_t> m_dims;
-};
-
-class Tuple : public Op
-{
-public:
-    Tuple(const std::vector<ptr_t>& inputs)
-    : Op(inputs, 0)
+    class Call : public Node
     {
-    }
-};
+    protected:
+        std::vector<std::shared_ptr<Node>> m_args;
+        
+    };
 
-} // end of namespace ngraph
+}

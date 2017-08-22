@@ -14,32 +14,25 @@
 
 #pragma once
 
-#include "values/node.hpp"
-#include "values/op.hpp"
+#include <vector>
+
 #include "values/type.hpp"
 
-namespace ngraph 
+namespace ngraph
 {
 
-    class Function;
-
-    class Parameter : public Node
+    class Node
     {
     public:
-
-        Parameter(Function& function, size_t index, const std::shared_ptr<ValueType>& type)
-        : Node(type)
-        , m_function(function)
-        , m_index(index)
+        Node(std::shared_ptr<ValueType> type=0)
+        : m_type(type)
         {}
 
-    protected:
-        Function& m_function;
-        size_t m_index;
-    };
+        virtual ~Node(){}
+        virtual std::vector<std::shared_ptr<Node>> dependents() {
+            return m_parameters;
+        }
 
-    class Result {
-    public:
         void type(const std::shared_ptr<ValueType>& t){
             m_type = t;
         }
@@ -51,28 +44,10 @@ namespace ngraph
         std::shared_ptr<ValueType> type() const {
             return m_type;
         }
+
     protected:
+        std::vector<std::shared_ptr<Node>> m_parameters;
         std::shared_ptr<ValueType> m_type;
     };
 
-    class Function
-    {
-    public:
-        Function(size_t n_parameters)
-        : m_parameters(n_parameters)
-        {}
-
-        Result *result(){
-            return &m_result;
-        }
-
-        std::shared_ptr<Parameter> parameter(size_t i){
-            return m_parameters[i];
-        }
-
-    protected:
-        std::vector<std::shared_ptr<Parameter>> m_parameters;
-        Result m_result;
-    };
-
-} // end namespace ngraph
+}

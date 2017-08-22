@@ -1,3 +1,17 @@
+// ----------------------------------------------------------------------------
+// Copyright 2017 Nervana Systems Inc.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// ----------------------------------------------------------------------------
+
 #pragma once
 
 #include <algorithm>
@@ -6,90 +20,7 @@
 
 #include "values/type.hpp"
 
-namespace ngraph {
-
-class ValueDescriptor
+namespace ngraph 
 {
-public:
-    using ptr_t = std::shared_ptr<ValueDescriptor>;
 
-    virtual ValueType::ptr_t value_type() const = 0;
-};
-
-class TensorDescriptor
-{
-public:
-    using ptr_t = std::shared_ptr<TensorDescriptor>;
-
-    TensorDescriptor(const ElementType& element_type)
-    : m_element_type(element_type)
-    {}
-
-protected:
-    const ElementType& m_element_type;
-};
-
-class TensorLayoutDescriptor
-{
-public:
-    using ptr_t = std::shared_ptr<TensorLayoutDescriptor>;
-};
-
-class TensorViewDescriptor : public ValueDescriptor
-{
-public:
-    using ptr_t = std::shared_ptr<TensorViewDescriptor>;
-
-    TensorViewDescriptor(const TensorViewType::ptr_t& type)
-    : m_type(type)
-    {}
-
-    TensorViewDescriptor(const ElementType& element_type, const Shape& shape)
-    : TensorViewDescriptor(TensorViewType::make(element_type, shape))
-    {}
-
-    static ptr_t make(const TensorViewType::ptr_t& type){
-        return ptr_t::make_shared(type);
-    }
-
-    static ptr_t make(const ElementType& element_type, const Shape& shape){
-        return ptr_t::make_shared(element_type, shape);
-    }
-
-    ValueType::ptr_t value_type() const override {
-        return m_type;
-    }
-protected:
-    TensorViewType::ptr_t m_type;
-    TensorDescriptor::ptr_t m_tensor_descriptor;
-    TensorLayoutDescriptor::ptr_t m_tensor_layout_descriptor;
-};
-
-class TupleDescriptor : public ValueDescriptor
-{
-public:
-    using ptr_t = std::shared_ptr<TupleDescriptor>;
-
-    TupleDescriptor(const std::vector<ValueDescriptor::ptr_t>& elements)
-    : m_element_descriptors(elements)
-    {
-        std::vector<ValueType::ptr_t> types;
-        for(auto elt : elements){
-            types.push_back(elt->value_type());
-        }
-        m_type = TupleType::make(types);
-    }
-
-    static ptr_t make(const std::vector<ValueDescriptor::ptr_t>& elements){
-        return ptr_t::make_shared(elements);
-    }
-
-    ValueType::ptr_t value_type() const override {
-        return m_type;
-    }
-protected:
-    TupleType::ptr_t m_type;
-    std::vector<ValueDescriptor::ptr_t> m_element_descriptors;
-};
-
-} // End of NGRAPH
+}

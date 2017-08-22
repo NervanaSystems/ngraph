@@ -1,3 +1,17 @@
+// ----------------------------------------------------------------------------
+// Copyright 2017 Nervana Systems Inc.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// ----------------------------------------------------------------------------
+
 #pragma once
 
 #include <memory>
@@ -7,67 +21,47 @@
 
 namespace ngraph {
 
-class TensorViewDescriptor;
-class TupleDescriptor;
+    class Shape
+    {
+    public:
+        Shape(const std::initializer_list<size_t>& sizes)
+        : m_sizes(sizes)
+        {}
 
-using value_size_t = size_t;
+    protected:
+        std::vector<size_t> m_sizes;
+    };
 
-class Shape
-{
-public:
-    Shape(const std::initializer_list<value_size_t>& sizes)
-    : m_sizes(sizes)
-    {}
+    // ValueType is
+    //   TensorViewType
+    //   | TupleType(ValueType[])
+    class ValueType
+    {
+    };
 
-protected:
-    std::vector<value_size_t> m_sizes;
-};
+    class TensorViewType : public ValueType
+    {
+    public:
+        TensorViewType(const ElementType& element_type, const Shape& shape)
+        : m_element_type(element_type)
+        , m_shape(shape)
+        {}
 
-// Base type for ngraph values
-class ValueType
-{
-public:
-    using ptr_t = std::shared_ptr<ValueType>;
-};
+    protected:
+        TensorViewType(const TensorViewType&) = delete;
+        const ElementType& m_element_type;
+        Shape m_shape;
+    };
 
-class TensorViewType : public ValueType
-{
-public:
-    using ptr_t = std::shared_ptr<TensorViewType>;
-    using descriptor_t = TensorViewDescriptor;
+    class TupleType : public ValueType
+    {
+    public:
 
-    TensorViewType(const ElementType& element_type, const Shape& shape)
-    : m_element_type(element_type)
-    , m_shape(shape)
-    {}
+        TupleType(const std::vector<std::shared_ptr<ValueType>>& element_types)
+        : m_element_types(element_types)
+        {}
 
-    static ptr_t make(const ElementType& element_type, const Shape& shape){
-        return ptr_t::make_shared(element_type, shape);
-    }
-
-protected:
-    TensorViewType(const TensorViewType&) = delete;
-    const ElementType& m_element_type;
-    Shape m_shape;
-};
-
-class TupleType : public ValueType
-{
-public:
-    using ptr_t = std::shared_ptr<TupleType>;
-    using descriptor_t = TupleDescriptor;
-
-    TupleType(const std::vector<ValueType::ptr_t>& element_types)
-    : m_element_types(element_types)
-    {}
-
-    static ptr_t make(const std::vector<ValueType::ptr_t>& element_types){
-        return ptr_t::make_shared(element_types);
-    }
-
-protected:
-    // Is this name too similar to TensorViewType.to m_element_type?
-    std::vector<ValueType::ptr_t> m_element_types;
-};
-
-} // End of ngraph
+    protected:
+        std::vector<std::shared_ptr<ValueType>> m_element_types;
+    };
+}

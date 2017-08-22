@@ -1,13 +1,18 @@
+// ----------------------------------------------------------------------------
+// Copyright 2017 Nervana Systems Inc.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// ----------------------------------------------------------------------------
+
 #include "values/function.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-Parameter::ptr_t Parameter::make(Function& function, size_t index, const ValueType::ptr_t& output_type){
-    return ptr_t::make_shared(function, index, output_type);
-}
-
-Function::ptr_t Function::make(const ValueType::ptr_t& return_type, const std::vector<ValueType::ptr_t>& argument_types){
-    return ptr_t::make_shared(return_type, argument_types);
-}
-
