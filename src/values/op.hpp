@@ -17,15 +17,67 @@
 #include <memory>
 
 #include "values/descriptor.hpp"
+#include "values/node.hpp"
 #include "values/type.hpp"
 
 namespace ngraph
 {
-    class Call : public Node
+    class Op
     {
-    protected:
-        std::vector<std::shared_ptr<Node>> m_args;
-        
     };
 
+    class Broadcast : public Op
+    {
+        class BroadcastCall : public Call
+        {
+            friend class Broadcast;
+
+        public:
+            BroadcastCall(const std::shared_ptr<Node>& arg, size_t axis)
+                : Call({arg})
+                , m_axis(axis)
+            {
+            }
+
+        protected:
+            size_t m_axis;
+        };
+
+    public:
+        std::shared_ptr<BroadcastCall> operator()(const std::shared_ptr<Node>& tensor, size_t axis)
+        {
+            return std::make_shared<BroadcastCall>(tensor, axis);
+        }
+    };
+
+    namespace op
+    {
+        extern Broadcast broadcast;
+    }
+
+    class Dot : public Op
+    {
+        class DotCall : public Call
+        {
+            friend class Dot;
+
+        public:
+            DotCall(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Call({arg0, arg1})
+            {
+            }
+        };
+
+    public:
+        std::shared_ptr<DotCall> operator()(const std::shared_ptr<Node>& arg0,
+                                            const std::shared_ptr<Node>& arg1)
+        {
+            return std::make_shared<DotCall>(arg0, arg1);
+        }
+    };
+
+    namespace op
+    {
+        extern Dot dot;
+    }
 }

@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include "gtest/gtest.h"
+
 #include "values/type.hpp"
 #include "values/function.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-void build_simple_graph()
+TEST(graph, build_simple)
 {
     // Function with 4 parameters
     auto cluster_0 = make_shared<Function>(4);
@@ -29,11 +31,14 @@ void build_simple_graph()
     cluster_0->parameter(3)->type(element_type_float, Shape {Shape {32, 7}});
     auto arg3 = cluster_0->parameter(3);
     // call broadcast op on arg3, broadcasting on axis 1.
-    //auto broadcast_1 = op::broadcast(arg3, 1);
+    auto broadcast_1 = op::broadcast(arg3, 1);
     auto arg2 = cluster_0->parameter(2);
     auto arg0 = cluster_0->parameter(0);
     // call dot op
-    //auto dot = op::dot(arg2, arg0);
+    auto dot = op::dot(arg2, arg0);
+    ASSERT_EQ(dot->dependents()[0], arg2);
     // Function returns tuple of dot and broadcast_1.
-    //cluster_0.result->value(op::tuple(dot, broadcast_1));
+    cluster_0->result()->value(dot);
+
+    ASSERT_EQ(cluster_0->result()->value(), dot);
 }

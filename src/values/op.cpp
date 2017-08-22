@@ -12,14 +12,9 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "values/op.hpp"
 
-#include <algorithm>
-#include <memory>
-#include <vector>
+using namespace ngraph;
 
-#include "values/type.hpp"
-
-namespace ngraph
-{
-}
+Broadcast ngraph::op::broadcast{};
+Dot       ngraph::op::dot{};

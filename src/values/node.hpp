@@ -20,34 +20,39 @@
 
 namespace ngraph
 {
-
     class Node
     {
     public:
-        Node(std::shared_ptr<ValueType> type=0)
-        : m_type(type)
-        {}
-
-        virtual ~Node(){}
-        virtual std::vector<std::shared_ptr<Node>> dependents() {
-            return m_parameters;
+        Node(const std::vector<std::shared_ptr<Node>>& arguments,
+             std::shared_ptr<ValueType>                type = 0)
+            : m_arguments(arguments)
+            , m_type(type)
+        {
         }
 
-        void type(const std::shared_ptr<ValueType>& t){
-            m_type = t;
-        }
+        virtual ~Node() {}
+        virtual std::vector<std::shared_ptr<Node>> dependents() { return m_arguments; }
 
-        void type(const ElementType& element_type, const Shape& shape){
+        void type(const std::shared_ptr<ValueType>& t) { m_type = t; }
+
+        void type(const ElementType& element_type, const Shape& shape)
+        {
             m_type = std::make_shared<TensorViewType>(element_type, shape);
         }
 
-        std::shared_ptr<ValueType> type() const {
-            return m_type;
-        }
+        std::shared_ptr<ValueType> type() const { return m_type; }
 
     protected:
-        std::vector<std::shared_ptr<Node>> m_parameters;
-        std::shared_ptr<ValueType> m_type;
+        std::vector<std::shared_ptr<Node>> m_arguments;
+        std::shared_ptr<ValueType>         m_type;
     };
 
+    class Call : public Node
+    {
+    protected:
+        Call(const std::vector<std::shared_ptr<Node>>& arguments)
+            : Node(arguments, 0)
+        {
+        }
+    };
 }

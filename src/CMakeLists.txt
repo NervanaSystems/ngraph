@@ -29,6 +29,7 @@ set (SRC
     transformers/op_graph.cpp
 
     values/function.cpp
+    values/op.cpp
 )
 
 # NOTE: We'd prefer to only have the .cpp files *in* the 'transformers' directory be compiled
