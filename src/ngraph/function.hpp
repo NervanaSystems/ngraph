@@ -60,4 +60,4 @@ namespace ngraph
         Result                      m_result;
     };
 
-} // end namespace ngraph
+}

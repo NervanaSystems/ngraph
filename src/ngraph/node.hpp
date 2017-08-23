@@ -28,8 +28,8 @@ namespace ngraph
         using ptr = std::shared_ptr<Node>;
 
         Node(const std::vector<Node::ptr>& arguments, ValueType::ptr type = 0)
-            : m_arguments(arguments)
-            , TypedValueMixin(type)
+            : TypedValueMixin(type)
+            , m_arguments(arguments)
         {
         }
 
