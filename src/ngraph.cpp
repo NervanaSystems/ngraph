@@ -11,29 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
-
-#include <chrono>
-#include <iostream>
-
-#include "gtest/gtest.h"
+#include "ngraph.hpp"
 #include "log.hpp"
 
-using namespace std;
-
-int main(int argc, char** argv)
+NGraph* create_ngraph_object()
 {
-    const char*   exclude = "--gtest_filter=-benchmark.*";
-    vector<char*> argv_vector;
-    argv_vector.push_back(argv[0]);
-    argv_vector.push_back((char*)exclude);
-    for (int i = 1; i < argc; i++)
-    {
-        argv_vector.push_back(argv[i]);
-    }
-    argc++;
+    return new NGraph();
+}
 
-    ::testing::InitGoogleTest(&argc, argv_vector.data());
-    int rc = RUN_ALL_TESTS();
+void destroy_ngraph_object(NGraph* pObj)
+{
+    delete pObj;
+}
 
-    return rc;
+void NGraph::add_params(const std::vector<std::string>& paramList)
+{
+    INFO << "Adding parameters";
+    m_params.insert(m_params.end(), paramList.begin(), paramList.end());
+}
+
+const std::vector<std::string>& NGraph::get_params() const
+{
+    return m_params;
 }
