@@ -14,56 +14,30 @@
 
 #pragma once
 
-#include <memory>
 #include <vector>
-
-#include "element_type.hpp"
 
 namespace ngraph
 {
+    /**
+     ** Holds the shape of a tensor view.
+     **/
     class Shape
     {
     public:
+        /**
+         ** \param sizes A sequence of sizes.
+         **/
         Shape(const std::initializer_list<size_t>& sizes)
             : m_sizes(sizes)
         {
         }
 
+        /**
+         ** Conversion to a vector of sizes.
+         **/
+        operator const std::vector<size_t>&() const { return m_sizes; }
+
     protected:
         std::vector<size_t> m_sizes;
-    };
-
-    // ValueType is
-    //   TensorViewType
-    //   | TupleType(ValueType[])
-    class ValueType
-    {
-    };
-
-    class TensorViewType : public ValueType
-    {
-    public:
-        TensorViewType(const ElementType& element_type, const Shape& shape)
-            : m_element_type(element_type)
-            , m_shape(shape)
-        {
-        }
-
-    protected:
-        TensorViewType(const TensorViewType&) = delete;
-        const ElementType& m_element_type;
-        Shape              m_shape;
-    };
-
-    class TupleType : public ValueType
-    {
-    public:
-        TupleType(const std::vector<std::shared_ptr<ValueType>>& element_types)
-            : m_element_types(element_types)
-        {
-        }
-
-    protected:
-        std::vector<std::shared_ptr<ValueType>> m_element_types;
     };
 }

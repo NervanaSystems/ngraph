@@ -18,6 +18,6 @@
 
 #include "gtest/gtest.h"
 
-#include "element_type.hpp"
+#include "ngraph/element_type.hpp"
 
 using namespace ngraph;

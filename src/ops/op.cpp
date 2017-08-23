@@ -12,9 +12,20 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "values/op.hpp"
+#include "ngraph/ngraph.hpp"
 
 using namespace ngraph;
 
 Broadcast ngraph::op::broadcast{};
-Dot       ngraph::op::dot{};
+
+Op& ngraph::Broadcast::BroadcastCall::op() const
+{
+    return op::broadcast;
+}
+
+Dot ngraph::op::dot{};
+
+Op& ngraph::Dot::DotCall::op() const
+{
+    return op::dot;
+}

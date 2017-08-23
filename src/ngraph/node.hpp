@@ -16,41 +16,37 @@
 
 #include <vector>
 
-#include "values/type.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
-    class Node
+    class Op;
+
+    class Node : public TypedValueMixin
     {
     public:
-        Node(const std::vector<std::shared_ptr<Node>>& arguments,
-             std::shared_ptr<ValueType>                type = 0)
+        using ptr = std::shared_ptr<Node>;
+
+        Node(const std::vector<Node::ptr>& arguments, ValueType::ptr type = 0)
             : m_arguments(arguments)
-            , m_type(type)
+            , TypedValueMixin(type)
         {
         }
 
         virtual ~Node() {}
-        virtual std::vector<std::shared_ptr<Node>> dependents() { return m_arguments; }
-
-        void type(const std::shared_ptr<ValueType>& t) { m_type = t; }
-
-        void type(const ElementType& element_type, const Shape& shape)
-        {
-            m_type = std::make_shared<TensorViewType>(element_type, shape);
-        }
-
-        std::shared_ptr<ValueType> type() const { return m_type; }
+        virtual std::vector<Node::ptr> dependents() { return m_arguments; }
 
     protected:
-        std::vector<std::shared_ptr<Node>> m_arguments;
-        std::shared_ptr<ValueType>         m_type;
+        std::vector<Node::ptr> m_arguments;
     };
 
     class Call : public Node
     {
+    public:
+        virtual Op& op() const = 0;
+
     protected:
-        Call(const std::vector<std::shared_ptr<Node>>& arguments)
+        Call(const std::vector<Node::ptr>& arguments)
             : Node(arguments, 0)
         {
         }

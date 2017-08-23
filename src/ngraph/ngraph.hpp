@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+//
+// The public API for ngraph++
+//
+
 #pragma once
 
-#include <algorithm>
-#include <memory>
-#include <vector>
-
-#include "values/type.hpp"
-
-namespace ngraph
-{
-}
+#include "ngraph/element_type.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/type.hpp"

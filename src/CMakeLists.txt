@@ -15,12 +15,12 @@ get_filename_component( NGRAPH_INCLUDE_DIR . ABSOLUTE)
 set(NGRAPH_INCLUDE_DIR "${NGRAPH_INCLUDE_DIR}" PARENT_SCOPE)
 
 set (SRC
-    element_type.cpp
     tree.cpp
     util.cpp
     log.cpp
-    values/function.cpp
-    values/op.cpp
+    ops/function.cpp
+    ops/op.cpp
+    types/element_type.cpp
 )
 
 # NOTE: We'd prefer to only have the .cpp files *in* the 'transformers' directory be compiled

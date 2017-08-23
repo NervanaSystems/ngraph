@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include "values/node.hpp"
-#include "values/op.hpp"
-#include "values/type.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
@@ -25,53 +25,39 @@ namespace ngraph
     class Parameter : public Node
     {
     public:
-        Parameter(Function& function, size_t index, const std::shared_ptr<ValueType>& type)
-            : Node({}, type)
-            , m_function(function)
-            , m_index(index)
-        {
-        }
+        using ptr = std::shared_ptr<Parameter>;
+
+        Parameter(Function& function, size_t index);
 
     protected:
         Function& m_function;
         size_t    m_index;
     };
 
-    class Result
+    class Result : public TypedValueMixin
     {
     public:
-        void type(const std::shared_ptr<ValueType>& t) { m_type = t; }
+        using ptr = std::shared_ptr<Result>;
 
-        void type(const ElementType& element_type, const Shape& shape)
-        {
-            m_type = std::make_shared<TensorViewType>(element_type, shape);
-        }
-
-        std::shared_ptr<ValueType> type() const { return m_type; }
-
-        std::shared_ptr<Node> value() const { return m_value; }
-        void                  value(const std::shared_ptr<Node>& value) { m_value = value; }
+        Node::ptr value() const { return m_value; }
+        void      value(const Node::ptr& value) { m_value = value; }
 
     protected:
-        std::shared_ptr<ValueType> m_type;
-        std::shared_ptr<Node>      m_value;
+        Node::ptr m_value;
     };
 
-    class Function
+    class Function : public Op
     {
     public:
-        Function(size_t n_parameters)
-            : m_parameters(n_parameters)
-        {
-        }
+        Function(size_t n_parameters);
 
         Result* result() { return &m_result; }
 
         std::shared_ptr<Parameter> parameter(size_t i) { return m_parameters[i]; }
 
     protected:
-        std::vector<std::shared_ptr<Parameter>> m_parameters;
-        Result                                  m_result;
+        std::vector<Parameter::ptr> m_parameters;
+        Result                      m_result;
     };
 
 } // end namespace ngraph

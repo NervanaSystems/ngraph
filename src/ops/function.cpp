@@ -12,7 +12,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "values/function.hpp"
+#include "ngraph/ngraph.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+Parameter::Parameter(Function& function, size_t index)
+    : Node({})
+    , m_function(function)
+    , m_index(index)
+{
+}
+
+Function::Function(size_t n_parameters)
+    : m_parameters(n_parameters)
+{
+    for (int i = 0; i < n_parameters; i++)
+    {
+        m_parameters[i] = Parameter::ptr::make_shared(*this, i);
+    }
+}

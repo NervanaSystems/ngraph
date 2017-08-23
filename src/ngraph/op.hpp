@@ -16,9 +16,8 @@
 
 #include <memory>
 
-#include "values/descriptor.hpp"
-#include "values/node.hpp"
-#include "values/type.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
@@ -33,18 +32,20 @@ namespace ngraph
             friend class Broadcast;
 
         public:
-            BroadcastCall(const std::shared_ptr<Node>& arg, size_t axis)
+            BroadcastCall(const Node::ptr& arg, size_t axis)
                 : Call({arg})
                 , m_axis(axis)
             {
             }
+
+            Op& op() const override;
 
         protected:
             size_t m_axis;
         };
 
     public:
-        std::shared_ptr<BroadcastCall> operator()(const std::shared_ptr<Node>& tensor, size_t axis)
+        std::shared_ptr<BroadcastCall> operator()(const Node::ptr& tensor, size_t axis)
         {
             return std::make_shared<BroadcastCall>(tensor, axis);
         }
@@ -62,15 +63,16 @@ namespace ngraph
             friend class Dot;
 
         public:
-            DotCall(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+            DotCall(const std::shared_ptr<Node>& arg0, const Node::ptr& arg1)
                 : Call({arg0, arg1})
             {
             }
+
+            Op& op() const override;
         };
 
     public:
-        std::shared_ptr<DotCall> operator()(const std::shared_ptr<Node>& arg0,
-                                            const std::shared_ptr<Node>& arg1)
+        std::shared_ptr<DotCall> operator()(const Node::ptr& arg0, const Node::ptr& arg1)
         {
             return std::make_shared<DotCall>(arg0, arg1);
         }

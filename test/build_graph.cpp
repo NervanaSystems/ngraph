@@ -14,31 +14,31 @@
 
 #include "gtest/gtest.h"
 
-#include "values/type.hpp"
-#include "values/function.hpp"
+#include "ngraph/ngraph.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 TEST(graph, build_simple)
 {
-    // // Function with 4 parameters
-    // auto cluster_0 = make_shared<Function>(4);
-    // cluster_0->result()->type(element_type_float, Shape {32, 3});
-    // cluster_0->parameter(0)->type(element_type_float, Shape {Shape {7, 3}});
-    // cluster_0->parameter(1)->type(element_type_float, Shape {Shape {3}});
-    // cluster_0->parameter(2)->type(element_type_float, Shape {Shape {32, 7}});
-    // cluster_0->parameter(3)->type(element_type_float, Shape {Shape {32, 7}});
-    // auto arg3 = cluster_0->parameter(3);
-    // // call broadcast op on arg3, broadcasting on axis 1.
-    // auto broadcast_1 = op::broadcast(arg3, 1);
-    // auto arg2 = cluster_0->parameter(2);
-    // auto arg0 = cluster_0->parameter(0);
-    // // call dot op
-    // auto dot = op::dot(arg2, arg0);
-    // ASSERT_EQ(dot->dependents()[0], arg2);
-    // // Function returns tuple of dot and broadcast_1.
-    // cluster_0->result()->value(dot);
+    // Function with 4 parameters
+    auto cluster_0 = make_shared<Function>(4);
+    cluster_0->result()->type(element_type_float, {32, 3});
+    cluster_0->parameter(0)->type(element_type_float, {7, 3});
+    cluster_0->parameter(1)->type(element_type_float, {3});
+    cluster_0->parameter(2)->type(element_type_float, {32, 7});
+    cluster_0->parameter(3)->type(element_type_float, {32, 7});
+    auto arg3 = cluster_0->parameter(3);
+    // call broadcast op on arg3, broadcasting on axis 1.
+    auto broadcast_1 = op::broadcast(arg3, 1);
+    auto arg2 = cluster_0->parameter(2);
+    auto arg0 = cluster_0->parameter(0);
+    // call dot op
+    auto dot = op::dot(arg2, arg0);
+    ASSERT_EQ(dot->dependents()[0], arg2);
+    ASSERT_EQ(dot->dependents()[1], arg0);
+    // Function returns tuple of dot and broadcast_1.
+    cluster_0->result()->value(dot);
 
-    // ASSERT_EQ(cluster_0->result()->value(), dot);
+    ASSERT_EQ(cluster_0->result()->value(), dot);
 }
