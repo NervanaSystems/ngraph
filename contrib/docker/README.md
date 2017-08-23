@@ -25,37 +25,23 @@ In order to use the make targets, you will need to do the following:
 
 The _make targets_ are designed to provide easy commands to run actions using the docker image.  All _make targets_ should be issued on the host OS, and _not_ in a docker image.
 
-* In general, you simply need to run the command **`make check_cpu`**.  This first makes the `build_ngraph_cpp_cpu` target as a dependency.  Then it makes the `check_cpu` target, which will build NGraph-Cpp and run unit testing.  Please keep in mind that `make check_cpu` does not work when your working directory is in an NFS filesystem that uses `root squash` (see **Notes** section below).
+* In general, you simply need to run the command **`make check_cpu`**.  This first makes the `build_ngraph_cpp_cpu` target as a dependency.  Then it makes the `check_cpu` target, which will build NGraph-Cpp using _cmake_ and _make_ and then run unit testing.  Please keep in mind that `make check_cpu` does not work when your working directory is in an NFS filesystem that uses _root squash_ (see **Notes** section below).
 
-* You can also run the command **`make shell`** to start an interactive bash shell inside the docker image.  While this is not required for normal builds and unit testing, it allows you to run interactively within the docker image with the cloned repo mounted.  Again, `build_ngraph_cpp_cpu` is made first as a dependency.  Please keep in mind that `make shell` does not work when your working directory is in an NFS filesystem that uses `root squash` (see **Notes** section below).
+* You can also run the command **`make shell`** to start an interactive bash shell inside the docker image.  While this is not required for normal builds and unit testing, it allows you to run interactively within the docker image with the cloned repo mounted.  Again, `build_ngraph_cpp_cpu` is made first as a dependency.  Please keep in mind that `make shell` does not work when your working directory is in an NFS filesystem that uses _root squash_ (see **Notes** section below).
 
 * Running the command **`make build_ngraph_cpp_cpu`** is also available, if you simply want to build the docker image.  This target does work properly when your working directory is in an NFS filesystem.
 
-Note that all operations performed inside the the docker image are run as **root**.  This has unfornate side effects if you run a make target that does operations inside the docker image, while your working directory is in an NFS filesystem that uses _root squash_ (see **Notes** below).
-
-The available _make targets_ are:
-
-#### `make build_ngraph_cpp_cpu`
-
-Build a docker image of the _reference-OS_ used to build NGraph-Cpp and run unit tests.
-
-#### `make check_cpu`
-
-Build NGraph-Cpp in the _reference-OS_ docker image.  The results are built in the cloned repo by mounting it into the docker image.  This target will set up a cmake BUILD directory at the top level of the cloned repo, run _cmake_ and _make_ in it, and finally run unit tests - all while in the docker image.
-
-#### `make shell`
-
-This target will start an interactive bash shell in the _reference-OS_ docker image, with a mount to the cloned repo available in the docker image.
+Note that all operations performed inside the the docker image are run as **root**.  This has unfortunate side effects if you run a make target that does operations inside the docker image, while your working directory is in an NFS filesystem that uses _root squash_ (see **Notes** below).
 
 ## Helper Scripts
 
 These helper scripts are included for use in the `Makefile` and automated (Jenkins) jobs.  **These scripts should _not_ be called directly unless you understand what they do.**
 
-### `chown_files.sh`
+#### `chown_files.sh`
 
 Used in the `Makefile` to change the ownership of files while running _inside the docker image_.  This is used to fix a problem with docker where files written in a mounted filesystem, from within the docker image, will end up being owned by root in the host OS.  This leads to problems with Jenkins not being able to clean up its own job directories if docker images are used.
 
-### `docker_cleanup.sh`
+#### `docker_cleanup.sh`
 
 A helper script for Jenkins jobs to clean up old exited docker containers and `ngraph_*` docker images.
 
