@@ -70,5 +70,4 @@ namespace ngraph
         std::vector<Parameter::ptr> m_parameters;
         Result                      m_result;
     };
-
 }

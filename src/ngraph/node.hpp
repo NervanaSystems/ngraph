@@ -22,6 +22,11 @@ namespace ngraph
 {
     class Op;
 
+    /**
+     ** Nodes are the backbone of the graph of Value dataflow. Every node has
+     ** zero or more nodes as arguments and one value, which is either a tensor
+     ** view or a (possibly empty) tuple of values.
+     **/
     class Node : public TypedValueMixin
     {
     public:
@@ -33,11 +38,10 @@ namespace ngraph
         {
         }
 
-        virtual ~Node() {}
-        virtual std::vector<Node::ptr> dependents() { return m_arguments; }
+        const std::vector<Node::ptr> arguments() const { return m_arguments; }
+        std::vector<Node::ptr>       arguments() { return m_arguments; }
 
     protected:
         std::vector<Node::ptr> m_arguments;
     };
-
 }

@@ -16,7 +16,6 @@
 
 using namespace ngraph;
 
-Broadcast::ref ngraph::op::broadcast = *std::make_shared<Broadcast>();
+decltype(*std::shared_ptr<Broadcast>()) ngraph::op::broadcast = *std::make_shared<Broadcast>();
 
-Dot::ref ngraph::op::dot = *std::make_shared<Dot>();
-
+decltype(*std::shared_ptr<Dot>()) ngraph::op::dot = *std::make_shared<Dot>();
