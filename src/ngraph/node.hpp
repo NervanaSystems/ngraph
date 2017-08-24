@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <vector>
 #include <set>
+#include <vector>
 
 #include "ngraph/type.hpp"
 
@@ -31,7 +31,6 @@ namespace ngraph
     class Node : public TypedValueMixin
     {
     public:
-
         using ptr = std::shared_ptr<Node>;
 
         Node(const std::vector<Node::ptr>& arguments, ValueType::ptr type = nullptr)
@@ -39,7 +38,8 @@ namespace ngraph
             , m_arguments(arguments)
         {
             // Add this node as a user of each argument.
-            for(auto node : m_arguments){
+            for (auto node : m_arguments)
+            {
                 node->m_users.insert(node.get());
             }
         }
@@ -52,6 +52,6 @@ namespace ngraph
 
     protected:
         std::vector<Node::ptr> m_arguments;
-        std::multiset<Node*> m_users;
+        std::multiset<Node*>   m_users;
     };
 }

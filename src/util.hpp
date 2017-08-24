@@ -83,10 +83,10 @@ namespace ngraph
     }
 
     size_t hash_combine(const std::vector<size_t>& list);
-    void dump(std::ostream& out, const void*, size_t);
+    void   dump(std::ostream& out, const void*, size_t);
 
-    std::string to_lower(const std::string& s);
-    std::string trim(const std::string& s);
+    std::string              to_lower(const std::string& s);
+    std::string              trim(const std::string& s);
     std::vector<std::string> split(const std::string& s, char delimiter, bool trim = false);
 
     class stopwatch
@@ -148,6 +148,7 @@ namespace ngraph
         size_t get_total_milliseconds() const { return get_total_nanoseconds() / 1e6; }
         size_t get_total_microseconds() const { return get_total_nanoseconds() / 1e3; }
         size_t get_total_nanoseconds() const { return m_total_time.count(); }
+
     private:
         std::chrono::high_resolution_clock                          m_clock;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_start_time;

@@ -50,8 +50,15 @@ namespace ngraph
     {
     };
 
+    namespace op
+    {
+        std::shared_ptr<Node> broadcast(const Node::ptr& tensor, size_t axis);
+    }
+
     class Broadcast : public Op, public std::enable_shared_from_this<Broadcast>
     {
+        friend std::shared_ptr<Node> op::broadcast(const Node::ptr& tensor, size_t axis);
+
     protected:
         class BroadcastCall : public Call
         {
@@ -68,29 +75,17 @@ namespace ngraph
             size_t m_axis;
         };
 
-    public:
-        std::shared_ptr<BroadcastCall> operator()(const Node::ptr& tensor, size_t axis)
-        {
-            return std::make_shared<BroadcastCall>(shared_from_this(), tensor, axis);
-        }
+        static std::shared_ptr<Broadcast> s_op;
     };
 
     namespace op
     {
-        extern decltype(*std::shared_ptr<Broadcast>()) broadcast;
+        std::shared_ptr<Node> dot(const Node::ptr& arg0, const Node::ptr& arg1);
     }
 
     class Dot : public Op, public std::enable_shared_from_this<Dot>
     {
-    public:
-        Call::ptr operator()(const Node::ptr& arg0, const Node::ptr& arg1)
-        {
-            return std::make_shared<Call>(shared_from_this(), std::vector<Node::ptr>{arg0, arg1});
-        }
+        friend std::shared_ptr<Node> op::dot(const Node::ptr& arg0, const Node::ptr& arg1);
+        static std::shared_ptr<Dot>  s_op;
     };
-
-    namespace op
-    {
-        extern decltype(*std::shared_ptr<Dot>()) dot;
-    }
 }

@@ -15,7 +15,18 @@
 #include "ngraph/ngraph.hpp"
 
 using namespace ngraph;
+using namespace std;
 
-decltype(*std::shared_ptr<Broadcast>()) ngraph::op::broadcast = *std::make_shared<Broadcast>();
+shared_ptr<Broadcast> ngraph::Broadcast::s_op = make_shared<ngraph::Broadcast>();
 
-decltype(*std::shared_ptr<Dot>()) ngraph::op::dot = *std::make_shared<Dot>();
+shared_ptr<Node> ngraph::op::broadcast(const Node::ptr& tensor, size_t axis)
+{
+    return make_shared<Broadcast::BroadcastCall>(Broadcast::s_op->shared_from_this(), tensor, axis);
+}
+
+shared_ptr<Dot> ngraph::Dot::s_op = make_shared<ngraph::Dot>();
+
+shared_ptr<Node> ngraph::op::dot(const Node::ptr& arg0, const Node::ptr& arg1)
+{
+    return make_shared<Call>(Dot::s_op->shared_from_this(), std::vector<Node::ptr>{arg0, arg1});
+}
