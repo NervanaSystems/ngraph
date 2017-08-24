@@ -12,28 +12,15 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <chrono>
-#include <iostream>
+//
+// The public API for ngraph++
+//
 
-#include "gtest/gtest.h"
-#include "log.hpp"
+#pragma once
 
-using namespace std;
-
-int main(int argc, char** argv)
-{
-    const char*   exclude = "--gtest_filter=-benchmark.*";
-    vector<char*> argv_vector;
-    argv_vector.push_back(argv[0]);
-    argv_vector.push_back((char*)exclude);
-    for (int i = 1; i < argc; i++)
-    {
-        argv_vector.push_back(argv[i]);
-    }
-    argc++;
-
-    ::testing::InitGoogleTest(&argc, argv_vector.data());
-    int rc = RUN_ALL_TESTS();
-
-    return rc;
-}
+#include "ngraph/element_type.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/type.hpp"

@@ -12,28 +12,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <chrono>
-#include <iostream>
-
-#include "gtest/gtest.h"
-#include "log.hpp"
+#include "ngraph/ngraph.hpp"
 
 using namespace std;
+using namespace ngraph;
 
-int main(int argc, char** argv)
+Parameter::Parameter(Function& function, size_t index)
+    : Node({})
+    , m_function(function)
+    , m_index(index)
 {
-    const char*   exclude = "--gtest_filter=-benchmark.*";
-    vector<char*> argv_vector;
-    argv_vector.push_back(argv[0]);
-    argv_vector.push_back((char*)exclude);
-    for (int i = 1; i < argc; i++)
+}
+
+Function::Function(size_t n_parameters)
+    : m_parameters(n_parameters)
+{
+    for (int i = 0; i < n_parameters; i++)
     {
-        argv_vector.push_back(argv[i]);
+        m_parameters[i] = std::make_shared<Parameter>(*this, i);
     }
-    argc++;
-
-    ::testing::InitGoogleTest(&argc, argv_vector.data());
-    int rc = RUN_ALL_TESTS();
-
-    return rc;
 }

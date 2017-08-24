@@ -19,16 +19,17 @@
 class NGraph
 {
 public:
-    void add_params(const std::vector<std::string>& paramList);
+    void                            add_params(const std::vector<std::string>& paramList);
     const std::vector<std::string>& get_params() const;
     std::string                     get_name() const { return "NGraph Implementation Object"; }
+
 private:
     std::vector<std::string> m_params;
 };
 
 // Factory methods
 extern "C" NGraph* create_ngraph_object();
-extern "C" void destroy_ngraph_object(NGraph* pObj);
+extern "C" void    destroy_ngraph_object(NGraph* pObj);
 
 // FUnction pointers to the factory methods
 typedef NGraph* (*CreateNGraphObjPfn)();

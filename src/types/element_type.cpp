@@ -15,7 +15,7 @@
 #include <cassert>
 #include <cmath>
 
-#include "element_type.hpp"
+#include "ngraph/element_type.hpp"
 
 const ngraph::ElementType element_type_float    = ngraph::ElementType(32, true, true, "float");
 const ngraph::ElementType element_type_int8_t   = ngraph::ElementType(8, false, true, "int8_t");

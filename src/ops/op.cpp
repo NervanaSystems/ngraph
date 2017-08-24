@@ -12,28 +12,10 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <chrono>
-#include <iostream>
+#include "ngraph/ngraph.hpp"
 
-#include "gtest/gtest.h"
-#include "log.hpp"
+using namespace ngraph;
 
-using namespace std;
+decltype(*std::shared_ptr<Broadcast>()) ngraph::op::broadcast = *std::make_shared<Broadcast>();
 
-int main(int argc, char** argv)
-{
-    const char*   exclude = "--gtest_filter=-benchmark.*";
-    vector<char*> argv_vector;
-    argv_vector.push_back(argv[0]);
-    argv_vector.push_back((char*)exclude);
-    for (int i = 1; i < argc; i++)
-    {
-        argv_vector.push_back(argv[i]);
-    }
-    argc++;
-
-    ::testing::InitGoogleTest(&argc, argv_vector.data());
-    int rc = RUN_ALL_TESTS();
-
-    return rc;
-}
+decltype(*std::shared_ptr<Dot>()) ngraph::op::dot = *std::make_shared<Dot>();

@@ -12,28 +12,32 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <chrono>
-#include <iostream>
+#pragma once
 
-#include "gtest/gtest.h"
-#include "log.hpp"
+#include <vector>
 
-using namespace std;
-
-int main(int argc, char** argv)
+namespace ngraph
 {
-    const char*   exclude = "--gtest_filter=-benchmark.*";
-    vector<char*> argv_vector;
-    argv_vector.push_back(argv[0]);
-    argv_vector.push_back((char*)exclude);
-    for (int i = 1; i < argc; i++)
+    /**
+     ** Holds the shape of a tensor view.
+     **/
+    class Shape
     {
-        argv_vector.push_back(argv[i]);
-    }
-    argc++;
+    public:
+        /**
+         ** \param sizes A sequence of sizes.
+         **/
+        Shape(const std::initializer_list<size_t>& sizes)
+            : m_sizes(sizes)
+        {
+        }
 
-    ::testing::InitGoogleTest(&argc, argv_vector.data());
-    int rc = RUN_ALL_TESTS();
+        /**
+         ** Conversion to a vector of sizes.
+         **/
+        operator const std::vector<size_t>&() const { return m_sizes; }
 
-    return rc;
+    protected:
+        std::vector<size_t> m_sizes;
+    };
 }
