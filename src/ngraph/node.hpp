@@ -27,7 +27,7 @@ namespace ngraph
     public:
         using ptr = std::shared_ptr<Node>;
 
-        Node(const std::vector<Node::ptr>& arguments, ValueType::ptr type = 0)
+        Node(const std::vector<Node::ptr>& arguments, ValueType::ptr type = nullptr)
             : TypedValueMixin(type)
             , m_arguments(arguments)
         {

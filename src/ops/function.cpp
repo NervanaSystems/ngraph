@@ -29,6 +29,6 @@ Function::Function(size_t n_parameters)
 {
     for (int i = 0; i < n_parameters; i++)
     {
-        m_parameters[i] = Parameter::ptr::make_shared(*this, i);
+        m_parameters[i] = std::make_shared<Parameter>(*this, i);
     }
 }

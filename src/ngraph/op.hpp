@@ -36,7 +36,7 @@ namespace ngraph
         Op::ptr op() const { return m_op; }
 
         Call(const Op::ptr& op, const std::vector<Node::ptr>& arguments)
-            : Node(arguments, 0)
+            : Node(arguments, nullptr)
             , m_op(op)
         {
         }
@@ -89,7 +89,7 @@ namespace ngraph
     public:
         Call::ptr operator()(const Node::ptr& arg0, const Node::ptr& arg1)
         {
-            return Call::ptr::make_shared(shared_from_this(), std::vector<Node::ptr>{arg0, arg1});
+            return std::make_shared<Call>(shared_from_this(), std::vector<Node::ptr>{arg0, arg1});
         }
     };
 

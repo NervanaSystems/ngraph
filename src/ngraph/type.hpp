@@ -99,7 +99,7 @@ namespace ngraph
     class TypedValueMixin
     {
     public:
-        TypedValueMixin(const ValueType::ptr& type = 0)
+        TypedValueMixin(const ValueType::ptr& type = nullptr)
             : m_type(type)
         {
         }
@@ -117,7 +117,7 @@ namespace ngraph
          **/
         void type(const ElementType& element_type, const Shape& shape)
         {
-            m_type = TensorViewType::ptr::make_shared(element_type, shape);
+            m_type = std::make_shared<TensorViewType>(element_type, shape);
         }
 
         /**
