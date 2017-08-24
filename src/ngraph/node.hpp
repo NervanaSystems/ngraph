@@ -40,15 +40,4 @@ namespace ngraph
         std::vector<Node::ptr> m_arguments;
     };
 
-    class Call : public Node
-    {
-    public:
-        virtual Op& op() const = 0;
-
-    protected:
-        Call(const std::vector<Node::ptr>& arguments)
-            : Node(arguments, 0)
-        {
-        }
-    };
 }

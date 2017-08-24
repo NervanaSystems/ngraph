@@ -16,16 +16,7 @@
 
 using namespace ngraph;
 
-Broadcast ngraph::op::broadcast{};
+Broadcast::ref ngraph::op::broadcast = *std::make_shared<Broadcast>();
 
-Op& ngraph::Broadcast::BroadcastCall::op() const
-{
-    return op::broadcast;
-}
+Dot::ref ngraph::op::dot = *std::make_shared<Dot>();
 
-Dot ngraph::op::dot{};
-
-Op& ngraph::Dot::DotCall::op() const
-{
-    return op::dot;
-}

@@ -22,6 +22,10 @@ namespace ngraph
 {
     class Function;
 
+    /**
+     ** One parameter of a function. Within the function's graph
+     ** the parameter is a node that represents the argument in a call.
+     **/
     class Parameter : public Node
     {
     public:
@@ -34,6 +38,10 @@ namespace ngraph
         size_t    m_index;
     };
 
+    /**
+     ** The result of a function. The ndoe addociated with the result
+     ** supplies the return value when the function is called.
+     **/
     class Result : public TypedValueMixin
     {
     public:
@@ -46,6 +54,9 @@ namespace ngraph
         Node::ptr m_value;
     };
 
+    /**
+     ** A user-defined function.
+     **/
     class Function : public Op
     {
     public:
@@ -53,7 +64,7 @@ namespace ngraph
 
         Result* result() { return &m_result; }
 
-        std::shared_ptr<Parameter> parameter(size_t i) { return m_parameters[i]; }
+        Parameter::ptr parameter(size_t i) { return m_parameters[i]; }
 
     protected:
         std::vector<Parameter::ptr> m_parameters;

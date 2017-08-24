@@ -23,63 +23,78 @@ namespace ngraph
 {
     class Op
     {
+    public:
+        using ptr = std::shared_ptr<Op>;
+        using ref = decltype(*std::shared_ptr<Op>());
     };
 
-    class Broadcast : public Op
+    class Call : public Node
     {
+    public:
+        using ptr = std::shared_ptr<Call>;
+
+        Op::ptr op() const { return m_op; }
+
+        Call(const Op::ptr& op, const std::vector<Node::ptr>& arguments)
+            : Node(arguments, 0)
+            , m_op(op)
+        {
+        }
+    protected:
+        Op::ptr m_op;
+    };
+
+    class Broadcast : public Op, public std::enable_shared_from_this<Broadcast>
+    {
+    public:
+        using ptr = std::shared_ptr<Broadcast>;
+        using ref = decltype(*std::shared_ptr<Broadcast>());
+
+    protected:
+
         class BroadcastCall : public Call
         {
             friend class Broadcast;
 
         public:
-            BroadcastCall(const Node::ptr& arg, size_t axis)
-                : Call({arg})
+            BroadcastCall(const Op::ptr& op, const Node::ptr& arg, size_t axis)
+                : Call(op, {arg})
                 , m_axis(axis)
             {
             }
-
-            Op& op() const override;
 
         protected:
             size_t m_axis;
         };
 
     public:
+
         std::shared_ptr<BroadcastCall> operator()(const Node::ptr& tensor, size_t axis)
         {
-            return std::make_shared<BroadcastCall>(tensor, axis);
+            return std::make_shared<BroadcastCall>(shared_from_this(), tensor, axis);
         }
     };
 
     namespace op
     {
-        extern Broadcast broadcast;
+        extern Broadcast::ref broadcast;
     }
 
-    class Dot : public Op
+    class Dot : public Op, public std::enable_shared_from_this<Dot>
     {
-        class DotCall : public Call
-        {
-            friend class Dot;
-
-        public:
-            DotCall(const std::shared_ptr<Node>& arg0, const Node::ptr& arg1)
-                : Call({arg0, arg1})
-            {
-            }
-
-            Op& op() const override;
-        };
-
     public:
-        std::shared_ptr<DotCall> operator()(const Node::ptr& arg0, const Node::ptr& arg1)
+        using ptr = std::shared_ptr<Dot>;
+        using ref = decltype(*std::shared_ptr<Dot>());
+    
+    public:
+        Call::ptr operator()(const Node::ptr& arg0, const Node::ptr& arg1)
         {
-            return std::make_shared<DotCall>(arg0, arg1);
+            return Call::ptr::make_shared(shared_from_this(), std::vector<Node::ptr>{arg0, arg1});
         }
     };
 
     namespace op
     {
-        extern Dot dot;
+        extern Dot::ref dot;
     }
 }
