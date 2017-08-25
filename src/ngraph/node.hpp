@@ -50,7 +50,7 @@ namespace ngraph
 
     public:
         /// A "one-liner" describing this node.
-        virtual const std::string& description() const = 0;
+        virtual std::string description() const = 0;
 
         /// Propagate types and check arguments for consistency
         // virtual void propagate_types() = 0;
@@ -61,8 +61,8 @@ namespace ngraph
         const std::multiset<Node*> users() const { return m_users; }
         std::multiset<Node*>       users() { return m_users; }
 
-        const std::string& name() const { return m_name; }
-        void               name(const std::string& name) { m_name = name; }
+        std::string name() const { return m_name; }
+        void        name(const std::string& name) { m_name = name; }
 
     protected:
         std::vector<Node::ptr> m_arguments;

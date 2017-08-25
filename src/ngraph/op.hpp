@@ -30,7 +30,7 @@ namespace ngraph
         virtual ~Op() {}
 
     public:
-        virtual const std::string& name() const = 0;
+        virtual std::string name() const = 0;
     };
 
     /**
@@ -49,7 +49,7 @@ namespace ngraph
         {
         }
 
-        const std::string& description() const override { return m_op->name(); }
+        virtual std::string description() const override { return m_op->name(); }
 
     protected:
         std::shared_ptr<Op> m_op;
@@ -69,7 +69,7 @@ namespace ngraph
         }
 
     public:
-        const std::string& name() const override { return m_name; }
+        std::string name() const override { return m_name; }
 
     protected:
         std::string m_name;
@@ -78,11 +78,7 @@ namespace ngraph
     class BuiltinCall : public Call
     {
     public:
-        const std::string& description() const override
-        {
-            static std::string name{"BuiltinCall "};
-            return name;
-        }
+        virtual std::string description() const override { return "BuiltinCall"; }
 
     protected:
         BuiltinCall(const std::shared_ptr<Op>& op, const std::vector<Node::ptr>& args)

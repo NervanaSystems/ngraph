@@ -59,7 +59,7 @@ namespace ngraph
 
     protected:
         const element::Type& m_element_type;
-        Shape              m_shape;
+        Shape                m_shape;
     };
 
     /**
