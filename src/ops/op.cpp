@@ -15,7 +15,27 @@
 #include "ngraph/ngraph.hpp"
 
 using namespace ngraph;
+using namespace std;
 
-decltype(*std::shared_ptr<Broadcast>()) ngraph::op::broadcast = *std::make_shared<Broadcast>();
+std::shared_ptr<BuiltinOp> BroadcastCall::s_op = make_shared<BuiltinOp>("broadcast");
 
-decltype(*std::shared_ptr<Dot>()) ngraph::op::dot = *std::make_shared<Dot>();
+/**
+ ** /param arg The tensor view to be broadcast.
+ ** /param shape The shape of the result
+ ** /param broadcast_axes The axis positions (0-based) in the result that are being broadcast.
+ **  the remaining axes in shape must be the same as the shape of arg.
+ **/
+ shared_ptr<Node> ngraph::op::broadcast(const Node::ptr&      tensor,
+                                       const Shape&          shape,
+                                       const vector<size_t>& broadcast_axes)
+{
+    return make_shared<BroadcastCall>(tensor, shape, broadcast_axes);
+}
+
+std::shared_ptr<BuiltinOp> DotCall::s_op = make_shared<BuiltinOp>("dot");
+
+/// TODO: Semantics of arg0 and arg1 axes wrt reduction.
+shared_ptr<Node> ngraph::op::dot(const Node::ptr& arg0, const Node::ptr& arg1)
+{
+    return make_shared<DotCall>(arg0, arg1);
+}

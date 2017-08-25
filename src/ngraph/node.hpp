@@ -14,8 +14,9 @@
 
 #pragma once
 
-#include <vector>
 #include <set>
+#include <string>
+#include <vector>
 
 #include "ngraph/type.hpp"
 
@@ -31,18 +32,28 @@ namespace ngraph
     class Node : public TypedValueMixin
     {
     public:
-
         using ptr = std::shared_ptr<Node>;
 
+    protected:
         Node(const std::vector<Node::ptr>& arguments, ValueType::ptr type = nullptr)
             : TypedValueMixin(type)
             , m_arguments(arguments)
         {
             // Add this node as a user of each argument.
-            for(auto node : m_arguments){
+            for (auto node : m_arguments)
+            {
                 node->m_users.insert(node.get());
             }
         }
+
+        virtual ~Node() {}
+
+    public:
+        /// A "one-liner" describing this node.
+        virtual std::string description() const = 0;
+
+        /// Propagate types and check arguments for consistency
+        // virtual void propagate_types() = 0;
 
         const std::vector<Node::ptr> arguments() const { return m_arguments; }
         std::vector<Node::ptr>       arguments() { return m_arguments; }
@@ -50,8 +61,12 @@ namespace ngraph
         const std::multiset<Node*> users() const { return m_users; }
         std::multiset<Node*>       users() { return m_users; }
 
+        std::string name() const { return m_name; }
+        void        name(const std::string& name) { m_name = name; }
+
     protected:
         std::vector<Node::ptr> m_arguments;
-        std::multiset<Node*> m_users;
+        std::multiset<Node*>   m_users;
+        std::string            m_name;
     };
 }
