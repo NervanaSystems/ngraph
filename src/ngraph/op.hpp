@@ -36,7 +36,7 @@ namespace ngraph
     /**
      ** Call nodes are nodes whose value is the result of some operation, the op,
      ** applied to its arguments. We use the op as a callable to construct the
-     ** call nodes.
+     ** call nodes. For calls to user functions, the op will be the user function.
      **/
     class Call : public Node
     {
@@ -56,7 +56,9 @@ namespace ngraph
     };
 
     /**
-     ** There is exactly one instance of builtin op for each pre-defined operation.
+     ** There is exactly one instance of builtin op for each pre-defined operation. These
+     ** are intended to be used when matching calls in different graphs; every FooCall
+     ** will have the same op.
      **/
     class BuiltinOp : public Op
     {
@@ -124,6 +126,7 @@ namespace ngraph
     class DotCall : public BuiltinCall
     {
     public:
+        /// TODO: Semantics of arg0 and arg1 axes wrt reduction.
         DotCall(const Node::ptr& arg0, const Node::ptr& arg1)
             : BuiltinCall(s_op, {arg0, arg1})
         {
