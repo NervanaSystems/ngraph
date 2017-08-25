@@ -26,6 +26,7 @@ Parameter::Parameter(Function& function, size_t index)
 
 Function::Function(size_t n_parameters)
     : m_parameters(n_parameters)
+    , m_name("Function")
 {
     for (int i = 0; i < n_parameters; i++)
     {

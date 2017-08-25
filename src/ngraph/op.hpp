@@ -21,7 +21,17 @@
 
 namespace ngraph
 {
-    class Op;
+    /**
+     ** Every instance of Op corresponds to a unique defined operation.
+     **/
+    class Op
+    {
+    protected:
+        virtual ~Op() {}
+
+    public:
+        virtual const std::string& name() const = 0;
+    };
 
     /**
      ** Call nodes are nodes whose value is the result of some operation, the op,
@@ -39,43 +49,69 @@ namespace ngraph
         {
         }
 
+        const std::string& description() const override { return m_op->name(); }
+
     protected:
         std::shared_ptr<Op> m_op;
     };
 
     /**
-     ** The Op class provides the behavior for a Call.
+     ** There is exactly one instance of builtin op for each pre-defined operation.
      **/
-    class Op
+    class BuiltinOp : public Op
     {
+        friend class Call;
+
+    public:
+        BuiltinOp(const std::string& name)
+            : m_name(name)
+        {
+        }
+
+    public:
+        const std::string& name() const override { return m_name; }
+
+    protected:
+        std::string m_name;
+    };
+
+    class BuiltinCall : public Call
+    {
+    public:
+        const std::string& description() const override
+        {
+            static std::string name{"BuiltinCall "};
+            return name;
+        }
+
+    protected:
+        BuiltinCall(const std::shared_ptr<Op>& op, const std::vector<Node::ptr>& args)
+            : Call(op, args)
+        {
+        }
     };
 
     namespace op
     {
-        std::shared_ptr<Node> broadcast(const Node::ptr& tensor, size_t axis);
+        std::shared_ptr<Node> broadcast(const Node::ptr&           tensor,
+                                        const Shape&               shape,
+                                        const std::vector<size_t>& broadcast_axes);
     }
 
-    class Broadcast : public Op, public std::enable_shared_from_this<Broadcast>
+    class BroadcastCall : public BuiltinCall
     {
-        friend std::shared_ptr<Node> op::broadcast(const Node::ptr& tensor, size_t axis);
+    public:
+        BroadcastCall(const Node::ptr& arg, const Shape& shape, std::vector<size_t> broadcast_axes)
+            : BuiltinCall(s_op, {arg})
+            , m_shape(shape)
+            , m_broadcast_axes(broadcast_axes)
+        {
+        }
+        Shape               m_shape;
+        std::vector<size_t> m_broadcast_axes;
 
     protected:
-        class BroadcastCall : public Call
-        {
-            friend class Broadcast;
-
-        public:
-            BroadcastCall(const std::shared_ptr<Op>& op, const Node::ptr& arg, size_t axis)
-                : Call(op, {arg})
-                , m_axis(axis)
-            {
-            }
-
-        protected:
-            size_t m_axis;
-        };
-
-        static std::shared_ptr<Broadcast> s_op;
+        static std::shared_ptr<BuiltinOp> s_op;
     };
 
     namespace op
@@ -83,9 +119,15 @@ namespace ngraph
         std::shared_ptr<Node> dot(const Node::ptr& arg0, const Node::ptr& arg1);
     }
 
-    class Dot : public Op, public std::enable_shared_from_this<Dot>
+    class DotCall : public BuiltinCall
     {
-        friend std::shared_ptr<Node> op::dot(const Node::ptr& arg0, const Node::ptr& arg1);
-        static std::shared_ptr<Dot>  s_op;
+    public:
+        DotCall(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinCall(s_op, {arg0, arg1})
+        {
+        }
+
+    protected:
+        static std::shared_ptr<BuiltinOp> s_op;
     };
 }

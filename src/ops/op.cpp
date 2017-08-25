@@ -17,16 +17,18 @@
 using namespace ngraph;
 using namespace std;
 
-shared_ptr<Broadcast> ngraph::Broadcast::s_op = make_shared<ngraph::Broadcast>();
+std::shared_ptr<BuiltinOp> BroadcastCall::s_op = make_shared<BuiltinOp>("broadcast");
 
-shared_ptr<Node> ngraph::op::broadcast(const Node::ptr& tensor, size_t axis)
+shared_ptr<Node> ngraph::op::broadcast(const Node::ptr&      tensor,
+                                       const Shape&          shape,
+                                       const vector<size_t>& broadcast_axes)
 {
-    return make_shared<Broadcast::BroadcastCall>(Broadcast::s_op->shared_from_this(), tensor, axis);
+    return make_shared<BroadcastCall>(tensor, shape, broadcast_axes);
 }
 
-shared_ptr<Dot> ngraph::Dot::s_op = make_shared<ngraph::Dot>();
+std::shared_ptr<BuiltinOp> DotCall::s_op = make_shared<BuiltinOp>("dot");
 
 shared_ptr<Node> ngraph::op::dot(const Node::ptr& arg0, const Node::ptr& arg1)
 {
-    return make_shared<Call>(Dot::s_op->shared_from_this(), std::vector<Node::ptr>{arg0, arg1});
+    return make_shared<DotCall>(arg0, arg1);
 }

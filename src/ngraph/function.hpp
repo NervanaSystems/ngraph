@@ -33,6 +33,12 @@ namespace ngraph
 
         Parameter(Function& function, size_t index);
 
+        const std::string& description() const override
+        {
+            static std::string name{"Parameter"};
+            return name;
+        }
+
     protected:
         Function& m_function;
         size_t    m_index;
@@ -66,8 +72,11 @@ namespace ngraph
 
         Parameter::ptr parameter(size_t i) { return m_parameters[i]; }
 
+        const std::string& name() const override { return m_name; }
+
     protected:
         std::vector<Parameter::ptr> m_parameters;
         Result                      m_result;
+        std::string                 m_name;
     };
 }

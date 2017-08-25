@@ -30,7 +30,7 @@ TEST(graph, build_simple)
     cluster_0->parameter(3)->type(element_type_float, {32, 7});
     auto arg3 = cluster_0->parameter(3);
     // call broadcast op on arg3, broadcasting on axis 1.
-    auto broadcast_1 = op::broadcast(arg3, 1);
+    auto broadcast_1 = op::broadcast(arg3, {10, 32, 7}, {0});
     auto arg2        = cluster_0->parameter(2);
     auto arg0        = cluster_0->parameter(0);
     // call dot op
