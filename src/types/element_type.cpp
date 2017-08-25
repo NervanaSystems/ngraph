@@ -17,17 +17,9 @@
 
 #include "ngraph/element_type.hpp"
 
-const ngraph::ElementType element_type_float    = ngraph::ElementType(32, true, true, "float");
-const ngraph::ElementType element_type_int8_t   = ngraph::ElementType(8, false, true, "int8_t");
-const ngraph::ElementType element_type_int32_t  = ngraph::ElementType(32, false, true, "int32_t");
-const ngraph::ElementType element_type_int64_t  = ngraph::ElementType(64, false, true, "int64_t");
-const ngraph::ElementType element_type_uint8_t  = ngraph::ElementType(8, false, false, "int8_t");
-const ngraph::ElementType element_type_uint32_t = ngraph::ElementType(32, false, false, "int32_t");
-const ngraph::ElementType element_type_uint64_t = ngraph::ElementType(64, false, false, "int64_t");
+std::map<std::string, ngraph::element::Type> ngraph::element::Type::m_element_list;
 
-std::map<std::string, ngraph::ElementType> ngraph::ElementType::m_element_list;
-
-ngraph::ElementType::ElementType(size_t             bitwidth,
+ngraph::element::Type::Type(size_t             bitwidth,
                                  bool               is_float,
                                  bool               is_signed,
                                  const std::string& cname)
@@ -39,18 +31,18 @@ ngraph::ElementType::ElementType(size_t             bitwidth,
     assert(m_bitwidth % 8 == 0);
 }
 
-const std::string& ngraph::ElementType::c_type_string() const
+const std::string& ngraph::element::Type::c_type_string() const
 {
     return m_cname;
 }
 
-bool ngraph::ElementType::operator==(const ElementType& other) const
+bool ngraph::element::Type::operator==(const element::Type& other) const
 {
     return m_bitwidth == other.m_bitwidth && m_is_float == other.m_is_float &&
            m_is_signed == other.m_is_signed;
 }
 
-size_t ngraph::ElementType::size() const
+size_t ngraph::element::Type::size() const
 {
     return std::ceil((float)m_bitwidth / 8.0);
 }

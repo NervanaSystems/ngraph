@@ -19,15 +19,15 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(graph, build_simple)
+TEST(DISABLED_graph, build_simple)
 {
     // Function with 4 parameters
     auto cluster_0 = make_shared<Function>(4);
-    cluster_0->result()->type(element_type_float, {32, 3});
-    cluster_0->parameter(0)->type(element_type_float, {7, 3});
-    cluster_0->parameter(1)->type(element_type_float, {3});
-    cluster_0->parameter(2)->type(element_type_float, {32, 7});
-    cluster_0->parameter(3)->type(element_type_float, {32, 7});
+    cluster_0->result()->type(element::float32_t, {32, 3});
+    cluster_0->parameter(0)->type(element::float32_t, {7, 3});
+    cluster_0->parameter(1)->type(element::float32_t, {3});
+    cluster_0->parameter(2)->type(element::float32_t, {32, 7});
+    cluster_0->parameter(3)->type(element::float32_t, {32, 7});
     auto arg3 = cluster_0->parameter(3);
     // call broadcast op on arg3, broadcasting on axis 1.
     auto broadcast_1 = op::broadcast(arg3, 1);

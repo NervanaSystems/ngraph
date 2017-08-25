@@ -51,14 +51,14 @@ namespace ngraph
          ** /param element_type The type of the tensor elements.
          ** /param shape The shape of the tensor.
          **/
-        TensorViewType(const ElementType& element_type, const Shape& shape)
+        TensorViewType(const element::Type& element_type, const Shape& shape)
             : m_element_type(element_type)
             , m_shape(shape)
         {
         }
 
     protected:
-        const ElementType& m_element_type;
+        const element::Type& m_element_type;
         Shape              m_shape;
     };
 
@@ -115,7 +115,7 @@ namespace ngraph
          ** /param element_type The type of the tensor elements
          ** /param shape The shape of the view
          **/
-        void type(const ElementType& element_type, const Shape& shape)
+        void type(const element::Type& element_type, const Shape& shape)
         {
             m_type = std::make_shared<TensorViewType>(element_type, shape);
         }
