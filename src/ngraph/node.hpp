@@ -53,7 +53,7 @@ namespace ngraph
         virtual std::string description() const = 0;
 
         /// Propagate types and check arguments for consistency
-        // virtual void propagate_types() = 0;
+        virtual void propagate_types() = 0;
 
         const std::vector<Node::ptr> arguments() const { return m_arguments; }
         std::vector<Node::ptr>       arguments() { return m_arguments; }

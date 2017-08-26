@@ -22,6 +22,9 @@
 
 namespace ngraph
 {
+    class TensorViewType;
+    class TupleType;
+
     /**
      ** ValueType is
      **   TensorViewType
@@ -34,6 +37,10 @@ namespace ngraph
          ** Preferred handle
          **/
         using ptr = std::shared_ptr<ValueType>;
+
+        virtual ~ValueType() {}
+        virtual std::shared_ptr<TensorViewType> as_tensor_view_type() { return nullptr; }
+        virtual std::shared_ptr<TupleType>      as_tuple_type() { return nullptr; }
     };
 
     /**
@@ -56,6 +63,9 @@ namespace ngraph
             , m_shape(shape)
         {
         }
+
+        const element::Type& element_type() const { return m_element_type; }
+        const Shape          shape() const { return m_shape; }
 
     protected:
         const element::Type& m_element_type;

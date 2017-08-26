@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(DISABLED_graph, build_simple)
+TEST(ngraph, build_simple)
 {
     // Function with 4 parameters
     auto cluster_0 = make_shared<Function>(4);

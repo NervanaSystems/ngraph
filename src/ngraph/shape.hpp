@@ -32,10 +32,18 @@ namespace ngraph
         {
         }
 
+        Shape(const std::vector<size_t>& sizes)
+            : m_sizes(sizes)
+        {
+        }
+
         /**
          ** Conversion to a vector of sizes.
          **/
         operator const std::vector<size_t>&() const { return m_sizes; }
+
+        bool operator==(const Shape& shape) const { return m_sizes == shape.m_sizes; }
+        bool operator!=(const Shape& shape) const { return m_sizes != shape.m_sizes; }
 
     protected:
         std::vector<size_t> m_sizes;
