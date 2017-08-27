@@ -84,18 +84,18 @@ namespace ngraph
     class Call : public Node
     {
     public:
-        std::shared_ptr<Op> op() const { return m_op; }
+        const Op& op() const { return m_op; }
 
-        Call(const std::shared_ptr<Op>& op, const std::vector<Node::ptr>& arguments)
+        Call(const Op& op, const std::vector<Node::ptr>& arguments)
             : Node(arguments, nullptr)
             , m_op(op)
         {
         }
 
-        virtual std::string description() const override { return m_op->name(); }
+        virtual std::string description() const override { return m_op.name(); }
 
     protected:
-        std::shared_ptr<Op> m_op;
+        const Op& m_op;
     };
 
     /**
@@ -129,7 +129,7 @@ namespace ngraph
         virtual void propagate_types() override {}
 
     protected:
-        BuiltinCall(const std::shared_ptr<Op>& op, const std::vector<Node::ptr>& args)
+        BuiltinCall(const Op& op, const std::vector<Node::ptr>& args)
             : Call(op, args)
         {
         }
@@ -144,7 +144,7 @@ namespace ngraph
         }
 
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class AddCall : public BuiltinCall
@@ -156,7 +156,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class BroadcastCall : public BuiltinCall
@@ -181,7 +181,7 @@ namespace ngraph
         Shape               m_shape;
         std::vector<size_t> m_broadcast_axes;
 
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class CeilingCall : public BuiltinCall
@@ -193,7 +193,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class DivideCall : public BuiltinCall
@@ -205,7 +205,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class DotCall : public BuiltinCall
@@ -219,7 +219,7 @@ namespace ngraph
         virtual void propagate_types() override;
 
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class EqualCall : public BuiltinCall
@@ -231,7 +231,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class ExponentialCall : public BuiltinCall
@@ -243,7 +243,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class FloorCall : public BuiltinCall
@@ -255,7 +255,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class GreaterCall : public BuiltinCall
@@ -267,7 +267,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class LessCall : public BuiltinCall
@@ -279,7 +279,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class LogCall : public BuiltinCall
@@ -291,7 +291,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class MaximumCall : public BuiltinCall
@@ -303,7 +303,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class MinimumCall : public BuiltinCall
@@ -315,7 +315,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class MultiplyCall : public BuiltinCall
@@ -327,7 +327,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class NegateCall : public BuiltinCall
@@ -339,7 +339,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class PowerCall : public BuiltinCall
@@ -351,7 +351,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class RemainderCall : public BuiltinCall
@@ -363,7 +363,7 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class ReshapeCall : public BuiltinCall
@@ -378,7 +378,7 @@ namespace ngraph
     protected:
         Shape m_shape;
 
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 
     class SubtractCall : public BuiltinCall
@@ -390,6 +390,6 @@ namespace ngraph
         }
         //virtual void propagate_types() override;
     protected:
-        static std::shared_ptr<BuiltinOp> s_op;
+        static BuiltinOp s_op;
     };
 }

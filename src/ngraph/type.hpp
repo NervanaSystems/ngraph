@@ -65,7 +65,7 @@ namespace ngraph
         }
 
         const element::Type& element_type() const { return m_element_type; }
-        const Shape          shape() const { return m_shape; }
+        const Shape&          shape() const { return m_shape; }
 
     protected:
         const element::Type& m_element_type;
