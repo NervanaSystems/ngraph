@@ -39,8 +39,12 @@ namespace ngraph
         using ptr = std::shared_ptr<ValueType>;
 
         virtual ~ValueType() {}
-        virtual std::shared_ptr<TensorViewType> as_tensor_view_type() { return nullptr; }
-        virtual std::shared_ptr<TupleType>      as_tuple_type() { return nullptr; }
+        
+        /**
+         ** Unmanaged cast to a supertype. dynamic_cast cannot be used
+         ** directly on a shared_ptr.
+         **/ 
+        template<typename T> T as() { return dynamic_cast<T>(this); }
     };
 
     /**
