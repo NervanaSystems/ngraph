@@ -49,7 +49,7 @@ void BroadcastOp::propagate_types()
     {
         throw ngraph_error("Argument to broadcast is missing type.");
     }
-    auto arg_tensor_view_type = arg_type->as<TensorViewType*>();
+    auto arg_tensor_view_type = dynamic_pointer_cast<TensorViewType>(arg_type);
     if (nullptr == arg_tensor_view_type)
     {
         throw ngraph_error("Argument to broadcast is not a tensor view");
@@ -91,8 +91,8 @@ Node::ptr ngraph::op::dot(const Node::ptr& arg0, const Node::ptr& arg1)
 
 void DotOp::propagate_types()
 {
-    auto arg0_tensor_type = m_arguments.at(0)->type()->as<TensorViewType*>();
-    auto arg1_tensor_type = m_arguments.at(1)->type()->as<TensorViewType*>();
+    auto arg0_tensor_type = dynamic_pointer_cast<TensorViewType>(m_arguments.at(0)->type());
+    auto arg1_tensor_type = dynamic_pointer_cast<TensorViewType>(m_arguments.at(1)->type());
     if (nullptr == arg0_tensor_type || nullptr == arg1_tensor_type)
     {
         throw ngraph_error("Arguments to dot must be tensor views");

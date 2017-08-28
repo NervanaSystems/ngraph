@@ -39,13 +39,6 @@ namespace ngraph
         using ptr = std::shared_ptr<ValueType>;
 
         virtual ~ValueType() {}
-        
-        /**
-         ** Unmanaged cast to a supertype. dynamic_cast cannot be used
-         ** directly on a shared_ptr. Can use dynamic_pointer_cast if
-         ** a shared_ptr is needed.
-         **/ 
-        template<typename T> T as() { return dynamic_cast<T>(this); }
     };
 
     /**
