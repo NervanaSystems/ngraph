@@ -60,3 +60,34 @@ TEST(build_graph, as_type)
     TupleType* tp_tp = tp_vt->as<TupleType*>();
     ASSERT_EQ(tp_vt.get(), tp_tp);
 }
+
+// Check Call comparisons
+TEST(DISABLED_build_graph, call_comparison)
+{
+    auto fun = make_shared<Function>(3);
+    fun->parameter(0)->type(element::float32_t, {32, 3});
+    fun->parameter(1)->type(element::float32_t, {3});
+    fun->parameter(2)->type(element::float32_t, {32});
+    auto arg0 = fun->parameter(0);
+    auto arg1 = fun->parameter(1);
+    auto arg2 = fun->parameter(2);
+
+    auto dot = op::dot(arg0, arg1);
+    auto add = op::add(dot, arg2);
+
+    auto pattern = make_shared<Function>(1);
+    pattern->parameter(0)->type(element::float32_t, {});
+    auto parg = pattern->parameter(0);
+    auto pattern_dot = op::dot(parg, parg);
+    ASSERT_TRUE(pattern_dot->has_same_op(dot)); 
+    // TODO This passes because typeid is not behaving as documented.
+    // Need to figure out what's wrong.
+    ASSERT_FALSE(pattern_dot->has_same_op(add));
+}
+
+// Check argument inverses
+TEST(build_graph, arg_inverse)
+{
+
+}
+

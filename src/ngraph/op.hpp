@@ -65,32 +65,40 @@ namespace ngraph
     }
 
     /**
-     ** Call nodes are nodes whose value is the result of some operation, the op,
-     ** applied to its arguments. We use the op as a callable to construct the
-     ** call nodes. For calls to user functions, the op will be the user function.
+     ** Op nodes are nodes whose value is the result of some operation
+     ** applied to its arguments. For calls to user functions, the op will 
+     ** reference the user function.
      **/
-    class Call : public Node
+    class Op : public Node
     {
     public:
 
-        Call(const std::vector<Node::ptr>& arguments)
+        Op(const std::vector<Node::ptr>& arguments)
             : Node(arguments, nullptr)
         {
         }
-
-        /**
-         ** Return true if this has the same implementing class as call. This
-         ** will be used by the pattern matcher when comparing a pattern
-         ** graph against the graph.
-         **/
-        bool has_same_op(Call& call) { return typeid(this) == typeid(&call); }
-        virtual std::string description() const override { return "Call"; }
     };
 
-    class BuiltinCall : public Call
+    /**
+     ** A FunctionOp invokes a function on node arguments. In addition to the argument
+     ** we need to preserve the function.
+     **/
+    class FunctionOp : public Op
+    {
+
+        virtual std::string description() const override { return "FunctionOp"; }
+    protected:
+        Node::ptr m_function;
+    };
+
+    /**
+     ** The is an operation we handle directly, i.e. all type checking, etc.
+     ** are defined in C++ rather than in terms of ngraph operations.
+     **/
+    class BuiltinOp : public Op
     {
     public:
-        virtual std::string description() const override { return "BuiltinCall"; }
+        virtual std::string description() const override { return "BuiltinOp"; }
         /// Name of the builtin op, for debugging and logging.
         virtual std::string op_name() const = 0;
         
@@ -98,17 +106,17 @@ namespace ngraph
         virtual void propagate_types() override {}
 
     protected:
-        BuiltinCall(const std::vector<Node::ptr>& args)
-            : Call(args)
+        BuiltinOp(const std::vector<Node::ptr>& args)
+            : Op(args)
         {
         }
     };
 
-    class AbsCall : public BuiltinCall
+    class AbsOp : public BuiltinOp
     {
     public:
-        AbsCall(const Node::ptr& arg0)
-            : BuiltinCall({arg0})
+        AbsOp(const Node::ptr& arg0)
+            : BuiltinOp({arg0})
         {
         }
 
@@ -116,18 +124,18 @@ namespace ngraph
         //virtual void propagate_types() override;  
     };
 
-    class AddCall : public BuiltinCall
+    class AddOp : public BuiltinOp
     {
     public:
-        AddCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        AddOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
         virtual std::string op_name() const override { return "add"; }
         //virtual void propagate_types() override;  
     };
 
-    class BroadcastCall : public BuiltinCall
+    class BroadcastOp : public BuiltinOp
     {
     public:
         /**
@@ -136,8 +144,8 @@ namespace ngraph
          ** /param broadcast_axes The axis positions (0-based) in the result that are being broadcast.
          **  the remaining axes in shape must be the same as the shape of arg.
          **/
-        BroadcastCall(const Node::ptr& arg, const Shape& shape, std::vector<size_t> broadcast_axes)
-            : BuiltinCall({arg})
+        BroadcastOp(const Node::ptr& arg, const Shape& shape, std::vector<size_t> broadcast_axes)
+            : BuiltinOp({arg})
             , m_shape(shape)
             , m_broadcast_axes(broadcast_axes)
         {
@@ -151,11 +159,11 @@ namespace ngraph
         std::vector<size_t> m_broadcast_axes;
     };
 
-    class CeilingCall : public BuiltinCall
+    class CeilingOp : public BuiltinOp
     {
     public:
-        CeilingCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        CeilingOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
 
@@ -163,11 +171,11 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class DivideCall : public BuiltinCall
+    class DivideOp : public BuiltinOp
     {
     public:
-        DivideCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        DivideOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
 
@@ -175,12 +183,12 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class DotCall : public BuiltinCall
+    class DotOp : public BuiltinOp
     {
     public:
         /// TODO: Semantics of arg0 and arg1 axes wrt reduction.
-        DotCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        DotOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
         
@@ -188,11 +196,11 @@ namespace ngraph
         virtual void propagate_types() override;
     };
 
-    class EqualCall : public BuiltinCall
+    class EqualOp : public BuiltinOp
     {
     public:
-        EqualCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        EqualOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
 
@@ -200,11 +208,11 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class ExponentialCall : public BuiltinCall
+    class ExponentialOp : public BuiltinOp
     {
     public:
-        ExponentialCall(const Node::ptr& arg0)
-            : BuiltinCall({arg0})
+        ExponentialOp(const Node::ptr& arg0)
+            : BuiltinOp({arg0})
         {
         }
         
@@ -212,11 +220,11 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class FloorCall : public BuiltinCall
+    class FloorOp : public BuiltinOp
     {
     public:
-        FloorCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        FloorOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
         
@@ -224,11 +232,11 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class GreaterCall : public BuiltinCall
+    class GreaterOp : public BuiltinOp
     {
     public:
-        GreaterCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        GreaterOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
 
@@ -236,11 +244,11 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class LessCall : public BuiltinCall
+    class LessOp : public BuiltinOp
     {
     public:
-        LessCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        LessOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
         
@@ -248,11 +256,11 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class LogCall : public BuiltinCall
+    class LogOp : public BuiltinOp
     {
     public:
-        LogCall(const Node::ptr& arg0)
-            : BuiltinCall({arg0})
+        LogOp(const Node::ptr& arg0)
+            : BuiltinOp({arg0})
         {
         }
 
@@ -260,11 +268,11 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class MaximumCall : public BuiltinCall
+    class MaximumOp : public BuiltinOp
     {
     public:
-        MaximumCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        MaximumOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
 
@@ -272,11 +280,11 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class MinimumCall : public BuiltinCall
+    class MinimumOp : public BuiltinOp
     {
     public:
-        MinimumCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        MinimumOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
 
@@ -284,11 +292,11 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class MultiplyCall : public BuiltinCall
+    class MultiplyOp : public BuiltinOp
     {
     public:
-        MultiplyCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        MultiplyOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
 
@@ -296,11 +304,11 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class NegateCall : public BuiltinCall
+    class NegateOp : public BuiltinOp
     {
     public:
-        NegateCall(const Node::ptr& arg0)
-            : BuiltinCall({arg0})
+        NegateOp(const Node::ptr& arg0)
+            : BuiltinOp({arg0})
         {
         }
 
@@ -308,11 +316,11 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class PowerCall : public BuiltinCall
+    class PowerOp : public BuiltinOp
     {
     public:
-        PowerCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        PowerOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
         
@@ -320,11 +328,11 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class RemainderCall : public BuiltinCall
+    class RemainderOp : public BuiltinOp
     {
     public:
-        RemainderCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        RemainderOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
 
@@ -332,11 +340,11 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class ReshapeCall : public BuiltinCall
+    class ReshapeOp : public BuiltinOp
     {
     public:
-        ReshapeCall(const Node::ptr& arg0, const Shape& shape)
-            : BuiltinCall({arg0})
+        ReshapeOp(const Node::ptr& arg0, const Shape& shape)
+            : BuiltinOp({arg0})
             , m_shape(shape)
         {
         }
@@ -347,11 +355,11 @@ namespace ngraph
         Shape m_shape;
     };
 
-    class SubtractCall : public BuiltinCall
+    class SubtractOp : public BuiltinOp
     {
     public:
-        SubtractCall(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinCall({arg0, arg1})
+        SubtractOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
         {
         }
 

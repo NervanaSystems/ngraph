@@ -18,6 +18,8 @@
 #include <string>
 #include <vector>
 
+#include <iostream>
+
 #include "ngraph/type.hpp"
 
 namespace ngraph
@@ -61,6 +63,15 @@ namespace ngraph
 
         std::string name() const { return m_name; }
         void        name(const std::string& name) { m_name = name; }
+
+        /**
+         ** Return true if this has the same implementing class as call. This
+         ** will be used by the pattern matcher when comparing a pattern
+         ** graph against the graph.
+         ** TODO: typeids are Node*, doc says they should be the actual classes.
+         **/
+         bool has_same_op(const Node::ptr& node) { return typeid(this) == typeid(node.get()); }
+         
 
     protected:
         std::vector<Node::ptr> m_arguments;
