@@ -19,21 +19,15 @@
 using namespace ngraph;
 using namespace std;
 
-BuiltinOp AbsCall::s_op = BuiltinOp("abs");
-
 Node::ptr ngraph::op::abs(const Node::ptr& arg)
 {
     return make_shared<AbsCall>(arg);
 }
 
-BuiltinOp AddCall::s_op = BuiltinOp("add");
-
 Node::ptr ngraph::op::add(const Node::ptr& arg0, const Node::ptr& arg1)
 {
     return make_shared<AddCall>(arg0, arg1);
 }
-
-BuiltinOp BroadcastCall::s_op = BuiltinOp("broadcast");
 
 /**
  ** /param arg The tensor view to be broadcast.
@@ -74,8 +68,6 @@ void BroadcastCall::propagate_types()
     m_type = make_shared<TensorViewType>(arg_tensor_view_type->element_type(), m_shape);
 }
 
-BuiltinOp CeilingCall::s_op = BuiltinOp("ceiling");
-
 Node::ptr ngraph::op::ceiling(const Node::ptr& arg0, const Node::ptr& arg1)
 {
     return make_shared<CeilingCall>(arg0, arg1);
@@ -86,14 +78,10 @@ Node::ptr ngraph::op::ceiling(const Node::ptr& arg0, const Node::ptr& arg1)
 // 'convert',
 // 'convolution',
 
-BuiltinOp DivideCall::s_op = BuiltinOp("divide");
-
 Node::ptr ngraph::op::divide(const Node::ptr& arg0, const Node::ptr& arg1)
 {
     return make_shared<DivideCall>(arg0, arg1);
 }
-
-BuiltinOp DotCall::s_op = BuiltinOp("dot");
 
 /// TODO: Semantics of arg0 and arg1 axes wrt reduction.
 Node::ptr ngraph::op::dot(const Node::ptr& arg0, const Node::ptr& arg1)
@@ -139,49 +127,35 @@ void DotCall::propagate_types()
     m_type = make_shared<TensorViewType>(arg0_tensor_type->element_type(), result_shape);
 }
 
-BuiltinOp ExponentialCall::s_op = BuiltinOp("exponential");
-
 Node::ptr ngraph::op::exponential(const Node::ptr& arg0)
 {
     return make_shared<ExponentialCall>(arg0);
 }
-
-BuiltinOp FloorCall::s_op = BuiltinOp("floor");
 
 Node::ptr ngraph::op::floor(const Node::ptr& arg0, const Node::ptr& arg1)
 {
     return make_shared<FloorCall>(arg0, arg1);
 }
 
-BuiltinOp LogCall::s_op = BuiltinOp("log");
-
 Node::ptr ngraph::op::log(const Node::ptr& arg0)
 {
     return make_shared<LogCall>(arg0);
 }
-
-BuiltinOp MaximumCall::s_op = BuiltinOp("maximum");
 
 Node::ptr ngraph::op::maximum(const Node::ptr& arg0, const Node::ptr& arg1)
 {
     return make_shared<MaximumCall>(arg0, arg1);
 }
 
-BuiltinOp MinimumCall::s_op = BuiltinOp("minimum");
-
 Node::ptr ngraph::op::minimum(const Node::ptr& arg0, const Node::ptr& arg1)
 {
     return make_shared<MinimumCall>(arg0, arg1);
 }
 
-BuiltinOp MultiplyCall::s_op = BuiltinOp("multiply");
-
 Node::ptr ngraph::op::multiply(const Node::ptr& arg0, const Node::ptr& arg1)
 {
     return make_shared<MultiplyCall>(arg0, arg1);
 }
-
-BuiltinOp NegateCall::s_op = BuiltinOp("negate");
 
 Node::ptr ngraph::op::negate(const Node::ptr& arg0)
 {
@@ -191,8 +165,6 @@ Node::ptr ngraph::op::negate(const Node::ptr& arg0)
 // 'pad',
 // 'parameter',
 
-BuiltinOp PowerCall::s_op = BuiltinOp("power");
-
 Node::ptr ngraph::op::power(const Node::ptr& arg0, const Node::ptr& arg1)
 {
     return make_shared<PowerCall>(arg0, arg1);
@@ -200,14 +172,10 @@ Node::ptr ngraph::op::power(const Node::ptr& arg0, const Node::ptr& arg1)
 
 //'reduce',
 
-BuiltinOp RemainderCall::s_op = BuiltinOp("remainder");
-
 Node::ptr ngraph::op::remainder(const Node::ptr& arg0, const Node::ptr& arg1)
 {
     return make_shared<RemainderCall>(arg0, arg1);
 }
-
-BuiltinOp ReshapeCall::s_op = BuiltinOp("reshape");
 
 Node::ptr ngraph::op::reshape(const Node::ptr& arg0, const Shape& shape)
 {
@@ -218,8 +186,6 @@ Node::ptr ngraph::op::reshape(const Node::ptr& arg0, const Shape& shape)
 //'rng',
 // 'select',
 //'slice',
-
-BuiltinOp SubtractCall::s_op = BuiltinOp("subtract");
 
 Node::ptr ngraph::op::subtract(const Node::ptr& arg0, const Node::ptr& arg1)
 {

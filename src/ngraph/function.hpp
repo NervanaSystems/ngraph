@@ -61,7 +61,7 @@ namespace ngraph
     /**
      ** A user-defined function.
      **/
-    class Function : public Op
+    class Function
     {
     public:
         Function(size_t n_parameters);
@@ -70,7 +70,7 @@ namespace ngraph
 
         Parameter::ptr parameter(size_t i) { return m_parameters[i]; }
 
-        std::string name() const override { return m_name; }
+        std::string name() const { return m_name; }
 
     protected:
         std::vector<Parameter::ptr> m_parameters;
