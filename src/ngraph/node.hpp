@@ -69,7 +69,10 @@ namespace ngraph
          ** will be used by the pattern matcher when comparing a pattern
          ** graph against the graph.
          **/
-         bool is_same_op_type(const Node::ptr& node) const { return typeid(*this) == typeid(*node.get()); }
+        bool is_same_op_type(const Node::ptr& node) const
+        {
+            return typeid(*this) == typeid(*node.get());
+        }
 
     protected:
         std::vector<Node::ptr> m_arguments;

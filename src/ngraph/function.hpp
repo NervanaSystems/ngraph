@@ -16,65 +16,39 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op.hpp"
+#include "ngraph/parameter.hpp"
 #include "ngraph/type.hpp"
 
 namespace ngraph
 {
-    class Function;
-
-    /**
-     ** One parameter of a function. Within the function's graph
-     ** the parameter is a node that represents the argument in a call.
-     **/
-    class Parameter : public Node
-    {
-    public:
-        using ptr = std::shared_ptr<Parameter>;
-
-        Parameter(Function& function, size_t index);
-
-        std::string description() const override { return "Parameter"; }
-
-        virtual void propagate_types() override;
-
-    protected:
-        Function& m_function;
-        size_t    m_index;
-    };
-
-    /**
-     ** The result of a function. The ndoe addociated with the result
-     ** supplies the return value when the function is called.
-     **/
-    class Result : public TypedValueMixin
-    {
-    public:
-        using ptr = std::shared_ptr<Result>;
-
-        Node::ptr value() const { return m_value; }
-        void      value(const Node::ptr& value) { m_value = value; }
-
-    protected:
-        Node::ptr m_value;
-    };
-
     /**
      ** A user-defined function.
      **/
     class Function
     {
     public:
-        Function(size_t n_parameters);
+        Function(const Node::ptr&                               result,
+                 const std::vector<std::shared_ptr<Parameter>>& parameters);
 
-        Result* result() { return &m_result; }
+        Node::ptr result() { return m_result; }
 
         Parameter::ptr parameter(size_t i) { return m_parameters[i]; }
 
         std::string name() const { return m_name; }
 
     protected:
-        std::vector<Parameter::ptr> m_parameters;
-        Result                      m_result;
-        std::string                 m_name;
+        Node::ptr                                       m_result;
+        std::vector<std::shared_ptr<ngraph::Parameter>> m_parameters;
+        std::string                                     m_name;
     };
+
+    namespace op
+    {
+        std::shared_ptr<Function>
+            function(const Node::ptr&                                         result,
+                     const std::initializer_list<std::shared_ptr<Parameter>>& parameters);
+        std::shared_ptr<Function>
+            function(const Node::ptr&                               result,
+                     const std::vector<std::shared_ptr<Parameter>>& parameters);
+    }
 }

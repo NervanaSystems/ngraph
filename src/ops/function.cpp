@@ -17,27 +17,27 @@
 using namespace std;
 using namespace ngraph;
 
-Parameter::Parameter(Function& function, size_t index)
-    : Node({})
-    , m_function(function)
-    , m_index(index)
-{
-}
-
-void Parameter::propagate_types()
-{
-    if (m_type == nullptr)
-    {
-        throw ngraph_error{"Unitialized parameter"};
-    }
-}
-
-Function::Function(size_t n_parameters)
-    : m_parameters(n_parameters)
+Function::Function(const Node::ptr&                                       result,
+                   const std::vector<std::shared_ptr<ngraph::Parameter>>& parameters)
+    : m_result(result)
+    , m_parameters(parameters)
     , m_name("Function")
 {
-    for (int i = 0; i < n_parameters; i++)
+    size_t i = 0;
+    for (auto parameter : parameters)
     {
-        m_parameters[i] = std::make_shared<Parameter>(*this, i);
+        parameter->assign_function(this, i++);
     }
+}
+
+shared_ptr<Function> ngraph::op::function(const Node::ptr&                               result,
+                                          const initializer_list<shared_ptr<Parameter>>& parameters)
+{
+    return make_shared<Function>(result, parameters);
+}
+
+shared_ptr<Function> ngraph::op::function(const Node::ptr&                     result,
+                                          const vector<shared_ptr<Parameter>>& parameters)
+{
+    return make_shared<Function>(result, parameters);
 }

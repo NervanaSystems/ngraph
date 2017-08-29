@@ -23,5 +23,6 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op.hpp"
+#include "ngraph/parameter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type.hpp"
