@@ -29,11 +29,9 @@ TEST(build_graph, build_simple)
     cluster_0->parameter(2)->type(element::float32_t, {32, 7});
     cluster_0->parameter(3)->type(element::float32_t, {32, 7});
     auto arg3 = cluster_0->parameter(3);
-    // call broadcast op on arg3, broadcasting on axis 0.
     auto broadcast_1 = op::broadcast(arg3, {10, 32, 7}, {0});
     auto arg2        = cluster_0->parameter(2);
     auto arg0        = cluster_0->parameter(0);
-    // call dot op
     auto dot = op::dot(arg2, arg0);
     ASSERT_EQ(dot->arguments()[0], arg2);
     ASSERT_EQ(dot->arguments()[1], arg0);
@@ -61,8 +59,8 @@ TEST(build_graph, as_type)
     ASSERT_EQ(tp_vt, tp_tp);
 }
 
-// Check Call comparisons
-TEST(build_graph, call_comparison)
+// Check node comparisons
+TEST(build_graph, node_comparison)
 {
     auto fun = make_shared<Function>(3);
     fun->parameter(0)->type(element::float32_t, {32, 3});
@@ -79,10 +77,10 @@ TEST(build_graph, call_comparison)
     pattern->parameter(0)->type(element::float32_t, {});
     auto parg = pattern->parameter(0);
     auto pattern_dot = op::dot(parg, parg);
-    ASSERT_TRUE(pattern_dot->has_same_op(dot)); 
+    ASSERT_TRUE(pattern_dot->is_same_op_type(dot)); 
     // TODO This passes because typeid is not behaving as documented.
     // Need to figure out what's wrong.
-    ASSERT_FALSE(pattern_dot->has_same_op(add));
+    ASSERT_FALSE(pattern_dot->is_same_op_type(add));
 }
 
 // Check argument inverses

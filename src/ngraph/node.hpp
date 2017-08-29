@@ -65,11 +65,11 @@ namespace ngraph
         void        name(const std::string& name) { m_name = name; }
 
         /**
-         ** Return true if this has the same implementing class as call. This
+         ** Return true if this has the same implementing class as node. This
          ** will be used by the pattern matcher when comparing a pattern
          ** graph against the graph.
          **/
-         bool has_same_op(const Node::ptr& node) const { return typeid(*this) == typeid(*node.get()); }
+         bool is_same_op_type(const Node::ptr& node) const { return typeid(*this) == typeid(*node.get()); }
 
     protected:
         std::vector<Node::ptr> m_arguments;
