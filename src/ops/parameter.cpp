@@ -17,24 +17,32 @@
 using namespace std;
 using namespace ngraph;
 
-Function::Function(const Node::ptr& result, const std::vector<std::shared_ptr<ngraph::Parameter>>& parameters)
-    : m_result(result)
-    , m_parameters(parameters)
-    , m_name("Function")
+Parameter::Parameter(const ValueType::ptr& value_type)
+    : Node({}, value_type)
+    , m_function(nullptr)
+    , m_index(0)
 {
-    size_t i = 0;
-    for (auto parameter : parameters)
-    {
-        parameter->assign_function(this, i++);
+}
+
+void Parameter::assign_function(Function* function, size_t index)
+{
+    if (nullptr != m_function){
+        throw ngraph_error("Re-assigning function to a parameter.");
     }
+    m_function = function;
+    m_index = index;
 }
 
-shared_ptr<Function> ngraph::op::function(const Node::ptr& result, const initializer_list<shared_ptr<Parameter>>& parameters)
+void Parameter::propagate_types()
 {
-    return make_shared<Function>(result, parameters);
 }
 
-shared_ptr<Function> ngraph::op::function(const Node::ptr& result, const vector<shared_ptr<Parameter>>& parameters)
+shared_ptr<Parameter> ngraph::op::parameter(const ValueType::ptr& value_type)
 {
-    return make_shared<Function>(result, parameters);
+    return make_shared<Parameter>(value_type);
+}
+
+shared_ptr<Parameter> ngraph::op::parameter(const ngraph::element::Type element_type, const Shape& shape)
+{
+    return make_shared<Parameter>(make_shared<TensorViewType>(element_type, shape));
 }

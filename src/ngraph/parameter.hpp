@@ -15,36 +15,38 @@
 #pragma once
 
 #include "ngraph/node.hpp"
-#include "ngraph/op.hpp"
-#include "ngraph/parameter.hpp"
 #include "ngraph/type.hpp"
 
 namespace ngraph
 {
 
+    class Function;
+    
     /**
-     ** A user-defined function.
-     **/
-    class Function
+        ** One parameter of a function. Within the function's graph
+        ** the parameter is a node that represents the argument in a call.
+        **/
+    class Parameter : public Node
     {
+        friend class Function;
+    protected:
+        void assign_function(Function* function, size_t index);
+
     public:
-        Function(const Node::ptr& result, const std::vector<std::shared_ptr<Parameter>>& parameters);
+        Parameter(const ValueType::ptr& value_type);
 
-        Node::ptr result() { return m_result; }
+        std::string description() const override { return "Parameter"; }
 
-        Parameter::ptr parameter(size_t i) { return m_parameters[i]; }
-
-        std::string name() const { return m_name; }
+        virtual void propagate_types() override;
 
     protected:
-        Node::ptr                   m_result;
-        std::vector<std::shared_ptr<ngraph::Parameter>> m_parameters;
-        std::string                 m_name;
+        Function* m_function;
+        size_t    m_index;
     };
 
     namespace op
     {
-        std::shared_ptr<Function> function(const Node::ptr& result, const std::initializer_list<std::shared_ptr<Parameter>>& parameters);
-        std::shared_ptr<Function> function(const Node::ptr& result, const std::vector<std::shared_ptr<Parameter>>& parameters);
+        std::shared_ptr<ngraph::Parameter> parameter(const ValueType::ptr& value_type=nullptr);
+        std::shared_ptr<ngraph::Parameter> parameter(const ngraph::element::Type element_type, const Shape& shape);
     }
 }

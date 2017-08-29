@@ -20,6 +20,7 @@ set (SRC
     log.cpp
     ops/function.cpp
     ops/op.cpp
+    ops/parameter.cpp
     types/element_type.cpp
 )
 

@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "ngraph/node.hpp"
+#include "ngraph/parameter.hpp"
 #include "ngraph/type.hpp"
 
 namespace ngraph
