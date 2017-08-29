@@ -24,6 +24,14 @@ Parameter::Parameter(Function& function, size_t index)
 {
 }
 
+void Parameter::propagate_types()
+{
+    if (m_type == nullptr)
+    {
+        throw ngraph_error{"Unitialized parameter"};
+    }
+}
+
 Function::Function(size_t n_parameters)
     : m_parameters(n_parameters)
     , m_name("Function")

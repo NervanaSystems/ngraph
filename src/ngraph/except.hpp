@@ -12,16 +12,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-//
-// The public API for ngraph++
-//
-
 #pragma once
 
-#include "ngraph/element_type.hpp"
-#include "ngraph/except.hpp"
-#include "ngraph/function.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op.hpp"
-#include "ngraph/shape.hpp"
-#include "ngraph/type.hpp"
+#include <stdexcept>
+
+namespace ngraph
+{
+    /// Base error for ngraph runtime errors.
+    struct ngraph_error : std::runtime_error
+    {
+        explicit ngraph_error(const std::string& what_arg)
+            : std::runtime_error(what_arg)
+        {
+        }
+
+        explicit ngraph_error(const char* what_arg)
+            : std::runtime_error(what_arg)
+        {
+        }
+    };
+}

@@ -18,6 +18,8 @@
 #include <string>
 #include <vector>
 
+#include <iostream>
+
 #include "ngraph/type.hpp"
 
 namespace ngraph
@@ -53,16 +55,21 @@ namespace ngraph
         virtual std::string description() const = 0;
 
         /// Propagate types and check arguments for consistency
-        // virtual void propagate_types() = 0;
+        virtual void propagate_types() = 0;
 
-        const std::vector<Node::ptr> arguments() const { return m_arguments; }
-        std::vector<Node::ptr>       arguments() { return m_arguments; }
+        const std::vector<Node::ptr>& arguments() const { return m_arguments; }
 
-        const std::multiset<Node*> users() const { return m_users; }
-        std::multiset<Node*>       users() { return m_users; }
+        const std::multiset<Node*>& users() const { return m_users; }
 
         std::string name() const { return m_name; }
         void        name(const std::string& name) { m_name = name; }
+
+        /**
+         ** Return true if this has the same implementing class as node. This
+         ** will be used by the pattern matcher when comparing a pattern
+         ** graph against the graph.
+         **/
+         bool is_same_op_type(const Node::ptr& node) const { return typeid(*this) == typeid(*node.get()); }
 
     protected:
         std::vector<Node::ptr> m_arguments;
