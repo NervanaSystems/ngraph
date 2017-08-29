@@ -21,6 +21,7 @@ namespace ngraph
     /// Base error for ngraph runtime errors.
     struct ngraph_error : std::runtime_error
     {
+        
         explicit ngraph_error(const std::string& what_arg)
             : std::runtime_error(what_arg)
         {
