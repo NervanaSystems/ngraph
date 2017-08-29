@@ -19,9 +19,8 @@
 
 namespace ngraph
 {
-
     class Function;
-    
+
     /**
      ** Parameters are nodes that represent the arguments that will be passed to user-defined functions.
      ** Function creation requires a sequence of parameters.
@@ -30,6 +29,7 @@ namespace ngraph
     class Parameter : public Node
     {
         friend class Function;
+
     protected:
         // Called by the Function constructor to associate this parameter with the function.
         // It is an error to try to associate a parameter with more than one function.
@@ -50,8 +50,9 @@ namespace ngraph
     namespace op
     {
         /// Factory for frameworks
-        std::shared_ptr<ngraph::Parameter> parameter(const ValueType::ptr& value_type=nullptr);
+        std::shared_ptr<ngraph::Parameter> parameter(const ValueType::ptr& value_type = nullptr);
         /// Convenience factory for tests
-        std::shared_ptr<ngraph::Parameter> parameter(const ngraph::element::Type element_type, const Shape& shape);
+        std::shared_ptr<ngraph::Parameter> parameter(const ngraph::element::Type element_type,
+                                                     const Shape&                shape);
     }
 }

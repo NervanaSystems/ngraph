@@ -26,23 +26,23 @@ Parameter::Parameter(const ValueType::ptr& value_type)
 
 void Parameter::assign_function(Function* function, size_t index)
 {
-    if (nullptr != m_function){
+    if (nullptr != m_function)
+    {
         throw ngraph_error("Re-assigning function to a parameter.");
     }
     m_function = function;
-    m_index = index;
+    m_index    = index;
 }
 
-void Parameter::propagate_types()
-{
-}
+void Parameter::propagate_types() {}
 
 shared_ptr<Parameter> ngraph::op::parameter(const ValueType::ptr& value_type)
 {
     return make_shared<Parameter>(value_type);
 }
 
-shared_ptr<Parameter> ngraph::op::parameter(const ngraph::element::Type element_type, const Shape& shape)
+shared_ptr<Parameter> ngraph::op::parameter(const ngraph::element::Type element_type,
+                                            const Shape&                shape)
 {
     return make_shared<Parameter>(make_shared<TensorViewType>(element_type, shape));
 }

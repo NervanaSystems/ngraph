@@ -17,7 +17,8 @@
 using namespace std;
 using namespace ngraph;
 
-Function::Function(const Node::ptr& result, const std::vector<std::shared_ptr<ngraph::Parameter>>& parameters)
+Function::Function(const Node::ptr&                                       result,
+                   const std::vector<std::shared_ptr<ngraph::Parameter>>& parameters)
     : m_result(result)
     , m_parameters(parameters)
     , m_name("Function")
@@ -29,12 +30,14 @@ Function::Function(const Node::ptr& result, const std::vector<std::shared_ptr<ng
     }
 }
 
-shared_ptr<Function> ngraph::op::function(const Node::ptr& result, const initializer_list<shared_ptr<Parameter>>& parameters)
+shared_ptr<Function> ngraph::op::function(const Node::ptr&                               result,
+                                          const initializer_list<shared_ptr<Parameter>>& parameters)
 {
     return make_shared<Function>(result, parameters);
 }
 
-shared_ptr<Function> ngraph::op::function(const Node::ptr& result, const vector<shared_ptr<Parameter>>& parameters)
+shared_ptr<Function> ngraph::op::function(const Node::ptr&                     result,
+                                          const vector<shared_ptr<Parameter>>& parameters)
 {
     return make_shared<Function>(result, parameters);
 }

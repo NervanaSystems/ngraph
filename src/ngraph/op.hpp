@@ -67,13 +67,12 @@ namespace ngraph
 
     /**
      ** Op nodes are nodes whose value is the result of some operation
-     ** applied to its arguments. For calls to user functions, the op will 
+     ** applied to its arguments. For calls to user functions, the op will
      ** reference the user function.
      **/
     class Op : public Node
     {
     public:
-
         Op(const std::vector<Node::ptr>& arguments)
             : Node(arguments, nullptr)
         {
@@ -86,8 +85,8 @@ namespace ngraph
      **/
     class FunctionOp : public Op
     {
-
         virtual std::string description() const override { return "FunctionOp"; }
+
     protected:
         Node::ptr m_function;
     };
@@ -102,7 +101,7 @@ namespace ngraph
         virtual std::string description() const override { return "BuiltinOp"; }
         /// Name of the builtin op, for debugging and logging.
         virtual std::string op_name() const = 0;
-        
+
         // TODO: Implement for each op
         virtual void propagate_types() override {}
 
@@ -122,7 +121,7 @@ namespace ngraph
         }
 
         virtual std::string op_name() const override { return "abs"; }
-        //virtual void propagate_types() override;  
+        //virtual void propagate_types() override;
     };
 
     class AddOp : public BuiltinOp
@@ -133,7 +132,7 @@ namespace ngraph
         {
         }
         virtual std::string op_name() const override { return "add"; }
-        //virtual void propagate_types() override;  
+        //virtual void propagate_types() override;
     };
 
     class BroadcastOp : public BuiltinOp
@@ -153,7 +152,7 @@ namespace ngraph
         }
 
         virtual std::string op_name() const override { return "broadcast"; }
-        virtual void propagate_types() override;
+        virtual void        propagate_types() override;
 
     protected:
         Shape               m_shape;
@@ -192,9 +191,9 @@ namespace ngraph
             : BuiltinOp({arg0, arg1})
         {
         }
-        
+
         virtual std::string op_name() const override { return "dot"; }
-        virtual void propagate_types() override;
+        virtual void        propagate_types() override;
     };
 
     class EqualOp : public BuiltinOp
@@ -216,7 +215,7 @@ namespace ngraph
             : BuiltinOp({arg0})
         {
         }
-        
+
         virtual std::string op_name() const override { return "exp"; }
         //virtual void propagate_types() override;
     };
@@ -228,7 +227,7 @@ namespace ngraph
             : BuiltinOp({arg0, arg1})
         {
         }
-        
+
         virtual std::string op_name() const override { return "floor"; }
         //virtual void propagate_types() override;
     };
@@ -252,7 +251,7 @@ namespace ngraph
             : BuiltinOp({arg0, arg1})
         {
         }
-        
+
         virtual std::string op_name() const override { return "less"; }
         //virtual void propagate_types() override;
     };
@@ -324,7 +323,7 @@ namespace ngraph
             : BuiltinOp({arg0, arg1})
         {
         }
-        
+
         virtual std::string op_name() const override { return "power"; }
         //virtual void propagate_types() override;
     };
