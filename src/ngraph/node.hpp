@@ -68,10 +68,8 @@ namespace ngraph
          ** Return true if this has the same implementing class as call. This
          ** will be used by the pattern matcher when comparing a pattern
          ** graph against the graph.
-         ** TODO: typeids are Node*, doc says they should be the actual classes.
          **/
-         bool has_same_op(const Node::ptr& node) { return typeid(this) == typeid(node.get()); }
-         
+         bool has_same_op(const Node::ptr& node) const { return typeid(*this) == typeid(*node.get()); }
 
     protected:
         std::vector<Node::ptr> m_arguments;

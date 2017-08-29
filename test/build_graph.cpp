@@ -62,7 +62,7 @@ TEST(build_graph, as_type)
 }
 
 // Check Call comparisons
-TEST(DISABLED_build_graph, call_comparison)
+TEST(build_graph, call_comparison)
 {
     auto fun = make_shared<Function>(3);
     fun->parameter(0)->type(element::float32_t, {32, 3});
