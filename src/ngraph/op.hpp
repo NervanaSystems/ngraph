@@ -26,7 +26,6 @@ namespace ngraph
     {
         Node::ptr abs(const Node::ptr& arg);
         Node::ptr add(const Node::ptr& arg0, const Node::ptr& arg1);
-        //Node::ptr candidate();
         Node::ptr ceiling(const Node::ptr& arg0, const Node::ptr& arg1);
         //Node::ptr convert();
         //Node::ptr convolution();
@@ -34,11 +33,13 @@ namespace ngraph
         Node::ptr equal(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr exponential(const Node::ptr& arg0);
         Node::ptr floor(const Node::ptr& arg0, const Node::ptr& arg1);
-        //Node::ptr get();
+        //Node::ptr get_tuple_element();
         Node::ptr greater(const Node::ptr& arg0, const Node::ptr& arg1);
+        //Node::ptr greater_equal(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr less(const Node::ptr& arg0, const Node::ptr& arg1);
+        //Node::ptr less_equal(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr log(const Node::ptr& arg0);
-        //Node::ptr logical();
+        //Node::ptr logical(); and, or, not
         Node::ptr maximum(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr minimum(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr multiply(const Node::ptr& arg0, const Node::ptr& arg1);
@@ -46,11 +47,13 @@ namespace ngraph
         //Node::ptr pad();
         Node::ptr power(const Node::ptr& arg0, const Node::ptr& arg1);
         //Node::ptr reduce();
+        // Node::ptr reduce_window();
         Node::ptr remainder(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr reshape(const Node::ptr& arg0, const Shape& shape);
         //Node::ptr reverse();
         //Node::ptr rng();
         //Node::ptr select();
+        //Node::ptr select_scatter();
         //Node::ptr slice();
         Node::ptr subtract(const Node::ptr& arg0, const Node::ptr& arg1);
         //Node::ptr transpose();

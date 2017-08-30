@@ -20,6 +20,7 @@ set (SRC
     log.cpp
     ops/broadcast.cpp
     ops/concatenate.cpp
+    ops/convert.cpp
     ops/constant.cpp
     ops/dot.cpp
     ops/function.cpp
