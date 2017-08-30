@@ -19,9 +19,11 @@ set (SRC
     util.cpp
     log.cpp
     ops/function.cpp
+    ops/literal.cpp
     ops/op.cpp
     ops/parameter.cpp
     types/element_type.cpp
+    types/type.cpp
 )
 
 # NOTE: We'd prefer to only have the .cpp files *in* the 'transformers' directory be compiled

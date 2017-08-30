@@ -17,6 +17,8 @@
 
 #include "ngraph/element_type.hpp"
 
+using namespace ngraph;
+
 std::map<std::string, ngraph::element::Type> ngraph::element::Type::m_element_list;
 
 ngraph::element::Type::Type(size_t             bitwidth,
@@ -46,3 +48,28 @@ size_t ngraph::element::Type::size() const
 {
     return std::ceil((float)m_bitwidth / 8.0);
 }
+
+namespace
+{
+    const element::Float  s_float32_t = element::Float{"float"};
+    const element::Int8   s_int8_t    = element::Int8{"int8_t"};
+    const element::Int32  s_int32_t   = element::Int32{"int32_t"};
+    const element::Int64  s_int64_t   = element::Int64{"int64_t"};
+    const element::UInt8  s_uint8_t   = element::UInt8{"uint8_t"};
+    const element::UInt32 s_uint32_t  = element::UInt32{"uint32_t"};
+    const element::UInt64 s_uint64_t  = element::UInt64{"uint64_t"};
+}
+template <>
+const element::TraitedType<float>& element::TraitedType<float>::type = s_float32_t;
+template <>
+const element::TraitedType<int8_t>& element::TraitedType<int8_t>::type = s_int8_t;
+template <>
+const element::TraitedType<int32_t>& element::TraitedType<int32_t>::type = s_int32_t;
+template <>
+const element::TraitedType<int64_t>& element::TraitedType<int64_t>::type = s_int64_t;
+template <>
+const element::TraitedType<uint8_t>& element::TraitedType<uint8_t>::type = s_uint8_t;
+template <>
+const element::TraitedType<uint32_t>& element::TraitedType<uint32_t>::type = s_uint32_t;
+template <>
+const element::TraitedType<uint64_t>& element::TraitedType<uint64_t>::type = s_uint64_t;

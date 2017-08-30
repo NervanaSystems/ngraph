@@ -39,6 +39,8 @@ namespace ngraph
         using ptr = std::shared_ptr<ValueType>;
 
         virtual ~ValueType() {}
+        virtual bool operator==(const ValueType::ptr& that) const = 0;
+        bool         operator!=(const ValueType::ptr& that) const { return !(*this == that); }
     };
 
     /**
@@ -64,6 +66,8 @@ namespace ngraph
 
         const element::Type& element_type() const { return m_element_type; }
         const Shape&         shape() const { return m_shape; }
+
+        virtual bool operator==(const ValueType::ptr& that) const override;
 
     protected:
         const element::Type& m_element_type;
@@ -96,6 +100,8 @@ namespace ngraph
 
         const std::vector<ValueType::ptr> element_types() const { return m_element_types; }
         std::vector<ValueType::ptr>       element_types() { return m_element_types; }
+
+        virtual bool operator==(const ValueType::ptr& that) const override;
 
     protected:
         std::vector<ValueType::ptr> m_element_types;
