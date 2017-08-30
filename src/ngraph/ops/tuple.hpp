@@ -12,8 +12,24 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ngraph.hpp"
+#pragma once
 
-using namespace ngraph;
+namespace ngraph
+{
+    namespace op
+    {
+        Node::ptr tuple(const std::vector<Node::ptr>& args);
+    }
 
-void ScalarLiteralBaseOp::propagate_types() {}
+    class TupleOp : public BuiltinOp
+    {
+    public:
+        TupleOp(const std::vector<Node::ptr>& args)
+            : BuiltinOp(args)
+        {
+        }
+
+        virtual std::string op_name() const override { return "tuple"; }
+        virtual void        propagate_types() override;
+    };
+}

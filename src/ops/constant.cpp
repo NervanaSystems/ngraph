@@ -12,22 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-//
-// The public API for ngraph++
-//
+#include "ngraph/ngraph.hpp"
 
-#pragma once
+using namespace ngraph;
 
-#include "ngraph/element_type.hpp"
-#include "ngraph/except.hpp"
-#include "ngraph/function.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/dot.hpp"
-#include "ngraph/ops/concatenate.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/tuple.hpp"
-#include "ngraph/shape.hpp"
-#include "ngraph/type.hpp"
+void ScalarConstantBaseOp::propagate_types() {}

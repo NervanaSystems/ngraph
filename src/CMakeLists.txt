@@ -18,11 +18,14 @@ set (SRC
     tree.cpp
     util.cpp
     log.cpp
+    ops/broadcast.cpp
     ops/concatenate.cpp
+    ops/constant.cpp
+    ops/dot.cpp
     ops/function.cpp
-    ops/literal.cpp
     ops/op.cpp
     ops/parameter.cpp
+    ops/tuple.cpp
     types/element_type.cpp
     types/type.cpp
 )

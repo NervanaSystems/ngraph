@@ -18,11 +18,11 @@
 
 namespace ngraph
 {
-    // Defines methods to all literal scalars
-    class ScalarLiteralBaseOp : public Node
+    // Defines methods to all constant scalars
+    class ScalarConstantBaseOp : public Node
     {
     protected:
-        ScalarLiteralBaseOp(const std::shared_ptr<TensorViewType>& type)
+        ScalarConstantBaseOp(const std::shared_ptr<TensorViewType>& type)
             : Node({}, type)
         {
         }
@@ -30,10 +30,10 @@ namespace ngraph
         virtual void propagate_types() override;
     };
 
-    // Implement a literal scalar for each element type.
+    // Implement a constant scalar for each element type.
     // The static make method takes a
     template <typename T>
-    class ScalarLiteralOp : public ScalarLiteralBaseOp
+    class ScalarConstantOp : public ScalarConstantBaseOp
     {
     public:
         // The ngraph element type
@@ -41,34 +41,34 @@ namespace ngraph
         // The C++ type that holds the element type
         using ctype = typename T::ctype;
 
-        ScalarLiteralOp(typename T::ctype value)
-            : ScalarLiteralBaseOp(std::make_shared<TensorViewType>(T::type, ngraph::Shape{}))
+        ScalarConstantOp(typename T::ctype value)
+            : ScalarConstantBaseOp(std::make_shared<TensorViewType>(T::type, ngraph::Shape{}))
             , m_value(value)
         {
         }
 
-        virtual std::string description() const override { return "LiteralScalar"; }
+        virtual std::string description() const override { return "ConstantScalar"; }
 
         typename T::ctype value() const { return m_value; }
 
-        // Make a literal from any value that can be converted to the C++ type we use
+        // Make a constant from any value that can be converted to the C++ type we use
         // to represent the values.
         template <typename U>
-        static std::shared_ptr<ScalarLiteralOp<T>> make(U value)
+        static std::shared_ptr<ScalarConstantOp<T>> make(U value)
         {
-            return std::make_shared<ScalarLiteralOp<T>>(
-                static_cast<ScalarLiteralOp<T>::ctype>(value));
+            return std::make_shared<ScalarConstantOp<T>>(
+                static_cast<ScalarConstantOp<T>::ctype>(value));
         }
 
     protected:
         typename T::ctype m_value;
     };
 
-    using FloatScalarOp  = ScalarLiteralOp<element::Float>;
-    using Int8ScalarOp   = ScalarLiteralOp<element::Int8>;
-    using Int32ScalarOp  = ScalarLiteralOp<element::Int32>;
-    using Int64ScalarOp  = ScalarLiteralOp<element::Int64>;
-    using UInt8ScalarOp  = ScalarLiteralOp<element::UInt8>;
-    using UInt32ScalarOp = ScalarLiteralOp<element::UInt32>;
-    using UInt64ScalarOp = ScalarLiteralOp<element::UInt64>;
+    using FloatScalarConstantOp  = ScalarConstantOp<element::Float>;
+    using Int8ScalarConstantOp   = ScalarConstantOp<element::Int8>;
+    using Int32ScalarConstantOp  = ScalarConstantOp<element::Int32>;
+    using Int64ScalarConstantOp  = ScalarConstantOp<element::Int64>;
+    using UInt8ScalarConstantOp  = ScalarConstantOp<element::UInt8>;
+    using UInt32ScalarConstantOp = ScalarConstantOp<element::UInt32>;
+    using UInt64ScalarConstantOp = ScalarConstantOp<element::UInt64>;
 }

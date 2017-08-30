@@ -12,22 +12,26 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-//
-// The public API for ngraph++
-//
-
 #pragma once
 
-#include "ngraph/element_type.hpp"
-#include "ngraph/except.hpp"
-#include "ngraph/function.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/dot.hpp"
-#include "ngraph/ops/concatenate.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/tuple.hpp"
-#include "ngraph/shape.hpp"
-#include "ngraph/type.hpp"
+namespace ngraph
+{
+
+    class DotOp : public BuiltinOp
+    {
+    public:
+        /// TODO: Semantics of arg0 and arg1 axes wrt reduction.
+        DotOp(const Node::ptr& arg0, const Node::ptr& arg1)
+            : BuiltinOp({arg0, arg1})
+        {
+        }
+
+        virtual std::string op_name() const override { return "dot"; }
+        virtual void        propagate_types() override;
+    };
+
+    namespace op
+    {
+        Node::ptr dot(const Node::ptr& arg0, const Node::ptr& arg1);
+    }
+}

@@ -75,7 +75,7 @@ TEST(build_graph, node_comparison)
 TEST(build_graph, literal)
 {
     // float scalar from a float
-    auto float0 = FloatScalarOp::make(3.0);
+    auto float0 = FloatScalarConstantOp::make(3.0);
     auto float_scalar_type =  make_shared<TensorViewType>(element::Float::type, Shape{});
     ASSERT_EQ(float0->value(), 3.0);
     ASSERT_EQ(*float0->type(), float_scalar_type);
@@ -84,11 +84,11 @@ TEST(build_graph, literal)
     ASSERT_EQ(d->arguments().at(1), float0);
 
     // float scalar from an int
-    auto float1 = FloatScalarOp::make(3);
+    auto float1 = FloatScalarConstantOp::make(3);
     ASSERT_EQ(float1->value(), 3);
     ASSERT_EQ(*float1->type(), float_scalar_type);
     
-    auto int32_0 = Int32ScalarOp::make(3.0);
+    auto int32_0 = Int32ScalarConstantOp::make(3.0);
     auto int32_scalar_type =  make_shared<TensorViewType>(element::Int32::type, Shape{});
     ASSERT_EQ(int32_0->value(), 3);
     ASSERT_EQ(*int32_0->type(), int32_scalar_type);

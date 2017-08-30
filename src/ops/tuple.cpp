@@ -12,22 +12,19 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-//
-// The public API for ngraph++
-//
+#include <memory>
 
-#pragma once
+#include "ngraph/ngraph.hpp"
 
-#include "ngraph/element_type.hpp"
-#include "ngraph/except.hpp"
-#include "ngraph/function.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/dot.hpp"
-#include "ngraph/ops/concatenate.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/tuple.hpp"
-#include "ngraph/shape.hpp"
-#include "ngraph/type.hpp"
+using namespace std;
+using namespace ngraph;
+
+void TupleOp::propagate_types()
+{
+    throw ngraph_error("NIY");
+}
+
+Node::ptr op::tuple(const std::vector<Node::ptr>& args)
+{
+    return make_shared<TupleOp>(args);
+}

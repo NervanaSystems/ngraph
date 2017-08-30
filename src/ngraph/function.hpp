@@ -16,7 +16,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op.hpp"
-#include "ngraph/parameter.hpp"
+#include "ngraph/ops/parameter.hpp"
 #include "ngraph/type.hpp"
 
 namespace ngraph
