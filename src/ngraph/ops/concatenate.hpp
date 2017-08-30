@@ -12,19 +12,24 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-//
-// The public API for ngraph++
-//
-
 #pragma once
 
-#include "ngraph/element_type.hpp"
-#include "ngraph/except.hpp"
-#include "ngraph/function.hpp"
-#include "ngraph/literal.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op.hpp"
-#include "ngraph/ops/concatenate.hpp"
-#include "ngraph/parameter.hpp"
-#include "ngraph/shape.hpp"
-#include "ngraph/type.hpp"
+namespace ngraph
+{
+    namespace op
+    {
+        Node::ptr concatenate(const std::vector<Node::ptr>& args);
+    }
+
+    class ConcatenateOp : public BuiltinOp
+    {
+    public:
+        ConcatenateOp(const std::vector<Node::ptr>& args)
+            : BuiltinOp(args)
+        {
+        }
+
+        virtual std::string op_name() const override { return "concatenate"; }
+        virtual void        propagate_types() override;
+    };
+}

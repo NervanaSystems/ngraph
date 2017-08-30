@@ -18,6 +18,7 @@ set (SRC
     tree.cpp
     util.cpp
     log.cpp
+    ops/concatenate.cpp
     ops/function.cpp
     ops/literal.cpp
     ops/op.cpp

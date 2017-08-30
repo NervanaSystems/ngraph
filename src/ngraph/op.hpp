@@ -32,7 +32,7 @@ namespace ngraph
 
         //Node::ptr candidate();
         Node::ptr ceiling(const Node::ptr& arg0, const Node::ptr& arg1);
-        //Node::ptr concatenate();
+
         //Node::ptr constant();
         //Node::ptr convert();
         //Node::ptr convolution();
