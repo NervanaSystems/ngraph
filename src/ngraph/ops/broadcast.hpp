@@ -43,8 +43,7 @@ namespace ngraph
     namespace op
     {
         Node::ptr broadcast(const Node::ptr&           tensor,
-            const Shape&               shape,
-            const std::vector<size_t>& broadcast_axes);
-
+                            const Shape&               shape,
+                            const std::vector<size_t>& broadcast_axes);
     }
 }

@@ -16,7 +16,6 @@
 
 namespace ngraph
 {
-
     class DotOp : public BuiltinOp
     {
     public:
