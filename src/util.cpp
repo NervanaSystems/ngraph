@@ -16,6 +16,7 @@
 #include <map>
 
 #include "util.hpp"
+#include "ngraph/node.hpp"
 
 using namespace std;
 
@@ -128,4 +129,26 @@ size_t ngraph::hash_combine(const std::vector<size_t>& list)
         seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
     return seed;
+}
+
+static void traverse_nodes(std::shared_ptr<ngraph::Node>                      p,
+                           std::function<void(std::shared_ptr<ngraph::Node>)> f,
+                           std::set<size_t>&                                  instances_seen)
+{
+    f(p);
+    for (auto arg : p->arguments())
+    {
+        if (instances_seen.find(arg->instance_id()) == instances_seen.end())
+        {
+            instances_seen.insert(arg->instance_id());
+            traverse_nodes(arg, f, instances_seen);
+        }
+    }
+}
+
+void ngraph::traverse_nodes(std::shared_ptr<ngraph::Node>                      p,
+                            std::function<void(std::shared_ptr<ngraph::Node>)> f)
+{
+    std::set<size_t> instances_seen;
+    ::traverse_nodes(p, f, instances_seen);
 }

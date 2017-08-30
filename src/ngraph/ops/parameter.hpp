@@ -38,9 +38,9 @@ namespace ngraph
     public:
         Parameter(const ValueType::ptr& value_type);
 
-        std::string description() const override { return "Parameter"; }
-
-        virtual void propagate_types() override;
+        std::string         description() const override { return "Parameter"; }
+        virtual void        propagate_types() override;
+        virtual std::string node_id() const override;
 
     protected:
         Function* m_function;

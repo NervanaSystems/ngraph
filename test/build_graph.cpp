@@ -28,6 +28,7 @@ TEST(build_graph, build_simple)
     auto arg3        = op::parameter(element::Float::type, {32, 7});
     auto broadcast_1 = op::broadcast(arg3, {10, 32, 7}, {0});
     auto dot         = op::dot(arg2, arg0);
+    ASSERT_EQ(2, dot->arguments().size());
     ASSERT_EQ(dot->arguments()[0], arg2);
     ASSERT_EQ(dot->arguments()[1], arg0);
 
@@ -96,4 +97,6 @@ TEST(build_graph, literal)
 }
 
 // Check argument inverses
-TEST(build_graph, arg_inverse) {}
+TEST(build_graph, arg_inverse)
+{
+}

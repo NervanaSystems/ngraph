@@ -89,7 +89,6 @@ namespace ngraph
          ** Construct empty tuple and add value types later.
          **/
         TupleType() {}
-
         /**
          ** /param element_types A vector of types for the tuple elements
          **/
@@ -123,7 +122,6 @@ namespace ngraph
          ** /param type The new type
          **/
         void type(const ValueType::ptr& type) { m_type = type; }
-
         /**
          ** Set the type to be a tensor view type
          ** /param element_type The type of the tensor elements
@@ -138,12 +136,10 @@ namespace ngraph
          ** The type associated with this value.
          **/
         ValueType::ptr type() { return m_type; }
-
         /**
          ** The type associated with this value.
          **/
         const ValueType::ptr type() const { return m_type; }
-
     protected:
         ValueType::ptr m_type;
     };
