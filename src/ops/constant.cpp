@@ -16,4 +16,4 @@
 
 using namespace ngraph;
 
-void ScalarConstantBaseOp::propagate_types() {}
+void ScalarConstantBase::propagate_types() {}
