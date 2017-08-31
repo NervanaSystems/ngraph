@@ -56,8 +56,7 @@ namespace ngraph
         template <typename U>
         static std::shared_ptr<ScalarConstantOp<T>> make(U value)
         {
-            return std::make_shared<ScalarConstantOp<T>>(
-                static_cast<ScalarConstantOp<T>::ctype>(value));
+            return std::make_shared<ScalarConstantOp<T>>(value);
         }
 
     protected:
