@@ -21,10 +21,10 @@ namespace ngraph
         Node::ptr concatenate(const Nodes& args);
     }
 
-    class ConcatenateOp : public BuiltinOp
+    class ConcatOp : public BuiltinOp
     {
     public:
-        ConcatenateOp(const Nodes& args)
+        ConcatOp(const Nodes& args)
             : BuiltinOp(args)
         {
         }

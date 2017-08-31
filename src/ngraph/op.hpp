@@ -24,6 +24,7 @@ namespace ngraph
 {
     namespace op
     {
+        
         Node::ptr abs(const Node::ptr& arg);
         Node::ptr add(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr ceiling(const Node::ptr& arg0, const Node::ptr& arg1);
@@ -31,7 +32,7 @@ namespace ngraph
         //Node::ptr convolution();
         Node::ptr divide(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr equal(const Node::ptr& arg0, const Node::ptr& arg1);
-        Node::ptr exponential(const Node::ptr& arg0);
+        Node::ptr exp(const Node::ptr& arg0);
         Node::ptr floor(const Node::ptr& arg0, const Node::ptr& arg1);
         //Node::ptr get_tuple_element();
         Node::ptr greater(const Node::ptr& arg0, const Node::ptr& arg1);
@@ -43,7 +44,7 @@ namespace ngraph
         Node::ptr maximum(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr minimum(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr multiply(const Node::ptr& arg0, const Node::ptr& arg1);
-        Node::ptr negate(const Node::ptr& arg0);
+        Node::ptr negative(const Node::ptr& arg0);
         //Node::ptr pad();
         Node::ptr power(const Node::ptr& arg0, const Node::ptr& arg1);
         //Node::ptr reduce();
@@ -166,10 +167,10 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class ExponentialOp : public BuiltinOp
+    class ExpOp : public BuiltinOp
     {
     public:
-        ExponentialOp(const Node::ptr& arg0)
+        ExpOp(const Node::ptr& arg0)
             : BuiltinOp({arg0})
         {
         }
@@ -262,15 +263,15 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class NegateOp : public BuiltinOp
+    class NegativeOp : public BuiltinOp
     {
     public:
-        NegateOp(const Node::ptr& arg0)
+        NegativeOp(const Node::ptr& arg0)
             : BuiltinOp({arg0})
         {
         }
 
-        virtual std::string op_name() const override { return "negate"; }
+        virtual std::string op_name() const override { return "negative"; }
         //virtual void propagate_types() override;
     };
 

@@ -19,12 +19,12 @@
 using namespace std;
 using namespace ngraph;
 
-void ConcatenateOp::propagate_types()
+void ConcatOp::propagate_types()
 {
     throw ngraph_error("NIY");
 }
 
 Node::ptr op::concatenate(const std::vector<Node::ptr>& args)
 {
-    return make_shared<ConcatenateOp>(args);
+    return make_shared<ConcatOp>(args);
 }

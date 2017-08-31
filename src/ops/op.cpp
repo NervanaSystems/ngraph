@@ -42,9 +42,9 @@ Node::ptr ngraph::op::divide(const Node::ptr& arg0, const Node::ptr& arg1)
     return make_shared<DivideOp>(arg0, arg1);
 }
 
-Node::ptr ngraph::op::exponential(const Node::ptr& arg0)
+Node::ptr ngraph::op::exp(const Node::ptr& arg0)
 {
-    return make_shared<ExponentialOp>(arg0);
+    return make_shared<ExpOp>(arg0);
 }
 
 Node::ptr ngraph::op::floor(const Node::ptr& arg0, const Node::ptr& arg1)
@@ -72,9 +72,9 @@ Node::ptr ngraph::op::multiply(const Node::ptr& arg0, const Node::ptr& arg1)
     return make_shared<MultiplyOp>(arg0, arg1);
 }
 
-Node::ptr ngraph::op::negate(const Node::ptr& arg0)
+Node::ptr ngraph::op::negative(const Node::ptr& arg0)
 {
-    return make_shared<NegateOp>(arg0);
+    return make_shared<NegativeOp>(arg0);
 }
 
 // 'pad',

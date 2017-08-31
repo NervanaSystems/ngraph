@@ -16,18 +16,34 @@
 
 #include "ngraph/ngraph.hpp"
 
+#include <memory>
 using namespace std;
 using namespace ngraph;
+
+
+template<typename T, typename ...A>
+std::shared_ptr<T> myfun(A&&... args)
+{
+    return std::make_shared<T>(args...);
+}
+
+template<>
+std::shared_ptr<Parameter> myfun<Parameter> (ngraph::element::Type&& element_type, Shape&& shape)
+{
+    return make_shared<Parameter>(make_shared<TensorViewType>(element_type, shape));
+}
 
 TEST(build_graph, build_simple)
 {
     // Function with 4 parameters
-    auto arg0        = op::parameter(element::Float::type, {7, 3});
-    auto arg1        = op::parameter(element::Float::type, {3});
-    auto arg2        = op::parameter(element::Float::type, {32, 7});
-    auto arg3        = op::parameter(element::Float::type, {32, 7});
-    auto broadcast_1 = op::broadcast(arg3, {10, 32, 7}, {0});
+    auto arg0        = myfun<Parameter>(element::Float::type, Shape{7, 3});
+    auto arg1        = op::parameter(element::Float::type, Shape{3});
+    auto arg2        = op::parameter(element::Float::type, Shape{32, 7});
+    auto arg3        = op::parameter(element::Float::type, Shape{32, 7});
+    auto broadcast_1 = op::broadcast(arg3, Shape{10, 32, 7}, BroadcastOp::Axes{0});
+    auto b1 = myfun<BroadcastOp>(arg3, Shape{10, 32, 7}, BroadcastOp::Axes{0});
     auto dot         = op::dot(arg2, arg0);
+    auto d1 = myfun<DotOp>(arg2, arg0);
     ASSERT_EQ(dot->arguments()[0], arg2);
     ASSERT_EQ(dot->arguments()[1], arg0);
 
@@ -96,4 +112,7 @@ TEST(build_graph, literal)
 }
 
 // Check argument inverses
-TEST(build_graph, arg_inverse) {}
+TEST(build_graph, arg_inverse) 
+{
+}
+
