@@ -27,8 +27,8 @@ Node::ptr ngraph::op::dot(const Node::ptr& arg0, const Node::ptr& arg1)
 
 void DotOp::propagate_types()
 {
-    auto arg0_tensor_type = dynamic_pointer_cast<TensorViewType>(m_arguments.at(0)->type());
-    auto arg1_tensor_type = dynamic_pointer_cast<TensorViewType>(m_arguments.at(1)->type());
+    auto arg0_tensor_type = dynamic_pointer_cast<TensorViewType>(m_arguments.at(0)->value_type());
+    auto arg1_tensor_type = dynamic_pointer_cast<TensorViewType>(m_arguments.at(1)->value_type());
     if (nullptr == arg0_tensor_type || nullptr == arg1_tensor_type)
     {
         throw ngraph_error("Arguments to dot must be tensor views");
@@ -60,5 +60,5 @@ void DotOp::propagate_types()
     copy(arg0_shape.begin(), arg0_shape.begin() + arg1_reduction, result_shape.end());
     copy(arg1_shape.begin(), arg1_shape.begin() + arg1_reduction, result_shape.end());
     copy(arg1_shape.begin() + arg1_reduction, arg1_shape.end(), result_shape.end());
-    m_type = make_shared<TensorViewType>(arg0_tensor_type->element_type(), result_shape);
+    m_value_type = make_shared<TensorViewType>(arg0_tensor_type->element_type(), result_shape);
 }

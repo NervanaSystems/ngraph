@@ -112,8 +112,8 @@ namespace ngraph
     class TypedValueMixin
     {
     public:
-        TypedValueMixin(const ValueType::ptr& type = nullptr)
-            : m_type(type)
+        TypedValueMixin(const ValueType::ptr& value_type = nullptr)
+            : m_value_type(value_type)
         {
         }
 
@@ -121,26 +121,26 @@ namespace ngraph
          ** Set the type
          ** /param type The new type
          **/
-        void type(const ValueType::ptr& type) { m_type = type; }
+        void value_type(const ValueType::ptr& value_type) { m_value_type = value_type; }
         /**
          ** Set the type to be a tensor view type
          ** /param element_type The type of the tensor elements
          ** /param shape The shape of the view
          **/
-        void type(const element::Type& element_type, const Shape& shape)
+        void value_type(const element::Type& element_type, const Shape& shape)
         {
-            m_type = std::make_shared<TensorViewType>(element_type, shape);
+            m_value_type = std::make_shared<TensorViewType>(element_type, shape);
         }
 
         /**
          ** The type associated with this value.
          **/
-        ValueType::ptr type() { return m_type; }
+        ValueType::ptr value_type() { return m_value_type; }
         /**
          ** The type associated with this value.
          **/
-        const ValueType::ptr type() const { return m_type; }
+        const ValueType::ptr value_type() const { return m_value_type; }
     protected:
-        ValueType::ptr m_type;
+        ValueType::ptr m_value_type;
     };
 }

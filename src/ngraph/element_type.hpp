@@ -66,7 +66,7 @@ namespace ngraph
 
         public:
             // This is the C++ type used to hold a value of this element type during compilation
-            using ctype = T;
+            using type = T;
             // This is a reference to an instance of this element type.
             static const U& element_type(){
                 static U t;

@@ -93,7 +93,7 @@ TEST(build_graph, literal)
     auto float0 = FloatScalarConstant::make(3.0);
     auto float_scalar_type =  make_shared<TensorViewType>(element::Float::element_type(), Shape{});
     ASSERT_EQ(float0->value(), 3.0);
-    ASSERT_EQ(*float0->type(), float_scalar_type);
+    ASSERT_EQ(*float0->value_type(), float_scalar_type);
     auto d = op::dot(float0, float0);
     ASSERT_EQ(d->arguments().at(0), float0);
     ASSERT_EQ(d->arguments().at(1), float0);
@@ -101,13 +101,13 @@ TEST(build_graph, literal)
     // float scalar from an int
     auto float1 = FloatScalarConstant::make(3);
     ASSERT_EQ(float1->value(), 3);
-    ASSERT_EQ(*float1->type(), float_scalar_type);
+    ASSERT_EQ(*float1->value_type(), float_scalar_type);
     
     auto int32_0 = Int32ScalarConstant::make(3.0);
     auto int32_scalar_type =  make_shared<TensorViewType>(element::Int32::element_type(), Shape{});
     ASSERT_EQ(int32_0->value(), 3);
-    ASSERT_EQ(*int32_0->type(), int32_scalar_type);
-    ASSERT_NE(*int32_0->type(), float_scalar_type);
+    ASSERT_EQ(*int32_0->value_type(), int32_scalar_type);
+    ASSERT_NE(*int32_0->value_type(), float_scalar_type);
 }
 
 // Check argument inverses

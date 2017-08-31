@@ -41,15 +41,15 @@ namespace ngraph
         // The ngraph element type
         using element_type = T;
         // The C++ type that holds the element type
-        using ctype = typename T::ctype;
+        using type = typename T::type;
 
-        ScalarConstant(typename T::ctype value)
+        ScalarConstant(typename T::type value)
             : ScalarConstantBase(std::make_shared<TensorViewType>(T::element_type(), Shape{}))
             , m_value(value)
         {
         }
 
-        virtual std::string description() const override { return "ConstantScalar"; }
+        virtual std::string description() const override { return "ScalarConstant"; }
         virtual std::string node_id() const override
         {
             std::stringstream ss;
@@ -57,7 +57,7 @@ namespace ngraph
             return ss.str();
         }
                 
-        typename T::ctype value() const { return m_value; }
+        typename T::type value() const { return m_value; }
 
         // Make a constant from any value that can be converted to the C++ type we use
         // to represent the values.
@@ -68,7 +68,7 @@ namespace ngraph
         }
 
     protected:
-        typename T::ctype m_value;
+        typename T::type m_value;
     };
 
     using FloatScalarConstant  = ScalarConstant<element::Float>;
