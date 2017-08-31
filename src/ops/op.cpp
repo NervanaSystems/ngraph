@@ -13,11 +13,19 @@
 // ----------------------------------------------------------------------------
 
 #include <algorithm>
+#include <sstream>
 
 #include "ngraph/ngraph.hpp"
 
 using namespace ngraph;
 using namespace std;
+
+std::string ngraph::Op::node_id() const
+{
+    stringstream ss;
+    ss << op_class_name() << "_" << m_instance_id;
+    return ss.str();
+}
 
 Node::ptr ngraph::op::abs(const Node::ptr& arg)
 {

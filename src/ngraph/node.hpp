@@ -38,19 +38,9 @@ namespace ngraph
         using ptr = std::shared_ptr<Node>;
 
     protected:
-        Node(const Nodes& arguments, ValueType::ptr type = nullptr)
-            : TypedValueMixin(type)
-            , m_arguments(arguments)
-        {
-            // Add this node as a user of each argument.
-            for (auto node : m_arguments)
-            {
-                node->m_users.insert(node.get());
-            }
-        }
+        Node(const Nodes& arguments, ValueType::ptr type = nullptr);
 
         virtual ~Node() {}
-
     public:
         /// A "one-liner" describing this node.
         virtual std::string description() const = 0;
@@ -65,6 +55,8 @@ namespace ngraph
         std::string name() const { return m_name; }
         void        name(const std::string& name) { m_name = name; }
 
+        virtual std::string node_id() const = 0;
+
         /**
          ** Return true if this has the same implementing class as node. This
          ** will be used by the pattern matcher when comparing a pattern
@@ -75,9 +67,19 @@ namespace ngraph
             return typeid(*this) == typeid(*node.get());
         }
 
+        bool is_op() const;
+        bool is_parameter() const;
+
+        size_t               instance_id() const { return m_instance_id; }
+        friend std::ostream& operator<<(std::ostream&, const Node&);
+
     protected:
         Nodes m_arguments;
         std::multiset<Node*>   m_users;
         std::string            m_name;
+        size_t                 m_instance_id;
+        static size_t          m_next_instance_id;
     };
+
+    using node_ptr = std::shared_ptr<Node>;
 }

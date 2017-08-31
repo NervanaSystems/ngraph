@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <sstream>
+
 #include "../element_type.hpp"
 
 namespace ngraph
@@ -48,7 +50,13 @@ namespace ngraph
         }
 
         virtual std::string description() const override { return "ConstantScalar"; }
-
+        virtual std::string node_id() const override
+        {
+            std::stringstream ss;
+            ss << description() << "_" << node_id();
+            return ss.str();
+        }
+                
         typename T::ctype value() const { return m_value; }
 
         // Make a constant from any value that can be converted to the C++ type we use

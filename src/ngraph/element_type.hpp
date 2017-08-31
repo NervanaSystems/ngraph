@@ -39,15 +39,14 @@ namespace ngraph
                 return h(m_cname);
             }
 
-            //bool operator==(const Type& other) const;
-            //bool operator!=(const Type& other) const { return !(*this == other); }
-
+            bool operator==(const Type& other) const;
+            bool operator!=(const Type& other) const { return !(*this == other); }
         private:
             static std::map<std::string, Type> m_element_list;
-            size_t                             m_bitwidth;
-            bool                               m_is_float;
-            bool                               m_is_signed;
-            const std::string                  m_cname;
+            size_t            m_bitwidth;
+            bool              m_is_float;
+            bool              m_is_signed;
+            const std::string m_cname;
         };
 
         // Literals (and probably other things we don't know about yet) need to have their C++ types

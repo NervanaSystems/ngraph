@@ -43,7 +43,6 @@ TEST(build_graph, build_simple)
     auto broadcast_1 = op::broadcast(arg3, Shape{10, 32, 7}, BroadcastOp::Axes{0});
     auto b1 = myfun<BroadcastOp>(arg3, Shape{10, 32, 7}, BroadcastOp::Axes{0});
     auto dot         = op::dot(arg2, arg0);
-    auto d1 = myfun<DotOp>(arg2, arg0);
     ASSERT_EQ(dot->arguments()[0], arg2);
     ASSERT_EQ(dot->arguments()[1], arg0);
 
@@ -112,7 +111,6 @@ TEST(build_graph, literal)
 }
 
 // Check argument inverses
-TEST(build_graph, arg_inverse) 
+TEST(build_graph, arg_inverse)
 {
 }
-
