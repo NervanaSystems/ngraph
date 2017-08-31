@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-//
-// The public API for ngraph++
-//
-
 #pragma once
 
-#include "common.hpp"
-#include "element_type.hpp"
-#include "except.hpp"
-#include "function.hpp"
-#include "node.hpp"
-#include "op.hpp"
-#include "ops/broadcast.hpp"
-#include "ops/concatenate.hpp"
-#include "ops/constant.hpp"
-#include "ops/convert.hpp"
-#include "ops/dot.hpp"
-#include "ops/parameter.hpp"
-#include "ops/tuple.hpp"
-#include "shape.hpp"
-#include "type.hpp"
+#include <memory>
+#include <vector>
+#include <set>
+
+// Names for types that aren't worth giving their own classes
+namespace ngraph
+{
+    class Node;
+    class Parameter;
+
+    /// Zero or more nodes
+    using Nodes = std::vector<std::shared_ptr<Node>>;
+    
+    /// A set of indices, for example, reduction axes
+    using IndexSet = std::set<size_t>;
+
+    /// A list of parameters
+    using Parameters = std::vector<std::shared_ptr<Parameter>>;
+}

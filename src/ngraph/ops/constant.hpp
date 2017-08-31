@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "ngraph/element_type.hpp"
+#include "../element_type.hpp"
 
 namespace ngraph
 {
@@ -42,7 +42,7 @@ namespace ngraph
         using ctype = typename T::ctype;
 
         ScalarConstantOp(typename T::ctype value)
-            : ScalarConstantBaseOp(std::make_shared<TensorViewType>(T::type, ngraph::Shape{}))
+            : ScalarConstantBaseOp(std::make_shared<TensorViewType>(T::type, Shape{}))
             , m_value(value)
         {
         }

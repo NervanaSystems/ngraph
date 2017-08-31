@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include "ngraph/node.hpp"
-#include "ngraph/op.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/type.hpp"
+#include "node.hpp"
+#include "op.hpp"
+#include "ops/parameter.hpp"
+#include "type.hpp"
 
 namespace ngraph
 {

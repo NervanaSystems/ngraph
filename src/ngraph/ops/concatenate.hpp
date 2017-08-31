@@ -18,13 +18,13 @@ namespace ngraph
 {
     namespace op
     {
-        Node::ptr concatenate(const std::vector<Node::ptr>& args);
+        Node::ptr concatenate(const Nodes& args);
     }
 
     class ConcatenateOp : public BuiltinOp
     {
     public:
-        ConcatenateOp(const std::vector<Node::ptr>& args)
+        ConcatenateOp(const Nodes& args)
             : BuiltinOp(args)
         {
         }

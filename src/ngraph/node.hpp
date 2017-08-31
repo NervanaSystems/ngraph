@@ -20,7 +20,8 @@
 
 #include <iostream>
 
-#include "ngraph/type.hpp"
+#include "type.hpp"
+#include "common.hpp"
 
 namespace ngraph
 {
@@ -37,7 +38,7 @@ namespace ngraph
         using ptr = std::shared_ptr<Node>;
 
     protected:
-        Node(const std::vector<Node::ptr>& arguments, ValueType::ptr type = nullptr)
+        Node(const Nodes& arguments, ValueType::ptr type = nullptr)
             : TypedValueMixin(type)
             , m_arguments(arguments)
         {
@@ -57,7 +58,7 @@ namespace ngraph
         /// Propagate types and check arguments for consistency
         virtual void propagate_types() = 0;
 
-        const std::vector<Node::ptr>& arguments() const { return m_arguments; }
+        const Nodes& arguments() const { return m_arguments; }
 
         const std::multiset<Node*>& users() const { return m_users; }
 
@@ -75,7 +76,7 @@ namespace ngraph
         }
 
     protected:
-        std::vector<Node::ptr> m_arguments;
+        Nodes m_arguments;
         std::multiset<Node*>   m_users;
         std::string            m_name;
     };

@@ -18,13 +18,13 @@ namespace ngraph
 {
     namespace op
     {
-        Node::ptr tuple(const std::vector<Node::ptr>& args);
+        Node::ptr tuple(const Nodes& args);
     }
 
     class TupleOp : public BuiltinOp
     {
     public:
-        TupleOp(const std::vector<Node::ptr>& args)
+        TupleOp(const Nodes& args)
             : BuiltinOp(args)
         {
         }
