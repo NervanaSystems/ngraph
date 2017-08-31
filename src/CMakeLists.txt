@@ -29,6 +29,9 @@ set (SRC
     ops/tuple.cpp
     types/element_type.cpp
     types/type.cpp
+    ngraph/node.cpp
+    ngraph/topological_sort.cpp
+    ngraph/visualize.cpp
 )
 
 # NOTE: We'd prefer to only have the .cpp files *in* the 'transformers' directory be compiled

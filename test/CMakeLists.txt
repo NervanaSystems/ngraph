@@ -27,6 +27,8 @@ set (SRC
     tensor.cpp
     element_type.cpp
     uuid.cpp
+    topological_sort.cpp
+    op.cpp
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")

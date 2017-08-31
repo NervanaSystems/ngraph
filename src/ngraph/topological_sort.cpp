@@ -12,25 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "topological_sort.hpp"
 
-namespace ngraph
+void ngraph::TopologicalSort::process(node_ptr node)
 {
-    class DotOp : public BuiltinOp
-    {
-    public:
-        /// TODO: Semantics of arg0 and arg1 axes wrt reduction.
-        DotOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
-        {
-        }
-
-        virtual std::string op_class_name() const override { return "dot"; }
-        virtual void        propagate_types() override;
-    };
-
-    namespace op
-    {
-        Node::ptr dot(const Node::ptr& arg0, const Node::ptr& arg1);
-    }
 }

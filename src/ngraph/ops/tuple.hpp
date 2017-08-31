@@ -29,7 +29,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_name() const override { return "tuple"; }
+        virtual std::string op_class_name() const override { return "tuple"; }
         virtual void        propagate_types() override;
     };
 }
