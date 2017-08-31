@@ -12,24 +12,29 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-//
-// The public API for ngraph++
-//
-
 #pragma once
 
-#include "common.hpp"
-#include "element_type.hpp"
-#include "except.hpp"
-#include "function.hpp"
-#include "node.hpp"
-#include "op.hpp"
-#include "ops/broadcast.hpp"
-#include "ops/concatenate.hpp"
-#include "ops/constant.hpp"
-#include "ops/convert.hpp"
-#include "ops/dot.hpp"
-#include "ops/parameter.hpp"
-#include "ops/tuple.hpp"
-#include "shape.hpp"
-#include "type.hpp"
+namespace ngraph
+{
+
+    class ConvertOp : public BuiltinOp
+    {
+    public:
+        ConvertOp(const Node::ptr& arg, const ngraph::element::Type& element_type)
+            : BuiltinOp({arg})
+            , m_element_type(element_type)
+        {
+        }
+
+        virtual std::string op_name() const override { return "convert"; }
+        virtual void        propagate_types() override;
+    protected:
+        const ngraph::element::Type& m_element_type;
+    };
+
+
+    namespace op
+    {
+        std::shared_ptr<ngraph::ConvertOp> convert(const Node::ptr& arg, const ngraph::element::Type& element_type);
+    }
+}

@@ -20,6 +20,7 @@
 
 #include <map>
 #include <string>
+#include <type_traits>
 
 namespace ngraph
 {
@@ -49,12 +50,34 @@ namespace ngraph
             const std::string                  m_cname;
         };
 
-        const Type float32_t = Type(32, true, true, "float");
-        const Type int8_t    = Type(8, false, true, "int8_t");
-        const Type int32_t   = Type(32, false, true, "int32_t");
-        const Type int64_t   = Type(64, false, true, "int64_t");
-        const Type uint8_t   = Type(8, false, false, "int8_t");
-        const Type uint32_t  = Type(32, false, false, "int32_t");
-        const Type uint64_t  = Type(64, false, false, "int64_t");
+        // Literals (and probably other things we don't know about yet) need to have their C++ types
+        // and element types coordinated. Every element type corresponds to a TraitedType which provides
+        // access to both the instance and the C++ type used to hold the value during compilation.
+        template <typename T>
+        class TraitedType : public Type
+        {
+        public:
+            // This is the C++ type used to hold a value of this element type during compilation
+            using ctype = T;
+            // This is a reference to an instance of this element type.
+            static const TraitedType<T>& type;
+
+            TraitedType(const std::string& cname)
+                : Type(sizeof(T) * 8,
+                       std::is_floating_point<T>::value,
+                       std::is_signed<T>::value,
+                       cname)
+            {
+            }
+        };
+
+        // Human-readable names for the element types
+        using Float  = TraitedType<float>;
+        using Int8   = TraitedType<int8_t>;
+        using Int32  = TraitedType<int32_t>;
+        using Int64  = TraitedType<int64_t>;
+        using UInt8  = TraitedType<uint8_t>;
+        using UInt32 = TraitedType<uint32_t>;
+        using UInt64 = TraitedType<uint64_t>;
     }
 }

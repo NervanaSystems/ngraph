@@ -16,9 +16,9 @@
 
 #include <memory>
 
-#include "ngraph/node.hpp"
-#include "ngraph/parameter.hpp"
-#include "ngraph/type.hpp"
+#include "node.hpp"
+#include "ops/parameter.hpp"
+#include "type.hpp"
 
 namespace ngraph
 {
@@ -26,26 +26,20 @@ namespace ngraph
     {
         Node::ptr abs(const Node::ptr& arg);
         Node::ptr add(const Node::ptr& arg0, const Node::ptr& arg1);
-        Node::ptr broadcast(const Node::ptr&           tensor,
-                            const Shape&               shape,
-                            const std::vector<size_t>& broadcast_axes);
-
-        //Node::ptr candidate();
         Node::ptr ceiling(const Node::ptr& arg0, const Node::ptr& arg1);
-        //Node::ptr concatenate();
-        //Node::ptr constant();
         //Node::ptr convert();
         //Node::ptr convolution();
         Node::ptr divide(const Node::ptr& arg0, const Node::ptr& arg1);
-        Node::ptr dot(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr equal(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr exponential(const Node::ptr& arg0);
         Node::ptr floor(const Node::ptr& arg0, const Node::ptr& arg1);
-        //Node::ptr get();
+        //Node::ptr get_tuple_element();
         Node::ptr greater(const Node::ptr& arg0, const Node::ptr& arg1);
+        //Node::ptr greater_equal(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr less(const Node::ptr& arg0, const Node::ptr& arg1);
+        //Node::ptr less_equal(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr log(const Node::ptr& arg0);
-        //Node::ptr logical();
+        //Node::ptr logical(); and, or, not
         Node::ptr maximum(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr minimum(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr multiply(const Node::ptr& arg0, const Node::ptr& arg1);
@@ -53,15 +47,16 @@ namespace ngraph
         //Node::ptr pad();
         Node::ptr power(const Node::ptr& arg0, const Node::ptr& arg1);
         //Node::ptr reduce();
+        // Node::ptr reduce_window();
         Node::ptr remainder(const Node::ptr& arg0, const Node::ptr& arg1);
         Node::ptr reshape(const Node::ptr& arg0, const Shape& shape);
         //Node::ptr reverse();
         //Node::ptr rng();
         //Node::ptr select();
+        //Node::ptr select_scatter();
         //Node::ptr slice();
         Node::ptr subtract(const Node::ptr& arg0, const Node::ptr& arg1);
         //Node::ptr transpose();
-        //Node::ptr tuple();
         //Node::ptr while();
     }
 
@@ -102,7 +97,7 @@ namespace ngraph
         /// Name of the builtin op, for debugging and logging.
         virtual std::string op_name() const = 0;
 
-        // TODO: Implement for each op
+        // TODO: Implement for each op. This enables graphs to be built for now.
         virtual void propagate_types() override {}
 
     protected:
@@ -135,30 +130,6 @@ namespace ngraph
         //virtual void propagate_types() override;
     };
 
-    class BroadcastOp : public BuiltinOp
-    {
-    public:
-        /**
-         ** /param arg The tensor view to be broadcast.
-         ** /param shape The shape of the result
-         ** /param broadcast_axes The axis positions (0-based) in the result that are being broadcast.
-         **  the remaining axes in shape must be the same as the shape of arg.
-         **/
-        BroadcastOp(const Node::ptr& arg, const Shape& shape, std::vector<size_t> broadcast_axes)
-            : BuiltinOp({arg})
-            , m_shape(shape)
-            , m_broadcast_axes(broadcast_axes)
-        {
-        }
-
-        virtual std::string op_name() const override { return "broadcast"; }
-        virtual void        propagate_types() override;
-
-    protected:
-        Shape               m_shape;
-        std::vector<size_t> m_broadcast_axes;
-    };
-
     class CeilingOp : public BuiltinOp
     {
     public:
@@ -181,19 +152,6 @@ namespace ngraph
 
         virtual std::string op_name() const override { return "divide"; }
         //virtual void propagate_types() override;
-    };
-
-    class DotOp : public BuiltinOp
-    {
-    public:
-        /// TODO: Semantics of arg0 and arg1 axes wrt reduction.
-        DotOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
-        {
-        }
-
-        virtual std::string op_name() const override { return "dot"; }
-        virtual void        propagate_types() override;
     };
 
     class EqualOp : public BuiltinOp

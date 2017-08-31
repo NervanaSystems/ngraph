@@ -12,24 +12,19 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-//
-// The public API for ngraph++
-//
+#include <memory>
 
-#pragma once
+#include "ngraph/ngraph.hpp"
 
-#include "common.hpp"
-#include "element_type.hpp"
-#include "except.hpp"
-#include "function.hpp"
-#include "node.hpp"
-#include "op.hpp"
-#include "ops/broadcast.hpp"
-#include "ops/concatenate.hpp"
-#include "ops/constant.hpp"
-#include "ops/convert.hpp"
-#include "ops/dot.hpp"
-#include "ops/parameter.hpp"
-#include "ops/tuple.hpp"
-#include "shape.hpp"
-#include "type.hpp"
+using namespace std;
+using namespace ngraph;
+
+void ConvertOp::propagate_types()
+{
+    throw ngraph_error("NIY");
+}
+
+shared_ptr<ConvertOp> op::convert(const Node::ptr& arg, const element::Type& element_type)
+{
+    return make_shared<ConvertOp>(arg, element_type);
+}

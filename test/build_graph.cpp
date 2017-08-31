@@ -22,10 +22,10 @@ using namespace ngraph;
 TEST(build_graph, build_simple)
 {
     // Function with 4 parameters
-    auto arg0        = op::parameter(element::float32_t, {7, 3});
-    auto arg1        = op::parameter(element::float32_t, {3});
-    auto arg2        = op::parameter(element::float32_t, {32, 7});
-    auto arg3        = op::parameter(element::float32_t, {32, 7});
+    auto arg0        = op::parameter(element::Float::type, {7, 3});
+    auto arg1        = op::parameter(element::Float::type, {3});
+    auto arg2        = op::parameter(element::Float::type, {32, 7});
+    auto arg3        = op::parameter(element::Float::type, {32, 7});
     auto broadcast_1 = op::broadcast(arg3, {10, 32, 7}, {0});
     auto dot         = op::dot(arg2, arg0);
     ASSERT_EQ(dot->arguments()[0], arg2);
@@ -40,7 +40,7 @@ TEST(build_graph, build_simple)
 TEST(build_graph, as_type)
 {
     // Check upcasting a ValueType::ptr that is a TensorViewType to a TensorViewType and Tuple.
-    ValueType::ptr tv_vt = make_shared<TensorViewType>(element::float32_t, Shape{2, 3, 5});
+    ValueType::ptr tv_vt = make_shared<TensorViewType>(element::Float::type, Shape{2, 3, 5});
     auto           tv_tv = dynamic_pointer_cast<TensorViewType>(tv_vt);
     ASSERT_EQ(tv_vt, tv_tv);
     auto tv_tp = dynamic_pointer_cast<TupleType>(tv_vt);
@@ -57,19 +57,42 @@ TEST(build_graph, as_type)
 // Check node comparisons
 TEST(build_graph, node_comparison)
 {
-    auto arg0 = op::parameter(element::float32_t, {32, 3});
-    auto arg1 = op::parameter(element::float32_t, {3});
-    auto arg2 = op::parameter(element::float32_t, {32});
+    auto arg0 = op::parameter(element::Float::type, {32, 3});
+    auto arg1 = op::parameter(element::Float::type, {3});
+    auto arg2 = op::parameter(element::Float::type, {32});
 
     auto dot = op::dot(arg0, arg1);
     auto add = op::add(dot, arg2);
 
-    auto parg        = op::parameter(element::float32_t, {});
+    auto parg        = op::parameter(element::Float::type, {});
     auto pattern_dot = op::dot(parg, parg);
     ASSERT_TRUE(pattern_dot->is_same_op_type(dot));
     // TODO This passes because typeid is not behaving as documented.
     // Need to figure out what's wrong.
     ASSERT_FALSE(pattern_dot->is_same_op_type(add));
+}
+
+TEST(build_graph, literal)
+{
+    // float scalar from a float
+    auto float0 = FloatScalarConstantOp::make(3.0);
+    auto float_scalar_type =  make_shared<TensorViewType>(element::Float::type, Shape{});
+    ASSERT_EQ(float0->value(), 3.0);
+    ASSERT_EQ(*float0->type(), float_scalar_type);
+    auto d = op::dot(float0, float0);
+    ASSERT_EQ(d->arguments().at(0), float0);
+    ASSERT_EQ(d->arguments().at(1), float0);
+
+    // float scalar from an int
+    auto float1 = FloatScalarConstantOp::make(3);
+    ASSERT_EQ(float1->value(), 3);
+    ASSERT_EQ(*float1->type(), float_scalar_type);
+    
+    auto int32_0 = Int32ScalarConstantOp::make(3.0);
+    auto int32_scalar_type =  make_shared<TensorViewType>(element::Int32::type, Shape{});
+    ASSERT_EQ(int32_0->value(), 3);
+    ASSERT_EQ(*int32_0->type(), int32_scalar_type);
+    ASSERT_NE(*int32_0->type(), float_scalar_type);
 }
 
 // Check argument inverses

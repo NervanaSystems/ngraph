@@ -12,24 +12,37 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-//
-// The public API for ngraph++
-//
+#include <memory>
 
-#pragma once
+#include <ngraph/ngraph.hpp>
 
-#include "common.hpp"
-#include "element_type.hpp"
-#include "except.hpp"
-#include "function.hpp"
-#include "node.hpp"
-#include "op.hpp"
-#include "ops/broadcast.hpp"
-#include "ops/concatenate.hpp"
-#include "ops/constant.hpp"
-#include "ops/convert.hpp"
-#include "ops/dot.hpp"
-#include "ops/parameter.hpp"
-#include "ops/tuple.hpp"
-#include "shape.hpp"
-#include "type.hpp"
+using namespace std;
+using namespace ngraph;
+
+bool TensorViewType::operator==(const ValueType::ptr& that) const
+{
+    auto that_tvt = dynamic_pointer_cast<TensorViewType>(that);
+    if (nullptr == that_tvt)
+    {
+        return false;
+    }
+    if (that_tvt->element_type() != m_element_type)
+    {
+        return false;
+    }
+    if (that_tvt->shape() != m_shape)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool TupleType::operator==(const ValueType::ptr& that) const
+{
+    auto that_tvt = dynamic_pointer_cast<TupleType>(that);
+    if (nullptr == that_tvt)
+    {
+        return false;
+    }
+    return that_tvt->element_types() == element_types();
+}
