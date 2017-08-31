@@ -98,7 +98,7 @@ namespace ngraph
         /// Name of the builtin op, for debugging and logging.
         virtual std::string op_name() const = 0;
 
-        // TODO: Implement for each op
+        // TODO: Implement for each op. This enables graphs to be built for now.
         virtual void propagate_types() override {}
 
     protected:
