@@ -20,8 +20,8 @@
 
 #include <iostream>
 
-#include "type.hpp"
 #include "common.hpp"
+#include "type.hpp"
 
 namespace ngraph
 {
@@ -32,11 +32,11 @@ namespace ngraph
     /// view or a (possibly empty) tuple of values.
     class Node : public TypedValueMixin, public std::enable_shared_from_this<Node>
     {
-
     protected:
         Node(const Nodes& arguments, std::shared_ptr<ValueType> type = nullptr);
 
         virtual ~Node() {}
+
     public:
         /// A "one-liner" describing this node.
         virtual std::string description() const = 0;
@@ -68,10 +68,10 @@ namespace ngraph
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
     protected:
-        Nodes                                m_arguments;
+        Nodes                m_arguments;
         std::multiset<Node*> m_users;
-        std::string                          m_name;
-        size_t                               m_instance_id;
-        static size_t                        m_next_instance_id;
+        std::string          m_name;
+        size_t               m_instance_id;
+        static size_t        m_next_instance_id;
     };
 }

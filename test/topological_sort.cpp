@@ -29,20 +29,20 @@ using namespace ngraph;
 static bool validate_list(const vector<Node*>& nodes)
 {
     bool rc = true;
-    for (auto it=nodes.rbegin(); it!=nodes.rend(); it++)
+    for (auto it = nodes.rbegin(); it != nodes.rend(); it++)
     {
-        auto node_tmp = *it;
-        auto dependencies_tmp = node_tmp->get_arguments();
+        auto          node_tmp         = *it;
+        auto          dependencies_tmp = node_tmp->get_arguments();
         vector<Node*> dependencies;
         for (shared_ptr<Node> n : dependencies_tmp)
         {
             dependencies.push_back(n.get());
         }
-        auto tmp = it+1;
-        for (; tmp!=nodes.rend(); tmp++)
+        auto tmp = it + 1;
+        for (; tmp != nodes.rend(); tmp++)
         {
             auto dep_tmp = *tmp;
-            auto found = find(dependencies.begin(), dependencies.end(), dep_tmp);
+            auto found   = find(dependencies.begin(), dependencies.end(), dep_tmp);
             if (found != dependencies.end())
             {
                 dependencies.erase(found);
@@ -59,7 +59,7 @@ static bool validate_list(const vector<Node*>& nodes)
 TEST(topological_sort, basic)
 {
     vector<shared_ptr<Parameter>> args;
-    for (int i=0; i<10; i++)
+    for (int i = 0; i < 10; i++)
     {
         auto arg = op::parameter(element::Float::element_type(), {1});
         ASSERT_NE(nullptr, arg);

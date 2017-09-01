@@ -56,7 +56,7 @@ namespace ngraph
             ss << description() << "_" /* << node_id() */;
             return ss.str();
         }
-                
+
         typename T::type get_value() const { return m_value; }
 
     protected:

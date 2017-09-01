@@ -41,9 +41,7 @@ void Parameter::assign_function(Function* function, size_t index)
     m_index    = index;
 }
 
-void Parameter::propagate_types()
-{
-}
+void Parameter::propagate_types() {}
 
 shared_ptr<Parameter> ngraph::op::parameter(const std::shared_ptr<ValueType>& value_type)
 {

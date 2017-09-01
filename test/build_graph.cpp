@@ -28,7 +28,7 @@ TEST(build_graph, build_simple)
     auto arg2        = node<Parameter>(element::Float::element_type(), Shape{32, 7});
     auto arg3        = node<Parameter>(element::Float::element_type(), Shape{32, 7});
     auto broadcast_1 = node<BroadcastOp>(arg3, Shape{10, 32, 7}, AxisSet{0});
-    auto b1 = node<BroadcastOp>(arg3, Shape{10, 32, 7}, AxisSet{0});
+    auto b1          = node<BroadcastOp>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto dot         = node<DotOp>(arg2, arg0);
     ASSERT_EQ(dot->get_arguments()[0], arg2);
     ASSERT_EQ(dot->get_arguments()[1], arg0);
@@ -50,7 +50,7 @@ TEST(build_graph, as_type)
 
     // Check upcasting a ValueType::ptr that is a TupleType to a TensorViewType and Tuple.
     auto tp_vt = make_shared<TupleType>(ValueTypes{tv_vt, tv_vt});
-    auto           tp_tv = dynamic_pointer_cast<TensorViewType>(tp_vt);
+    auto tp_tv = dynamic_pointer_cast<TensorViewType>(tp_vt);
     ASSERT_EQ(nullptr, tp_tv);
     auto tp_tp = dynamic_pointer_cast<TupleType>(tp_vt);
     ASSERT_EQ(tp_vt, tp_tp);
@@ -78,8 +78,8 @@ TEST(build_graph, literal)
 {
     // float scalar from a float
     //auto float0 = FloatScalarConstant::make(3.0);
-    auto float0 = node<FloatScalarConstant>(3.0);
-    auto float_scalar_type =  make_shared<TensorViewType>(element::Float::element_type(), Shape{});
+    auto float0            = node<FloatScalarConstant>(3.0);
+    auto float_scalar_type = make_shared<TensorViewType>(element::Float::element_type(), Shape{});
     ASSERT_EQ(float0->get_value(), 3.0);
     ASSERT_EQ(*float0->get_value_type(), float_scalar_type);
     auto d = node<DotOp>(float0, float0);
@@ -90,15 +90,13 @@ TEST(build_graph, literal)
     auto float1 = node<FloatScalarConstant>(3);
     ASSERT_EQ(float1->get_value(), 3);
     ASSERT_EQ(*float1->get_value_type(), float_scalar_type);
-    
-    auto int32_0 = node<Int32ScalarConstant>(3.0);
-    auto int32_scalar_type =  make_shared<TensorViewType>(element::Int32::element_type(), Shape{});
+
+    auto int32_0           = node<Int32ScalarConstant>(3.0);
+    auto int32_scalar_type = make_shared<TensorViewType>(element::Int32::element_type(), Shape{});
     ASSERT_EQ(int32_0->get_value(), 3);
     ASSERT_EQ(*int32_0->get_value_type(), int32_scalar_type);
     ASSERT_NE(*int32_0->get_value_type(), float_scalar_type);
 }
 
 // Check argument inverses
-TEST(build_graph, arg_inverse)
-{
-}
+TEST(build_graph, arg_inverse) {}

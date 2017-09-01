@@ -43,27 +43,32 @@ namespace ngraph
 
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
+
         private:
             static std::map<std::string, Type> m_element_list;
-            size_t            m_bitwidth;
-            bool              m_is_float;
-            bool              m_is_signed;
-            const std::string m_cname;
+            size_t                             m_bitwidth;
+            bool                               m_is_float;
+            bool                               m_is_signed;
+            const std::string                  m_cname;
         };
 
         // Provides a compile-time name for a C++ type.
         // Used in TraitedType for the string that supplies the C++ type name during code generation,
         // so it needs to be a valid C++ name.
-        template<typename T>
+        template <typename T>
         const char* traited_type_name()
         {
             throw ngraph_error("Unknown type");
         }
 
-        // Define a type string for a type T. Will make traited_type_name<T>() return "T"
-        #define NGRAPH_DEFINE_TTN( T ) \
-        template<> constexpr const char* traited_type_name < T > () { return #T; }
-     
+// Define a type string for a type T. Will make traited_type_name<T>() return "T"
+#define NGRAPH_DEFINE_TTN(T)                                                                       \
+    template <>                                                                                    \
+    constexpr const char* traited_type_name<T>()                                                   \
+    {                                                                                              \
+        return #T;                                                                                 \
+    }
+
         // Literals (and probably other things we don't know about yet) need to have their C++ types
         // and element types coordinated. Every element type corresponds to a TraitedType which provides
         // access to both the instance and the C++ type used to hold the value during compilation.
@@ -72,10 +77,10 @@ namespace ngraph
         {
         protected:
             TraitedType()
-            : Type(sizeof(T) * 8,
-                   std::is_floating_point<T>::value,
-                   std::is_signed<T>::value,
-                   traited_type_name<T>())
+                : Type(sizeof(T) * 8,
+                       std::is_floating_point<T>::value,
+                       std::is_signed<T>::value,
+                       traited_type_name<T>())
             {
             }
 
@@ -83,31 +88,32 @@ namespace ngraph
             // This is the C++ type used to hold a value of this element type during compilation
             using type = T;
             // This returns a reference to an instance of this element type.
-            static const TraitedType<T>& element_type(){
+            static const TraitedType<T>& element_type()
+            {
                 static TraitedType<T> t;
                 return t;
             }
         };
 
-        NGRAPH_DEFINE_TTN( float )
+        NGRAPH_DEFINE_TTN(float)
         using Float = TraitedType<float>;
 
-        NGRAPH_DEFINE_TTN( int8_t )
+        NGRAPH_DEFINE_TTN(int8_t)
         using Int8 = TraitedType<int8_t>;
 
-        NGRAPH_DEFINE_TTN( int32_t )
+        NGRAPH_DEFINE_TTN(int32_t)
         using Int32 = TraitedType<int32_t>;
 
-        NGRAPH_DEFINE_TTN( int64_t )
+        NGRAPH_DEFINE_TTN(int64_t)
         using Int64 = TraitedType<int64_t>;
 
-        NGRAPH_DEFINE_TTN( uint8_t )
+        NGRAPH_DEFINE_TTN(uint8_t)
         using UInt8 = TraitedType<uint8_t>;
 
-        NGRAPH_DEFINE_TTN( uint32_t )
+        NGRAPH_DEFINE_TTN(uint32_t)
         using UInt32 = TraitedType<uint32_t>;
 
-        NGRAPH_DEFINE_TTN( uint64_t )
+        NGRAPH_DEFINE_TTN(uint64_t)
         using UInt64 = TraitedType<uint64_t>;
     }
 }

@@ -24,39 +24,51 @@ namespace ngraph
 {
     namespace op
     {
-        
         std::shared_ptr<Node> abs(const std::shared_ptr<Node>& arg);
-        std::shared_ptr<Node> add(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
-        std::shared_ptr<Node> ceiling(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> add(const std::shared_ptr<Node>& arg0,
+                                  const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> ceiling(const std::shared_ptr<Node>& arg0,
+                                      const std::shared_ptr<Node>& arg1);
         //std::shared_ptr<Node> convert();
         //std::shared_ptr<Node> convolution();
-        std::shared_ptr<Node> divide(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
-        std::shared_ptr<Node> equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> divide(const std::shared_ptr<Node>& arg0,
+                                     const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> equal(const std::shared_ptr<Node>& arg0,
+                                    const std::shared_ptr<Node>& arg1);
         std::shared_ptr<Node> exp(const std::shared_ptr<Node>& arg0);
-        std::shared_ptr<Node> floor(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> floor(const std::shared_ptr<Node>& arg0,
+                                    const std::shared_ptr<Node>& arg1);
         //std::shared_ptr<Node> get_tuple_element();
-        std::shared_ptr<Node> greater(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> greater(const std::shared_ptr<Node>& arg0,
+                                      const std::shared_ptr<Node>& arg1);
         //std::shared_ptr<Node> greater_equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
-        std::shared_ptr<Node> less(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> less(const std::shared_ptr<Node>& arg0,
+                                   const std::shared_ptr<Node>& arg1);
         //std::shared_ptr<Node> less_equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
         std::shared_ptr<Node> log(const std::shared_ptr<Node>& arg0);
         //std::shared_ptr<Node> logical(); and, or, not
-        std::shared_ptr<Node> maximum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
-        std::shared_ptr<Node> minimum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
-        std::shared_ptr<Node> multiply(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> maximum(const std::shared_ptr<Node>& arg0,
+                                      const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> minimum(const std::shared_ptr<Node>& arg0,
+                                      const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> multiply(const std::shared_ptr<Node>& arg0,
+                                       const std::shared_ptr<Node>& arg1);
         std::shared_ptr<Node> negative(const std::shared_ptr<Node>& arg0);
         //std::shared_ptr<Node> pad();
-        std::shared_ptr<Node> power(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> power(const std::shared_ptr<Node>& arg0,
+                                    const std::shared_ptr<Node>& arg1);
         //std::shared_ptr<Node> reduce();
         // std::shared_ptr<Node> reduce_window();
-        std::shared_ptr<Node> remainder(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> remainder(const std::shared_ptr<Node>& arg0,
+                                        const std::shared_ptr<Node>& arg1);
         std::shared_ptr<Node> reshape(const std::shared_ptr<Node>& arg0, const Shape& shape);
         //std::shared_ptr<Node> reverse();
         //std::shared_ptr<Node> rng();
         //std::shared_ptr<Node> select();
         //std::shared_ptr<Node> select_scatter();
         //std::shared_ptr<Node> slice();
-        std::shared_ptr<Node> subtract(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> subtract(const std::shared_ptr<Node>& arg0,
+                                       const std::shared_ptr<Node>& arg1);
         //std::shared_ptr<Node> transpose();
         //std::shared_ptr<Node> while();
     }
@@ -81,6 +93,7 @@ namespace ngraph
     class FunctionOp : public Op
     {
         virtual std::string description() const override { return "FunctionOp"; }
+
     protected:
         std::shared_ptr<Node> m_function;
     };
@@ -95,6 +108,7 @@ namespace ngraph
 
         // TODO: Implement for each op. This enables graphs to be built for now.
         virtual void propagate_types() override {}
+
     protected:
         BuiltinOp(const std::vector<std::shared_ptr<Node>>& args)
             : Op(args)

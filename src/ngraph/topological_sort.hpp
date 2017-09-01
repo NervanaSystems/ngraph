@@ -14,9 +14,10 @@
 
 #pragma once
 
-#include <memory>
-#include <map>
 #include <list>
+#include <map>
+#include <memory>
+#include <vector>
 
 namespace ngraph
 {
@@ -30,7 +31,7 @@ class ngraph::TopologicalSort
 public:
     TopologicalSort() {}
 
-    void process(node_ptr);
+    void                      process(node_ptr);
     const std::vector<Node*>& get_sorted_list() const;
 
 private:

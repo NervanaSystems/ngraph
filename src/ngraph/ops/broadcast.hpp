@@ -25,7 +25,9 @@ namespace ngraph
         /// @param broadcast_axes The axis positions (0-based) in the result that are being broadcast.
         ///  the remaining axes in shape must be the same as the shape of arg.
         ///
-        BroadcastOp(const std::shared_ptr<Node>& arg, const Shape& shape, const AxisSet& broadcast_axes)
+        BroadcastOp(const std::shared_ptr<Node>& arg,
+                    const Shape&                 shape,
+                    const AxisSet&               broadcast_axes)
             : BuiltinOp({arg})
             , m_shape(shape)
             , m_broadcast_axes(broadcast_axes)
@@ -36,14 +38,14 @@ namespace ngraph
         virtual void        propagate_types() override;
 
     protected:
-        Shape               m_shape;
+        Shape   m_shape;
         AxisSet m_broadcast_axes;
     };
 
     namespace op
     {
-        std::shared_ptr<Node> broadcast(const std::shared_ptr<Node>&           tensor,
-                            const Shape&               shape,
-                            AxisSet&& broadcast_axes);
+        std::shared_ptr<Node> broadcast(const std::shared_ptr<Node>& tensor,
+                                        const Shape&                 shape,
+                                        AxisSet&&                    broadcast_axes);
     }
 }

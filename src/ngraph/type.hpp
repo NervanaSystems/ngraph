@@ -33,7 +33,7 @@ namespace ngraph
     public:
         virtual ~ValueType() {}
         virtual bool operator==(const std::shared_ptr<ValueType>& that) const = 0;
-        bool         operator!=(const std::shared_ptr<ValueType>& that) const { return !(*this == that); }
+        bool operator!=(const std::shared_ptr<ValueType>& that) const { return !(*this == that); }
     };
 
     /// Describes a tensor view; an element type and a shape.
@@ -71,8 +71,11 @@ namespace ngraph
         {
         }
 
-        const std::vector<std::shared_ptr<ValueType>> get_element_types() const { return m_element_types; }
-        std::vector<std::shared_ptr<ValueType>>       set_element_types() { return m_element_types; }
+        const std::vector<std::shared_ptr<ValueType>> get_element_types() const
+        {
+            return m_element_types;
+        }
+        std::vector<std::shared_ptr<ValueType>> set_element_types() { return m_element_types; }
 
         virtual bool operator==(const std::shared_ptr<ValueType>& that) const override;
 
@@ -95,7 +98,10 @@ namespace ngraph
          ** Set the type
          ** /param type The new type
          **/
-        void set_value_type(const std::shared_ptr<ValueType>& value_type) { m_value_type = value_type; }
+        void set_value_type(const std::shared_ptr<ValueType>& value_type)
+        {
+            m_value_type = value_type;
+        }
         /**
          ** Set the type to be a tensor view type
          ** /param element_type The type of the tensor elements
@@ -114,6 +120,7 @@ namespace ngraph
          ** The type associated with this value.
          **/
         const std::shared_ptr<ValueType> get_value_type() const { return m_value_type; }
+
     protected:
         std::shared_ptr<ValueType> m_value_type;
     };

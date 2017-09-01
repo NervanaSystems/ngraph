@@ -31,6 +31,7 @@ namespace ngraph
 
     namespace op
     {
-        std::shared_ptr<Node> dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+        std::shared_ptr<Node> dot(const std::shared_ptr<Node>& arg0,
+                                  const std::shared_ptr<Node>& arg1);
     }
 }

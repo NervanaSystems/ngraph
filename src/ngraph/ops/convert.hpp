@@ -16,7 +16,6 @@
 
 namespace ngraph
 {
-
     class ConvertOp : public BuiltinOp
     {
     public:
@@ -28,13 +27,14 @@ namespace ngraph
 
         virtual std::string get_op_class_name() const override { return "convert"; }
         virtual void        propagate_types() override;
+
     protected:
         const ngraph::element::Type& m_element_type;
     };
 
-
     namespace op
     {
-        std::shared_ptr<ngraph::ConvertOp> convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type);
+        std::shared_ptr<ngraph::ConvertOp> convert(const std::shared_ptr<Node>& arg,
+                                                   const ngraph::element::Type& element_type);
     }
 }

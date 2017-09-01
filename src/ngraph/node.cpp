@@ -17,7 +17,8 @@
 
 size_t ngraph::Node::m_next_instance_id = 0;
 
-ngraph::Node::Node(const std::vector<std::shared_ptr<Node>>& arguments, std::shared_ptr<ValueType> type)
+ngraph::Node::Node(const std::vector<std::shared_ptr<Node>>& arguments,
+                   std::shared_ptr<ValueType>                type)
     : TypedValueMixin(type)
     , m_arguments(arguments)
     , m_instance_id(m_next_instance_id++)
