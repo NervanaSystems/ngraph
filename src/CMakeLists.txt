@@ -11,9 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-get_filename_component( NGRAPH_INCLUDE_DIR . ABSOLUTE)
-set(NGRAPH_INCLUDE_DIR "${NGRAPH_INCLUDE_DIR}" PARENT_SCOPE)
-
 set (SRC
     tree.cpp
     util.cpp
@@ -31,16 +28,15 @@ set (SRC
     types/type.cpp
 )
 
-# NOTE: We'd prefer to only have the .cpp files *in* the 'transformers' directory be compiled
-# with the 'transformers' directory in the include-path.  But it's hard to do that with
-# CMake versions lower than 3.1: see
-# https://stackoverflow.com/questions/9339851/can-one-add-further-source-files-to-an-executable-once-defined
-include_directories(
-    "${NGRAPH_INCLUDE_DIR}"
-    "${NGRAPH_INCLUDE_DIR}/transformers"
-    )
+set(NGRAPH_INCLUDE_DIR 
+    ${CMAKE_CURRENT_SOURCE_DIR} 
+    ${CMAKE_CURRENT_SOURCE_DIR}/ngraph
+)
+
+include_directories("${NGRAPH_INCLUDE_DIR}")
 
 add_library(ngraph SHARED ${SRC})
+target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_DIR}")
 
 if ( APPLE )
     set_property( TARGET ngraph PROPERTY PREFIX "lib" )
@@ -51,18 +47,14 @@ endif()
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
+set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/ngraph_dist" CACHE PATH "Install directory" FORCE)
+message (STATUS "Installation directory: ${CMAKE_INSTALL_PREFIX}")
+message (STATUS "To Override use: cmake -DCMAKE_INSTALL_PREFIX=/foo -P cmake_install.cmake")
 
-set(DEPLOY_SRC_HEADERS
-    element_type.hpp
-    tree.hpp
-    util.hpp
-    uuid.hpp
-    )
-
-set(DEPLOY_SRC_TRANSFORMERS_HEADERS
-    )
-
-install(TARGETS ngraph DESTINATION lib)
-install(FILES ${DEPLOY_SRC_HEADERS} DESTINATION include/ngraph)
-install(FILES ${DEPLOY_SRC_TRANSFORMERS_HEADERS} DESTINATION include/ngraph/transformers)
+install(TARGETS ngraph DESTINATION ${CMAKE_INSTALL_PREFIX} )
+install(DIRECTORY 
+    ${CMAKE_CURRENT_SOURCE_DIR}/ngraph 
+    DESTINATION ${CMAKE_INSTALL_PREFIX} 
+    FILES_MATCHING PATTERN "*.hpp"
+)
 
