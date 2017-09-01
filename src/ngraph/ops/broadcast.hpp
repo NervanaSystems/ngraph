@@ -19,12 +19,12 @@ namespace ngraph
     class BroadcastOp : public BuiltinOp
     {
     public:
-        /**
-         ** /param arg The tensor view to be broadcast.
-         ** /param shape The shape of the result
-         ** /param broadcast_axes The axis positions (0-based) in the result that are being broadcast.
-         **  the remaining axes in shape must be the same as the shape of arg.
-         **/
+        ///
+        /// @param arg The tensor view to be broadcast.
+        /// @param shape The shape of the result
+        /// @param broadcast_axes The axis positions (0-based) in the result that are being broadcast.
+        ///  the remaining axes in shape must be the same as the shape of arg.
+        ///
         BroadcastOp(const Node::ptr& arg, const Shape& shape, const AxisSet& broadcast_axes)
             : BuiltinOp({arg})
             , m_shape(shape)

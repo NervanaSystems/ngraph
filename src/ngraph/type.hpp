@@ -25,11 +25,9 @@ namespace ngraph
     class TensorViewType;
     class TupleType;
 
-    /**
-     ** ValueType is
-     **   TensorViewType
-     **   | TupleType(ValueType[])
-     **/
+    /// ValueType is
+    ///   TensorViewType
+    ///   | TupleType(ValueType[])
     class ValueType
     {
     public:
@@ -43,21 +41,15 @@ namespace ngraph
         bool         operator!=(const ValueType::ptr& that) const { return !(*this == that); }
     };
 
-    /**
-     ** Describes a tensor view; an element type and a shape.
-     **/
+    /// Describes a tensor view; an element type and a shape.
     class TensorViewType : public ValueType
     {
     public:
-        /**
-         ** Preferred handle
-         **/
+        // Preferred handle
         using ptr = std::shared_ptr<TensorViewType>;
 
-        /**
-         ** /param element_type The type of the tensor elements.
-         ** /param shape The shape of the tensor.
-         **/
+        /// /param element_type The type of the tensor elements.
+        /// /param shape The shape of the tensor.
         TensorViewType(const element::Type& element_type, const Shape& shape)
             : m_element_type(element_type)
             , m_shape(shape)
@@ -74,24 +66,16 @@ namespace ngraph
         Shape                m_shape;
     };
 
-    /**
-     ** Describes a tuple of values; a vector of types
-     **/
+    /// Describes a tuple of values; a vector of types
     class TupleType : public ValueType
     {
     public:
-        /**
-         ** The preferred handle
-         **/
         using ptr = std::shared_ptr<ValueType>;
 
-        /**
-         ** Construct empty tuple and add value types later.
-         **/
+        /// Construct empty tuple and add value types later.
         TupleType() {}
-        /**
-         ** /param element_types A vector of types for the tuple elements
-         **/
+
+        /// @param element_types A vector of types for the tuple elements
         TupleType(const std::vector<ValueType::ptr>& element_types)
             : m_element_types(element_types)
         {

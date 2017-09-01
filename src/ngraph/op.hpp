@@ -61,11 +61,9 @@ namespace ngraph
         //Node::ptr while();
     }
 
-    /**
-     ** Op nodes are nodes whose value is the result of some operation
-     ** applied to its arguments. For calls to user functions, the op will
-     ** reference the user function.
-     **/
+    /// Op nodes are nodes whose value is the result of some operation
+    /// applied to its arguments. For calls to user functions, the op will
+    /// reference the user function.
     class Op : public Node
     {
     public:
@@ -78,10 +76,8 @@ namespace ngraph
         virtual std::string get_node_id() const override;
     };
 
-    /**
-     ** A FunctionOp invokes a function on node arguments. In addition to the argument
-     ** we need to preserve the function.
-     **/
+    /// A FunctionOp invokes a function on node arguments. In addition to the argument
+    /// we need to preserve the function.
     class FunctionOp : public Op
     {
         virtual std::string description() const override { return "FunctionOp"; }
@@ -89,10 +85,8 @@ namespace ngraph
         Node::ptr m_function;
     };
 
-    /**
-     ** The is an operation we handle directly, i.e. all type checking, etc.
-     ** are defined in C++ rather than in terms of ngraph operations.
-     **/
+    /// The is an operation we handle directly, i.e. all type checking, etc.
+    /// are defined in C++ rather than in terms of ngraph operations.
     class BuiltinOp : public Op
     {
     public:

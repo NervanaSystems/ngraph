@@ -21,9 +21,7 @@
 
 namespace ngraph
 {
-    /**
-     ** A user-defined function.
-     **/
+    /// A user-defined function.
     class Function
     {
     public:

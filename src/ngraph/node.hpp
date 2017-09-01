@@ -27,11 +27,9 @@ namespace ngraph
 {
     class Op;
 
-    /**
-     ** Nodes are the backbone of the graph of Value dataflow. Every node has
-     ** zero or more nodes as arguments and one value, which is either a tensor
-     ** view or a (possibly empty) tuple of values.
-     **/
+    /// Nodes are the backbone of the graph of Value dataflow. Every node has
+    /// zero or more nodes as arguments and one value, which is either a tensor
+    /// view or a (possibly empty) tuple of values.
     class Node : public TypedValueMixin
     {
     public:
@@ -57,11 +55,9 @@ namespace ngraph
 
         virtual std::string get_node_id() const = 0;
 
-        /**
-         ** Return true if this has the same implementing class as node. This
-         ** will be used by the pattern matcher when comparing a pattern
-         ** graph against the graph.
-         **/
+        /// Return true if this has the same implementing class as node. This
+        /// will be used by the pattern matcher when comparing a pattern
+        /// graph against the graph.
         bool is_same_op_type(const Node::ptr& node) const
         {
             return typeid(*this) == typeid(*node.get());

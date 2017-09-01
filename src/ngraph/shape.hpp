@@ -24,9 +24,7 @@ namespace ngraph
     class Shape
     {
     public:
-        /**
-         ** \param sizes A sequence of sizes.
-         **/
+        /// @param sizes A sequence of sizes.
         Shape(const std::initializer_list<size_t>& sizes)
             : m_sizes(sizes)
         {
@@ -37,9 +35,7 @@ namespace ngraph
         {
         }
 
-        /**
-         ** Conversion to a vector of sizes.
-         **/
+        /// Conversion to a vector of sizes.
         operator const std::vector<size_t>&() const { return m_sizes; }
         bool operator==(const Shape& shape) const { return m_sizes == shape.m_sizes; }
         bool operator!=(const Shape& shape) const { return m_sizes != shape.m_sizes; }
