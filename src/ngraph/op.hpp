@@ -80,7 +80,12 @@ namespace ngraph
     {
     public:
         Op(const std::vector<std::shared_ptr<Node>>& arguments)
-            : Node(arguments, nullptr)
+            : Node(arguments)
+        {
+        }
+
+        Op()
+            : Node()
         {
         }
 

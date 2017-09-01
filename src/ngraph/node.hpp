@@ -30,10 +30,19 @@ namespace ngraph
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// view or a (possibly empty) tuple of values.
-    class Node : public TypedValueMixin, public std::enable_shared_from_this<Node>
+    class Node : public std::enable_shared_from_this<Node>
     {
     protected:
-        Node(const Nodes& arguments, std::shared_ptr<ValueType> type = nullptr);
+        Node(const Nodes& arguments, std::shared_ptr<ValueType> value_type = nullptr);
+        Node()
+            : Node({}, nullptr)
+        {
+        }
+
+        Node(std::shared_ptr<ValueType> value_type)
+            : Node({}, value_type)
+        {
+        }
 
         virtual ~Node() {}
 
@@ -61,6 +70,19 @@ namespace ngraph
             return typeid(*this) == typeid(*node.get());
         }
 
+        std::shared_ptr<ValueType>       get_value_type() { return m_value_type; }
+        const std::shared_ptr<ValueType> get_value_type() const { return m_value_type; }
+
+        void set_value_type(const element::Type& element_type, const Shape& shape)
+        {
+            m_value_type = std::make_shared<TensorViewType>(element_type, shape);
+        }
+
+        void set_value_type(const std::shared_ptr<ValueType>& value_type)
+        {
+            m_value_type = value_type;
+        }
+
         bool is_op() const;
         bool is_parameter() const;
 
@@ -68,10 +90,11 @@ namespace ngraph
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
     protected:
-        Nodes                m_arguments;
-        std::multiset<Node*> m_users;
-        std::string          m_name;
-        size_t               m_instance_id;
-        static size_t        m_next_instance_id;
+        Nodes                      m_arguments;
+        std::shared_ptr<ValueType> m_value_type;
+        std::multiset<Node*>       m_users;
+        std::string                m_name;
+        size_t                     m_instance_id;
+        static size_t              m_next_instance_id;
     };
 }

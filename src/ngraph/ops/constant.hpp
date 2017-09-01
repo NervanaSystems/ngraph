@@ -63,7 +63,7 @@ namespace ngraph
         typename T::type m_value;
     };
 
-    using FloatScalarConstant  = ScalarConstant<element::Float>;
+    using Float32ScalarConstant  = ScalarConstant<element::Float32>;
     using Int8ScalarConstant   = ScalarConstant<element::Int8>;
     using Int32ScalarConstant  = ScalarConstant<element::Int32>;
     using Int64ScalarConstant  = ScalarConstant<element::Int64>;

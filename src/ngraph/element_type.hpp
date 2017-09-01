@@ -49,7 +49,7 @@ namespace ngraph
             size_t                             m_bitwidth;
             bool                               m_is_float;
             bool                               m_is_signed;
-            const std::string                  m_cname;
+            const std::string&                 m_cname;
         };
 
         // Provides a compile-time name for a C++ type.
@@ -62,7 +62,7 @@ namespace ngraph
         }
 
 // Define a type string for a type T. Will make traited_type_name<T>() return "T"
-#define NGRAPH_DEFINE_TTN(T)                                                                       \
+#define NGRAPH_DEFINE_TRAITED_TYPE_NAME(T)                                                                       \
     template <>                                                                                    \
     constexpr const char* traited_type_name<T>()                                                   \
     {                                                                                              \
@@ -95,25 +95,25 @@ namespace ngraph
             }
         };
 
-        NGRAPH_DEFINE_TTN(float)
-        using Float = TraitedType<float>;
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(float)
+        using Float32 = TraitedType<float>;
 
-        NGRAPH_DEFINE_TTN(int8_t)
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(int8_t)
         using Int8 = TraitedType<int8_t>;
 
-        NGRAPH_DEFINE_TTN(int32_t)
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(int32_t)
         using Int32 = TraitedType<int32_t>;
 
-        NGRAPH_DEFINE_TTN(int64_t)
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(int64_t)
         using Int64 = TraitedType<int64_t>;
 
-        NGRAPH_DEFINE_TTN(uint8_t)
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(uint8_t)
         using UInt8 = TraitedType<uint8_t>;
 
-        NGRAPH_DEFINE_TTN(uint32_t)
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(uint32_t)
         using UInt32 = TraitedType<uint32_t>;
 
-        NGRAPH_DEFINE_TTN(uint64_t)
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(uint64_t)
         using UInt64 = TraitedType<uint64_t>;
     }
 }

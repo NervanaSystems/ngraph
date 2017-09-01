@@ -28,9 +28,12 @@ namespace ngraph
         Function(const std::shared_ptr<Node>&                   result,
                  const std::vector<std::shared_ptr<Parameter>>& parameters);
 
-        std::shared_ptr<Node>      result() { return m_result; }
-        std::shared_ptr<Parameter> parameter(size_t i) { return m_parameters[i]; }
-        std::string                name() const { return m_name; }
+        std::shared_ptr<Node>                         get_result() { return m_result; }
+        const std::vector<std::shared_ptr<Parameter>> get_parameters() const
+        {
+            return m_parameters;
+        }
+        std::string get_name() const { return m_name; }
 
     protected:
         std::shared_ptr<Node>                           m_result;

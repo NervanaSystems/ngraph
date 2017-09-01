@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 Parameter::Parameter(const std::shared_ptr<ValueType>& value_type)
-    : Node({}, value_type)
+    : Node(value_type)
     , m_function(nullptr)
     , m_index(0)
 {

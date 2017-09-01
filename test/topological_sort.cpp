@@ -61,7 +61,7 @@ TEST(topological_sort, basic)
     vector<shared_ptr<Parameter>> args;
     for (int i = 0; i < 10; i++)
     {
-        auto arg = op::parameter(element::Float::element_type(), {1});
+        auto arg = op::parameter(element::Float32::element_type(), {1});
         ASSERT_NE(nullptr, arg);
         args.push_back(arg);
     }

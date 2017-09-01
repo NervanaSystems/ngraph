@@ -82,46 +82,4 @@ namespace ngraph
     protected:
         std::vector<std::shared_ptr<ValueType>> m_element_types;
     };
-
-    /**
-     ** Mixin for objects with type information
-     **/
-    class TypedValueMixin
-    {
-    public:
-        TypedValueMixin(const std::shared_ptr<ValueType>& value_type = nullptr)
-            : m_value_type(value_type)
-        {
-        }
-
-        /**
-         ** Set the type
-         ** /param type The new type
-         **/
-        void set_value_type(const std::shared_ptr<ValueType>& value_type)
-        {
-            m_value_type = value_type;
-        }
-        /**
-         ** Set the type to be a tensor view type
-         ** /param element_type The type of the tensor elements
-         ** /param shape The shape of the view
-         **/
-        void set_value_type(const element::Type& element_type, const Shape& shape)
-        {
-            m_value_type = std::make_shared<TensorViewType>(element_type, shape);
-        }
-
-        /**
-         ** The type associated with this value.
-         **/
-        std::shared_ptr<ValueType> get_value_type() { return m_value_type; }
-        /**
-         ** The type associated with this value.
-         **/
-        const std::shared_ptr<ValueType> get_value_type() const { return m_value_type; }
-
-    protected:
-        std::shared_ptr<ValueType> m_value_type;
-    };
 }

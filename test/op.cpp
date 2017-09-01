@@ -23,7 +23,7 @@ using namespace ngraph;
 
 TEST(op, is_op)
 {
-    auto arg0 = op::parameter(element::Float::element_type(), {1});
+    auto arg0 = op::parameter(element::Float32::element_type(), {1});
     ASSERT_NE(nullptr, arg0);
     EXPECT_TRUE(arg0->is_parameter());
     EXPECT_FALSE(arg0->is_op());
@@ -31,7 +31,7 @@ TEST(op, is_op)
 
 TEST(op, is_parameter)
 {
-    auto arg0 = op::parameter(element::Float::element_type(), {1});
+    auto arg0 = op::parameter(element::Float32::element_type(), {1});
     ASSERT_NE(nullptr, arg0);
     auto t0 = op::add(arg0, arg0);
     ASSERT_NE(nullptr, t0);
