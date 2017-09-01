@@ -26,8 +26,8 @@ void ngraph::dump(ostream& out, const void* _data, size_t _size)
 {
     auto           flags = out.flags();
     const uint8_t* data  = reinterpret_cast<const uint8_t*>(_data);
-    int            len   = _size;
-    int            index = 0;
+    size_t            len   = _size;
+    size_t            index = 0;
     while (index < len)
     {
         out << std::hex << std::setw(8) << std::setfill('0') << index;
