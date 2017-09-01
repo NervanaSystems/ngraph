@@ -39,21 +39,24 @@ bool ngraph::Node::is_parameter() const
     return dynamic_cast<const ngraph::Parameter*>(this) != nullptr;
 }
 
-std::ostream& ngraph::operator<<(std::ostream& out, const ngraph::Node& node)
+namespace ngraph
 {
-    auto op_tmp        = dynamic_cast<const ngraph::Op*>(&node);
-    auto parameter_tmp = dynamic_cast<const ngraph::Op*>(&node);
-    if (op_tmp)
+    std::ostream& operator<<(std::ostream& out, const ngraph::Node& node)
     {
-        out << "Op(" << op_tmp->get_node_id() << ")";
+        auto op_tmp        = dynamic_cast<const ngraph::Op*>(&node);
+        auto parameter_tmp = dynamic_cast<const ngraph::Op*>(&node);
+        if (op_tmp)
+        {
+            out << "Op(" << op_tmp->get_node_id() << ")";
+        }
+        else if (parameter_tmp)
+        {
+            out << "Parameter(" << parameter_tmp->get_node_id() << ")";
+        }
+        else
+        {
+            out << "Node(" << node.get_node_id() << ")";
+        }
+        return out;
     }
-    else if (parameter_tmp)
-    {
-        out << "Parameter(" << parameter_tmp->get_node_id() << ")";
-    }
-    else
-    {
-        out << "Node(" << node.get_node_id() << ")";
-    }
-    return out;
 }

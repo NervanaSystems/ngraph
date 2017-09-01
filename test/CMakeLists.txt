@@ -36,7 +36,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}
 
 add_executable(unit-test ${SRC})
 
-target_link_libraries(unit-test ngraph pthread libgtest)
+target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
 add_dependencies(unit-test ngraph libgtest)
