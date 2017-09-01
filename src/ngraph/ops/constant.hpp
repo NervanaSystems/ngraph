@@ -53,7 +53,7 @@ namespace ngraph
         virtual std::string node_id() const override
         {
             std::stringstream ss;
-            ss << description() << "_" << node_id();
+            ss << description() << "_" /* << node_id() */;
             return ss.str();
         }
                 
