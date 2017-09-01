@@ -42,7 +42,7 @@ TEST(top_sort, basic)
     auto f0 = op::function(r0, {arg0, arg1});
     ASSERT_NE(nullptr, f0);
 
-    ASSERT_EQ(2, r0->arguments().size());
+    ASSERT_EQ(2, r0->get_arguments().size());
     auto op_r0 = static_pointer_cast<Op>(r0);
     cout << "op_r0 name " << *r0 << endl;
 

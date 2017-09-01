@@ -50,14 +50,14 @@ namespace ngraph
         }
 
         virtual std::string description() const override { return "ScalarConstant"; }
-        virtual std::string node_id() const override
+        virtual std::string get_node_id() const override
         {
             std::stringstream ss;
             ss << description() << "_" /* << node_id() */;
             return ss.str();
         }
                 
-        typename T::type value() const { return m_value; }
+        typename T::type get_value() const { return m_value; }
 
     protected:
         typename T::type m_value;

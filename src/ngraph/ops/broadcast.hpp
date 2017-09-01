@@ -32,7 +32,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "broadcast"; }
+        virtual std::string get_op_class_name() const override { return "broadcast"; }
         virtual void        propagate_types() override;
 
     protected:

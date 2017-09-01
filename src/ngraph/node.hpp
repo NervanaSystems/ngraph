@@ -48,14 +48,14 @@ namespace ngraph
         /// Propagate types and check arguments for consistency
         virtual void propagate_types() = 0;
 
-        const Nodes& arguments() const { return m_arguments; }
+        const Nodes& get_arguments() const { return m_arguments; }
 
         const std::multiset<Node*>& users() const { return m_users; }
 
-        std::string name() const { return m_name; }
-        void        name(const std::string& name) { m_name = name; }
+        std::string get_name() const { return m_name; }
+        void        set_name(const std::string& name) { m_name = name; }
 
-        virtual std::string node_id() const = 0;
+        virtual std::string get_node_id() const = 0;
 
         /**
          ** Return true if this has the same implementing class as node. This
@@ -70,7 +70,7 @@ namespace ngraph
         bool is_op() const;
         bool is_parameter() const;
 
-        size_t               instance_id() const { return m_instance_id; }
+        size_t               get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
     protected:

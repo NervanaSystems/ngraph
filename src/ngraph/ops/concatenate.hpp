@@ -29,7 +29,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "concatenate"; }
+        virtual std::string get_op_class_name() const override { return "concatenate"; }
         virtual void        propagate_types() override;
     };
 }

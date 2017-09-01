@@ -56,7 +56,7 @@ shared_ptr<Parameter> ngraph::op::parameter(const ngraph::element::Type element_
     return make_shared<Parameter>(make_shared<TensorViewType>(element_type, shape));
 }
 
-std::string ngraph::Parameter::node_id() const
+std::string ngraph::Parameter::get_node_id() const
 {
     stringstream ss;
     ss << "parameter_" << m_instance_id;

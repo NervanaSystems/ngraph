@@ -45,15 +45,15 @@ std::ostream& ngraph::operator<<(std::ostream& out, const ngraph::Node& node)
     auto parameter_tmp = dynamic_cast<const ngraph::Op*>(&node);
     if (op_tmp)
     {
-        out << "Op(" << op_tmp->node_id() << ")";
+        out << "Op(" << op_tmp->get_node_id() << ")";
     }
     else if (parameter_tmp)
     {
-        out << "Parameter(" << parameter_tmp->node_id() << ")";
+        out << "Parameter(" << parameter_tmp->get_node_id() << ")";
     }
     else
     {
-        out << "Node(" << node.node_id() << ")";
+        out << "Node(" << node.get_node_id() << ")";
     }
     return out;
 }

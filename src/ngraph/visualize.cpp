@@ -33,9 +33,9 @@ void Visualize::add(node_ptr p)
     // map<size_t, list<node_ptr>> dependent_nodes;
     traverse_nodes(p, [&](node_ptr node)
     {
-        for (auto arg : node->arguments())
+        for (auto arg : node->get_arguments())
         {
-            m_ss << "    " << arg->node_id() << " -> " << node->node_id() << ";\n";
+            m_ss << "    " << arg->get_node_id() << " -> " << node->get_node_id() << ";\n";
         }
     });
 }

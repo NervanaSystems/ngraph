@@ -74,8 +74,8 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const = 0;
-        virtual std::string node_id() const override;
+        virtual std::string get_op_class_name() const = 0;
+        virtual std::string get_node_id() const override;
     };
 
     /**
@@ -116,7 +116,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "abs"; }
+        virtual std::string get_op_class_name() const override { return "abs"; }
         //virtual void propagate_types() override;
     };
 
@@ -127,7 +127,7 @@ namespace ngraph
             : BuiltinOp({arg0, arg1})
         {
         }
-        virtual std::string op_class_name() const override { return "add"; }
+        virtual std::string get_op_class_name() const override { return "add"; }
         //virtual void propagate_types() override;
     };
 
@@ -139,7 +139,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "ceiling"; }
+        virtual std::string get_op_class_name() const override { return "ceiling"; }
         //virtual void propagate_types() override;
     };
 
@@ -151,7 +151,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "divide"; }
+        virtual std::string get_op_class_name() const override { return "divide"; }
         //virtual void propagate_types() override;
     };
 
@@ -163,7 +163,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "equal"; }
+        virtual std::string get_op_class_name() const override { return "equal"; }
         //virtual void propagate_types() override;
     };
 
@@ -175,7 +175,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "exp"; }
+        virtual std::string get_op_class_name() const override { return "exp"; }
         //virtual void propagate_types() override;
     };
 
@@ -187,7 +187,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "floor"; }
+        virtual std::string get_op_class_name() const override { return "floor"; }
         //virtual void propagate_types() override;
     };
 
@@ -199,7 +199,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "greater"; }
+        virtual std::string get_op_class_name() const override { return "greater"; }
         //virtual void propagate_types() override;
     };
 
@@ -211,7 +211,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "less"; }
+        virtual std::string get_op_class_name() const override { return "less"; }
         //virtual void propagate_types() override;
     };
 
@@ -223,7 +223,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "log"; }
+        virtual std::string get_op_class_name() const override { return "log"; }
         //virtual void propagate_types() override;
     };
 
@@ -235,7 +235,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "max"; }
+        virtual std::string get_op_class_name() const override { return "max"; }
         //virtual void propagate_types() override;
     };
 
@@ -247,7 +247,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "min"; }
+        virtual std::string get_op_class_name() const override { return "min"; }
         //virtual void propagate_types() override;
     };
 
@@ -259,7 +259,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "multiply"; }
+        virtual std::string get_op_class_name() const override { return "multiply"; }
         //virtual void propagate_types() override;
     };
 
@@ -271,7 +271,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "negative"; }
+        virtual std::string get_op_class_name() const override { return "negative"; }
         //virtual void propagate_types() override;
     };
 
@@ -283,7 +283,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "power"; }
+        virtual std::string get_op_class_name() const override { return "power"; }
         //virtual void propagate_types() override;
     };
 
@@ -295,7 +295,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "remainder"; }
+        virtual std::string get_op_class_name() const override { return "remainder"; }
         //virtual void propagate_types() override;
     };
 
@@ -308,7 +308,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "reshape"; }
+        virtual std::string get_op_class_name() const override { return "reshape"; }
         //virtual void propagate_types() override;
     protected:
         Shape m_shape;
@@ -322,7 +322,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "subtract"; }
+        virtual std::string get_op_class_name() const override { return "subtract"; }
         //virtual void propagate_types() override;
     };
 }

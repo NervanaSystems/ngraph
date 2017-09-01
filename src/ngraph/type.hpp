@@ -64,8 +64,8 @@ namespace ngraph
         {
         }
 
-        const element::Type& element_type() const { return m_element_type; }
-        const Shape&         shape() const { return m_shape; }
+        const element::Type& get_element_type() const { return m_element_type; }
+        const Shape&         get_shape() const { return m_shape; }
 
         virtual bool operator==(const ValueType::ptr& that) const override;
 
@@ -97,8 +97,8 @@ namespace ngraph
         {
         }
 
-        const std::vector<ValueType::ptr> element_types() const { return m_element_types; }
-        std::vector<ValueType::ptr>       element_types() { return m_element_types; }
+        const std::vector<ValueType::ptr> get_element_types() const { return m_element_types; }
+        std::vector<ValueType::ptr>       set_element_types() { return m_element_types; }
 
         virtual bool operator==(const ValueType::ptr& that) const override;
 
@@ -121,13 +121,13 @@ namespace ngraph
          ** Set the type
          ** /param type The new type
          **/
-        void value_type(const ValueType::ptr& value_type) { m_value_type = value_type; }
+        void set_value_type(const ValueType::ptr& value_type) { m_value_type = value_type; }
         /**
          ** Set the type to be a tensor view type
          ** /param element_type The type of the tensor elements
          ** /param shape The shape of the view
          **/
-        void value_type(const element::Type& element_type, const Shape& shape)
+        void set_value_type(const element::Type& element_type, const Shape& shape)
         {
             m_value_type = std::make_shared<TensorViewType>(element_type, shape);
         }
@@ -135,11 +135,11 @@ namespace ngraph
         /**
          ** The type associated with this value.
          **/
-        ValueType::ptr value_type() { return m_value_type; }
+        ValueType::ptr get_value_type() { return m_value_type; }
         /**
          ** The type associated with this value.
          **/
-        const ValueType::ptr value_type() const { return m_value_type; }
+        const ValueType::ptr get_value_type() const { return m_value_type; }
     protected:
         ValueType::ptr m_value_type;
     };

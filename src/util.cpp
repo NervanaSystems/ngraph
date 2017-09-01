@@ -136,11 +136,11 @@ static void traverse_nodes(std::shared_ptr<ngraph::Node>                      p,
                            std::set<size_t>&                                  instances_seen)
 {
     f(p);
-    for (auto arg : p->arguments())
+    for (auto arg : p->get_arguments())
     {
-        if (instances_seen.find(arg->instance_id()) == instances_seen.end())
+        if (instances_seen.find(arg->get_instance_id()) == instances_seen.end())
         {
-            instances_seen.insert(arg->instance_id());
+            instances_seen.insert(arg->get_instance_id());
             traverse_nodes(arg, f, instances_seen);
         }
     }

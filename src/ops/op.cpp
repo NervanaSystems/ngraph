@@ -20,10 +20,10 @@
 using namespace ngraph;
 using namespace std;
 
-std::string ngraph::Op::node_id() const
+std::string ngraph::Op::get_node_id() const
 {
     stringstream ss;
-    ss << op_class_name() << "_" << m_instance_id;
+    ss << get_op_class_name() << "_" << m_instance_id;
     return ss.str();
 }
 
