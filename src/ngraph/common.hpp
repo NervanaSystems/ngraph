@@ -15,20 +15,33 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 #include <set>
+#include <vector>
 
 // Names for types that aren't worth giving their own classes
 namespace ngraph
 {
     class Node;
     class Parameter;
+    class ValueType;
+
+    template <typename T, typename... A>
+    std::shared_ptr<T> node(A&&... args)
+    {
+        return std::make_shared<T>(args...);
+    }
+
+    /// Zero or more value types
+    using ValueTypes = std::vector<std::shared_ptr<ValueType>>;
 
     /// Zero or more nodes
     using Nodes = std::vector<std::shared_ptr<Node>>;
-    
-    /// A set of indices, for example, reduction axes
-    using IndexSet = std::set<size_t>;
+
+    /// A sequence of axes
+    using AxisVector = std::vector<size_t>;
+
+    /// A set of axes, for example, reduction axes
+    using AxisSet = std::set<size_t>;
 
     /// A list of parameters
     using Parameters = std::vector<std::shared_ptr<Parameter>>;

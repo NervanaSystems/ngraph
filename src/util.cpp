@@ -26,8 +26,8 @@ void ngraph::dump(ostream& out, const void* _data, size_t _size)
 {
     auto           flags = out.flags();
     const uint8_t* data  = reinterpret_cast<const uint8_t*>(_data);
-    int            len   = _size;
-    int            index = 0;
+    size_t            len   = _size;
+    size_t            index = 0;
     while (index < len)
     {
         out << std::hex << std::setw(8) << std::setfill('0') << index;
@@ -136,11 +136,11 @@ static void traverse_nodes(std::shared_ptr<ngraph::Node>                      p,
                            std::set<size_t>&                                  instances_seen)
 {
     f(p);
-    for (auto arg : p->arguments())
+    for (auto arg : p->get_arguments())
     {
-        if (instances_seen.find(arg->instance_id()) == instances_seen.end())
+        if (instances_seen.find(arg->get_instance_id()) == instances_seen.end())
         {
-            instances_seen.insert(arg->instance_id());
+            instances_seen.insert(arg->get_instance_id());
             traverse_nodes(arg, f, instances_seen);
         }
     }

@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <list>
-#include <fstream>
 #include <cstdio>
+#include <fstream>
+#include <list>
 
-#include "visualize.hpp"
 #include "ngraph/node.hpp"
 #include "util.hpp"
+#include "visualize.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -31,18 +31,17 @@ Visualize::Visualize(const string& name)
 void Visualize::add(node_ptr p)
 {
     // map<size_t, list<node_ptr>> dependent_nodes;
-    traverse_nodes(p, [&](node_ptr node)
-    {
-        for (auto arg : node->arguments())
+    traverse_nodes(p, [&](node_ptr node) {
+        for (auto arg : node->get_arguments())
         {
-            m_ss << "    " << arg->node_id() << " -> " << node->node_id() << ";\n";
+            m_ss << "    " << arg->get_node_id() << " -> " << node->get_node_id() << ";\n";
         }
     });
 }
 
 void Visualize::save_dot(const string& path) const
 {
-    auto tmp_file = path+".tmp";
+    auto     tmp_file = path + ".tmp";
     ofstream out(tmp_file);
     if (out)
     {
@@ -53,7 +52,7 @@ void Visualize::save_dot(const string& path) const
 
         stringstream ss;
         ss << "dot -Tpng " << tmp_file << " -o " << path;
-        auto cmd = ss.str();
+        auto cmd    = ss.str();
         auto stream = popen(cmd.c_str(), "r");
         pclose(stream);
 

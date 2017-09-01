@@ -18,7 +18,7 @@ namespace ngraph
 {
     namespace op
     {
-        Node::ptr tuple(const Nodes& args);
+        std::shared_ptr<Node> tuple(const Nodes& args);
     }
 
     class TupleOp : public BuiltinOp
@@ -29,7 +29,7 @@ namespace ngraph
         {
         }
 
-        virtual std::string op_class_name() const override { return "tuple"; }
+        virtual std::string get_op_class_name() const override { return "tuple"; }
         virtual void        propagate_types() override;
     };
 }

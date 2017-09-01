@@ -17,22 +17,20 @@
 using namespace std;
 using namespace ngraph;
 
-/**
- ** /param arg The tensor view to be broadcast.
- ** /param shape The shape of the result
- ** /param broadcast_axes The axis positions (0-based) in the result that are being broadcast.
- **  the remaining axes in shape must be the same as the shape of arg.
- **/
-Node::ptr ngraph::op::broadcast(const Node::ptr&      tensor,
-                                const Shape&          shape,
-                                const BroadcastOp::Axes&& broadcast_axes)
+/// @param tensor The tensor view to be broadcast.
+/// @param shape The shape of the result
+/// @param broadcast_axes The axis positions (0-based) in the result that are being broadcast.
+///  the remaining axes in shape must be the same as the shape of arg.
+std::shared_ptr<Node> ngraph::op::broadcast(const std::shared_ptr<Node>& tensor,
+                                            const Shape&                 shape,
+                                            AxisSet&&                    broadcast_axes)
 {
     return make_shared<BroadcastOp>(tensor, shape, broadcast_axes);
 }
 
 void BroadcastOp::propagate_types()
 {
-    auto arg_type = m_arguments.at(0)->type();
+    auto arg_type = m_arguments.at(0)->get_value_type();
     if (nullptr == arg_type)
     {
         throw ngraph_error("Argument to broadcast is missing type.");
@@ -47,11 +45,11 @@ void BroadcastOp::propagate_types()
     {
         target_shape.erase(target_shape.begin() + *i);
     }
-    if (Shape{target_shape} != arg_tensor_view_type->shape())
+    if (Shape{target_shape} != arg_tensor_view_type->get_shape())
     {
         throw ngraph_error("Broadcast arg, shape, and axes are incompatible");
     }
     // TODO If m_type is already set (by framework), this should verify that the type
     // we expect is consistent with the type the framework expects.
-    m_type = make_shared<TensorViewType>(arg_tensor_view_type->element_type(), m_shape);
+    m_value_type = make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), m_shape);
 }

@@ -18,18 +18,18 @@ namespace ngraph
 {
     namespace op
     {
-        Node::ptr concatenate(const Nodes& args);
+        std::shared_ptr<Node> concatenate(const Nodes& args);
     }
 
-    class ConcatenateOp : public BuiltinOp
+    class ConcatOp : public BuiltinOp
     {
     public:
-        ConcatenateOp(const Nodes& args)
+        ConcatOp(const Nodes& args)
             : BuiltinOp(args)
         {
         }
 
-        virtual std::string op_class_name() const override { return "concatenate"; }
+        virtual std::string get_op_class_name() const override { return "concatenate"; }
         virtual void        propagate_types() override;
     };
 }

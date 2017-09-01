@@ -17,9 +17,10 @@
 
 size_t ngraph::Node::m_next_instance_id = 0;
 
-ngraph::Node::Node(const std::vector<Node::ptr>& arguments, ValueType::ptr type)
-    : TypedValueMixin(type)
-    , m_arguments(arguments)
+ngraph::Node::Node(const std::vector<std::shared_ptr<Node>>& arguments,
+                   std::shared_ptr<ValueType>                value_type)
+    : m_arguments(arguments)
+    , m_value_type(value_type)
     , m_instance_id(m_next_instance_id++)
 {
     // Add this node as a user of each argument.
@@ -47,15 +48,15 @@ namespace ngraph
         auto parameter_tmp = dynamic_cast<const ngraph::Op*>(&node);
         if (op_tmp)
         {
-            out << "Op(" << op_tmp->node_id() << ")";
+            out << "Op(" << op_tmp->get_node_id() << ")";
         }
         else if (parameter_tmp)
         {
-            out << "Parameter(" << parameter_tmp->node_id() << ")";
+            out << "Parameter(" << parameter_tmp->get_node_id() << ")";
         }
         else
         {
-            out << "Node(" << node.node_id() << ")";
+            out << "Node(" << node.get_node_id() << ")";
         }
         return out;
     }

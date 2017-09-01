@@ -19,33 +19,33 @@ namespace ngraph
     class BroadcastOp : public BuiltinOp
     {
     public:
-        using Axes = std::vector<size_t>;
-
-        /**
-         ** /param arg The tensor view to be broadcast.
-         ** /param shape The shape of the result
-         ** /param broadcast_axes The axis positions (0-based) in the result that are being broadcast.
-         **  the remaining axes in shape must be the same as the shape of arg.
-         **/
-        BroadcastOp(const Node::ptr& arg, const Shape& shape, const Axes& broadcast_axes)
+        ///
+        /// @param arg The tensor view to be broadcast.
+        /// @param shape The shape of the result
+        /// @param broadcast_axes The axis positions (0-based) in the result that are being broadcast.
+        ///  the remaining axes in shape must be the same as the shape of arg.
+        ///
+        BroadcastOp(const std::shared_ptr<Node>& arg,
+                    const Shape&                 shape,
+                    const AxisSet&               broadcast_axes)
             : BuiltinOp({arg})
             , m_shape(shape)
             , m_broadcast_axes(broadcast_axes)
         {
         }
 
-        virtual std::string op_class_name() const override { return "broadcast"; }
+        virtual std::string get_op_class_name() const override { return "broadcast"; }
         virtual void        propagate_types() override;
 
     protected:
-        Shape               m_shape;
-        Axes m_broadcast_axes;
+        Shape   m_shape;
+        AxisSet m_broadcast_axes;
     };
 
     namespace op
     {
-        Node::ptr broadcast(const Node::ptr&           tensor,
-                            const Shape&               shape,
-                            const BroadcastOp::Axes&& broadcast_axes);
+        std::shared_ptr<Node> broadcast(const std::shared_ptr<Node>& tensor,
+                                        const Shape&                 shape,
+                                        AxisSet&&                    broadcast_axes);
     }
 }

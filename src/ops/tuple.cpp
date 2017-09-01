@@ -24,7 +24,7 @@ void TupleOp::propagate_types()
     throw ngraph_error("NIY");
 }
 
-Node::ptr op::tuple(const std::vector<Node::ptr>& args)
+std::shared_ptr<Node> op::tuple(const std::vector<std::shared_ptr<Node>>& args)
 {
     return make_shared<TupleOp>(args);
 }

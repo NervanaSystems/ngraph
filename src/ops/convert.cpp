@@ -24,7 +24,8 @@ void ConvertOp::propagate_types()
     throw ngraph_error("NIY");
 }
 
-shared_ptr<ConvertOp> op::convert(const Node::ptr& arg, const element::Type& element_type)
+shared_ptr<ConvertOp> op::convert(const std::shared_ptr<Node>& arg,
+                                  const element::Type&         element_type)
 {
     return make_shared<ConvertOp>(arg, element_type);
 }
