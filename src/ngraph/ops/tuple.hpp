@@ -18,7 +18,7 @@ namespace ngraph
 {
     namespace op
     {
-        Node::ptr tuple(const Nodes& args);
+        std::shared_ptr<Node> tuple(const Nodes& args);
     }
 
     class TupleOp : public BuiltinOp

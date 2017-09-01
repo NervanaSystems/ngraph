@@ -27,17 +27,17 @@ std::string ngraph::Op::get_node_id() const
     return ss.str();
 }
 
-Node::ptr ngraph::op::abs(const Node::ptr& arg)
+std::shared_ptr<Node> ngraph::op::abs(const std::shared_ptr<Node>& arg)
 {
     return make_shared<AbsOp>(arg);
 }
 
-Node::ptr ngraph::op::add(const Node::ptr& arg0, const Node::ptr& arg1)
+std::shared_ptr<Node> ngraph::op::add(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     return make_shared<AddOp>(arg0, arg1);
 }
 
-Node::ptr ngraph::op::ceiling(const Node::ptr& arg0, const Node::ptr& arg1)
+std::shared_ptr<Node> ngraph::op::ceiling(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     return make_shared<CeilingOp>(arg0, arg1);
 }
@@ -45,61 +45,61 @@ Node::ptr ngraph::op::ceiling(const Node::ptr& arg0, const Node::ptr& arg1)
 // 'convert',
 // 'convolution',
 
-Node::ptr ngraph::op::divide(const Node::ptr& arg0, const Node::ptr& arg1)
+std::shared_ptr<Node> ngraph::op::divide(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     return make_shared<DivideOp>(arg0, arg1);
 }
 
-Node::ptr ngraph::op::exp(const Node::ptr& arg0)
+std::shared_ptr<Node> ngraph::op::exp(const std::shared_ptr<Node>& arg0)
 {
     return make_shared<ExpOp>(arg0);
 }
 
-Node::ptr ngraph::op::floor(const Node::ptr& arg0, const Node::ptr& arg1)
+std::shared_ptr<Node> ngraph::op::floor(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     return make_shared<FloorOp>(arg0, arg1);
 }
 
-Node::ptr ngraph::op::log(const Node::ptr& arg0)
+std::shared_ptr<Node> ngraph::op::log(const std::shared_ptr<Node>& arg0)
 {
     return make_shared<LogOp>(arg0);
 }
 
-Node::ptr ngraph::op::maximum(const Node::ptr& arg0, const Node::ptr& arg1)
+std::shared_ptr<Node> ngraph::op::maximum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     return make_shared<MaximumOp>(arg0, arg1);
 }
 
-Node::ptr ngraph::op::minimum(const Node::ptr& arg0, const Node::ptr& arg1)
+std::shared_ptr<Node> ngraph::op::minimum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     return make_shared<MinimumOp>(arg0, arg1);
 }
 
-Node::ptr ngraph::op::multiply(const Node::ptr& arg0, const Node::ptr& arg1)
+std::shared_ptr<Node> ngraph::op::multiply(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     return make_shared<MultiplyOp>(arg0, arg1);
 }
 
-Node::ptr ngraph::op::negative(const Node::ptr& arg0)
+std::shared_ptr<Node> ngraph::op::negative(const std::shared_ptr<Node>& arg0)
 {
     return make_shared<NegativeOp>(arg0);
 }
 
 // 'pad',
 
-Node::ptr ngraph::op::power(const Node::ptr& arg0, const Node::ptr& arg1)
+std::shared_ptr<Node> ngraph::op::power(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     return make_shared<PowerOp>(arg0, arg1);
 }
 
 //'reduce',
 
-Node::ptr ngraph::op::remainder(const Node::ptr& arg0, const Node::ptr& arg1)
+std::shared_ptr<Node> ngraph::op::remainder(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     return make_shared<RemainderOp>(arg0, arg1);
 }
 
-Node::ptr ngraph::op::reshape(const Node::ptr& arg0, const Shape& shape)
+std::shared_ptr<Node> ngraph::op::reshape(const std::shared_ptr<Node>& arg0, const Shape& shape)
 {
     return make_shared<ReshapeOp>(arg0, shape);
 }
@@ -109,7 +109,7 @@ Node::ptr ngraph::op::reshape(const Node::ptr& arg0, const Shape& shape)
 // 'select',
 //'slice',
 
-Node::ptr ngraph::op::subtract(const Node::ptr& arg0, const Node::ptr& arg1)
+std::shared_ptr<Node> ngraph::op::subtract(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     return make_shared<SubtractOp>(arg0, arg1);
 }

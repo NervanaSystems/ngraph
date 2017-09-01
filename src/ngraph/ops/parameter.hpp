@@ -36,7 +36,7 @@ namespace ngraph
         void assign_function(Function* function, size_t index);
 
     public:
-        Parameter(const ValueType::ptr& value_type);
+        Parameter(const std::shared_ptr<ValueType>& value_type);
         Parameter(const ngraph::element::Type element_type, const Shape& shape);
 
         std::string         description() const override { return "Parameter"; }
@@ -51,7 +51,7 @@ namespace ngraph
     namespace op
     {
         /// Factory for frameworks
-        std::shared_ptr<ngraph::Parameter> parameter(const ValueType::ptr& value_type = nullptr);
+        std::shared_ptr<ngraph::Parameter> parameter(const std::shared_ptr<ValueType>& value_type = nullptr);
         /// Convenience factory for tests
         std::shared_ptr<ngraph::Parameter> parameter(const element::Type element_type,
                                                      const Shape&                shape);

@@ -31,23 +31,15 @@ namespace ngraph
     class ValueType
     {
     public:
-        /**
-         ** Preferred handle
-         **/
-        using ptr = std::shared_ptr<ValueType>;
-
         virtual ~ValueType() {}
-        virtual bool operator==(const ValueType::ptr& that) const = 0;
-        bool         operator!=(const ValueType::ptr& that) const { return !(*this == that); }
+        virtual bool operator==(const std::shared_ptr<ValueType>& that) const = 0;
+        bool         operator!=(const std::shared_ptr<ValueType>& that) const { return !(*this == that); }
     };
 
     /// Describes a tensor view; an element type and a shape.
     class TensorViewType : public ValueType
     {
     public:
-        // Preferred handle
-        using ptr = std::shared_ptr<TensorViewType>;
-
         /// /param element_type The type of the tensor elements.
         /// /param shape The shape of the tensor.
         TensorViewType(const element::Type& element_type, const Shape& shape)
@@ -59,7 +51,7 @@ namespace ngraph
         const element::Type& get_element_type() const { return m_element_type; }
         const Shape&         get_shape() const { return m_shape; }
 
-        virtual bool operator==(const ValueType::ptr& that) const override;
+        virtual bool operator==(const std::shared_ptr<ValueType>& that) const override;
 
     protected:
         const element::Type& m_element_type;
@@ -70,24 +62,22 @@ namespace ngraph
     class TupleType : public ValueType
     {
     public:
-        using ptr = std::shared_ptr<ValueType>;
-
         /// Construct empty tuple and add value types later.
         TupleType() {}
 
         /// @param element_types A vector of types for the tuple elements
-        TupleType(const std::vector<ValueType::ptr>& element_types)
+        TupleType(const std::vector<std::shared_ptr<ValueType>>& element_types)
             : m_element_types(element_types)
         {
         }
 
-        const std::vector<ValueType::ptr> get_element_types() const { return m_element_types; }
-        std::vector<ValueType::ptr>       set_element_types() { return m_element_types; }
+        const std::vector<std::shared_ptr<ValueType>> get_element_types() const { return m_element_types; }
+        std::vector<std::shared_ptr<ValueType>>       set_element_types() { return m_element_types; }
 
-        virtual bool operator==(const ValueType::ptr& that) const override;
+        virtual bool operator==(const std::shared_ptr<ValueType>& that) const override;
 
     protected:
-        std::vector<ValueType::ptr> m_element_types;
+        std::vector<std::shared_ptr<ValueType>> m_element_types;
     };
 
     /**
@@ -96,7 +86,7 @@ namespace ngraph
     class TypedValueMixin
     {
     public:
-        TypedValueMixin(const ValueType::ptr& value_type = nullptr)
+        TypedValueMixin(const std::shared_ptr<ValueType>& value_type = nullptr)
             : m_value_type(value_type)
         {
         }
@@ -105,7 +95,7 @@ namespace ngraph
          ** Set the type
          ** /param type The new type
          **/
-        void set_value_type(const ValueType::ptr& value_type) { m_value_type = value_type; }
+        void set_value_type(const std::shared_ptr<ValueType>& value_type) { m_value_type = value_type; }
         /**
          ** Set the type to be a tensor view type
          ** /param element_type The type of the tensor elements
@@ -119,12 +109,12 @@ namespace ngraph
         /**
          ** The type associated with this value.
          **/
-        ValueType::ptr get_value_type() { return m_value_type; }
+        std::shared_ptr<ValueType> get_value_type() { return m_value_type; }
         /**
          ** The type associated with this value.
          **/
-        const ValueType::ptr get_value_type() const { return m_value_type; }
+        const std::shared_ptr<ValueType> get_value_type() const { return m_value_type; }
     protected:
-        ValueType::ptr m_value_type;
+        std::shared_ptr<ValueType> m_value_type;
     };
 }

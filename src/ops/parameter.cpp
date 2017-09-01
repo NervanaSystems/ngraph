@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-Parameter::Parameter(const ValueType::ptr& value_type)
+Parameter::Parameter(const std::shared_ptr<ValueType>& value_type)
     : Node({}, value_type)
     , m_function(nullptr)
     , m_index(0)
@@ -45,7 +45,7 @@ void Parameter::propagate_types()
 {
 }
 
-shared_ptr<Parameter> ngraph::op::parameter(const ValueType::ptr& value_type)
+shared_ptr<Parameter> ngraph::op::parameter(const std::shared_ptr<ValueType>& value_type)
 {
     return make_shared<Parameter>(value_type);
 }

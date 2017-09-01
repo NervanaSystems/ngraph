@@ -36,7 +36,7 @@ TEST(top_sort, basic)
     ASSERT_NE(nullptr, t0);
     auto t1 = op::add(arg0, arg1);
     ASSERT_NE(nullptr, t1);
-    Node::ptr r0 = op::add(t0, t1);
+    auto r0 = op::add(t0, t1);
     ASSERT_NE(nullptr, r0);
 
     auto f0 = op::function(r0, {arg0, arg1});

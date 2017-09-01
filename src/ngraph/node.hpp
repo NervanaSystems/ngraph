@@ -32,11 +32,9 @@ namespace ngraph
     /// view or a (possibly empty) tuple of values.
     class Node : public TypedValueMixin
     {
-    public:
-        using ptr = std::shared_ptr<Node>;
 
     protected:
-        Node(const Nodes& arguments, ValueType::ptr type = nullptr);
+        Node(const Nodes& arguments, std::shared_ptr<ValueType> type = nullptr);
 
         virtual ~Node() {}
     public:
@@ -58,7 +56,7 @@ namespace ngraph
         /// Return true if this has the same implementing class as node. This
         /// will be used by the pattern matcher when comparing a pattern
         /// graph against the graph.
-        bool is_same_op_type(const Node::ptr& node) const
+        bool is_same_op_type(const std::shared_ptr<Node>& node) const
         {
             return typeid(*this) == typeid(*node.get());
         }
@@ -76,6 +74,4 @@ namespace ngraph
         size_t                 m_instance_id;
         static size_t          m_next_instance_id;
     };
-
-    using node_ptr = std::shared_ptr<Node>;
 }

@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-bool TensorViewType::operator==(const ValueType::ptr& that) const
+bool TensorViewType::operator==(const std::shared_ptr<ValueType>& that) const
 {
     auto that_tvt = dynamic_pointer_cast<TensorViewType>(that);
     if (nullptr == that_tvt)
@@ -37,7 +37,7 @@ bool TensorViewType::operator==(const ValueType::ptr& that) const
     return true;
 }
 
-bool TupleType::operator==(const ValueType::ptr& that) const
+bool TupleType::operator==(const std::shared_ptr<ValueType>& that) const
 {
     auto that_tvt = dynamic_pointer_cast<TupleType>(that);
     if (nullptr == that_tvt)

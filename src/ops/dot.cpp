@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 /// TODO: Semantics of arg0 and arg1 axes wrt reduction.
-Node::ptr ngraph::op::dot(const Node::ptr& arg0, const Node::ptr& arg1)
+std::shared_ptr<Node> ngraph::op::dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     return make_shared<DotOp>(arg0, arg1);
 }

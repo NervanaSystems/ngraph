@@ -25,14 +25,14 @@ namespace ngraph
     class Function
     {
     public:
-        Function(const Node::ptr&                               result,
+        Function(const std::shared_ptr<Node>&                               result,
                  const std::vector<std::shared_ptr<Parameter>>& parameters);
 
-        Node::ptr      result() { return m_result; }
-        Parameter::ptr parameter(size_t i) { return m_parameters[i]; }
+        std::shared_ptr<Node>      result() { return m_result; }
+        std::shared_ptr<Parameter> parameter(size_t i) { return m_parameters[i]; }
         std::string                     name() const { return m_name; }
     protected:
-        Node::ptr                                       m_result;
+        std::shared_ptr<Node>                                       m_result;
         std::vector<std::shared_ptr<ngraph::Parameter>> m_parameters;
         std::string                                     m_name;
     };
@@ -40,10 +40,10 @@ namespace ngraph
     namespace op
     {
         std::shared_ptr<Function>
-            function(const Node::ptr&                                         result,
+            function(const std::shared_ptr<Node>&                                         result,
                      const std::initializer_list<std::shared_ptr<Parameter>>& parameters);
         std::shared_ptr<Function>
-            function(const Node::ptr&                               result,
+            function(const std::shared_ptr<Node>&                               result,
                      const std::vector<std::shared_ptr<Parameter>>& parameters);
     }
 }

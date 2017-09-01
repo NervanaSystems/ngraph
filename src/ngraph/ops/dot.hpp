@@ -20,7 +20,7 @@ namespace ngraph
     {
     public:
         /// TODO: Semantics of arg0 and arg1 axes wrt reduction.
-        DotOp(const Node::ptr& arg0, const Node::ptr& arg1)
+        DotOp(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
             : BuiltinOp({arg0, arg1})
         {
         }
@@ -31,6 +31,6 @@ namespace ngraph
 
     namespace op
     {
-        Node::ptr dot(const Node::ptr& arg0, const Node::ptr& arg1);
+        std::shared_ptr<Node> dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
     }
 }

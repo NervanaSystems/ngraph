@@ -21,7 +21,7 @@ using namespace ngraph;
 /// @param shape The shape of the result
 /// @param broadcast_axes The axis positions (0-based) in the result that are being broadcast.
 ///  the remaining axes in shape must be the same as the shape of arg.
-Node::ptr ngraph::op::broadcast(const Node::ptr&      tensor,
+std::shared_ptr<Node> ngraph::op::broadcast(const std::shared_ptr<Node>&      tensor,
                                 const Shape&          shape,
                                 AxisSet&& broadcast_axes)
 {

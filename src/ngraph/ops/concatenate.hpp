@@ -18,7 +18,7 @@ namespace ngraph
 {
     namespace op
     {
-        Node::ptr concatenate(const Nodes& args);
+        std::shared_ptr<Node> concatenate(const Nodes& args);
     }
 
     class ConcatOp : public BuiltinOp

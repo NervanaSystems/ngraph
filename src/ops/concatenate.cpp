@@ -24,7 +24,7 @@ void ConcatOp::propagate_types()
     throw ngraph_error("NIY");
 }
 
-Node::ptr op::concatenate(const std::vector<Node::ptr>& args)
+std::shared_ptr<Node> op::concatenate(const std::vector<std::shared_ptr<Node>>& args)
 {
     return make_shared<ConcatOp>(args);
 }
