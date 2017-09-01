@@ -59,14 +59,6 @@ namespace ngraph
                 
         typename T::type value() const { return m_value; }
 
-        // Make a constant from any value that can be converted to the C++ type we use
-        // to represent the values.
-        template <typename U>
-        static std::shared_ptr<ScalarConstant<T>> make(U value)
-        {
-            return std::make_shared<ScalarConstant<T>>(value);
-        }
-
     protected:
         typename T::type m_value;
     };

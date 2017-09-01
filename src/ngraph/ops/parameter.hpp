@@ -37,6 +37,7 @@ namespace ngraph
 
     public:
         Parameter(const ValueType::ptr& value_type);
+        Parameter(const ngraph::element::Type element_type, const Shape& shape);
 
         std::string         description() const override { return "Parameter"; }
         virtual void        propagate_types() override;

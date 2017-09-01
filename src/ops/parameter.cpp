@@ -26,6 +26,11 @@ Parameter::Parameter(const ValueType::ptr& value_type)
 {
 }
 
+Parameter::Parameter(const ngraph::element::Type element_type, const Shape& shape)
+    : Parameter(make_shared<TensorViewType>(element_type, shape))
+{
+}
+
 void Parameter::assign_function(Function* function, size_t index)
 {
     if (nullptr != m_function)

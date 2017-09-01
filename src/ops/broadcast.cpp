@@ -25,7 +25,7 @@ using namespace ngraph;
  **/
 Node::ptr ngraph::op::broadcast(const Node::ptr&      tensor,
                                 const Shape&          shape,
-                                const BroadcastOp::Axes&& broadcast_axes)
+                                AxisSet&& broadcast_axes)
 {
     return make_shared<BroadcastOp>(tensor, shape, broadcast_axes);
 }
