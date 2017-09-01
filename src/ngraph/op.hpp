@@ -76,7 +76,6 @@ namespace ngraph
 
         virtual std::string op_class_name() const = 0;
         virtual std::string node_id() const override;
-        virtual bool is_op() const override { return true; }
     };
 
     /**

@@ -67,8 +67,8 @@ namespace ngraph
             return typeid(*this) == typeid(*node.get());
         }
 
-        virtual bool is_op() const { return false; }
-        virtual bool is_parameter() const { return false; }
+        bool is_op() const;
+        bool is_parameter() const;
 
         size_t               instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);

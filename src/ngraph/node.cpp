@@ -29,6 +29,16 @@ ngraph::Node::Node(const std::vector<Node::ptr>& arguments, ValueType::ptr type)
     }
 }
 
+bool ngraph::Node::is_op() const
+{
+    return dynamic_cast<const ngraph::Op*>(this) != nullptr;
+}
+
+bool ngraph::Node::is_parameter() const
+{
+    return dynamic_cast<const ngraph::Parameter*>(this) != nullptr;
+}
+
 std::ostream& ngraph::operator<<(std::ostream& out, const ngraph::Node& node)
 {
     auto op_tmp        = dynamic_cast<const ngraph::Op*>(&node);
