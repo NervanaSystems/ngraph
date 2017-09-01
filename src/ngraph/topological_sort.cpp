@@ -12,8 +12,53 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include "node.hpp"
 #include "topological_sort.hpp"
+#include "util.hpp"
 
-void ngraph::TopologicalSort::process(node_ptr node)
+using namespace ngraph;
+using namespace std;
+
+void ngraph::TopologicalSort::promote_node(Node* n)
 {
+    for (auto dn=m_dependent_nodes.begin(); dn!=m_dependent_nodes.end(); dn++)
+    {
+        if (dn->first > 0)   // Skip zero as they should never be promoted
+        {
+            auto it = find(dn->second.begin(), dn->second.end(), n);
+            if (it != dn->second.end())
+            {
+                // found the node
+                dn->second.erase(it);
+                m_dependent_nodes[dn->first-1].push_back(n);
+            }
+        }
+    }
+}
+
+void ngraph::TopologicalSort::process(node_ptr p)
+{
+    traverse_nodes(p, [&](node_ptr node)
+    {
+        list<Node*>& node_list = m_dependent_nodes[node->arguments().size()];
+        node_list.push_back(node.get());
+    });
+
+    list<Node*>& independent_nodes = m_dependent_nodes[0];
+    while (independent_nodes.size() > 0)
+    {
+        auto independent_node = independent_nodes.front();
+        m_sorted_list.push_back(independent_node);
+        independent_nodes.pop_front();
+
+        for (auto user : independent_node->users())
+        {
+            promote_node(user);
+        }
+    }
+}
+
+const std::vector<Node*>& ngraph::TopologicalSort::get_sorted_list() const
+{
+    return m_sorted_list;
 }
