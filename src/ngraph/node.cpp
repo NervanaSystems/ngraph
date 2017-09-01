@@ -25,7 +25,7 @@ ngraph::Node::Node(const std::vector<std::shared_ptr<Node>>& arguments, std::sha
     // Add this node as a user of each argument.
     for (auto node : m_arguments)
     {
-        node->m_users.insert(node.get());
+        node->m_users.insert(this);
     }
 }
 

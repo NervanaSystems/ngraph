@@ -26,28 +26,73 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(top_sort, basic)
+static bool validate_list(const vector<Node*>& nodes)
 {
-    auto arg0 = op::parameter(element::Float::element_type(), {1});
-    ASSERT_NE(nullptr, arg0);
-    auto arg1 = op::parameter(element::Float::element_type(), {1});
-    ASSERT_NE(nullptr, arg1);
-    auto t0 = op::add(arg0, arg1);
+    bool rc = true;
+    for (auto it=nodes.rbegin(); it!=nodes.rend(); it++)
+    {
+        auto node_tmp = *it;
+        auto dependencies_tmp = node_tmp->get_arguments();
+        vector<Node*> dependencies;
+        for (shared_ptr<Node> n : dependencies_tmp)
+        {
+            dependencies.push_back(n.get());
+        }
+        auto tmp = it+1;
+        for (; tmp!=nodes.rend(); tmp++)
+        {
+            auto dep_tmp = *tmp;
+            auto found = find(dependencies.begin(), dependencies.end(), dep_tmp);
+            if (found != dependencies.end())
+            {
+                dependencies.erase(found);
+            }
+        }
+        if (dependencies.size() > 0)
+        {
+            rc = false;
+        }
+    }
+    return rc;
+}
+
+TEST(topological_sort, basic)
+{
+    vector<shared_ptr<Parameter>> args;
+    for (int i=0; i<10; i++)
+    {
+        auto arg = op::parameter(element::Float::element_type(), {1});
+        ASSERT_NE(nullptr, arg);
+        args.push_back(arg);
+    }
+
+    auto t0 = op::add(args[0], args[1]);
     ASSERT_NE(nullptr, t0);
-    auto t1 = op::add(arg0, arg1);
+    auto t1 = op::dot(t0, args[2]);
     ASSERT_NE(nullptr, t1);
-    auto r0 = op::add(t0, t1);
+    auto t2 = op::multiply(t0, args[3]);
+    ASSERT_NE(nullptr, t2);
+
+    auto t3 = op::add(t1, args[4]);
+    ASSERT_NE(nullptr, t2);
+    auto t4 = op::add(t2, args[5]);
+    ASSERT_NE(nullptr, t3);
+
+    auto r0 = op::add(t3, t4);
     ASSERT_NE(nullptr, r0);
 
-    auto f0 = op::function(r0, {arg0, arg1});
+    auto f0 = op::function(r0, args);
     ASSERT_NE(nullptr, f0);
 
     ASSERT_EQ(2, r0->get_arguments().size());
     auto op_r0 = static_pointer_cast<Op>(r0);
-    cout << "op_r0 name " << *r0 << endl;
 
     Visualize vz;
     vz.add(r0);
     vz.save_dot("test.png");
-    TopologicalSort::process(r0);
+    TopologicalSort ts;
+    ts.process(r0);
+    auto sorted_list = ts.get_sorted_list();
+
+    EXPECT_TRUE(validate_list(sorted_list));
 }

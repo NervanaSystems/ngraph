@@ -30,7 +30,7 @@ namespace ngraph
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// view or a (possibly empty) tuple of values.
-    class Node : public TypedValueMixin
+    class Node : public TypedValueMixin, public std::enable_shared_from_this<Node>
     {
 
     protected:
@@ -68,10 +68,10 @@ namespace ngraph
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
     protected:
-        Nodes m_arguments;
-        std::multiset<Node*>   m_users;
-        std::string            m_name;
-        size_t                 m_instance_id;
-        static size_t          m_next_instance_id;
+        Nodes                                m_arguments;
+        std::multiset<Node*> m_users;
+        std::string                          m_name;
+        size_t                               m_instance_id;
+        static size_t                        m_next_instance_id;
     };
 }
