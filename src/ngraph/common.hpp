@@ -38,7 +38,7 @@ namespace ngraph
     using Nodes = std::vector<std::shared_ptr<Node>>;
 
     /// A sequence of axes
-    using AxisList = std::vector<size_t>;
+    using AxisVector = std::vector<size_t>;
     
     /// A set of axes, for example, reduction axes
     using AxisSet = std::set<size_t>;

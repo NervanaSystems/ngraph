@@ -54,7 +54,7 @@ namespace ngraph
         /// Factory for frameworks
         std::shared_ptr<ngraph::Parameter> parameter(const ValueType::ptr& value_type = nullptr);
         /// Convenience factory for tests
-        std::shared_ptr<ngraph::Parameter> parameter(const ngraph::element::Type element_type,
+        std::shared_ptr<ngraph::Parameter> parameter(const element::Type element_type,
                                                      const Shape&                shape);
     }
 }

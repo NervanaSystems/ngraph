@@ -25,7 +25,7 @@ namespace ngraph
          ** /param broadcast_axes The axis positions (0-based) in the result that are being broadcast.
          **  the remaining axes in shape must be the same as the shape of arg.
          **/
-        BroadcastOp(const Node::ptr& arg, const Shape& shape, AxisSet& broadcast_axes)
+        BroadcastOp(const Node::ptr& arg, const Shape& shape, const AxisSet& broadcast_axes)
             : BuiltinOp({arg})
             , m_shape(shape)
             , m_broadcast_axes(broadcast_axes)
