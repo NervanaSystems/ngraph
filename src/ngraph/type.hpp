@@ -40,7 +40,7 @@ namespace ngraph
 
         virtual ~ValueType() {}
         virtual bool operator==(const ValueType::ptr& that) const = 0;
-        bool         operator!=(const ValueType::ptr& that) const { return !(*this == that); }
+        bool operator!=(const ValueType::ptr& that) const { return !(*this == that); }
     };
 
     /**
@@ -140,6 +140,7 @@ namespace ngraph
          ** The type associated with this value.
          **/
         const ValueType::ptr type() const { return m_type; }
+
     protected:
         ValueType::ptr m_type;
     };
