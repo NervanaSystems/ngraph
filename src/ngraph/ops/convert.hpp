@@ -16,25 +16,22 @@
 
 namespace ngraph
 {
-    class ConvertOp : public BuiltinOp
-    {
-    public:
-        ConvertOp(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type)
-            : BuiltinOp({arg})
-            , m_element_type(element_type)
-        {
-        }
-
-        virtual std::string get_op_class_name() const override { return "convert"; }
-        virtual void        propagate_types() override;
-
-    protected:
-        const ngraph::element::Type& m_element_type;
-    };
-
     namespace op
     {
-        std::shared_ptr<ngraph::ConvertOp> convert(const std::shared_ptr<Node>& arg,
-                                                   const ngraph::element::Type& element_type);
+        class Convert : public Builtin
+        {
+        public:
+            Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type)
+                : Builtin({arg})
+                , m_element_type(element_type)
+            {
+            }
+
+            virtual std::string get_op_class_name() const override { return "Convert"; }
+            virtual void        propagate_types() override;
+
+        protected:
+            const ngraph::element::Type& m_element_type;
+        };
     }
 }

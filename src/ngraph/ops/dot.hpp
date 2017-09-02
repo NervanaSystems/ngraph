@@ -16,22 +16,19 @@
 
 namespace ngraph
 {
-    class DotOp : public BuiltinOp
-    {
-    public:
-        /// TODO: Semantics of arg0 and arg1 axes wrt reduction.
-        DotOp(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-            : BuiltinOp({arg0, arg1})
-        {
-        }
-
-        virtual std::string get_op_class_name() const override { return "dot"; }
-        virtual void        propagate_types() override;
-    };
-
     namespace op
     {
-        std::shared_ptr<Node> dot(const std::shared_ptr<Node>& arg0,
-                                  const std::shared_ptr<Node>& arg1);
+        class Dot : public Builtin
+        {
+        public:
+            /// TODO: Semantics of arg0 and arg1 axes wrt reduction.
+            Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
+
+            virtual std::string get_op_class_name() const override { return "Dot"; }
+            virtual void        propagate_types() override;
+        };
     }
 }

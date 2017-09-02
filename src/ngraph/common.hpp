@@ -22,14 +22,13 @@
 namespace ngraph
 {
     class Node;
-    class Parameter;
-    class ValueType;
-
-    template <typename T, typename... A>
-    std::shared_ptr<T> node(A&&... args)
-    {
-        return std::make_shared<T>(args...);
+    namespace op {
+        class Parameter;
+    
+        /// A list of parameters
+        using Parameters = std::vector<std::shared_ptr<Parameter>>;
     }
+    class ValueType;
 
     /// Zero or more value types
     using ValueTypes = std::vector<std::shared_ptr<ValueType>>;
@@ -42,7 +41,4 @@ namespace ngraph
 
     /// A set of axes, for example, reduction axes
     using AxisSet = std::set<size_t>;
-
-    /// A list of parameters
-    using Parameters = std::vector<std::shared_ptr<Parameter>>;
 }

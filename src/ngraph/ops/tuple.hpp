@@ -18,18 +18,16 @@ namespace ngraph
 {
     namespace op
     {
-        std::shared_ptr<Node> tuple(const Nodes& args);
-    }
-
-    class TupleOp : public BuiltinOp
-    {
-    public:
-        TupleOp(const Nodes& args)
-            : BuiltinOp(args)
+        class Tuple : public Builtin
         {
-        }
+        public:
+            Tuple(const Nodes& args)
+                : Builtin(args)
+            {
+            }
 
-        virtual std::string get_op_class_name() const override { return "tuple"; }
-        virtual void        propagate_types() override;
-    };
+            virtual std::string get_op_class_name() const override { return "Tuple"; }
+            virtual void        propagate_types() override;
+        };
+    }
 }

@@ -17,14 +17,9 @@
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
-using namespace ngraph;
+using namespace ngraph::op;
 
-void ConcatOp::propagate_types()
+void Concat::propagate_types()
 {
     throw ngraph_error("NIY");
-}
-
-std::shared_ptr<Node> op::concatenate(const std::vector<std::shared_ptr<Node>>& args)
-{
-    return make_shared<ConcatOp>(args);
 }

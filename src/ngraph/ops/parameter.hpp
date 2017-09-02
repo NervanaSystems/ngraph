@@ -20,41 +20,33 @@
 namespace ngraph
 {
     class Function;
-
-    ///
-    /// Parameters are nodes that represent the arguments that will be passed to user-defined functions.
-    /// Function creation requires a sequence of parameters.
-    /// Basic graph operations do not need parameters attached to a function.
-    ///
-    class Parameter : public Node
-    {
-        friend class Function;
-
-    protected:
-        // Called by the Function constructor to associate this parameter with the function.
-        // It is an error to try to associate a parameter with more than one function.
-        void assign_function(Function* function, size_t index);
-
-    public:
-        Parameter(const std::shared_ptr<ValueType>& value_type);
-        Parameter(const ngraph::element::Type element_type, const Shape& shape);
-
-        std::string         description() const override { return "Parameter"; }
-        virtual void        propagate_types() override;
-        virtual std::string get_node_id() const override;
-
-    protected:
-        Function* m_function;
-        size_t    m_index;
-    };
-
     namespace op
     {
-        /// Factory for frameworks
-        std::shared_ptr<ngraph::Parameter>
-            parameter(const std::shared_ptr<ValueType>& value_type = nullptr);
-        /// Convenience factory for tests
-        std::shared_ptr<ngraph::Parameter> parameter(const element::Type element_type,
-                                                     const Shape&        shape);
+        ///
+        /// Parameters are nodes that represent the arguments that will be passed to user-defined functions.
+        /// Function creation requires a sequence of parameters.
+        /// Basic graph operations do not need parameters attached to a function.
+        ///
+        class Parameter : public Node
+        {
+            friend class ngraph::Function;
+
+        protected:
+            // Called by the Function constructor to associate this parameter with the function.
+            // It is an error to try to associate a parameter with more than one function.
+            void assign_function(Function* function, size_t index);
+
+        public:
+            Parameter(const std::shared_ptr<ValueType>& value_type);
+            Parameter(const ngraph::element::Type element_type, const Shape& shape);
+
+            std::string         description() const override { return "Parameter"; }
+            virtual void        propagate_types() override;
+            virtual std::string get_node_id() const override;
+
+        protected:
+            Function* m_function;
+            size_t    m_index;
+        };
     }
 }

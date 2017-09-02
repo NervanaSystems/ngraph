@@ -26,28 +26,18 @@ namespace ngraph
     {
     public:
         Function(const std::shared_ptr<Node>&                   result,
-                 const std::vector<std::shared_ptr<Parameter>>& parameters);
+                 const std::vector<std::shared_ptr<op::Parameter>>& parameters);
 
         std::shared_ptr<Node>                         get_result() { return m_result; }
-        const std::vector<std::shared_ptr<Parameter>> get_parameters() const
+        const std::vector<std::shared_ptr<op::Parameter>> get_parameters() const
         {
             return m_parameters;
         }
         std::string get_name() const { return m_name; }
 
     protected:
-        std::shared_ptr<Node>                           m_result;
-        std::vector<std::shared_ptr<ngraph::Parameter>> m_parameters;
-        std::string                                     m_name;
+        std::shared_ptr<Node>                               m_result;
+        std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;
+        std::string                                         m_name;
     };
-
-    namespace op
-    {
-        std::shared_ptr<Function>
-            function(const std::shared_ptr<Node>&                             result,
-                     const std::initializer_list<std::shared_ptr<Parameter>>& parameters);
-        std::shared_ptr<Function>
-            function(const std::shared_ptr<Node>&                   result,
-                     const std::vector<std::shared_ptr<Parameter>>& parameters);
-    }
 }
