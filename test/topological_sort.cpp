@@ -58,30 +58,30 @@ static bool validate_list(const vector<Node*>& nodes)
 
 TEST(topological_sort, basic)
 {
-    vector<shared_ptr<Parameter>> args;
+    vector<shared_ptr<op::Parameter>> args;
     for (int i = 0; i < 10; i++)
     {
-        auto arg = op::parameter(element::Float32::element_type(), {1});
+        auto arg = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
         ASSERT_NE(nullptr, arg);
         args.push_back(arg);
     }
 
-    auto t0 = op::add(args[0], args[1]);
+    auto t0 = make_shared<op::Add>(args[0], args[1]);
     ASSERT_NE(nullptr, t0);
-    auto t1 = op::dot(t0, args[2]);
+    auto t1 = make_shared<op::Dot>(t0, args[2]);
     ASSERT_NE(nullptr, t1);
-    auto t2 = op::multiply(t0, args[3]);
+    auto t2 = make_shared<op::Multiply>(t0, args[3]);
     ASSERT_NE(nullptr, t2);
 
-    auto t3 = op::add(t1, args[4]);
+    auto t3 = make_shared<op::Add>(t1, args[4]);
     ASSERT_NE(nullptr, t2);
-    auto t4 = op::add(t2, args[5]);
+    auto t4 = make_shared<op::Add>(t2, args[5]);
     ASSERT_NE(nullptr, t3);
 
-    auto r0 = op::add(t3, t4);
+    auto r0 = make_shared<op::Add>(t3, t4);
     ASSERT_NE(nullptr, r0);
 
-    auto f0 = op::function(r0, args);
+    auto f0 = make_shared<Function>(r0, args);
     ASSERT_NE(nullptr, f0);
 
     ASSERT_EQ(2, r0->get_arguments().size());

@@ -17,7 +17,7 @@
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
-using namespace ngraph;
+using namespace ngraph::op;
 
 Parameter::Parameter(const std::shared_ptr<ValueType>& value_type)
     : Node(value_type)
@@ -43,18 +43,7 @@ void Parameter::assign_function(Function* function, size_t index)
 
 void Parameter::propagate_types() {}
 
-shared_ptr<Parameter> ngraph::op::parameter(const std::shared_ptr<ValueType>& value_type)
-{
-    return make_shared<Parameter>(value_type);
-}
-
-shared_ptr<Parameter> ngraph::op::parameter(const ngraph::element::Type element_type,
-                                            const Shape&                shape)
-{
-    return make_shared<Parameter>(make_shared<TensorViewType>(element_type, shape));
-}
-
-std::string ngraph::Parameter::get_node_id() const
+std::string ngraph::op::Parameter::get_node_id() const
 {
     stringstream ss;
     ss << "parameter_" << m_instance_id;

@@ -17,16 +17,9 @@
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
-using namespace ngraph;
+using namespace ngraph::op;
 
-/// TODO: Semantics of arg0 and arg1 axes wrt reduction.
-std::shared_ptr<Node> ngraph::op::dot(const std::shared_ptr<Node>& arg0,
-                                      const std::shared_ptr<Node>& arg1)
-{
-    return make_shared<DotOp>(arg0, arg1);
-}
-
-void DotOp::propagate_types()
+void Dot::propagate_types()
 {
     auto arg0_tensor_type =
         dynamic_pointer_cast<TensorViewType>(m_arguments.at(0)->get_value_type());

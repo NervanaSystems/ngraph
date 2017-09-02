@@ -37,7 +37,7 @@ bool ngraph::Node::is_op() const
 
 bool ngraph::Node::is_parameter() const
 {
-    return dynamic_cast<const ngraph::Parameter*>(this) != nullptr;
+    return dynamic_cast<const ngraph::op::Parameter*>(this) != nullptr;
 }
 
 namespace ngraph

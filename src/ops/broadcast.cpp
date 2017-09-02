@@ -15,20 +15,9 @@
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
-using namespace ngraph;
+using namespace ngraph::op;
 
-/// @param tensor The tensor view to be broadcast.
-/// @param shape The shape of the result
-/// @param broadcast_axes The axis positions (0-based) in the result that are being broadcast.
-///  the remaining axes in shape must be the same as the shape of arg.
-std::shared_ptr<Node> ngraph::op::broadcast(const std::shared_ptr<Node>& tensor,
-                                            const Shape&                 shape,
-                                            AxisSet&&                    broadcast_axes)
-{
-    return make_shared<BroadcastOp>(tensor, shape, broadcast_axes);
-}
-
-void BroadcastOp::propagate_types()
+void Broadcast::propagate_types()
 {
     auto arg_type = m_arguments.at(0)->get_value_type();
     if (nullptr == arg_type)
