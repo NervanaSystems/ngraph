@@ -28,15 +28,15 @@ set (SRC
     types/type.cpp
 )
 
-set(NGRAPH_INCLUDE_DIR 
+set(NGRAPH_INCLUDE_DIRS 
     ${CMAKE_CURRENT_SOURCE_DIR} 
     ${CMAKE_CURRENT_SOURCE_DIR}/ngraph
 )
 
-include_directories("${NGRAPH_INCLUDE_DIR}")
+include_directories("${NGRAPH_INCLUDE_DIRS}")
 
 add_library(ngraph SHARED ${SRC})
-target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_DIR}")
+target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_DIRS}")
 
 if ( APPLE )
     set_property( TARGET ngraph PROPERTY PREFIX "lib" )

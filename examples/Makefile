@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 NGRAPH_DIST_DIR = ${HOME}/ngraph_dist
-CFLAGS = -std=c++11
-CFLAGS += -I $(NGRAPH_DIST_DIR)
+CXXFLAGS += -std=c++11
+CPPFLAGS += -I $(NGRAPH_DIST_DIR)
 LDFLAGS = -L $(NGRAPH_DIST_DIR)
 OBJ = main.o
 
 %.o: %.cpp $(DEPS)
-	$(CXX) -c -o $@ $< $(CFLAGS)
+	$(CXX) -c -o $@ $< $(CXXFLAGS) $(CPPFLAGS)
 
 ngraph-test: $(OBJ) 
 	$(CXX) -o $@ $(OBJ) $(LDFLAGS) -lngraph
