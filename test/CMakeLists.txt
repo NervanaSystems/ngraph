@@ -16,10 +16,6 @@ include_directories(
     "${GTEST_INCLUDE_DIR}"
     )
 
-include_directories(
-    "${NGRAPH_INCLUDE_DIR}"
-    )
-
 set (SRC
     main.cpp
     build_graph.cpp

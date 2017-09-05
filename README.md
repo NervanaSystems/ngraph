@@ -16,8 +16,10 @@ TODO
 
 1. Create a build directory outside of source directory tree.
 2. `cd` to the build directory.
-3. Run CMake.  For example, `cmake ../private-ngraph-cpp -DCMAKE_CXX_COMPILER=clang++-3.9`
-4. Run `make`.
+3. Run `cmake`.  For example, `cmake ../`
+4. Run `make -j8`.
+5. Run `make install`
+6. This will install the libngraph.so and the header files to your home directory/ngraph_dist. 
 
 # Testing `libngraph`
 
@@ -31,6 +33,26 @@ To perform the unit tests
 3. Run `make check`
 
 # Using `libngraph`
+
+## From Tensorflow as XLA plugin
+
+:warning: Note: Work in Progress.
+
+1. Get the Nervana's fork of the TF from this repo: ```git@github.com:NervanaSystems/ngraph-tensorflow.git```
+2. Go to the end near the following snippet:
+```
+  native.new_local_repository(
+    name = "ngraph_external",
+    path = "/your/home/directory/where/ngraph_is_installed",
+    build_file = str(Label("//tensorflow/compiler/plugin/ngraph:ngraph.BUILD")),
+  )
+```
+
+Then modify the following line in `tensorflow/workspace.bzl` file and provide absolute path to `~/ngraph_dist` :
+```
+path = "/your/home/directory/where/ngraph_is_installed",
+``` 
+3. Now run `configure` and rest of the TF build.
 
 ## System Requirements
 TBD
