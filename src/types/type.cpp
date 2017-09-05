@@ -19,30 +19,30 @@
 using namespace std;
 using namespace ngraph;
 
-bool TensorViewType::operator==(const ValueType::ptr& that) const
+bool TensorViewType::operator==(const std::shared_ptr<ValueType>& that) const
 {
     auto that_tvt = dynamic_pointer_cast<TensorViewType>(that);
     if (nullptr == that_tvt)
     {
         return false;
     }
-    if (that_tvt->element_type() != m_element_type)
+    if (that_tvt->get_element_type() != m_element_type)
     {
         return false;
     }
-    if (that_tvt->shape() != m_shape)
+    if (that_tvt->get_shape() != m_shape)
     {
         return false;
     }
     return true;
 }
 
-bool TupleType::operator==(const ValueType::ptr& that) const
+bool TupleType::operator==(const std::shared_ptr<ValueType>& that) const
 {
     auto that_tvt = dynamic_pointer_cast<TupleType>(that);
     if (nullptr == that_tvt)
     {
         return false;
     }
-    return that_tvt->element_types() == element_types();
+    return that_tvt->get_element_types() == get_element_types();
 }

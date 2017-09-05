@@ -36,8 +36,7 @@ namespace nervana
             return i < _size ? _string[i] : throw std::out_of_range("");
         }
         constexpr const char* get_ptr(size_t offset) const { return &_string[offset]; }
-        constexpr size_t      size() const { return _size; }
-
+        constexpr size_t                     size() const { return _size; }
     private:
         const char* _string;
         size_t      _size;
@@ -45,9 +44,8 @@ namespace nervana
 
     constexpr const char* find_last(conststring s, size_t offset, char ch)
     {
-        return offset == 0
-                   ? s.get_ptr(0)
-                   : (s[offset] == ch ? s.get_ptr(offset + 1) : find_last(s, offset - 1, ch));
+        return offset == 0 ? s.get_ptr(0) : (s[offset] == ch ? s.get_ptr(offset + 1)
+                                                             : find_last(s, offset - 1, ch));
     }
 
     constexpr const char* find_last(conststring s, char ch)
@@ -69,7 +67,6 @@ namespace nervana
         ~log_helper();
 
         std::ostream& stream() { return _stream; }
-
     private:
         std::stringstream _stream;
     };
@@ -84,9 +81,9 @@ namespace nervana
         static void stop();
 
     private:
-        static void                    log_item(const std::string& s);
-        static void                    process_event(const std::string& s);
-        static void                    thread_entry(void* param);
+        static void log_item(const std::string& s);
+        static void process_event(const std::string& s);
+        static void thread_entry(void* param);
         static std::string             log_path;
         static std::deque<std::string> queue;
     };

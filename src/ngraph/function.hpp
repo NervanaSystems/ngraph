@@ -21,34 +21,23 @@
 
 namespace ngraph
 {
-    /**
-     ** A user-defined function.
-     **/
+    /// A user-defined function.
     class Function
     {
     public:
-        Function(const Node::ptr&                               result,
-                 const std::vector<std::shared_ptr<Parameter>>& parameters);
+        Function(const std::shared_ptr<Node>&                   result,
+                 const std::vector<std::shared_ptr<op::Parameter>>& parameters);
 
-        Node::ptr result() { return m_result; }
-
-        Parameter::ptr parameter(size_t i) { return m_parameters[i]; }
-
-        std::string name() const { return m_name; }
+        std::shared_ptr<Node>                         get_result() { return m_result; }
+        const std::vector<std::shared_ptr<op::Parameter>> get_parameters() const
+        {
+            return m_parameters;
+        }
+        std::string get_name() const { return m_name; }
 
     protected:
-        Node::ptr                                       m_result;
-        std::vector<std::shared_ptr<ngraph::Parameter>> m_parameters;
-        std::string                                     m_name;
+        std::shared_ptr<Node>                               m_result;
+        std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;
+        std::string                                         m_name;
     };
-
-    namespace op
-    {
-        std::shared_ptr<Function>
-            function(const Node::ptr&                                         result,
-                     const std::initializer_list<std::shared_ptr<Parameter>>& parameters);
-        std::shared_ptr<Function>
-            function(const Node::ptr&                               result,
-                     const std::vector<std::shared_ptr<Parameter>>& parameters);
-    }
 }

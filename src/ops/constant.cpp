@@ -14,6 +14,6 @@
 
 #include "ngraph/ngraph.hpp"
 
-using namespace ngraph;
+using namespace ngraph::op;
 
-void ScalarConstantBaseOp::propagate_types() {}
+void ScalarConstantBase::propagate_types() {}

@@ -21,14 +21,16 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace ngraph
 {
+    class Node;
     class stopwatch;
     extern std::map<std::string, stopwatch*> stopwatch_statistics;
 
     template <typename T>
-    std::string join(const T& v, const std::string& sep)
+    std::string join(const T& v, const std::string& sep = ", ")
     {
         std::ostringstream ss;
         for (const auto& x : v)
@@ -83,10 +85,10 @@ namespace ngraph
     }
 
     size_t hash_combine(const std::vector<size_t>& list);
-    void   dump(std::ostream& out, const void*, size_t);
+    void dump(std::ostream& out, const void*, size_t);
 
-    std::string              to_lower(const std::string& s);
-    std::string              trim(const std::string& s);
+    std::string to_lower(const std::string& s);
+    std::string trim(const std::string& s);
     std::vector<std::string> split(const std::string& s, char delimiter, bool trim = false);
 
     class stopwatch
@@ -148,7 +150,6 @@ namespace ngraph
         size_t get_total_milliseconds() const { return get_total_nanoseconds() / 1e6; }
         size_t get_total_microseconds() const { return get_total_nanoseconds() / 1e3; }
         size_t get_total_nanoseconds() const { return m_total_time.count(); }
-
     private:
         std::chrono::high_resolution_clock                          m_clock;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_start_time;
@@ -194,4 +195,5 @@ namespace ngraph
         return a * b;
     }
 
+    void traverse_nodes(std::shared_ptr<Node> p, std::function<void(std::shared_ptr<Node>)> f);
 } // end namespace ngraph

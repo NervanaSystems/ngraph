@@ -1,6 +1,3 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
@@ -12,20 +9,32 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include "gtest/gtest.h"
+
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-Function::Function(const std::shared_ptr<Node>&                           result,
-                   const std::vector<std::shared_ptr<op::Parameter>>& parameters)
-    : m_result(result)
-    , m_parameters(parameters)
-    , m_name("Function")
+TEST(op, is_op)
 {
-    size_t i = 0;
-    for (auto parameter : parameters)
-    {
-        parameter->assign_function(this, i++);
-    }
+    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+    ASSERT_NE(nullptr, arg0);
+    EXPECT_TRUE(arg0->is_parameter());
+    EXPECT_FALSE(arg0->is_op());
+}
+
+TEST(op, is_parameter)
+{
+    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+    ASSERT_NE(nullptr, arg0);
+    auto t0 = make_shared<op::Add>(arg0, arg0);
+    ASSERT_NE(nullptr, t0);
+    EXPECT_FALSE(t0->is_parameter());
+    EXPECT_TRUE(t0->is_op());
 }

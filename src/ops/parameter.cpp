@@ -12,15 +12,22 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <sstream>
+
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
-using namespace ngraph;
+using namespace ngraph::op;
 
-Parameter::Parameter(const ValueType::ptr& value_type)
-    : Node({}, value_type)
+Parameter::Parameter(const std::shared_ptr<ValueType>& value_type)
+    : Node(value_type)
     , m_function(nullptr)
     , m_index(0)
+{
+}
+
+Parameter::Parameter(const ngraph::element::Type element_type, const Shape& shape)
+    : Parameter(make_shared<TensorViewType>(element_type, shape))
 {
 }
 
@@ -36,13 +43,9 @@ void Parameter::assign_function(Function* function, size_t index)
 
 void Parameter::propagate_types() {}
 
-shared_ptr<Parameter> ngraph::op::parameter(const ValueType::ptr& value_type)
+std::string ngraph::op::Parameter::get_node_id() const
 {
-    return make_shared<Parameter>(value_type);
-}
-
-shared_ptr<Parameter> ngraph::op::parameter(const ngraph::element::Type element_type,
-                                            const Shape&                shape)
-{
-    return make_shared<Parameter>(make_shared<TensorViewType>(element_type, shape));
+    stringstream ss;
+    ss << "parameter_" << m_instance_id;
+    return ss.str();
 }

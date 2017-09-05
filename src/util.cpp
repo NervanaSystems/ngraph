@@ -16,6 +16,7 @@
 #include <map>
 
 #include "util.hpp"
+#include "ngraph/node.hpp"
 
 using namespace std;
 
@@ -25,8 +26,8 @@ void ngraph::dump(ostream& out, const void* _data, size_t _size)
 {
     auto           flags = out.flags();
     const uint8_t* data  = reinterpret_cast<const uint8_t*>(_data);
-    int            len   = _size;
-    int            index = 0;
+    size_t            len   = _size;
+    size_t            index = 0;
     while (index < len)
     {
         out << std::hex << std::setw(8) << std::setfill('0') << index;
@@ -128,4 +129,26 @@ size_t ngraph::hash_combine(const std::vector<size_t>& list)
         seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
     return seed;
+}
+
+static void traverse_nodes(std::shared_ptr<ngraph::Node>                      p,
+                           std::function<void(std::shared_ptr<ngraph::Node>)> f,
+                           std::set<size_t>&                                  instances_seen)
+{
+    f(p);
+    for (auto arg : p->get_arguments())
+    {
+        if (instances_seen.find(arg->get_instance_id()) == instances_seen.end())
+        {
+            instances_seen.insert(arg->get_instance_id());
+            traverse_nodes(arg, f, instances_seen);
+        }
+    }
+}
+
+void ngraph::traverse_nodes(std::shared_ptr<ngraph::Node>                      p,
+                            std::function<void(std::shared_ptr<ngraph::Node>)> f)
+{
+    std::set<size_t> instances_seen;
+    ::traverse_nodes(p, f, instances_seen);
 }
