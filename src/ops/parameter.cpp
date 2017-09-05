@@ -26,7 +26,7 @@ Parameter::Parameter(const std::shared_ptr<ValueType>& value_type)
 {
 }
 
-Parameter::Parameter(const ngraph::element::Type element_type, const Shape& shape)
+Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& shape)
     : Parameter(make_shared<TensorViewType>(element_type, shape))
 {
 }

@@ -37,8 +37,8 @@ namespace ngraph
             void assign_function(Function* function, size_t index);
 
         public:
-            Parameter(const std::shared_ptr<ValueType>& value_type);
-            Parameter(const ngraph::element::Type element_type, const Shape& shape);
+            Parameter(const std::shared_ptr<ValueType>& value_type=nullptr);
+            Parameter(const ngraph::element::Type& element_type, const Shape& shape);
 
             std::string         description() const override { return "Parameter"; }
             virtual void        propagate_types() override;

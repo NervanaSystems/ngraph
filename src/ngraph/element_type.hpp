@@ -30,6 +30,8 @@ namespace ngraph
     {
         class Type
         {
+            Type(const Type&) = delete;
+            Type& operator=(const Type&) = delete;
         public:
             Type(size_t bitwidth, bool is_float, bool is_signed, const std::string& cname);
 
@@ -75,6 +77,8 @@ namespace ngraph
         template <typename T>
         class TraitedType : public Type
         {
+            TraitedType(const TraitedType&) = delete;
+            TraitedType& operator=(const TraitedType&) = delete;
         protected:
             TraitedType()
                 : Type(sizeof(T) * 8,

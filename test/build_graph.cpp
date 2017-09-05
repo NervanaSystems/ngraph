@@ -81,7 +81,7 @@ TEST(build_graph, literal)
     auto float0            = make_shared<op::Float32ScalarConstant>(3.0);
     auto float_scalar_type = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     ASSERT_EQ(float0->get_value(), 3.0);
-    ASSERT_EQ(*float0->get_value_type(), float_scalar_type);
+    ASSERT_EQ(*float0->get_value_type(), *float_scalar_type);
     auto d = make_shared<op::Dot>(float0, float0);
     ASSERT_EQ(d->get_arguments().at(0), float0);
     ASSERT_EQ(d->get_arguments().at(1), float0);
@@ -89,13 +89,51 @@ TEST(build_graph, literal)
     // float scalar from an int
     auto float1 = make_shared<op::Float32ScalarConstant>(3);
     ASSERT_EQ(float1->get_value(), 3);
-    ASSERT_EQ(*float1->get_value_type(), float_scalar_type);
+    ASSERT_EQ(*float1->get_value_type(), *float_scalar_type);
 
     auto int32_0           = make_shared<op::Int32ScalarConstant>(3.0);
     auto int32_scalar_type = make_shared<TensorViewType>(element::Int32::element_type(), Shape{});
     ASSERT_EQ(int32_0->get_value(), 3);
-    ASSERT_EQ(*int32_0->get_value_type(), int32_scalar_type);
-    ASSERT_NE(*int32_0->get_value_type(), float_scalar_type);
+    ASSERT_EQ(*int32_0->get_value_type(), *int32_scalar_type);
+    ASSERT_NE(*int32_0->get_value_type(), *float_scalar_type);
+}
+
+TEST(build_graph, set_value_type_checked)
+{
+    auto untyped_param = make_shared<op::Parameter>();
+    try {
+        untyped_param->set_value_type_checked(make_shared<TensorViewType>(element::Float32::element_type(), Shape{4, 4}));
+    } catch(...){
+        FAIL() << "Setting value type for first time type failed.";
+    }
+    try {
+        untyped_param->set_value_type_checked(make_shared<TensorViewType>(element::Float32::element_type(), Shape{4, 4}));
+    } catch(...){
+        FAIL() << "Setting value type to same type failed.";
+    }
+    try {
+        untyped_param->set_value_type_checked(make_shared<TensorViewType>(element::Float32::element_type(), Shape{4, 5}));
+        FAIL() << "Setting value type to a different shape did not fail.";
+    } catch(const ngraph_error& error){
+        EXPECT_EQ(error.what(), std::string("Setting value type to a different ValueType"));
+    } catch(...){
+        FAIL() << "Setting value type to a different shape did not failed with incorrect error.";
+    }
+    try {
+        untyped_param->set_value_type_checked(make_shared<TensorViewType>(element::Int32::element_type(), Shape{4, 4}));
+        FAIL() << "Setting value type to a different element type did not fail.";
+    } catch(const ngraph_error& error){
+        EXPECT_EQ(error.what(), std::string("Setting value type to a different ValueType"));
+    } catch(...){
+        FAIL() << "Setting value type to a different element type did not failed with incorrect error.";
+    }
+    
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4, 4});
+    try {
+        param->set_value_type_checked(make_shared<TensorViewType>(element::Float32::element_type(), Shape{4, 4}));
+    } catch(...){
+        FAIL() << "Setting value type to same type failed.";
+    }
 }
 
 // Check argument inverses

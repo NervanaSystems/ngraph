@@ -56,5 +56,5 @@ void Dot::propagate_types()
     copy(arg0_shape.begin(), arg0_shape.begin() + arg1_reduction, result_shape.end());
     copy(arg1_shape.begin(), arg1_shape.begin() + arg1_reduction, result_shape.end());
     copy(arg1_shape.begin() + arg1_reduction, arg1_shape.end(), result_shape.end());
-    m_value_type = make_shared<TensorViewType>(arg0_tensor_type->get_element_type(), result_shape);
+    set_value_type_checked(make_shared<TensorViewType>(arg0_tensor_type->get_element_type(), result_shape));
 }

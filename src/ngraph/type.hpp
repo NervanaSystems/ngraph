@@ -32,8 +32,8 @@ namespace ngraph
     {
     public:
         virtual ~ValueType() {}
-        virtual bool operator==(const std::shared_ptr<ValueType>& that) const = 0;
-        bool operator!=(const std::shared_ptr<ValueType>& that) const { return !(*this == that); }
+        virtual bool operator==(const ValueType& that) const = 0;
+        bool operator!=(const ValueType& that) const { return !(*this == that); }
     };
 
     /// Describes a tensor view; an element type and a shape.
@@ -51,7 +51,7 @@ namespace ngraph
         const element::Type& get_element_type() const { return m_element_type; }
         const Shape&         get_shape() const { return m_shape; }
 
-        virtual bool operator==(const std::shared_ptr<ValueType>& that) const override;
+        virtual bool operator==(const ValueType& that) const override;
 
     protected:
         const element::Type& m_element_type;
@@ -77,7 +77,7 @@ namespace ngraph
         }
         std::vector<std::shared_ptr<ValueType>> set_element_types() { return m_element_types; }
 
-        virtual bool operator==(const std::shared_ptr<ValueType>& that) const override;
+        virtual bool operator==(const ValueType& that) const override;
 
     protected:
         std::vector<std::shared_ptr<ValueType>> m_element_types;

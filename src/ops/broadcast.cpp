@@ -38,7 +38,5 @@ void Broadcast::propagate_types()
     {
         throw ngraph_error("Broadcast arg, shape, and axes are incompatible");
     }
-    // TODO If m_type is already set (by framework), this should verify that the type
-    // we expect is consistent with the type the framework expects.
-    m_value_type = make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), m_shape);
+    set_value_type_checked(make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), m_shape));
 }
