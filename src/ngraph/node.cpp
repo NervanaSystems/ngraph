@@ -30,6 +30,17 @@ ngraph::Node::Node(const std::vector<std::shared_ptr<Node>>& arguments,
     }
 }
 
+void ngraph::Node::set_value_type_checked(const std::shared_ptr<ValueType>& value_type)
+{
+    if (nullptr == m_value_type){
+        m_value_type = value_type;
+    } else {
+        if (*m_value_type != *value_type){
+            throw ngraph::ngraph_error("Setting value type to a different ValueType");
+        }
+    }
+}
+
 bool ngraph::Node::is_op() const
 {
     return dynamic_cast<const ngraph::Op*>(this) != nullptr;
