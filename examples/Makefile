@@ -26,4 +26,4 @@ ngraph-test: $(OBJ)
 .PHONY: clean
 
 clean:
-	rm -f $(OBJ)
+	rm -f $(OBJ) ngraph-test
