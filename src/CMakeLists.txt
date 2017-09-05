@@ -31,15 +31,15 @@ set (SRC
     ngraph/visualize.cpp
 )
 
-set(NGRAPH_INCLUDE_DIRS 
+set(NGRAPH_INCLUDE_PATH 
     ${CMAKE_CURRENT_SOURCE_DIR} 
     ${CMAKE_CURRENT_SOURCE_DIR}/ngraph
 )
 
-include_directories("${NGRAPH_INCLUDE_DIRS}")
+include_directories("${NGRAPH_INCLUDE_PATH}")
 
 add_library(ngraph SHARED ${SRC})
-target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_DIRS}")
+target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
 if ( APPLE )
     set_property( TARGET ngraph PROPERTY PREFIX "lib" )
