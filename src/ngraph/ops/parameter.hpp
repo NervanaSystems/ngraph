@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "../node.hpp"
-#include "../type.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {

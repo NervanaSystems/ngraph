@@ -36,7 +36,7 @@ set(NGRAPH_CXX_WARNING_FLAGS "")
 
 # Compiler-specific logic...
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
-    message("setting clang flags...")
+    message( STATUS "Setting clang flags...")
     include( cmake/clang_4_0_flags.cmake )
 endif()
 
