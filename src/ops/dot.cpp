@@ -17,31 +17,27 @@
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
-using namespace ngraph;
+using namespace ngraph::op;
 
-/// TODO: Semantics of arg0 and arg1 axes wrt reduction.
-Node::ptr ngraph::op::dot(const Node::ptr& arg0, const Node::ptr& arg1)
+void Dot::propagate_types()
 {
-    return make_shared<DotOp>(arg0, arg1);
-}
-
-void DotOp::propagate_types()
-{
-    auto arg0_tensor_type = dynamic_pointer_cast<TensorViewType>(m_arguments.at(0)->type());
-    auto arg1_tensor_type = dynamic_pointer_cast<TensorViewType>(m_arguments.at(1)->type());
+    auto arg0_tensor_type =
+        dynamic_pointer_cast<TensorViewType>(m_arguments.at(0)->get_value_type());
+    auto arg1_tensor_type =
+        dynamic_pointer_cast<TensorViewType>(m_arguments.at(1)->get_value_type());
     if (nullptr == arg0_tensor_type || nullptr == arg1_tensor_type)
     {
         throw ngraph_error("Arguments to dot must be tensor views");
     }
-    if (arg0_tensor_type->element_type() != arg1_tensor_type->element_type())
+    if (arg0_tensor_type->get_element_type() != arg1_tensor_type->get_element_type())
     {
         throw ngraph_error("Arguments to dot must have the same element type");
     }
 
     // Use NumPy semantics for now
     // Last axis of first arg reduces against second to last of second arg if more than one axis, else axis.
-    vector<size_t> arg0_shape     = arg0_tensor_type->shape();
-    vector<size_t> arg1_shape     = arg1_tensor_type->shape();
+    vector<size_t> arg0_shape     = arg0_tensor_type->get_shape();
+    vector<size_t> arg1_shape     = arg1_tensor_type->get_shape();
     size_t         arg0_reduction = arg0_shape.size() - 1;
     size_t         arg1_reduction;
     if (arg1_shape.size() > 1)
@@ -60,5 +56,5 @@ void DotOp::propagate_types()
     copy(arg0_shape.begin(), arg0_shape.begin() + arg1_reduction, result_shape.end());
     copy(arg1_shape.begin(), arg1_shape.begin() + arg1_reduction, result_shape.end());
     copy(arg1_shape.begin() + arg1_reduction, arg1_shape.end(), result_shape.end());
-    m_type = make_shared<TensorViewType>(arg0_tensor_type->element_type(), result_shape);
+    m_value_type = make_shared<TensorViewType>(arg0_tensor_type->get_element_type(), result_shape);
 }

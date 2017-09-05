@@ -12,20 +12,31 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ngraph.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include <list>
+#include <map>
+#include <memory>
+#include <vector>
 
-Function::Function(const std::shared_ptr<Node>&                           result,
-                   const std::vector<std::shared_ptr<op::Parameter>>& parameters)
-    : m_result(result)
-    , m_parameters(parameters)
-    , m_name("Function")
+namespace ngraph
 {
-    size_t i = 0;
-    for (auto parameter : parameters)
-    {
-        parameter->assign_function(this, i++);
-    }
+    class TopologicalSort;
+    class Node;
+    using node_ptr = std::shared_ptr<Node>;
 }
+
+class ngraph::TopologicalSort
+{
+public:
+    TopologicalSort() {}
+
+    void                      process(node_ptr);
+    const std::vector<Node*>& get_sorted_list() const;
+
+private:
+    void promote_node(Node* n);
+
+    std::map<size_t, std::list<Node*>> m_dependent_nodes;
+    std::vector<Node*>                 m_sorted_list;
+};

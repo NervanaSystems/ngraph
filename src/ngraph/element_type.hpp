@@ -22,6 +22,8 @@
 #include <string>
 #include <type_traits>
 
+#include "except.hpp"
+
 namespace ngraph
 {
     namespace element
@@ -47,8 +49,25 @@ namespace ngraph
             size_t                             m_bitwidth;
             bool                               m_is_float;
             bool                               m_is_signed;
-            const std::string                  m_cname;
+            const std::string&                 m_cname;
         };
+
+        // Provides a compile-time name for a C++ type.
+        // Used in TraitedType for the string that supplies the C++ type name during code generation,
+        // so it needs to be a valid C++ name.
+        template <typename T>
+        const char* traited_type_name()
+        {
+            throw ngraph_error("Unknown type");
+        }
+
+// Define a type string for a type T. Will make traited_type_name<T>() return "T"
+#define NGRAPH_DEFINE_TRAITED_TYPE_NAME(T)                                                                       \
+    template <>                                                                                    \
+    constexpr const char* traited_type_name<T>()                                                   \
+    {                                                                                              \
+        return #T;                                                                                 \
+    }
 
         // Literals (and probably other things we don't know about yet) need to have their C++ types
         // and element types coordinated. Every element type corresponds to a TraitedType which provides
@@ -56,28 +75,45 @@ namespace ngraph
         template <typename T>
         class TraitedType : public Type
         {
-        public:
-            // This is the C++ type used to hold a value of this element type during compilation
-            using ctype = T;
-            // This is a reference to an instance of this element type.
-            static const TraitedType<T>& type;
-
-            TraitedType(const std::string& cname)
+        protected:
+            TraitedType()
                 : Type(sizeof(T) * 8,
                        std::is_floating_point<T>::value,
                        std::is_signed<T>::value,
-                       cname)
+                       traited_type_name<T>())
             {
+            }
+
+        public:
+            // This is the C++ type used to hold a value of this element type during compilation
+            using type = T;
+            // This returns a reference to an instance of this element type.
+            static const TraitedType<T>& element_type()
+            {
+                static TraitedType<T> t;
+                return t;
             }
         };
 
-        // Human-readable names for the element types
-        using Float  = TraitedType<float>;
-        using Int8   = TraitedType<int8_t>;
-        using Int32  = TraitedType<int32_t>;
-        using Int64  = TraitedType<int64_t>;
-        using UInt8  = TraitedType<uint8_t>;
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(float)
+        using Float32 = TraitedType<float>;
+
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(int8_t)
+        using Int8 = TraitedType<int8_t>;
+
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(int32_t)
+        using Int32 = TraitedType<int32_t>;
+
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(int64_t)
+        using Int64 = TraitedType<int64_t>;
+
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(uint8_t)
+        using UInt8 = TraitedType<uint8_t>;
+
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(uint32_t)
         using UInt32 = TraitedType<uint32_t>;
+
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(uint64_t)
         using UInt64 = TraitedType<uint64_t>;
     }
 }

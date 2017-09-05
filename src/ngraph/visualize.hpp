@@ -12,20 +12,30 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ngraph.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include <functional>
+#include <memory>
+#include <set>
+#include <sstream>
 
-Function::Function(const std::shared_ptr<Node>&                           result,
-                   const std::vector<std::shared_ptr<op::Parameter>>& parameters)
-    : m_result(result)
-    , m_parameters(parameters)
-    , m_name("Function")
+namespace ngraph
 {
-    size_t i = 0;
-    for (auto parameter : parameters)
-    {
-        parameter->assign_function(this, i++);
-    }
+    class Visualize;
+    class Node;
+    using node_ptr = std::shared_ptr<Node>;
 }
+
+class ngraph::Visualize
+{
+public:
+    Visualize(const std::string& name = "ngraph");
+
+    void add(node_ptr);
+
+    void save_dot(const std::string& path) const;
+
+private:
+    std::stringstream m_ss;
+    std::string       m_name;
+};

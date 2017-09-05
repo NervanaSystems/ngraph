@@ -22,306 +22,273 @@
 
 namespace ngraph
 {
-    namespace op
-    {
-        Node::ptr abs(const Node::ptr& arg);
-        Node::ptr add(const Node::ptr& arg0, const Node::ptr& arg1);
-        Node::ptr ceiling(const Node::ptr& arg0, const Node::ptr& arg1);
-        //Node::ptr convert();
-        //Node::ptr convolution();
-        Node::ptr divide(const Node::ptr& arg0, const Node::ptr& arg1);
-        Node::ptr equal(const Node::ptr& arg0, const Node::ptr& arg1);
-        Node::ptr exponential(const Node::ptr& arg0);
-        Node::ptr floor(const Node::ptr& arg0, const Node::ptr& arg1);
-        //Node::ptr get_tuple_element();
-        Node::ptr greater(const Node::ptr& arg0, const Node::ptr& arg1);
-        //Node::ptr greater_equal(const Node::ptr& arg0, const Node::ptr& arg1);
-        Node::ptr less(const Node::ptr& arg0, const Node::ptr& arg1);
-        //Node::ptr less_equal(const Node::ptr& arg0, const Node::ptr& arg1);
-        Node::ptr log(const Node::ptr& arg0);
-        //Node::ptr logical(); and, or, not
-        Node::ptr maximum(const Node::ptr& arg0, const Node::ptr& arg1);
-        Node::ptr minimum(const Node::ptr& arg0, const Node::ptr& arg1);
-        Node::ptr multiply(const Node::ptr& arg0, const Node::ptr& arg1);
-        Node::ptr negate(const Node::ptr& arg0);
-        //Node::ptr pad();
-        Node::ptr power(const Node::ptr& arg0, const Node::ptr& arg1);
-        //Node::ptr reduce();
-        // Node::ptr reduce_window();
-        Node::ptr remainder(const Node::ptr& arg0, const Node::ptr& arg1);
-        Node::ptr reshape(const Node::ptr& arg0, const Shape& shape);
-        //Node::ptr reverse();
-        //Node::ptr rng();
-        //Node::ptr select();
-        //Node::ptr select_scatter();
-        //Node::ptr slice();
-        Node::ptr subtract(const Node::ptr& arg0, const Node::ptr& arg1);
-        //Node::ptr transpose();
-        //Node::ptr while();
-    }
-
-    /**
-     ** Op nodes are nodes whose value is the result of some operation
-     ** applied to its arguments. For calls to user functions, the op will
-     ** reference the user function.
-     **/
+    /// Op nodes are nodes whose value is the result of some operation
+    /// applied to its arguments. For calls to user functions, the op will
+    /// reference the user function.
     class Op : public Node
     {
     public:
-        Op(const std::vector<Node::ptr>& arguments)
-            : Node(arguments, nullptr)
-        {
-        }
-    };
-
-    /**
-     ** A FunctionOp invokes a function on node arguments. In addition to the argument
-     ** we need to preserve the function.
-     **/
-    class FunctionOp : public Op
-    {
-        virtual std::string description() const override { return "FunctionOp"; }
-
-    protected:
-        Node::ptr m_function;
-    };
-
-    /**
-     ** The is an operation we handle directly, i.e. all type checking, etc.
-     ** are defined in C++ rather than in terms of ngraph operations.
-     **/
-    class BuiltinOp : public Op
-    {
-    public:
-        virtual std::string description() const override { return "BuiltinOp"; }
-        /// Name of the builtin op, for debugging and logging.
-        virtual std::string op_name() const = 0;
-
-        // TODO: Implement for each op. This enables graphs to be built for now.
-        virtual void propagate_types() override {}
-
-    protected:
-        BuiltinOp(const std::vector<Node::ptr>& args)
-            : Op(args)
-        {
-        }
-    };
-
-    class AbsOp : public BuiltinOp
-    {
-    public:
-        AbsOp(const Node::ptr& arg0)
-            : BuiltinOp({arg0})
+        Op(const std::vector<std::shared_ptr<Node>>& arguments)
+            : Node(arguments)
         {
         }
 
-        virtual std::string op_name() const override { return "abs"; }
-        //virtual void propagate_types() override;
-    };
-
-    class AddOp : public BuiltinOp
-    {
-    public:
-        AddOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
-        {
-        }
-        virtual std::string op_name() const override { return "add"; }
-        //virtual void propagate_types() override;
-    };
-
-    class CeilingOp : public BuiltinOp
-    {
-    public:
-        CeilingOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
+        Op()
+            : Node()
         {
         }
 
-        virtual std::string op_name() const override { return "ceiling"; }
-        //virtual void propagate_types() override;
+        virtual std::string get_op_class_name() const = 0;
+        virtual std::string get_node_id() const override;
     };
 
-    class DivideOp : public BuiltinOp
+    // TODO: These class definitions are to be moved into separate files in the op directory
+    namespace op
     {
-    public:
-        DivideOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
+        /// A Function invokes a function on node arguments. In addition to the argument
+        /// we need to preserve the function.
+        class FunctionCall : public Op
         {
-        }
+            virtual std::string description() const override { return "FunctionCall"; }
 
-        virtual std::string op_name() const override { return "divide"; }
-        //virtual void propagate_types() override;
-    };
+        protected:
+            std::shared_ptr<Node> m_function;
+        };
 
-    class EqualOp : public BuiltinOp
-    {
-    public:
-        EqualOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
+        /// The is an operation we handle directly, i.e. all type checking, etc.
+        /// are defined in C++ rather than in terms of ngraph operations.
+        class Builtin : public Op
         {
-        }
+        public:
+            virtual std::string description() const override { return "Builtin"; }
+            /// Name of the builtin op, for debugging and logging.
 
-        virtual std::string op_name() const override { return "equal"; }
-        //virtual void propagate_types() override;
-    };
+            // TODO: Implement for each op. This enables graphs to be built for now.
+            virtual void propagate_types() override {}
 
-    class ExponentialOp : public BuiltinOp
-    {
-    public:
-        ExponentialOp(const Node::ptr& arg0)
-            : BuiltinOp({arg0})
+        protected:
+            Builtin(const std::vector<std::shared_ptr<Node>>& args)
+                : Op(args)
+            {
+            }
+        };
+
+        class Abs : public Builtin
         {
-        }
+        public:
+            Abs(const std::shared_ptr<Node>& arg0)
+                : Builtin({arg0})
+            {
+            }
 
-        virtual std::string op_name() const override { return "exp"; }
-        //virtual void propagate_types() override;
-    };
+            virtual std::string get_op_class_name() const override { return "Abs"; }
+            //virtual void propagate_types() override;
+        };
 
-    class FloorOp : public BuiltinOp
-    {
-    public:
-        FloorOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
+        class Add : public Builtin
         {
-        }
+        public:
+            Add(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
+            virtual std::string get_op_class_name() const override { return "Add"; }
+            //virtual void propagate_types() override;
+        };
 
-        virtual std::string op_name() const override { return "floor"; }
-        //virtual void propagate_types() override;
-    };
-
-    class GreaterOp : public BuiltinOp
-    {
-    public:
-        GreaterOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
+        class Ceiling : public Builtin
         {
-        }
+        public:
+            Ceiling(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
 
-        virtual std::string op_name() const override { return "greater"; }
-        //virtual void propagate_types() override;
-    };
+            virtual std::string get_op_class_name() const override { return "Ceiling"; }
+            //virtual void propagate_types() override;
+        };
 
-    class LessOp : public BuiltinOp
-    {
-    public:
-        LessOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
+        class Divide : public Builtin
         {
-        }
+        public:
+            Divide(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
 
-        virtual std::string op_name() const override { return "less"; }
-        //virtual void propagate_types() override;
-    };
+            virtual std::string get_op_class_name() const override { return "Divide"; }
+            //virtual void propagate_types() override;
+        };
 
-    class LogOp : public BuiltinOp
-    {
-    public:
-        LogOp(const Node::ptr& arg0)
-            : BuiltinOp({arg0})
+        class Equal : public Builtin
         {
-        }
+        public:
+            Equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
 
-        virtual std::string op_name() const override { return "log"; }
-        //virtual void propagate_types() override;
-    };
+            virtual std::string get_op_class_name() const override { return "Equal"; }
+            //virtual void propagate_types() override;
+        };
 
-    class MaximumOp : public BuiltinOp
-    {
-    public:
-        MaximumOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
+        class Exp : public Builtin
         {
-        }
+        public:
+            Exp(const std::shared_ptr<Node>& arg0)
+                : Builtin({arg0})
+            {
+            }
 
-        virtual std::string op_name() const override { return "max"; }
-        //virtual void propagate_types() override;
-    };
+            virtual std::string get_op_class_name() const override { return "Exp"; }
+            //virtual void propagate_types() override;
+        };
 
-    class MinimumOp : public BuiltinOp
-    {
-    public:
-        MinimumOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
+        class Floor : public Builtin
         {
-        }
+        public:
+            Floor(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
 
-        virtual std::string op_name() const override { return "min"; }
-        //virtual void propagate_types() override;
-    };
+            virtual std::string get_op_class_name() const override { return "Floor"; }
+            //virtual void propagate_types() override;
+        };
 
-    class MultiplyOp : public BuiltinOp
-    {
-    public:
-        MultiplyOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
+        class Greater : public Builtin
         {
-        }
+        public:
+            Greater(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
 
-        virtual std::string op_name() const override { return "multiply"; }
-        //virtual void propagate_types() override;
-    };
+            virtual std::string get_op_class_name() const override { return "Greater"; }
+            //virtual void propagate_types() override;
+        };
 
-    class NegateOp : public BuiltinOp
-    {
-    public:
-        NegateOp(const Node::ptr& arg0)
-            : BuiltinOp({arg0})
+        class Less : public Builtin
         {
-        }
+        public:
+            Less(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
 
-        virtual std::string op_name() const override { return "negate"; }
-        //virtual void propagate_types() override;
-    };
+            virtual std::string get_op_class_name() const override { return "Less"; }
+            //virtual void propagate_types() override;
+        };
 
-    class PowerOp : public BuiltinOp
-    {
-    public:
-        PowerOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
+        class Log : public Builtin
         {
-        }
+        public:
+            Log(const std::shared_ptr<Node>& arg0)
+                : Builtin({arg0})
+            {
+            }
 
-        virtual std::string op_name() const override { return "power"; }
-        //virtual void propagate_types() override;
-    };
+            virtual std::string get_op_class_name() const override { return "Log"; }
+            //virtual void propagate_types() override;
+        };
 
-    class RemainderOp : public BuiltinOp
-    {
-    public:
-        RemainderOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
+        class Maximum : public Builtin
         {
-        }
+        public:
+            Maximum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
 
-        virtual std::string op_name() const override { return "remainder"; }
-        //virtual void propagate_types() override;
-    };
+            virtual std::string get_op_class_name() const override { return "Max"; }
+            //virtual void propagate_types() override;
+        };
 
-    class ReshapeOp : public BuiltinOp
-    {
-    public:
-        ReshapeOp(const Node::ptr& arg0, const Shape& shape)
-            : BuiltinOp({arg0})
-            , m_shape(shape)
+        class Minimum : public Builtin
         {
-        }
+        public:
+            Minimum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
 
-        virtual std::string op_name() const override { return "reshape"; }
-        //virtual void propagate_types() override;
-    protected:
-        Shape m_shape;
-    };
+            virtual std::string get_op_class_name() const override { return "Min"; }
+            //virtual void propagate_types() override;
+        };
 
-    class SubtractOp : public BuiltinOp
-    {
-    public:
-        SubtractOp(const Node::ptr& arg0, const Node::ptr& arg1)
-            : BuiltinOp({arg0, arg1})
+        class Multiply : public Builtin
         {
-        }
+        public:
+            Multiply(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
 
-        virtual std::string op_name() const override { return "subtract"; }
-        //virtual void propagate_types() override;
-    };
+            virtual std::string get_op_class_name() const override { return "Multiply"; }
+            //virtual void propagate_types() override;
+        };
+
+        class Negative : public Builtin
+        {
+        public:
+            Negative(const std::shared_ptr<Node>& arg0)
+                : Builtin({arg0})
+            {
+            }
+
+            virtual std::string get_op_class_name() const override { return "Negative"; }
+            //virtual void propagate_types() override;
+        };
+
+        class Power : public Builtin
+        {
+        public:
+            Power(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
+
+            virtual std::string get_op_class_name() const override { return "Power"; }
+            //virtual void propagate_types() override;
+        };
+
+        class Remainder : public Builtin
+        {
+        public:
+            Remainder(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
+
+            virtual std::string get_op_class_name() const override { return "Remainder"; }
+            //virtual void propagate_types() override;
+        };
+
+        class Reshape : public Builtin
+        {
+        public:
+            Reshape(const std::shared_ptr<Node>& arg0, const Shape& shape)
+                : Builtin({arg0})
+                , m_shape(shape)
+            {
+            }
+
+            virtual std::string get_op_class_name() const override { return "Reshape"; }
+            //virtual void propagate_types() override;
+        protected:
+            Shape m_shape;
+        };
+
+        class Subtract : public Builtin
+        {
+        public:
+            Subtract(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : Builtin({arg0, arg1})
+            {
+            }
+
+            virtual std::string get_op_class_name() const override { return "Subtract"; }
+            //virtual void propagate_types() override;
+        };
+    }
 }

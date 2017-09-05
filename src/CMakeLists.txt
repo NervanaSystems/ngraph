@@ -26,6 +26,9 @@ set (SRC
     ops/tuple.cpp
     types/element_type.cpp
     types/type.cpp
+    ngraph/node.cpp
+    ngraph/topological_sort.cpp
+    ngraph/visualize.cpp
 )
 
 set(NGRAPH_INCLUDE_DIR 

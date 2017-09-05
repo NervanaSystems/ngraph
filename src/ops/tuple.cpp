@@ -17,14 +17,9 @@
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
-using namespace ngraph;
+using namespace ngraph::op;
 
-void TupleOp::propagate_types()
+void Tuple::propagate_types()
 {
     throw ngraph_error("NIY");
-}
-
-Node::ptr op::tuple(const std::vector<Node::ptr>& args)
-{
-    return make_shared<TupleOp>(args);
 }
