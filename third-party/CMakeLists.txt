@@ -12,3 +12,4 @@
 # limitations under the License.
 
 include( ../cmake/external_gtest.cmake )
+include( ../cmake/external_eigen.cmake )
