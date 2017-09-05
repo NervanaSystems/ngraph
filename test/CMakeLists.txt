@@ -24,6 +24,7 @@ set (SRC
     element_type.cpp
     uuid.cpp
     topological_sort.cpp
+    type_prop.cpp
     op.cpp
 )
 
