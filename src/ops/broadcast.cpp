@@ -19,6 +19,10 @@ using namespace ngraph::op;
 
 void Broadcast::propagate_types()
 {
+    if (m_arguments.size() != 1){
+        throw ngraph_error("Wrong number of arguments.");
+    }
+    
     auto arg_type = m_arguments.at(0)->get_value_type();
     if (nullptr == arg_type)
     {

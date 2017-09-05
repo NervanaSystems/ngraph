@@ -94,6 +94,7 @@ namespace ngraph
 
         size_t               get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
+        
 
     protected:
         Nodes                      m_arguments;
