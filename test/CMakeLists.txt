@@ -13,7 +13,12 @@
 
 include_directories(
     SYSTEM
-    "${GTEST_INCLUDE_DIR}"
+    ${GTEST_INCLUDE_DIR}
+    ${EIGEN_INCLUDE_DIR}
+    )
+    
+include_directories(
+    ${NGRAPH_INCLUDE_DIR}
     )
 
 set (SRC
@@ -25,6 +30,7 @@ set (SRC
     uuid.cpp
     topological_sort.cpp
     op.cpp
+    eigen.cpp
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -35,7 +41,7 @@ add_executable(unit-test ${SRC})
 target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
-add_dependencies(unit-test ngraph libgtest)
+add_dependencies(unit-test ngraph libgtest eigen)
 
 add_custom_target(check
 	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test
