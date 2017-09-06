@@ -57,6 +57,7 @@ TEST(type_prop, broadcast_deduce_incorrect)
     try
     {
         bc->propagate_types();
+        // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
     catch (const ngraph_error& error)
@@ -77,6 +78,7 @@ TEST(type_prop, broadcast_bad_arguments)
     try
     {
         bc->propagate_types();
+        // Should have thrown, so fail if it didn't
         FAIL() << "Tuple argument to broadcast not detected.";
     }
     catch (const ngraph_error& error)
@@ -94,6 +96,7 @@ void test_binary_bad_arguments_tuple(const shared_ptr<Node>& node)
     try
     {
         node->propagate_types();
+        // Should have thrown, so fail if it didn't
         FAIL() << "Tuple argument not detected.";
     }
     catch (const ngraph_error& error)
@@ -111,7 +114,8 @@ void test_binary_bad_arguments_views(const shared_ptr<Node>& node)
     try
     {
         node->propagate_types();
-        FAIL() << "incompatible view argumenta not detected.";
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incompatible view arguments not detected.";
     }
     catch (const ngraph_error& error)
     {

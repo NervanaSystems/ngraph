@@ -84,7 +84,7 @@ namespace ngraph
         class UnaryElementwiseBuiltin : public Builtin
         {
         protected:
-            UnaryElementwiseBuiltin(const std::shared_ptr<Node> arg)
+            UnaryElementwiseBuiltin(const std::shared_ptr<Node>& arg)
                 : Builtin(Nodes{arg})
             {
             }
@@ -97,7 +97,7 @@ namespace ngraph
         class BinaryElementwiseBuiltin : public Builtin
         {
         protected:
-            BinaryElementwiseBuiltin(std::shared_ptr<Node> arg0, std::shared_ptr<Node> arg1)
+            BinaryElementwiseBuiltin(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
                 : Builtin(Nodes{arg0, arg1})
             {
             }
