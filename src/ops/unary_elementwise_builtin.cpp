@@ -12,26 +12,26 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include <memory>
 
-namespace ngraph
+#include "ngraph/ngraph.hpp"
+
+using namespace std;
+using namespace ngraph::op;
+
+void UnaryElementwiseBuiltin::propagate_types()
 {
-    namespace op
+    if (m_arguments.size() != 1)
     {
-        class Convert : public UnaryElementwiseBuiltin
-        {
-        public:
-            Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type)
-                : UnaryElementwiseBuiltin({arg})
-                , m_element_type(element_type)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Convert"; }
-            virtual void        propagate_types() override;
-
-        protected:
-            const ngraph::element::Type& m_element_type;
-        };
+        throw ngraph_error("Wrong number of arguments.");
     }
+
+    auto arg_tensor_type =
+        dynamic_pointer_cast<TensorViewType>(m_arguments.at(0)->get_value_type());
+    if (nullptr == arg_tensor_type)
+    {
+        throw ngraph_error("Argument must be tensor view");
+    }
+
+    set_value_type_checked(arg_tensor_type);
 }
