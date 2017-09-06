@@ -94,7 +94,7 @@ void test_binary_bad_arguments_tuple(const shared_ptr<Node>& node)
     try
     {
         node->propagate_types();
-        FAIL() << "Tuple argument to add not detected.";
+        FAIL() << "Tuple argument not detected.";
     }
     catch (const ngraph_error& error)
     {
@@ -111,7 +111,7 @@ void test_binary_bad_arguments_views(const shared_ptr<Node>& node)
     try
     {
         node->propagate_types();
-        FAIL() << "Tuple argument to add not detected.";
+        FAIL() << "incompatible view argumenta not detected.";
     }
     catch (const ngraph_error& error)
     {
