@@ -36,15 +36,22 @@ set(NGRAPH_INCLUDE_PATH
     ${CMAKE_CURRENT_SOURCE_DIR}/ngraph
 )
 
+# find_program (GRAPHVIZ dot)
+# message (STATUS "graphviz '${GRAPHVIZ}'")
+find_package(Graphviz)
+if (GRAPHVIZ_FOUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGRAPHVIZ_FOUND")
+endif()
+
 include_directories("${NGRAPH_INCLUDE_PATH}")
 
 add_library(ngraph SHARED ${SRC})
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
-if ( APPLE )
-    set_property( TARGET ngraph PROPERTY PREFIX "lib" )
-    set_property( TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.so" )
-    set_property( TARGET ngraph PROPERTY SUFFIX "" )
+if (APPLE)
+    set_property(TARGET ngraph PROPERTY PREFIX "lib")
+    set_property(TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.so")
+    set_property(TARGET ngraph PROPERTY SUFFIX "")
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -63,7 +70,7 @@ set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/ngraph_dist" CACHE PATH "Install directory"
 message (STATUS "Installation directory: ${CMAKE_INSTALL_PREFIX}")
 message (STATUS "To Override use: cmake -DCMAKE_INSTALL_PREFIX=/foo -P cmake_install.cmake")
 
-install(TARGETS ngraph DESTINATION ${CMAKE_INSTALL_PREFIX} )
+install(TARGETS ngraph DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY 
     ${CMAKE_CURRENT_SOURCE_DIR}/ngraph 
     DESTINATION ${CMAKE_INSTALL_PREFIX} 

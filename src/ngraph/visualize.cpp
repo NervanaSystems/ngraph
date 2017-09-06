@@ -41,6 +41,7 @@ void Visualize::add(node_ptr p)
 
 void Visualize::save_dot(const string& path) const
 {
+#if GRAPHVIZ_FOUND
     auto     tmp_file = path + ".tmp";
     ofstream out(tmp_file);
     if (out)
@@ -56,6 +57,8 @@ void Visualize::save_dot(const string& path) const
         auto stream = popen(cmd.c_str(), "r");
         pclose(stream);
 
-        // remove(tmp_file.c_str());
+        remove(tmp_file.c_str());
     }
+#else
+#endif
 }
