@@ -25,9 +25,9 @@ ExternalProject_Add(
     eigen
     URL http://bitbucket.org/eigen/eigen/get/3.3.3.zip
     # PREFIX ${CMAKE_CURRENT_BINARY_DIR}/eigen
-    INSTALL_COMMAND make install
     UPDATE_COMMAND ""
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+    BUILD_BYPRODUCTS "${EXTERNAL_INSTALL_LOCATION}/include/eigen3"
     )
 
 #----------------------------------------------------------------------------------------------------------
