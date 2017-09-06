@@ -24,14 +24,15 @@ include_directories(
 set (SRC
     main.cpp
     build_graph.cpp
-    util.cpp
-    tensor.cpp
+    eigen.cpp
     element_type.cpp
-    uuid.cpp
+    op.cpp
+    input_output_assign.cpp
+    tensor.cpp
     topological_sort.cpp
     type_prop.cpp
-    op.cpp
-    eigen.cpp
+    util.cpp
+    uuid.cpp
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
