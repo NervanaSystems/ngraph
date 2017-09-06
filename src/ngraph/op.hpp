@@ -61,10 +61,6 @@ namespace ngraph
         {
         public:
             virtual std::string description() const override { return "Builtin"; }
-            /// Name of the builtin op, for debugging and logging.
-
-            // TODO: Implement for each op. This enables graphs to be built for now.
-            virtual void propagate_types() override {}
 
         protected:
             Builtin(const std::vector<std::shared_ptr<Node>>& args)
@@ -73,11 +69,48 @@ namespace ngraph
             }
         };
 
-        class Abs : public Builtin
+        /// Index ops create a new way to index the same tensor elements
+        class IndexBuiltin : public Builtin
+        {
+        protected:
+            IndexBuiltin(const std::shared_ptr<Node>& arg)
+                : Builtin(Nodes{arg})
+            {
+            }
+        };
+
+        /// Operations where the same element function is applied to each element
+        /// Op(X)[I] = op(X[I])
+        class UnaryElementwiseBuiltin : public Builtin
+        {
+        protected:
+            UnaryElementwiseBuiltin(const std::shared_ptr<Node> arg)
+                : Builtin(Nodes{arg})
+            {
+            }
+
+        public:
+            virtual void propagate_types() override;
+        };
+
+        /// Op(X, Y)[I] = op(X[I], Y[I])
+        class BinaryElementwiseBuiltin : public Builtin
+        {
+        protected:
+            BinaryElementwiseBuiltin(std::shared_ptr<Node> arg0, std::shared_ptr<Node> arg1)
+                : Builtin(Nodes{arg0, arg1})
+            {
+            }
+
+        public:
+            virtual void propagate_types() override;
+        };
+
+        class Abs : public UnaryElementwiseBuiltin
         {
         public:
             Abs(const std::shared_ptr<Node>& arg0)
-                : Builtin({arg0})
+                : UnaryElementwiseBuiltin({arg0})
             {
             }
 
@@ -85,46 +118,11 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Add : public Builtin
-        {
-        public:
-            Add(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
-            {
-            }
-            virtual std::string get_op_class_name() const override { return "Add"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Ceiling : public Builtin
-        {
-        public:
-            Ceiling(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Ceiling"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Divide : public Builtin
-        {
-        public:
-            Divide(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Divide"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Equal : public Builtin
+        class Equal : public BinaryElementwiseBuiltin
         {
         public:
             Equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
+                : BinaryElementwiseBuiltin(arg0, arg1)
             {
             }
 
@@ -132,11 +130,11 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Exp : public Builtin
+        class Exp : public UnaryElementwiseBuiltin
         {
         public:
             Exp(const std::shared_ptr<Node>& arg0)
-                : Builtin({arg0})
+                : UnaryElementwiseBuiltin(arg0)
             {
             }
 
@@ -144,23 +142,11 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Floor : public Builtin
-        {
-        public:
-            Floor(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Floor"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Greater : public Builtin
+        class Greater : public BinaryElementwiseBuiltin
         {
         public:
             Greater(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
+                : BinaryElementwiseBuiltin(arg0, arg1)
             {
             }
 
@@ -168,11 +154,11 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Less : public Builtin
+        class Less : public BinaryElementwiseBuiltin
         {
         public:
             Less(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
+                : BinaryElementwiseBuiltin(arg0, arg1)
             {
             }
 
@@ -180,11 +166,11 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Log : public Builtin
+        class Log : public UnaryElementwiseBuiltin
         {
         public:
             Log(const std::shared_ptr<Node>& arg0)
-                : Builtin({arg0})
+                : UnaryElementwiseBuiltin(arg0)
             {
             }
 
@@ -192,11 +178,11 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Maximum : public Builtin
+        class Maximum : public BinaryElementwiseBuiltin
         {
         public:
             Maximum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
+                : BinaryElementwiseBuiltin(arg0, arg1)
             {
             }
 
@@ -204,11 +190,11 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Minimum : public Builtin
+        class Minimum : public BinaryElementwiseBuiltin
         {
         public:
             Minimum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
+                : BinaryElementwiseBuiltin(arg0, arg1)
             {
             }
 
@@ -216,23 +202,11 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Multiply : public Builtin
-        {
-        public:
-            Multiply(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Multiply"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Negative : public Builtin
+        class Negative : public UnaryElementwiseBuiltin
         {
         public:
             Negative(const std::shared_ptr<Node>& arg0)
-                : Builtin({arg0})
+                : UnaryElementwiseBuiltin(arg0)
             {
             }
 
@@ -240,11 +214,11 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Power : public Builtin
+        class Power : public BinaryElementwiseBuiltin
         {
         public:
             Power(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
+                : BinaryElementwiseBuiltin(arg0, arg1)
             {
             }
 
@@ -252,11 +226,11 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Remainder : public Builtin
+        class Remainder : public BinaryElementwiseBuiltin
         {
         public:
             Remainder(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
+                : BinaryElementwiseBuiltin(arg0, arg1)
             {
             }
 
@@ -264,11 +238,11 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Reshape : public Builtin
+        class Reshape : public IndexBuiltin
         {
         public:
             Reshape(const std::shared_ptr<Node>& arg0, const Shape& shape)
-                : Builtin({arg0})
+                : IndexBuiltin(arg0)
                 , m_shape(shape)
             {
             }
@@ -277,18 +251,6 @@ namespace ngraph
             //virtual void propagate_types() override;
         protected:
             Shape m_shape;
-        };
-
-        class Subtract : public Builtin
-        {
-        public:
-            Subtract(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Subtract"; }
-            //virtual void propagate_types() override;
         };
     }
 }

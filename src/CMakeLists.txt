@@ -15,6 +15,7 @@ set (SRC
     tree.cpp
     util.cpp
     log.cpp
+    ops/binary_elementwise_builtin.cpp
     ops/broadcast.cpp
     ops/concatenate.cpp
     ops/convert.cpp
@@ -24,6 +25,7 @@ set (SRC
     ops/op.cpp
     ops/parameter.cpp
     ops/tuple.cpp
+    ops/unary_elementwise_builtin.cpp
     types/element_type.cpp
     types/type.cpp
     ngraph/node.cpp

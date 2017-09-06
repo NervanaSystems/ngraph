@@ -20,6 +20,11 @@
 using namespace std;
 using namespace ngraph;
 
+void test_binary_bad_arguments_tuple(const shared_ptr<Node>& node);
+void test_binary_bad_arguments_views(const shared_ptr<Node>& node);
+void test_binary_good_arguments(const shared_ptr<Node>& node);
+void test_binary(shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr<Node>& y));
+
 TEST(type_prop, broadcast_deduce)
 {
     // Deduce type
@@ -84,3 +89,103 @@ TEST(type_prop, broadcast_bad_arguments)
     }
 }
 
+void test_binary_bad_arguments_tuple(const shared_ptr<Node>& node)
+{
+    try
+    {
+        node->propagate_types();
+        FAIL() << "Tuple argument to add not detected.";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Arguments must be tensor views"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+void test_binary_bad_arguments_views(const shared_ptr<Node>& node)
+{
+    try
+    {
+        node->propagate_types();
+        FAIL() << "Tuple argument to add not detected.";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+void test_binary_good_arguments(const shared_ptr<Node>& node)
+{
+    node->propagate_types();
+    EXPECT_EQ(*node->get_value_type(), *node->get_arguments()[0]->get_value_type());
+}
+
+void test_binary(shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr<Node>& y))
+{
+    // Check for bad arguments
+    auto tp0_param       = make_shared<op::Parameter>(make_shared<TupleType>());
+    auto tp1_param       = make_shared<op::Parameter>(make_shared<TupleType>());
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto tv0_4_2_param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{4, 2}));
+
+    test_binary_bad_arguments_tuple(f(tp0_param, tp1_param));
+    test_binary_bad_arguments_tuple(f(tp0_param, tv0_2_4_param_0));
+    test_binary_bad_arguments_tuple(f(tv0_2_4_param_0, tp0_param));
+    test_binary_bad_arguments_views(f(tv0_2_4_param_0, tv0_4_2_param));
+    test_binary_good_arguments(f(tv0_2_4_param_0, tv0_2_4_param_1));
+}
+
+TEST(type_prop, add_bad_arguments)
+{
+    test_binary([](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+        return make_shared<op::Add>(x, y);
+    });
+}
+
+TEST(type_prop, ceiling_bad_arguments)
+{
+    test_binary([](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+        return make_shared<op::Ceiling>(x, y);
+    });
+}
+
+TEST(type_prop, divide_bad_arguments)
+{
+    test_binary([](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+        return make_shared<op::Divide>(x, y);
+    });
+}
+
+TEST(type_prop, floor_bad_arguments)
+{
+    test_binary([](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+        return make_shared<op::Floor>(x, y);
+    });
+}
+
+TEST(type_prop, multiply_bad_arguments)
+{
+    test_binary([](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+        return make_shared<op::Multiply>(x, y);
+    });
+}
+
+TEST(type_prop, subtract_bad_arguments)
+{
+    test_binary([](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+        return make_shared<op::Subtract>(x, y);
+    });
+}

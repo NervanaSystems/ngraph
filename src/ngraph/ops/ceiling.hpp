@@ -18,20 +18,15 @@ namespace ngraph
 {
     namespace op
     {
-        class Convert : public UnaryElementwiseBuiltin
+        class Ceiling : public BinaryElementwiseBuiltin
         {
         public:
-            Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type)
-                : UnaryElementwiseBuiltin({arg})
-                , m_element_type(element_type)
+            Ceiling(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : BinaryElementwiseBuiltin(arg0, arg1)
             {
             }
 
-            virtual std::string get_op_class_name() const override { return "Convert"; }
-            virtual void        propagate_types() override;
-
-        protected:
-            const ngraph::element::Type& m_element_type;
+            virtual std::string get_op_class_name() const override { return "Ceiling"; }
         };
     }
 }
