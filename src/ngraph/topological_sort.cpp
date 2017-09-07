@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <unordered_map>
+#include <deque>
+
 #include "topological_sort.hpp"
 #include "node.hpp"
 #include "util.hpp"
@@ -19,31 +22,19 @@
 using namespace ngraph;
 using namespace std;
 
-void ngraph::TopologicalSort::promote_node(Node* n)
-{
-    for (auto dn = m_dependent_nodes.begin(); dn != m_dependent_nodes.end(); dn++)
-    {
-        if (dn->first > 0) // Skip zero as they should never be promoted
-        {
-            auto it = find(dn->second.begin(), dn->second.end(), n);
-            if (it != dn->second.end())
-            {
-                // found the node
-                dn->second.erase(it);
-                m_dependent_nodes[dn->first - 1].push_back(n);
-            }
-        }
-    }
-}
-
 void ngraph::TopologicalSort::process(node_ptr p)
 {
+    deque<Node*> independent_nodes;
+    unordered_map<Node*, size_t> node_depencency_count;
+
     traverse_nodes(p, [&](node_ptr node) {
-        list<Node*>& node_list = m_dependent_nodes[node->get_arguments().size()];
-        node_list.push_back(node.get());
+        node_depencency_count[node.get()] = node->get_arguments().size();
+        if (node->get_arguments().size() == 0)
+        {
+            independent_nodes.push_back(node.get());
+        }
     });
 
-    list<Node*>& independent_nodes = m_dependent_nodes[0];
     while (independent_nodes.size() > 0)
     {
         auto independent_node = independent_nodes.front();
@@ -52,12 +43,22 @@ void ngraph::TopologicalSort::process(node_ptr p)
 
         for (auto user : independent_node->users())
         {
-            promote_node(user);
+            node_depencency_count[user] -= 1;
+            size_t count = node_depencency_count[user];
+            if (count == 0)
+            {
+                independent_nodes.push_back(user);
+            }
         }
     }
 }
 
-const std::vector<Node*>& ngraph::TopologicalSort::get_sorted_list() const
+const std::list<Node*>& ngraph::TopologicalSort::get_sorted_list() const
+{
+    return m_sorted_list;
+}
+
+std::list<Node*>& ngraph::TopologicalSort::get_sorted_list()
 {
     return m_sorted_list;
 }
