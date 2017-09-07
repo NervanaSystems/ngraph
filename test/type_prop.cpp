@@ -97,6 +97,50 @@ TEST(type_prop, broadcast_bad_arguments)
 //
 // Tests for dot product.
 //
+TEST(type_prop, dot_deduce_scalar_2d)
+{
+    // Deduce type for 1D arguments
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4,5});
+    auto bc     = make_shared<op::Dot>(param1, param2);
+    bc->propagate_types();
+    auto bc_vt = bc->get_value_type();
+    ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{4,5}));
+}
+
+TEST(type_prop, dot_deduce_2d_scalar)
+{
+    // Deduce type for 1D arguments
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4,5});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto bc     = make_shared<op::Dot>(param1, param2);
+    bc->propagate_types();
+    auto bc_vt = bc->get_value_type();
+    ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{4,5}));
+}
+
+TEST(type_prop, dot_deduce_scalar_scalar)
+{
+    // Deduce type for 1D arguments
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto bc     = make_shared<op::Dot>(param1, param2);
+    bc->propagate_types();
+    auto bc_vt = bc->get_value_type();
+    ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{}));
+}
+
+TEST(type_prop, dot_deduce_scalar_1d)
+{
+    // Deduce type for 1D arguments
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6});
+    auto bc     = make_shared<op::Dot>(param1, param2);
+    bc->propagate_types();
+    auto bc_vt = bc->get_value_type();
+    ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{6}));
+}
+
 TEST(type_prop, dot_deduce_1d)
 {
     // Deduce type for 1D arguments

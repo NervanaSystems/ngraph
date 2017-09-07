@@ -21,7 +21,23 @@ namespace ngraph
         class Dot : public Builtin
         {
         public:
-            /// TODO: Semantics of arg0 and arg1 axes wrt reduction.
+            /// Computes the dot product of two tensors.
+            ///
+            /// There are three possible cases:
+            ///  (1) arg0 or arg1 is 0-dimensional. Then, we treat the 0-dimensional
+            ///      argument(s) as scalars and compute a scalar-tensor or
+            ///      scalar-scalar product.
+            ///         (Example: arg0 has shape {1,2,3} and arg1 has shape {}; then
+            ///         the result will have shape {1,2,3}.)
+            ///  (2) arg1 is 1-dimensional. Then, we compute a dot product reducing
+            ///      on the innermost dimensions of arg0 and arg1.
+            ///         (Example: arg0 has shape {1,2,3} and arg1 has shape {3}; then
+            ///         the result will have shape {1,2}.)
+            ///  (3) arg1 is more than 1-dimensional. Then, we compute a dot product
+            ///      reducing on the innermost dimension of arg0, and the
+            ///      next-to-innermost dimension of arg1.
+            ///         (Example: arg0 has shape {3,4} and arg1 has shape {4,3}; then
+            ///         the result will have shape {3,3}.)
             Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
                 : Builtin({arg0, arg1})
             {
