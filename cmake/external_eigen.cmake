@@ -21,14 +21,24 @@ set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
 #----------------------------------------------------------------------------------------------------------
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
-ExternalProject_Add(
-    eigen
-    URL http://bitbucket.org/eigen/eigen/get/3.3.3.zip
-    # PREFIX ${CMAKE_CURRENT_BINARY_DIR}/eigen
-    UPDATE_COMMAND ""
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
-    BUILD_BYPRODUCTS "${EXTERNAL_INSTALL_LOCATION}/include/eigen3"
-    )
+if (${CMAKE_VERSION} VERSION_LESS 3.2)
+    ExternalProject_Add(
+        eigen
+        URL http://bitbucket.org/eigen/eigen/get/3.3.3.zip
+        # PREFIX ${CMAKE_CURRENT_BINARY_DIR}/eigen
+        UPDATE_COMMAND ""
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+        )
+else()
+    ExternalProject_Add(
+        eigen
+        URL http://bitbucket.org/eigen/eigen/get/3.3.3.zip
+        # PREFIX ${CMAKE_CURRENT_BINARY_DIR}/eigen
+        UPDATE_COMMAND ""
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+        BUILD_BYPRODUCTS "${EXTERNAL_INSTALL_LOCATION}/include/eigen3"
+        )
+endif()
 
 #----------------------------------------------------------------------------------------------------------
 
