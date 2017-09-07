@@ -15,10 +15,15 @@ include_directories(
     SYSTEM
     ${GTEST_INCLUDE_DIR}
     ${EIGEN_INCLUDE_DIR}
+    ${MKLDNN_INCLUDE_DIR}
     )
     
 include_directories(
     ${NGRAPH_INCLUDE_DIR}
+    )
+
+link_directories(
+    ${MKLDNN_LIB_DIR}
     )
 
 set (SRC
@@ -32,6 +37,7 @@ set (SRC
     type_prop.cpp
     op.cpp
     eigen.cpp
+    mkldnn.cpp
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -39,10 +45,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}
 
 add_executable(unit-test ${SRC})
 
-target_link_libraries(unit-test ngraph libgtest pthread)
+target_link_libraries(unit-test ngraph libgtest mkldnn pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
-add_dependencies(unit-test ngraph libgtest eigen)
+add_dependencies(unit-test ngraph libgtest eigen ext_mkldnn)
 
 add_custom_target(check
 	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test
