@@ -25,6 +25,9 @@ void test_binary_bad_arguments_views(const shared_ptr<Node>& node);
 void test_binary_good_arguments(const shared_ptr<Node>& node);
 void test_binary(shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr<Node>& y));
 
+//
+// Tests for broadcast.
+//
 TEST(type_prop, broadcast_deduce)
 {
     // Deduce type
@@ -91,6 +94,102 @@ TEST(type_prop, broadcast_bad_arguments)
     }
 }
 
+//
+// Tests for dot product.
+//
+TEST(type_prop, dot_deduce_1d)
+{
+    // Deduce type for 1D arguments
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4});
+    auto bc     = make_shared<op::Dot>(param1, param2);
+    bc->propagate_types();
+    auto bc_vt = bc->get_value_type();
+    ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{}));
+}
+
+TEST(type_prop, dot_deduce_2d)
+{
+    // Deduce type for 2D arguments
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4,2});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2,3});
+    auto bc     = make_shared<op::Dot>(param1, param2);
+    bc->propagate_types();
+    auto bc_vt = bc->get_value_type();
+    ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{4,3}));
+}
+
+TEST(type_prop, dot_deduce_different_d)
+{
+    // Deduce type for different-dimension arguments
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2,8,4,2});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1,2,3});
+    auto bc     = make_shared<op::Dot>(param1, param2);
+    bc->propagate_types();
+    auto bc_vt = bc->get_value_type();
+    ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2,8,4,1,3}));
+}
+
+TEST(type_prop, dot_deduce_different_d_correct)
+{
+    // Deduced type matches explicitly set type
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2,8,4,2});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1,2,3});
+    auto bc     = make_shared<op::Dot>(param1, param2);
+    bc->set_value_type(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2,8,4,1,3}));
+    bc->propagate_types();
+    auto bc_vt = bc->get_value_type();
+    ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2,8,4,1,3}));
+}
+
+TEST(type_prop, dot_deduce_element_type_mismatch)
+{
+    // Type deduction fails due to element type mismatch
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4,2});
+    auto param2 = make_shared<op::Parameter>(element::Int32::element_type(), Shape{2,5});
+    auto bc     = make_shared<op::Dot>(param1, param2);
+    try
+    {
+        bc->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Element type mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Arguments to dot must have the same element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dot_deduce_reduction_axes_size_mismatch)
+{
+    // Type deduction fails due to reduction axes size mismatch
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4,2});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{3,5});
+    auto bc     = make_shared<op::Dot>(param1, param2);
+    try
+    {
+        bc->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Dot reduction axes size mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Dot reduction axes not compatible"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+//
+// Tests for binary elementwise ops.
+//
 void test_binary_bad_arguments_tuple(const shared_ptr<Node>& node)
 {
     try

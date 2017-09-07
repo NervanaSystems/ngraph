@@ -35,7 +35,7 @@ void Dot::propagate_types()
     }
 
     // Use NumPy semantics for now
-    // Last axis of first arg reduces against second to last of second arg if more than one axis, else axis.
+    // Last axis of first arg reduces against second to last of second arg if more than one axis, else the only axis.
     vector<size_t> arg0_shape     = arg0_tensor_type->get_shape();
     vector<size_t> arg1_shape     = arg1_tensor_type->get_shape();
     size_t         arg0_reduction = arg0_shape.size() - 1;
@@ -52,9 +52,18 @@ void Dot::propagate_types()
     {
         throw ngraph_error("Dot reduction axes not compatible");
     }
+    
     vector<size_t> result_shape;
-    copy(arg0_shape.begin(), arg0_shape.begin() + arg1_reduction, result_shape.end());
-    copy(arg1_shape.begin(), arg1_shape.begin() + arg1_reduction, result_shape.end());
-    copy(arg1_shape.begin() + arg1_reduction, arg1_shape.end(), result_shape.end());
-    set_value_type_checked(make_shared<TensorViewType>(arg0_tensor_type->get_element_type(), result_shape));
+    result_shape.reserve(arg0_shape.size() + arg1_shape.size() - 2);
+
+    for(auto i = 0; i < arg0_shape.size(); i++)
+        if(i != arg0_reduction)
+            result_shape.push_back(arg0_shape[i]);
+
+    for(auto i = 0; i < arg1_shape.size(); i++)
+        if(i != arg1_reduction)
+            result_shape.push_back(arg1_shape[i]);
+
+    auto result_type = make_shared<TensorViewType>(arg0_tensor_type->get_element_type(), result_shape);
+    set_value_type_checked(result_type);
 }
