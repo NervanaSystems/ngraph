@@ -38,7 +38,7 @@ void Dot::propagate_types()
     vector<size_t> arg1_shape     = arg1_tensor_type->get_shape();
     size_t         arg0_reduction = arg0_shape.size() - 1;
     size_t         arg1_reduction;
-    bool           is_scalar_mult = arg0_shape.size() == 0 || arg1_shape.size() == 0;
+    const bool     is_scalar_mult = arg0_shape.size() == 0 || arg1_shape.size() == 0;
 
     if (arg1_shape.size() > 1)
     {
@@ -48,7 +48,7 @@ void Dot::propagate_types()
     {
         arg1_reduction = arg1_shape.size() - 1;
     }
-    if (!is_scalar_mult && arg0_shape.at(arg0_reduction) != arg1_shape.at(arg1_reduction))
+    if (!is_scalar_mult && (arg0_shape.at(arg0_reduction) != arg1_shape.at(arg1_reduction)))
     {
         throw ngraph_error("Dot reduction axes not compatible");
     }

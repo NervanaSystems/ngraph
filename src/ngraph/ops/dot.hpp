@@ -29,12 +29,14 @@ namespace ngraph
             ///      scalar-scalar product.
             ///         (Example: arg0 has shape {1,2,3} and arg1 has shape {}; then
             ///         the result will have shape {1,2,3}.)
+            ///
             ///  (2) arg1 is 1-dimensional. Then, we compute a dot product reducing
-            ///      on the innermost dimensions of arg0 and arg1.
+            ///      on the innermost (rightmost) dimensions of arg0 and arg1.
             ///         (Example: arg0 has shape {1,2,3} and arg1 has shape {3}; then
             ///         the result will have shape {1,2}.)
+            ///
             ///  (3) arg1 is more than 1-dimensional. Then, we compute a dot product
-            ///      reducing on the innermost dimension of arg0, and the
+            ///      reducing on the innermost (rightmost) dimension of arg0, and the
             ///      next-to-innermost dimension of arg1.
             ///         (Example: arg0 has shape {3,4} and arg1 has shape {4,3}; then
             ///         the result will have shape {3,3}.)
