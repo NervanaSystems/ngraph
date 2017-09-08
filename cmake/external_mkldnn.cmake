@@ -27,6 +27,7 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         ext_mkldnn
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         UPDATE_COMMAND ""
+        PATCH_COMMAND git am ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
         )
 else()
@@ -34,6 +35,7 @@ else()
         ext_mkldnn
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         UPDATE_COMMAND ""
+        PATCH_COMMAND git am ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
         BUILD_BYPRODUCTS "${EXTERNAL_INSTALL_LOCATION}/include/mkldnn.hpp"
         )
