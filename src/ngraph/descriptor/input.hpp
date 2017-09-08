@@ -33,6 +33,7 @@ namespace ngraph
             /// @param index The position of this this tensor in all input tensors
             /// @param argno The position of the argument with this tensor
             /// @param arg_index The position of the tensor within the argument's tensors
+            /// @param output The output that supplies a value for this input
             Input(Node*                          node,
                   size_t                         index,
                   size_t                         argno,
