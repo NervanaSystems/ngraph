@@ -14,10 +14,8 @@
 
 #pragma once
 
-#include <list>
-#include <map>
 #include <memory>
-#include <vector>
+#include <list>
 
 namespace ngraph
 {
@@ -32,11 +30,11 @@ public:
     TopologicalSort() {}
 
     void                      process(node_ptr);
-    const std::vector<Node*>& get_sorted_list() const;
-
+    const std::list<Node*>& get_sorted_list() const;
+    std::list<Node*>& get_sorted_list();
+    
 private:
     void promote_node(Node* n);
 
-    std::map<size_t, std::list<Node*>> m_dependent_nodes;
-    std::vector<Node*>                 m_sorted_list;
+    std::list<Node*> m_sorted_list;
 };
