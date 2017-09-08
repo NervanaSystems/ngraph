@@ -12,29 +12,29 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include <sstream>
 
-#include <memory>
-#include <list>
+#include "propagate_types.hpp"
+#include "ngraph/ngraph.hpp"
 
-namespace ngraph
+using namespace std;
+using namespace ngraph;
+
+bool pass::PropagateTypes::run_on_call_list(std::list<Node*> node_list)
 {
-    class TopologicalSort;
-    class Node;
-    using node_ptr = std::shared_ptr<Node>;
+    for (Node* node : node_list)
+    {
+        try
+        {
+            node->propagate_types();
+        }
+        catch (exception& e)
+        {
+            stringstream ss;
+            ss << "Error with node " << *node << ": ";
+            ss << e.what();
+            throw invalid_argument(ss.str());
+        }
+    }
+    return false;
 }
-
-class ngraph::TopologicalSort
-{
-public:
-    TopologicalSort() {}
-
-    void                      process(node_ptr);
-    const std::list<Node*>& get_sorted_list() const;
-    std::list<Node*>& get_sorted_list();
-    
-private:
-    void promote_node(Node* n);
-
-    std::list<Node*> m_sorted_list;
-};

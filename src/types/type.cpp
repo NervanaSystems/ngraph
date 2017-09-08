@@ -54,7 +54,26 @@ bool TupleType::operator==(const ValueType& that) const
 
 void TupleType::collect_tensor_views(std::vector<std::shared_ptr<const TensorViewType>>& views) const
 {
-    for(auto elt : m_element_types){
+    for(auto elt : m_element_types)
+    {
         elt->collect_tensor_views(views);
     }
+}
+
+std::ostream& ngraph::operator<<(std::ostream& out, const ValueType& obj)
+{
+    out << "ValueType()";
+    return out;
+}
+
+std::ostream& ngraph::operator<<(std::ostream& out, const TensorViewType& obj)
+{
+    out << "TensorViewType(" << obj.m_element_type << ")";
+    return out;
+}
+
+std::ostream& ngraph::operator<<(std::ostream& out, const TupleType& obj)
+{
+    out << "TupleType()";
+    return out;
 }

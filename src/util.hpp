@@ -195,5 +195,7 @@ namespace ngraph
         return a * b;
     }
 
-    void traverse_nodes(std::shared_ptr<Node> p, std::function<void(std::shared_ptr<Node>)> f);
+    void traverse_nodes(const std::shared_ptr<Node>& p, std::function<void(Node*)> f);
+
+    void free_nodes(std::shared_ptr<Node>);
 } // end namespace ngraph

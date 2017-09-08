@@ -64,6 +64,7 @@ namespace ngraph
         void assign_tensors();
 
         const Nodes& get_arguments() const { return m_arguments; }
+        void clear_arguments() { m_arguments.clear(); }
 
         const std::multiset<Node*>& users() const { return m_users; }
 
@@ -94,8 +95,8 @@ namespace ngraph
         }
 
         // Set the value type if it has not already been set; otherwise, ensure that
-        // value_type agrees with the value type that was set. 
-        // This is used when the framework specifies a value type for the value, and we 
+        // value_type agrees with the value type that was set.
+        // This is used when the framework specifies a value type for the value, and we
         // independently compute what we thing the value type should be from the arguments.
         void set_value_type_checked(const std::shared_ptr<ValueType>& value_type);
 

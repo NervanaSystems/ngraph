@@ -16,7 +16,7 @@ include_directories(
     ${GTEST_INCLUDE_DIR}
     ${EIGEN_INCLUDE_DIR}
     )
-    
+
 include_directories(
     ${NGRAPH_INCLUDE_DIR}
     )
@@ -33,6 +33,8 @@ set (SRC
     type_prop.cpp
     util.cpp
     uuid.cpp
+    pass_manager.cpp
+    test_tools.cpp
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -48,4 +50,3 @@ add_dependencies(unit-test ngraph libgtest eigen)
 add_custom_target(check
 	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test
 	DEPENDS unit-test)
-

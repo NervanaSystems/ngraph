@@ -37,6 +37,7 @@ namespace ngraph
 
         /// Add tensor views in depth-first order.
         virtual void collect_tensor_views(std::vector<std::shared_ptr<const TensorViewType>>& views) const = 0;
+        friend std::ostream& operator<<(std::ostream&, const ValueType&);
     };
 
     /// Describes a tensor view; an element type and a shape.
@@ -56,6 +57,8 @@ namespace ngraph
 
         virtual bool operator==(const ValueType& that) const override;
         virtual void collect_tensor_views(std::vector<std::shared_ptr<const TensorViewType>>& views) const override;
+
+        friend std::ostream& operator<<(std::ostream&, const TensorViewType&);
 
     protected:
         const element::Type& m_element_type;
@@ -83,6 +86,7 @@ namespace ngraph
 
         virtual bool operator==(const ValueType& that) const override;
         virtual void collect_tensor_views(std::vector<std::shared_ptr<const TensorViewType>>& views) const override;
+        friend std::ostream& operator<<(std::ostream&, const TupleType&);
 
     protected:
         std::vector<std::shared_ptr<ValueType>> m_element_types;

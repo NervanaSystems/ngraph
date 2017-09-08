@@ -14,32 +14,30 @@
 
 #pragma once
 
-#include <functional>
 #include <memory>
-#include <set>
-#include <sstream>
+#include <list>
+
+#include "tree_pass.hpp"
 
 namespace ngraph
 {
-    class Visualize;
+    namespace pass
+    {
+        class TopologicalSort;
+    }
     class Node;
-    using node_ptr = std::shared_ptr<Node>;
 }
 
-class ngraph::Visualize
+class ngraph::pass::TopologicalSort : public TreeBase
 {
 public:
-    Visualize(const std::string& name = "ngraph");
+    TopologicalSort() {}
 
-    void add(node_ptr);
+    bool run_on_tree(std::shared_ptr<Node>) override;
 
-    void save_dot(const std::string& path) const;
+    bool call_graph_produced() const override { return true; }
+    std::list<Node*> get_call_graph() const override;
 
 private:
-    std::string add_attributes(const Node* node);
-    std::string get_attributes(const Node* node);
-
-    std::stringstream     m_ss;
-    std::string           m_name;
-    std::set<const Node*> m_nodes_with_attributes;
+    std::list<Node*> m_sorted_list;
 };

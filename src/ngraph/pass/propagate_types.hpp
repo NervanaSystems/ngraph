@@ -14,32 +14,21 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
-#include <set>
-#include <sstream>
+#include "call_pass.hpp"
 
 namespace ngraph
 {
-    class Visualize;
+    namespace pass
+    {
+        class PropagateTypes;
+    }
     class Node;
-    using node_ptr = std::shared_ptr<Node>;
 }
 
-class ngraph::Visualize
+class ngraph::pass::PropagateTypes : public CallBase
 {
 public:
-    Visualize(const std::string& name = "ngraph");
-
-    void add(node_ptr);
-
-    void save_dot(const std::string& path) const;
+    virtual bool run_on_call_list(std::list<Node*>) override;
 
 private:
-    std::string add_attributes(const Node* node);
-    std::string get_attributes(const Node* node);
-
-    std::stringstream     m_ss;
-    std::string           m_name;
-    std::set<const Node*> m_nodes_with_attributes;
 };
