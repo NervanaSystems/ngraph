@@ -18,7 +18,7 @@ namespace ngraph
 {
     namespace op
     {
-        class Broadcast : public Builtin
+        class Broadcast : public IndexBuiltin
         {
         public:
             ///
@@ -30,7 +30,7 @@ namespace ngraph
             Broadcast(const std::shared_ptr<Node>& arg,
                       const Shape&                 shape,
                       const AxisSet&               broadcast_axes)
-                : Builtin({arg})
+                : IndexBuiltin(arg)
                 , m_shape(shape)
                 , m_broadcast_axes(broadcast_axes)
             {

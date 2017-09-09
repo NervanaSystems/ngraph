@@ -22,11 +22,12 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/topological_sort.hpp"
 #include "ngraph/visualize.hpp"
+#include "util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-static bool validate_list(const vector<Node*>& nodes)
+static bool validate_list(const list<Node*>& nodes)
 {
     bool rc = true;
     for (auto it = nodes.rbegin(); it != nodes.rend(); it++)
@@ -38,7 +39,7 @@ static bool validate_list(const vector<Node*>& nodes)
         {
             dependencies.push_back(n.get());
         }
-        auto tmp = it + 1;
+        auto tmp = it++;
         for (; tmp != nodes.rend(); tmp++)
         {
             auto dep_tmp = *tmp;
@@ -87,12 +88,18 @@ TEST(topological_sort, basic)
     ASSERT_EQ(2, r0->get_arguments().size());
     auto op_r0 = static_pointer_cast<Op>(r0);
 
-    Visualize vz;
-    vz.add(r0);
-    vz.save_dot("test.png");
+    // Visualize vz;
+    // vz.add(r0);
+    // vz.save_dot("test.png");
     TopologicalSort ts;
     ts.process(r0);
     auto sorted_list = ts.get_sorted_list();
 
+    size_t node_count = 0;
+    traverse_nodes(r0, [&](node_ptr node) {
+        node_count++;
+    });
+
+    EXPECT_EQ(node_count, sorted_list.size());
     EXPECT_TRUE(validate_list(sorted_list));
 }

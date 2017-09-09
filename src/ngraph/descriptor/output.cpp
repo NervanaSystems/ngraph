@@ -12,26 +12,21 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "ngraph.hpp"
 
-namespace ngraph
+using namespace std;
+using namespace ngraph;
+using namespace descriptor;
+
+Output::Output(Node* node, size_t index, const std::shared_ptr<TensorView>& tensor_view)
+    : m_node(node)
+    , m_index(index)
+    , m_tensor_view(tensor_view)
 {
-    namespace op
-    {
-        class Convert : public UnaryElementwiseBuiltin
-        {
-        public:
-            Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type)
-                : UnaryElementwiseBuiltin({arg})
-                , m_element_type(element_type)
-            {
-            }
+}
 
-            virtual std::string get_op_class_name() const override { return "Convert"; }
-            virtual void        propagate_types() override;
-
-        protected:
-            const ngraph::element::Type& m_element_type;
-        };
-    }
+// Add an input to the vector of inputs that use this output.
+void Output::add_input(Input* input)
+{
+    m_inputs.insert(input);
 }

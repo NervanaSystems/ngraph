@@ -14,24 +14,18 @@
 
 #pragma once
 
+#include <vector>
+
 namespace ngraph
 {
-    namespace op
+    namespace descriptor
     {
-        class Convert : public UnaryElementwiseBuiltin
+        using Strides = std::vector<size_t>;
+
+        class TensorViewLayout
         {
-        public:
-            Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type)
-                : UnaryElementwiseBuiltin({arg})
-                , m_element_type(element_type)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Convert"; }
-            virtual void        propagate_types() override;
-
         protected:
-            const ngraph::element::Type& m_element_type;
+            Strides m_strides;
         };
     }
 }

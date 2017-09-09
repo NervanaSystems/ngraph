@@ -37,6 +37,11 @@ bool TensorViewType::operator==(const ValueType& that) const
     return true;
 }
 
+void TensorViewType::collect_tensor_views(std::vector<std::shared_ptr<const TensorViewType>>& views) const
+{
+    views.push_back(shared_from_this());
+}
+
 bool TupleType::operator==(const ValueType& that) const
 {
     auto that_tvt = dynamic_cast<const TupleType*>(&that);
@@ -45,4 +50,11 @@ bool TupleType::operator==(const ValueType& that) const
         return false;
     }
     return that_tvt->get_element_types() == get_element_types();
+}
+
+void TupleType::collect_tensor_views(std::vector<std::shared_ptr<const TensorViewType>>& views) const
+{
+    for(auto elt : m_element_types){
+        elt->collect_tensor_views(views);
+    }
 }

@@ -27,6 +27,12 @@ namespace ngraph
 {
     class Op;
 
+    namespace descriptor
+    {
+        class Input;
+        class Output;
+    }
+
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// view or a (possibly empty) tuple of values.
@@ -52,6 +58,10 @@ namespace ngraph
 
         /// Propagate types and check arguments for consistency
         virtual void propagate_types() = 0;
+
+        /// Assign Input and Output vectors
+        // This might later need to be virtual.
+        void assign_tensors();
 
         const Nodes& get_arguments() const { return m_arguments; }
 
@@ -94,7 +104,9 @@ namespace ngraph
 
         size_t               get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
-        
+
+        std::vector<std::shared_ptr<descriptor::Input>> get_inputs() { return m_inputs; }
+        std::vector<std::shared_ptr<descriptor::Output>> get_outputs() {return m_outputs; }
 
     protected:
         Nodes                      m_arguments;
@@ -103,5 +115,7 @@ namespace ngraph
         std::string                m_name;
         size_t                     m_instance_id;
         static size_t              m_next_instance_id;
+        std::vector<std::shared_ptr<descriptor::Input>> m_inputs;
+        std::vector<std::shared_ptr<descriptor::Output>> m_outputs;
     };
 }

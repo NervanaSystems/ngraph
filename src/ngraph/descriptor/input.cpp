@@ -12,26 +12,19 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "ngraph.hpp"
 
-namespace ngraph
+using namespace std;
+using namespace ngraph;
+using namespace descriptor;
+
+Input::Input(
+    Node* node, size_t index, size_t argno, size_t arg_index, const shared_ptr<Output>& output)
+    : m_node(node)
+    , m_index(index)
+    , m_argno(argno)
+    , m_arg_index(arg_index)
+    , m_output(output)
 {
-    namespace op
-    {
-        class Convert : public UnaryElementwiseBuiltin
-        {
-        public:
-            Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type)
-                : UnaryElementwiseBuiltin({arg})
-                , m_element_type(element_type)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Convert"; }
-            virtual void        propagate_types() override;
-
-        protected:
-            const ngraph::element::Type& m_element_type;
-        };
-    }
+    output->add_input(this);
 }

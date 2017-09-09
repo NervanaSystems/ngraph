@@ -12,26 +12,17 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "descriptor/tensor_view.hpp"
 
-namespace ngraph
+using namespace ngraph;
+using namespace descriptor;
+
+const Tensor& PrimaryTensorView::get_tensor() const
 {
-    namespace op
-    {
-        class Convert : public UnaryElementwiseBuiltin
-        {
-        public:
-            Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type)
-                : UnaryElementwiseBuiltin({arg})
-                , m_element_type(element_type)
-            {
-            }
+    return m_tensor;
+}
 
-            virtual std::string get_op_class_name() const override { return "Convert"; }
-            virtual void        propagate_types() override;
-
-        protected:
-            const ngraph::element::Type& m_element_type;
-        };
-    }
+Tensor& PrimaryTensorView::get_tensor()
+{
+    return m_tensor;
 }

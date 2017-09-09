@@ -14,24 +14,33 @@
 
 #pragma once
 
+#include <memory>
+#include <vector>
+
 namespace ngraph
 {
-    namespace op
+    namespace element
     {
-        class Convert : public UnaryElementwiseBuiltin
-        {
-        public:
-            Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type)
-                : UnaryElementwiseBuiltin({arg})
-                , m_element_type(element_type)
-            {
-            }
+        class Type;
+    }
 
-            virtual std::string get_op_class_name() const override { return "Convert"; }
-            virtual void        propagate_types() override;
+    namespace descriptor
+    {
+        class TensorView;
+        class PrimaryTensorView;
+
+        class Tensor
+        {
+            friend class PrimaryTensorView;
+
+            Tensor(const Tensor&) = delete;
+            Tensor& operator=(const Tensor&) = delete;
+
+            Tensor(const element::Type& element_type, PrimaryTensorView* tensor_view);
 
         protected:
-            const ngraph::element::Type& m_element_type;
+            const element::Type& m_element_type;
+            PrimaryTensorView*   m_primary_tensor_view;
         };
     }
 }

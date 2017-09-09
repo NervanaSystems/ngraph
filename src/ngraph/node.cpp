@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "node.hpp"
-#include "op.hpp"
+#include "ngraph.hpp"
 
-size_t ngraph::Node::m_next_instance_id = 0;
+using namespace std;
+using namespace ngraph;
 
-ngraph::Node::Node(const std::vector<std::shared_ptr<Node>>& arguments,
-                   std::shared_ptr<ValueType>                value_type)
+size_t Node::m_next_instance_id = 0;
+
+Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<ValueType> value_type)
     : m_arguments(arguments)
     , m_value_type(value_type)
     , m_instance_id(m_next_instance_id++)
@@ -30,33 +31,63 @@ ngraph::Node::Node(const std::vector<std::shared_ptr<Node>>& arguments,
     }
 }
 
-void ngraph::Node::set_value_type_checked(const std::shared_ptr<ValueType>& value_type)
+void Node::set_value_type_checked(const shared_ptr<ValueType>& value_type)
 {
-    if (nullptr == m_value_type){
+    if (nullptr == m_value_type)
+    {
         m_value_type = value_type;
-    } else {
-        if (*m_value_type != *value_type){
-            throw ngraph::ngraph_error("Setting value type to a different ValueType");
+    }
+    else
+    {
+        if (*m_value_type != *value_type)
+        {
+            throw ngraph_error("Setting value type to a different ValueType");
         }
     }
 }
 
-bool ngraph::Node::is_op() const
+void Node::assign_tensors()
 {
-    return dynamic_cast<const ngraph::Op*>(this) != nullptr;
+    vector<std::shared_ptr<const TensorViewType>> tensor_view_types;
+    get_value_type()->collect_tensor_views(tensor_view_types);
+    size_t i = 0;
+    for (auto tvt : tensor_view_types)
+    {
+        auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(tvt);
+        auto output = make_shared<descriptor::Output>(this, i++, tensor_view_descriptor);
+        m_outputs.push_back(output);
+    }
+
+    i            = 0;
+    size_t argno = 0;
+    for (auto arg : get_arguments())
+    {
+        size_t arg_index = 0;
+        for (auto output : arg->get_outputs())
+        {
+            auto input = make_shared<descriptor::Input>(this, i++, argno, arg_index++, output);
+            m_inputs.push_back(input);
+        }
+        argno++;
+    }
 }
 
-bool ngraph::Node::is_parameter() const
+bool Node::is_op() const
 {
-    return dynamic_cast<const ngraph::op::Parameter*>(this) != nullptr;
+    return dynamic_cast<const Op*>(this) != nullptr;
+}
+
+bool Node::is_parameter() const
+{
+    return dynamic_cast<const op::Parameter*>(this) != nullptr;
 }
 
 namespace ngraph
 {
-    std::ostream& operator<<(std::ostream& out, const ngraph::Node& node)
+    ostream& operator<<(ostream& out, const Node& node)
     {
-        auto op_tmp        = dynamic_cast<const ngraph::Op*>(&node);
-        auto parameter_tmp = dynamic_cast<const ngraph::Op*>(&node);
+        auto op_tmp        = dynamic_cast<const Op*>(&node);
+        auto parameter_tmp = dynamic_cast<const Op*>(&node);
         if (op_tmp)
         {
             out << "Op(" << op_tmp->get_node_id() << ")";

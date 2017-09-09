@@ -34,13 +34,46 @@ void Visualize::add(node_ptr p)
     traverse_nodes(p, [&](node_ptr node) {
         for (auto arg : node->get_arguments())
         {
-            m_ss << "    " << arg->get_node_id() << " -> " << node->get_node_id() << ";\n";
+            m_ss << add_attributes(arg);
+            m_ss << add_attributes(node);
+            m_ss << "    " << arg->get_node_id() << " -> " << node->get_node_id();
+            m_ss << ";\n";
         }
     });
 }
 
+std::string Visualize::add_attributes(node_ptr node)
+{
+    string rc;
+    if (!contains(m_nodes_with_attributes, node))
+    {
+        m_nodes_with_attributes.insert(node);
+        rc = get_attributes(node);
+    }
+    return rc;
+}
+
+std::string Visualize::get_attributes(node_ptr node)
+{
+    stringstream ss;
+    if (node->is_parameter())
+    {
+        ss << "    " << node->get_node_id() << " [shape=box color=blue]\n";
+    }
+    else if (node->is_op())
+    {
+        ss << "    " << node->get_node_id() << " [shape=ellipse color=black]\n";
+    }
+    else
+    {
+        ss << "    " << node->get_node_id() << " [shape=diamond color=red]\n";
+    }
+    return ss.str();
+}
+
 void Visualize::save_dot(const string& path) const
 {
+#if GRAPHVIZ_FOUND
     auto     tmp_file = path + ".tmp";
     ofstream out(tmp_file);
     if (out)
@@ -56,6 +89,8 @@ void Visualize::save_dot(const string& path) const
         auto stream = popen(cmd.c_str(), "r");
         pclose(stream);
 
-        // remove(tmp_file.c_str());
+        remove(tmp_file.c_str());
     }
+#else
+#endif
 }
