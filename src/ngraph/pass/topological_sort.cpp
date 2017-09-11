@@ -18,20 +18,21 @@
 #include "topological_sort.hpp"
 #include "node.hpp"
 #include "util.hpp"
+#include "log.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-void ngraph::TopologicalSort::process(node_ptr p)
+bool ngraph::pass::TopologicalSort::run_on_tree(std::shared_ptr<Node> p)
 {
     deque<Node*> independent_nodes;
     unordered_map<Node*, size_t> node_depencency_count;
 
-    traverse_nodes(p, [&](node_ptr node) {
-        node_depencency_count[node.get()] = node->get_arguments().size();
+    traverse_nodes(p, [&](Node* node) {
+        node_depencency_count[node] = node->get_arguments().size();
         if (node->get_arguments().size() == 0)
         {
-            independent_nodes.push_back(node.get());
+            independent_nodes.push_back(node);
         }
     });
 
@@ -51,14 +52,11 @@ void ngraph::TopologicalSort::process(node_ptr p)
             }
         }
     }
+
+    return false;
 }
 
-const std::list<Node*>& ngraph::TopologicalSort::get_sorted_list() const
-{
-    return m_sorted_list;
-}
-
-std::list<Node*>& ngraph::TopologicalSort::get_sorted_list()
+std::list<Node*> ngraph::pass::TopologicalSort::get_call_graph() const
 {
     return m_sorted_list;
 }

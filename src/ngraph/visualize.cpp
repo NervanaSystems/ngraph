@@ -31,10 +31,10 @@ Visualize::Visualize(const string& name)
 void Visualize::add(node_ptr p)
 {
     // map<size_t, list<node_ptr>> dependent_nodes;
-    traverse_nodes(p, [&](node_ptr node) {
+    traverse_nodes(p, [&](Node* node) {
         for (auto arg : node->get_arguments())
         {
-            m_ss << add_attributes(arg);
+            m_ss << add_attributes(arg.get());
             m_ss << add_attributes(node);
             m_ss << "    " << arg->get_node_id() << " -> " << node->get_node_id();
             m_ss << ";\n";
@@ -42,7 +42,7 @@ void Visualize::add(node_ptr p)
     });
 }
 
-std::string Visualize::add_attributes(node_ptr node)
+std::string Visualize::add_attributes(const Node* node)
 {
     string rc;
     if (!contains(m_nodes_with_attributes, node))
@@ -53,7 +53,7 @@ std::string Visualize::add_attributes(node_ptr node)
     return rc;
 }
 
-std::string Visualize::get_attributes(node_ptr node)
+std::string Visualize::get_attributes(const Node* node)
 {
     stringstream ss;
     if (node->is_parameter())

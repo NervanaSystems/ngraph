@@ -16,19 +16,21 @@ include_directories(
     ${GTEST_INCLUDE_DIR}
     ${EIGEN_INCLUDE_DIR}
     )
-    
+
 include_directories(
     ${NGRAPH_INCLUDE_DIR}
     )
 
 set (SRC
-    main.cpp
     build_graph.cpp
     eigen.cpp
     element_type.cpp
-    op.cpp
     input_output_assign.cpp
+    main.cpp
+    op.cpp
+    pass_manager.cpp
     tensor.cpp
+    test_tools.cpp
     topological_sort.cpp
     type_prop.cpp
     util.cpp
@@ -48,4 +50,3 @@ add_dependencies(unit-test ngraph libgtest eigen)
 add_custom_target(check
 	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test
 	DEPENDS unit-test)
-

@@ -14,9 +14,13 @@
 
 #include <iomanip>
 #include <map>
+#include <deque>
+#include <forward_list>
+#include <unordered_set>
 
 #include "util.hpp"
 #include "ngraph/node.hpp"
+#include "log.hpp"
 
 using namespace std;
 
@@ -131,24 +135,37 @@ size_t ngraph::hash_combine(const std::vector<size_t>& list)
     return seed;
 }
 
-static void traverse_nodes(std::shared_ptr<ngraph::Node>                      p,
-                           std::function<void(std::shared_ptr<ngraph::Node>)> f,
-                           std::set<size_t>&                                  instances_seen)
+void ngraph::traverse_nodes(const std::shared_ptr<ngraph::Node>& p,
+                            std::function<void(Node*)>           f)
 {
-    f(p);
-    for (auto arg : p->get_arguments())
+    std::unordered_set<Node*> instances_seen;
+    deque<Node*> stack;
+    stack.push_front(p.get());
+
+    while (stack.size() > 0)
     {
-        if (instances_seen.find(arg->get_instance_id()) == instances_seen.end())
+        Node* n = stack.front();
+        if (instances_seen.find(n) == instances_seen.end())
         {
-            instances_seen.insert(arg->get_instance_id());
-            traverse_nodes(arg, f, instances_seen);
+            instances_seen.insert(n);
+            f(n);
         }
+        stack.pop_front();
+        for (auto arg : n->get_arguments()) { stack.push_front(arg.get()); }
     }
 }
 
-void ngraph::traverse_nodes(std::shared_ptr<ngraph::Node>                      p,
-                            std::function<void(std::shared_ptr<ngraph::Node>)> f)
+void ngraph::free_nodes(shared_ptr<Node> p)
 {
-    std::set<size_t> instances_seen;
-    ::traverse_nodes(p, f, instances_seen);
+    std::deque<Node*> sorted_list;
+
+    traverse_nodes(p, [&](Node* n)
+    {
+        sorted_list.push_front(n);
+    });
+
+    for (Node* n : sorted_list)
+    {
+        n->clear_arguments();
+    }
 }

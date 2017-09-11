@@ -14,32 +14,14 @@
 
 #pragma once
 
-#include <functional>
+#include <list>
 #include <memory>
-#include <set>
-#include <sstream>
 
 namespace ngraph
 {
-    class Visualize;
     class Node;
-    using node_ptr = std::shared_ptr<Node>;
 }
 
-class ngraph::Visualize
-{
-public:
-    Visualize(const std::string& name = "ngraph");
-
-    void add(node_ptr);
-
-    void save_dot(const std::string& path) const;
-
-private:
-    std::string add_attributes(const Node* node);
-    std::string get_attributes(const Node* node);
-
-    std::stringstream     m_ss;
-    std::string           m_name;
-    std::set<const Node*> m_nodes_with_attributes;
-};
+bool validate_list(const std::list<ngraph::Node*>& nodes);
+std::shared_ptr<ngraph::Node> make_test_graph();
+size_t get_node_count(std::shared_ptr<ngraph::Node> n);

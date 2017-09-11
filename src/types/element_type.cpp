@@ -14,8 +14,10 @@
 
 #include <cassert>
 #include <cmath>
+#include <iostream>
 
 #include "ngraph/element_type.hpp"
+#include "log.hpp"
 
 using namespace ngraph;
 
@@ -30,6 +32,7 @@ ngraph::element::Type::Type(size_t             bitwidth,
     , m_is_signed{is_signed}
     , m_cname{cname}
 {
+    INFO << m_cname;
     assert(m_bitwidth % 8 == 0);
 }
 
@@ -47,4 +50,10 @@ bool ngraph::element::Type::operator==(const element::Type& other) const
 size_t ngraph::element::Type::size() const
 {
     return std::ceil((float)m_bitwidth / 8.0);
+}
+
+std::ostream& ngraph::element::operator<<(std::ostream& out, const ngraph::element::Type& obj)
+{
+    // out << "ElementType(" << obj.c_type_string() << ")";
+    return out;
 }
