@@ -14,33 +14,25 @@
 
 #pragma once
 
-#include <list>
-#include <memory>
-#include <vector>
-
-#include "pass.hpp"
+#include "call_pass.hpp"
 
 namespace ngraph
 {
     namespace pass
     {
-        class TreeBase;
+        class Liveness;
     }
-
     class Node;
 }
 
-class ngraph::pass::TreeBase : public Base
+class ngraph::pass::Liveness : public CallBase
 {
 public:
-    virtual ~TreeBase() {}
-    // return true if changes were made to the tree
-    virtual bool run_on_tree(std::shared_ptr<Node>) = 0;
+    virtual bool run_on_call_list(std::list<Node*>&) override;
 
-    virtual bool             call_graph_produced() const { return false; }
-    virtual std::list<Node*> get_call_graph() const { return std::list<Node*>(); }
-    // derived class throws exception if its dependencies have not been met
-    virtual void check_dependencies(const std::vector<std::shared_ptr<TreeBase>>&) const {}
+    void check_dependencies(const std::vector<std::shared_ptr<CallBase>>&) const override;
+
 private:
-    std::list<Node*> m_sorted_list;
+    // bool is_interesting(tensor_decl);
+    // void validate_liveness(std::list<Node*> ops);
 };

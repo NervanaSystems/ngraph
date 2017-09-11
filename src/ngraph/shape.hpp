@@ -13,7 +13,9 @@
 // ----------------------------------------------------------------------------
 
 #pragma once
-#include <cstddef>
+
+#include <cstdio>
+#include <iostream>
 #include <vector>
 
 namespace ngraph
@@ -39,6 +41,7 @@ namespace ngraph
              operator const std::vector<size_t>&() const { return m_sizes; }
         bool operator==(const Shape& shape) const { return m_sizes == shape.m_sizes; }
         bool operator!=(const Shape& shape) const { return m_sizes != shape.m_sizes; }
+        friend std::ostream& operator<<(std::ostream&, const Shape&);
 
     protected:
         std::vector<size_t> m_sizes;

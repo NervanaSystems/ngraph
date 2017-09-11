@@ -20,15 +20,17 @@ namespace ngraph
 {
     namespace pass
     {
-        class PropagateTypes;
+        class AssignTensors;
     }
     class Node;
 }
 
-class ngraph::pass::PropagateTypes : public CallBase
+class ngraph::pass::AssignTensors : public CallBase
 {
 public:
     virtual bool run_on_call_list(std::list<Node*>&) override;
+
+    void check_dependencies(const std::vector<std::shared_ptr<CallBase>>&) const override;
 
 private:
 };

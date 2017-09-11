@@ -12,21 +12,25 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include "assign_tensors.hpp"
+
+#include <exception>
 #include <sstream>
 
+#include "log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "propagate_types.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-bool pass::PropagateTypes::run_on_call_list(std::list<Node*>& node_list)
+bool pass::AssignTensors::run_on_call_list(std::list<Node*>& node_list)
 {
     for (Node* node : node_list)
     {
         try
         {
-            node->propagate_types();
+            node->assign_tensors();
         }
         catch (exception& e)
         {
@@ -37,4 +41,22 @@ bool pass::PropagateTypes::run_on_call_list(std::list<Node*>& node_list)
         }
     }
     return false;
+}
+
+void pass::AssignTensors::check_dependencies(
+    const std::vector<std::shared_ptr<CallBase>>& registered_passes) const
+{
+    bool found_propagate_types = false;
+    for (auto pass : registered_passes)
+    {
+        if (dynamic_pointer_cast<PropagateTypes>(pass))
+        {
+            found_propagate_types = true;
+        }
+    }
+
+    if (!found_propagate_types)
+    {
+        throw runtime_error("Depencency 'PropagateTypes' not found for pass 'AssignTensors'");
+    }
 }

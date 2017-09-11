@@ -12,23 +12,11 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "shape.hpp"
+#include "util.hpp"
 
-#include "call_pass.hpp"
-
-namespace ngraph
+std::ostream& ngraph::operator<<(std::ostream& out, const ngraph::Shape& obj)
 {
-    namespace pass
-    {
-        class PropagateTypes;
-    }
-    class Node;
+    out << "{" << join(obj.m_sizes, ", ") << "}";
+    return out;
 }
-
-class ngraph::pass::PropagateTypes : public CallBase
-{
-public:
-    virtual bool run_on_call_list(std::list<Node*>&) override;
-
-private:
-};

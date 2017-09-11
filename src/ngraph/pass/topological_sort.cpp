@@ -25,7 +25,7 @@ using namespace std;
 
 bool ngraph::pass::TopologicalSort::run_on_tree(std::shared_ptr<Node> p)
 {
-    deque<Node*>                 independent_nodes;
+    deque<Node*> independent_nodes;
     unordered_map<Node*, size_t> node_depencency_count;
 
     traverse_nodes(p, [&](Node* node) {

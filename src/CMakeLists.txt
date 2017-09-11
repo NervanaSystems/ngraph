@@ -18,8 +18,12 @@ set (SRC
     ngraph/descriptor/tensor_view.cpp
     ngraph/descriptor/tensor.cpp
     ngraph/node.cpp
+    ngraph/shape.cpp
+    ngraph/pass/assign_tensors.cpp
     ngraph/pass/call_pass.cpp
+    ngraph/pass/liveness.cpp
     ngraph/pass/manager.cpp
+    ngraph/pass/memory_layout.cpp
     ngraph/pass/pass.cpp
     ngraph/pass/propagate_types.cpp
     ngraph/pass/topological_sort.cpp

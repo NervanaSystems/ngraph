@@ -15,9 +15,9 @@
 #include <iostream>
 #include <memory>
 
+#include "log.hpp"
 #include "manager.hpp"
 #include "ngraph/node.hpp"
-#include "log.hpp"
 
 using namespace std;
 
@@ -39,6 +39,7 @@ void ngraph::pass::Manager::register_pass(std::shared_ptr<TreeBase> p)
     {
         throw invalid_argument("null pass registered");
     }
+    p->check_dependencies(m_tree_passes);
     m_tree_passes.push_back(p);
 }
 
@@ -48,6 +49,7 @@ void ngraph::pass::Manager::register_pass(std::shared_ptr<CallBase> p)
     {
         throw invalid_argument("null pass registered");
     }
+    p->check_dependencies(m_call_passes);
     m_call_passes.push_back(p);
 }
 
