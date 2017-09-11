@@ -15,6 +15,10 @@ set (SRC
     tree.cpp
     util.cpp
     log.cpp
+    ngraph/descriptor/input.cpp
+    ngraph/descriptor/output.cpp
+    ngraph/descriptor/tensor.cpp
+    ngraph/descriptor/tensor_view.cpp
     ops/binary_elementwise_builtin.cpp
     ops/broadcast.cpp
     ops/concatenate.cpp
