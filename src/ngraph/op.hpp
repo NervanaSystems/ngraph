@@ -88,6 +88,8 @@ namespace ngraph
                 : Builtin(Nodes{arg})
             {
             }
+            virtual const element::Type& infer_result_element_type(
+                                            const element::Type& arg_element_type) const;
 
         public:
             virtual void propagate_types() override;
@@ -101,6 +103,9 @@ namespace ngraph
                 : Builtin(Nodes{arg0, arg1})
             {
             }
+            virtual const element::Type& infer_result_element_type(
+                                            const element::Type& arg0_element_type,
+                                            const element::Type& arg1_element_type) const;
 
         public:
             virtual void propagate_types() override;
@@ -121,13 +126,27 @@ namespace ngraph
         class Equal : public BinaryElementwiseBuiltin
         {
         public:
+            Equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1,
+                  const element::Type& result_element_type)
+                : BinaryElementwiseBuiltin(arg0, arg1)
+                , m_result_element_type(result_element_type)
+            {
+            }
+
             Equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
                 : BinaryElementwiseBuiltin(arg0, arg1)
+                , m_result_element_type(element::Int32::element_type())
             {
             }
 
             virtual std::string get_op_class_name() const override { return "Equal"; }
             //virtual void propagate_types() override;
+            virtual const element::Type& infer_result_element_type(
+                                            const element::Type& arg0_element_type,
+                                            const element::Type& arg1_element_type) const override;
+
+        protected:
+            const element::Type& m_result_element_type;
         };
 
         class Exp : public UnaryElementwiseBuiltin

@@ -31,6 +31,7 @@ set (SRC
     ops/constant.cpp
     ops/convert.cpp
     ops/dot.cpp
+    ops/equal.cpp
     ops/function.cpp
     ops/op.cpp
     ops/parameter.cpp

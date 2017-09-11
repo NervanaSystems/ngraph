@@ -17,6 +17,7 @@
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
+using namespace ngraph;
 using namespace ngraph::op;
 
 void UnaryElementwiseBuiltin::propagate_types()
@@ -33,5 +34,16 @@ void UnaryElementwiseBuiltin::propagate_types()
         throw ngraph_error("Argument must be tensor view");
     }
 
-    set_value_type_checked(arg_tensor_type);
+    const element::Type& result_element_type =
+        infer_result_element_type(arg_tensor_type->get_element_type());
+
+    set_value_type_checked(make_shared<TensorViewType>(result_element_type,
+                                                       arg_tensor_type->get_shape()));
+}
+
+/// Default behavior: result element type is same as argument element type.
+const element::Type& UnaryElementwiseBuiltin::infer_result_element_type(
+                         const element::Type& arg_element_type) const
+{
+    return arg_element_type;
 }
