@@ -40,7 +40,7 @@ namespace ngraph
                   size_t                         arg_index,
                   const std::shared_ptr<Output>& output);
 
-            std::shared_ptr<Node>   get_node() { return m_node->shared_from_this(); }
+            std::shared_ptr<Node>   get_node();
             size_t                  get_argno() const { return m_argno; }
             size_t                  get_arg_index() const { return m_arg_index; }
             size_t                  get_index() const { return m_index; }
