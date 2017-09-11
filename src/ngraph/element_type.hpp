@@ -22,7 +22,7 @@
 #include <string>
 #include <type_traits>
 
-#include "except.hpp"
+#include "ngraph/except.hpp"
 
 namespace ngraph
 {
@@ -32,6 +32,7 @@ namespace ngraph
         {
             Type(const Type&) = delete;
             Type& operator=(const Type&) = delete;
+
         public:
             Type(size_t bitwidth, bool is_float, bool is_signed, const std::string& cname);
 
@@ -48,10 +49,10 @@ namespace ngraph
 
         private:
             static std::map<std::string, Type> m_element_list;
-            size_t                             m_bitwidth;
-            bool                               m_is_float;
-            bool                               m_is_signed;
-            const std::string&                 m_cname;
+            size_t             m_bitwidth;
+            bool               m_is_float;
+            bool               m_is_signed;
+            const std::string& m_cname;
         };
 
         // Provides a compile-time name for a C++ type.
@@ -64,7 +65,7 @@ namespace ngraph
         }
 
 // Define a type string for a type T. Will make traited_type_name<T>() return "T"
-#define NGRAPH_DEFINE_TRAITED_TYPE_NAME(T)                                                                       \
+#define NGRAPH_DEFINE_TRAITED_TYPE_NAME(T)                                                         \
     template <>                                                                                    \
     constexpr const char* traited_type_name<T>()                                                   \
     {                                                                                              \
@@ -79,6 +80,7 @@ namespace ngraph
         {
             TraitedType(const TraitedType&) = delete;
             TraitedType& operator=(const TraitedType&) = delete;
+
         protected:
             TraitedType()
                 : Type(sizeof(T) * 8,

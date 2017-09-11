@@ -20,8 +20,8 @@
 
 #include <iostream>
 
-#include "common.hpp"
-#include "type.hpp"
+#include "ngraph/common.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
@@ -68,7 +68,7 @@ namespace ngraph
         const std::multiset<Node*>& users() const { return m_users; }
 
         std::string get_name() const { return m_name; }
-        void        set_name(const std::string& name) { m_name = name; }
+        void set_name(const std::string& name) { m_name = name; }
 
         virtual std::string get_node_id() const = 0;
 
@@ -94,8 +94,8 @@ namespace ngraph
         }
 
         // Set the value type if it has not already been set; otherwise, ensure that
-        // value_type agrees with the value type that was set. 
-        // This is used when the framework specifies a value type for the value, and we 
+        // value_type agrees with the value type that was set.
+        // This is used when the framework specifies a value type for the value, and we
         // independently compute what we thing the value type should be from the arguments.
         void set_value_type_checked(const std::shared_ptr<ValueType>& value_type);
 
@@ -105,17 +105,17 @@ namespace ngraph
         size_t               get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
-        std::vector<std::shared_ptr<descriptor::Input>> get_inputs() { return m_inputs; }
-        std::vector<std::shared_ptr<descriptor::Output>> get_outputs() {return m_outputs; }
+        std::vector<std::shared_ptr<descriptor::Input>>  get_inputs() { return m_inputs; }
+        std::vector<std::shared_ptr<descriptor::Output>> get_outputs() { return m_outputs; }
 
     protected:
-        Nodes                      m_arguments;
-        std::shared_ptr<ValueType> m_value_type;
-        std::multiset<Node*>       m_users;
-        std::string                m_name;
-        size_t                     m_instance_id;
-        static size_t              m_next_instance_id;
-        std::vector<std::shared_ptr<descriptor::Input>> m_inputs;
+        Nodes                                            m_arguments;
+        std::shared_ptr<ValueType>                       m_value_type;
+        std::multiset<Node*>                             m_users;
+        std::string                                      m_name;
+        size_t                                           m_instance_id;
+        static size_t                                    m_next_instance_id;
+        std::vector<std::shared_ptr<descriptor::Input>>  m_inputs;
         std::vector<std::shared_ptr<descriptor::Output>> m_outputs;
     };
 }
