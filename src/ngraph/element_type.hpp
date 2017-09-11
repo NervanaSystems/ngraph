@@ -44,17 +44,19 @@ namespace ngraph
                 return h(m_cname);
             }
 
-            bool operator==(const Type& other) const;
-            bool operator!=(const Type& other) const { return !(*this == other); }
+            bool                 operator==(const Type& other) const;
+            bool                 operator!=(const Type& other) const { return !(*this == other); }
             friend std::ostream& operator<<(std::ostream&, const Type&);
 
         private:
             static std::map<std::string, Type> m_element_list;
-            size_t             m_bitwidth;
-            bool               m_is_float;
-            bool               m_is_signed;
-            const std::string& m_cname;
+            size_t                             m_bitwidth;
+            bool                               m_is_float;
+            bool                               m_is_signed;
+            const std::string&                 m_cname;
         };
+
+        std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
 
         // Provides a compile-time name for a C++ type.
         // Used in TraitedType for the string that supplies the C++ type name during code generation,
