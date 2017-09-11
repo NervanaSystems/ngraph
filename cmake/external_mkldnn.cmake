@@ -17,33 +17,35 @@ include(ExternalProject)
 # Fetch and install MKL-DNN
 #----------------------------------------------------------------------------------------------------------
 
-SET(MKLDNN_GIT_REPO_URL https://github.com/01org/mkl-dnn)
+if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
-set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
+    SET(MKLDNN_GIT_REPO_URL https://github.com/01org/mkl-dnn)
 
-# The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
-if (${CMAKE_VERSION} VERSION_LESS 3.2)
-    ExternalProject_Add(
-        ext_mkldnn
-        GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
-        UPDATE_COMMAND ""
-        PATCH_COMMAND git am ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
-        )
-else()
-    ExternalProject_Add(
-        ext_mkldnn
-        GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
-        UPDATE_COMMAND ""
-        PATCH_COMMAND git am ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
-        BUILD_BYPRODUCTS "${EXTERNAL_INSTALL_LOCATION}/include/mkldnn.hpp"
-        )
-endif()
+    set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
 
-ExternalProject_Get_Property(ext_mkldnn source_dir binary_dir)
+    # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
+    if(${CMAKE_VERSION} VERSION_LESS 3.2)
+        ExternalProject_Add(
+            ext_mkldnn
+            GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
+            UPDATE_COMMAND ""
+            PATCH_COMMAND git am ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
+            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+            )
+    else()
+        ExternalProject_Add(
+            ext_mkldnn
+            GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
+            UPDATE_COMMAND ""
+            PATCH_COMMAND git am ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
+            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+            BUILD_BYPRODUCTS "${EXTERNAL_INSTALL_LOCATION}/include/mkldnn.hpp"
+            )
+    endif()
 
-ExternalProject_Add_Step(
+    ExternalProject_Get_Property(ext_mkldnn source_dir binary_dir)
+
+    ExternalProject_Add_Step(
         ext_mkldnn
         PrepareMKL
         COMMAND ${source_dir}/scripts/prepare_mkl.sh
@@ -51,7 +53,8 @@ ExternalProject_Add_Step(
         DEPENDERS configure
         )
 
-#----------------------------------------------------------------------------------------------------------
 
-set(MKLDNN_INCLUDE_DIR "${EXTERNAL_INSTALL_LOCATION}/include" PARENT_SCOPE)
-set(MKLDNN_LIB_DIR "${EXTERNAL_INSTALL_LOCATION}/lib" PARENT_SCOPE)
+    set(MKLDNN_INCLUDE_DIR "${EXTERNAL_INSTALL_LOCATION}/include" PARENT_SCOPE)
+    set(MKLDNN_LIB_DIR "${EXTERNAL_INSTALL_LOCATION}/lib" PARENT_SCOPE)
+
+endif()
