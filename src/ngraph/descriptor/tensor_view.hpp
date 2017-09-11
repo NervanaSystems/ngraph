@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include "descriptor/tensor.hpp"
-#include "shape.hpp"
-#include "type.hpp"
+#include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {

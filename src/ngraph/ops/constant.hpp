@@ -16,7 +16,7 @@
 
 #include <sstream>
 
-#include "../element_type.hpp"
+#include "ngraph/element_type.hpp"
 
 namespace ngraph
 {
