@@ -18,8 +18,10 @@ TODO
 2. `cd` to the build directory.
 3. Run `cmake`.  For example, `cmake ../`
 4. Run `make -j8`.
-5. Run `make install`
-6. This will install the libngraph.so and the header files to your home directory/ngraph_dist. 
+5. Run `make install`.
+    * This will install `libngraph.so` and the header files to `$HOME/ngraph_dist`.
+6. _(Optional, requires `doxygen`)_ Run `make doc`.
+    * This will build API documentation in the directory `doc` inside the build directory.
 
 # Testing `libngraph`
 

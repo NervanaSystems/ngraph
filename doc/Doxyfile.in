@@ -2,6 +2,6 @@ PROJECT_NAME     = "ngraph++"
 PROJECT_BRIEF    = "Nervana graph compiler"
 
 OUTPUT_DIRECTORY = @CMAKE_CURRENT_BINARY_DIR@
-INPUT            = @CMAKE_CURRENT_SOURCE_DIR@/../src
+INPUT            = @CMAKE_SOURCE_DIR@/src
 
 RECURSIVE        = YES
