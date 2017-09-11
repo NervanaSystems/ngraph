@@ -17,7 +17,7 @@
 #include <memory>
 #include <set>
 
-#include "descriptor/tensor_view.hpp"
+#include "ngraph/descriptor/tensor_view.hpp"
 
 namespace ngraph
 {

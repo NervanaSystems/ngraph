@@ -13,7 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #pragma once
-
+#include <cstddef>
 #include <vector>
 
 namespace ngraph

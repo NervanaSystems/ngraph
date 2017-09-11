@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "descriptor/tensor_view.hpp"
+#include "ngraph/descriptor/tensor_view.hpp"
 
 using namespace ngraph;
 using namespace descriptor;
