@@ -22,19 +22,19 @@ include_directories(
     )
 
 set (SRC
-    main.cpp
     build_graph.cpp
     eigen.cpp
     element_type.cpp
-    op.cpp
     input_output_assign.cpp
+    main.cpp
+    op.cpp
+    pass_manager.cpp
     tensor.cpp
+    test_tools.cpp
     topological_sort.cpp
     type_prop.cpp
     util.cpp
     uuid.cpp
-    pass_manager.cpp
-    test_tools.cpp
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")

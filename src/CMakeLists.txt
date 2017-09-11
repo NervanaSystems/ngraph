@@ -12,34 +12,34 @@
 # limitations under the License.
 
 set (SRC
-    tree.cpp
-    util.cpp
     log.cpp
     ngraph/descriptor/input.cpp
     ngraph/descriptor/output.cpp
-    ngraph/descriptor/tensor.cpp
     ngraph/descriptor/tensor_view.cpp
+    ngraph/descriptor/tensor.cpp
+    ngraph/node.cpp
+    ngraph/pass/call_pass.cpp
+    ngraph/pass/manager.cpp
+    ngraph/pass/pass.cpp
+    ngraph/pass/propagate_types.cpp
+    ngraph/pass/topological_sort.cpp
+    ngraph/pass/tree_pass.cpp
+    ngraph/visualize.cpp
     ops/binary_elementwise_builtin.cpp
     ops/broadcast.cpp
     ops/concatenate.cpp
-    ops/convert.cpp
     ops/constant.cpp
+    ops/convert.cpp
     ops/dot.cpp
     ops/function.cpp
     ops/op.cpp
     ops/parameter.cpp
     ops/tuple.cpp
     ops/unary_elementwise_builtin.cpp
+    tree.cpp
     types/element_type.cpp
     types/type.cpp
-    ngraph/node.cpp
-    ngraph/visualize.cpp
-    ngraph/pass/pass.cpp
-    ngraph/pass/manager.cpp
-    ngraph/pass/call_pass.cpp
-    ngraph/pass/tree_pass.cpp
-    ngraph/pass/topological_sort.cpp
-    ngraph/pass/propagate_types.cpp
+    util.cpp
     )
 
 set(NGRAPH_INCLUDE_PATH

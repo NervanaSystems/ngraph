@@ -21,6 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
+// This function traverses the list of ops and verifies that each op's dependencies (its inputs)
+// is located earlier in the list. That is enough to be valid
 bool validate_list(const list<Node*>& nodes)
 {
     bool rc = true;
