@@ -123,30 +123,50 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Equal : public BinaryElementwiseBuiltin
+        class BinaryElementwiseComparison : public BinaryElementwiseBuiltin
         {
         public:
-            Equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1,
-                  const element::Type& result_element_type)
+            BinaryElementwiseComparison(
+                const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1,
+                const element::Type& result_element_type)
                 : BinaryElementwiseBuiltin(arg0, arg1)
                 , m_result_element_type(result_element_type)
             {
             }
 
-            Equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+            BinaryElementwiseComparison(
+                const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
                 : BinaryElementwiseBuiltin(arg0, arg1)
                 , m_result_element_type(element::Int32::element_type())
             {
             }
 
-            virtual std::string get_op_class_name() const override { return "Equal"; }
+            virtual std::string get_op_class_name() const override { return "BinaryElementwiseComparison"; }
             //virtual void propagate_types() override;
             virtual const element::Type& infer_result_element_type(
-                                            const element::Type& arg0_element_type,
-                                            const element::Type& arg1_element_type) const override;
+                                             const element::Type& arg0_element_type,
+                                             const element::Type& arg1_element_type) const override;
 
         protected:
             const element::Type& m_result_element_type;
+        };
+
+        class Equal : public BinaryElementwiseComparison
+        {
+        public:
+            Equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1,
+                  const element::Type& result_element_type)
+                : BinaryElementwiseComparison(arg0, arg1, result_element_type)
+            {
+            }
+
+            Equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : BinaryElementwiseComparison(arg0, arg1)
+            {
+            }
+
+            virtual std::string get_op_class_name() const override { return "Equal"; }
+            //virtual void propagate_types() override;
         };
 
         class Exp : public UnaryElementwiseBuiltin
@@ -161,11 +181,17 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Greater : public BinaryElementwiseBuiltin
+        class Greater : public BinaryElementwiseComparison
         {
         public:
+            Greater(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1,
+                    const element::Type& result_element_type)
+                : BinaryElementwiseComparison(arg0, arg1, result_element_type)
+            {
+            }
+
             Greater(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
+                : BinaryElementwiseComparison(arg0, arg1)
             {
             }
 
@@ -173,11 +199,17 @@ namespace ngraph
             //virtual void propagate_types() override;
         };
 
-        class Less : public BinaryElementwiseBuiltin
+        class Less : public BinaryElementwiseComparison
         {
         public:
+            Less(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1,
+                 const element::Type& result_element_type)
+                : BinaryElementwiseComparison(arg0, arg1, result_element_type)
+            {
+            }
+
             Less(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
+                : BinaryElementwiseComparison(arg0, arg1)
             {
             }
 

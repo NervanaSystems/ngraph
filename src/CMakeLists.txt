@@ -26,12 +26,12 @@ set (SRC
     ngraph/pass/tree_pass.cpp
     ngraph/visualize.cpp
     ops/binary_elementwise_builtin.cpp
+    ops/binary_elementwise_comparison.cpp
     ops/broadcast.cpp
     ops/concatenate.cpp
     ops/constant.cpp
     ops/convert.cpp
     ops/dot.cpp
-    ops/equal.cpp
     ops/function.cpp
     ops/op.cpp
     ops/parameter.cpp
