@@ -17,8 +17,8 @@
 #include <memory>
 #include <vector>
 
-#include "element_type.hpp"
-#include "shape.hpp"
+#include "ngraph/element_type.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -33,10 +33,11 @@ namespace ngraph
     public:
         virtual ~ValueType() {}
         virtual bool operator==(const ValueType& that) const = 0;
-        bool operator!=(const ValueType& that) const { return !(*this == that); }
+        bool         operator!=(const ValueType& that) const { return !(*this == that); }
 
         /// Add tensor views in depth-first order.
-        virtual void collect_tensor_views(std::vector<std::shared_ptr<const TensorViewType>>& views) const = 0;
+        virtual void collect_tensor_views(
+            std::vector<std::shared_ptr<const TensorViewType>>& views) const = 0;
         friend std::ostream& operator<<(std::ostream&, const ValueType&);
     };
 
@@ -56,7 +57,8 @@ namespace ngraph
         const Shape&         get_shape() const { return m_shape; }
 
         virtual bool operator==(const ValueType& that) const override;
-        virtual void collect_tensor_views(std::vector<std::shared_ptr<const TensorViewType>>& views) const override;
+        virtual void collect_tensor_views(
+            std::vector<std::shared_ptr<const TensorViewType>>& views) const override;
 
         friend std::ostream& operator<<(std::ostream&, const TensorViewType&);
 
@@ -85,7 +87,8 @@ namespace ngraph
         std::vector<std::shared_ptr<ValueType>> set_element_types() { return m_element_types; }
 
         virtual bool operator==(const ValueType& that) const override;
-        virtual void collect_tensor_views(std::vector<std::shared_ptr<const TensorViewType>>& views) const override;
+        virtual void collect_tensor_views(
+            std::vector<std::shared_ptr<const TensorViewType>>& views) const override;
         friend std::ostream& operator<<(std::ostream&, const TupleType&);
 
     protected:

@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <unordered_map>
 #include <deque>
+#include <unordered_map>
 
-#include "topological_sort.hpp"
-#include "node.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/topological_sort.hpp"
 #include "util.hpp"
 #include "log.hpp"
 
