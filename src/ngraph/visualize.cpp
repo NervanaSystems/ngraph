@@ -17,8 +17,8 @@
 #include <list>
 
 #include "ngraph/node.hpp"
+#include "ngraph/visualize.hpp"
 #include "util.hpp"
-#include "visualize.hpp"
 
 using namespace ngraph;
 using namespace std;
