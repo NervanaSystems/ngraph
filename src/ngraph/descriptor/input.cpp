@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph.hpp"
+#include "ngraph/ngraph.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -27,4 +27,9 @@ Input::Input(
     , m_output(output)
 {
     output->add_input(this);
+}
+
+std::shared_ptr<Node> Input::get_node()
+{
+    return m_node->shared_from_this();
 }

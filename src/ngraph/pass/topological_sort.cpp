@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <unordered_map>
 #include <deque>
+#include <unordered_map>
 
-#include "topological_sort.hpp"
-#include "node.hpp"
-#include "util.hpp"
 #include "log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/pass/topological_sort.hpp"
+#include "util.hpp"
 
 using namespace ngraph;
 using namespace std;
 
 bool ngraph::pass::TopologicalSort::run_on_tree(std::shared_ptr<Node> p)
 {
-    deque<Node*> independent_nodes;
+    deque<Node*>                 independent_nodes;
     unordered_map<Node*, size_t> node_depencency_count;
 
     traverse_nodes(p, [&](Node* node) {

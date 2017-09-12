@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include <memory>
 #include <list>
+#include <memory>
 
-#include "tree_pass.hpp"
+#include "ngraph/pass/tree_pass.hpp"
 
 namespace ngraph
 {
@@ -35,7 +35,7 @@ public:
 
     bool run_on_tree(std::shared_ptr<Node>) override;
 
-    bool call_graph_produced() const override { return true; }
+    bool             call_graph_produced() const override { return true; }
     std::list<Node*> get_call_graph() const override;
 
 private:

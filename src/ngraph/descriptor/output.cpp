@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph.hpp"
+#include "ngraph/ngraph.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -29,4 +29,9 @@ Output::Output(Node* node, size_t index, const std::shared_ptr<TensorView>& tens
 void Output::add_input(Input* input)
 {
     m_inputs.insert(input);
+}
+
+std::shared_ptr<Node> Output::get_node() const
+{
+    return m_node->shared_from_this();
 }

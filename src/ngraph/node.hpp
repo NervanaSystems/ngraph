@@ -20,8 +20,8 @@
 
 #include <iostream>
 
-#include "common.hpp"
-#include "type.hpp"
+#include "ngraph/common.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
@@ -69,7 +69,7 @@ namespace ngraph
         const std::multiset<Node*>& users() const { return m_users; }
 
         std::string get_name() const { return m_name; }
-        void        set_name(const std::string& name) { m_name = name; }
+        void set_name(const std::string& name) { m_name = name; }
 
         virtual std::string get_node_id() const = 0;
 
@@ -106,17 +106,17 @@ namespace ngraph
         size_t               get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
-        std::vector<std::shared_ptr<descriptor::Input>> get_inputs() { return m_inputs; }
-        std::vector<std::shared_ptr<descriptor::Output>> get_outputs() {return m_outputs; }
+        std::vector<std::shared_ptr<descriptor::Input>>  get_inputs() { return m_inputs; }
+        std::vector<std::shared_ptr<descriptor::Output>> get_outputs() { return m_outputs; }
 
     protected:
-        Nodes                      m_arguments;
-        std::shared_ptr<ValueType> m_value_type;
-        std::multiset<Node*>       m_users;
-        std::string                m_name;
-        size_t                     m_instance_id;
-        static size_t              m_next_instance_id;
-        std::vector<std::shared_ptr<descriptor::Input>> m_inputs;
+        Nodes                                            m_arguments;
+        std::shared_ptr<ValueType>                       m_value_type;
+        std::multiset<Node*>                             m_users;
+        std::string                                      m_name;
+        size_t                                           m_instance_id;
+        static size_t                                    m_next_instance_id;
+        std::vector<std::shared_ptr<descriptor::Input>>  m_inputs;
         std::vector<std::shared_ptr<descriptor::Output>> m_outputs;
     };
 }

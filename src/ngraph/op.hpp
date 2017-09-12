@@ -16,9 +16,9 @@
 
 #include <memory>
 
-#include "node.hpp"
-#include "ops/parameter.hpp"
-#include "type.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/ops/parameter.hpp"
+#include "ngraph/type.hpp"
 
 namespace ngraph
 {
@@ -97,7 +97,8 @@ namespace ngraph
         class BinaryElementwiseBuiltin : public Builtin
         {
         protected:
-            BinaryElementwiseBuiltin(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+            BinaryElementwiseBuiltin(const std::shared_ptr<Node>& arg0,
+                                     const std::shared_ptr<Node>& arg1)
                 : Builtin(Nodes{arg0, arg1})
             {
             }
