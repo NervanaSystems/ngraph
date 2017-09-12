@@ -12,29 +12,33 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
-
+#include <algorithm>
 #include <vector>
 
-namespace ngraph
-{
-    namespace descriptor
-    {
-        // An interface for describing implementations of tensor views
-        // Kernel selection will need to pay attention to the layout
-        class TensorViewLayout
-        {
-        public:
-            virtual ~TensorViewLayout() {}
-        };
+#include "ngraph/shape.hpp"
 
-        // The standard strided layout
-        class DenseTensorViewLayout : public TensorViewLayout
-        {
-        protected:
-            std::shared_ptr<Buffer> m_buffer;
-            Strides                 m_strides;
-            size_t                  m_offset;
-        };
+using namespace std;
+using namespace ngraph;
+
+size_t ngraph::shape_size(const Shape& shape)
+{
+    size_t size = 1;
+    for (auto d : shape)
+    {
+        size *= d;
     }
+    return size;
+}
+
+Strides ngraph::row_major_strides(const Shape& shape)
+{
+    Strides strides;
+    size_t  s = 1;
+    for (auto d = shape.rbegin(); d != shape.rend(); d++)
+    {
+        strides.push_back(s);
+        s *= *d;
+    }
+    reverse(strides.begin(), strides.end());
+    return strides;
 }

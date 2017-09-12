@@ -19,6 +19,8 @@
 #pragma once
 
 #include "ngraph/common.hpp"
+#include "ngraph/descriptor/buffer.hpp"
+#include "ngraph/descriptor/call_frame.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
@@ -42,5 +44,9 @@
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/tuple.hpp"
+#include "ngraph/runtime/eigen/tensor_view.hpp"
+#include "ngraph/runtime/call_frame.hpp"
+#include "ngraph/runtime/function.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type.hpp"

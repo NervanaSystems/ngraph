@@ -17,6 +17,7 @@
 #include <sstream>
 
 #include "ngraph/element_type.hpp"
+#include "ngraph/runtime/eigen/tensor_view.hpp"
 
 namespace ngraph
 {
@@ -59,7 +60,10 @@ namespace ngraph
                 return ss.str();
             }
 
-            typename T::type get_value() const { return m_value; }
+            type get_value() const
+            {
+                return m_value;
+            }
 
         protected:
             typename T::type m_value;
@@ -72,5 +76,55 @@ namespace ngraph
         using UInt8ScalarConstant   = ScalarConstant<element::UInt8>;
         using UInt32ScalarConstant  = ScalarConstant<element::UInt32>;
         using UInt64ScalarConstant  = ScalarConstant<element::UInt64>;
+
+        // Defines methods to all constant tensors
+        class TensorConstantBase : public Node
+        {
+        protected:
+            TensorConstantBase(const std::shared_ptr<TensorViewType>& type)
+                : Node({}, type)
+            {
+            }
+
+            virtual void propagate_types() override;
+        };
+
+        // Implement a constant tensor for each element type.
+        template <typename T>
+        class TensorConstant : public TensorConstantBase
+        {
+        public:
+            // The ngraph element type
+            using element_type = T;
+            // The C++ type that holds the element type
+            using type = typename T::type;
+
+            TensorConstant(const Shape& shape)
+                : TensorConstantBase(std::make_shared<TensorViewType>(T::element_type(), shape))
+                , m_value(std::make_shared<ngraph::runtime::eigen::PrimaryTensorView<T>>(shape))
+            {
+            }
+
+            virtual std::string description() const override { return "TensorConstant"; }
+            virtual std::string get_node_id() const override
+            {
+                std::stringstream ss;
+                ss << description() << "_" /* << node_id() */;
+                return ss.str();
+            }
+
+            typename std::shared_ptr<ngraph::runtime::eigen::PrimaryTensorView<T>> get_value() const { return m_value; }
+
+        protected:
+            std::shared_ptr<ngraph::runtime::eigen::PrimaryTensorView<T>> m_value;
+        };
+
+        using Float32TensorConstant = TensorConstant<element::Float32>;
+        using Int8TensorConstant    = TensorConstant<element::Int8>;
+        using Int32TensorConstant   = TensorConstant<element::Int32>;
+        using Int64TensorConstant   = TensorConstant<element::Int64>;
+        using UInt8TensorConstant   = TensorConstant<element::UInt8>;
+        using UInt32TensorConstant  = TensorConstant<element::UInt32>;
+        using UInt64TensorConstant  = TensorConstant<element::UInt64>;
     }
 }

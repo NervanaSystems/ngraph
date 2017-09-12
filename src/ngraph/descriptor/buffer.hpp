@@ -14,27 +14,17 @@
 
 #pragma once
 
-#include <vector>
-
 namespace ngraph
 {
     namespace descriptor
     {
-        // An interface for describing implementations of tensor views
-        // Kernel selection will need to pay attention to the layout
-        class TensorViewLayout
-        {
-        public:
-            virtual ~TensorViewLayout() {}
-        };
-
-        // The standard strided layout
-        class DenseTensorViewLayout : public TensorViewLayout
+        // A buffer identfies a chunk of storage
+        // In descriptors, we are identifying what will be associated with actual memory
+        // during execution.
+        class Buffer
         {
         protected:
-            std::shared_ptr<Buffer> m_buffer;
-            Strides                 m_strides;
-            size_t                  m_offset;
+            size_t size;
         };
     }
 }

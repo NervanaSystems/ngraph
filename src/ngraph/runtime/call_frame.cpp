@@ -12,29 +12,18 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "ngraph/ngraph.hpp"
 
-#include <vector>
+using namespace std;
+using namespace ngraph;
+using namespace runtime;
 
-namespace ngraph
+CallFrame::CallFrame(Function&                                              function,
+                     const std::vector<std::shared_ptr<PrimaryTensorView>>& arguments,
+                     const std::vector<std::shared_ptr<PrimaryTensorView>>& results)
 {
-    namespace descriptor
-    {
-        // An interface for describing implementations of tensor views
-        // Kernel selection will need to pay attention to the layout
-        class TensorViewLayout
-        {
-        public:
-            virtual ~TensorViewLayout() {}
-        };
-
-        // The standard strided layout
-        class DenseTensorViewLayout : public TensorViewLayout
-        {
-        protected:
-            std::shared_ptr<Buffer> m_buffer;
-            Strides                 m_strides;
-            size_t                  m_offset;
-        };
-    }
+    m_tensors.insert(m_tensors.end(), arguments.begin(), arguments.end());
+    m_tensors.insert(m_tensors.end(), results.begin(), results.end());
+    // TBD
+    // From Function allocate tensors for the temporaries
 }
