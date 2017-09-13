@@ -50,7 +50,7 @@ namespace ngraph
         {
         }
 
-        virtual ~Node() {}
+        virtual ~Node();
 
     public:
         /// A "one-liner" describing this node.
@@ -106,17 +106,17 @@ namespace ngraph
         size_t               get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
-        const std::vector<std::shared_ptr<descriptor::Input>>&  get_inputs() { return m_inputs; }
-        const std::vector<std::shared_ptr<descriptor::Output>>& get_outputs() { return m_outputs; }
+        std::vector<descriptor::Input>&  get_inputs() { return m_inputs; }
+        std::vector<descriptor::Output>& get_outputs() { return m_outputs; }
 
     protected:
-        Nodes                                            m_arguments;
-        std::shared_ptr<ValueType>                       m_value_type;
-        std::multiset<Node*>                             m_users;
-        std::string                                      m_name;
-        size_t                                           m_instance_id;
-        static size_t                                    m_next_instance_id;
-        std::vector<std::shared_ptr<descriptor::Input>>  m_inputs;
-        std::vector<std::shared_ptr<descriptor::Output>> m_outputs;
+        Nodes                           m_arguments;
+        std::shared_ptr<ValueType>      m_value_type;
+        std::multiset<Node*>            m_users;
+        std::string                     m_name;
+        size_t                          m_instance_id;
+        static size_t                   m_next_instance_id;
+        std::vector<descriptor::Input>  m_inputs;
+        std::vector<descriptor::Output> m_outputs;
     };
 }
