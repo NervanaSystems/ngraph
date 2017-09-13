@@ -32,7 +32,6 @@ ngraph::element::Type::Type(size_t             bitwidth,
     , m_is_signed{is_signed}
     , m_cname{cname}
 {
-    INFO << m_cname;
     assert(m_bitwidth % 8 == 0);
 }
 

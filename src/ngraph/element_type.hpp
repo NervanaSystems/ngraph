@@ -104,6 +104,9 @@ namespace ngraph
             }
         };
 
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(bool)
+        using Bool = TraitedType<bool>;
+
         NGRAPH_DEFINE_TRAITED_TYPE_NAME(float)
         using Float32 = TraitedType<float>;
 

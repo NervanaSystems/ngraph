@@ -12,21 +12,20 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "ngraph/ngraph.hpp"
 
-namespace ngraph
+using namespace std;
+using namespace ngraph;
+using namespace ngraph::op;
+
+const element::Type& BinaryElementwiseArithmetic::infer_result_element_type(
+                         const element::Type& arg0_element_type,
+                         const element::Type& arg1_element_type) const
 {
-    namespace op
+    if (arg0_element_type != arg1_element_type)
     {
-        class Subtract : public BinaryElementwiseArithmetic
-        {
-        public:
-            Subtract(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Subtract"; }
-        };
+        throw ngraph_error("Arguments must have the same tensor view element type");
     }
+
+    return arg0_element_type;
 }

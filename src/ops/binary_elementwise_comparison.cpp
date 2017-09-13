@@ -27,5 +27,5 @@ const element::Type& BinaryElementwiseComparison::infer_result_element_type(
         throw ngraph_error("Arguments must have the same tensor view element type");
     }
 
-    return m_result_element_type;
+    return element::Bool::element_type();
 }

@@ -48,6 +48,8 @@ void BinaryElementwiseBuiltin::propagate_types()
                                                        arg0_tensor_type->get_shape()));
 }
 
+/// TODO: make this abstract
+/// 
 /// Default behavior: arg0 and arg1 element types must match, and result
 /// element type is same as argument element types.
 const element::Type& BinaryElementwiseBuiltin::infer_result_element_type(

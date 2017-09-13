@@ -358,26 +358,14 @@ TEST(type_prop, subtract_bad_arguments)
     });
 }
 
-TEST(type_prop, equal_implicit)
+TEST(type_prop, equal)
 {
     auto tv0_2_4_param_0 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
     auto tv0_2_4_param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
     auto eq = make_shared<op::Equal>(tv0_2_4_param_0,tv0_2_4_param_1);
-    auto expected_type = TensorViewType(element::Int32::element_type(), Shape{2, 4});
-    eq->propagate_types();
-    EXPECT_EQ(*eq->get_value_type(),expected_type);
-}
-
-TEST(type_prop, equal_explicit)
-{
-    auto tv0_2_4_param_0 = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
-    auto tv0_2_4_param_1 = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
-    auto eq = make_shared<op::Equal>(tv0_2_4_param_0,tv0_2_4_param_1,element::Float32::element_type());
-    auto expected_type = TensorViewType(element::Float32::element_type(), Shape{2, 4});
+    auto expected_type = TensorViewType(element::Bool::element_type(), Shape{2, 4});
     eq->propagate_types();
     EXPECT_EQ(*eq->get_value_type(),expected_type);
 }

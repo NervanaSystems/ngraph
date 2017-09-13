@@ -18,11 +18,11 @@ namespace ngraph
 {
     namespace op
     {
-        class Divide : public BinaryElementwiseBuiltin
+        class Divide : public BinaryElementwiseArithmetic
         {
         public:
             Divide(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
+                : BinaryElementwiseArithmetic(arg0, arg1)
             {
             }
 
