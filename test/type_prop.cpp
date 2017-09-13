@@ -358,7 +358,7 @@ TEST(type_prop, subtract_bad_arguments)
     });
 }
 
-TEST(type_prop, equal)
+TEST(type_prop, comparison_good)
 {
     auto tv0_2_4_param_0 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
@@ -368,4 +368,48 @@ TEST(type_prop, equal)
     auto expected_type = TensorViewType(element::Bool::element_type(), Shape{2, 4});
     eq->propagate_types();
     EXPECT_EQ(*eq->get_value_type(),expected_type);
+}
+
+TEST(type_prop, binary_arithmetic_bad_argument_element_types)
+{
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Bool::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Bool::element_type(), Shape{2, 4}));
+    auto bc = make_shared<op::Add>(tv0_2_4_param_0,tv0_2_4_param_1);
+    try
+    {
+        bc->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Operands for arithmetic operators must have numeric element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, unary_arithmetic_bad_argument_element_types)
+{
+    auto tv0_2_4_param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Bool::element_type(), Shape{2, 4}));
+    auto bc = make_shared<op::Negative>(tv0_2_4_param);
+    try
+    {
+        bc->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Operands for arithmetic operators must have numeric element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }

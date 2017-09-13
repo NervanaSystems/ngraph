@@ -41,25 +41,10 @@ void BinaryElementwiseBuiltin::propagate_types()
     }
 
     const element::Type& result_element_type =
-        infer_result_element_type(arg0_tensor_type->get_element_type(),
-                                  arg1_tensor_type->get_element_type());
+        propagate_element_types(arg0_tensor_type->get_element_type(),
+                                arg1_tensor_type->get_element_type());
 
     set_value_type_checked(make_shared<TensorViewType>(result_element_type,
                                                        arg0_tensor_type->get_shape()));
 }
 
-/// TODO: make this abstract
-/// 
-/// Default behavior: arg0 and arg1 element types must match, and result
-/// element type is same as argument element types.
-const element::Type& BinaryElementwiseBuiltin::infer_result_element_type(
-                         const element::Type& arg0_element_type,
-                         const element::Type& arg1_element_type) const
-{
-    if (arg0_element_type != arg1_element_type)
-    {
-        throw ngraph_error("Arguments must have the same tensor view element type");
-    }
-
-    return arg0_element_type;
-}

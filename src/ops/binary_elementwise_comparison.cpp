@@ -18,7 +18,7 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::op;
 
-const element::Type& BinaryElementwiseComparison::infer_result_element_type(
+const element::Type& BinaryElementwiseComparison::propagate_element_types(
                          const element::Type& arg0_element_type,
                          const element::Type& arg1_element_type) const
 {

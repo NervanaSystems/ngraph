@@ -35,17 +35,8 @@ void UnaryElementwiseBuiltin::propagate_types()
     }
 
     const element::Type& result_element_type =
-        infer_result_element_type(arg_tensor_type->get_element_type());
+        propagate_element_types(arg_tensor_type->get_element_type());
 
     set_value_type_checked(make_shared<TensorViewType>(result_element_type,
                                                        arg_tensor_type->get_shape()));
-}
-
-/// TODO: Make this abstract
-///
-/// Default behavior: result element type is same as argument element type.
-const element::Type& UnaryElementwiseBuiltin::infer_result_element_type(
-                         const element::Type& arg_element_type) const
-{
-    return arg_element_type;
 }

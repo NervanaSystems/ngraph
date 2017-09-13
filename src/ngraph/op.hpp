@@ -103,8 +103,8 @@ namespace ngraph
                 : Builtin(Nodes{arg})
             {
             }
-            virtual const element::Type& infer_result_element_type(
-                                            const element::Type& arg_element_type) const;
+            virtual const element::Type& propagate_element_types(
+                const element::Type& arg_element_type) const = 0;
 
         public:
             virtual void propagate_types() override;
@@ -117,8 +117,8 @@ namespace ngraph
                 : UnaryElementwiseBuiltin({arg})
             {
             }
-            virtual const element::Type& infer_result_element_type(
-                                            const element::Type& arg_element_type) const override;
+            virtual const element::Type& propagate_element_types(
+                const element::Type& arg_element_type) const final override;
         };
 
         class Abs : public UnaryElementwiseArithmetic
@@ -178,9 +178,9 @@ namespace ngraph
                 : Builtin(Nodes{arg0, arg1})
             {
             }
-            virtual const element::Type& infer_result_element_type(
+            virtual const element::Type& propagate_element_types(
                                             const element::Type& arg0_element_type,
-                                            const element::Type& arg1_element_type) const;
+                                            const element::Type& arg1_element_type) const = 0;
 
         public:
             virtual void propagate_types() override;
@@ -197,7 +197,7 @@ namespace ngraph
 
             virtual std::string get_op_class_name() const override { return "BinaryElementwiseComparison"; }
             //virtual void propagate_types() override;
-            virtual const element::Type& infer_result_element_type(
+            virtual const element::Type& propagate_element_types(
                                              const element::Type& arg0_element_type,
                                              const element::Type& arg1_element_type) const override;
         };
@@ -249,9 +249,10 @@ namespace ngraph
 
             virtual std::string get_op_class_name() const override { return "BinaryElementwiseArithmetic"; }
             //virtual void propagate_types() override;
-            virtual const element::Type& infer_result_element_type(
-                                             const element::Type& arg0_element_type,
-                                             const element::Type& arg1_element_type) const override;
+            virtual const element::Type& propagate_element_types(
+                                           const element::Type& arg0_element_type,
+                                           const element::Type& arg1_element_type)
+                const final override;
         };
 
         class Maximum : public BinaryElementwiseArithmetic
