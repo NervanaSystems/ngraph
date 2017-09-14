@@ -46,6 +46,7 @@ namespace ngraph
             size_t                get_arg_index() const { return m_arg_index; }
             size_t                get_index() const { return m_index; }
             const Output&         get_output() const { return m_output; }
+            Output&               get_output() { return m_output; }
 
         protected:
             Node*   m_node;      // The node we are an input for

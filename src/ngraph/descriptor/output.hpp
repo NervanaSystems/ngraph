@@ -26,6 +26,8 @@ namespace ngraph
         // Describes an output tensor of an op
         class Output
         {
+            // For some odd reason emplace_back is requiring a copy constructor
+            // it should not. See issue #111 for details
             // Output(const Output&) = delete;
             // Output& operator=(const Output&) = delete;
 
