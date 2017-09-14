@@ -16,31 +16,13 @@
 #include <cstddef>
 #include <vector>
 
+#include "common.hpp"
+
 namespace ngraph
 {
-    /**
-     ** Holds the shape of a tensor view.
-     **/
-    class Shape
-    {
-    public:
-        /// @param sizes A sequence of sizes.
-        Shape(const std::initializer_list<size_t>& sizes)
-            : m_sizes(sizes)
-        {
-        }
+    /// Number of elements in spanned by a shape
+    size_t shape_size(const Shape& shape);
 
-        Shape(const std::vector<size_t>& sizes)
-            : m_sizes(sizes)
-        {
-        }
-
-        /// Conversion to a vector of sizes.
-             operator const std::vector<size_t>&() const { return m_sizes; }
-        bool operator==(const Shape& shape) const { return m_sizes == shape.m_sizes; }
-        bool operator!=(const Shape& shape) const { return m_sizes != shape.m_sizes; }
-
-    protected:
-        std::vector<size_t> m_sizes;
-    };
+    /// Row-major strides for a shape
+    Strides row_major_strides(const Shape& shape);
 }

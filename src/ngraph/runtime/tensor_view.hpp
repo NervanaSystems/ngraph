@@ -14,27 +14,15 @@
 
 #pragma once
 
-#include <vector>
-
 namespace ngraph
 {
-    namespace descriptor
+    namespace runtime
     {
-        // An interface for describing implementations of tensor views
-        // Kernel selection will need to pay attention to the layout
-        class TensorViewLayout
+        // Actual tensor views are parameterized on element type
+        class PrimaryTensorView
         {
         public:
-            virtual ~TensorViewLayout() {}
-        };
-
-        // The standard strided layout
-        class DenseTensorViewLayout : public TensorViewLayout
-        {
-        protected:
-            std::shared_ptr<Buffer> m_buffer;
-            Strides                 m_strides;
-            size_t                  m_offset;
+            virtual ~PrimaryTensorView(){}
         };
     }
 }

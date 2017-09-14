@@ -12,29 +12,26 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include <memory>
 
-#include <vector>
+#include "gtest/gtest.h"
 
-namespace ngraph
+#include "ngraph/ngraph.hpp"
+
+using namespace std;
+using namespace ngraph;
+using namespace ngraph::runtime::eigen;
+
+TEST(shape, test_shape_size)
 {
-    namespace descriptor
-    {
-        // An interface for describing implementations of tensor views
-        // Kernel selection will need to pay attention to the layout
-        class TensorViewLayout
-        {
-        public:
-            virtual ~TensorViewLayout() {}
-        };
+    ASSERT_EQ(1, shape_size(Shape{}));
+    ASSERT_EQ(2 * 3 * 5, shape_size(Shape{2, 3, 5}));
+}
 
-        // The standard strided layout
-        class DenseTensorViewLayout : public TensorViewLayout
-        {
-        protected:
-            std::shared_ptr<Buffer> m_buffer;
-            Strides                 m_strides;
-            size_t                  m_offset;
-        };
-    }
+TEST(shape, test_shape_strides)
+{
+    ASSERT_EQ(Strides{}, row_major_strides(Shape{}));
+    ASSERT_EQ(Strides{1}, row_major_strides(Shape{3}));
+    ASSERT_EQ((Strides{7, 1}), row_major_strides(Shape{2, 7}));
+    ASSERT_EQ((Strides{84, 12, 1}), row_major_strides(Shape{5, 7, 12}));
 }

@@ -12,29 +12,18 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include <Eigen/Dense>
 
-#include <vector>
+#include "ngraph.hpp"
 
-namespace ngraph
-{
-    namespace descriptor
-    {
-        // An interface for describing implementations of tensor views
-        // Kernel selection will need to pay attention to the layout
-        class TensorViewLayout
-        {
-        public:
-            virtual ~TensorViewLayout() {}
-        };
+using namespace Eigen;
+using namespace ngraph::runtime::eigen;
+using namespace ngraph::element;
 
-        // The standard strided layout
-        class DenseTensorViewLayout : public TensorViewLayout
-        {
-        protected:
-            std::shared_ptr<Buffer> m_buffer;
-            Strides                 m_strides;
-            size_t                  m_offset;
-        };
-    }
-}
+template void ngraph::runtime::eigen::add<Float32>(const PrimaryTensorView<Float32>& arg0,
+                                                   const PrimaryTensorView<Float32>& arg1,
+                                                   PrimaryTensorView<Float32>&       out);
+
+template void ngraph::runtime::eigen::multiply<Float32>(const PrimaryTensorView<Float32>& arg0,
+                                                        const PrimaryTensorView<Float32>& arg1,
+                                                        PrimaryTensorView<Float32>&       out);

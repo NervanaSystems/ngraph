@@ -15,37 +15,23 @@
 #pragma once
 
 #include <memory>
-#include <set>
 #include <vector>
 
-// Names for types that aren't worth giving their own classes
+#include "ngraph/runtime/tensor_view.hpp"
+
 namespace ngraph
 {
-    class Node;
-    namespace op {
-        class Parameter;
-    
-        /// A list of parameters
-        using Parameters = std::vector<std::shared_ptr<Parameter>>;
+    namespace runtime
+    {
+        // A compiled graph function
+        class Function
+        {
+        public:
+            virtual ~Function() {}
+
+            // Invoke the function with a the given inputs and outputs
+            void operator()(std::vector<std::shared_ptr<PrimaryTensorView>> inputs,
+                            std::vector<std::shared_ptr<PrimaryTensorView>> outputs);
+        };
     }
-    class ValueType;
-
-    /// Zero or more value types
-    using ValueTypes = std::vector<std::shared_ptr<ValueType>>;
-
-    /// Zero or more nodes
-    using Nodes = std::vector<std::shared_ptr<Node>>;
-
-    /// A sequence of axes
-    using AxisVector = std::vector<size_t>;
-
-    /// A set of axes, for example, reduction axes
-    using AxisSet = std::set<size_t>;
-
-    /// Shape for a tensor
-    using Shape = std::vector<size_t>;
-
-    /// Strides of a tensor
-    using Strides = std::vector<size_t>;
-
 }
