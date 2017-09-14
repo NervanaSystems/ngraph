@@ -79,166 +79,6 @@ namespace ngraph
             }
         };
 
-        /// Operations where the same element function is applied to each element
-        /// Op(X)[I] = op(X[I])
-        class UnaryElementwiseBuiltin : public Builtin
-        {
-        protected:
-            UnaryElementwiseBuiltin(const std::shared_ptr<Node>& arg)
-                : Builtin(Nodes{arg})
-            {
-            }
-
-        public:
-            virtual void propagate_types() override;
-        };
-
-        /// Op(X, Y)[I] = op(X[I], Y[I])
-        class BinaryElementwiseBuiltin : public Builtin
-        {
-        protected:
-            BinaryElementwiseBuiltin(const std::shared_ptr<Node>& arg0,
-                                     const std::shared_ptr<Node>& arg1)
-                : Builtin(Nodes{arg0, arg1})
-            {
-            }
-
-        public:
-            virtual void propagate_types() override;
-        };
-
-        class Abs : public UnaryElementwiseBuiltin
-        {
-        public:
-            Abs(const std::shared_ptr<Node>& arg0)
-                : UnaryElementwiseBuiltin({arg0})
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Abs"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Equal : public BinaryElementwiseBuiltin
-        {
-        public:
-            Equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Equal"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Exp : public UnaryElementwiseBuiltin
-        {
-        public:
-            Exp(const std::shared_ptr<Node>& arg0)
-                : UnaryElementwiseBuiltin(arg0)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Exp"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Greater : public BinaryElementwiseBuiltin
-        {
-        public:
-            Greater(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Greater"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Less : public BinaryElementwiseBuiltin
-        {
-        public:
-            Less(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Less"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Log : public UnaryElementwiseBuiltin
-        {
-        public:
-            Log(const std::shared_ptr<Node>& arg0)
-                : UnaryElementwiseBuiltin(arg0)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Log"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Maximum : public BinaryElementwiseBuiltin
-        {
-        public:
-            Maximum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Max"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Minimum : public BinaryElementwiseBuiltin
-        {
-        public:
-            Minimum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Min"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Negative : public UnaryElementwiseBuiltin
-        {
-        public:
-            Negative(const std::shared_ptr<Node>& arg0)
-                : UnaryElementwiseBuiltin(arg0)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Negative"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Power : public BinaryElementwiseBuiltin
-        {
-        public:
-            Power(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Power"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Remainder : public BinaryElementwiseBuiltin
-        {
-        public:
-            Remainder(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Remainder"; }
-            //virtual void propagate_types() override;
-        };
-
         class Reshape : public IndexBuiltin
         {
         public:
@@ -252,6 +92,83 @@ namespace ngraph
             //virtual void propagate_types() override;
         protected:
             Shape m_shape;
+        };
+
+        /// Operations where the same element function is applied to each element
+        /// Op(X)[I] = op(X[I])
+        class UnaryElementwiseBuiltin : public Builtin
+        {
+        protected:
+            UnaryElementwiseBuiltin(const std::shared_ptr<Node>& arg)
+                : Builtin(Nodes{arg})
+            {
+            }
+            virtual const element::Type& propagate_element_types(
+                const element::Type& arg_element_type) const = 0;
+
+        public:
+            virtual void propagate_types() override;
+        };
+
+        class UnaryElementwiseArithmetic : public UnaryElementwiseBuiltin
+        {
+        protected:
+            UnaryElementwiseArithmetic(const std::shared_ptr<Node>& arg)
+                : UnaryElementwiseBuiltin({arg})
+            {
+            }
+            virtual const element::Type& propagate_element_types(
+                const element::Type& arg_element_type) const final override;
+        };
+
+        /// Op(X, Y)[I] = op(X[I], Y[I])
+        class BinaryElementwiseBuiltin : public Builtin
+        {
+        protected:
+            BinaryElementwiseBuiltin(const std::shared_ptr<Node>& arg0,
+                                     const std::shared_ptr<Node>& arg1)
+                : Builtin(Nodes{arg0, arg1})
+            {
+            }
+            virtual const element::Type& propagate_element_types(
+                                            const element::Type& arg0_element_type,
+                                            const element::Type& arg1_element_type) const = 0;
+
+        public:
+            virtual void propagate_types() override;
+        };
+
+        class BinaryElementwiseComparison : public BinaryElementwiseBuiltin
+        {
+        public:
+            BinaryElementwiseComparison(
+                const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : BinaryElementwiseBuiltin(arg0, arg1)
+            {
+            }
+
+            virtual std::string get_op_class_name() const override { return "BinaryElementwiseComparison"; }
+            //virtual void propagate_types() override;
+            virtual const element::Type& propagate_element_types(
+                                             const element::Type& arg0_element_type,
+                                             const element::Type& arg1_element_type) const override;
+        };
+
+        class BinaryElementwiseArithmetic : public BinaryElementwiseBuiltin
+        {
+        public:
+            BinaryElementwiseArithmetic(
+                const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : BinaryElementwiseBuiltin(arg0, arg1)
+            {
+            }
+
+            virtual std::string get_op_class_name() const override { return "BinaryElementwiseArithmetic"; }
+            //virtual void propagate_types() override;
+            virtual const element::Type& propagate_element_types(
+                                           const element::Type& arg0_element_type,
+                                           const element::Type& arg1_element_type)
+                const final override;
         };
     }
 }

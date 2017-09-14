@@ -18,11 +18,11 @@ namespace ngraph
 {
     namespace op
     {
-        class Ceiling : public BinaryElementwiseBuiltin
+        class Ceiling : public UnaryElementwiseArithmetic
         {
         public:
-            Ceiling(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
+            Ceiling(const std::shared_ptr<Node>& arg)
+                : UnaryElementwiseArithmetic(arg)
             {
             }
 

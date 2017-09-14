@@ -18,11 +18,11 @@ namespace ngraph
 {
     namespace op
     {
-        class Multiply : public BinaryElementwiseBuiltin
+        class Multiply : public BinaryElementwiseArithmetic
         {
         public:
             Multiply(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
+                : BinaryElementwiseArithmetic(arg0, arg1)
             {
             }
 

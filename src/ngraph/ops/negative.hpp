@@ -18,15 +18,15 @@ namespace ngraph
 {
     namespace op
     {
-        class Subtract : public BinaryElementwiseArithmetic
+        class Negative : public UnaryElementwiseArithmetic
         {
         public:
-            Subtract(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic(arg0, arg1)
+            Negative(const std::shared_ptr<Node>& arg)
+                : UnaryElementwiseArithmetic(arg)
             {
             }
 
-            virtual std::string get_op_class_name() const override { return "Subtract"; }
+            virtual std::string get_op_class_name() const override { return "Negative"; }
         };
     }
 }

@@ -18,11 +18,11 @@ namespace ngraph
 {
     namespace op
     {
-        class Add : public BinaryElementwiseBuiltin
+        class Add : public BinaryElementwiseArithmetic
         {
         public:
             Add(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
+                : BinaryElementwiseArithmetic(arg0, arg1)
             {
             }
             virtual std::string get_op_class_name() const override { return "Add"; }

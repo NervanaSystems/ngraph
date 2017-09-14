@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include <memory>
 
-namespace ngraph
+#include "ngraph/ngraph.hpp"
+
+using namespace std;
+using namespace ngraph;
+using namespace ngraph::op;
+
+const element::Type& UnaryElementwiseArithmetic::propagate_element_types(
+                         const element::Type& arg_element_type) const
 {
-    namespace op
+    if (arg_element_type == element::Bool::element_type())
     {
-        class Subtract : public BinaryElementwiseArithmetic
-        {
-        public:
-            Subtract(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Subtract"; }
-        };
+        throw ngraph_error("Operands for arithmetic operators must have numeric element type");
     }
+
+    return arg_element_type;
 }
