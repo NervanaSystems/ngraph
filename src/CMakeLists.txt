@@ -24,6 +24,7 @@ set (SRC
     ngraph/shape.cpp
     ngraph/pass/assign_tensors.cpp
     ngraph/pass/call_pass.cpp
+    ngraph/pass/dump_sorted.cpp
     ngraph/pass/liveness.cpp
     ngraph/pass/manager.cpp
     ngraph/pass/memory_layout.cpp
@@ -31,6 +32,7 @@ set (SRC
     ngraph/pass/propagate_types.cpp
     ngraph/pass/topological_sort.cpp
     ngraph/pass/tree_pass.cpp
+    ngraph/pass/visualize_tree.cpp
     ngraph/runtime/call_frame.cpp
     ngraph/runtime/eigen/external_function.cpp
     ngraph/runtime/eigen/tensor_view.cpp

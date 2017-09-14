@@ -57,8 +57,9 @@ void Node::assign_tensors()
     size_t i = 0;
     for (auto tvt : tensor_view_types)
     {
-        auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(tvt);
-        m_outputs.emplace_back(this, i++, tensor_view_descriptor);
+        auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(tvt, this, i);
+        m_outputs.emplace_back(this, i, tensor_view_descriptor);
+        i++;
     }
 
     i            = 0;
@@ -68,7 +69,8 @@ void Node::assign_tensors()
         size_t arg_index = 0;
         for (descriptor::Output& output : arg->get_outputs())
         {
-            m_inputs.emplace_back(this, i++, argno, arg_index++, output);
+            m_inputs.emplace_back(this, i, argno, arg_index++, output);
+            i++;
         }
         argno++;
     }

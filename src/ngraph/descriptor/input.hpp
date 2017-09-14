@@ -16,6 +16,8 @@
 
 #include <memory>
 
+#include "ngraph/descriptor/tensor.hpp"
+
 namespace ngraph
 {
     class Node;
@@ -47,6 +49,8 @@ namespace ngraph
             size_t                get_index() const { return m_index; }
             const Output&         get_output() const { return m_output; }
             Output&               get_output() { return m_output; }
+            const Tensor&         get_tensor() const;
+            Tensor&               get_tensor();
 
         protected:
             Node*   m_node;      // The node we are an input for

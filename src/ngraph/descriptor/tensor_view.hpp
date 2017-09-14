@@ -17,9 +17,12 @@
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type.hpp"
+#include "log.hpp"
 
 namespace ngraph
 {
+    class Node;
+
     namespace descriptor
     {
         class Tensor;
@@ -41,6 +44,7 @@ namespace ngraph
             virtual ~TensorView() {}
             virtual const Tensor& get_tensor() const = 0;
             virtual Tensor&       get_tensor()       = 0;
+            const std::string& get_name() const { return m_name; }
 
             std::shared_ptr<const TensorViewType> get_tensor_view_type() const
             {
@@ -51,6 +55,7 @@ namespace ngraph
             {
                 return m_tensor_view_layout;
             }
+
             void set_tensor_view_layout(const std::shared_ptr<TensorViewLayout>& tensor_view_layout)
             {
                 m_tensor_view_layout = tensor_view_layout;
@@ -59,6 +64,7 @@ namespace ngraph
         protected:
             std::shared_ptr<const TensorViewType> m_tensor_view_type;
             std::shared_ptr<TensorViewLayout>     m_tensor_view_layout;
+            std::string                           m_name;
         };
 
         // A PrimaryTensorView owns the tensor. All other views are the result
@@ -66,10 +72,14 @@ namespace ngraph
         class PrimaryTensorView : public TensorView
         {
         public:
-            PrimaryTensorView(const std::shared_ptr<const TensorViewType>& tensor_view_type)
+            PrimaryTensorView(const std::shared_ptr<const TensorViewType>& tensor_view_type,
+                const Node* parent, size_t value_index)
                 : TensorView(tensor_view_type)
-                , m_tensor(tensor_view_type->get_element_type(), this)
+                , m_tensor(tensor_view_type->get_element_type(), this, parent, value_index)
             {
+                // Set the name in the parent TensorView.
+                // This can't be done until after the m_tensor is constructed.
+                m_name = m_tensor.get_next_view_name();
             }
 
             virtual const Tensor& get_tensor() const override;

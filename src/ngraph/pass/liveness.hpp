@@ -15,6 +15,7 @@
 #pragma once
 
 #include "call_pass.hpp"
+#include "ngraph/descriptor/tensor.hpp"
 
 namespace ngraph
 {
@@ -33,6 +34,6 @@ public:
     void check_dependencies(const std::vector<std::shared_ptr<CallBase>>&) const override;
 
 private:
-    // bool is_interesting(tensor_decl);
-    // void validate_liveness(std::list<Node*> ops);
+    bool is_temporary(const descriptor::Tensor&);
+    void validate_liveness(const std::list<Node*>& ops);
 };

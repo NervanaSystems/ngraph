@@ -12,36 +12,28 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ngraph.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
-using namespace descriptor;
+#include <string>
 
-Output::Output(Node* node, size_t index, const std::shared_ptr<TensorView>& tensor_view)
-    : m_node(node)
-    , m_index(index)
-    , m_tensor_view(tensor_view)
+#include "call_pass.hpp"
+
+namespace ngraph
 {
+    namespace pass
+    {
+        class DumpSorted;
+    }
+    class Node;
 }
 
-// Add an input to the vector of inputs that use this output.
-void Output::add_input(Input* input)
+class ngraph::pass::DumpSorted : public CallBase
 {
-    m_inputs.insert(input);
-}
+public:
+    DumpSorted(const std::string& output_file);
 
-std::shared_ptr<Node> Output::get_node() const
-{
-    return m_node->shared_from_this();
-}
+    virtual bool run_on_call_list(std::list<Node*>&) override;
 
-const Tensor& Output::get_tensor() const
-{
-    return m_tensor_view->get_tensor();
-}
-
-Tensor& Output::get_tensor()
-{
-    return m_tensor_view->get_tensor();
-}
+private:
+    const std::string   m_output_file;
+};

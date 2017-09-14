@@ -64,5 +64,5 @@ target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 add_dependencies(unit-test ngraph libgtest eigen)
 
 add_custom_target(check
-	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test
+	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
 	DEPENDS unit-test)

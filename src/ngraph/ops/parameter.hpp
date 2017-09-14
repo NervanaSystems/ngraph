@@ -42,7 +42,6 @@ namespace ngraph
 
             std::string         description() const override { return "Parameter"; }
             virtual void        propagate_types() override;
-            virtual std::string get_node_id() const override;
 
         protected:
             Function* m_function;
