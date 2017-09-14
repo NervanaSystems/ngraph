@@ -31,6 +31,10 @@ Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<ValueType>
     }
 }
 
+Node::~Node()
+{
+}
+
 void Node::set_value_type_checked(const shared_ptr<ValueType>& value_type)
 {
     if (nullptr == m_value_type)
@@ -54,8 +58,7 @@ void Node::assign_tensors()
     for (auto tvt : tensor_view_types)
     {
         auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(tvt);
-        auto output = make_shared<descriptor::Output>(this, i++, tensor_view_descriptor);
-        m_outputs.push_back(output);
+        m_outputs.emplace_back(this, i++, tensor_view_descriptor);
     }
 
     i            = 0;
@@ -63,10 +66,9 @@ void Node::assign_tensors()
     for (auto arg : get_arguments())
     {
         size_t arg_index = 0;
-        for (auto output : arg->get_outputs())
+        for (descriptor::Output& output : arg->get_outputs())
         {
-            auto input = make_shared<descriptor::Input>(this, i++, argno, arg_index++, output);
-            m_inputs.push_back(input);
+            m_inputs.emplace_back(this, i++, argno, arg_index++, output);
         }
         argno++;
     }
