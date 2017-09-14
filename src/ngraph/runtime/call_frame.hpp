@@ -17,43 +17,41 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/runtime/function.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/runtime/instruction.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        class CallFrameAccessor;
+        using PTVs = std::vector<std::shared_ptr<ngraph::runtime::PrimaryTensorView>>;
 
-        // This is constructed when a runtime function is called.
+        class PrimaryTensorView;
+
+        // A VM for executing lightly-compiled graph functions.
         class CallFrame
         {
-            friend class CallFrameAccessor;
-
         public:
-            CallFrame(Function&                             function,
-                      const std::vector<std::shared_ptr<PrimaryTensorView>>& arguments,
-                      const std::vector<std::shared_ptr<PrimaryTensorView>>& results);
+            CallFrame(
+                size_t                                                            n_inputs,
+                size_t                                                            n_outputs,
+                const PTVs&                                                       temps,
+                size_t                                                            initial_pc,
+                const std::shared_ptr<std::vector<std::shared_ptr<Instruction>>>& instructions);
+
+            void operator()(const PTVs& inputs, const PTVs& outpus);
+            void set_return() { m_return = true; }
+            std::shared_ptr<PrimaryTensorView> get_tensor(size_t i) { return m_tensors[i]; }
 
         protected:
-            std::vector<std::shared_ptr<PrimaryTensorView>> m_tensors;
-        };
-
-        class CallFrameAccessor
-        {
-        public:
-            CallFrameAccessor(size_t index)
-                : m_index(index)
-            {
-            }
-
-            std::shared_ptr<PrimaryTensorView> operator()(CallFrame& call_frame)
-            {
-                return call_frame.m_tensors[m_index];
-            }
-
-        protected:
-            size_t m_index;
+            size_t                                                     m_n_inputs;
+            size_t                                                     m_n_outputs;
+            PTVs                                                       m_tensors;
+            size_t                                                     m_initial_pc;
+            std::shared_ptr<std::vector<std::shared_ptr<Instruction>>> m_instructions;
+            size_t                                                     m_pc;
+            size_t                                                     m_next_pc;
+            bool                                                       m_return;
         };
     }
 }

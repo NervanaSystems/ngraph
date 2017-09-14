@@ -21,6 +21,7 @@
 
 using namespace std;
 using namespace ngraph;
+using namespace ngraph::runtime;
 using namespace ngraph::runtime::eigen;
 
 TEST(runtime, test_add)
@@ -43,4 +44,46 @@ TEST(runtime, test_multiply)
     auto z          = make_shared<op::Float32TensorConstant>(Shape{2, 2});
     multiply(*x->get_value(), *y->get_value(), *z->get_value());
     ASSERT_EQ((vector<float>{5, 12, 21, 32}), z->get_value()->get_vector());
+}
+
+TEST(runtime, test_add_multiply)
+{
+    // Inputs:
+    //   0 : a
+    //   1 : b
+    //   2 : c
+    // Outputs:
+    //   3 : result
+    // Temporaries
+    //   4: t0
+    auto instructions = make_shared<std::vector<std::shared_ptr<ngraph::runtime::Instruction>>>();
+    // a + b -> t0
+    instructions->push_back(make_shared<AddInstruction<element::Float32>>(0, 1, 4));
+    // t0 * c -> result
+    instructions->push_back(make_shared<MultiplyInstruction<element::Float32>>(4, 2, 3));
+    instructions->push_back(make_shared<ReturnInstruction>());
+
+    runtime::CallFrame cf{3,
+                          1,
+                          PTVs{make_shared<PrimaryTensorView<element::Float32>>(Shape{2, 2})},
+                          0,
+                          instructions};
+
+    // Create some tensors for input/output
+    auto a      = make_shared<PrimaryTensorView<element::Float32>>(Shape{2, 2});
+    *a          = vector<float>{1, 2, 3, 4};
+    auto b      = make_shared<PrimaryTensorView<element::Float32>>(Shape{2, 2});
+    *b          = vector<float>{5, 6, 7, 8};
+    auto c      = make_shared<PrimaryTensorView<element::Float32>>(Shape{2, 2});
+    *c          = vector<float>{9, 10, 11, 12};
+    auto result = make_shared<PrimaryTensorView<element::Float32>>(Shape{2, 2});
+
+    cf(PTVs{a, b, c}, PTVs{result});
+    ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector());
+
+    cf(PTVs{b, a, c}, PTVs{result});
+    ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector());
+
+    cf(PTVs{a, c, b}, PTVs{result});
+    ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector());
 }
