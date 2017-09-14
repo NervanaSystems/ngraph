@@ -12,18 +12,41 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <algorithm>
+
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
 using namespace ngraph;
-using namespace runtime;
+using namespace ngraph::runtime;
 
-CallFrame::CallFrame(Function&                                              function,
-                     const std::vector<std::shared_ptr<PrimaryTensorView>>& arguments,
-                     const std::vector<std::shared_ptr<PrimaryTensorView>>& results)
+CallFrame::CallFrame(size_t                                             n_inputs,
+                     size_t                                             n_outputs,
+                     const PTVs&                                        temps,
+                     size_t                                             initial_pc,
+                     const shared_ptr<vector<shared_ptr<Instruction>>>& instructions)
+
+    : m_n_inputs(n_inputs)
+    , m_n_outputs(n_outputs)
+    , m_tensors(n_inputs + n_outputs + temps.size())
+    , m_initial_pc(initial_pc)
+    , m_instructions(instructions)
 {
-    m_tensors.insert(m_tensors.end(), arguments.begin(), arguments.end());
-    m_tensors.insert(m_tensors.end(), results.begin(), results.end());
-    // TBD
-    // From Function allocate tensors for the temporaries
+    copy(temps.begin(), temps.end(), m_tensors.begin() + m_n_inputs + m_n_outputs);
+}
+
+void CallFrame::operator()(const PTVs& inputs, const PTVs& outputs)
+{
+    copy(inputs.begin(), inputs.end(), m_tensors.begin());
+    copy(outputs.begin(), outputs.end(), m_tensors.begin() + m_n_inputs);
+    m_next_pc = m_initial_pc;
+    m_return  = false;
+    while (!m_return)
+    {
+        m_pc      = m_next_pc;
+        m_next_pc = m_pc + 1;
+        m_instructions->at(m_pc)->execute(*this);
+    }
+    // Don't hold onto inputs/outputs
+    fill_n(m_tensors.begin(), m_n_inputs + m_n_outputs, nullptr);
 }

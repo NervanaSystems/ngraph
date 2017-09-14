@@ -14,24 +14,18 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
-
-#include "ngraph/runtime/tensor_view.hpp"
-
 namespace ngraph
 {
     namespace runtime
     {
-        // A compiled graph function
-        class Function
+        class CallFrame;
+
+        // An interpreter for an Op
+        class Instruction
         {
         public:
-            virtual ~Function() {}
-
-            // Invoke the function with a the given inputs and outputs
-            void operator()(std::vector<std::shared_ptr<PrimaryTensorView>> inputs,
-                            std::vector<std::shared_ptr<PrimaryTensorView>> outputs);
+            virtual ~Instruction(){}
+            virtual void execute(CallFrame& call_frame) const = 0;
         };
     }
 }

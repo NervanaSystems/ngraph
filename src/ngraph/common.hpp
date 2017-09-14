@@ -22,9 +22,10 @@
 namespace ngraph
 {
     class Node;
-    namespace op {
+    namespace op
+    {
         class Parameter;
-    
+
         /// A list of parameters
         using Parameters = std::vector<std::shared_ptr<Parameter>>;
     }
@@ -47,5 +48,4 @@ namespace ngraph
 
     /// Strides of a tensor
     using Strides = std::vector<size_t>;
-
 }
