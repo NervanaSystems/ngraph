@@ -121,54 +121,6 @@ namespace ngraph
                 const element::Type& arg_element_type) const final override;
         };
 
-        class Abs : public UnaryElementwiseArithmetic
-        {
-        public:
-            Abs(const std::shared_ptr<Node>& arg0)
-                : UnaryElementwiseArithmetic({arg0})
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Abs"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Exp : public UnaryElementwiseArithmetic
-        {
-        public:
-            Exp(const std::shared_ptr<Node>& arg0)
-                : UnaryElementwiseArithmetic(arg0)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Exp"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Log : public UnaryElementwiseArithmetic
-        {
-        public:
-            Log(const std::shared_ptr<Node>& arg0)
-                : UnaryElementwiseArithmetic(arg0)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Log"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Negative : public UnaryElementwiseArithmetic
-        {
-        public:
-            Negative(const std::shared_ptr<Node>& arg0)
-                : UnaryElementwiseArithmetic(arg0)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Negative"; }
-            //virtual void propagate_types() override;
-        };
-
         /// Op(X, Y)[I] = op(X[I], Y[I])
         class BinaryElementwiseBuiltin : public Builtin
         {
@@ -202,42 +154,6 @@ namespace ngraph
                                              const element::Type& arg1_element_type) const override;
         };
 
-        class Equal : public BinaryElementwiseComparison
-        {
-        public:
-            Equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseComparison(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Equal"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Greater : public BinaryElementwiseComparison
-        {
-        public:
-            Greater(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseComparison(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Greater"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Less : public BinaryElementwiseComparison
-        {
-        public:
-            Less(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseComparison(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Less"; }
-            //virtual void propagate_types() override;
-        };
-
         class BinaryElementwiseArithmetic : public BinaryElementwiseBuiltin
         {
         public:
@@ -253,54 +169,6 @@ namespace ngraph
                                            const element::Type& arg0_element_type,
                                            const element::Type& arg1_element_type)
                 const final override;
-        };
-
-        class Maximum : public BinaryElementwiseArithmetic
-        {
-        public:
-            Maximum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Max"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Minimum : public BinaryElementwiseArithmetic
-        {
-        public:
-            Minimum(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Min"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Power : public BinaryElementwiseArithmetic
-        {
-        public:
-            Power(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Power"; }
-            //virtual void propagate_types() override;
-        };
-
-        class Remainder : public BinaryElementwiseArithmetic
-        {
-        public:
-            Remainder(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic(arg0, arg1)
-            {
-            }
-
-            virtual std::string get_op_class_name() const override { return "Remainder"; }
-            //virtual void propagate_types() override;
         };
     }
 }

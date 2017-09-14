@@ -18,15 +18,15 @@ namespace ngraph
 {
     namespace op
     {
-        class Ceiling : public UnaryElementwiseArithmetic
+        class Negative : public UnaryElementwiseArithmetic
         {
         public:
-            Ceiling(const std::shared_ptr<Node>& arg)
+            Negative(const std::shared_ptr<Node>& arg)
                 : UnaryElementwiseArithmetic(arg)
             {
             }
 
-            virtual std::string get_op_class_name() const override { return "Ceiling"; }
+            virtual std::string get_op_class_name() const override { return "Negative"; }
         };
     }
 }

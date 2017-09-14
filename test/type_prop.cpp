@@ -323,24 +323,10 @@ TEST(type_prop, add_bad_arguments)
     });
 }
 
-TEST(type_prop, ceiling_bad_arguments)
-{
-    test_binary([](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
-        return make_shared<op::Ceiling>(x, y);
-    });
-}
-
 TEST(type_prop, divide_bad_arguments)
 {
     test_binary([](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
         return make_shared<op::Divide>(x, y);
-    });
-}
-
-TEST(type_prop, floor_bad_arguments)
-{
-    test_binary([](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
-        return make_shared<op::Floor>(x, y);
     });
 }
 

@@ -18,11 +18,11 @@ namespace ngraph
 {
     namespace op
     {
-        class Floor : public BinaryElementwiseArithmetic
+        class Floor : public UnaryElementwiseArithmetic
         {
         public:
-            Floor(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic(arg0, arg1)
+            Floor(const std::shared_ptr<Node>& arg)
+                : UnaryElementwiseArithmetic(arg)
             {
             }
 

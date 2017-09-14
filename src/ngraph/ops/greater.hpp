@@ -18,15 +18,14 @@ namespace ngraph
 {
     namespace op
     {
-        class Ceiling : public UnaryElementwiseArithmetic
+        class Greater : public BinaryElementwiseComparison
         {
         public:
-            Ceiling(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic(arg)
+            Greater(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+                : BinaryElementwiseComparison(arg0, arg1)
             {
             }
-
-            virtual std::string get_op_class_name() const override { return "Ceiling"; }
+            virtual std::string get_op_class_name() const override { return "Greater"; }
         };
     }
 }
