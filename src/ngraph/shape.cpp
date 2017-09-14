@@ -12,11 +12,33 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "shape.hpp"
-#include "util.hpp"
+#include <algorithm>
+#include <vector>
 
-std::ostream& ngraph::operator<<(std::ostream& out, const ngraph::Shape& obj)
+#include "ngraph/shape.hpp"
+
+using namespace std;
+using namespace ngraph;
+
+size_t ngraph::shape_size(const Shape& shape)
 {
-    out << "{" << join(obj.m_sizes, ", ") << "}";
-    return out;
+    size_t size = 1;
+    for (auto d : shape)
+    {
+        size *= d;
+    }
+    return size;
+}
+
+Strides ngraph::row_major_strides(const Shape& shape)
+{
+    Strides strides;
+    size_t  s = 1;
+    for (auto d = shape.rbegin(); d != shape.rend(); d++)
+    {
+        strides.push_back(s);
+        s *= *d;
+    }
+    reverse(strides.begin(), strides.end());
+    return strides;
 }

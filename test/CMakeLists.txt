@@ -31,6 +31,8 @@ set (SRC
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    runtime.cpp
+    shape.cpp
     tensor.cpp
     test_tools.cpp
     topological_sort.cpp

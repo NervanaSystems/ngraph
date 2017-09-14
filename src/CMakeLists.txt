@@ -11,6 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+include_directories(SYSTEM ${EIGEN_INCLUDE_DIR})
+
 set (SRC
     log.cpp
     ngraph/descriptor/input.cpp
@@ -28,6 +30,9 @@ set (SRC
     ngraph/pass/propagate_types.cpp
     ngraph/pass/topological_sort.cpp
     ngraph/pass/tree_pass.cpp
+    ngraph/runtime/call_frame.cpp
+    ngraph/runtime/eigen/tensor_view.cpp
+    ngraph/shape.cpp
     ngraph/visualize.cpp
     ops/binary_elementwise_builtin.cpp
     ops/broadcast.cpp
@@ -92,3 +97,4 @@ install(DIRECTORY
     FILES_MATCHING PATTERN "*.hpp"
 )
 
+add_dependencies(ngraph eigen)

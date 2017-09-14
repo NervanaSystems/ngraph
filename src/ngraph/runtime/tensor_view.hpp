@@ -14,17 +14,15 @@
 
 #pragma once
 
-#include <cstdio>
-#include <iostream>
-#include <vector>
-
-#include "common.hpp"
-
 namespace ngraph
 {
-    /// Number of elements in spanned by a shape
-    size_t shape_size(const Shape& shape);
-
-    /// Row-major strides for a shape
-    Strides row_major_strides(const Shape& shape);
+    namespace runtime
+    {
+        // Actual tensor views are parameterized on element type
+        class PrimaryTensorView
+        {
+        public:
+            virtual ~PrimaryTensorView(){}
+        };
+    }
 }

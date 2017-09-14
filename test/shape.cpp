@@ -12,19 +12,26 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include <memory>
 
-#include <cstdio>
-#include <iostream>
-#include <vector>
+#include "gtest/gtest.h"
 
-#include "common.hpp"
+#include "ngraph/ngraph.hpp"
 
-namespace ngraph
+using namespace std;
+using namespace ngraph;
+using namespace ngraph::runtime::eigen;
+
+TEST(shape, test_shape_size)
 {
-    /// Number of elements in spanned by a shape
-    size_t shape_size(const Shape& shape);
+    ASSERT_EQ(1, shape_size(Shape{}));
+    ASSERT_EQ(2 * 3 * 5, shape_size(Shape{2, 3, 5}));
+}
 
-    /// Row-major strides for a shape
-    Strides row_major_strides(const Shape& shape);
+TEST(shape, test_shape_strides)
+{
+    ASSERT_EQ(Strides{}, row_major_strides(Shape{}));
+    ASSERT_EQ(Strides{1}, row_major_strides(Shape{3}));
+    ASSERT_EQ((Strides{7, 1}), row_major_strides(Shape{2, 7}));
+    ASSERT_EQ((Strides{84, 12, 1}), row_major_strides(Shape{5, 7, 12}));
 }

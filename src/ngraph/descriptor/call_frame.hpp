@@ -14,17 +14,28 @@
 
 #pragma once
 
-#include <cstdio>
-#include <iostream>
+#include <memory>
 #include <vector>
 
-#include "common.hpp"
+#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/function.hpp"
 
 namespace ngraph
 {
-    /// Number of elements in spanned by a shape
-    size_t shape_size(const Shape& shape);
+    namespace descriptor
+    {
+        // Describes the frame that will be used when a function is executing
+        class CallFrame
+        {
+        protected:
+            Function m_function;
 
-    /// Row-major strides for a shape
-    Strides row_major_strides(const Shape& shape);
+            // Will be provided by the caller
+            std::vector<std::shared_ptr<TensorView>> m_inputs;
+            std::vector<std::shared_ptr<TensorView>> m_outputs;
+            // Will be provided by the call mechanism
+            // Expect there to be only one buffer
+            std::vector<std::shared_ptr<Buffer>> m_buffers;
+        };
+    }
 }

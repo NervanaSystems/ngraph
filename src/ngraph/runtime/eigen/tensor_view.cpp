@@ -12,19 +12,18 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include <Eigen/Dense>
 
-#include <cstdio>
-#include <iostream>
-#include <vector>
+#include "ngraph.hpp"
 
-#include "common.hpp"
+using namespace Eigen;
+using namespace ngraph::runtime::eigen;
+using namespace ngraph::element;
 
-namespace ngraph
-{
-    /// Number of elements in spanned by a shape
-    size_t shape_size(const Shape& shape);
+template void ngraph::runtime::eigen::add<Float32>(const PrimaryTensorView<Float32>& arg0,
+                                                   const PrimaryTensorView<Float32>& arg1,
+                                                   PrimaryTensorView<Float32>&       out);
 
-    /// Row-major strides for a shape
-    Strides row_major_strides(const Shape& shape);
-}
+template void ngraph::runtime::eigen::multiply<Float32>(const PrimaryTensorView<Float32>& arg0,
+                                                        const PrimaryTensorView<Float32>& arg1,
+                                                        PrimaryTensorView<Float32>&       out);

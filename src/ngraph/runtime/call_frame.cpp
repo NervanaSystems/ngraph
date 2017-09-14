@@ -12,19 +12,18 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "ngraph/ngraph.hpp"
 
-#include <cstdio>
-#include <iostream>
-#include <vector>
+using namespace std;
+using namespace ngraph;
+using namespace runtime;
 
-#include "common.hpp"
-
-namespace ngraph
+CallFrame::CallFrame(Function&                                              function,
+                     const std::vector<std::shared_ptr<PrimaryTensorView>>& arguments,
+                     const std::vector<std::shared_ptr<PrimaryTensorView>>& results)
 {
-    /// Number of elements in spanned by a shape
-    size_t shape_size(const Shape& shape);
-
-    /// Row-major strides for a shape
-    Strides row_major_strides(const Shape& shape);
+    m_tensors.insert(m_tensors.end(), arguments.begin(), arguments.end());
+    m_tensors.insert(m_tensors.end(), results.begin(), results.end());
+    // TBD
+    // From Function allocate tensors for the temporaries
 }

@@ -14,17 +14,24 @@
 
 #pragma once
 
-#include <cstdio>
-#include <iostream>
+#include <memory>
 #include <vector>
 
-#include "common.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
 {
-    /// Number of elements in spanned by a shape
-    size_t shape_size(const Shape& shape);
+    namespace runtime
+    {
+        // A compiled graph function
+        class Function
+        {
+        public:
+            virtual ~Function() {}
 
-    /// Row-major strides for a shape
-    Strides row_major_strides(const Shape& shape);
+            // Invoke the function with a the given inputs and outputs
+            void operator()(std::vector<std::shared_ptr<PrimaryTensorView>> inputs,
+                            std::vector<std::shared_ptr<PrimaryTensorView>> outputs);
+        };
+    }
 }

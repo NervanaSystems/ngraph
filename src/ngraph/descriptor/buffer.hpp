@@ -14,17 +14,17 @@
 
 #pragma once
 
-#include <cstdio>
-#include <iostream>
-#include <vector>
-
-#include "common.hpp"
-
 namespace ngraph
 {
-    /// Number of elements in spanned by a shape
-    size_t shape_size(const Shape& shape);
-
-    /// Row-major strides for a shape
-    Strides row_major_strides(const Shape& shape);
+    namespace descriptor
+    {
+        // A buffer identfies a chunk of storage
+        // In descriptors, we are identifying what will be associated with actual memory
+        // during execution.
+        class Buffer
+        {
+        protected:
+            size_t size;
+        };
+    }
 }

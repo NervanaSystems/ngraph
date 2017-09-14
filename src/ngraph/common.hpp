@@ -41,4 +41,11 @@ namespace ngraph
 
     /// A set of axes, for example, reduction axes
     using AxisSet = std::set<size_t>;
+
+    /// Shape for a tensor
+    using Shape = std::vector<size_t>;
+
+    /// Strides of a tensor
+    using Strides = std::vector<size_t>;
+
 }

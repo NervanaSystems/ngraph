@@ -16,6 +16,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "log.hpp"
+#include "util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -69,7 +70,7 @@ std::ostream& ngraph::operator<<(std::ostream& out, const ValueType& obj)
 
 std::ostream& ngraph::operator<<(std::ostream& out, const TensorViewType& obj)
 {
-    out << "TensorViewType(" << obj.m_element_type << ", " << obj.m_shape  << ")";
+    out << "TensorViewType(" << obj.m_element_type << ", {" << join(obj.m_shape)  << "})";
     return out;
 }
 
