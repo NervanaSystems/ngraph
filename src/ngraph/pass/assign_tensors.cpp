@@ -57,6 +57,6 @@ void pass::AssignTensors::check_dependencies(
 
     if (!found_propagate_types)
     {
-        throw runtime_error("Depencency 'PropagateTypes' not found for pass 'AssignTensors'");
+        throw runtime_error("Dependency 'PropagateTypes' not found for pass 'AssignTensors'");
     }
 }

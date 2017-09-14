@@ -53,7 +53,7 @@ namespace ngraph
             size_t                             m_bitwidth;
             bool                               m_is_float;
             bool                               m_is_signed;
-            std::string                        m_cname;
+            const std::string                  m_cname;
         };
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);

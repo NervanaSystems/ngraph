@@ -46,7 +46,7 @@ void pass::MemoryLayout::check_dependencies(
 
     if (!found_propagate_types)
     {
-        throw runtime_error("Depencency 'PropagateTypes' not found for pass 'AssignTensors'");
+        throw runtime_error("Dependency 'PropagateTypes' not found for pass 'AssignTensors'");
     }
 }
 
@@ -68,16 +68,13 @@ pass::MemoryManager::MemoryManager(size_t alignment)
 
 size_t pass::MemoryManager::allocate(size_t size)
 {
-    INFO;
     size_t rc;
     switch(m_scheme)
     {
     case allocation_scheme::FIRST_FIT:
-        INFO;
         rc = first_fit(size);
         break;
     case allocation_scheme::BEST_FIT:
-        INFO;
         rc = best_fit(size);
         break;
     }
@@ -88,7 +85,6 @@ size_t pass::MemoryManager::best_fit(size_t size)
 {
     size = align(size, m_alignment);
     size_t offset = 0;
-    bool found = false;
     size_t min_delta = numeric_limits<size_t>::max();
     auto best_fit = m_node_list.end();
     size_t best_offset = offset;
@@ -97,7 +93,6 @@ size_t pass::MemoryManager::best_fit(size_t size)
         if (it->m_state == block_state::FREE && it->m_size >= size)
         {
             size_t delta = it->m_size - size;
-            INFO << "delta " << delta << ", min_delta " << min_delta;
             if (delta < min_delta)
             {
                 min_delta = delta;
@@ -107,22 +102,21 @@ size_t pass::MemoryManager::best_fit(size_t size)
         }
         offset += it->m_size;
     }
+
     if (best_fit == m_node_list.end())
     {
         throw bad_alloc();
     }
-    else if (!found)
+
+    if (min_delta == 0)
     {
-        if (min_delta == 0)
-        {
-            // exact fit
-            best_fit->m_state = block_state::ALLOCATED;
-        }
-        else
-        {
-            m_node_list.insert(best_fit, node{size, block_state::ALLOCATED});
-            best_fit->m_size -= size;
-        }
+        // exact fit
+        best_fit->m_state = block_state::ALLOCATED;
+    }
+    else
+    {
+        m_node_list.insert(best_fit, node{size, block_state::ALLOCATED});
+        best_fit->m_size -= size;
     }
     m_max_allocated = std::max(m_max_allocated, best_offset + size);
 
@@ -224,12 +218,10 @@ size_t pass::MemoryManager::align(size_t size, size_t alignment)
     else
     {
         auto remainder = size % alignment;
-        INFO << "size " << size << ", remainder " << remainder << ", alignment " << alignment;
         if (remainder > 0)
         {
             size += (alignment - remainder);
         }
-        INFO << "final size " << size;
     }
     return size;
 }
