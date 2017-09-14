@@ -29,6 +29,8 @@ set (SRC
     main.cpp
     op.cpp
     pass_manager.cpp
+    runtime.cpp
+    shape.cpp
     tensor.cpp
     test_tools.cpp
     topological_sort.cpp

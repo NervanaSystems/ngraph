@@ -51,14 +51,8 @@ size_t ngraph::element::Type::size() const
     return std::ceil((float)m_bitwidth / 8.0);
 }
 
-namespace ngraph
+std::ostream& ngraph::element::operator<<(std::ostream& out, const ngraph::element::Type& obj)
 {
-    namespace element
-    {
-        std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj)
-        {
-            // out << "ElementType(" << obj.c_type_string() << ")";
-            return out;
-        }
-    }
+    // out << "ElementType(" << obj.c_type_string() << ")";
+    return out;
 }
