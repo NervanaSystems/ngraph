@@ -28,7 +28,7 @@ namespace ngraph
 class ngraph::pass::PropagateTypes : public CallBase
 {
 public:
-    virtual bool run_on_call_list(std::list<Node*>) override;
+    virtual bool run_on_call_list(std::list<Node*>&) override;
 
 private:
 };

@@ -32,7 +32,6 @@ ngraph::element::Type::Type(size_t             bitwidth,
     , m_is_signed{is_signed}
     , m_cname{cname}
 {
-    INFO << m_cname;
     assert(m_bitwidth % 8 == 0);
 }
 
@@ -54,6 +53,6 @@ size_t ngraph::element::Type::size() const
 
 std::ostream& ngraph::element::operator<<(std::ostream& out, const ngraph::element::Type& obj)
 {
-    // out << "ElementType(" << obj.c_type_string() << ")";
+    out << obj.m_cname;
     return out;
 }

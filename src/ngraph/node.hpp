@@ -106,8 +106,8 @@ namespace ngraph
         size_t               get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
-        std::vector<std::shared_ptr<descriptor::Input>>  get_inputs() { return m_inputs; }
-        std::vector<std::shared_ptr<descriptor::Output>> get_outputs() { return m_outputs; }
+        const std::vector<std::shared_ptr<descriptor::Input>>&  get_inputs() { return m_inputs; }
+        const std::vector<std::shared_ptr<descriptor::Output>>& get_outputs() { return m_outputs; }
 
     protected:
         Nodes                                            m_arguments;

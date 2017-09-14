@@ -45,7 +45,7 @@ public:
     const std::list<Node*>& get_sorted_list() const;
 
 private:
-    std::vector<std::shared_ptr<TreeBase>>  m_tree_passes;
-    std::vector<std::shared_ptr<CallBase>>  m_call_passes;
-    std::list<Node*>                        m_sorted_list;
+    std::vector<std::shared_ptr<TreeBase>> m_tree_passes;
+    std::vector<std::shared_ptr<CallBase>> m_call_passes;
+    std::list<Node*>                       m_sorted_list;
 };
