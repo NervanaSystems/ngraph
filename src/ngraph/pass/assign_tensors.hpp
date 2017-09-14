@@ -14,17 +14,23 @@
 
 #pragma once
 
-#include <cstdio>
-#include <iostream>
-#include <vector>
-
-#include "common.hpp"
+#include "call_pass.hpp"
 
 namespace ngraph
 {
-    /// Number of elements in spanned by a shape
-    size_t shape_size(const Shape& shape);
-
-    /// Row-major strides for a shape
-    Strides row_major_strides(const Shape& shape);
+    namespace pass
+    {
+        class AssignTensors;
+    }
+    class Node;
 }
+
+class ngraph::pass::AssignTensors : public CallBase
+{
+public:
+    virtual bool run_on_call_list(std::list<Node*>&) override;
+
+    void check_dependencies(const std::vector<std::shared_ptr<CallBase>>&) const override;
+
+private:
+};

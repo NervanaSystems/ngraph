@@ -55,12 +55,12 @@ bool validate_list(const list<Node*>& nodes)
 
 shared_ptr<Node> make_test_graph()
 {
-    auto arg_0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
-    auto arg_1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
-    auto arg_2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
-    auto arg_3 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
-    auto arg_4 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
-    auto arg_5 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+    auto arg_0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto arg_1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto arg_2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto arg_3 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto arg_4 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto arg_5 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
 
     auto t0 = make_shared<op::Add>(arg_0, arg_1);
     auto t1 = make_shared<op::Dot>(t0, arg_2);

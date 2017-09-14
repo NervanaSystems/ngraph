@@ -53,6 +53,6 @@ size_t ngraph::element::Type::size() const
 
 std::ostream& ngraph::element::operator<<(std::ostream& out, const ngraph::element::Type& obj)
 {
-    // out << "ElementType(" << obj.c_type_string() << ")";
+    out << obj.m_cname;
     return out;
 }

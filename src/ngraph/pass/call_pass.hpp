@@ -15,6 +15,8 @@
 #pragma once
 
 #include <list>
+#include <memory>
+#include <vector>
 
 #include "pass.hpp"
 
@@ -32,7 +34,9 @@ class ngraph::pass::CallBase : public Base
 {
 public:
     virtual ~CallBase() {}
+    virtual bool run_on_call_list(std::list<Node*>&) = 0;
 
-    virtual bool run_on_call_list(std::list<Node*>) = 0;
+    // derived class throws exception if its dependencies have not been met
+    virtual void check_dependencies(const std::vector<std::shared_ptr<CallBase>>&) const {}
 private:
 };
