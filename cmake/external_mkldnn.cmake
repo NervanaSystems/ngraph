@@ -29,7 +29,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             ext_mkldnn
             GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
             UPDATE_COMMAND ""
-            PATCH_COMMAND git am ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
+            PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
             CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
             )
     else()
