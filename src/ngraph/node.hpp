@@ -25,8 +25,6 @@
 
 namespace ngraph
 {
-    class Op;
-
     namespace descriptor
     {
         class Input;
@@ -71,7 +69,7 @@ namespace ngraph
         std::string get_name() const { return m_name; }
         void set_name(const std::string& name) { m_name = name; }
 
-        virtual std::string get_node_id() const = 0;
+        virtual std::string get_node_id() const;
 
         /// Return true if this has the same implementing class as node. This
         /// will be used by the pattern matcher when comparing a pattern
@@ -100,7 +98,6 @@ namespace ngraph
         // independently compute what we thing the value type should be from the arguments.
         void set_value_type_checked(const std::shared_ptr<ValueType>& value_type);
 
-        bool is_op() const;
         bool is_parameter() const;
 
         size_t               get_instance_id() const { return m_instance_id; }

@@ -27,7 +27,7 @@ namespace ngraph
             {
             }
 
-            virtual std::string get_op_class_name() const override { return "Convert"; }
+            virtual std::string description() const override { return "Convert"; }
             virtual void        propagate_types() override;
 
         protected:

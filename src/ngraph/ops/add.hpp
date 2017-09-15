@@ -25,7 +25,7 @@ namespace ngraph
                 : BinaryElementwiseArithmetic(arg0, arg1)
             {
             }
-            virtual std::string get_op_class_name() const override { return "Add"; }
+            virtual std::string description() const override { return "Add"; }
         };
     }
 }

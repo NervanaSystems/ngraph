@@ -107,17 +107,15 @@ TEST(benchmark, topological_sort)
         result = make_cell(result, in_1, in_2);
     }
 
-    auto op_r0 = static_pointer_cast<Op>(result);
-
     timer.start();
     pass::TopologicalSort ts;
-    ts.run_on_tree(op_r0);
+    ts.run_on_tree(result);
     auto sorted_list = ts.get_call_graph();
     timer.stop();
     INFO << "topological sort took " << timer.get_milliseconds() << "ms";
 
     size_t node_count = 0;
-    traverse_nodes(op_r0, [&](const Node* node) {
+    traverse_nodes(result, [&](const Node* node) {
         node_count++;
     });
 
