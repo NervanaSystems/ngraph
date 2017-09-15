@@ -19,6 +19,7 @@ set (SRC
     ngraph/descriptor/output.cpp
     ngraph/descriptor/tensor_view.cpp
     ngraph/descriptor/tensor.cpp
+    ngraph/function.cpp
     ngraph/node.cpp
     ngraph/shape.cpp
     ngraph/pass/assign_tensors.cpp
@@ -31,6 +32,7 @@ set (SRC
     ngraph/pass/topological_sort.cpp
     ngraph/pass/tree_pass.cpp
     ngraph/runtime/call_frame.cpp
+    ngraph/runtime/eigen/external_function.cpp
     ngraph/runtime/eigen/tensor_view.cpp
     ngraph/shape.cpp
     ngraph/visualize.cpp
@@ -42,7 +44,6 @@ set (SRC
     ops/constant.cpp
     ops/convert.cpp
     ops/dot.cpp
-    ops/function.cpp
     ops/op.cpp
     ops/parameter.cpp
     ops/tuple.cpp

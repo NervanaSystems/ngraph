@@ -351,7 +351,7 @@ TEST(type_prop, comparison_good)
     auto tv0_2_4_param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
     auto eq = make_shared<op::Equal>(tv0_2_4_param_0,tv0_2_4_param_1);
-    auto expected_type = TensorViewType(element::Bool::element_type(), Shape{2, 4});
+    TensorViewType expected_type{element::Bool::element_type(), Shape{2, 4}};
     eq->propagate_types();
     EXPECT_EQ(*eq->get_value_type(),expected_type);
 }

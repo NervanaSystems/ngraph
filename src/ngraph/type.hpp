@@ -30,6 +30,12 @@ namespace ngraph
     ///   | TupleType(ValueType[])
     class ValueType
     {
+        ValueType(const ValueType&) = delete;
+        ValueType& operator=(const ValueType&) = delete;
+
+    protected:
+        ValueType() {}
+
     public:
         virtual ~ValueType() {}
         virtual bool operator==(const ValueType& that) const = 0;
@@ -48,7 +54,8 @@ namespace ngraph
         /// /param element_type The type of the tensor elements.
         /// /param shape The shape of the tensor.
         TensorViewType(const element::Type& element_type, const Shape& shape)
-            : m_element_type(element_type)
+            : ValueType()
+            , m_element_type(element_type)
             , m_shape(shape)
         {
         }

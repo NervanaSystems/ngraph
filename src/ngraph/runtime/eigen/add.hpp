@@ -15,6 +15,7 @@
 #pragma once
 
 #include "ngraph/runtime/call_frame.hpp"
+#include "ngraph/runtime/eigen/tensor_view.hpp"
 #include "ngraph/runtime/instruction.hpp"
 
 namespace ngraph

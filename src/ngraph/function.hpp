@@ -14,9 +14,11 @@
 
 #pragma once
 
+#include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op.hpp"
 #include "ngraph/ops/parameter.hpp"
+#include "ngraph/runtime/instruction.hpp"
 #include "ngraph/type.hpp"
 
 namespace ngraph
@@ -34,7 +36,6 @@ namespace ngraph
             return m_parameters;
         }
         std::string get_name() const { return m_name; }
-
     protected:
         std::shared_ptr<Node>                               m_result;
         std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;

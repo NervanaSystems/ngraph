@@ -25,6 +25,7 @@ set (SRC
     build_graph.cpp
     eigen.cpp
     element_type.cpp
+    execute.cpp
     input_output_assign.cpp
     main.cpp
     op.cpp
