@@ -2,7 +2,9 @@
 # are added.
 
 DIR = $(realpath ../..)
-VOLUME = -v ${DIR}:/root/ngraph-cpp-test
+# Use /tmp/ngraph-cpp-test, because we run as the user (and not root)
+# /root/ngraph-cpp-test is not used, because /root is not accessible to user
+VOLUME = -v ${DIR}:/tmp/ngraph-cpp-test
 GIT_COMMIT = $(shell git rev-parse HEAD)
 BUILD_VERSION = ${GIT_COMMIT}_${PYTHON_VERSION}
 BUILD_DIR = ${DIR}/contrib/docker/.build-${BUILD_VERSION}
@@ -46,7 +48,12 @@ build_ngraph_cpp_cpu: expand_dockerfile_templates
 build_all: build_ngraph_cpp_cpu
 
 check_cpu: build_ngraph_cpp_cpu
-	docker run --rm ${DOCKER_RUN_ENV} ${VOLUME} -t ngraph_cpp_cpu:${BUILD_VERSION} sh -c "mkdir BUILD ; cd BUILD ; cmake .. ; make check"
+	# Make BUILD directory as user
+	mkdir -p ${DIR}/BUILD
+	chmod ug+rwx ${DIR}/BUILD
+	# Need to use /tmp/ngraph-cpp-test/BUILD, because running as user
+	# Can't use /root/ngraph-cpp-test/BUILD, because /root not accessible to user
+	docker run --rm --user ${CALLER_UID}:${CALLER_GID} ${DOCKER_RUN_ENV} ${VOLUME} -w /tmp/ngraph-cpp-test/BUILD -t ngraph_cpp_cpu:${BUILD_VERSION} sh -c "cmake .. ; make check"
 	# update the files to be owned by the calling user instead of root, to avoid docker mount problems with file ownership
 	docker run --rm ${VOLUME} \
 	--env MY_UID=${CALLER_UID} \
