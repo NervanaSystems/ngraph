@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include <Eigen/Dense>
+#include <memory>
 
 #include "ngraph.hpp"
 
@@ -27,3 +28,11 @@ template void ngraph::runtime::eigen::add<Float32>(const PrimaryTensorView<Float
 template void ngraph::runtime::eigen::multiply<Float32>(const PrimaryTensorView<Float32>& arg0,
                                                         const PrimaryTensorView<Float32>& arg1,
                                                         PrimaryTensorView<Float32>&       out);
+
+std::shared_ptr<ngraph::runtime::PrimaryTensorView> ngraph::runtime::eigen::make_tensor_view(
+    std::shared_ptr<ngraph::descriptor::TensorView> tensor_view)
+{
+    // For now, we only support Float32 primary tensor views
+    return std::make_shared<PrimaryTensorView<Float32>>(
+        tensor_view->get_tensor_view_type()->get_shape());
+}

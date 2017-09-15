@@ -17,6 +17,7 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/instruction.hpp"
 
@@ -24,8 +25,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        using PTVs = std::vector<std::shared_ptr<ngraph::runtime::PrimaryTensorView>>;
-
         class PrimaryTensorView;
 
         // A VM for executing lightly-compiled graph functions.
@@ -39,8 +38,8 @@ namespace ngraph
                 size_t                                                            initial_pc,
                 const std::shared_ptr<std::vector<std::shared_ptr<Instruction>>>& instructions);
 
-            void operator()(const PTVs& inputs, const PTVs& outpus);
-            void set_return() { m_return = true; }
+            void                               operator()(const PTVs& inputs, const PTVs& outpus);
+            void                               set_return() { m_return = true; }
             std::shared_ptr<PrimaryTensorView> get_tensor(size_t i) { return m_tensors[i]; }
 
         protected:

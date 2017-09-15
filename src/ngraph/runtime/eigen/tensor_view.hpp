@@ -19,6 +19,7 @@
 
 #include "ngraph/shape.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/descriptor/tensor_view.hpp"
 
 namespace ngraph
 {
@@ -26,6 +27,8 @@ namespace ngraph
     {
         namespace eigen
         {
+            std::shared_ptr<ngraph::runtime::PrimaryTensorView> make_tensor_view(std::shared_ptr<ngraph::descriptor::TensorView>);
+
             template <typename ET>
             class PrimaryTensorView : public ngraph::runtime::PrimaryTensorView
             {

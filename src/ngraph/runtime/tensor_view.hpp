@@ -22,7 +22,9 @@ namespace ngraph
         class PrimaryTensorView
         {
         public:
-            virtual ~PrimaryTensorView(){}
+            virtual ~PrimaryTensorView() {}
         };
+
+        using PTVs = std::vector<std::shared_ptr<ngraph::runtime::PrimaryTensorView>>;
     }
 }

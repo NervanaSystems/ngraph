@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ngraph.hpp"
+#include <memory>
+
+#include "ngraph/function.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-Function::Function(const std::shared_ptr<Node>&                           result,
+Function::Function(const std::shared_ptr<Node>&                       result,
                    const std::vector<std::shared_ptr<op::Parameter>>& parameters)
     : m_result(result)
     , m_parameters(parameters)

@@ -56,6 +56,7 @@
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/runtime/eigen/add.hpp"
+#include "ngraph/runtime/eigen/external_function.hpp"
 #include "ngraph/runtime/eigen/multiply.hpp"
 #include "ngraph/runtime/eigen/return.hpp"
 #include "ngraph/runtime/eigen/tensor_view.hpp"
