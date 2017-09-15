@@ -26,7 +26,7 @@ namespace ngraph
             {
             }
 
-            virtual std::string get_op_class_name() const override { return "Multiply"; }
+            virtual std::string description() const override { return "Multiply"; }
         };
     }
 }

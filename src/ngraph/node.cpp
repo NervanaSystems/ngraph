@@ -74,27 +74,24 @@ void Node::assign_tensors()
     }
 }
 
-bool Node::is_op() const
-{
-    return dynamic_cast<const Op*>(this) != nullptr;
-}
-
 bool Node::is_parameter() const
 {
     return dynamic_cast<const op::Parameter*>(this) != nullptr;
+}
+
+std::string Node::get_node_id() const
+{
+    stringstream ss;
+    ss << description() << "_" << m_instance_id;
+    return ss.str();
 }
 
 namespace ngraph
 {
     ostream& operator<<(ostream& out, const Node& node)
     {
-        auto op_tmp        = dynamic_cast<const Op*>(&node);
-        auto parameter_tmp = dynamic_cast<const Op*>(&node);
-        if (op_tmp)
-        {
-            out << "Op(" << op_tmp->get_node_id() << ")";
-        }
-        else if (parameter_tmp)
+        auto parameter_tmp = dynamic_cast<const op::Parameter*>(&node);
+        if (parameter_tmp)
         {
             out << "Parameter(" << parameter_tmp->get_node_id() << ")";
         }

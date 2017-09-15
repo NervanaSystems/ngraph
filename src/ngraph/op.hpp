@@ -22,32 +22,12 @@
 
 namespace ngraph
 {
-    /// Op nodes are nodes whose value is the result of some operation
-    /// applied to its arguments. For calls to user functions, the op will
-    /// reference the user function.
-    class Op : public Node
-    {
-    public:
-        Op(const std::vector<std::shared_ptr<Node>>& arguments)
-            : Node(arguments)
-        {
-        }
-
-        Op()
-            : Node()
-        {
-        }
-
-        virtual std::string get_op_class_name() const = 0;
-        virtual std::string get_node_id() const override;
-    };
-
     // TODO: These class definitions are to be moved into separate files in the op directory
     namespace op
     {
         /// A Function invokes a function on node arguments. In addition to the argument
         /// we need to preserve the function.
-        class FunctionCall : public Op
+        class FunctionCall : public Node
         {
             virtual std::string description() const override { return "FunctionCall"; }
 
@@ -57,14 +37,14 @@ namespace ngraph
 
         /// The is an operation we handle directly, i.e. all type checking, etc.
         /// are defined in C++ rather than in terms of ngraph operations.
-        class Builtin : public Op
+        class Builtin : public Node
         {
         public:
             virtual std::string description() const override { return "Builtin"; }
 
         protected:
             Builtin(const std::vector<std::shared_ptr<Node>>& args)
-                : Op(args)
+                : Node(args)
             {
             }
         };
@@ -88,7 +68,7 @@ namespace ngraph
             {
             }
 
-            virtual std::string get_op_class_name() const override { return "Reshape"; }
+            virtual std::string description() const override { return "Reshape"; }
             //virtual void propagate_types() override;
         protected:
             Shape m_shape;
@@ -147,7 +127,7 @@ namespace ngraph
             {
             }
 
-            virtual std::string get_op_class_name() const override { return "BinaryElementwiseComparison"; }
+            virtual std::string description() const override { return "BinaryElementwiseComparison"; }
             //virtual void propagate_types() override;
             virtual const element::Type& propagate_element_types(
                                              const element::Type& arg0_element_type,
@@ -163,7 +143,7 @@ namespace ngraph
             {
             }
 
-            virtual std::string get_op_class_name() const override { return "BinaryElementwiseArithmetic"; }
+            virtual std::string description() const override { return "BinaryElementwiseArithmetic"; }
             //virtual void propagate_types() override;
             virtual const element::Type& propagate_element_types(
                                            const element::Type& arg0_element_type,

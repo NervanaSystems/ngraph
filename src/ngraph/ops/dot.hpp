@@ -45,7 +45,7 @@ namespace ngraph
             {
             }
 
-            virtual std::string get_op_class_name() const override { return "Dot"; }
+            virtual std::string description() const override { return "Dot"; }
             virtual void        propagate_types() override;
         };
     }

@@ -60,13 +60,9 @@ std::string Visualize::get_attributes(const Node* node)
     {
         ss << "    " << node->get_node_id() << " [shape=box color=blue]\n";
     }
-    else if (node->is_op())
-    {
-        ss << "    " << node->get_node_id() << " [shape=ellipse color=black]\n";
-    }
     else
     {
-        ss << "    " << node->get_node_id() << " [shape=diamond color=red]\n";
+        ss << "    " << node->get_node_id() << " [shape=ellipse color=black]\n";
     }
     return ss.str();
 }

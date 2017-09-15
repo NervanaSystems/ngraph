@@ -25,7 +25,7 @@ namespace ngraph
                 : BinaryElementwiseComparison(arg0, arg1)
             {
             }
-            virtual std::string get_op_class_name() const override { return "Equal"; }
+            virtual std::string description() const override { return "Equal"; }
         };
     }
 }

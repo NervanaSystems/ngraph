@@ -26,7 +26,6 @@ TEST(op, is_op)
     auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
     ASSERT_NE(nullptr, arg0);
     EXPECT_TRUE(arg0->is_parameter());
-    EXPECT_FALSE(arg0->is_op());
 }
 
 TEST(op, is_parameter)
@@ -36,5 +35,4 @@ TEST(op, is_parameter)
     auto t0 = make_shared<op::Add>(arg0, arg0);
     ASSERT_NE(nullptr, t0);
     EXPECT_FALSE(t0->is_parameter());
-    EXPECT_TRUE(t0->is_op());
 }
