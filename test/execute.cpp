@@ -28,8 +28,7 @@ TEST(execute, test_abc)
     auto f     = make_shared<Function>(make_shared<op::Multiply>(make_shared<op::Add>(A, B), C),
                                    op::Parameters{A, B, C});
 
-    auto external = make_shared<ngraph::runtime::eigen::ExternalFunction>();
-    external->compile(f);
+    auto external = make_shared<ngraph::runtime::eigen::ExternalFunction>(f);
     auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
