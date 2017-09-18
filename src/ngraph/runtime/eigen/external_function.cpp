@@ -33,8 +33,10 @@
 using namespace std;
 using namespace ngraph::runtime::eigen;
 
-ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function)
+ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                                   bool                                     release_function)
     : m_function(function)
+    , m_release_function(release_function)
     , m_is_compiled(false)
     , m_instructions(make_shared<std::vector<std::shared_ptr<ngraph::runtime::Instruction>>>())
 {
@@ -172,6 +174,10 @@ void ExternalFunction::compile()
     }
     m_instructions->push_back(make_shared<runtime::eigen::ReturnInstruction>());
     m_is_compiled = true;
+    if (m_release_function)
+    {
+        release_function();
+    }
 }
 
 shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
