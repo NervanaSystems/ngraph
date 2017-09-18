@@ -9,4 +9,6 @@ This file should never appear on the master branch -- it should only ever exist
 on branch chrisl/test-merge-trigger, which will be deleted once the merge-
 trigger is working.
 
+Additional line to force pull-request change (and build).
+
 -- ChrisL, September 18, 2017
