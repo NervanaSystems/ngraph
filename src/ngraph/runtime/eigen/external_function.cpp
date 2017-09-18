@@ -33,8 +33,12 @@
 using namespace std;
 using namespace ngraph::runtime::eigen;
 
-ExternalFunction::ExternalFunction()
-    : m_instructions(make_shared<std::vector<std::shared_ptr<ngraph::runtime::Instruction>>>())
+ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                                   bool                                     release_function)
+    : m_function(function)
+    , m_release_function(release_function)
+    , m_is_compiled(false)
+    , m_instructions(make_shared<std::vector<std::shared_ptr<ngraph::runtime::Instruction>>>())
 {
 }
 
@@ -83,12 +87,17 @@ std::unordered_map<std::type_index,
     return op_map;
 }
 
-void ExternalFunction::compile(std::shared_ptr<ngraph::Function> f)
+void ExternalFunction::compile()
 {
+    if (m_is_compiled)
+    {
+        return;
+    }
+
     // This will be replaced with the pass manager
     // Get the ordered list of ops in execution order
     pass::TopologicalSort ts;
-    ts.run_on_tree(f->get_result());
+    ts.run_on_tree(m_function->get_result());
     auto nodes = ts.get_call_graph();
     // Types
     for (auto node : nodes)
@@ -104,7 +113,7 @@ void ExternalFunction::compile(std::shared_ptr<ngraph::Function> f)
     // Determine tensor requirements for  the call frame
     unordered_map<shared_ptr<ngraph::descriptor::TensorView>, size_t> tensor_index;
     // First come the function inputs
-    for (auto param : f->get_parameters())
+    for (auto param : m_function->get_parameters())
     {
         for (auto output : param->get_outputs())
         {
@@ -116,7 +125,7 @@ void ExternalFunction::compile(std::shared_ptr<ngraph::Function> f)
     m_n_inputs = tensor_index.size();
 
     // Next are the function outputs
-    for (auto output : f->get_result()->get_outputs())
+    for (auto output : m_function->get_result()->get_outputs())
     {
         auto   tv        = output.get_tensor_view();
         size_t index     = tensor_index.size();
@@ -164,10 +173,19 @@ void ExternalFunction::compile(std::shared_ptr<ngraph::Function> f)
         handler_it->second(node, this, in, out);
     }
     m_instructions->push_back(make_shared<runtime::eigen::ReturnInstruction>());
+    m_is_compiled = true;
+    if (m_release_function)
+    {
+        release_function();
+    }
 }
 
 shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
 {
+    if (!m_is_compiled)
+    {
+        compile();
+    }
     std::vector<std::shared_ptr<ngraph::runtime::PrimaryTensorView>> temps;
     for (auto tv : m_temp_views)
     {

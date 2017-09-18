@@ -30,9 +30,8 @@ namespace ngraph
             class ExternalFunction
             {
             public:
-                ExternalFunction();
-
-                void compile(std::shared_ptr<ngraph::Function> f);
+                ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                                 bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
                 std::shared_ptr<std::vector<std::shared_ptr<ngraph::runtime::Instruction>>>
                     get_instructions()
@@ -40,9 +39,17 @@ namespace ngraph
                     return m_instructions;
                 }
 
+                // Release original function's resources
+                void release_function() { m_function = nullptr; }
+
             protected:
-                size_t m_n_inputs;
-                size_t m_n_outputs;
+                void compile();
+
+                std::shared_ptr<ngraph::Function> m_function;
+                bool                              m_release_function;
+                bool                              m_is_compiled;
+                size_t                            m_n_inputs;
+                size_t                            m_n_outputs;
                 std::shared_ptr<std::vector<std::shared_ptr<ngraph::runtime::Instruction>>>
                                                                              m_instructions;
                 std::vector<std::shared_ptr<ngraph::descriptor::TensorView>> m_temp_views;
