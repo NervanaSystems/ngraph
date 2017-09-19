@@ -16,7 +16,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "ngraph/element_type.hpp"
+#include "element_type.hpp"
 #include "log.hpp"
 
 using namespace ngraph;

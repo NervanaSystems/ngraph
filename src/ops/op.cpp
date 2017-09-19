@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <sstream>
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph.hpp"
 
 using namespace ngraph;
 using namespace std;

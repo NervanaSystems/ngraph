@@ -14,7 +14,7 @@
 
 #include <memory>
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph.hpp"
 #include "log.hpp"
 #include "util.hpp"
 
