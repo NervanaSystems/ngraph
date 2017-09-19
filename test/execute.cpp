@@ -25,11 +25,10 @@ TEST(execute, test_abc)
     auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto C     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Multiply>(make_shared<op::Add>(A, B), C),
-                                   op::Parameters{A, B, C});
+    auto f     = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
 
     auto external = make_shared<ngraph::runtime::eigen::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto cf       = external->make_call_frame();
 
     // Create some tensors for input/output
     auto a      = make_shared<runtime::eigen::PrimaryTensorView<element::Float32>>(shape);
