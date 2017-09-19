@@ -17,6 +17,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 #include <iostream>
 
@@ -29,6 +30,7 @@ namespace ngraph
     {
         class Input;
         class Output;
+        class Tensor;
     }
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
@@ -51,7 +53,7 @@ namespace ngraph
         virtual ~Node();
 
     public:
-        /// A "one-liner" describing this node.
+        /// The class name, must not contain spaces
         virtual std::string description() const = 0;
 
         /// Propagate types and check arguments for consistency
@@ -65,9 +67,6 @@ namespace ngraph
         void clear_arguments() { m_arguments.clear(); }
 
         const std::multiset<Node*>& users() const { return m_users; }
-
-        std::string get_name() const { return m_name; }
-        void set_name(const std::string& name) { m_name = name; }
 
         virtual std::string get_node_id() const;
 
@@ -104,7 +103,13 @@ namespace ngraph
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
         std::vector<descriptor::Input>&  get_inputs() { return m_inputs; }
+        const std::vector<descriptor::Input>&  get_inputs() const { return m_inputs; }
         std::vector<descriptor::Output>& get_outputs() { return m_outputs; }
+        const std::vector<descriptor::Output>& get_outputs() const { return m_outputs; }
+
+        std::unordered_set<descriptor::Tensor*> liveness_live_list;
+        std::unordered_set<descriptor::Tensor*> liveness_new_list;
+        std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
     protected:
         Nodes                           m_arguments;

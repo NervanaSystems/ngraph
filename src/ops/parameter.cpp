@@ -42,10 +42,3 @@ void Parameter::assign_function(Function* function, size_t index)
 }
 
 void Parameter::propagate_types() {}
-
-std::string ngraph::op::Parameter::get_node_id() const
-{
-    stringstream ss;
-    ss << "parameter_" << m_instance_id;
-    return ss.str();
-}

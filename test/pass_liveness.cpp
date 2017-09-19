@@ -20,14 +20,54 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/assign_tensors.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/propagate_types.hpp"
+#include "ngraph/pass/topological_sort.hpp"
+#include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/ngraph.hpp"
 #include "test_tools.hpp"
+#include "log.hpp"
 
 using namespace std;
+using namespace ngraph;
 namespace ng = ngraph;
 
-TEST(liveness, test)
+TEST(pass, liveness)
 {
+    string image = "liveness.png";
+    string dump_file = "liveness.txt";
+    pass::Manager pass_manager;
+    auto          visualize        = make_shared<pass::VisualizeTree>(image);
+    auto          topological_sort = make_shared<pass::TopologicalSort>();
+    auto          propagate_types  = make_shared<pass::PropagateTypes>();
+    auto          assign_tensors   = make_shared<pass::AssignTensors>();
+    auto          liveness         = make_shared<pass::Liveness>();
+    auto          dump_sorted      = make_shared<pass::DumpSorted>(dump_file);
+
+    pass_manager.register_pass(visualize);
+    pass_manager.register_pass(topological_sort);
+    pass_manager.register_pass(propagate_types);
+    pass_manager.register_pass(assign_tensors);
+    pass_manager.register_pass(liveness);
+    pass_manager.register_pass(dump_sorted);
+
+    auto   graph      = make_test_graph();
+    size_t node_count = get_node_count(graph);
+    pass_manager.run_passes(graph);
+    auto sorted = pass_manager.get_sorted_list();
+
+    // for (const Node* node : sorted)
+    // {
+    //     INFO << *node;
+    //     for (const descriptor::Tensor* tensor : node->liveness_live_list)
+    //     {
+    //         INFO << "    " << *tensor;
+    //     }
+    // }
+
     // auto x = ng.variable(axes=[]).named('x');
     // auto y = ng.variable(axes=[]).named('y');
     // auto w1 = ng.variable(axes=[]).named('w1');
@@ -48,7 +88,7 @@ TEST(liveness, test)
     // return exc;
 
 
-    
+
     // lg = LivenessGraph(exc.exop.ops)
     // lg.layout_memory()
 

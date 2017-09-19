@@ -14,111 +14,112 @@
 
 #include <exception>
 #include <sstream>
+#include <unordered_set>
 
 #include "log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/liveness.hpp"
+#include "util.hpp"
+#include "log.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 bool pass::Liveness::run_on_call_list(list<Node*>& ops)
 {
-    // list<Node*> live_list;
-    // list<Node*> free_list;
-    // list<Node*> new_list;
-    // currently_live = list();
+    unordered_set<descriptor::Tensor*> currently_live;
 
-    // size_t i = 0;
-    // for (i, exop in enumerate(reversed(ops)
-    // for(auto it=ops.rbegin(); it!=ops.rend(); it++)
-    // {
-    //     Node& exop = **it;
-    //     input_tensor_decls = list()
-    //     for (auto input_decl : exop.get_inputs())
-    //     {
-    //         if (is_interesting(input_decl.tensor_decl))
-    //         {
-    //             input_tensor_decls.append(input_decl.tensor_decl);
-    //         }
-    //     }
+    for(auto it=ops.rbegin(); it!=ops.rend(); it++)
+    {
+        Node& exop = **it;
+        exop.liveness_live_list.clear();
+        exop.liveness_new_list.clear();
+        exop.liveness_free_list.clear();
+        unordered_set<descriptor::Tensor*> input_tensor_decls;
+        for (auto input_decl : exop.get_inputs())
+        {
+            descriptor::Tensor& tensor = input_decl.get_tensor();
+            if (is_temporary(tensor))
+            {
+                input_tensor_decls.insert(&tensor);
+            }
+        }
 
-    //     output_tensor_decls = list()
-    //     for (output_decl : exop.output_decls)
-    //     {
-    //         if (is_interesting(output_decl.tensor_decl))
-    //         {
-    //             output_tensor_decls.append(output_decl.tensor_decl);
-    //         }
-    //     }
+        unordered_set<descriptor::Tensor*> output_tensor_decls;
+        for (auto output_decl : exop.get_outputs())
+        {
+            descriptor::Tensor& tensor = output_decl.get_tensor();
+            if (is_temporary(tensor))
+            {
+                output_tensor_decls.insert(&tensor);
+            }
+        }
 
-    //     free_tensor_decls = list();
-    //     new_tensor_decls = list();
-    //     for tensor_decl in input_tensor_decls + output_tensor_decls
-    //     {
-    //         if tensor_decl not in currently_live
-    //         {
-    //             // this is the last node that value is seen in
-    //             // delete it at the end of the op
-    //             currently_live.append(tensor_decl);
-    //             free_tensor_decls.append(tensor_decl);
-    //         }
-    //     }
-    //     live_list.insert(0, list(currently_live))
-    //     for output_decl in output_tensor_decls
-    //     {
-    //         if output_decl in currently_live
-    //         {
-    //             new_tensor_decls.append(output_decl);
-    //             currently_live.remove(output_decl);
-    //         }
-    //     }
-    //     free_list.insert(0, free_tensor_decls);
-    //     new_list.insert(0, new_tensor_decls);
-    // }
+        unordered_set<descriptor::Tensor*> free_tensor_decls;
+        unordered_set<descriptor::Tensor*> new_tensor_decls;
+        unordered_set<descriptor::Tensor*> all_tensor_decls = input_tensor_decls;
 
-    // // Anything marked as output must remain live for the remainder of the graph
-    // // Add outputs to live_list and remove from free_list
-    // outputs = list();
-    // seen = list();
-    // for i, exop in enumerate(ops)
-    // {
-    //     for tensor in live_list[i]
-    //     {
-    //         if tensor.is_output and tensor not in outputs
-    //         {
-    //             outputs.append(tensor);
-    //         }
-    //     }
-    //     for tensor in outputs
-    //     {
-    //         if tensor not in live_list[i]
-    //         {
-    //             live_list[i].append(tensor);
-    //         }
-    //         if tensor in free_list[i]
-    //         {
-    //             free_list[i].remove(tensor);
-    //         }
-    //         if tensor in new_list[i]
-    //         {
-    //             if tensor in seen
-    //             {
-    //                 new_list[i].remove(tensor);
-    //             }
-    //             else
-    //             {
-    //                 seen.append(tensor);
-    //             }
-    //         }
-    //     }
-    //     exop.liveness_live_list = live_list[i];
-    //     exop.liveness_new_list = new_list[i];
-    //     exop.liveness_free_list = free_list[i];
-    // }
+        for (auto decls : {input_tensor_decls, output_tensor_decls})
+        {
+            for (descriptor::Tensor* tensor_decl : decls)
+            {
+                if (!contains(currently_live, tensor_decl))
+                {
+                    // this is the last node that value is seen in
+                    // delete it at the end of the op
+                    currently_live.insert(tensor_decl);
+                    free_tensor_decls.insert(tensor_decl);
+                }
+            }
+        }
 
-    // self.validate_liveness(ops)
+        exop.liveness_live_list = currently_live;
+        for (descriptor::Tensor* output_decl : output_tensor_decls)
+        {
+            if (contains(currently_live, output_decl))
+            {
+                new_tensor_decls.insert(output_decl);
+                currently_live.erase(output_decl);
+            }
+        }
+        exop.liveness_free_list = free_tensor_decls;
+        exop.liveness_new_list = new_tensor_decls;
+    }
+
+    // Anything marked as output must remain live for the remainder of the graph
+    // Add outputs to live_list and remove from free_list
+    unordered_set<descriptor::Tensor*> outputs;
+    unordered_set<descriptor::Tensor*> seen;
+    for (Node* exop : ops)
+    {
+        for (descriptor::Tensor* tensor : exop->liveness_live_list)
+        {
+            if (tensor->is_output())
+            {
+                outputs.insert(tensor);
+            }
+        }
+        for (descriptor::Tensor* tensor : outputs)
+        {
+            exop->liveness_live_list.insert(tensor);
+            exop->liveness_free_list.erase(tensor);
+
+            if (contains(exop->liveness_new_list, tensor))
+            {
+                if (contains(seen, tensor))
+                {
+                    exop->liveness_new_list.erase(tensor);
+                }
+                else
+                {
+                    seen.insert(tensor);
+                }
+            }
+        }
+    }
+
+    validate_liveness(ops);
     return false;
 }
 
@@ -140,30 +141,32 @@ void pass::Liveness::check_dependencies(
     }
 }
 
-// bool pass::Liveness::is_interesting(tensor_decl)
-// {
-//     return
-//         tensor_decl.is_persistent == false &&
-//         tensor_decl.is_constant == false &&
-//         tensor_decl.is_compile_only == false;
-// }
+bool pass::Liveness::is_temporary(const descriptor::Tensor& tensor)
+{
+    return
+        tensor.is_persistent() == false
+        && tensor.is_input() == false
+        ;
+        // && tensor.is_constant() == false
+        // && tensor.is_compile_only() == false;
+}
 
-// void pass::Liveness::validate_liveness(ops)
-// {
-//     dead_tensors = set();
-//     for i, exop in enumerate(ops)
-//     {
-//         active = set(exop.liveness_live_list);
-//         active |= set(exop.liveness_new_list);
-//         active |= set(exop.liveness_free_list);
-//         if bool(dead_tensors.intersection(active)) is True
-//         {
-//             raise RuntimeError("Liveness: Dead tensors intersect active tensors");
-//         }
-//         for tensor in exop.liveness_free_list
-//         {
-//             dead_tensors.add(tensor);
-//         }
-//     }
-// }
+void pass::Liveness::validate_liveness(const list<Node*>& ops)
+{
+    unordered_set<descriptor::Tensor*> dead_tensors;
+    for (const Node* exop : ops)
+    {
+        auto active = exop->liveness_live_list;
+        active.insert(exop->liveness_new_list.begin(), exop->liveness_new_list.end());
+        active.insert(exop->liveness_free_list.begin(), exop->liveness_free_list.end());
+        for (const descriptor::Tensor* tensor : active)
+        {
+            if (contains(dead_tensors, tensor))
+            {
+                throw runtime_error("Liveness: Dead tensors intersect active tensors");
+            }
+        }
+        dead_tensors.insert(exop->liveness_free_list.begin(), exop->liveness_free_list.end());
+    }
+}
 

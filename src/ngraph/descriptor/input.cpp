@@ -33,3 +33,13 @@ std::shared_ptr<Node> Input::get_node()
 {
     return m_node->shared_from_this();
 }
+
+const Tensor& Input::get_tensor() const
+{
+    return m_output.get_tensor();
+}
+
+Tensor& Input::get_tensor()
+{
+    return m_output.get_tensor();
+}
