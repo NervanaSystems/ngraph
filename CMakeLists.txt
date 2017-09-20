@@ -44,6 +44,25 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 
 #-----------------------------------------------------------------------------------------------
+# External projects install directory
+#-----------------------------------------------------------------------------------------------
+
+# Root for external installs, when using `make`, e.g.
+# ${EXTERNAL_INSTALL_DIR}
+# ├── eigen               <-- ${EIGEN_INSTALL_DIR}
+# │   ├── include
+# │   │   └── eigen3      <-- ${EIGEN_INCLUDE_DIR}
+# │   │       ├── Eigen
+# │   ...
+# │
+# └── mkldnn              <-- ${MKLDNN_INSTALL_DIR}
+#     ├── include         <-- ${MKLDNN_INCLUDE_DIR}
+#     │   ├── mkldnn.h
+#     │   ...
+#     ├── lib             <-- ${MKLDNN_LIB_DIR}
+#     │   ├── libiomp5.so
+#     ...
+set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
 
 # The following 'add_subdirectory' call:
 # - defines the 'libgtest' target.

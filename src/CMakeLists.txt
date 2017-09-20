@@ -96,11 +96,37 @@ set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/ngraph_dist" CACHE PATH "Install directory"
 message (STATUS "Installation directory: ${CMAKE_INSTALL_PREFIX}")
 message (STATUS "To Override use: cmake -DCMAKE_INSTALL_PREFIX=/foo -P cmake_install.cmake")
 
-install(TARGETS ngraph DESTINATION ${CMAKE_INSTALL_PREFIX})
+# Destinations
+set(CMAKE_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/include")
+
+# NGraph
+install(TARGETS ngraph DESTINATION ${CMAKE_INSTALL_LIB})  # libngraph.so
 install(DIRECTORY
-    ${CMAKE_CURRENT_SOURCE_DIR}/ngraph
-    DESTINATION ${CMAKE_INSTALL_PREFIX}
+    ${CMAKE_CURRENT_SOURCE_DIR}/
+    DESTINATION "${CMAKE_INSTALL_INCLUDE}"
     FILES_MATCHING PATTERN "*.hpp"
+)
+
+# External
+# Requirements:
+# - In NGraph, there are multiple include paths set for different external projects.
+# - However, we want one single include path for external projects from the TF bridge side, while
+#   making sure that the `#include` files can still be resolved.
+# - Therefore, when `make install`, the include directory will be "flattened" for each external
+#   projects respectively.
+
+install(DIRECTORY
+    ${EIGEN_INCLUDE_DIR}/
+    DESTINATION "${CMAKE_INSTALL_INCLUDE}"
+)
+install(DIRECTORY
+    ${MKLDNN_INCLUDE_DIR}/
+    DESTINATION "${CMAKE_INSTALL_INCLUDE}"
+)
+install(DIRECTORY
+    ${MKLDNN_LIB_DIR}/
+    DESTINATION "${CMAKE_INSTALL_LIB}"
 )
 
 add_dependencies(ngraph eigen)
