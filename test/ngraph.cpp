@@ -19,8 +19,8 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "log.hpp"
-#include "ngraph.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/ngraph.hpp"
 
 using namespace std;
 

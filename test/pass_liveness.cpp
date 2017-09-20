@@ -19,17 +19,18 @@
 
 #include "gtest/gtest.h"
 
-#include "pass/liveness.hpp"
-#include "pass/assign_tensors.hpp"
-#include "pass/manager.hpp"
-#include "pass/propagate_types.hpp"
-#include "pass/topological_sort.hpp"
-#include "pass/liveness.hpp"
-#include "pass/visualize_tree.hpp"
-#include "pass/dump_sorted.hpp"
-#include "ngraph.hpp"
+#include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/assign_tensors.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/propagate_types.hpp"
+#include "ngraph/pass/topological_sort.hpp"
+#include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/ngraph.hpp"
+#include "ngraph/log.hpp"
+
 #include "test_tools.hpp"
-#include "log.hpp"
 
 using namespace std;
 using namespace ngraph;

@@ -16,7 +16,7 @@
 #include <iostream>
 
 #include "gtest/gtest.h"
-#include "log.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 

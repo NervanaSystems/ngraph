@@ -14,7 +14,7 @@
 
 #include "gtest/gtest.h"
 
-#include "ngraph.hpp"
+#include "ngraph/ngraph.hpp"
 
 #include <memory>
 using namespace std;

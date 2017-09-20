@@ -18,7 +18,7 @@
 
 #include "gtest/gtest.h"
 
-#include "uuid.hpp"
+#include "ngraph/uuid.hpp"
 
 using namespace std;
 using namespace ngraph;
