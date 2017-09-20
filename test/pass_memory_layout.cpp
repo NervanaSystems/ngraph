@@ -19,8 +19,8 @@
 
 #include "gtest/gtest.h"
 
-#include "ngraph.hpp"
-#include "pass/memory_layout.hpp"
+#include "ngraph/ngraph.hpp"
+#include "ngraph/pass/memory_layout.hpp"
 #include "test_tools.hpp"
 
 using namespace ngraph;
