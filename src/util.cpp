@@ -19,7 +19,7 @@
 #include <unordered_set>
 
 #include "util.hpp"
-#include "ngraph/node.hpp"
+#include "node.hpp"
 #include "log.hpp"
 
 using namespace std;

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph.hpp"
 
 using namespace std;
 using namespace ngraph;

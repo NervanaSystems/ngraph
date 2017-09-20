@@ -15,29 +15,29 @@ include_directories(SYSTEM ${EIGEN_INCLUDE_DIR})
 
 set (SRC
     log.cpp
-    ngraph/descriptor/input.cpp
-    ngraph/descriptor/output.cpp
-    ngraph/descriptor/tensor_view.cpp
-    ngraph/descriptor/tensor.cpp
-    ngraph/function.cpp
-    ngraph/node.cpp
-    ngraph/shape.cpp
-    ngraph/pass/assign_tensors.cpp
-    ngraph/pass/call_pass.cpp
-    ngraph/pass/dump_sorted.cpp
-    ngraph/pass/liveness.cpp
-    ngraph/pass/manager.cpp
-    ngraph/pass/memory_layout.cpp
-    ngraph/pass/pass.cpp
-    ngraph/pass/propagate_types.cpp
-    ngraph/pass/topological_sort.cpp
-    ngraph/pass/tree_pass.cpp
-    ngraph/pass/visualize_tree.cpp
-    ngraph/runtime/call_frame.cpp
-    ngraph/runtime/eigen/external_function.cpp
-    ngraph/runtime/eigen/tensor_view.cpp
-    ngraph/shape.cpp
-    ngraph/visualize.cpp
+    descriptor/input.cpp
+    descriptor/output.cpp
+    descriptor/tensor_view.cpp
+    descriptor/tensor.cpp
+    function.cpp
+    node.cpp
+    shape.cpp
+    pass/assign_tensors.cpp
+    pass/call_pass.cpp
+    pass/dump_sorted.cpp
+    pass/liveness.cpp
+    pass/manager.cpp
+    pass/memory_layout.cpp
+    pass/pass.cpp
+    pass/propagate_types.cpp
+    pass/topological_sort.cpp
+    pass/tree_pass.cpp
+    pass/visualize_tree.cpp
+    runtime/call_frame.cpp
+    runtime/eigen/external_function.cpp
+    runtime/eigen/tensor_view.cpp
+    shape.cpp
+    visualize.cpp
     ops/binary_elementwise_arithmetic.cpp
     ops/binary_elementwise_builtin.cpp
     ops/binary_elementwise_comparison.cpp

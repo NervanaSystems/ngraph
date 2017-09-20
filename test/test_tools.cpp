@@ -15,7 +15,7 @@
 #include <algorithm>
 
 #include "test_tools.hpp"
-#include "ngraph/ngraph.hpp"
+#include "ngraph.hpp"
 #include "util.hpp"
 
 using namespace std;
