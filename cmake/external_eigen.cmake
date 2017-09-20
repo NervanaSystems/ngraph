@@ -14,7 +14,7 @@
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
-set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
+set(EIGEN_INSTALL_DIR ${EXTERNAL_INSTALL_DIR}/eigen)
 
 #----------------------------------------------------------------------------------------------------------
 # Download and install GoogleTest ...
@@ -27,7 +27,7 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         URL http://bitbucket.org/eigen/eigen/get/3.3.3.zip
         # PREFIX ${CMAKE_CURRENT_BINARY_DIR}/eigen
         UPDATE_COMMAND ""
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EIGEN_INSTALL_DIR}
         )
 else()
     ExternalProject_Add(
@@ -35,8 +35,8 @@ else()
         URL http://bitbucket.org/eigen/eigen/get/3.3.3.zip
         # PREFIX ${CMAKE_CURRENT_BINARY_DIR}/eigen
         UPDATE_COMMAND ""
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
-        BUILD_BYPRODUCTS "${EXTERNAL_INSTALL_LOCATION}/include/eigen3"
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EIGEN_INSTALL_DIR}
+        BUILD_BYPRODUCTS "${EIGEN_INSTALL_DIR}/include/eigen3"
         )
 endif()
 
@@ -44,4 +44,4 @@ endif()
 
 ExternalProject_Get_Property(eigen source_dir binary_dir)
 
-set(EIGEN_INCLUDE_DIR "${EXTERNAL_INSTALL_LOCATION}/include/eigen3" PARENT_SCOPE)
+set(EIGEN_INCLUDE_DIR "${EIGEN_INSTALL_DIR}/include/eigen3" PARENT_SCOPE)
