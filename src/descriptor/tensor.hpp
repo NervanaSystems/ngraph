@@ -14,9 +14,9 @@
 
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <vector>
-#include <iostream>
 
 namespace ngraph
 {
@@ -40,19 +40,18 @@ namespace ngraph
             Tensor(const Tensor&) = delete;
             Tensor& operator=(const Tensor&) = delete;
 
-            Tensor(const element::Type& element_type, PrimaryTensorView* tensor_view,
-                const Node* parent, size_t value_index);
+            Tensor(const element::Type& element_type,
+                   PrimaryTensorView*   tensor_view,
+                   const Node*          parent,
+                   size_t               value_index);
 
             std::string get_next_view_name();
 
         public:
-            bool is_output() const { return m_is_output; }
-            bool is_input() const { return m_is_input; }
-            bool is_persistent() const { return m_is_persistent; }
+            bool               is_output() const { return m_is_output; }
+            bool               is_input() const { return m_is_input; }
+            bool               is_persistent() const { return m_is_persistent; }
             const std::string& get_name() const { return m_name; }
-
-            friend std::ostream& operator<<(std::ostream&, const Tensor&);
-
         protected:
             const element::Type& m_element_type;
             PrimaryTensorView*   m_primary_tensor_view;
@@ -62,5 +61,7 @@ namespace ngraph
             std::string          m_name;
             size_t               m_next_view_id;
         };
+
+        std::ostream& operator<<(std::ostream&, const Tensor&);
     }
 }
