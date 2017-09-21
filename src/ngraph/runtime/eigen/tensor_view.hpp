@@ -14,12 +14,12 @@
 
 #pragma once
 
-#include <Eigen/Dense>
 #include <vector>
 
-#include "ngraph/shape.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "Eigen/Dense"
 #include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -27,7 +27,8 @@ namespace ngraph
     {
         namespace eigen
         {
-            std::shared_ptr<ngraph::runtime::PrimaryTensorView> make_tensor_view(std::shared_ptr<ngraph::descriptor::TensorView>);
+            std::shared_ptr<ngraph::runtime::PrimaryTensorView>
+                make_tensor_view(std::shared_ptr<ngraph::descriptor::TensorView>);
 
             template <typename ET>
             class PrimaryTensorView : public ngraph::runtime::PrimaryTensorView
@@ -69,12 +70,9 @@ namespace ngraph
 
                 // For getting the data out
                 const storage_type& get_vector() { return m_vector; }
-
-                eigen_map&       get_map() { return m_map; }
-                const eigen_map& get_map() const { return m_map; }
-
-                const Shape& get_shape() const { return m_shape; }
-
+                eigen_map&          get_map() { return m_map; }
+                const eigen_map&    get_map() const { return m_map; }
+                const Shape&        get_shape() const { return m_shape; }
             protected:
                 ngraph::Shape   m_shape;
                 size_t          m_size;
