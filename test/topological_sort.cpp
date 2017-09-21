@@ -112,17 +112,17 @@ TEST(benchmark, topological_sort)
     ts.run_on_tree(result);
     auto sorted_list = ts.get_call_graph();
     timer.stop();
-    INFO << "topological sort took " << timer.get_milliseconds() << "ms";
+    NGRAPH_INFO << "topological sort took " << timer.get_milliseconds() << "ms";
 
     size_t node_count = 0;
     traverse_nodes(result, [&](const Node* node) {
         node_count++;
     });
 
-    INFO << "node count " << node_count;
+    NGRAPH_INFO << "node count " << node_count;
 
     timer.start();
     ngraph::free_nodes(result);
     timer.stop();
-    INFO << "delete nodes took " << timer.get_milliseconds() << "ms";
+    NGRAPH_INFO << "delete nodes took " << timer.get_milliseconds() << "ms";
 }

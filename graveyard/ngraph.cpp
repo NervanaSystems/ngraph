@@ -26,7 +26,7 @@ void destroy_ngraph_object(NGraph* pObj)
 
 void NGraph::add_params(const std::vector<std::string>& paramList)
 {
-    INFO << "Adding parameters";
+    NGRAPH_INFO << "Adding parameters";
     m_params.insert(m_params.end(), paramList.begin(), paramList.end());
 }
 

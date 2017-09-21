@@ -48,9 +48,9 @@ TEST(NGraph, loadTest)
 
     NGraph* nGraphObj = createPfn();
 
-    INFO << "Call a method on the Object";
+    NGRAPH_INFO << "Call a method on the Object";
     ASSERT_EQ("NGraph Implementation Object", nGraphObj->get_name());
-    INFO << "Object Name: " << nGraphObj->get_name();
+    NGRAPH_INFO << "Object Name: " << nGraphObj->get_name();
 
     // Add some parameters
     const vector<string> TEST_PARAMS = {"param-1", "param-2", "param-3"};
@@ -65,7 +65,7 @@ TEST(NGraph, loadTest)
         EXPECT_EQ(TEST_PARAMS[i], storedParams[i]);
     }
 
-    INFO << "Destroy the NGraph Object";
+    NGRAPH_INFO << "Destroy the NGraph Object";
     destroyPfn(nGraphObj);
 
     dlclose(ngraphImplLib);
