@@ -15,6 +15,8 @@
 #pragma once
 
 #include <vector>
+#include <memory>
+#include <list>
 
 #include "ngraph/pass/call_pass.hpp"
 #include "ngraph/pass/tree_pass.hpp"
@@ -24,10 +26,30 @@ namespace ngraph
     namespace pass
     {
         class Manager;
+        class ManagerState;
     }
 
     class Node;
+    class Function;
 }
+
+class ngraph::pass::ManagerState
+{
+public:
+    Function* get_function();
+    void      set_function(Function*);
+
+    size_t get_temporary_pool_size();
+    void   set_temporary_pool_size(size_t);
+
+    std::list<Node*>& get_call_graph();
+    const std::list<Node*>& get_call_graph() const;
+
+private:
+    Function*        m_function = nullptr;
+    size_t           m_temporary_pool_size = 0;
+    std::list<Node*> m_call_graph;
+};
 
 class ngraph::pass::Manager
 {
@@ -40,12 +62,15 @@ public:
     void register_pass(std::shared_ptr<TreeBase>);
     void register_pass(std::shared_ptr<CallBase>);
 
-    void run_passes(std::shared_ptr<Node> nodes);
+    void run_passes(Function*);
+    void run_passes(std::shared_ptr<Function>);
 
-    const std::list<Node*>& get_sorted_list() const;
+    const std::list<Node*>& get_call_graph() const;
+
+    ManagerState& get_state();
 
 private:
     std::vector<std::shared_ptr<TreeBase>> m_tree_passes;
     std::vector<std::shared_ptr<CallBase>> m_call_passes;
-    std::list<Node*>                       m_sorted_list;
+    ManagerState                           m_state;
 };

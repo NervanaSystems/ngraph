@@ -55,10 +55,9 @@ TEST(pass, liveness)
     pass_manager.register_pass(liveness);
     pass_manager.register_pass(dump_sorted);
 
-    auto   graph      = make_test_graph();
-    size_t node_count = get_node_count(graph);
-    pass_manager.run_passes(graph);
-    auto sorted = pass_manager.get_sorted_list();
+    shared_ptr<Function>   func      = make_test_graph();
+    pass_manager.run_passes(func.get());
+    auto sorted = pass_manager.get_call_graph();
 
     // for (const Node* node : sorted)
     // {

@@ -23,6 +23,7 @@ Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<ValueType>
     : m_arguments(arguments)
     , m_value_type(value_type)
     , m_instance_id(m_next_instance_id++)
+    , m_is_output(false)
 {
     // Add this node as a user of each argument.
     for (auto node : m_arguments)
@@ -79,6 +80,16 @@ void Node::assign_tensors()
 bool Node::is_parameter() const
 {
     return dynamic_cast<const op::Parameter*>(this) != nullptr;
+}
+
+bool Node::is_output() const
+{
+    return m_is_output;
+}
+
+void Node::set_is_output()
+{
+    m_is_output = true;
 }
 
 std::string Node::get_node_id() const

@@ -24,6 +24,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/multiply.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/eigen/add.hpp"
 #include "ngraph/runtime/external_function.hpp"
@@ -97,9 +98,11 @@ void ExternalFunction::compile()
 
     // This will be replaced with the pass manager
     // Get the ordered list of ops in execution order
-    pass::TopologicalSort ts;
-    ts.run_on_tree(m_function->get_result());
-    auto nodes = ts.get_call_graph();
+    pass::Manager pass_manager;
+    auto          topological_sort = make_shared<pass::TopologicalSort>();
+    pass_manager.register_pass(topological_sort);
+    pass_manager.run_passes(m_function);
+    auto nodes = pass_manager.get_call_graph();
     // Types
     for (auto node : nodes)
     {

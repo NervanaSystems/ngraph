@@ -43,7 +43,7 @@ set (SRC
 )
 
 if(MKLDNN_INCLUDE_DIR)
-    include_directories(${MKLDNN_INCLUDE_DIR})
+    include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})
     link_directories(${MKLDNN_LIB_DIR})
     set(SRC ${SRC} mkldnn.cpp)
 endif()

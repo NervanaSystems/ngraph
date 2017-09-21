@@ -18,17 +18,32 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
+using namespace ngraph::descriptor;
 
 bool pass::MemoryLayout::run_on_call_list(std::list<Node*>& node_list)
 {
-    for (Node* node : node_list)
+    MemoryManager mm;
+    for (const Node* node : node_list)
     {
+        for (Tensor* tensor : node->liveness_new_list)
+        {
+            size_t offset = mm.allocate(tensor->size());
+            tensor->set_pool_offset(offset);
+        }
+        for (const Tensor* tensor : node->liveness_free_list)
+        {
+            mm.free(tensor->get_pool_offset());
+        }
     }
+    get_state().set_temporary_pool_size(mm.max_allocated());
+
     return false;
 }
 

@@ -20,6 +20,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/propagate_types.hpp"
+#include "ngraph/pass/manager.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -30,6 +31,13 @@ bool pass::AssignTensors::run_on_call_list(std::list<Node*>& node_list)
     {
         try
         {
+            // We need to set the nodes is_output state prior to call assign_tensors
+            // so that the output state can be passes to the constructed tensors.
+            if (node == get_state().get_function()->get_result().get())
+            {
+                node->set_is_output();
+            }
+
             node->assign_tensors();
         }
         catch (exception& e)

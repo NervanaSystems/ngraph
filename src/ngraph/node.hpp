@@ -98,6 +98,8 @@ namespace ngraph
         void set_value_type_checked(const std::shared_ptr<ValueType>& value_type);
 
         bool is_parameter() const;
+        bool is_output() const;
+        void set_is_output();
 
         size_t               get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
@@ -120,5 +122,6 @@ namespace ngraph
         static size_t                   m_next_instance_id;
         std::vector<descriptor::Input>  m_inputs;
         std::vector<descriptor::Output> m_outputs;
+        bool                            m_is_output;
     };
 }

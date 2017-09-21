@@ -18,8 +18,9 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/util.hpp"
 
-using namespace ngraph;
 using namespace std;
+using namespace ngraph;
+using namespace ngraph::descriptor;
 
 pass::DumpSorted::DumpSorted(const string& output_file)
     : m_output_file{output_file}
@@ -35,7 +36,7 @@ bool pass::DumpSorted::run_on_call_list(list<Node*>& nodes)
         {
             out << node->get_node_id() << "(";
             vector<string> inputs;
-            for (const descriptor::Input& input : node->get_inputs())
+            for (const Input& input : node->get_inputs())
             {
                 inputs.push_back(input.get_tensor().get_name());
             }
@@ -43,29 +44,25 @@ bool pass::DumpSorted::run_on_call_list(list<Node*>& nodes)
             out << ") -> ";
 
             vector<string> outputs;
-            for (const descriptor::Output& output : node->get_outputs())
+            for (const Output& output : node->get_outputs())
             {
                 outputs.push_back(output.get_tensor().get_name());
             }
             out << join(outputs);
             out << "\n";
 
-            for (const descriptor::Tensor* tensor : node->liveness_live_list)
+
+            for (const Tensor* tensor : node->liveness_live_list)
             {
-                out << "    ";
-                if (contains(node->liveness_new_list, tensor))
-                {
-                    out << "N ";
-                }
-                else if (contains(node->liveness_free_list, tensor))
-                {
-                    out << "F ";
-                }
-                else
-                {
-                    out << "L ";
-                }
-                out << tensor->get_name() << "\n";
+                out << "    L " << tensor->get_name() << "\n";
+            }
+            for (const Tensor* tensor : node->liveness_new_list)
+            {
+                out << "    N " << tensor->get_name() << "\n";
+            }
+            for (const Tensor* tensor : node->liveness_free_list)
+            {
+                out << "    F " << tensor->get_name() << "\n";
             }
         }
     }
