@@ -15,10 +15,8 @@
 #pragma once
 
 #include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/eigen/utils.hpp"
+#include "ngraph/runtime/eigen/tensor_view.hpp"
 #include "ngraph/runtime/instruction.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
->>>>>>> 996c7c0... Add elementwise ops
 
 namespace ngraph
 {
@@ -26,31 +24,32 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename T>
-            void abs(T arg, T out)
-            {
-                set_map(&*out, Eigen::abs(get_map(&*arg)));
-            }
-
             template <typename ET>
-            class AbsInstruction : public Instruction
+            class LessThanInstruction : public Instruction
             {
             public:
-                AbsInstruction(size_t arg, size_t out)
-                    : m_arg(arg)
+                LessThanInstruction(size_t arg0, size_t arg1, size_t out)
+                    : m_arg0(arg0)
+                    , m_arg1(arg1)
                     , m_out(out)
                 {
                 }
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::abs(
-                        call_frame.get_parameterized_tensor<ET>(m_arg),
-                        call_frame.get_parameterized_tensor<ET>(m_out));
+                    auto R = 
+                        dynamic_cast<PrimaryTensorView<ET>*>(&*call_frame.get_tensor(m_arg0))
+                            ->get_map() <
+                        dynamic_cast<PrimaryTensorView<ET>*>(&*call_frame.get_tensor(m_arg1))
+                            ->get_map();
+		    auto R_char = R.template cast<char>();
+                    dynamic_cast<PrimaryTensorView<element::Bool>*>(&*call_frame.get_tensor(m_out))
+                        ->get_map() = R_char;
                 }
 
             protected:
-                size_t m_arg;
+                size_t m_arg0;
+                size_t m_arg1;
                 size_t m_out;
             };
         }
