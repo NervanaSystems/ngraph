@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <Eigen/Dense>
 #include <memory>
 
+#include "Eigen/Dense"
 #include "ngraph/ngraph.hpp"
 
 using namespace Eigen;
