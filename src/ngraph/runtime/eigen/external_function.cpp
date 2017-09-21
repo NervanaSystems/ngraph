@@ -22,13 +22,29 @@
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/divide.hpp"
+#include "ngraph/ops/less.hpp"
+#include "ngraph/ops/log.hpp"
+#include "ngraph/ops/maximum.hpp"
 #include "ngraph/ops/multiply.hpp"
+#include "ngraph/ops/negative.hpp"
+#include "ngraph/ops/notequal.hpp"
+#include "ngraph/ops/subtract.hpp"
 #include "ngraph/pass/topological_sort.hpp"
+#include "ngraph/runtime/eigen/abs.hpp"
 #include "ngraph/runtime/eigen/add.hpp"
+#include "ngraph/runtime/eigen/divide.hpp"
+#include "ngraph/runtime/eigen/lessthan.hpp"
+#include "ngraph/runtime/eigen/log.hpp"
 #include "ngraph/runtime/eigen/external_function.hpp"
+#include "ngraph/runtime/eigen/maximum.hpp"
 #include "ngraph/runtime/eigen/multiply.hpp"
+#include "ngraph/runtime/eigen/negate.hpp"
+#include "ngraph/runtime/eigen/notequal.hpp"
 #include "ngraph/runtime/eigen/return.hpp"
+#include "ngraph/runtime/eigen/subtract.hpp"
 
 using namespace std;
 using namespace ngraph::runtime::eigen;
@@ -59,12 +75,57 @@ std::unordered_map<std::type_index,
         op_map;
     if (!initialized)
     {
+        op_map[type_index(typeid(op::Abs))] = [](Node*                      n,
+                                                 ExternalFunction*          ef,
+                                                 const std::vector<size_t>& in,
+                                                 const std::vector<size_t>& out) {
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::AbsInstruction<element::Float32>>(
+                    in[0], out[0]));
+        };
+
         op_map[type_index(typeid(op::Add))] = [](Node*                      n,
                                                  ExternalFunction*          ef,
                                                  const std::vector<size_t>& in,
                                                  const std::vector<size_t>& out) {
             ef->get_instructions()->push_back(
                 make_shared<runtime::eigen::AddInstruction<element::Float32>>(
+                    in[0], in[1], out[0]));
+        };
+
+        op_map[type_index(typeid(op::Divide))] = [](Node*                      n,
+                                                    ExternalFunction*          ef,
+                                                    const std::vector<size_t>& in,
+                                                    const std::vector<size_t>& out) {
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::DivideInstruction<element::Float32>>(
+                    in[0], in[1], out[0]));
+        };
+
+        op_map[type_index(typeid(op::Less))] = [](Node*                      n,
+                                                  ExternalFunction*          ef,
+                                                  const std::vector<size_t>& in,
+                                                  const std::vector<size_t>& out) {
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::LessThanInstruction<element::Float32>>(
+                    in[0], in[1], out[0]));
+        };
+
+        op_map[type_index(typeid(op::Log))] = [](Node*                      n,
+                                                 ExternalFunction*          ef,
+                                                 const std::vector<size_t>& in,
+                                                 const std::vector<size_t>& out) {
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::LogInstruction<element::Float32>>(
+                    in[0], out[0]));
+        };
+
+        op_map[type_index(typeid(op::Maximum))] = [](Node*                      n,
+                                                     ExternalFunction*          ef,
+                                                     const std::vector<size_t>& in,
+                                                     const std::vector<size_t>& out) {
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::MaximumInstruction<element::Float32>>(
                     in[0], in[1], out[0]));
         };
 
@@ -77,10 +138,37 @@ std::unordered_map<std::type_index,
                     in[0], in[1], out[0]));
         };
 
+        op_map[type_index(typeid(op::Negative))] = [](Node*                      n,
+                                                      ExternalFunction*          ef,
+                                                      const std::vector<size_t>& in,
+                                                      const std::vector<size_t>& out) {
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::NegateInstruction<element::Float32>>(
+                    in[0], out[0]));
+        };
+
+        op_map[type_index(typeid(op::NotEqual))] = [](Node*                      n,
+                                                      ExternalFunction*          ef,
+                                                      const std::vector<size_t>& in,
+                                                      const std::vector<size_t>& out) {
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::NotEqualInstruction<element::Float32>>(
+                    in[0], in[1], out[0]));
+        };
+
         op_map[type_index(typeid(op::Parameter))] = [](Node*                      n,
                                                        ExternalFunction*          ef,
                                                        const std::vector<size_t>& in,
                                                        const std::vector<size_t>& out) {};
+
+        op_map[type_index(typeid(op::Subtract))] = [](Node*                      n,
+                                                      ExternalFunction*          ef,
+                                                      const std::vector<size_t>& in,
+                                                      const std::vector<size_t>& out) {
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::SubtractInstruction<element::Float32>>(
+                    in[0], in[1], out[0]));
+        };
 
         initialized = true;
     }
