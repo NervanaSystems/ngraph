@@ -32,8 +32,7 @@ set (SRC
     pass/tree_pass.cpp
     pass/visualize_tree.cpp
     runtime/call_frame.cpp
-    runtime/eigen/external_function.cpp
-    runtime/eigen/tensor_view.cpp
+    runtime/external_function.cpp
     shape.cpp
     visualize.cpp
     ops/binary_elementwise_arithmetic.cpp

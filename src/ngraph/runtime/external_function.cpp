@@ -26,12 +26,13 @@
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/eigen/add.hpp"
-#include "ngraph/runtime/eigen/external_function.hpp"
+#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/eigen/multiply.hpp"
 #include "ngraph/runtime/eigen/return.hpp"
+#include "ngraph/runtime/utils.hpp"
 
 using namespace std;
-using namespace ngraph::runtime::eigen;
+using namespace ngraph::runtime;
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                    bool                                     release_function)
@@ -186,10 +187,10 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
     {
         compile();
     }
-    std::vector<std::shared_ptr<ngraph::runtime::PrimaryTensorView>> temps;
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> temps;
     for (auto tv : m_temp_views)
     {
-        temps.push_back(ngraph::runtime::eigen::make_tensor_view(tv));
+        temps.push_back(ngraph::runtime::make_tensor<ngraph::element::Float32>(tv->get_tensor_view_type()->get_shape()));
     }
     return make_shared<ngraph::runtime::CallFrame>(
         m_n_inputs, m_n_outputs, temps, 0, m_instructions);

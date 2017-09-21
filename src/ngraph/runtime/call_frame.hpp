@@ -17,9 +17,9 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/instruction.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
 {
@@ -34,18 +34,26 @@ namespace ngraph
             CallFrame(
                 size_t                                                            n_inputs,
                 size_t                                                            n_outputs,
-                const PTVs&                                                       temps,
+                const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>&  temps,
                 size_t                                                            initial_pc,
                 const std::shared_ptr<std::vector<std::shared_ptr<Instruction>>>& instructions);
 
-            void                               operator()(const PTVs& inputs, const PTVs& outpus);
-            void                               set_return() { m_return = true; }
-            std::shared_ptr<PrimaryTensorView> get_tensor(size_t i) { return m_tensors[i]; }
+            void
+                                        operator()(const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
+                           const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outpus);
+            void                        set_return() { m_return = true; }
+            std::shared_ptr<TensorView> get_tensor(size_t i) { return m_tensors[i]; }
+
+            template <typename ET>
+            ParameterizedTensorView<ET>* get_parameterized_tensor(size_t i)
+            {
+                return m_tensors[i]->get_parameterized_tensor<ET>();
+            }
 
         protected:
             size_t                                                     m_n_inputs;
             size_t                                                     m_n_outputs;
-            PTVs                                                       m_tensors;
+            std::vector<std::shared_ptr<ngraph::runtime::TensorView>>  m_tensors;
             size_t                                                     m_initial_pc;
             std::shared_ptr<std::vector<std::shared_ptr<Instruction>>> m_instructions;
             size_t                                                     m_pc;
