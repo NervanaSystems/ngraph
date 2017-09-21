@@ -56,7 +56,7 @@ check_cpu: build_ngraph_cpp_cpu
 	docker run \
 	    --rm --user ${CALLER_UID}:${CALLER_GID} \
 	    ${DOCKER_RUN_ENV} ${VOLUME} -w /tmp/ngraph-cpp-test/BUILD -t ngraph_cpp_cpu:${BUILD_VERSION} \
-	    sh -c "cmake -DCMAKE_CXX_COMPILER=clang++-3.9 -DCMAKE_C_COMPILER=clang-3.9 .. ; make check"
+	    sh -c "cmake -DCMAKE_CXX_COMPILER=clang++-3.9 -DCMAKE_C_COMPILER=clang-3.9 .. ; env VERBOSE=1 make check"
 	# update the files to be owned by the calling user instead of root, to avoid docker mount problems with file ownership
 	docker run --rm ${VOLUME} \
 	--env MY_UID=${CALLER_UID} \
