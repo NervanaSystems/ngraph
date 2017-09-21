@@ -64,10 +64,14 @@ endif()
 
 include_directories(
     "${NGRAPH_INCLUDE_PATH}"
+    )
+
+include_directories(
+    SYSTEM
     "${EIGEN_INCLUDE_DIR}"
     "${MKLDNN_INCLUDE_DIR}"
     )
-
+    
 add_library(ngraph SHARED ${SRC})
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
