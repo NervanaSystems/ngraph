@@ -88,19 +88,19 @@ namespace nervana
         static std::deque<std::string> queue;
     };
 
-#define ERR                                                                                        \
+#define NGRAPH_ERR                                                                                     \
     nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_ERROR,                                        \
                         nervana::get_file_name(__FILE__),                                          \
                         __LINE__,                                                                  \
                         __PRETTY_FUNCTION__)                                                       \
         .stream()
-#define WARN                                                                                       \
+#define NGRAPH_WARN                                                                                    \
     nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_WARNING,                                      \
                         nervana::get_file_name(__FILE__),                                          \
                         __LINE__,                                                                  \
                         __PRETTY_FUNCTION__)                                                       \
         .stream()
-#define INFO                                                                                       \
+#define NGRAPH_INFO                                                                                    \
     nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_INFO,                                         \
                         nervana::get_file_name(__FILE__),                                          \
                         __LINE__,                                                                  \

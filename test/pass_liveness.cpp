@@ -62,10 +62,10 @@ TEST(pass, liveness)
 
     // for (const Node* node : sorted)
     // {
-    //     INFO << *node;
+    //     NGRAPH_INFO << *node;
     //     for (const descriptor::Tensor* tensor : node->liveness_live_list)
     //     {
-    //         INFO << "    " << *tensor;
+    //         NGRAPH_INFO << "    " << *tensor;
     //     }
     // }
 
