@@ -17,7 +17,7 @@
 #include <sstream>
 
 #include "types/element_type.hpp"
-#include "runtime/eigen/tensor_view.hpp"
+#include "runtime/utils.hpp"
 
 namespace ngraph
 {
@@ -101,7 +101,7 @@ namespace ngraph
 
             TensorConstant(const Shape& shape)
                 : TensorConstantBase(std::make_shared<TensorViewType>(T::element_type(), shape))
-                , m_value(std::make_shared<ngraph::runtime::eigen::PrimaryTensorView<T>>(shape))
+                , m_value(ngraph::runtime::make_tensor<T>(shape))
             {
             }
 
@@ -113,10 +113,10 @@ namespace ngraph
                 return ss.str();
             }
 
-            typename std::shared_ptr<ngraph::runtime::eigen::PrimaryTensorView<T>> get_value() const { return m_value; }
+            typename std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>> get_value() const { return m_value; }
 
         protected:
-            std::shared_ptr<ngraph::runtime::eigen::PrimaryTensorView<T>> m_value;
+            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>> m_value;
         };
 
         using Float32TensorConstant = TensorConstant<element::Float32>;

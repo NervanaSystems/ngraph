@@ -19,6 +19,10 @@
 
 #include "ngraph.hpp"
 
+#include "runtime/eigen/add.hpp"
+#include "runtime/eigen/multiply.hpp"
+#include "runtime/eigen/return.hpp"
+
 using namespace std;
 using namespace ngraph;
 using namespace ngraph::runtime;
@@ -26,24 +30,24 @@ namespace ngeigen = ngraph::runtime::eigen;
 
 TEST(runtime, test_add)
 {
-    auto x = make_shared<ngeigen::PrimaryTensorView<element::Float32>>(Shape{2, 2});
-    *x     = std::vector<float>{1, 2, 3, 4};
-    auto y = make_shared<ngeigen::PrimaryTensorView<element::Float32>>(Shape{2, 2});
-    *y     = std::vector<float>{5, 6, 7, 8};
-    auto z = make_shared<ngeigen::PrimaryTensorView<element::Float32>>(Shape{2, 2});
-    add(*x, *y, *z);
+    auto x          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    x->get_vector() = {1, 2, 3, 4};
+    auto y          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    y->get_vector() = {5, 6, 7, 8};
+    auto z          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    ngraph::runtime::eigen::add(x, y, z);
     ASSERT_EQ((vector<float>{6, 8, 10, 12}), z->get_vector());
 }
 
 TEST(runtime, test_multiply)
 {
-    auto x          = make_shared<op::Float32TensorConstant>(Shape{2, 2});
-    *x->get_value() = std::vector<float>{1, 2, 3, 4};
-    auto y          = make_shared<op::Float32TensorConstant>(Shape{2, 2});
-    *y->get_value() = std::vector<float>{5, 6, 7, 8};
-    auto z          = make_shared<op::Float32TensorConstant>(Shape{2, 2});
-    multiply(*x->get_value(), *y->get_value(), *z->get_value());
-    ASSERT_EQ((vector<float>{5, 12, 21, 32}), z->get_value()->get_vector());
+    auto x          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    x->get_vector() = {1, 2, 3, 4};
+    auto y          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    y->get_vector() = {5, 6, 7, 8};
+    auto z          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    ngraph::runtime::eigen::multiply(x, y, z);
+    ASSERT_EQ((vector<float>{5, 12, 21, 32}), z->get_vector());
 }
 
 TEST(runtime, test_add_multiply)
@@ -64,27 +68,23 @@ TEST(runtime, test_add_multiply)
     instructions->push_back(make_shared<ngeigen::ReturnInstruction>());
 
     runtime::CallFrame cf{
-        3,
-        1,
-        PTVs{make_shared<ngeigen::PrimaryTensorView<element::Float32>>(Shape{2, 2})},
-        0,
-        instructions};
+        3, 1, {ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2})}, 0, instructions};
 
     // Create some tensors for input/output
-    auto a      = make_shared<ngeigen::PrimaryTensorView<element::Float32>>(Shape{2, 2});
-    *a          = vector<float>{1, 2, 3, 4};
-    auto b      = make_shared<ngeigen::PrimaryTensorView<element::Float32>>(Shape{2, 2});
-    *b          = vector<float>{5, 6, 7, 8};
-    auto c      = make_shared<ngeigen::PrimaryTensorView<element::Float32>>(Shape{2, 2});
-    *c          = vector<float>{9, 10, 11, 12};
-    auto result = make_shared<ngeigen::PrimaryTensorView<element::Float32>>(Shape{2, 2});
+    auto a          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    a->get_vector() = {1, 2, 3, 4};
+    auto b          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    b->get_vector() = {5, 6, 7, 8};
+    auto c          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    c->get_vector() = {9, 10, 11, 12};
+    auto result     = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
 
-    cf(PTVs{a, b, c}, PTVs{result});
+    cf({a, b, c}, {result});
     ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector());
 
-    cf(PTVs{b, a, c}, PTVs{result});
+    cf({b, a, c}, {result});
     ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector());
 
-    cf(PTVs{a, c, b}, PTVs{result});
+    cf({a, c, b}, {result});
     ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector());
 }

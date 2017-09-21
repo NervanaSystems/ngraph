@@ -12,25 +12,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#pragma once
+
 #include <memory>
 
-#include "gtest/gtest.h"
+#include "runtime/call_frame.hpp"
+#include "runtime/tensor_view.hpp"
+#include "types/element_type.hpp"
 
-#include "ngraph.hpp"
-
-using namespace std;
-using namespace ngraph;
-
-TEST(shape, test_shape_size)
+namespace ngraph
 {
-    ASSERT_EQ(1, shape_size(Shape{}));
-    ASSERT_EQ(2 * 3 * 5, shape_size(Shape{2, 3, 5}));
-}
-
-TEST(shape, test_shape_strides)
-{
-    ASSERT_EQ(Strides{}, row_major_strides(Shape{}));
-    ASSERT_EQ(Strides{1}, row_major_strides(Shape{3}));
-    ASSERT_EQ((Strides{7, 1}), row_major_strides(Shape{2, 7}));
-    ASSERT_EQ((Strides{84, 12, 1}), row_major_strides(Shape{5, 7, 12}));
+    namespace runtime
+    {
+        template <typename ET>
+        std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>
+            make_tensor(const Shape& shape)
+        {
+            return std::make_shared<runtime::ParameterizedTensorView<ET>>(shape);
+        }
+    }
 }
