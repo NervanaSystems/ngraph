@@ -19,11 +19,19 @@ namespace ngraph
     namespace pass
     {
         class Base;
+        class Manager;
+        class ManagerState;
     }
 }
 
 class ngraph::pass::Base
 {
+    friend class Manager;
 public:
+protected:
+    ManagerState& get_state();
+    void set_state(ManagerState&);
+
 private:
+    ManagerState* m_state;
 };

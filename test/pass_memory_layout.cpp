@@ -20,6 +20,14 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/assign_tensors.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/propagate_types.hpp"
+#include "ngraph/pass/topological_sort.hpp"
+#include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "test_tools.hpp"
 
@@ -195,4 +203,29 @@ TEST(memory_manager, memory_align)
     EXPECT_EQ(0, mm.allocate(4));
     EXPECT_EQ(64, mm.allocate(4));
     EXPECT_EQ(128, mm.allocate(4));
+}
+
+TEST(memory_layout, basic)
+{
+    string dump_file = "memory_layout.txt";
+    pass::Manager pass_manager;
+    auto          topological_sort = make_shared<pass::TopologicalSort>();
+    auto          propagate_types  = make_shared<pass::PropagateTypes>();
+    auto          assign_tensors   = make_shared<pass::AssignTensors>();
+    auto          liveness         = make_shared<pass::Liveness>();
+    auto          memory_layout    = make_shared<pass::MemoryLayout>();
+    auto          dump_sorted      = make_shared<pass::DumpSorted>(dump_file);
+
+    pass_manager.register_pass(topological_sort);
+    pass_manager.register_pass(propagate_types);
+    pass_manager.register_pass(assign_tensors);
+    pass_manager.register_pass(liveness);
+    pass_manager.register_pass(memory_layout);
+    pass_manager.register_pass(dump_sorted);
+
+    auto graph = make_test_graph();
+    pass_manager.run_passes(graph);
+    auto sorted = pass_manager.get_call_graph();
+    size_t temporary_pool_size = pass_manager.get_state().get_temporary_pool_size();
+    EXPECT_EQ(12, temporary_pool_size);
 }

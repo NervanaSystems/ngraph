@@ -20,6 +20,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/visualize.hpp"
 #include "ngraph/util.hpp"
@@ -62,9 +63,11 @@ TEST(topological_sort, basic)
     // Visualize vz;
     // vz.add(r0);
     // vz.save_dot("test.png");
-    pass::TopologicalSort ts;
-    ts.run_on_tree(r0);
-    auto sorted_list = ts.get_call_graph();
+    pass::Manager pass_manager;
+    auto          topological_sort = make_shared<pass::TopologicalSort>();
+    pass_manager.register_pass(topological_sort);
+    pass_manager.run_passes(f0);
+    auto sorted_list = pass_manager.get_call_graph();
 
     size_t node_count = get_node_count(r0);
 
@@ -99,18 +102,24 @@ TEST(benchmark, topological_sort)
     stopwatch timer;
     // x[i+1] = tanh(dot(W,x[i])+b)
     shared_ptr<Node> result;
+    vector<shared_ptr<op::Parameter>> args;
     result = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
     for (int i=0; i<1000000; i++)
     {
         auto in_1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
         auto in_2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+        args.push_back(in_1);
+        args.push_back(in_2);
         result = make_cell(result, in_1, in_2);
     }
+    auto f0 = make_shared<Function>(result, args);
 
     timer.start();
-    pass::TopologicalSort ts;
-    ts.run_on_tree(result);
-    auto sorted_list = ts.get_call_graph();
+    pass::Manager pass_manager;
+    auto          topological_sort = make_shared<pass::TopologicalSort>();
+    pass_manager.register_pass(topological_sort);
+    pass_manager.run_passes(f0);
+    auto sorted_list = pass_manager.get_call_graph();
     timer.stop();
     NGRAPH_INFO << "topological sort took " << timer.get_milliseconds() << "ms";
 

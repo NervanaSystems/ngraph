@@ -33,10 +33,4 @@ class ngraph::pass::TopologicalSort : public TreeBase
 public:
     TopologicalSort() {}
     bool run_on_tree(std::shared_ptr<Node>) override;
-
-    bool             call_graph_produced() const override { return true; }
-    std::list<Node*> get_call_graph() const override;
-
-private:
-    std::list<Node*> m_sorted_list;
 };

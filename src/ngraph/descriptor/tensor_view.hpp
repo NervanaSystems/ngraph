@@ -29,7 +29,7 @@ namespace ngraph
         class TensorViewLayout;
 
         // Describes a view of an instantiated tensor
-        class TensorView : public std::enable_shared_from_this<TensorView>
+        class TensorView
         {
             TensorView(const TensorView&) = delete;
             TensorView& operator=(const TensorView&) = delete;
@@ -73,14 +73,7 @@ namespace ngraph
         {
         public:
             PrimaryTensorView(const std::shared_ptr<const TensorViewType>& tensor_view_type,
-                const Node* parent, size_t value_index)
-                : TensorView(tensor_view_type)
-                , m_tensor(tensor_view_type->get_element_type(), this, parent, value_index)
-            {
-                // Set the name in the parent TensorView.
-                // This can't be done until after the m_tensor is constructed.
-                m_name = m_tensor.get_next_view_name();
-            }
+                const Node* parent, size_t value_index);
 
             virtual const Tensor& get_tensor() const override;
             virtual Tensor&       get_tensor() override;

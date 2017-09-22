@@ -37,10 +37,6 @@ public:
     // return true if changes were made to the tree
     virtual bool run_on_tree(std::shared_ptr<Node>) = 0;
 
-    virtual bool             call_graph_produced() const { return false; }
-    virtual std::list<Node*> get_call_graph() const { return std::list<Node*>(); }
     // derived class throws exception if its dependencies have not been met
     virtual void check_dependencies(const std::vector<std::shared_ptr<TreeBase>>&) const {}
-private:
-    std::list<Node*> m_sorted_list;
 };

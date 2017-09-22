@@ -17,6 +17,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/util.hpp"
 
@@ -25,6 +26,8 @@ using namespace std;
 
 bool ngraph::pass::TopologicalSort::run_on_tree(std::shared_ptr<Node> p)
 {
+    list<Node*>& sorted_list = get_state().get_call_graph();
+    sorted_list.clear();
     deque<Node*> independent_nodes;
     unordered_map<Node*, size_t> node_depencency_count;
 
@@ -39,7 +42,7 @@ bool ngraph::pass::TopologicalSort::run_on_tree(std::shared_ptr<Node> p)
     while (independent_nodes.size() > 0)
     {
         auto independent_node = independent_nodes.front();
-        m_sorted_list.push_back(independent_node);
+        sorted_list.push_back(independent_node);
         independent_nodes.pop_front();
 
         for (auto user : independent_node->users())
@@ -54,9 +57,4 @@ bool ngraph::pass::TopologicalSort::run_on_tree(std::shared_ptr<Node> p)
     }
 
     return false;
-}
-
-std::list<Node*> ngraph::pass::TopologicalSort::get_call_graph() const
-{
-    return m_sorted_list;
 }
