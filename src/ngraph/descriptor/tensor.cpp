@@ -20,9 +20,9 @@ using namespace ngraph;
 using namespace ngraph::descriptor;
 
 Tensor::Tensor(const element::Type& element_type,
-        PrimaryTensorView*   primary_tensor_view,
-        const Node*          parent,
-        size_t               value_index)
+               PrimaryTensorView*   primary_tensor_view,
+               const Node*          parent,
+               size_t               value_index)
     : m_element_type(element_type)
     , m_primary_tensor_view(primary_tensor_view)
     , m_is_output{parent->is_output()}
@@ -59,7 +59,7 @@ size_t Tensor::get_pool_offset() const
     return m_pool_offset;
 }
 
-std::ostream& descriptor::operator<<(std::ostream& out, const Tensor& tensor)
+std::ostream& operator<<(std::ostream& out, const Tensor& tensor)
 {
     out << "Tensor(" << tensor.get_name() << ")";
     return out;
