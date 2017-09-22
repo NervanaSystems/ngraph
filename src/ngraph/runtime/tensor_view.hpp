@@ -44,6 +44,7 @@ namespace ngraph
         public:
             ParameterizedTensorView(const ngraph::Shape& shape)
                 : m_vector(ngraph::shape_size(shape), 0)
+                , m_shape(shape)
             {
             }
 
@@ -73,9 +74,11 @@ namespace ngraph
 
             // For getting the data out
             storage_type& get_vector() { return m_vector; }
+            const ngraph::Shape& get_shape() const { return m_shape; }
 
         protected:
             storage_type m_vector;
+            ngraph::Shape m_shape;
         };
     }
 }
