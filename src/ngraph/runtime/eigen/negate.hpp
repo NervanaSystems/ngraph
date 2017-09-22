@@ -15,8 +15,9 @@
 #pragma once
 
 #include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/eigen/tensor_view.hpp"
+#include "ngraph/runtime/eigen/utils.hpp"
 #include "ngraph/runtime/instruction.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
 {
@@ -24,6 +25,18 @@ namespace ngraph
     {
         namespace eigen
         {
+            template <typename T>
+            void negate(T* arg, T* out)
+            {
+                set_map(out, -(get_map(arg)));
+            }
+
+            template <typename T>
+            void negate(std::shared_ptr<T>& arg, std::shared_ptr<T>& out)
+            {
+                negate(&*arg, &*out);
+            }
+
             template <typename ET>
             class NegateInstruction : public Instruction
             {
@@ -36,10 +49,8 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    dynamic_cast<PrimaryTensorView<ET>*>(&*call_frame.get_tensor(m_out))
-                        ->get_map() =
-                          -(dynamic_cast<PrimaryTensorView<ET>*>(&*call_frame.get_tensor(m_arg))
-                              ->get_map());
+                    negate(call_frame.get_parameterized_tensor<ET>(m_arg),
+                           call_frame.get_parameterized_tensor<ET>(m_out));
                 }
 
             protected:

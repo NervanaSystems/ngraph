@@ -12,19 +12,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <iostream>
+#pragma once
 
-#include "Eigen/Dense"
-#include "gtest/gtest.h"
+#include <memory>
 
-using Eigen::MatrixXd;
+#include "ngraph/runtime/call_frame.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/types/element_type.hpp"
 
-TEST(eigen, simple)
+namespace ngraph
 {
-    MatrixXd m(2, 2);
-    m(0, 0) = 3;
-    m(1, 0) = 2.5;
-    m(0, 1) = -1;
-    m(1, 1) = m(1, 0) + m(0, 1);
-    EXPECT_FLOAT_EQ(m(1, 1), 1.5);
+    namespace runtime
+    {
+        template <typename ET>
+        std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>
+            make_tensor(const Shape& shape)
+        {
+            return std::make_shared<runtime::ParameterizedTensorView<ET>>(shape);
+        }
+    }
 }

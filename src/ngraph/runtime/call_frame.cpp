@@ -20,11 +20,11 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::runtime;
 
-CallFrame::CallFrame(size_t                                             n_inputs,
-                     size_t                                             n_outputs,
-                     const PTVs&                                        temps,
-                     size_t                                             initial_pc,
-                     const shared_ptr<vector<shared_ptr<Instruction>>>& instructions)
+CallFrame::CallFrame(size_t                                                           n_inputs,
+                     size_t                                                           n_outputs,
+                     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& temps,
+                     size_t                                                           initial_pc,
+                     const shared_ptr<vector<shared_ptr<Instruction>>>&               instructions)
 
     : m_n_inputs(n_inputs)
     , m_n_outputs(n_outputs)
@@ -35,7 +35,8 @@ CallFrame::CallFrame(size_t                                             n_inputs
     copy(temps.begin(), temps.end(), m_tensors.begin() + m_n_inputs + m_n_outputs);
 }
 
-void CallFrame::operator()(const PTVs& inputs, const PTVs& outputs)
+void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
+                           const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs)
 {
     copy(inputs.begin(), inputs.end(), m_tensors.begin());
     copy(outputs.begin(), outputs.end(), m_tensors.begin() + m_n_inputs);

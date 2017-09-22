@@ -15,8 +15,9 @@
 #pragma once
 
 #include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/eigen/tensor_view.hpp"
+#include "ngraph/runtime/eigen/utils.hpp"
 #include "ngraph/runtime/instruction.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
 {
@@ -24,6 +25,20 @@ namespace ngraph
     {
         namespace eigen
         {
+            template <typename TI,typename TO>
+            void lessthan(TI* arg0, TI* arg1, TO* out)
+            {
+                auto result_as_float = get_map(arg0) < get_map(arg1);
+                auto result_as_char = result_as_float.template cast<char>();
+                set_map(out, result_as_char);
+            }
+
+            template <typename TI,typename TO>
+            void lessthan(std::shared_ptr<TI>& arg0, std::shared_ptr<TI>& arg1, std::shared_ptr<TO>& out)
+            {
+                lessthan(&*arg0, &*arg1, &*out);
+            }
+
             template <typename ET>
             class LessThanInstruction : public Instruction
             {
@@ -37,14 +52,9 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    auto R = 
-                        dynamic_cast<PrimaryTensorView<ET>*>(&*call_frame.get_tensor(m_arg0))
-                            ->get_map() <
-                        dynamic_cast<PrimaryTensorView<ET>*>(&*call_frame.get_tensor(m_arg1))
-                            ->get_map();
-		    auto R_char = R.template cast<char>();
-                    dynamic_cast<PrimaryTensorView<element::Bool>*>(&*call_frame.get_tensor(m_out))
-                        ->get_map() = R_char;
+                    lessthan(call_frame.get_parameterized_tensor<ET>(m_arg0),
+                             call_frame.get_parameterized_tensor<ET>(m_arg1),
+                             call_frame.get_parameterized_tensor<element::Bool>(m_out));
                 }
 
             protected:

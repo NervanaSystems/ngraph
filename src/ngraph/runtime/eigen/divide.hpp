@@ -15,8 +15,9 @@
 #pragma once
 
 #include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/eigen/tensor_view.hpp"
+#include "ngraph/runtime/eigen/utils.hpp"
 #include "ngraph/runtime/instruction.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
 {
@@ -24,6 +25,18 @@ namespace ngraph
     {
         namespace eigen
         {
+            template <typename T>
+            void divide(T* arg0, T* arg1, T* out)
+            {
+                set_map(out, get_map(arg0) / get_map(arg1));
+            }
+
+            template <typename T>
+            void divide(std::shared_ptr<T>& arg0, std::shared_ptr<T>& arg1, std::shared_ptr<T>& out)
+            {
+                divide(&*arg0, &*arg1, &*out);
+            }
+
             template <typename ET>
             class DivideInstruction : public Instruction
             {
@@ -37,12 +50,9 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    dynamic_cast<PrimaryTensorView<ET>*>(&*call_frame.get_tensor(m_out))
-                        ->get_map() =
-                        dynamic_cast<PrimaryTensorView<ET>*>(&*call_frame.get_tensor(m_arg0))
-                            ->get_map() /
-                        dynamic_cast<PrimaryTensorView<ET>*>(&*call_frame.get_tensor(m_arg1))
-                            ->get_map();
+                    divide(call_frame.get_parameterized_tensor<ET>(m_arg0),
+                           call_frame.get_parameterized_tensor<ET>(m_arg1),
+                           call_frame.get_parameterized_tensor<ET>(m_out));
                 }
 
             protected:

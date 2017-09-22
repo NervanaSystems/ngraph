@@ -32,8 +32,7 @@ set (SRC
     pass/tree_pass.cpp
     pass/visualize_tree.cpp
     runtime/call_frame.cpp
-    runtime/eigen/external_function.cpp
-    runtime/eigen/tensor_view.cpp
+    runtime/external_function.cpp
     shape.cpp
     visualize.cpp
     ops/binary_elementwise_arithmetic.cpp
@@ -69,18 +68,19 @@ include_directories(
 include_directories(
     SYSTEM
     "${EIGEN_INCLUDE_DIR}"
-    "${MKLDNN_INCLUDE_DIR}"
     )
     
 add_library(ngraph SHARED ${SRC})
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
-
+    
 if (APPLE)
     set_property(TARGET ngraph PROPERTY PREFIX "lib")
     set_property(TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.so")
     set_property(TARGET ngraph PROPERTY SUFFIX "")
+else()
+    include_directories("${MKLDNN_INCLUDE_DIR}")
 endif()
-
+    
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------

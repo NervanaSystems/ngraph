@@ -20,7 +20,6 @@
 
 using namespace std;
 using namespace ngraph;
-using namespace ngraph::runtime::eigen;
 
 TEST(shape, test_shape_size)
 {
