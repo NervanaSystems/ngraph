@@ -17,26 +17,24 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
-#include "ngraph/runtime/tuple.hpp"
-#include "ngraph/runtime/value.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/descriptor/value.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        /// @brief Framework constructor of a tensor of a specific element type and shape.
-        template <typename ET>
-        std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>
-            make_tensor(const Shape& shape)
+        class TensorView;
+        
+        /// @brief A first-class runtime value.
+        class Value
         {
-            return std::make_shared<runtime::ParameterizedTensorView<ET>>(shape);
-        }
+        public:
+            virtual ~Value() {}
 
-        /// @brief Framework constructor of a tuple from a sequence of values.
-        std::shared_ptr<ngraph::runtime::Tuple>
-            make_tuple(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& elements);
+            /// @brief The compile-time descriptor for this value.
+            virtual std::shared_ptr<ngraph::descriptor::Value> get_descriptor() const         = 0;
+            virtual void collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
+                                              const std::shared_ptr<Value>& value) const = 0;
+        };
     }
 }

@@ -12,31 +12,32 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <memory>
+#include <sstream>
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph/ops/get_tuple_element.hpp"
 
 using namespace std;
-using namespace ngraph;
 using namespace ngraph::op;
 
-void UnaryElementwiseBuiltin::propagate_types()
+void GetTupleElement::propagate_types()
 {
     if (m_arguments.size() != 1)
     {
         throw ngraph_error("Wrong number of arguments.");
     }
 
-    auto arg_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(0)->get_value_type());
-    if (nullptr == arg_tensor_type)
+    auto arg0_tuple_type =
+        dynamic_pointer_cast<const TupleType>(m_arguments.at(0)->get_value_type());
+    if (nullptr == arg0_tuple_type)
     {
-        throw ngraph_error("Argument must be tensor view");
+        throw ngraph_error("Argument must be a tuple view");
     }
 
-    const element::Type& result_element_type =
-        propagate_element_types(arg_tensor_type->get_element_type());
+    if (m_n >= arg0_tuple_type->get_element_types().size()){
+        throw ngraph_error("Indexing tuple beyond its size");
+    }
 
-    set_value_type_checked(make_shared<TensorViewType>(result_element_type,
-                                                       arg_tensor_type->get_shape()));
+    auto& result_element_type = arg0_tuple_type->get_element_types().at(m_n);
+
+    set_value_type_checked(result_element_type);
 }

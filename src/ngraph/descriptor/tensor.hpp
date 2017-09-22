@@ -45,8 +45,9 @@ private:
 
     Tensor(const element::Type& element_type,
            PrimaryTensorView*   tensor_view,
-           const Node*          parent,
-           size_t               value_index);
+           const std::string&   name,
+           bool                 is_output,
+           bool                 is_input);
 
     std::string get_next_view_name();
 
@@ -58,6 +59,8 @@ public:
     size_t             size() const;
     void               set_pool_offset(size_t);
     size_t             get_pool_offset() const;
+
+    static std::string make_tensor_name(const Node* node, size_t value_index);
 
 protected:
     const element::Type& m_element_type;

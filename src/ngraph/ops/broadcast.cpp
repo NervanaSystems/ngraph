@@ -28,7 +28,7 @@ void Broadcast::propagate_types()
     {
         throw ngraph_error("Argument to broadcast is missing type.");
     }
-    auto arg_tensor_view_type = dynamic_pointer_cast<TensorViewType>(arg_type);
+    auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
     if (nullptr == arg_tensor_view_type)
     {
         throw ngraph_error("Argument to broadcast is not a tensor view");

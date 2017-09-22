@@ -31,21 +31,21 @@ namespace ngraph
     }
     class ValueType;
 
-    /// Zero or more value types
-    using ValueTypes = std::vector<std::shared_ptr<ValueType>>;
+    /// @brief Zero or more value types
+    using ValueTypes = std::vector<std::shared_ptr<const ValueType>>;
 
-    /// Zero or more nodes
+    /// @brief Zero or more nodes
     using Nodes = std::vector<std::shared_ptr<Node>>;
 
-    /// A sequence of axes
+    /// @brief A sequence of axes
     using AxisVector = std::vector<size_t>;
 
-    /// A set of axes, for example, reduction axes
+    /// @brief A set of axes, for example, reduction axes
     using AxisSet = std::set<size_t>;
 
-    /// Shape for a tensor
+    /// @brief Shape for a tensor
     using Shape = std::vector<size_t>;
 
-    /// Strides of a tensor
+    /// @brief Strides of a tensor
     using Strides = std::vector<size_t>;
 }

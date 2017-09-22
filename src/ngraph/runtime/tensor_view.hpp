@@ -17,6 +17,8 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/runtime/value.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
 
@@ -27,58 +29,52 @@ namespace ngraph
         template <typename ET>
         class ParameterizedTensorView;
 
-        class TensorView
+        class TensorView : public Value
         {
         public:
+            TensorView(const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor)
+                : m_descriptor(descriptor)
+            {
+            }
+
+            TensorView() {}
+
             virtual ~TensorView() {}
+
             template <typename ET>
             ParameterizedTensorView<ET>* get_parameterized_tensor()
             {
                 return dynamic_cast<ParameterizedTensorView<ET>*>(this);
             }
-        };
 
-        template <typename ET>
-        class ParameterizedTensorView : public ngraph::runtime::TensorView
-        {
-        public:
-            ParameterizedTensorView(const ngraph::Shape& shape)
-                : m_vector(ngraph::shape_size(shape), 0)
-                , m_shape(shape)
+            std::shared_ptr<const ngraph::descriptor::TensorView> get_tensor_view_descriptor() const
             {
+                return m_descriptor;
             }
 
-            virtual ~ParameterizedTensorView() {}
-
-            // Standard definitions from vector
-            using element_type           = ET;
-            using value_type             = typename ET::type;
-            using storage_type           = std::vector<value_type>;
-            using size_type              = typename storage_type::size_type;
-            using difference_type        = typename storage_type::difference_type;
-            using reference              = typename storage_type::reference;
-            using const_reference        = typename storage_type::const_reference;
-            using pointer                = typename storage_type::pointer;
-            using const_pointer          = typename storage_type::const_pointer;
-            using iterator               = typename storage_type::iterator;
-            using const_iterator         = typename storage_type::const_iterator;
-            using reverse_iterator       = typename storage_type::reverse_iterator;
-            using const_reverse_iterator = typename storage_type::const_reverse_iterator;
-
-            template <typename T>
-            ParameterizedTensorView<ET>& operator=(const std::vector<T>& value)
+            virtual std::shared_ptr<ngraph::descriptor::Value> get_descriptor() const override
             {
-                get_vector() = value;
-                return *this;
+                return m_descriptor;
             }
 
-            // For getting the data out
-            storage_type& get_vector() { return m_vector; }
-            const ngraph::Shape& get_shape() const { return m_shape; }
+            virtual void
+            collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
+                                 const std::shared_ptr<Value>&        value) const override
+            {
+                views.push_back(std::static_pointer_cast<TensorView>(value));
+            }
+
+            const Shape& get_shape(){
+                return m_descriptor->get_tensor_view_type()->get_shape();
+            }
 
         protected:
-            storage_type m_vector;
-            ngraph::Shape m_shape;
+            void set_descriptor(const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor)
+            {
+                m_descriptor = descriptor;
+            }
+
+            std::shared_ptr<ngraph::descriptor::TensorView> m_descriptor;
         };
     }
 }

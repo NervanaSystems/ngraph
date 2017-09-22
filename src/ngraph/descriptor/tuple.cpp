@@ -13,30 +13,30 @@
 // ----------------------------------------------------------------------------
 
 #include <memory>
+#include <vector>
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/descriptor/tuple.hpp"
+#include "ngraph/types/type.hpp"
 
-using namespace std;
-using namespace ngraph;
-using namespace ngraph::op;
+using namespace ngraph::descriptor;
 
-void UnaryElementwiseBuiltin::propagate_types()
+Tuple::Tuple(const std::vector<std::shared_ptr<ngraph::descriptor::Value>>& elements)
+    : m_elements(elements)
 {
-    if (m_arguments.size() != 1)
+    std::vector<std::shared_ptr<const ngraph::ValueType>> types;
+    for (auto element : m_elements)
     {
-        throw ngraph_error("Wrong number of arguments.");
+        types.push_back(element->get_value_type());
     }
+    m_tuple_type = std::make_shared<ngraph::TupleType>(types);
+}
 
-    auto arg_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(0)->get_value_type());
-    if (nullptr == arg_tensor_type)
+void Tuple::collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
+                                 const std::shared_ptr<Value>&             value) const
+{
+    for (auto element : m_elements)
     {
-        throw ngraph_error("Argument must be tensor view");
+        element->collect_tensor_views(views, element);
     }
-
-    const element::Type& result_element_type =
-        propagate_element_types(arg_tensor_type->get_element_type());
-
-    set_value_type_checked(make_shared<TensorViewType>(result_element_type,
-                                                       arg_tensor_type->get_shape()));
 }

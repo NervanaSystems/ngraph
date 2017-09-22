@@ -14,29 +14,32 @@
 
 #pragma once
 
-#include <memory>
 #include <vector>
 
-#include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
-#include "ngraph/runtime/tuple.hpp"
-#include "ngraph/runtime/value.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/descriptor/buffer.hpp"
+#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/tensor_view.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace descriptor
     {
-        /// @brief Framework constructor of a tensor of a specific element type and shape.
-        template <typename ET>
-        std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>
-            make_tensor(const Shape& shape)
+        namespace layout
         {
-            return std::make_shared<runtime::ParameterizedTensorView<ET>>(shape);
-        }
+            // The standard strided layout
+            class DenseTensorViewLayout : public TensorViewLayout
+            {
+            public:
+                ~DenseTensorViewLayout() {}
+                DenseTensorViewLayout(const TensorView& tensor_view);
 
-        /// @brief Framework constructor of a tuple from a sequence of values.
-        std::shared_ptr<ngraph::runtime::Tuple>
-            make_tuple(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& elements);
+                virtual size_t get_size() override { return m_size; }
+                virtual size_t get_index_offset(const std::vector<size_t>& indices) override;
+
+            protected:
+                Strides m_strides;
+                size_t  m_size;
+            };
+        }
     }
 }

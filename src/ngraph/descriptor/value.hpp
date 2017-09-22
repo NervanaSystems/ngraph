@@ -12,20 +12,26 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#pragma once
+
 #include <memory>
-#include <vector>
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph/types/type.hpp"
 
-using namespace std;
-using namespace ngraph::op;
-
-void Tuple::propagate_types()
+namespace ngraph
 {
-    vector<shared_ptr<const ValueType>> element_types;
-    for (auto argument : m_arguments)
+    namespace descriptor
     {
-        element_types.push_back(argument->get_value_type());
+        class TensorView;
+
+        /// @brief Compile-time descriptor of a first-class value.
+        class Value
+        {
+        public:
+            virtual ~Value() {}
+            virtual std::shared_ptr<const ngraph::ValueType> get_value_type() const      = 0;
+            virtual void collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
+                                              const std::shared_ptr<Value>& value) const = 0;
+        };
     }
-    set_value_type_checked(make_shared<TupleType>(element_types));
 }

@@ -38,9 +38,17 @@ namespace ngraph
                 size_t                                                            initial_pc,
                 const std::shared_ptr<std::vector<std::shared_ptr<Instruction>>>& instructions);
 
-            void                        operator()(const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
-                                                   const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outpus);
-            void                        set_return() { m_return = true; }
+            /// @brief Tuples will be expanded into their tensor views
+            void operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
+                            const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outpus);
+
+            /// @brief Any tuples are pre-expanded to their underlying tensor views.
+            void tensor_call(
+                const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
+                const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outpus);
+
+            void set_return() { m_return = true; }
+
             std::shared_ptr<TensorView> get_tensor(size_t i) { return m_tensors[i]; }
 
             template <typename ET>

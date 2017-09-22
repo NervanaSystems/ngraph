@@ -12,20 +12,10 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <memory>
-#include <vector>
+#include "ngraph/runtime/utils.hpp"
 
-#include "ngraph/ngraph.hpp"
-
-using namespace std;
-using namespace ngraph::op;
-
-void Tuple::propagate_types()
+std::shared_ptr<ngraph::runtime::Tuple> ngraph::runtime::make_tuple(
+    const std::vector<std::shared_ptr<ngraph::runtime::Value>>& elements)
 {
-    vector<shared_ptr<const ValueType>> element_types;
-    for (auto argument : m_arguments)
-    {
-        element_types.push_back(argument->get_value_type());
-    }
-    set_value_type_checked(make_shared<TupleType>(element_types));
+    return std::make_shared<ngraph::runtime::Tuple>(elements);
 }
