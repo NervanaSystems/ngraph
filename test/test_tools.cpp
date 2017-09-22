@@ -53,7 +53,7 @@ bool validate_list(const list<Node*>& nodes)
     return rc;
 }
 
-shared_ptr<Node> make_test_graph()
+shared_ptr<Function> make_test_graph()
 {
     auto arg_0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     auto arg_1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
@@ -71,7 +71,9 @@ shared_ptr<Node> make_test_graph()
 
     auto r0 = make_shared<op::Add>(t3, t4);
 
-    return r0;
+    auto f0 = make_shared<Function>(r0, op::Parameters{arg_0, arg_1, arg_2, arg_3, arg_4, arg_5});
+
+    return f0;
 }
 
 size_t get_node_count(std::shared_ptr<Node> n)

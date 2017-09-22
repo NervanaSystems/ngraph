@@ -41,9 +41,9 @@ TEST(pass_manager, add)
     pass_manager.register_pass(assign_tensors);
 
     auto   graph      = make_test_graph();
-    size_t node_count = get_node_count(graph);
-    pass_manager.run_passes(graph);
-    auto sorted = pass_manager.get_sorted_list();
+    size_t node_count = get_node_count(graph->get_result());
+    pass_manager.run_passes(graph.get());
+    auto sorted = pass_manager.get_call_graph();
     EXPECT_EQ(node_count, sorted.size());
     EXPECT_TRUE(validate_list(sorted));
 }

@@ -26,6 +26,7 @@ set (SRC
     pass/liveness.cpp
     pass/manager.cpp
     pass/memory_layout.cpp
+    pass/memory_visualize.cpp
     pass/pass.cpp
     pass/propagate_types.cpp
     pass/topological_sort.cpp

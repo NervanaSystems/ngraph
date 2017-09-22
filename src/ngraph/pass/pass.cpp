@@ -13,3 +13,14 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/pass/manager.hpp"
+
+ngraph::pass::ManagerState& ngraph::pass::Base::get_state()
+{
+    return *m_state;
+}
+
+void ngraph::pass::Base::set_state(ManagerState& state)
+{
+    m_state = &state;
+}

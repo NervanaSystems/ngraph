@@ -14,6 +14,11 @@
 
 #pragma once
 
+#include <initializer_list>
+#include <memory>
+#include <vector>
+#include <string>
+
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/op.hpp"

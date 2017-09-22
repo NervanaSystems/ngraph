@@ -18,8 +18,40 @@
 #include "ngraph/log.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/function.hpp"
 
 using namespace std;
+using namespace ngraph;
+
+Function* ngraph::pass::ManagerState::get_function()
+{
+    return m_function;
+}
+
+void ngraph::pass::ManagerState::set_function(Function* func)
+{
+    m_function = func;
+}
+
+size_t ngraph::pass::ManagerState::get_temporary_pool_size()
+{
+    return m_temporary_pool_size;
+}
+
+void ngraph::pass::ManagerState::set_temporary_pool_size(size_t size)
+{
+    m_temporary_pool_size = size;
+}
+
+std::list<Node*>& ngraph::pass::ManagerState::get_call_graph()
+{
+    return m_call_graph;
+}
+
+const std::list<Node*>& ngraph::pass::ManagerState::get_call_graph() const
+{
+    return m_call_graph;
+}
 
 ngraph::pass::Manager::Manager()
 {
@@ -53,24 +85,33 @@ void ngraph::pass::Manager::register_pass(std::shared_ptr<CallBase> p)
     m_call_passes.push_back(p);
 }
 
-void ngraph::pass::Manager::run_passes(std::shared_ptr<Node> nodes)
+void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 {
+    run_passes(func.get());
+}
+
+void ngraph::pass::Manager::run_passes(Function* func)
+{
+    m_state.set_function(func);
     for (shared_ptr<TreeBase> p : m_tree_passes)
     {
-        p->run_on_tree(nodes);
-        if (p->call_graph_produced())
-        {
-            m_sorted_list = p->get_call_graph();
-        }
+        p->set_state(get_state());
+        p->run_on_tree(func->get_result());
     }
 
     for (shared_ptr<CallBase>& p : m_call_passes)
     {
-        p->run_on_call_list(m_sorted_list);
+        p->set_state(get_state());
+        p->run_on_call_list(get_state().get_call_graph());
     }
 }
 
-const std::list<ngraph::Node*>& ngraph::pass::Manager::get_sorted_list() const
+const std::list<ngraph::Node*>& ngraph::pass::Manager::get_call_graph() const
 {
-    return m_sorted_list;
+    return m_state.get_call_graph();
+}
+
+ngraph::pass::ManagerState& ngraph::pass::Manager::get_state()
+{
+    return m_state;
 }
