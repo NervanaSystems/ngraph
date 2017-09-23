@@ -132,5 +132,4 @@ install(DIRECTORY
     DESTINATION "${CMAKE_INSTALL_LIB}"
 )
 
-include_directories(SYSTEM ${EIGEN_INCLUDE_DIR})
 add_dependencies(ngraph eigen)
