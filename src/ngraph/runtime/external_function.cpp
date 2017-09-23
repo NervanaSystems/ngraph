@@ -25,6 +25,7 @@
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/divide.hpp"
+#include "ngraph/ops/equal.hpp"
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/log.hpp"
 #include "ngraph/ops/maximum.hpp"
@@ -38,6 +39,7 @@
 #include "ngraph/runtime/eigen/abs.hpp"
 #include "ngraph/runtime/eigen/add.hpp"
 #include "ngraph/runtime/eigen/divide.hpp"
+#include "ngraph/runtime/eigen/equal.hpp"
 #include "ngraph/runtime/eigen/lessthan.hpp"
 #include "ngraph/runtime/eigen/log.hpp"
 #include "ngraph/runtime/eigen/maximum.hpp"
@@ -101,6 +103,15 @@ std::unordered_map<std::type_index,
                                                     const std::vector<size_t>& out) {
             ef->get_instructions()->push_back(
                 make_shared<runtime::eigen::DivideInstruction<element::Float32>>(
+                    in[0], in[1], out[0]));
+        };
+
+        op_map[type_index(typeid(op::Equal))] = [](Node*                      n,
+                                                   ExternalFunction*          ef,
+                                                   const std::vector<size_t>& in,
+                                                   const std::vector<size_t>& out) {
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::EqualInstruction<element::Float32>>(
                     in[0], in[1], out[0]));
         };
 
