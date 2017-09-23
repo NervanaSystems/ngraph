@@ -46,6 +46,7 @@ set (SRC
     ops/dot.cpp
     ops/op.cpp
     ops/parameter.cpp
+    ops/select.cpp
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise_builtin.cpp

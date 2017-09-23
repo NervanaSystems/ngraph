@@ -208,6 +208,30 @@ TEST(execute, test_notequal)
     ASSERT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), result->get_vector());
 }
 
+TEST(execute, test_select)
+{
+    auto shape = Shape{2, 2, 2};
+    auto A     = make_shared<op::Parameter>(element::Bool::element_type(), shape);
+    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto C     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto f     = make_shared<Function>(make_shared<op::Select>(A,B,C), op::Parameters{A,B,C});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a      = ngraph::runtime::make_tensor<element::Bool>(shape);
+    *a          = vector<char>{ 0,  1,  1,  0,  0,  1,  0,  1};
+    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b          = vector<float>{ 1,  2,  3,  4,  5,  6,  7,  8};
+    auto c      = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *c          = vector<float>{11, 12, 13, 14, 15, 16, 17, 18};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+
+    (*cf)({a,b,c}, {result});
+    ASSERT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), result->get_vector());
+}
+
 TEST(execute, test_subtract)
 {
     auto shape = Shape{2, 2};

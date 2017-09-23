@@ -32,6 +32,7 @@
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/notequal.hpp"
+#include "ngraph/ops/select.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
@@ -47,6 +48,7 @@
 #include "ngraph/runtime/eigen/negate.hpp"
 #include "ngraph/runtime/eigen/notequal.hpp"
 #include "ngraph/runtime/eigen/return.hpp"
+#include "ngraph/runtime/eigen/select.hpp"
 #include "ngraph/runtime/eigen/subtract.hpp"
 #include "ngraph/runtime/utils.hpp"
 
@@ -173,6 +175,15 @@ std::unordered_map<std::type_index,
                                                        ExternalFunction*          ef,
                                                        const std::vector<size_t>& in,
                                                        const std::vector<size_t>& out) {};
+
+        op_map[type_index(typeid(op::Select))] = [](Node*                      n,
+                                                    ExternalFunction*          ef,
+                                                    const std::vector<size_t>& in,
+                                                    const std::vector<size_t>& out) {
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::SelectInstruction<element::Float32>>(
+                    in[0], in[1], in[2], out[0]));
+        };
 
         op_map[type_index(typeid(op::Subtract))] = [](Node*                      n,
                                                       ExternalFunction*          ef,
