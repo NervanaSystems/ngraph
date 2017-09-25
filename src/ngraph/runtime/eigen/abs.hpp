@@ -18,7 +18,6 @@
 #include "ngraph/runtime/eigen/utils.hpp"
 #include "ngraph/runtime/instruction.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
->>>>>>> 996c7c0... Add elementwise ops
 
 namespace ngraph
 {
