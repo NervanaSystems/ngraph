@@ -26,15 +26,9 @@ namespace ngraph
         namespace eigen
         {
             template <typename TA,typename TB>
-            void select(TA* arg0, TB* arg1, TB* arg2, TB* out)
+            void select(TA arg0, TB arg1, TB arg2, TB out)
             {
-                set_map(out, get_map(arg0).select(get_map(arg1),get_map(arg2)));
-            }
-
-            template <typename TA,typename TB>
-            void select(std::shared_ptr<TA>& arg0, std::shared_ptr<TB>& arg1, std::shared_ptr<TB>& arg2, std::shared_ptr<TB>& out)
-            {
-                select(&*arg0, &*arg1, &*arg2, &*out);
+                set_map(&*out, get_map(&*arg0).select(get_map(&*arg1),get_map(&*arg2)));
             }
 
             template <typename ET>
@@ -51,10 +45,11 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    select(call_frame.get_parameterized_tensor<element::Bool>(m_arg0),
-                           call_frame.get_parameterized_tensor<ET>(m_arg1),
-                           call_frame.get_parameterized_tensor<ET>(m_arg2),
-                           call_frame.get_parameterized_tensor<ET>(m_out));
+                    runtime::eigen::select(
+                        call_frame.get_parameterized_tensor<element::Bool>(m_arg0),
+                        call_frame.get_parameterized_tensor<ET>(m_arg1),
+                        call_frame.get_parameterized_tensor<ET>(m_arg2),
+                        call_frame.get_parameterized_tensor<ET>(m_out));
                 }
 
             protected:

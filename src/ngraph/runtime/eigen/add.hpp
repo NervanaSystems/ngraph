@@ -26,15 +26,9 @@ namespace ngraph
         namespace eigen
         {
             template <typename T>
-            void add(T* arg0, T* arg1, T* out)
+            void add(T arg0, T arg1, T out)
             {
-                set_map(out, get_map(arg0) + get_map(arg1));
-            }
-
-            template <typename T>
-            void add(std::shared_ptr<T>& arg0, std::shared_ptr<T>& arg1, std::shared_ptr<T>& out)
-            {
-                add(&*arg0, &*arg1, &*out);
+                set_map(&*out, get_map(&*arg0) + get_map(&*arg1));
             }
 
             template <typename ET>
@@ -50,7 +44,8 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    add(call_frame.get_parameterized_tensor<ET>(m_arg0),
+                    runtime::eigen::add(
+                        call_frame.get_parameterized_tensor<ET>(m_arg0),
                         call_frame.get_parameterized_tensor<ET>(m_arg1),
                         call_frame.get_parameterized_tensor<ET>(m_out));
                 }

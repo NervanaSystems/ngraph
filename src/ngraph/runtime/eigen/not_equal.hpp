@@ -26,17 +26,11 @@ namespace ngraph
         namespace eigen
         {
             template <typename TI,typename TO>
-            void notequal(TI* arg0, TI* arg1, TO* out)
+            void not_equal(TI arg0, TI arg1, TO out)
             {
-                auto result_as_float = get_map(arg0) != get_map(arg1);
-                auto result_as_char = result_as_float.template cast<char>();
-                set_map(out, result_as_char);
-            }
-
-            template <typename TI,typename TO>
-            void notequal(std::shared_ptr<TI>& arg0, std::shared_ptr<TI>& arg1, std::shared_ptr<TO>& out)
-            {
-                notequal(&*arg0, &*arg1, &*out);
+                auto result_as_float = get_map(&*arg0) != get_map(&*arg1);
+                auto result_as_char  = result_as_float.template cast<char>();
+                set_map(&*out, result_as_char);
             }
 
             template <typename ET>
@@ -52,9 +46,10 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    notequal(call_frame.get_parameterized_tensor<ET>(m_arg0),
-                             call_frame.get_parameterized_tensor<ET>(m_arg1),
-                             call_frame.get_parameterized_tensor<element::Bool>(m_out));
+                    runtime::eigen::not_equal(
+                        call_frame.get_parameterized_tensor<ET>(m_arg0),
+                        call_frame.get_parameterized_tensor<ET>(m_arg1),
+                        call_frame.get_parameterized_tensor<element::Bool>(m_out));
                 }
 
             protected:

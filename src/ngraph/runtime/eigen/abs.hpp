@@ -26,15 +26,9 @@ namespace ngraph
         namespace eigen
         {
             template <typename T>
-            void abs(T* arg, T* out)
+            void abs(T arg, T out)
             {
-                set_map(out, abs(get_map(arg)));
-            }
-
-            template <typename T>
-            void abs(std::shared_ptr<T>& arg, std::shared_ptr<T>& out)
-            {
-                abs(&*arg, &*out);
+                set_map(&*out, Eigen::abs(get_map(&*arg)));
             }
 
             template <typename ET>
@@ -49,7 +43,8 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    abs(call_frame.get_parameterized_tensor<ET>(m_arg),
+                    runtime::eigen::abs(
+                        call_frame.get_parameterized_tensor<ET>(m_arg),
                         call_frame.get_parameterized_tensor<ET>(m_out));
                 }
 

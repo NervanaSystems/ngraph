@@ -26,15 +26,9 @@ namespace ngraph
         namespace eigen
         {
             template <typename T>
-            void log(T* arg, T* out)
+            void log(T arg, T out)
             {
-                set_map(out, log(get_map(arg)));
-            }
-
-            template <typename T>
-            void log(std::shared_ptr<T>& arg, std::shared_ptr<T>& out)
-            {
-                log(&*arg, &*out);
+                set_map(&*out, Eigen::log(get_map(&*arg)));
             }
 
             template <typename ET>
@@ -49,7 +43,8 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    log(call_frame.get_parameterized_tensor<ET>(m_arg),
+                    runtime::eigen::log(
+                        call_frame.get_parameterized_tensor<ET>(m_arg),
                         call_frame.get_parameterized_tensor<ET>(m_out));
                 }
 

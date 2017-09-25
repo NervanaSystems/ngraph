@@ -26,15 +26,9 @@ namespace ngraph
         namespace eigen
         {
             template <typename T>
-            void negate(T* arg, T* out)
+            void negate(T arg, T out)
             {
-                set_map(out, -(get_map(arg)));
-            }
-
-            template <typename T>
-            void negate(std::shared_ptr<T>& arg, std::shared_ptr<T>& out)
-            {
-                negate(&*arg, &*out);
+                set_map(&*out, -(get_map(&*arg)));
             }
 
             template <typename ET>
@@ -49,8 +43,9 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    negate(call_frame.get_parameterized_tensor<ET>(m_arg),
-                           call_frame.get_parameterized_tensor<ET>(m_out));
+                    runtime::eigen::negate(
+                        call_frame.get_parameterized_tensor<ET>(m_arg),
+                        call_frame.get_parameterized_tensor<ET>(m_out));
                 }
 
             protected:
