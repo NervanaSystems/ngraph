@@ -399,3 +399,159 @@ TEST(type_prop, unary_arithmetic_bad_argument_element_types)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, select_deduce)
+{
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Bool::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto bc = make_shared<op::Select>(tv0_2_4_param_0,tv0_2_4_param_1,tv0_2_4_param_2);
+    bc->propagate_types();
+    auto bc_vt = bc->get_value_type();
+    ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 4}));
+}
+
+TEST(type_prop, select_deduce_correct)
+{
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Bool::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto bc = make_shared<op::Select>(tv0_2_4_param_0,tv0_2_4_param_1,tv0_2_4_param_2);
+    bc->set_value_type(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    bc->propagate_types();
+    auto bc_vt = bc->get_value_type();
+    ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 4}));
+}
+
+TEST(type_prop, select_shape_mismatch_a)
+{
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Bool::element_type(), Shape{3, 5}));
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto bc = make_shared<op::Select>(tv0_2_4_param_0,tv0_2_4_param_1,tv0_2_4_param_2);
+    try
+    {
+        bc->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_shape_mismatch_b)
+{
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Bool::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 5}));
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto bc = make_shared<op::Select>(tv0_2_4_param_0,tv0_2_4_param_1,tv0_2_4_param_2);
+    try
+    {
+        bc->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_shape_mismatch_c)
+{
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Bool::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 5}));
+    auto bc = make_shared<op::Select>(tv0_2_4_param_0,tv0_2_4_param_1,tv0_2_4_param_2);
+    try
+    {
+        bc->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_elem_mismatch_a)
+{
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto bc = make_shared<op::Select>(tv0_2_4_param_0,tv0_2_4_param_1,tv0_2_4_param_2);
+    try
+    {
+        bc->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Argument 0 for arithmetic operators must have boolean element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_elem_mismatch_bc)
+{
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Bool::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Int32::element_type(), Shape{2, 4}));
+    auto bc = make_shared<op::Select>(tv0_2_4_param_0,tv0_2_4_param_1,tv0_2_4_param_2);
+    try
+    {
+        bc->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Arguments 1 and 2 must have the same tensor view type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+

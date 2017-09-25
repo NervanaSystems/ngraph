@@ -26,16 +26,16 @@ namespace ngraph
         namespace eigen
         {
             template <typename T>
-            void add(T arg0, T arg1, T out)
+            void divide(T arg0, T arg1, T out)
             {
-                set_map(&*out, get_map(&*arg0) + get_map(&*arg1));
+                set_map(&*out, get_map(&*arg0) / get_map(&*arg1));
             }
 
             template <typename ET>
-            class AddInstruction : public Instruction
+            class DivideInstruction : public Instruction
             {
             public:
-                AddInstruction(size_t arg0, size_t arg1, size_t out)
+                DivideInstruction(size_t arg0, size_t arg1, size_t out)
                     : m_arg0(arg0)
                     , m_arg1(arg1)
                     , m_out(out)
@@ -44,7 +44,7 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::add(
+                    runtime::eigen::divide(
                         call_frame.get_parameterized_tensor<ET>(m_arg0),
                         call_frame.get_parameterized_tensor<ET>(m_arg1),
                         call_frame.get_parameterized_tensor<ET>(m_out));

@@ -25,34 +25,37 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename T>
-            void add(T arg0, T arg1, T out)
+            template <typename TA,typename TB>
+            void select(TA arg0, TB arg1, TB arg2, TB out)
             {
-                set_map(&*out, get_map(&*arg0) + get_map(&*arg1));
+                set_map(&*out, get_map(&*arg0).select(get_map(&*arg1),get_map(&*arg2)));
             }
 
             template <typename ET>
-            class AddInstruction : public Instruction
+            class SelectInstruction : public Instruction
             {
             public:
-                AddInstruction(size_t arg0, size_t arg1, size_t out)
+                SelectInstruction(size_t arg0, size_t arg1, size_t arg2, size_t out)
                     : m_arg0(arg0)
                     , m_arg1(arg1)
+                    , m_arg2(arg2)
                     , m_out(out)
                 {
                 }
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::add(
-                        call_frame.get_parameterized_tensor<ET>(m_arg0),
+                    runtime::eigen::select(
+                        call_frame.get_parameterized_tensor<element::Bool>(m_arg0),
                         call_frame.get_parameterized_tensor<ET>(m_arg1),
+                        call_frame.get_parameterized_tensor<ET>(m_arg2),
                         call_frame.get_parameterized_tensor<ET>(m_out));
                 }
 
             protected:
                 size_t m_arg0;
                 size_t m_arg1;
+                size_t m_arg2;
                 size_t m_out;
             };
         }

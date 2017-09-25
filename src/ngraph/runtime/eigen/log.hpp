@@ -26,33 +26,30 @@ namespace ngraph
         namespace eigen
         {
             template <typename T>
-            void add(T arg0, T arg1, T out)
+            void log(T arg, T out)
             {
-                set_map(&*out, get_map(&*arg0) + get_map(&*arg1));
+                set_map(&*out, Eigen::log(get_map(&*arg)));
             }
 
             template <typename ET>
-            class AddInstruction : public Instruction
+            class LogInstruction : public Instruction
             {
             public:
-                AddInstruction(size_t arg0, size_t arg1, size_t out)
-                    : m_arg0(arg0)
-                    , m_arg1(arg1)
+                LogInstruction(size_t arg, size_t out)
+                    : m_arg(arg)
                     , m_out(out)
                 {
                 }
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::add(
-                        call_frame.get_parameterized_tensor<ET>(m_arg0),
-                        call_frame.get_parameterized_tensor<ET>(m_arg1),
+                    runtime::eigen::log(
+                        call_frame.get_parameterized_tensor<ET>(m_arg),
                         call_frame.get_parameterized_tensor<ET>(m_out));
                 }
 
             protected:
-                size_t m_arg0;
-                size_t m_arg1;
+                size_t m_arg;
                 size_t m_out;
             };
         }

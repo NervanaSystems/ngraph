@@ -22,14 +22,34 @@
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/divide.hpp"
+#include "ngraph/ops/equal.hpp"
+#include "ngraph/ops/less.hpp"
+#include "ngraph/ops/log.hpp"
+#include "ngraph/ops/maximum.hpp"
 #include "ngraph/ops/multiply.hpp"
+#include "ngraph/ops/negative.hpp"
+#include "ngraph/ops/not_equal.hpp"
+#include "ngraph/ops/select.hpp"
+#include "ngraph/ops/subtract.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/runtime/eigen/add.hpp"
 #include "ngraph/runtime/external_function.hpp"
+#include "ngraph/runtime/eigen/abs.hpp"
+#include "ngraph/runtime/eigen/add.hpp"
+#include "ngraph/runtime/eigen/divide.hpp"
+#include "ngraph/runtime/eigen/equal.hpp"
+#include "ngraph/runtime/eigen/less_than.hpp"
+#include "ngraph/runtime/eigen/log.hpp"
+#include "ngraph/runtime/eigen/maximum.hpp"
 #include "ngraph/runtime/eigen/multiply.hpp"
+#include "ngraph/runtime/eigen/negate.hpp"
+#include "ngraph/runtime/eigen/not_equal.hpp"
 #include "ngraph/runtime/eigen/return.hpp"
+#include "ngraph/runtime/eigen/select.hpp"
+#include "ngraph/runtime/eigen/subtract.hpp"
 #include "ngraph/runtime/utils.hpp"
 
 using namespace std;
@@ -43,6 +63,22 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
     , m_instructions(make_shared<std::vector<std::shared_ptr<ngraph::runtime::Instruction>>>())
 {
 }
+
+#define REGISTER_INSTRUCTION(op_class,instr_class,...)                          \
+    op_map[type_index(typeid(op_class))] = [](Node *                      n,    \
+                                              ExternalFunction*          ef,    \
+                                              const std::vector<size_t>& in,    \
+                                              const std::vector<size_t>& out) { \
+            ef->get_instructions()->push_back(                                  \
+                make_shared<instr_class>(__VA_ARGS__));                         \
+    }
+
+#define REGISTER_UNOP(op_class,instr_class) \
+    REGISTER_INSTRUCTION(op_class,instr_class,in[0],out[0])
+#define REGISTER_BINOP(op_class,instr_class) \
+    REGISTER_INSTRUCTION(op_class,instr_class,in[0],in[1],out[0])
+#define REGISTER_TERNOP(op_class,instr_class) \
+    REGISTER_INSTRUCTION(op_class,instr_class,in[0],in[1],in[2],out[0])
 
 // Define code generators for handled ops.
 std::unordered_map<std::type_index,
@@ -61,24 +97,20 @@ std::unordered_map<std::type_index,
         op_map;
     if (!initialized)
     {
-        op_map[type_index(typeid(op::Add))] = [](Node*                      n,
-                                                 ExternalFunction*          ef,
-                                                 const std::vector<size_t>& in,
-                                                 const std::vector<size_t>& out) {
-            ef->get_instructions()->push_back(
-                make_shared<runtime::eigen::AddInstruction<element::Float32>>(
-                    in[0], in[1], out[0]));
-        };
+        REGISTER_UNOP  (op::Abs,     runtime::eigen::AbsInstruction<element::Float32>);
+        REGISTER_BINOP (op::Add,     runtime::eigen::AddInstruction<element::Float32>);
+        REGISTER_BINOP (op::Divide,  runtime::eigen::DivideInstruction<element::Float32>);
+        REGISTER_BINOP (op::Equal,   runtime::eigen::EqualInstruction<element::Float32>);
+        REGISTER_BINOP (op::Less,    runtime::eigen::LessThanInstruction<element::Float32>);
+        REGISTER_UNOP  (op::Log,     runtime::eigen::LogInstruction<element::Float32>);
+        REGISTER_BINOP (op::Maximum, runtime::eigen::MaximumInstruction<element::Float32>);
+        REGISTER_BINOP (op::Multiply,runtime::eigen::MultiplyInstruction<element::Float32>);
+        REGISTER_UNOP  (op::Negative,runtime::eigen::NegateInstruction<element::Float32>);
+        REGISTER_BINOP (op::NotEqual,runtime::eigen::NotEqualInstruction<element::Float32>);
+        REGISTER_TERNOP(op::Select,  runtime::eigen::SelectInstruction<element::Float32>);
+        REGISTER_BINOP (op::Subtract,runtime::eigen::SubtractInstruction<element::Float32>);
 
-        op_map[type_index(typeid(op::Multiply))] = [](Node*                      n,
-                                                      ExternalFunction*          ef,
-                                                      const std::vector<size_t>& in,
-                                                      const std::vector<size_t>& out) {
-            ef->get_instructions()->push_back(
-                make_shared<runtime::eigen::MultiplyInstruction<element::Float32>>(
-                    in[0], in[1], out[0]));
-        };
-
+        // Parameter, as a "runtime no-op", is a special case.
         op_map[type_index(typeid(op::Parameter))] = [](Node*                      n,
                                                        ExternalFunction*          ef,
                                                        const std::vector<size_t>& in,

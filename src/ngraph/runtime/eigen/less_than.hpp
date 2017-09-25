@@ -25,17 +25,19 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename T>
-            void add(T arg0, T arg1, T out)
+            template <typename TI,typename TO>
+            void less_than(TI arg0, TI arg1, TO out)
             {
-                set_map(&*out, get_map(&*arg0) + get_map(&*arg1));
+                auto result_as_float = get_map(&*arg0) < get_map(&*arg1);
+                auto result_as_char  = result_as_float.template cast<char>();
+                set_map(&*out, result_as_char);
             }
 
             template <typename ET>
-            class AddInstruction : public Instruction
+            class LessThanInstruction : public Instruction
             {
             public:
-                AddInstruction(size_t arg0, size_t arg1, size_t out)
+                LessThanInstruction(size_t arg0, size_t arg1, size_t out)
                     : m_arg0(arg0)
                     , m_arg1(arg1)
                     , m_out(out)
@@ -44,10 +46,10 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::add(
+                    runtime::eigen::less_than(
                         call_frame.get_parameterized_tensor<ET>(m_arg0),
                         call_frame.get_parameterized_tensor<ET>(m_arg1),
-                        call_frame.get_parameterized_tensor<ET>(m_out));
+                        call_frame.get_parameterized_tensor<element::Bool>(m_out));
                 }
 
             protected:
