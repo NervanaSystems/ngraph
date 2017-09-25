@@ -46,11 +46,13 @@
 #include "ngraph/runtime/eigen/less_than.hpp"
 #include "ngraph/runtime/eigen/log.hpp"
 #include "ngraph/runtime/eigen/matrix_mult.hpp"
+#include "ngraph/runtime/eigen/matrix_vector_product.hpp"
 #include "ngraph/runtime/eigen/maximum.hpp"
 #include "ngraph/runtime/eigen/multiply.hpp"
 #include "ngraph/runtime/eigen/negate.hpp"
 #include "ngraph/runtime/eigen/not_equal.hpp"
 #include "ngraph/runtime/eigen/return.hpp"
+#include "ngraph/runtime/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/eigen/select.hpp"
 #include "ngraph/runtime/eigen/subtract.hpp"
 #include "ngraph/runtime/utils.hpp"
@@ -138,25 +140,34 @@ std::unordered_map<std::type_index,
             auto arg0_shape = arg0_tensor_type->get_shape();
             auto arg1_shape = arg1_tensor_type->get_shape();
 
-/*            // If arg0 or arg1 is a scalar, emit a scalar-tensor product.
+            // If arg0 or arg1 is a scalar, emit a scalar-tensor product.
             if(arg0_shape.size() == 0)
             {
                 ef->get_instructions()->push_back(
-                    make_shared<runtime::eigen::ScalarTensorProduct<element::Float32>>(
+                    make_shared<runtime::eigen::ScalarTensorProductInstruction<element::Float32>>(
                         in[0], in[1], out[0]));
             }
             else if(arg1_shape.size() == 0)
             {
+                // If arg1 is the scalar, do the same thing but switch the order of operands.
                 ef->get_instructions()->push_back(
-                    make_shared<runtime::eigen::ScalarTensorProduct<element::Float32>>(
+                    make_shared<runtime::eigen::ScalarTensorProductInstruction<element::Float32>>(
                         in[1], in[0], out[0]));
             }
 
             // If arg0 and arg1 are both vectors, emit a dot product.
-            else*/ if(arg0_shape.size() == 1 && arg1_shape.size() == 1)
+            else if(arg0_shape.size() == 1 && arg1_shape.size() == 1)
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::DotInstruction<element::Float32>>(
+                        in[0], in[1], out[0]));
+            }
+
+            // If arg0 and arg1 are both vectors, emit a matrix-vector product.
+            else if(arg0_shape.size() == 2 && arg1_shape.size() == 1)
+            {
+                ef->get_instructions()->push_back(
+                    make_shared<runtime::eigen::MatrixVectorProductInstruction<element::Float32>>(
                         in[0], in[1], out[0]));
             }
 

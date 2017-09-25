@@ -26,15 +26,9 @@ namespace ngraph
         namespace eigen
         {
             template <typename T>
-            void matrix_mult(T* arg0, T* arg1, T* out)
+            void matrix_mult(T arg0, T arg1, T out)
             {
-                set_map_matrix_2d(out,get_map_matrix_2d(arg0) * get_map_matrix_2d(arg1));
-            }
-
-            template <typename T>
-            void matrix_mult(std::shared_ptr<T>& arg0, std::shared_ptr<T>& arg1, std::shared_ptr<T>& out)
-            {
-                matrix_mult(&*arg0, &*arg1, &*out);
+                set_map_matrix_2d(&*out,get_map_matrix_2d(&*arg0) * get_map_matrix_2d(&*arg1));
             }
 
             template <typename ET>

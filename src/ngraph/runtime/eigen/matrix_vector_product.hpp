@@ -26,16 +26,16 @@ namespace ngraph
         namespace eigen
         {
             template <typename T>
-            void dot(T arg0, T arg1, T out)
+            void matrix_vector_product(T arg0, T arg1, T out)
             {
-                (&*out)->get_vector()[0] = get_map_matrix(&*arg0).dot(get_map_matrix(&*arg1));
+                set_map_matrix(&*out,get_map_matrix_2d(&*arg0) * get_map_matrix(&*arg1));
             }
 
             template <typename ET>
-            class DotInstruction : public Instruction
+            class MatrixVectorProductInstruction : public Instruction
             {
             public:
-                DotInstruction(size_t arg0, size_t arg1, size_t out)
+                MatrixVectorProductInstruction(size_t arg0, size_t arg1, size_t out)
                     : m_arg0(arg0)
                     , m_arg1(arg1)
                     , m_out(out)
@@ -44,7 +44,8 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    dot(call_frame.get_parameterized_tensor<ET>(m_arg0),
+                    runtime::eigen::matrix_vector_product(
+                        call_frame.get_parameterized_tensor<ET>(m_arg0),
                         call_frame.get_parameterized_tensor<ET>(m_arg1),
                         call_frame.get_parameterized_tensor<ET>(m_out));
                 }
