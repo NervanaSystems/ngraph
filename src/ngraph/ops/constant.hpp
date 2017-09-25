@@ -115,6 +115,8 @@ namespace ngraph
 
             typename std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>> get_value() const { return m_value; }
 
+            void set_value(const std::vector<type>& value) const { m_value->get_vector() = value; }
+
         protected:
             std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>> m_value;
         };
