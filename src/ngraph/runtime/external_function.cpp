@@ -163,7 +163,7 @@ std::unordered_map<std::type_index,
                         in[0], in[1], out[0]));
             }
 
-            // If arg0 and arg1 are both vectors, emit a matrix-vector product.
+            // If arg0 is a matrix and arg1 is a vector, emit a matrix-vector product.
             else if(arg0_shape.size() == 2 && arg1_shape.size() == 1)
             {
                 ef->get_instructions()->push_back(
