@@ -107,7 +107,7 @@ TEST(execute, test_equal)
 
 TEST(execute, test_dot1d)
 {
-    auto shape   = Shape{2, 2};
+    auto shape   = Shape{4};
     auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto shape_r = Shape{1};
@@ -125,6 +125,31 @@ TEST(execute, test_dot1d)
 
     (*cf)({a,b}, {result});
     ASSERT_EQ((vector<float>{170}), result->get_vector());
+}
+
+TEST(execute, test_dot2d)
+{
+    auto shape   = Shape{2,2};
+    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto shape_r = Shape{2,2};
+    auto f       = make_shared<Function>(make_shared<op::Dot>(A,B), op::Parameters{A,B});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a          = vector<float>{1, 2,
+                                3, 4};
+    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b          = vector<float>{5, 6,
+                                7, 8};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a,b}, {result});
+    ASSERT_EQ((vector<float>{19,22,
+                             43,50}), result->get_vector());
 }
 
 TEST(execute, test_lessthan)
