@@ -44,7 +44,8 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    dot(call_frame.get_parameterized_tensor<ET>(m_arg0),
+                    runtime::eigen::dot(
+                        call_frame.get_parameterized_tensor<ET>(m_arg0),
                         call_frame.get_parameterized_tensor<ET>(m_arg1),
                         call_frame.get_parameterized_tensor<ET>(m_out));
                 }
