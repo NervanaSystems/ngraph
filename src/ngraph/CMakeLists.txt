@@ -12,14 +12,26 @@
 # limitations under the License.
 
 set (SRC
-    log.cpp
     descriptor/input.cpp
     descriptor/output.cpp
     descriptor/tensor_view.cpp
     descriptor/tensor.cpp
     function.cpp
+    log.cpp
     node.cpp
-    shape.cpp
+    ops/binary_elementwise_arithmetic.cpp
+    ops/binary_elementwise_builtin.cpp
+    ops/binary_elementwise_comparison.cpp
+    ops/broadcast.cpp
+    ops/concatenate.cpp
+    ops/constant.cpp
+    ops/convert.cpp
+    ops/dot.cpp
+    ops/op.cpp
+    ops/parameter.cpp
+    ops/tuple.cpp
+    ops/unary_elementwise_arithmetic.cpp
+    ops/unary_elementwise_builtin.cpp
     pass/assign_tensors.cpp
     pass/call_pass.cpp
     pass/dump_sorted.cpp
@@ -35,24 +47,11 @@ set (SRC
     runtime/call_frame.cpp
     runtime/external_function.cpp
     shape.cpp
-    visualize.cpp
-    ops/binary_elementwise_arithmetic.cpp
-    ops/binary_elementwise_builtin.cpp
-    ops/binary_elementwise_comparison.cpp
-    ops/broadcast.cpp
-    ops/concatenate.cpp
-    ops/constant.cpp
-    ops/convert.cpp
-    ops/dot.cpp
-    ops/op.cpp
-    ops/parameter.cpp
-    ops/tuple.cpp
-    ops/unary_elementwise_arithmetic.cpp
-    ops/unary_elementwise_builtin.cpp
-    tree.cpp
+    shape.cpp
     types/element_type.cpp
     types/type.cpp
     util.cpp
+    visualize.cpp
     )
 
 # find_program (GRAPHVIZ dot)
@@ -70,10 +69,10 @@ include_directories(
     SYSTEM
     "${EIGEN_INCLUDE_DIR}"
     )
-    
+
 add_library(ngraph SHARED ${SRC})
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
-    
+
 if (APPLE)
     set_property(TARGET ngraph PROPERTY PREFIX "lib")
     set_property(TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.so")
@@ -81,7 +80,7 @@ if (APPLE)
 else()
     include_directories("${MKLDNN_INCLUDE_DIR}")
 endif()
-    
+
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
