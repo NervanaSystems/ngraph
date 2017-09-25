@@ -24,6 +24,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/equal.hpp"
 #include "ngraph/ops/less.hpp"
@@ -39,6 +40,7 @@
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/eigen/abs.hpp"
 #include "ngraph/runtime/eigen/add.hpp"
+#include "ngraph/runtime/eigen/constant.hpp"
 #include "ngraph/runtime/eigen/divide.hpp"
 #include "ngraph/runtime/eigen/equal.hpp"
 #include "ngraph/runtime/eigen/less_than.hpp"
@@ -115,6 +117,16 @@ std::unordered_map<std::type_index,
                                                        ExternalFunction*          ef,
                                                        const std::vector<size_t>& in,
                                                        const std::vector<size_t>& out) {};
+
+        REGISTER_INSTRUCTION(op::ScalarConstant<element::Float32>,
+                             runtime::eigen::ConstantInstruction<element::Float32>,
+                             std::vector<element::Float32::type>{dynamic_cast<op::ScalarConstant<element::Float32>*>(n)->get_value()},
+                             out[0]);
+
+        REGISTER_INSTRUCTION(op::TensorConstant<element::Float32>,
+                             runtime::eigen::ConstantInstruction<element::Float32>,
+                             dynamic_cast<op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
+                             out[0]);
 
         initialized = true;
     }
