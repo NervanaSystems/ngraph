@@ -35,7 +35,9 @@
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/subtract.hpp"
+#include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/eigen/abs.hpp"
@@ -144,18 +146,9 @@ void ExternalFunction::compile()
     // Get the ordered list of ops in execution order
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
+    pass_manager.register_pass<pass::PropagateTypes>();
+    pass_manager.register_pass<pass::AssignTensors>();
     pass_manager.run_passes(m_function);
-    auto nodes = pass_manager.get_call_graph();
-    // Types
-    for (auto node : nodes)
-    {
-        node->propagate_types();
-    }
-    // Determine tensors
-    for (auto node : nodes)
-    {
-        node->assign_tensors();
-    }
 
     // Determine tensor requirements for  the call frame
     unordered_map<shared_ptr<ngraph::descriptor::TensorView>, size_t> tensor_index;
@@ -181,7 +174,7 @@ void ExternalFunction::compile()
     m_n_outputs = tensor_index.size() - m_n_inputs;
 
     // All remaining tensor views
-    for (auto node : nodes)
+    for (auto node : pass_manager.get_call_graph())
     {
         for (auto output : node->get_outputs())
         {
@@ -197,7 +190,7 @@ void ExternalFunction::compile()
 
     // Now we build the eigen-VM instructions
     auto op_map = get_op_map();
-    for (auto node : nodes)
+    for (auto node : pass_manager.get_call_graph())
     {
         auto handler_it = op_map.find(type_index(typeid(*node)));
         if (handler_it == op_map.end())
