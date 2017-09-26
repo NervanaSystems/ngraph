@@ -273,7 +273,7 @@ TEST(execute, test_tensor_constant)
 {
     auto shape = Shape{2,2,2};
     auto A     = make_shared<op::TensorConstant<element::Float32>>(shape);
-    A->set_value(vector<float>{1,2,3,4,5,6,7,8});
+    A->get_value()->get_vector() = {1,2,3,4,5,6,7,8};
     auto f     = make_shared<Function>(A, op::Parameters{});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
@@ -290,7 +290,7 @@ TEST(execute, test_tensor_constant_with_op)
 {
     auto shape = Shape{2,2,2};
     auto A     = make_shared<op::TensorConstant<element::Float32>>(shape);
-    A->set_value(vector<float>{-1,2,3,-4,5,-6,-7,8});
+    A->get_value()->get_vector() = {-1,2,3,-4,5,-6,-7,8};
     auto f     = make_shared<Function>(make_shared<op::Abs>(A), op::Parameters{});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
