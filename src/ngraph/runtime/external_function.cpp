@@ -26,6 +26,7 @@
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/divide.hpp"
+#include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/equal.hpp"
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/log.hpp"
@@ -42,14 +43,18 @@
 #include "ngraph/runtime/eigen/add.hpp"
 #include "ngraph/runtime/eigen/constant.hpp"
 #include "ngraph/runtime/eigen/divide.hpp"
+#include "ngraph/runtime/eigen/dot.hpp"
 #include "ngraph/runtime/eigen/equal.hpp"
 #include "ngraph/runtime/eigen/less_than.hpp"
 #include "ngraph/runtime/eigen/log.hpp"
+#include "ngraph/runtime/eigen/matrix_mult.hpp"
+#include "ngraph/runtime/eigen/matrix_vector_product.hpp"
 #include "ngraph/runtime/eigen/maximum.hpp"
 #include "ngraph/runtime/eigen/multiply.hpp"
 #include "ngraph/runtime/eigen/negate.hpp"
 #include "ngraph/runtime/eigen/not_equal.hpp"
 #include "ngraph/runtime/eigen/return.hpp"
+#include "ngraph/runtime/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/eigen/select.hpp"
 #include "ngraph/runtime/eigen/subtract.hpp"
 #include "ngraph/runtime/utils.hpp"
@@ -112,7 +117,71 @@ std::unordered_map<std::type_index,
         REGISTER_TERNOP(op::Select,  runtime::eigen::SelectInstruction<element::Float32>);
         REGISTER_BINOP (op::Subtract,runtime::eigen::SubtractInstruction<element::Float32>);
 
-        // Parameter, as a "runtime no-op", is a special case.
+        op_map[type_index(typeid(op::Dot))] = [](Node*                      n,
+                                                 ExternalFunction*          ef,
+                                                 const std::vector<size_t>& in,
+                                                 const std::vector<size_t>& out) {
+            auto& arg_nodes = n->get_arguments();
+
+            assert(arg_nodes.size() == 2);
+
+            auto arg0_tensor_type =
+              dynamic_pointer_cast<TensorViewType>(arg_nodes.at(0)->get_value_type());
+            assert(nullptr != arg0_tensor_type);
+
+            auto arg1_tensor_type =
+              dynamic_pointer_cast<TensorViewType>(arg_nodes.at(1)->get_value_type());
+            assert(nullptr != arg1_tensor_type);
+
+            auto arg0_shape = arg0_tensor_type->get_shape();
+            auto arg1_shape = arg1_tensor_type->get_shape();
+
+            // If arg0 or arg1 is a scalar, emit a scalar-tensor product.
+            if(arg0_shape.size() == 0)
+            {
+                ef->get_instructions()->push_back(
+                    make_shared<runtime::eigen::ScalarTensorProductInstruction<element::Float32>>(
+                        in[0], in[1], out[0]));
+            }
+            else if(arg1_shape.size() == 0)
+            {
+                // If arg1 is the scalar, do the same thing but switch the order of operands.
+                ef->get_instructions()->push_back(
+                    make_shared<runtime::eigen::ScalarTensorProductInstruction<element::Float32>>(
+                        in[1], in[0], out[0]));
+            }
+
+            // If arg0 and arg1 are both vectors, emit a dot product.
+            else if(arg0_shape.size() == 1 && arg1_shape.size() == 1)
+            {
+                ef->get_instructions()->push_back(
+                    make_shared<runtime::eigen::DotInstruction<element::Float32>>(
+                        in[0], in[1], out[0]));
+            }
+
+            // If arg0 is a matrix and arg1 is a vector, emit a matrix-vector product.
+            else if(arg0_shape.size() == 2 && arg1_shape.size() == 1)
+            {
+                ef->get_instructions()->push_back(
+                    make_shared<runtime::eigen::MatrixVectorProductInstruction<element::Float32>>(
+                        in[0], in[1], out[0]));
+            }
+
+            // If arg0 and arg1 are both matrices, emit a matrix product.
+            else if(arg0_shape.size() == 2 && arg1_shape.size() == 2)
+            {
+                ef->get_instructions()->push_back(
+                    make_shared<runtime::eigen::MatrixMultInstruction<element::Float32>>(
+                        in[0], in[1], out[0]));
+            }
+
+            else
+            {
+                throw ngraph_error("Dot product for tensors with rank>2 not implemented yet.");
+            }
+        };
+
+        // Parameter is a "runtime no-op" because the output tensor has already been filled.
         op_map[type_index(typeid(op::Parameter))] = [](Node*                      n,
                                                        ExternalFunction*          ef,
                                                        const std::vector<size_t>& in,
