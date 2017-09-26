@@ -391,3 +391,52 @@ TEST(execute, test_subtract)
     ASSERT_EQ((vector<float>{1, 2, 4, 8}), result->get_vector());
 }
 
+TEST(execute, test_scalar_constant)
+{
+    auto shape = Shape{};
+    auto A     = make_shared<op::ScalarConstant<element::Float32>>(-3.0f);
+    auto f     = make_shared<Function>(A, op::Parameters{});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<float>{-3.0f}), result->get_vector());
+}
+
+TEST(execute, test_tensor_constant)
+{
+    auto shape = Shape{2,2,2};
+    auto A     = make_shared<op::TensorConstant<element::Float32>>(shape);
+    A->get_value()->get_vector() = {1,2,3,4,5,6,7,8};
+    auto f     = make_shared<Function>(A, op::Parameters{});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<float>{1,2,3,4,5,6,7,8}), result->get_vector());
+}
+
+TEST(execute, test_tensor_constant_with_op)
+{
+    auto shape = Shape{2,2,2};
+    auto A     = make_shared<op::TensorConstant<element::Float32>>(shape);
+    A->get_value()->get_vector() = {-1,2,3,-4,5,-6,-7,8};
+    auto f     = make_shared<Function>(make_shared<op::Abs>(A), op::Parameters{});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<float>{1,2,3,4,5,6,7,8}), result->get_vector());
+}
