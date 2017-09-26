@@ -41,19 +41,13 @@ TEST(pass, liveness)
     string image = "liveness.png";
     string dump_file = "liveness.txt";
     pass::Manager pass_manager;
-    auto          visualize        = make_shared<pass::VisualizeTree>(image);
-    auto          topological_sort = make_shared<pass::TopologicalSort>();
-    auto          propagate_types  = make_shared<pass::PropagateTypes>();
-    auto          assign_tensors   = make_shared<pass::AssignTensors>();
-    auto          liveness         = make_shared<pass::Liveness>();
-    auto          dump_sorted      = make_shared<pass::DumpSorted>(dump_file);
 
-    pass_manager.register_pass(visualize);
-    pass_manager.register_pass(topological_sort);
-    pass_manager.register_pass(propagate_types);
-    pass_manager.register_pass(assign_tensors);
-    pass_manager.register_pass(liveness);
-    pass_manager.register_pass(dump_sorted);
+    pass_manager.register_pass<pass::VisualizeTree>(image);
+    pass_manager.register_pass<pass::TopologicalSort>();
+    pass_manager.register_pass<pass::PropagateTypes>();
+    pass_manager.register_pass<pass::AssignTensors>();
+    pass_manager.register_pass<pass::Liveness>();
+    pass_manager.register_pass<pass::DumpSorted>(dump_file);
 
     shared_ptr<Function>   func      = make_test_graph();
     pass_manager.run_passes(func.get());

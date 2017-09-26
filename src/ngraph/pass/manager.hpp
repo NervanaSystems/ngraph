@@ -59,8 +59,19 @@ public:
 
     void initialize_default_passes();
 
-    void register_pass(std::shared_ptr<TreeBase>);
-    void register_pass(std::shared_ptr<CallBase>);
+    template<typename T, class... Args>
+    void register_pass(Args... args)
+    {
+        static_assert(std::is_base_of<pass::Base, T>::value, "pass not derived from pass base");
+        if (std::is_base_of<TreeBase, T>::value)
+        {
+            register_pass_ptr(std::make_shared<T>(args...));
+        }
+        else if (std::is_base_of<CallBase, T>::value)
+        {
+            register_pass_ptr(std::make_shared<T>(args...));
+        }
+    }
 
     void run_passes(Function*);
     void run_passes(std::shared_ptr<Function>);
@@ -70,6 +81,9 @@ public:
     ManagerState& get_state();
 
 private:
+    void register_pass_ptr(std::shared_ptr<TreeBase>);
+    void register_pass_ptr(std::shared_ptr<CallBase>);
+
     std::vector<std::shared_ptr<TreeBase>> m_tree_passes;
     std::vector<std::shared_ptr<CallBase>> m_call_passes;
     ManagerState                           m_state;

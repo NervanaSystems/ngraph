@@ -64,8 +64,7 @@ TEST(topological_sort, basic)
     // vz.add(r0);
     // vz.save_dot("test.png");
     pass::Manager pass_manager;
-    auto          topological_sort = make_shared<pass::TopologicalSort>();
-    pass_manager.register_pass(topological_sort);
+    pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.run_passes(f0);
     auto sorted_list = pass_manager.get_call_graph();
 
@@ -116,8 +115,7 @@ TEST(benchmark, topological_sort)
 
     timer.start();
     pass::Manager pass_manager;
-    auto          topological_sort = make_shared<pass::TopologicalSort>();
-    pass_manager.register_pass(topological_sort);
+    pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.run_passes(f0);
     auto sorted_list = pass_manager.get_call_graph();
     timer.stop();

@@ -32,13 +32,10 @@ using namespace std;
 TEST(pass_manager, add)
 {
     pass::Manager pass_manager;
-    auto          topological_sort = make_shared<pass::TopologicalSort>();
-    auto          propagate_types  = make_shared<pass::PropagateTypes>();
-    auto          assign_tensors   = make_shared<pass::AssignTensors>();
 
-    pass_manager.register_pass(topological_sort);
-    pass_manager.register_pass(propagate_types);
-    pass_manager.register_pass(assign_tensors);
+    pass_manager.register_pass<pass::TopologicalSort>();
+    pass_manager.register_pass<pass::PropagateTypes>();
+    pass_manager.register_pass<pass::AssignTensors>();
 
     auto   graph      = make_test_graph();
     size_t node_count = get_node_count(graph->get_result());
@@ -51,10 +48,7 @@ TEST(pass_manager, add)
 TEST(pass_manager, dependency)
 {
     pass::Manager pass_manager;
-    auto          topological_sort = make_shared<pass::TopologicalSort>();
-    auto          propagate_types  = make_shared<pass::PropagateTypes>();
-    auto          assign_tensors   = make_shared<pass::AssignTensors>();
 
-    pass_manager.register_pass(topological_sort);
-    EXPECT_THROW(pass_manager.register_pass(assign_tensors), runtime_error);
+    pass_manager.register_pass<pass::TopologicalSort>();
+    EXPECT_THROW(pass_manager.register_pass<pass::AssignTensors>(), runtime_error);
 }
