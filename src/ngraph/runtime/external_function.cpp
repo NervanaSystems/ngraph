@@ -69,7 +69,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 }
 
 #define REGISTER_INSTRUCTION(op_class,instr_class,...)                          \
-    op_map[type_index(typeid(op_class))] = [](Node *                      n,    \
+    op_map[type_index(typeid(op_class))] = [](const Node*                n,    \
                                               ExternalFunction*          ef,    \
                                               const std::vector<size_t>& in,    \
                                               const std::vector<size_t>& out) { \
@@ -86,7 +86,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 
 // Define code generators for handled ops.
 std::unordered_map<std::type_index,
-                   std::function<void(ngraph::Node*,
+                   std::function<void(const ngraph::Node*,
                                       ExternalFunction*,
                                       const std::vector<size_t>& inputs,
                                       const std::vector<size_t>& outputs)>>&
@@ -94,7 +94,7 @@ std::unordered_map<std::type_index,
 {
     static bool initialized = false;
     static std::unordered_map<std::type_index,
-                              std::function<void(Node*,
+                              std::function<void(const Node*,
                                                  ExternalFunction*,
                                                  const std::vector<size_t>& inputs,
                                                  const std::vector<size_t>& outputs)>>
@@ -115,19 +115,19 @@ std::unordered_map<std::type_index,
         REGISTER_BINOP (op::Subtract,runtime::eigen::SubtractInstruction<element::Float32>);
 
         // Parameter, as a "runtime no-op", is a special case.
-        op_map[type_index(typeid(op::Parameter))] = [](Node*                      n,
+        op_map[type_index(typeid(op::Parameter))] = [](const Node*                n,
                                                        ExternalFunction*          ef,
                                                        const std::vector<size_t>& in,
                                                        const std::vector<size_t>& out) {};
 
         REGISTER_INSTRUCTION(op::ScalarConstant<element::Float32>,
                              runtime::eigen::ConstantInstruction<element::Float32>,
-                             std::vector<element::Float32::type>{dynamic_cast<op::ScalarConstant<element::Float32>*>(n)->get_value()},
+                             std::vector<element::Float32::type>{dynamic_cast<const op::ScalarConstant<element::Float32>*>(n)->get_value()},
                              out[0]);
 
         REGISTER_INSTRUCTION(op::TensorConstant<element::Float32>,
                              runtime::eigen::ConstantInstruction<element::Float32>,
-                             dynamic_cast<op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
+                             dynamic_cast<const op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
                              out[0]);
 
         initialized = true;
@@ -155,7 +155,7 @@ void ExternalFunction::compile()
     // First come the function inputs
     for (auto param : m_function->get_parameters())
     {
-        for (auto output : param->get_outputs())
+        for (const descriptor::Output& output : param->get_outputs())
         {
             auto   tv        = output.get_tensor_view();
             size_t index     = tensor_index.size();
@@ -165,7 +165,7 @@ void ExternalFunction::compile()
     m_n_inputs = tensor_index.size();
 
     // Next are the function outputs
-    for (auto output : m_function->get_result()->get_outputs())
+    for (const descriptor::Output& output : m_function->get_result()->get_outputs())
     {
         auto   tv        = output.get_tensor_view();
         size_t index     = tensor_index.size();
@@ -174,9 +174,9 @@ void ExternalFunction::compile()
     m_n_outputs = tensor_index.size() - m_n_inputs;
 
     // All remaining tensor views
-    for (auto node : pass_manager.get_call_graph())
+    for (const Node* node : pass_manager.get_call_graph())
     {
-        for (auto output : node->get_outputs())
+        for (const descriptor::Output& output : node->get_outputs())
         {
             auto tv = output.get_tensor_view();
             if (0 == tensor_index.count(tv))
@@ -190,7 +190,7 @@ void ExternalFunction::compile()
 
     // Now we build the eigen-VM instructions
     auto op_map = get_op_map();
-    for (auto node : pass_manager.get_call_graph())
+    for (const Node* node : pass_manager.get_call_graph())
     {
         auto handler_it = op_map.find(type_index(typeid(*node)));
         if (handler_it == op_map.end())
@@ -198,14 +198,14 @@ void ExternalFunction::compile()
             throw ngraph_error("Unhandled op during code generation");
         }
         std::vector<size_t> in;
-        for (auto input : node->get_inputs())
+        for (const descriptor::Input& input : node->get_inputs())
         {
-            auto output = input.get_output();
+            const descriptor::Output& output = input.get_output();
             auto tv     = output.get_tensor_view();
             in.push_back(tensor_index.at(tv));
         }
         std::vector<size_t> out;
-        for (auto output : node->get_outputs())
+        for (const descriptor::Output& output : node->get_outputs())
         {
             auto tv = output.get_tensor_view();
             out.push_back(tensor_index.at(tv));
