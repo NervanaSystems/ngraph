@@ -27,6 +27,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         ExternalProject_Add(
             ext_mkldnn
             GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
+            GIT_TAG "v0.10"
             UPDATE_COMMAND ""
             PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
             CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR}
@@ -35,6 +36,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         ExternalProject_Add(
             ext_mkldnn
             GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
+            GIT_TAG "v0.10"
             UPDATE_COMMAND ""
             PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
             CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR}
