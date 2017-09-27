@@ -94,12 +94,149 @@ TEST(type_prop, broadcast_bad_arguments)
     }
 }
 
+TEST(type_prop, concat_deduce)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 7, 4});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 2, 4});
+    auto c      = make_shared<op::Concat>(Nodes{param0,param1,param2}, 1);
+    c->propagate_types();
+    auto c_vt   = c->get_value_type();
+    ASSERT_EQ(*c_vt, TensorViewType(element::Float32::element_type(), Shape{2, 12, 4}));
+}
+
+TEST(type_prop, concat_deduce_incorrect)
+{
+    // Check deduced type against incorrectly specified type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 7, 4});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 2, 4});
+    auto c      = make_shared<op::Concat>(Nodes{param0,param1,param2}, 1);
+    c->set_value_type(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 14, 4}));
+    try
+    {
+        c->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Deduced type should disagree with specified type";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Setting value type to a different ValueType"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, concat_deduce_wrong_rank)
+{
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 7, 4});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 2,});
+    auto c      = make_shared<op::Concat>(Nodes{param0,param1,param2}, 1);
+    try
+    {
+        c->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Deduced type should disagree with specified type";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Arguments to concat do not have same rank"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, concat_deduce_wrong_shape)
+{
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 7, 4});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 2, 5});
+    auto c      = make_shared<op::Concat>(Nodes{param0,param1,param2}, 1);
+    try
+    {
+        c->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Deduced type should disagree with specified type";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Arguments to concat do not have same dimension on a non-concatenation axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, concat_deduce_axis_oob)
+{
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 7, 4});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 2, 5});
+    auto c      = make_shared<op::Concat>(Nodes{param0,param1,param2}, 3);
+    try
+    {
+        c->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Deduced type should disagree with specified type";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Concatenation axis is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, concat_deduce_axis_barely_in_bounds)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 8});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 12});
+    auto c      = make_shared<op::Concat>(Nodes{param0,param1,param2}, 2);
+    c->propagate_types();
+    auto c_vt   = c->get_value_type();
+    ASSERT_EQ(*c_vt, TensorViewType(element::Float32::element_type(), Shape{2, 3, 24}));
+}
+
+TEST(type_prop, concat_deduce_elem_type_mismatch)
+{
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
+    auto param1 = make_shared<op::Parameter>(element::Int32::element_type(), Shape{2, 7, 4});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 2, 4});
+    auto c      = make_shared<op::Concat>(Nodes{param0,param1,param2}, 1);
+    try
+    {
+        c->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Deduced type should disagree with specified type";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Argument element types do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 //
 // Tests for dot product.
 //
 TEST(type_prop, dot_deduce_scalar_2d)
 {
-    // Deduce type for 1D arguments
+    // Deduce type for scalar/matrix arguments
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4,5});
     auto bc     = make_shared<op::Dot>(param1, param2);
@@ -110,7 +247,7 @@ TEST(type_prop, dot_deduce_scalar_2d)
 
 TEST(type_prop, dot_deduce_2d_scalar)
 {
-    // Deduce type for 1D arguments
+    // Deduce type for matrix/scalar arguments
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4,5});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     auto bc     = make_shared<op::Dot>(param1, param2);
@@ -121,7 +258,7 @@ TEST(type_prop, dot_deduce_2d_scalar)
 
 TEST(type_prop, dot_deduce_scalar_scalar)
 {
-    // Deduce type for 1D arguments
+    // Deduce type for scalar/scalar arguments
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     auto bc     = make_shared<op::Dot>(param1, param2);
@@ -132,7 +269,7 @@ TEST(type_prop, dot_deduce_scalar_scalar)
 
 TEST(type_prop, dot_deduce_scalar_1d)
 {
-    // Deduce type for 1D arguments
+    // Deduce type for scalar/vector arguments
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6});
     auto bc     = make_shared<op::Dot>(param1, param2);
@@ -143,7 +280,7 @@ TEST(type_prop, dot_deduce_scalar_1d)
 
 TEST(type_prop, dot_deduce_1d)
 {
-    // Deduce type for 1D arguments
+    // Deduce type for vector/vector arguments
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4});
     auto bc     = make_shared<op::Dot>(param1, param2);
@@ -154,7 +291,7 @@ TEST(type_prop, dot_deduce_1d)
 
 TEST(type_prop, dot_deduce_2d)
 {
-    // Deduce type for 2D arguments
+    // Deduce type for matrix/matrix arguments
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4,2});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2,3});
     auto bc     = make_shared<op::Dot>(param1, param2);
@@ -163,9 +300,9 @@ TEST(type_prop, dot_deduce_2d)
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{4,3}));
 }
 
-TEST(type_prop, dot_deduce_different_d)
+TEST(type_prop, dot_deduce_different_rank)
 {
-    // Deduce type for different-dimension arguments
+    // Deduce type for different-rank tensor arguments
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2,8,4,2});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1,2,3});
     auto bc     = make_shared<op::Dot>(param1, param2);
@@ -174,7 +311,7 @@ TEST(type_prop, dot_deduce_different_d)
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2,8,4,1,3}));
 }
 
-TEST(type_prop, dot_deduce_different_d_correct)
+TEST(type_prop, dot_deduce_different_rank_correct)
 {
     // Deduced type matches explicitly set type
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2,8,4,2});

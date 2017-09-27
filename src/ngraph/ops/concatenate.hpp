@@ -21,13 +21,19 @@ namespace ngraph
         class Concat : public Builtin
         {
         public:
-            Concat(const Nodes& args)
+            Concat(const Nodes& args,size_t axis)
                 : Builtin(args)
+                , m_concatenation_axis(axis)
             {
             }
 
             virtual std::string description() const override { return "Concatenate"; }
             virtual void        propagate_types() override;
+
+            size_t get_concatenation_axis() const { return m_concatenation_axis; }
+
+        protected:
+            const size_t m_concatenation_axis;
         };
     }
 }
