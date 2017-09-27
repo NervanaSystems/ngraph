@@ -25,8 +25,10 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename TA,typename T>
-            void concat_matrix(std::vector<TA>& args, T out, size_t axis)
+            // Intended substitutions for T are shared_ptr<ParameterizedTensorView<...>>
+            // and ParameterizedTensorView<...>*.
+            template <typename T>
+            void concat_matrix(std::vector<T>& args, T out, size_t axis)
             {
                 auto mat_out = get_map_matrix_2d(&*out);
                 auto& out_shape = out->get_shape();
@@ -36,7 +38,7 @@ namespace ngraph
 
                 size_t concat_pos = 0;
 
-                for(TA arg : args)
+                for(T arg : args)
                 {
                     auto mat_arg = get_map_matrix_2d(&*arg);
                     auto& arg_shape = arg->get_shape();

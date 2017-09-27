@@ -107,18 +107,18 @@ std::unordered_map<std::type_index,
         op_map;
     if (!initialized)
     {
-        REGISTER_UNOP  (op::Abs,        runtime::eigen::AbsInstruction<element::Float32>);
-        REGISTER_BINOP (op::Add,        runtime::eigen::AddInstruction<element::Float32>);
-        REGISTER_BINOP (op::Divide,     runtime::eigen::DivideInstruction<element::Float32>);
-        REGISTER_BINOP (op::Equal,      runtime::eigen::EqualInstruction<element::Float32>);
-        REGISTER_BINOP (op::Less,       runtime::eigen::LessThanInstruction<element::Float32>);
-        REGISTER_UNOP  (op::Log,        runtime::eigen::LogInstruction<element::Float32>);
-        REGISTER_BINOP (op::Maximum,    runtime::eigen::MaximumInstruction<element::Float32>);
-        REGISTER_BINOP (op::Multiply,   runtime::eigen::MultiplyInstruction<element::Float32>);
-        REGISTER_UNOP  (op::Negative,   runtime::eigen::NegateInstruction<element::Float32>);
-        REGISTER_BINOP (op::NotEqual,   runtime::eigen::NotEqualInstruction<element::Float32>);
-        REGISTER_TERNOP(op::Select,     runtime::eigen::SelectInstruction<element::Float32>);
-        REGISTER_BINOP (op::Subtract,   runtime::eigen::SubtractInstruction<element::Float32>);
+        REGISTER_UNOP  (op::Abs,     runtime::eigen::AbsInstruction<element::Float32>);
+        REGISTER_BINOP (op::Add,     runtime::eigen::AddInstruction<element::Float32>);
+        REGISTER_BINOP (op::Divide,  runtime::eigen::DivideInstruction<element::Float32>);
+        REGISTER_BINOP (op::Equal,   runtime::eigen::EqualInstruction<element::Float32>);
+        REGISTER_BINOP (op::Less,    runtime::eigen::LessThanInstruction<element::Float32>);
+        REGISTER_UNOP  (op::Log,     runtime::eigen::LogInstruction<element::Float32>);
+        REGISTER_BINOP (op::Maximum, runtime::eigen::MaximumInstruction<element::Float32>);
+        REGISTER_BINOP (op::Multiply,runtime::eigen::MultiplyInstruction<element::Float32>);
+        REGISTER_UNOP  (op::Negative,runtime::eigen::NegateInstruction<element::Float32>);
+        REGISTER_BINOP (op::NotEqual,runtime::eigen::NotEqualInstruction<element::Float32>);
+        REGISTER_TERNOP(op::Select,  runtime::eigen::SelectInstruction<element::Float32>);
+        REGISTER_BINOP (op::Subtract,runtime::eigen::SubtractInstruction<element::Float32>);
 
         op_map[type_index(typeid(op::Concat))] = [](Node*                      n,
                                                     ExternalFunction*          ef,

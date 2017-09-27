@@ -21,9 +21,18 @@ namespace ngraph
         class Concat : public Builtin
         {
         public:
-            Concat(const Nodes& args,size_t axis)
+            /// Concatenates one or more tensors.
+            ///
+            /// All tensors must have the same rank, and the sizes of the axes must match
+            /// everywhere except at the concatenation axis. The size of the concatenation
+            /// axis on the output is the sum of its size on all inputs; the size of other
+            /// axes is unchanged from the input tensors.
+            ///
+            /// Example: n0 has shape {2,4,2}, and n1 has shape {2,5,2}. Then the output of
+            ///          Concat(Nodes{n0,n1},1) will have shape {2,9,2}.
+            Concat(const Nodes& args,size_t concatenation_axis)
                 : Builtin(args)
-                , m_concatenation_axis(axis)
+                , m_concatenation_axis(concatenation_axis)
             {
             }
 
