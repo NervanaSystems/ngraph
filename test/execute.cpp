@@ -67,6 +67,105 @@ TEST(execute, test_abs)
     ASSERT_EQ((vector<float>{1, 2, 0, 4.8f}), result->get_vector());
 }
 
+
+
+TEST(execute, test_concat_matrix_colwise)
+{
+    auto shape_a = Shape{2, 2};
+    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_b = Shape{2, 3};
+    auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto shape_c = Shape{2, 3};
+    auto C       = make_shared<op::Parameter>(element::Float32::element_type(), shape_c);
+    auto shape_r = Shape{2, 8};
+    auto f       = make_shared<Function>(make_shared<op::Concat>(Nodes{A,B,C},1), op::Parameters{A,B,C});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a          = vector<float>{2,  4,
+                                8, 16};
+    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b          = vector<float>{ 1, 2, 4,
+                                 8,16,32};
+    auto c      = ngraph::runtime::make_tensor<element::Float32>(shape_c);
+    *c          = vector<float>{ 2, 3, 5,
+                                 7,11,13};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a,b,c}, {result});
+    ASSERT_EQ((vector<float>{ 2,  4, 1,  2, 4, 2,  3,  5,
+                              8, 16, 8, 16,32, 7, 11, 13}), result->get_vector());
+}
+
+TEST(execute, test_concat_matrix_rowwise)
+{
+    auto shape_a = Shape{2, 2};
+    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_b = Shape{3, 2};
+    auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto shape_c = Shape{3, 2};
+    auto C       = make_shared<op::Parameter>(element::Float32::element_type(), shape_c);
+    auto shape_r = Shape{8, 2};
+    auto f       = make_shared<Function>(make_shared<op::Concat>(Nodes{A,B,C},0), op::Parameters{A,B,C});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a          = vector<float>{2,  4,
+                                8, 16};
+    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b          = vector<float>{ 1, 2,
+                                 4, 8,
+                                16,32};
+    auto c      = ngraph::runtime::make_tensor<element::Float32>(shape_c);
+    *c          = vector<float>{ 2, 3,
+                                 5, 7,
+                                11,13};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a,b,c}, {result});
+    ASSERT_EQ((vector<float>{ 2,  4,
+                              8, 16,
+                              1,  2,
+                              4,  8,
+                             16, 32,
+                              2,  3,
+                              5,  7,
+                             11, 13}), result->get_vector());
+}
+
+TEST(execute, test_concat_vector)
+{
+    auto shape_a = Shape{4};
+    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_b = Shape{6};
+    auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto shape_c = Shape{2};
+    auto C       = make_shared<op::Parameter>(element::Float32::element_type(), shape_c);
+    auto shape_r = Shape{12};
+    auto f       = make_shared<Function>(make_shared<op::Concat>(Nodes{A,B,C},0), op::Parameters{A,B,C});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a          = vector<float>{2,4,8,16};
+    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b          = vector<float>{1,2,4,8,16,32};
+    auto c      = ngraph::runtime::make_tensor<element::Float32>(shape_c);
+    *c          = vector<float>{18,19};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a,b,c}, {result});
+    ASSERT_EQ((vector<float>{2,4,8,16,1,2,4,8,16,32,18,19}), result->get_vector());
+}
+
 TEST(execute, test_divide)
 {
     auto shape = Shape{2, 2};
