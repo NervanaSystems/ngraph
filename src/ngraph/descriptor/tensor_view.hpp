@@ -14,10 +14,13 @@
 
 #pragma once
 
+#include <memory>
+
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/descriptor/value.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/types/type.hpp"
-#include "ngraph/log.hpp"
 
 namespace ngraph
 {
@@ -25,11 +28,14 @@ namespace ngraph
 
     namespace descriptor
     {
-        class Tensor;
-        class TensorViewLayout;
+        namespace layout
+        {
+            class Tensor;
+            class TensorViewLayout;
+        }
 
-        // Describes a view of an instantiated tensor
-        class TensorView
+        /// @brief Compile-time descriptor of a first-class value that is a view of a tensor.
+        class TensorView : public Value
         {
             TensorView(const TensorView&) = delete;
             TensorView& operator=(const TensorView&) = delete;
@@ -44,6 +50,12 @@ namespace ngraph
             virtual ~TensorView() {}
             virtual const Tensor& get_tensor() const = 0;
             virtual Tensor&       get_tensor()       = 0;
+
+            virtual std::shared_ptr<const ValueType> get_value_type() const override
+            {
+                return m_tensor_view_type;
+            }
+
             const std::string& get_name() const { return m_name; }
 
             std::shared_ptr<const TensorViewType> get_tensor_view_type() const
@@ -51,35 +63,27 @@ namespace ngraph
                 return m_tensor_view_type;
             }
 
-            const std::shared_ptr<TensorViewLayout>& get_tensor_view_layout() const
+            const std::shared_ptr<layout::TensorViewLayout>& get_tensor_view_layout() const
             {
                 return m_tensor_view_layout;
             }
 
-            void set_tensor_view_layout(const std::shared_ptr<TensorViewLayout>& tensor_view_layout)
+            void set_tensor_view_layout(
+                const std::shared_ptr<layout::TensorViewLayout>& tensor_view_layout)
             {
                 m_tensor_view_layout = tensor_view_layout;
             }
 
-        protected:
-            std::shared_ptr<const TensorViewType> m_tensor_view_type;
-            std::shared_ptr<TensorViewLayout>     m_tensor_view_layout;
-            std::string                           m_name;
-        };
-
-        // A PrimaryTensorView owns the tensor. All other views are the result
-        // of some index operation on the primary view.
-        class PrimaryTensorView : public TensorView
-        {
-        public:
-            PrimaryTensorView(const std::shared_ptr<const TensorViewType>& tensor_view_type,
-                const Node* parent, size_t value_index);
-
-            virtual const Tensor& get_tensor() const override;
-            virtual Tensor&       get_tensor() override;
+            virtual void collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
+                                              const std::shared_ptr<Value>& value) const override
+            {
+                views.push_back(std::static_pointer_cast<TensorView>(value));
+            }
 
         protected:
-            Tensor m_tensor;
+            std::shared_ptr<const TensorViewType>     m_tensor_view_type;
+            std::shared_ptr<layout::TensorViewLayout> m_tensor_view_layout;
+            std::string                               m_name;
         };
     }
 }

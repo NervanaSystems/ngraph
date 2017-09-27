@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include <memory>
+#include <vector>
 
 #include "ngraph/ngraph.hpp"
 
@@ -21,5 +22,10 @@ using namespace ngraph::op;
 
 void Tuple::propagate_types()
 {
-    throw ngraph_error("NIY");
+    vector<shared_ptr<const ValueType>> element_types;
+    for (auto argument : m_arguments)
+    {
+        element_types.push_back(argument->get_value_type());
+    }
+    set_value_type_checked(make_shared<TupleType>(element_types));
 }

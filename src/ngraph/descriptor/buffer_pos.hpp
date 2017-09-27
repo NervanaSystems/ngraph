@@ -14,27 +14,37 @@
 
 #pragma once
 
-#include <vector>
+#include <cassert>
+
+#include "ngraph/descriptor/buffer.hpp"
 
 namespace ngraph
 {
     namespace descriptor
     {
-        // An interface for describing implementations of tensor views
-        // Kernel selection will need to pay attention to the layout
-        class TensorViewLayout
+        /// @brief Specifies a contiguous portion of a buffer.
+        ///
+        /// Currently only implemented for linear buffers.
+        class BufferPos
         {
         public:
-            virtual ~TensorViewLayout() {}
-        };
+            BufferPos() {}
 
-        // The standard strided layout
-        class DenseTensorViewLayout : public TensorViewLayout
-        {
+            BufferPos(std::shared_ptr<Buffer> buffer, size_t offset, size_t size)
+                : m_buffer(buffer)
+                , m_offset(offset)
+                , m_size(size)
+            {
+                assert(buffer->size() >= offset + size);
+            }
+
+            BufferPos(const BufferPos& buffer_pos) = default;
+            BufferPos& operator=(const BufferPos& buffer_pos) = default;
+
         protected:
             std::shared_ptr<Buffer> m_buffer;
-            Strides                 m_strides;
             size_t                  m_offset;
+            size_t                  m_size;
         };
     }
 }

@@ -35,8 +35,9 @@ CallFrame::CallFrame(size_t                                                     
     copy(temps.begin(), temps.end(), m_tensors.begin() + m_n_inputs + m_n_outputs);
 }
 
-void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
-                           const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs)
+void CallFrame::tensor_call(
+    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
+    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs)
 {
     copy(inputs.begin(), inputs.end(), m_tensors.begin());
     copy(outputs.begin(), outputs.end(), m_tensors.begin() + m_n_inputs);
@@ -50,4 +51,21 @@ void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Te
     }
     // Don't hold onto inputs/outputs
     fill_n(m_tensors.begin(), m_n_inputs + m_n_outputs, nullptr);
+}
+
+void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,
+                           const std::vector<std::shared_ptr<ngraph::runtime::Value>>& results)
+{
+    // TODO: Check types of args and result
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> inputs;
+    for (auto argument : arguments){
+        argument->collect_tensor_views(inputs, argument);
+    }
+
+    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> outputs;
+    for (auto result : results){
+        result->collect_tensor_views(outputs, result);
+    }
+
+    tensor_call(inputs, outputs);
 }

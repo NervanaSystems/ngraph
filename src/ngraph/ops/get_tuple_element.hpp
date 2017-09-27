@@ -12,27 +12,32 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/descriptor/tensor_view.hpp"
+#pragma once
 
-using namespace ngraph;
-using namespace descriptor;
+#include "ngraph/ops/op.hpp"
 
-PrimaryTensorView::PrimaryTensorView(const std::shared_ptr<const TensorViewType>& tensor_view_type,
-    const Node* parent, size_t value_index)
-    : TensorView(tensor_view_type)
-    , m_tensor(tensor_view_type->get_element_type(), this, parent, value_index)
+namespace ngraph
 {
-    // Set the name in the parent TensorView.
-    // This can't be done until after the m_tensor is constructed.
-    m_name = m_tensor.get_next_view_name();
-}
+    namespace op
+    {
+        class Node;
 
-const Tensor& PrimaryTensorView::get_tensor() const
-{
-    return m_tensor;
-}
+        class GetTupleElement : public Builtin
+        {
+        public:
+            GetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
+                : Builtin({arg})
+                , m_n{n}
+            {
+            }
 
-Tensor& PrimaryTensorView::get_tensor()
-{
-    return m_tensor;
+            virtual void        propagate_types() override;
+            virtual std::string description() const override { return "GetTupleElement"; }
+
+            size_t get_n() const { return m_n; }
+
+        protected:
+            size_t m_n;
+        };
+    }
 }

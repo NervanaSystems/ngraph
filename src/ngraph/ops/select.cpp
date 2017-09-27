@@ -29,11 +29,11 @@ void Select::propagate_types()
     }
 
     auto arg0_tensor_type =
-        dynamic_pointer_cast<TensorViewType>(m_arguments.at(0)->get_value_type());
+        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(0)->get_value_type());
     auto arg1_tensor_type =
-        dynamic_pointer_cast<TensorViewType>(m_arguments.at(1)->get_value_type());
+        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(1)->get_value_type());
     auto arg2_tensor_type =
-        dynamic_pointer_cast<TensorViewType>(m_arguments.at(2)->get_value_type());
+        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(2)->get_value_type());
     if (nullptr == arg0_tensor_type || nullptr == arg1_tensor_type || nullptr == arg2_tensor_type)
     {
         throw ngraph_error("Arguments must be tensor views");

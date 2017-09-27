@@ -16,8 +16,8 @@
 
 #include <set>
 #include <string>
-#include <vector>
 #include <unordered_set>
+#include <vector>
 
 #include <iostream>
 
@@ -64,7 +64,7 @@ namespace ngraph
         void assign_tensors();
 
         const Nodes& get_arguments() const { return m_arguments; }
-        void clear_arguments() { m_arguments.clear(); }
+        void         clear_arguments() { m_arguments.clear(); }
 
         const std::multiset<Node*>& users() const { return m_users; }
 
@@ -78,15 +78,15 @@ namespace ngraph
             return typeid(*this) == typeid(*node.get());
         }
 
-        std::shared_ptr<ValueType>       get_value_type() { return m_value_type; }
-        const std::shared_ptr<ValueType> get_value_type() const { return m_value_type; }
+        std::shared_ptr<const ValueType>       get_value_type() { return m_value_type; }
+        const std::shared_ptr<const ValueType> get_value_type() const { return m_value_type; }
 
         void set_value_type(const element::Type& element_type, const Shape& shape)
         {
             m_value_type = std::make_shared<TensorViewType>(element_type, shape);
         }
 
-        void set_value_type(const std::shared_ptr<ValueType>& value_type)
+        void set_value_type(const std::shared_ptr<const ValueType>& value_type)
         {
             m_value_type = value_type;
         }
@@ -95,7 +95,7 @@ namespace ngraph
         // value_type agrees with the value type that was set.
         // This is used when the framework specifies a value type for the value, and we
         // independently compute what we thing the value type should be from the arguments.
-        void set_value_type_checked(const std::shared_ptr<ValueType>& value_type);
+        void set_value_type_checked(const std::shared_ptr<const ValueType>& value_type);
 
         bool is_parameter() const;
         bool is_output() const;
@@ -104,9 +104,9 @@ namespace ngraph
         size_t               get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
-        std::vector<descriptor::Input>&  get_inputs() { return m_inputs; }
+        std::vector<descriptor::Input>&        get_inputs() { return m_inputs; }
         const std::vector<descriptor::Input>&  get_inputs() const { return m_inputs; }
-        std::vector<descriptor::Output>& get_outputs() { return m_outputs; }
+        std::vector<descriptor::Output>&       get_outputs() { return m_outputs; }
         const std::vector<descriptor::Output>& get_outputs() const { return m_outputs; }
 
         std::unordered_set<descriptor::Tensor*> liveness_live_list;
@@ -114,14 +114,14 @@ namespace ngraph
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
     protected:
-        Nodes                           m_arguments;
-        std::shared_ptr<ValueType>      m_value_type;
-        std::multiset<Node*>            m_users;
-        std::string                     m_name;
-        size_t                          m_instance_id;
-        static size_t                   m_next_instance_id;
-        std::vector<descriptor::Input>  m_inputs;
-        std::vector<descriptor::Output> m_outputs;
-        bool                            m_is_output;
+        Nodes                            m_arguments;
+        std::shared_ptr<const ValueType> m_value_type;
+        std::multiset<Node*>             m_users;
+        std::string                      m_name;
+        size_t                           m_instance_id;
+        static size_t                    m_next_instance_id;
+        std::vector<descriptor::Input>   m_inputs;
+        std::vector<descriptor::Output>  m_outputs;
+        bool                             m_is_output;
     };
 }

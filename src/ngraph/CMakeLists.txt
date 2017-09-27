@@ -13,9 +13,11 @@
 
 set (SRC
     descriptor/input.cpp
+    descriptor/layout/dense_tensor_view_layout.cpp
     descriptor/output.cpp
-    descriptor/tensor_view.cpp
+    descriptor/primary_tensor_view.cpp
     descriptor/tensor.cpp
+    descriptor/tuple.cpp
     function.cpp
     log.cpp
     node.cpp
@@ -27,6 +29,7 @@ set (SRC
     ops/constant.cpp
     ops/convert.cpp
     ops/dot.cpp
+    ops/get_tuple_element.cpp
     ops/op.cpp
     ops/parameter.cpp
     ops/select.cpp
@@ -47,6 +50,8 @@ set (SRC
     pass/visualize_tree.cpp
     runtime/call_frame.cpp
     runtime/external_function.cpp
+    runtime/tuple.cpp
+    runtime/utils.cpp
     shape.cpp
     types/element_type.cpp
     types/type.cpp

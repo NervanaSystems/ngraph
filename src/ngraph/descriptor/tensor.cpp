@@ -13,7 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/node.hpp"
 
 using namespace ngraph;
@@ -21,14 +21,15 @@ using namespace ngraph::descriptor;
 
 Tensor::Tensor(const element::Type& element_type,
                PrimaryTensorView*   primary_tensor_view,
-               const Node*          parent,
-               size_t               value_index)
+               const std::string&   name,
+               bool                 is_output,
+               bool                 is_input)
     : m_element_type(element_type)
     , m_primary_tensor_view(primary_tensor_view)
-    , m_is_output{parent->is_output()}
-    , m_is_input{parent->is_parameter()}
+    , m_is_output{is_output}
+    , m_is_input{is_input}
     , m_is_persistent{false}
-    , m_name{parent->get_node_id() + "_" + std::to_string(value_index)}
+    , m_name{name}
     , m_next_view_id{0}
 {
     size_t size = 1;
@@ -37,6 +38,11 @@ Tensor::Tensor(const element::Type& element_type,
         size *= s;
     }
     m_size = size * m_element_type.size();
+}
+
+std::string Tensor::make_tensor_name(const Node* node, size_t value_index)
+{
+    return node->get_node_id() + "_" + std::to_string(value_index);
 }
 
 std::string Tensor::get_next_view_name()
