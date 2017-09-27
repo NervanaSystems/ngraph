@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <cassert>
+
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/eigen/utils.hpp"
 #include "ngraph/runtime/instruction.hpp"
@@ -25,25 +27,27 @@ namespace ngraph
     {
         namespace eigen
         {
-            /// @brief Copies a tensor from arg to out.
+            /// @brief Copies a tensor from in to out.
             template <typename ET>
             class CopyInstruction : public Instruction
             {
             public:
-                
-                CopyInstruction(size_t arg, size_t out)
-                    : m_arg(arg)
+                /// @param in Index of input tensor in call frame.
+                /// @param out Index of output tensor in call frame.
+                CopyInstruction(size_t in, size_t out)
+                    : m_in(in)
                     , m_out(out)
                 {
                 }
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    call_frame.get_parameterized_tensor<ET>(m_out)->get_vector() = call_frame.get_parameterized_tensor<ET>(m_arg)->get_vector();
+                    call_frame.get_parameterized_tensor<ET>(m_out)->get_vector() =
+                        call_frame.get_parameterized_tensor<ET>(m_in)->get_vector();
                 }
 
             protected:
-                size_t m_arg;
+                size_t m_in;
                 size_t m_out;
             };
         }

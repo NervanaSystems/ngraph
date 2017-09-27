@@ -26,7 +26,9 @@ namespace ngraph
     {
         namespace layout
         {
-            // The standard strided layout
+            /// @brief The standard strided layout, used for row-major and column-major, their permutations and slices.
+            ///
+            /// The linearized offset of an index I is dot(I, strides) + offset.
             class DenseTensorViewLayout : public TensorViewLayout
             {
             public:
@@ -34,10 +36,12 @@ namespace ngraph
                 DenseTensorViewLayout(const TensorView& tensor_view);
 
                 virtual size_t get_size() override { return m_size; }
+                size_t get_offset() const { return m_offset; }
                 virtual size_t get_index_offset(const std::vector<size_t>& indices) override;
 
             protected:
                 Strides m_strides;
+                size_t  m_offset;
                 size_t  m_size;
             };
         }

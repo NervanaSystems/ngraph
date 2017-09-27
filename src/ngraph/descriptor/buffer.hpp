@@ -23,8 +23,11 @@ namespace ngraph
         // during execution.
         class Buffer
         {
+        public:
+            size_t size() const { return m_size; }
+
         protected:
-            size_t size;
+            size_t m_size;
         };
     }
 }

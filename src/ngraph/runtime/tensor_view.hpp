@@ -31,12 +31,13 @@ namespace ngraph
 
         class TensorView : public Value
         {
-        public:
+        protected:
             TensorView(const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor)
                 : m_descriptor(descriptor)
             {
             }
 
+        public:
             TensorView() {}
 
             virtual ~TensorView() {}
@@ -57,23 +58,15 @@ namespace ngraph
                 return m_descriptor;
             }
 
-            virtual void
-            collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
-                                 const std::shared_ptr<Value>&        value) const override
+            virtual void collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
+                                              const std::shared_ptr<Value>& value) const override
             {
                 views.push_back(std::static_pointer_cast<TensorView>(value));
             }
 
-            const Shape& get_shape(){
-                return m_descriptor->get_tensor_view_type()->get_shape();
-            }
+            const Shape& get_shape() { return m_descriptor->get_tensor_view_type()->get_shape(); }
 
         protected:
-            void set_descriptor(const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor)
-            {
-                m_descriptor = descriptor;
-            }
-
             std::shared_ptr<ngraph::descriptor::TensorView> m_descriptor;
         };
     }

@@ -25,7 +25,7 @@
 /// @brief Descriptors are compile-time representations of objects that will appear at run-time.
 
 /// @namespace ngraph::descriptor::layout
-/// @brief Layouts descriptors describe how tensor views are implemented.
+/// @brief Layout descriptors describe how tensor views are implemented.
 
 /// @namespace ngraph::op
 /// @brief Ops used in graph-building.

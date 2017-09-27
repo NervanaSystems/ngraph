@@ -48,20 +48,9 @@ namespace ngraph
             ParameterizedTensorView(
                 const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor);
 
-            // Standard definitions from vector
-            using element_type           = ET;
-            using value_type             = typename ET::type;
-            using storage_type           = std::vector<value_type>;
-            using size_type              = typename storage_type::size_type;
-            using difference_type        = typename storage_type::difference_type;
-            using reference              = typename storage_type::reference;
-            using const_reference        = typename storage_type::const_reference;
-            using pointer                = typename storage_type::pointer;
-            using const_pointer          = typename storage_type::const_pointer;
-            using iterator               = typename storage_type::iterator;
-            using const_iterator         = typename storage_type::const_iterator;
-            using reverse_iterator       = typename storage_type::reverse_iterator;
-            using const_reverse_iterator = typename storage_type::const_reverse_iterator;
+            using element_type = ET;
+            using value_type   = typename ET::type;
+            using storage_type = std::vector<value_type>;
 
             template <typename T>
             ParameterizedTensorView<ET>& operator=(const std::vector<T>& value)

@@ -14,13 +14,17 @@
 
 #pragma once
 
+#include <cassert>
+
 #include "ngraph/descriptor/buffer.hpp"
 
 namespace ngraph
 {
     namespace descriptor
     {
-        /// A BufferPos describes a chunk of allocated buffer
+        /// @brief Specifies a contiguous portion of a buffer.
+        ///
+        /// Currently only implemented for linear buffers.
         class BufferPos
         {
         public:
@@ -31,6 +35,7 @@ namespace ngraph
                 , m_offset(offset)
                 , m_size(size)
             {
+                assert(buffer->size() >= offset + size);
             }
 
             BufferPos(const BufferPos& buffer_pos) = default;

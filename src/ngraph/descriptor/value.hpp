@@ -30,6 +30,14 @@ namespace ngraph
         public:
             virtual ~Value() {}
             virtual std::shared_ptr<const ngraph::ValueType> get_value_type() const      = 0;
+
+            /// @brief helper for collecting all the tensor views in a sequence of values
+            ///
+            /// @param views The vector of tensor views being collected.
+            /// @param value A shared pointer for this.
+            ///
+            /// Append each tensor view in this value to views. Since this may be a tensor view
+            /// we need to pass a shared pointer to this since we can't get one from this.
             virtual void collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
                                               const std::shared_ptr<Value>& value) const = 0;
         };

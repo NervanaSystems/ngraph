@@ -27,8 +27,9 @@ namespace ngraph
 
         namespace layout
         {
-            // An interface for describing implementations of tensor views
-            // Kernel selection will need to pay attention to the layout
+            /// @brief Interface for describing implementations of tensor views.
+            ///
+            /// Kernel selection will need to pay attention to the layout.
             class TensorViewLayout
             {
             protected:
@@ -40,9 +41,17 @@ namespace ngraph
             public:
                 virtual ~TensorViewLayout() {}
 
-                virtual size_t get_size()                                           = 0;
+                /// Extent of this view in buffer.
+                ///
+                /// When we support non-linear buffers, this will need to be something other than size_t.
+                virtual size_t get_size() = 0;
+
+                /// Offset of an index; useful for slice implementation.
+                ///
+                /// With non-linear buffers, this will need to be something other than size_t.
                 virtual size_t get_index_offset(const std::vector<size_t>& indices) = 0;
 
+                /// Where this view is located in the buffer.
                 const BufferPos& get_buffer_pos() const { return m_buffer_pos; }
                 BufferPos&       get_buffer_pos() { return m_buffer_pos; }
 
