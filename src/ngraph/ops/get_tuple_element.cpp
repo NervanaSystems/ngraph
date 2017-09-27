@@ -37,7 +37,7 @@ void GetTupleElement::propagate_types()
         throw ngraph_error("Indexing tuple beyond its size");
     }
 
-    auto& result_element_type = arg0_tuple_type->get_element_types().at(m_n);
+    auto result_element_type = arg0_tuple_type->get_element_types().at(m_n);
 
     set_value_type_checked(result_element_type);
 }
