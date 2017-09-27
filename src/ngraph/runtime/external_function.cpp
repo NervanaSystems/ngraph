@@ -29,6 +29,7 @@
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/equal.hpp"
+#include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/log.hpp"
 #include "ngraph/ops/maximum.hpp"
@@ -37,11 +38,12 @@
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/subtract.hpp"
+#include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/eigen/abs.hpp"
 #include "ngraph/runtime/eigen/add.hpp"
+#include "ngraph/runtime/eigen/copy.hpp"
 #include "ngraph/runtime/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/eigen/concat_vector.hpp"
 #include "ngraph/runtime/eigen/constant.hpp"
@@ -60,9 +62,10 @@
 #include "ngraph/runtime/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/eigen/select.hpp"
 #include "ngraph/runtime/eigen/subtract.hpp"
+#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
 
-using namespace std;
+    using namespace std;
 using namespace ngraph::runtime;
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
@@ -74,21 +77,20 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 {
 }
 
-#define REGISTER_INSTRUCTION(op_class,instr_class,...)                          \
-    op_map[type_index(typeid(op_class))] = [](Node *                      n,    \
-                                              ExternalFunction*          ef,    \
-                                              const std::vector<size_t>& in,    \
-                                              const std::vector<size_t>& out) { \
-            ef->get_instructions()->push_back(                                  \
-                make_shared<instr_class>(__VA_ARGS__));                         \
+#define REGISTER_INSTRUCTION(op_class, instr_class, ...)                                           \
+    op_map[type_index(typeid(op_class))] = [](Node*                      n,                        \
+                                              ExternalFunction*          ef,                       \
+                                              const std::vector<size_t>& in,                       \
+                                              const std::vector<size_t>& out) {                    \
+        ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__));                  \
     }
 
-#define REGISTER_UNOP(op_class,instr_class) \
-    REGISTER_INSTRUCTION(op_class,instr_class,in[0],out[0])
-#define REGISTER_BINOP(op_class,instr_class) \
-    REGISTER_INSTRUCTION(op_class,instr_class,in[0],in[1],out[0])
-#define REGISTER_TERNOP(op_class,instr_class) \
-    REGISTER_INSTRUCTION(op_class,instr_class,in[0],in[1],in[2],out[0])
+#define REGISTER_UNOP(op_class, instr_class)                                                       \
+    REGISTER_INSTRUCTION(op_class, instr_class, in[0], out[0])
+#define REGISTER_BINOP(op_class, instr_class)                                                      \
+    REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], out[0])
+#define REGISTER_TERNOP(op_class, instr_class)                                                     \
+    REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], in[2], out[0])
 
 // Define code generators for handled ops.
 std::unordered_map<std::type_index,
@@ -107,25 +109,38 @@ std::unordered_map<std::type_index,
         op_map;
     if (!initialized)
     {
-        REGISTER_UNOP  (op::Abs,     runtime::eigen::AbsInstruction<element::Float32>);
-        REGISTER_BINOP (op::Add,     runtime::eigen::AddInstruction<element::Float32>);
-        REGISTER_BINOP (op::Divide,  runtime::eigen::DivideInstruction<element::Float32>);
-        REGISTER_BINOP (op::Equal,   runtime::eigen::EqualInstruction<element::Float32>);
-        REGISTER_BINOP (op::Less,    runtime::eigen::LessThanInstruction<element::Float32>);
-        REGISTER_UNOP  (op::Log,     runtime::eigen::LogInstruction<element::Float32>);
-        REGISTER_BINOP (op::Maximum, runtime::eigen::MaximumInstruction<element::Float32>);
-        REGISTER_BINOP (op::Multiply,runtime::eigen::MultiplyInstruction<element::Float32>);
-        REGISTER_UNOP  (op::Negative,runtime::eigen::NegateInstruction<element::Float32>);
-        REGISTER_BINOP (op::NotEqual,runtime::eigen::NotEqualInstruction<element::Float32>);
-        REGISTER_TERNOP(op::Select,  runtime::eigen::SelectInstruction<element::Float32>);
-        REGISTER_BINOP (op::Subtract,runtime::eigen::SubtractInstruction<element::Float32>);
+        REGISTER_UNOP(op::Abs, runtime::eigen::AbsInstruction<element::Float32>);
+        REGISTER_BINOP(op::Add, runtime::eigen::AddInstruction<element::Float32>);
+        REGISTER_BINOP(op::Divide, runtime::eigen::DivideInstruction<element::Float32>);
+        REGISTER_BINOP(op::Equal, runtime::eigen::EqualInstruction<element::Float32>);
+        REGISTER_BINOP(op::Less, runtime::eigen::LessThanInstruction<element::Float32>);
+        REGISTER_UNOP(op::Log, runtime::eigen::LogInstruction<element::Float32>);
+        REGISTER_BINOP(op::Maximum, runtime::eigen::MaximumInstruction<element::Float32>);
+        REGISTER_BINOP(op::Multiply, runtime::eigen::MultiplyInstruction<element::Float32>);
+        REGISTER_UNOP(op::Negative, runtime::eigen::NegateInstruction<element::Float32>);
+        REGISTER_BINOP(op::NotEqual, runtime::eigen::NotEqualInstruction<element::Float32>);
+        REGISTER_TERNOP(op::Select, runtime::eigen::SelectInstruction<element::Float32>);
+        REGISTER_BINOP(op::Subtract, runtime::eigen::SubtractInstruction<element::Float32>);
+
+        REGISTER_INSTRUCTION(
+            op::ScalarConstant<element::Float32>,
+            runtime::eigen::ConstantInstruction<element::Float32>,
+            std::vector<element::Float32::type>{
+                dynamic_cast<op::ScalarConstant<element::Float32>*>(n)->get_value()},
+            out[0]);
+
+        REGISTER_INSTRUCTION(
+            op::TensorConstant<element::Float32>,
+            runtime::eigen::ConstantInstruction<element::Float32>,
+            dynamic_cast<op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
+            out[0]);
 
         op_map[type_index(typeid(op::Concat))] = [](Node*                      n,
                                                     ExternalFunction*          ef,
                                                     const std::vector<size_t>& in,
                                                     const std::vector<size_t>& out) {
             auto result_tensor_type =
-              dynamic_pointer_cast<TensorViewType>(n->get_value_type());
+              dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
 
             auto result_shape = result_tensor_type->get_shape();
@@ -157,24 +172,24 @@ std::unordered_map<std::type_index,
             assert(arg_nodes.size() == 2);
 
             auto arg0_tensor_type =
-              dynamic_pointer_cast<TensorViewType>(arg_nodes.at(0)->get_value_type());
+                dynamic_pointer_cast<const TensorViewType>(arg_nodes.at(0)->get_value_type());
             assert(nullptr != arg0_tensor_type);
 
             auto arg1_tensor_type =
-              dynamic_pointer_cast<TensorViewType>(arg_nodes.at(1)->get_value_type());
+                dynamic_pointer_cast<const TensorViewType>(arg_nodes.at(1)->get_value_type());
             assert(nullptr != arg1_tensor_type);
 
             auto arg0_shape = arg0_tensor_type->get_shape();
             auto arg1_shape = arg1_tensor_type->get_shape();
 
             // If arg0 or arg1 is a scalar, emit a scalar-tensor product.
-            if(arg0_shape.size() == 0)
+            if (arg0_shape.size() == 0)
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::ScalarTensorProductInstruction<element::Float32>>(
                         in[0], in[1], out[0]));
             }
-            else if(arg1_shape.size() == 0)
+            else if (arg1_shape.size() == 0)
             {
                 // If arg1 is the scalar, do the same thing but switch the order of operands.
                 ef->get_instructions()->push_back(
@@ -183,7 +198,7 @@ std::unordered_map<std::type_index,
             }
 
             // If arg0 and arg1 are both vectors, emit a dot product.
-            else if(arg0_shape.size() == 1 && arg1_shape.size() == 1)
+            else if (arg0_shape.size() == 1 && arg1_shape.size() == 1)
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::DotInstruction<element::Float32>>(
@@ -191,7 +206,7 @@ std::unordered_map<std::type_index,
             }
 
             // If arg0 is a matrix and arg1 is a vector, emit a matrix-vector product.
-            else if(arg0_shape.size() == 2 && arg1_shape.size() == 1)
+            else if (arg0_shape.size() == 2 && arg1_shape.size() == 1)
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::MatrixVectorProductInstruction<element::Float32>>(
@@ -199,7 +214,7 @@ std::unordered_map<std::type_index,
             }
 
             // If arg0 and arg1 are both matrices, emit a matrix product.
-            else if(arg0_shape.size() == 2 && arg1_shape.size() == 2)
+            else if (arg0_shape.size() == 2 && arg1_shape.size() == 2)
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::MatrixMultInstruction<element::Float32>>(
@@ -218,15 +233,29 @@ std::unordered_map<std::type_index,
                                                        const std::vector<size_t>& in,
                                                        const std::vector<size_t>& out) {};
 
-        REGISTER_INSTRUCTION(op::ScalarConstant<element::Float32>,
-                             runtime::eigen::ConstantInstruction<element::Float32>,
-                             std::vector<element::Float32::type>{dynamic_cast<op::ScalarConstant<element::Float32>*>(n)->get_value()},
-                             out[0]);
+        // GetTupleElement will be spliced out, with the users of out redirected to in's source, but, for now, we need to copy.
+        op_map[type_index(typeid(op::GetTupleElement))] = [](Node*                      n,
+                                                             ExternalFunction*          ef,
+                                                             const std::vector<size_t>& in,
+                                                             const std::vector<size_t>& out) {
+            auto get_tuple_element = static_cast<op::GetTupleElement*>(n);
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
+                    in.at(get_tuple_element->get_n()), out.at(0)));
+        };
 
-        REGISTER_INSTRUCTION(op::TensorConstant<element::Float32>,
-                             runtime::eigen::ConstantInstruction<element::Float32>,
-                             dynamic_cast<op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
-                             out[0]);
+        // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
+        op_map[type_index(typeid(op::Tuple))] = [](Node*                      n,
+                                                   ExternalFunction*          ef,
+                                                   const std::vector<size_t>& in,
+                                                   const std::vector<size_t>& out) {
+            for (size_t i = 0; i < in.size(); ++i)
+            {
+                ef->get_instructions()->push_back(
+                    make_shared<runtime::eigen::CopyInstruction<element::Float32>>(in.at(i),
+                                                                                   out.at(i)));
+            }
+        };
 
         initialized = true;
     }
@@ -337,7 +366,8 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
     std::vector<std::shared_ptr<ngraph::runtime::TensorView>> temps;
     for (auto tv : m_temp_views)
     {
-        temps.push_back(ngraph::runtime::make_tensor<ngraph::element::Float32>(tv->get_tensor_view_type()->get_shape()));
+        temps.push_back(ngraph::runtime::make_tensor<ngraph::element::Float32>(
+            tv->get_tensor_view_type()->get_shape()));
     }
     return make_shared<ngraph::runtime::CallFrame>(
         m_n_inputs, m_n_outputs, temps, 0, m_instructions);

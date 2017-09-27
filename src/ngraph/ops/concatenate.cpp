@@ -32,7 +32,7 @@ void Concat::propagate_types()
         throw ngraph_error("Argument to concat is missing type.");
     }
 
-    auto arg0_tensor_view_type = dynamic_pointer_cast<TensorViewType>(arg0_type);
+    auto arg0_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg0_type);
     if (nullptr == arg0_tensor_view_type)
     {
         throw ngraph_error("Argument to concat is not a tensor view");
@@ -55,7 +55,7 @@ void Concat::propagate_types()
             throw ngraph_error("Argument to concat is missing type.");
         }
 
-        auto argi_tensor_view_type = dynamic_pointer_cast<TensorViewType>(argi_type);
+        auto argi_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(argi_type);
         if (nullptr == argi_tensor_view_type)
         {
             throw ngraph_error("Argument to concat is not a tensor view");

@@ -44,7 +44,7 @@ TEST(input_output, param_tuple)
     // Same as param_tensor, but for a tuple
     auto tv_tp_0 = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4});
     auto tv_tp_1 = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4, 6});
-    auto tp_tp = make_shared<TupleType>(std::vector<std::shared_ptr<ValueType>>{tv_tp_0, tv_tp_1});
+    auto tp_tp = make_shared<TupleType>(ValueTypes{tv_tp_0, tv_tp_1});
     auto param = make_shared<op::Parameter>(tp_tp);
     param->propagate_types();
     param->assign_tensors();

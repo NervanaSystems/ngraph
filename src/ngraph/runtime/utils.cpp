@@ -12,24 +12,10 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "ngraph/runtime/utils.hpp"
 
-#include <memory>
-
-namespace ngraph
+std::shared_ptr<ngraph::runtime::Tuple> ngraph::runtime::make_tuple(
+    const std::vector<std::shared_ptr<ngraph::runtime::Value>>& elements)
 {
-    namespace descriptor
-    {
-        // A buffer identfies a chunk of storage
-        // In descriptors, we are identifying what will be associated with actual memory
-        // during execution.
-        class Buffer
-        {
-        public:
-            size_t size() const { return m_size; }
-
-        protected:
-            size_t m_size;
-        };
-    }
+    return std::make_shared<ngraph::runtime::Tuple>(elements);
 }

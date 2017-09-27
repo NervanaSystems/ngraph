@@ -18,14 +18,33 @@
 
 #pragma once
 
+/// @namespace ngraph
+/// @brief The Intel Nervana Graph C++ API.
+
+/// @namespace ngraph::descriptor
+/// @brief Descriptors are compile-time representations of objects that will appear at run-time.
+
+/// @namespace ngraph::descriptor::layout
+/// @brief Layout descriptors describe how tensor views are implemented.
+
+/// @namespace ngraph::op
+/// @brief Ops used in graph-building.
+
+/// @namespace ngraph::runtime
+/// @brief The objects used for executing the graph.
+
 #include "ngraph/common.hpp"
 #include "ngraph/descriptor/buffer.hpp"
 #include "ngraph/descriptor/call_frame.hpp"
 #include "ngraph/descriptor/input.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/descriptor/tensor_view_layout.hpp"
+#include "ngraph/descriptor/tuple.hpp"
+#include "ngraph/descriptor/value.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
@@ -41,6 +60,7 @@
 #include "ngraph/ops/equal.hpp"
 #include "ngraph/ops/exp.hpp"
 #include "ngraph/ops/floor.hpp"
+#include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/log.hpp"
@@ -56,10 +76,13 @@
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/tuple.hpp"
-#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/call_frame.hpp"
+#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/instruction.hpp"
+#include "ngraph/runtime/parameterized_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tuple.hpp"
+#include "ngraph/runtime/value.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/types/type.hpp"

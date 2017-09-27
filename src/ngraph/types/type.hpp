@@ -82,16 +82,16 @@ namespace ngraph
         TupleType() {}
 
         /// @param element_types A vector of types for the tuple elements
-        TupleType(const std::vector<std::shared_ptr<ValueType>>& element_types)
+        TupleType(const std::vector<std::shared_ptr<const ValueType>>& element_types)
             : m_element_types(element_types)
         {
         }
 
-        const std::vector<std::shared_ptr<ValueType>> get_element_types() const
+        const std::vector<std::shared_ptr<const ValueType>> get_element_types() const
         {
             return m_element_types;
         }
-        std::vector<std::shared_ptr<ValueType>> set_element_types() { return m_element_types; }
+        std::vector<std::shared_ptr<const ValueType>> set_element_types() { return m_element_types; }
 
         virtual bool operator==(const ValueType& that) const override;
         virtual void collect_tensor_views(
@@ -99,6 +99,6 @@ namespace ngraph
         friend std::ostream& operator<<(std::ostream&, const TupleType&);
 
     protected:
-        std::vector<std::shared_ptr<ValueType>> m_element_types;
+        std::vector<std::shared_ptr<const ValueType>> m_element_types;
     };
 }

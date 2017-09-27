@@ -12,31 +12,31 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
-
 #include <memory>
 #include <vector>
 
-#include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
+#include "ngraph/descriptor/tuple.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/runtime/tuple.hpp"
-#include "ngraph/runtime/value.hpp"
-#include "ngraph/types/element_type.hpp"
 
-namespace ngraph
+using namespace ngraph::runtime;
+
+Tuple::Tuple(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& elements)
+    : m_elements(elements)
 {
-    namespace runtime
+    std::vector<std::shared_ptr<ngraph::descriptor::Value>> descriptors;
+    for (auto element : m_elements)
     {
-        /// @brief Framework constructor of a tensor of a specific element type and shape.
-        template <typename ET>
-        std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>
-            make_tensor(const Shape& shape)
-        {
-            return std::make_shared<runtime::ParameterizedTensorView<ET>>(shape);
-        }
+        descriptors.push_back(element->get_descriptor());
+    }
+    m_descriptor = std::make_shared<ngraph::descriptor::Tuple>(descriptors);
+}
 
-        /// @brief Framework constructor of a tuple from a sequence of values.
-        std::shared_ptr<ngraph::runtime::Tuple>
-            make_tuple(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& elements);
+void Tuple::collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
+                                 const std::shared_ptr<Value>&        value) const
+{
+    for (auto element : m_elements)
+    {
+        element->collect_tensor_views(views, element);
     }
 }

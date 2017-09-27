@@ -36,7 +36,7 @@ Node::~Node()
 {
 }
 
-void Node::set_value_type_checked(const shared_ptr<ValueType>& value_type)
+void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
 {
     if (nullptr == m_value_type)
     {
@@ -58,7 +58,7 @@ void Node::assign_tensors()
     size_t i = 0;
     for (auto tvt : tensor_view_types)
     {
-        auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(tvt, this, i);
+        auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(tvt, ngraph::descriptor::Tensor::make_tensor_name(this, i), is_output(), is_parameter());
         m_outputs.emplace_back(this, i, tensor_view_descriptor);
         i++;
     }
