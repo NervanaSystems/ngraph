@@ -80,7 +80,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 }
 
 #define REGISTER_INSTRUCTION(op_class, instr_class, ...)                                           \
-    op_map[type_index(typeid(op_class))] = [](Node*                      n,                        \
+    op_map[type_index(typeid(op_class))] = [](const Node*                n,                        \
                                               ExternalFunction*          ef,                       \
                                               const std::vector<size_t>& in,                       \
                                               const std::vector<size_t>& out) {                    \
@@ -128,16 +128,16 @@ std::unordered_map<std::type_index,
             op::ScalarConstant<element::Float32>,
             runtime::eigen::ConstantInstruction<element::Float32>,
             std::vector<element::Float32::type>{
-                dynamic_cast<op::ScalarConstant<element::Float32>*>(n)->get_value()},
+                dynamic_cast<const op::ScalarConstant<element::Float32>*>(n)->get_value()},
             out[0]);
 
         REGISTER_INSTRUCTION(
             op::TensorConstant<element::Float32>,
             runtime::eigen::ConstantInstruction<element::Float32>,
-            dynamic_cast<op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
+            dynamic_cast<const op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
             out[0]);
 
-        op_map[type_index(typeid(op::Concat))] = [](Node*                      n,
+        op_map[type_index(typeid(op::Concat))] = [](const Node*                n,
                                                     ExternalFunction*          ef,
                                                     const std::vector<size_t>& in,
                                                     const std::vector<size_t>& out) {
@@ -157,7 +157,7 @@ std::unordered_map<std::type_index,
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::ConcatMatrixInstruction<element::Float32>>(
-                        in, (dynamic_cast<op::Concat *>(n))->get_concatenation_axis(), out[0]));
+                        in, (dynamic_cast<const op::Concat *>(n))->get_concatenation_axis(), out[0]));
             }
             else
             {
@@ -165,7 +165,7 @@ std::unordered_map<std::type_index,
             }
         };
 
-        op_map[type_index(typeid(op::Dot))] = [](Node*                      n,
+        op_map[type_index(typeid(op::Dot))] = [](const Node*                n,
                                                  ExternalFunction*          ef,
                                                  const std::vector<size_t>& in,
                                                  const std::vector<size_t>& out) {
@@ -230,24 +230,24 @@ std::unordered_map<std::type_index,
         };
 
         // Parameter is a "runtime no-op" because the output tensor has already been filled.
-        op_map[type_index(typeid(op::Parameter))] = [](Node*                      n,
+        op_map[type_index(typeid(op::Parameter))] = [](const Node*                n,
                                                        ExternalFunction*          ef,
                                                        const std::vector<size_t>& in,
                                                        const std::vector<size_t>& out) {};
 
         // GetTupleElement will be spliced out, with the users of out redirected to in's source, but, for now, we need to copy.
-        op_map[type_index(typeid(op::GetTupleElement))] = [](Node*                      n,
+        op_map[type_index(typeid(op::GetTupleElement))] = [](const Node*                n,
                                                              ExternalFunction*          ef,
                                                              const std::vector<size_t>& in,
                                                              const std::vector<size_t>& out) {
-            auto get_tuple_element = static_cast<op::GetTupleElement*>(n);
+            auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
             ef->get_instructions()->push_back(
                 make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
                     in.at(get_tuple_element->get_n()), out.at(0)));
         };
 
         // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
-        op_map[type_index(typeid(op::Tuple))] = [](Node*                      n,
+        op_map[type_index(typeid(op::Tuple))] = [](const Node*                n,
                                                    ExternalFunction*          ef,
                                                    const std::vector<size_t>& in,
                                                    const std::vector<size_t>& out) {
