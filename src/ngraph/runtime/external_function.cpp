@@ -24,6 +24,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
@@ -43,8 +44,10 @@
 #include "ngraph/runtime/eigen/abs.hpp"
 #include "ngraph/runtime/eigen/add.hpp"
 #include "ngraph/runtime/eigen/copy.hpp"
+#include "ngraph/runtime/eigen/concat_matrix.hpp"
+#include "ngraph/runtime/eigen/concat_vector.hpp"
 #include "ngraph/runtime/eigen/constant.hpp"
-    #include "ngraph/runtime/eigen/divide.hpp"
+#include "ngraph/runtime/eigen/divide.hpp"
 #include "ngraph/runtime/eigen/dot.hpp"
 #include "ngraph/runtime/eigen/equal.hpp"
 #include "ngraph/runtime/eigen/less_than.hpp"
@@ -131,6 +134,34 @@ std::unordered_map<std::type_index,
             runtime::eigen::ConstantInstruction<element::Float32>,
             dynamic_cast<op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
             out[0]);
+
+        op_map[type_index(typeid(op::Concat))] = [](Node*                      n,
+                                                    ExternalFunction*          ef,
+                                                    const std::vector<size_t>& in,
+                                                    const std::vector<size_t>& out) {
+            auto result_tensor_type =
+              dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+
+            auto result_shape = result_tensor_type->get_shape();
+
+            if (result_shape.size() == 1)
+            {
+                ef->get_instructions()->push_back(
+                    make_shared<runtime::eigen::ConcatVectorInstruction<element::Float32>>(
+                        in, out[0]));
+            }
+            else if(result_shape.size() == 2)
+            {
+                ef->get_instructions()->push_back(
+                    make_shared<runtime::eigen::ConcatMatrixInstruction<element::Float32>>(
+                        in, (dynamic_cast<op::Concat *>(n))->get_concatenation_axis(), out[0]));
+            }
+            else
+            {
+                throw ngraph_error("Concat not implemented for rank>2 in VM yet");
+            }
+        };
 
         op_map[type_index(typeid(op::Dot))] = [](Node*                      n,
                                                  ExternalFunction*          ef,
