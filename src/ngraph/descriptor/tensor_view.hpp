@@ -85,5 +85,7 @@ namespace ngraph
             std::shared_ptr<layout::TensorViewLayout> m_tensor_view_layout;
             std::string                               m_name;
         };
+
+        using TensorViewPtrs = std::vector<std::shared_ptr<TensorView>>;
     }
 }
