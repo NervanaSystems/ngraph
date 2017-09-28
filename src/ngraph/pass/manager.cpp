@@ -65,7 +65,7 @@ void ngraph::pass::Manager::initialize_default_passes()
 {
 }
 
-void ngraph::pass::Manager::register_pass(std::shared_ptr<TreeBase> p)
+void ngraph::pass::Manager::register_pass_ptr(std::shared_ptr<TreeBase> p)
 {
     if (p == nullptr)
     {
@@ -75,7 +75,7 @@ void ngraph::pass::Manager::register_pass(std::shared_ptr<TreeBase> p)
     m_tree_passes.push_back(p);
 }
 
-void ngraph::pass::Manager::register_pass(std::shared_ptr<CallBase> p)
+void ngraph::pass::Manager::register_pass_ptr(std::shared_ptr<CallBase> p)
 {
     if (p == nullptr)
     {

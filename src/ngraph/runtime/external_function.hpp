@@ -53,7 +53,7 @@ namespace ngraph
             std::vector<std::shared_ptr<ngraph::descriptor::TensorView>> m_temp_views;
 
             static std::unordered_map<std::type_index,
-                                      std::function<void(ngraph::Node*,
+                                      std::function<void(const ngraph::Node*,
                                                          ExternalFunction*,
                                                          const std::vector<size_t>& inputs,
                                                          const std::vector<size_t>& outputs)>>&
