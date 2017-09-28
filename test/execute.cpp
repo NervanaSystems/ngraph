@@ -580,3 +580,43 @@ TEST(execute, test_tensor_constant_with_op)
     (*cf)({}, {result});
     ASSERT_EQ((vector<float>{1,2,3,4,5,6,7,8}), result->get_vector());
 }
+
+TEST(execute, test_function_call)
+{
+    // First create "f(A,B,C) = (A+B)*C".
+    auto shape = Shape{2, 2};
+    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto C     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto f     = make_shared<Function>((A + B * C), op::Parameters{A, B, C});
+
+    // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
+    auto X     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto Y     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto Z     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto g     = make_shared<Function>(
+                     make_shared<op::FunctionCall>(f,Nodes{X,Y,Z})
+                     + make_shared<op::FunctionCall>(f,Nodes{X,Y,Z}),
+                     op::Parameters{X, Y, Z});
+    // Now call g on some test vectors.
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(g);
+    auto cf       = external->make_call_frame();
+
+    auto x      = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *x          = vector<float>{1, 2, 3, 4};
+    auto y      = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *y          = vector<float>{5, 6, 7, 8};
+    auto z      = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *z          = vector<float>{9, 10, 11, 12};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+
+    (*cf)({x, y, z}, {result});
+    ASSERT_EQ((vector<float>{108, 160, 220, 288}), result->get_vector());
+
+/*
+    (*cf)({y, x, z}, {result});
+    ASSERT_EQ((vector<float>{108, 160, 220, 288}), result->get_vector());
+
+    (*cf)({x, z, y}, {result});
+    ASSERT_EQ((vector<float>{100, 144, 196, 256}), result->get_vector());*/
+}

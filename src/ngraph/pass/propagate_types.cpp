@@ -16,6 +16,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/propagate_types.hpp"
+#include "ngraph/pass/topological_sort.hpp"
 
 using namespace std;
 using namespace ngraph;

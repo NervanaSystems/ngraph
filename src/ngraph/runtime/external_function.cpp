@@ -29,6 +29,7 @@
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/equal.hpp"
+#include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/log.hpp"
@@ -45,6 +46,7 @@
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/eigen/abs.hpp"
 #include "ngraph/runtime/eigen/add.hpp"
+#include "ngraph/runtime/eigen/call.hpp"
 #include "ngraph/runtime/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/eigen/concat_vector.hpp"
 #include "ngraph/runtime/eigen/constant.hpp"
@@ -71,20 +73,27 @@ using namespace std;
 using namespace ngraph::runtime;
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                   bool                                     release_function)
+                                   const std::shared_ptr<FunctionMap>       function_map,
+                                   bool                                     release_function,
+                                   bool                                     release_function_map)
     : m_function(function)
     , m_release_function(release_function)
     , m_is_compiled(false)
     , m_instructions(make_shared<std::vector<std::shared_ptr<ngraph::runtime::Instruction>>>())
+    , m_function_map((nullptr == function_map) ? std::make_shared<FunctionMap>() : function_map)
+    , m_release_function_map(release_function)
 {
 }
 
-#define REGISTER_INSTRUCTION(op_class, instr_class, ...)                                           \
-    op_map[type_index(typeid(op_class))] = [](const Node*                n,                        \
-                                              ExternalFunction*          ef,                       \
-                                              const std::vector<size_t>& in,                       \
-                                              const std::vector<size_t>& out) {                    \
-        ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__));                  \
+#define REGISTER_TO_OP_MAP(op_class)                                                           \
+    op_map[type_index(typeid(op_class))] = [](const Node*                n,                    \
+                                              ExternalFunction*          ef,                   \
+                                              const std::vector<size_t>& in,                   \
+                                              const std::vector<size_t>& out)
+
+#define REGISTER_INSTRUCTION(op_class, instr_class, ...)                          \
+    REGISTER_TO_OP_MAP(op_class) {                                                \
+        ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__)); \
     }
 
 #define REGISTER_UNOP(op_class, instr_class)                                                       \
@@ -127,10 +136,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             dynamic_cast<const op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
             out[0]);
 
-        op_map[type_index(typeid(op::Concat))] = [](const Node*                n,
-                                                    ExternalFunction*          ef,
-                                                    const std::vector<size_t>& in,
-                                                    const std::vector<size_t>& out) {
+        REGISTER_TO_OP_MAP(op::Concat)
+        {
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
@@ -157,10 +164,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
         };
 
-        op_map[type_index(typeid(op::Dot))] = [](const Node*                n,
-                                                 ExternalFunction*          ef,
-                                                 const std::vector<size_t>& in,
-                                                 const std::vector<size_t>& out) {
+        REGISTER_TO_OP_MAP(op::Dot)
+        {
             auto& arg_nodes = n->get_arguments();
 
             assert(arg_nodes.size() == 2);
@@ -222,33 +227,36 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         };
 
         // Parameter is a "runtime no-op" because the output tensor has already been filled.
-        op_map[type_index(typeid(op::Parameter))] = [](const Node*                n,
-                                                       ExternalFunction*          ef,
-                                                       const std::vector<size_t>& in,
-                                                       const std::vector<size_t>& out) {};
+        REGISTER_TO_OP_MAP(op::Parameter) {};
 
         // GetTupleElement will be spliced out, with the users of out redirected to in's source, but, for now, we need to copy.
-        op_map[type_index(typeid(op::GetTupleElement))] = [](const Node*                n,
-                                                             ExternalFunction*          ef,
-                                                             const std::vector<size_t>& in,
-                                                             const std::vector<size_t>& out) {
+        REGISTER_TO_OP_MAP(op::GetTupleElement)
+        {
             auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
+
             ef->get_instructions()->push_back(
                 make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
                     in.at(get_tuple_element->get_n()), out.at(0)));
         };
 
         // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
-        op_map[type_index(typeid(op::Tuple))] = [](const Node*                n,
-                                                   ExternalFunction*          ef,
-                                                   const std::vector<size_t>& in,
-                                                   const std::vector<size_t>& out) {
+        REGISTER_TO_OP_MAP(op::Tuple)
+        {
             for (size_t i = 0; i < in.size(); ++i)
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::CopyInstruction<element::Float32>>(in.at(i),
                                                                                    out.at(i)));
             }
+        };
+
+        REGISTER_TO_OP_MAP(op::FunctionCall)
+        {
+            auto function_call = static_cast<const op::FunctionCall*>(n);
+            auto external      = make_shared<ngraph::runtime::ExternalFunction>(
+                                     function_call->get_function());
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::CallInstruction>(external,in,out));
         };
 
         initialized = true;
@@ -338,6 +346,10 @@ void ExternalFunction::compile()
     if (m_release_function)
     {
         release_function();
+    }
+    if (m_release_function_map)
+    {
+        release_function_map();
     }
 }
 

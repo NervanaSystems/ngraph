@@ -29,6 +29,7 @@ set (SRC
     ops/constant.cpp
     ops/convert.cpp
     ops/dot.cpp
+    ops/function_call.cpp
     ops/get_tuple_element.cpp
     ops/op.cpp
     ops/parameter.cpp

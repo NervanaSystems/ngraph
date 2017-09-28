@@ -14,31 +14,34 @@
 
 #pragma once
 
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/propagate_types.hpp"
+
 namespace ngraph
 {
     namespace op
     {
-        class Reduce : public Builtin
+        class FunctionCall : public Builtin
         {
         public:
             ///
-            /// @param arg_reductee The tensor view to be reduced.
-            /// @param arg_init The initial value for reduction.
-            /// @param reduction_axes The axis positions (0-based) to be reduced.
+            /// @param function The function to be called
+            /// @param args The function arguments
             ///
-            Reduce(const std::shared_ptr<Node>&     arg_reductee,
-                   const std::shared_ptr<Node>&     arg_init,
-                   const AxisSet&                   reduction_axes)
-                : Builtin({arg_reductee,arg_init})
-                , m_reduction_axes(reduction_axes)
+            FunctionCall(const std::shared_ptr<Function>&          function,
+                         const std::vector<std::shared_ptr<Node>>& args)
+                : Builtin(args)
+                , m_function(function)
             {
             }
 
-            virtual std::string description() const override { return "Reduce"; }
+            virtual std::string description() const override { return "FunctionCall"; }
             virtual void        propagate_types() override;
 
+            std::shared_ptr<Function> get_function() const { return m_function; }
+
         protected:
-            AxisSet m_reduction_axes;
+            std::shared_ptr<Function> m_function;
         };
     }
 }

@@ -801,3 +801,25 @@ TEST(type_prop, reduce_axis_oob)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, function_call_deduce)
+{
+    // First create "f(A,B,C) = (A+B)*C".
+    auto shape = Shape{2, 2};
+    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto C     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto f     = make_shared<Function>((A + B * C), op::Parameters{A, B, C});
+
+    // Now make "f(X,Y,Z) + f(X,Y,Z)"
+    auto X     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto Y     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto Z     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto r     = make_shared<op::FunctionCall>(f,Nodes{X,Y,Z});
+    auto r_p_r = r + r;
+
+    r->propagate_types();
+    r_p_r->propagate_types();
+    auto r_p_r_vt = r_p_r->get_value_type();
+    ASSERT_EQ(*r_p_r_vt, TensorViewType(element::Float32::element_type(), Shape{2, 2}));
+}

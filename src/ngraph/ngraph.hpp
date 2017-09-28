@@ -60,6 +60,7 @@
 #include "ngraph/ops/equal.hpp"
 #include "ngraph/ops/exp.hpp"
 #include "ngraph/ops/floor.hpp"
+#include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
 #include "ngraph/ops/less.hpp"

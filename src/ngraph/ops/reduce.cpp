@@ -19,6 +19,8 @@ using namespace ngraph::op;
 
 void Reduce::propagate_types()
 {
+    // TODO: For now we have to assume the reduction function is correctly typed.
+
     if (m_arguments.size() != 2)
     {
         throw ngraph_error("Wrong number of arguments.");
