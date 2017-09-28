@@ -45,7 +45,7 @@ namespace ngraph
                 {
                     runtime::eigen::assign_constant(
                         m_value,
-                        call_frame.get_parameterized_tensor<ET>(m_out));
+                        call_frame.get_parameterized_tensor_view<ET>(m_out));
                 }
 
             protected:

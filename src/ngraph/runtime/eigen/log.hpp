@@ -28,7 +28,7 @@ namespace ngraph
             template <typename T>
             void log(T arg, T out)
             {
-                set_map(&*out, Eigen::log(get_map(&*arg)));
+                set_map_array(&*out, Eigen::log(get_map_array(&*arg)));
             }
 
             template <typename ET>
@@ -44,8 +44,8 @@ namespace ngraph
                 virtual void execute(CallFrame& call_frame) const override
                 {
                     runtime::eigen::log(
-                        call_frame.get_parameterized_tensor<ET>(m_arg),
-                        call_frame.get_parameterized_tensor<ET>(m_out));
+                        call_frame.get_parameterized_tensor_view<ET>(m_arg),
+                        call_frame.get_parameterized_tensor_view<ET>(m_out));
                 }
 
             protected:

@@ -45,10 +45,10 @@
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/eigen/abs.hpp"
 #include "ngraph/runtime/eigen/add.hpp"
-#include "ngraph/runtime/eigen/copy.hpp"
 #include "ngraph/runtime/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/eigen/concat_vector.hpp"
 #include "ngraph/runtime/eigen/constant.hpp"
+#include "ngraph/runtime/eigen/copy.hpp"
 #include "ngraph/runtime/eigen/divide.hpp"
 #include "ngraph/runtime/eigen/dot.hpp"
 #include "ngraph/runtime/eigen/equal.hpp"
@@ -67,7 +67,7 @@
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
 
-    using namespace std;
+using namespace std;
 using namespace ngraph::runtime;
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
@@ -95,20 +95,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
     REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], in[2], out[0])
 
 // Define code generators for handled ops.
-std::unordered_map<std::type_index,
-                   std::function<void(const ngraph::Node*,
-                                      ExternalFunction*,
-                                      const std::vector<size_t>& inputs,
-                                      const std::vector<size_t>& outputs)>>&
-    ExternalFunction::get_op_map()
+ExternalFunction::OpMap& ExternalFunction::get_op_map()
 {
     static bool initialized = false;
-    static std::unordered_map<std::type_index,
-                              std::function<void(const Node*,
-                                                 ExternalFunction*,
-                                                 const std::vector<size_t>& inputs,
-                                                 const std::vector<size_t>& outputs)>>
-        op_map;
+    static OpMap op_map;
     if (!initialized)
     {
         REGISTER_UNOP(op::Abs, runtime::eigen::AbsInstruction<element::Float32>);
@@ -142,7 +132,7 @@ std::unordered_map<std::type_index,
                                                     const std::vector<size_t>& in,
                                                     const std::vector<size_t>& out) {
             auto result_tensor_type =
-              dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
 
             auto result_shape = result_tensor_type->get_shape();
@@ -150,14 +140,16 @@ std::unordered_map<std::type_index,
             if (result_shape.size() == 1)
             {
                 ef->get_instructions()->push_back(
-                    make_shared<runtime::eigen::ConcatVectorInstruction<element::Float32>>(
-                        in, out[0]));
+                    make_shared<runtime::eigen::ConcatVectorInstruction<element::Float32>>(in,
+                                                                                           out[0]));
             }
-            else if(result_shape.size() == 2)
+            else if (result_shape.size() == 2)
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::ConcatMatrixInstruction<element::Float32>>(
-                        in, (dynamic_cast<const op::Concat *>(n))->get_concatenation_axis(), out[0]));
+                        in,
+                        (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis(),
+                        out[0]));
             }
             else
             {
@@ -330,7 +322,7 @@ void ExternalFunction::compile()
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
-            auto tv     = output.get_tensor_view();
+            auto                      tv     = output.get_tensor_view();
             in.push_back(tensor_index.at(tv));
         }
         std::vector<size_t> out;

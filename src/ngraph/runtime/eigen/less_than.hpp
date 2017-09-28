@@ -28,9 +28,9 @@ namespace ngraph
             template <typename TI,typename TO>
             void less_than(TI arg0, TI arg1, TO out)
             {
-                auto result_as_float = get_map(&*arg0) < get_map(&*arg1);
+                auto result_as_float = get_map_array(&*arg0) < get_map_array(&*arg1);
                 auto result_as_char  = result_as_float.template cast<char>();
-                set_map(&*out, result_as_char);
+                set_map_array(&*out, result_as_char);
             }
 
             template <typename ET>
@@ -47,9 +47,9 @@ namespace ngraph
                 virtual void execute(CallFrame& call_frame) const override
                 {
                     runtime::eigen::less_than(
-                        call_frame.get_parameterized_tensor<ET>(m_arg0),
-                        call_frame.get_parameterized_tensor<ET>(m_arg1),
-                        call_frame.get_parameterized_tensor<element::Bool>(m_out));
+                        call_frame.get_parameterized_tensor_view<ET>(m_arg0),
+                        call_frame.get_parameterized_tensor_view<ET>(m_arg1),
+                        call_frame.get_parameterized_tensor_view<element::Bool>(m_out));
                 }
 
             protected:
