@@ -28,7 +28,7 @@ namespace ngraph
             template <typename T>
             void subtract(T arg0, T arg1, T out)
             {
-                set_map(&*out, get_map(&*arg0) - get_map(&*arg1));
+                set_map_array(&*out, get_map_array(&*arg0) - get_map_array(&*arg1));
             }
 
             template <typename ET>
@@ -45,9 +45,9 @@ namespace ngraph
                 virtual void execute(CallFrame& call_frame) const override
                 {
                     runtime::eigen::subtract(
-                        call_frame.get_parameterized_tensor<ET>(m_arg0),
-                        call_frame.get_parameterized_tensor<ET>(m_arg1),
-                        call_frame.get_parameterized_tensor<ET>(m_out));
+                        call_frame.get_parameterized_tensor_view<ET>(m_arg0),
+                        call_frame.get_parameterized_tensor_view<ET>(m_arg1),
+                        call_frame.get_parameterized_tensor_view<ET>(m_out));
                 }
 
             protected:

@@ -43,7 +43,7 @@ namespace ngraph
             virtual ~TensorView() {}
 
             template <typename ET>
-            ParameterizedTensorView<ET>* get_parameterized_tensor()
+            ParameterizedTensorView<ET>* get_parameterized_tensor_view()
             {
                 return dynamic_cast<ParameterizedTensorView<ET>*>(this);
             }
@@ -69,5 +69,7 @@ namespace ngraph
         protected:
             std::shared_ptr<ngraph::descriptor::TensorView> m_descriptor;
         };
+
+        using TensorViewPtrs = std::vector<std::shared_ptr<TensorView>>;
     }
 }
