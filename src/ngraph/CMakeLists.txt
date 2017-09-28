@@ -32,6 +32,7 @@ set (SRC
     ops/get_tuple_element.cpp
     ops/op.cpp
     ops/parameter.cpp
+    ops/reduce.cpp
     ops/select.cpp
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
