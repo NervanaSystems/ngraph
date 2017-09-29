@@ -36,17 +36,17 @@ bool pass::DumpSorted::run_on_call_list(list<Node*>& nodes)
         {
             out << node->get_node_id() << "(";
             vector<string> inputs;
-            for (const std::shared_ptr<Input>& input : node->get_inputs())
+            for (const Input& input : node->get_inputs())
             {
-                inputs.push_back(input->get_tensor().get_name());
+                inputs.push_back(input.get_tensor().get_name());
             }
             out << join(inputs);
             out << ") -> ";
 
             vector<string> outputs;
-            for (const std::shared_ptr<Output>& output : node->get_outputs())
+            for (const Output& output : node->get_outputs())
             {
-                outputs.push_back(output->get_tensor().get_name());
+                outputs.push_back(output.get_tensor().get_name());
             }
             out << join(outputs);
             out << "\n";

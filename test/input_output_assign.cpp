@@ -32,11 +32,11 @@ TEST(input_output, param_tensor)
     for (size_t i = 0; i < param->get_outputs().size(); i++)
     {
         auto output = param->get_outputs()[i];
-        ASSERT_EQ(i, output->get_index());
-        ASSERT_EQ(param, output->get_node());
+        ASSERT_EQ(i, output.get_index());
+        ASSERT_EQ(param, output.get_node());
     }
 
-    ASSERT_EQ(*tv_tp, *param->get_outputs()[0]->get_tensor_view()->get_tensor_view_type());
+    ASSERT_EQ(*tv_tp, *param->get_outputs()[0].get_tensor_view()->get_tensor_view_type());
 }
 
 TEST(input_output, param_tuple)
@@ -53,12 +53,12 @@ TEST(input_output, param_tuple)
     for (size_t i = 0; i < param->get_outputs().size(); i++)
     {
         auto output = param->get_outputs()[i];
-        ASSERT_EQ(i, output->get_index());
-        ASSERT_EQ(param, output->get_node());
+        ASSERT_EQ(i, output.get_index());
+        ASSERT_EQ(param, output.get_node());
     }
 
-    ASSERT_EQ(*tv_tp_0, *param->get_outputs()[0]->get_tensor_view()->get_tensor_view_type());
-    ASSERT_EQ(*tv_tp_1, *param->get_outputs()[1]->get_tensor_view()->get_tensor_view_type());
+    ASSERT_EQ(*tv_tp_0, *param->get_outputs()[0].get_tensor_view()->get_tensor_view_type());
+    ASSERT_EQ(*tv_tp_1, *param->get_outputs()[1].get_tensor_view()->get_tensor_view_type());
 }
 
 TEST(input_output, simple_output)
@@ -92,9 +92,9 @@ TEST(input_output, simple_output)
     for (size_t i = 0; i < inputs.size(); i++)
     {
         auto input = inputs[i];
-        ASSERT_EQ(i, input->get_index());
-        ASSERT_EQ(i, input->get_argno());
-        ASSERT_EQ(0, input->get_arg_index());
-        ASSERT_EQ(input->get_output()->get_node(), add->get_arguments()[i]);
+        ASSERT_EQ(i, input.get_index());
+        ASSERT_EQ(i, input.get_argno());
+        ASSERT_EQ(0, input.get_arg_index());
+        ASSERT_EQ(input.get_output().get_node(), add->get_arguments()[i]);
     }
 }

@@ -19,14 +19,14 @@ using namespace ngraph;
 using namespace descriptor;
 
 Input::Input(
-    Node* node, size_t index, size_t argno, size_t arg_index, const shared_ptr<Output>& output)
+    Node* node, size_t index, size_t argno, size_t arg_index, Output& output)
     : m_node(node)
     , m_index(index)
     , m_argno(argno)
     , m_arg_index(arg_index)
     , m_output(output)
 {
-    output->add_input(this);
+    output.add_input(this);
 }
 
 std::shared_ptr<Node> Input::get_node()
@@ -36,10 +36,10 @@ std::shared_ptr<Node> Input::get_node()
 
 const Tensor& Input::get_tensor() const
 {
-    return m_output->get_tensor();
+    return m_output.get_tensor();
 }
 
 Tensor& Input::get_tensor()
 {
-    return m_output->get_tensor();
+    return m_output.get_tensor();
 }

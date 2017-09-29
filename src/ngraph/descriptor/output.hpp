@@ -24,10 +24,12 @@ namespace ngraph
     namespace descriptor
     {
         // Describes an output tensor of an op
-        class Output : public std::enable_shared_from_this<Output>
+        class Output
         {
-            Output(const Output&) = delete;
-            Output& operator=(const Output&) = delete;
+            // For some odd reason emplace_back is requiring a copy constructor
+            // it should not. See issue #111 for details
+            // Output(const Output&) = delete;
+            // Output& operator=(const Output&) = delete;
 
         public:
             /// @param node Node that owns this output. Not shared to prevent owner loop.
