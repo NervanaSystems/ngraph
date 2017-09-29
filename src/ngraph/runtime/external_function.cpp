@@ -73,8 +73,7 @@ using namespace std;
 using namespace ngraph::runtime;
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                   bool                                     release_function,
-                                   bool                                     release_function_map)
+                                   bool                                     release_function)
     : m_function(function)
     , m_release_function(release_function)
     , m_is_compiled(false)
@@ -85,7 +84,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 #define REGISTER_TO_OP_MAP(op_class)                                                   \
     op_map[type_index(typeid(op_class))] = [](const Node*                n,            \
                                               ExternalFunction*          ef,           \
-                                              FunctionMap*               function_map, \
+                                              FunctionMap&               function_map, \
                                               const std::vector<size_t>& in,           \
                                               const std::vector<size_t>& out)
 
@@ -257,13 +256,13 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
             try
             {
-                external = function_map->at(function);
+                external = function_map.at(function);
             }
             catch (const std::out_of_range)
             {
                 external = make_shared<ngraph::runtime::ExternalFunction>(
                                function_call->get_function());
-                function_map->insert({function,external});
+                function_map.insert({function,external});
             }
 
             ef->get_instructions()->push_back(
@@ -275,7 +274,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
     return op_map;
 }
 
-void ExternalFunction::compile(FunctionMap* function_map)
+void ExternalFunction::compile(FunctionMap& function_map)
 {
     if (m_is_compiled)
     {
@@ -363,10 +362,10 @@ void ExternalFunction::compile(FunctionMap* function_map)
 shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
 {
     FunctionMap function_map;
-    return make_call_frame(&function_map);
+    return make_call_frame(function_map);
 }
 
-shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame(FunctionMap* function_map)
+shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame(FunctionMap& function_map)
 {
     if (!m_is_compiled)
     {
