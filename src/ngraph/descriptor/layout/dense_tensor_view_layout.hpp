@@ -36,8 +36,10 @@ namespace ngraph
                 DenseTensorViewLayout(const TensorView& tensor_view);
 
                 virtual size_t get_size() override { return m_size; }
-                size_t get_offset() const { return m_offset; }
+                size_t         get_offset() const { return m_offset; }
                 virtual size_t get_index_offset(const std::vector<size_t>& indices) override;
+
+                const Strides& get_strides() const { return m_strides; }
 
             protected:
                 Strides m_strides;

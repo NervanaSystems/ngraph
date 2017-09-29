@@ -49,6 +49,7 @@ set (SRC
     pass/tree_pass.cpp
     pass/visualize_tree.cpp
     runtime/call_frame.cpp
+    runtime/eigen/utils.cpp
     runtime/external_function.cpp
     runtime/tuple.cpp
     runtime/utils.cpp

@@ -53,7 +53,7 @@ namespace ngraph
             class ConcatVectorInstruction : public Instruction
             {
             public:
-                ConcatVectorInstruction(const std::vector<size_t>& args, size_t out)
+                ConcatVectorInstruction(const std::vector<TensorViewInfo>& args, size_t out)
                     : m_args(args)
                     , m_out(out)
                 {
@@ -62,9 +62,9 @@ namespace ngraph
                 virtual void execute(CallFrame& call_frame) const override
                 {
                     std::vector<ParameterizedTensorView<ET>*> ptvs;
-                    for(size_t arg : m_args)
+                    for(auto arg : m_args)
                     {
-                        ptvs.push_back(call_frame.get_parameterized_tensor_view<ET>(arg));
+                        ptvs.push_back(call_frame.get_parameterized_tensor_view<ET>(arg.index));
                     }
                     runtime::eigen::concat_vector(
                         ptvs,
@@ -72,7 +72,7 @@ namespace ngraph
                 }
 
             protected:
-                std::vector<size_t> m_args;
+                std::vector<TensorViewInfo> m_args;
                 size_t m_out;
             };
         }

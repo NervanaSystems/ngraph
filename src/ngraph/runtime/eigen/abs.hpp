@@ -18,6 +18,7 @@
 #include "ngraph/runtime/eigen/utils.hpp"
 #include "ngraph/runtime/instruction.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor_view_info.hpp"
 
 namespace ngraph
 {
@@ -26,31 +27,33 @@ namespace ngraph
         namespace eigen
         {
             template <typename T>
-            void abs(T arg, T out)
+            void abs(T* arg, const TH2& arg_th, T* out, const TH2& out_th)
             {
-                set_map_array(&*out, Eigen::abs(get_map_array(&*arg)));
+                set_map_array(out, out_th, Eigen::abs(get_map_array(arg, arg_th)));
             }
 
             template <typename ET>
             class AbsInstruction : public Instruction
             {
             public:
-                AbsInstruction(size_t arg, size_t out)
-                    : m_arg(arg)
-                    , m_out(out)
+                AbsInstruction(const TensorViewInfo& arg, const TensorViewInfo& out)
+                    : m_arg(get_tensor_header(arg, true))
+                    , m_out(get_tensor_header(out, true))
                 {
                 }
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
                     runtime::eigen::abs(
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg),
-                        call_frame.get_parameterized_tensor_view<ET>(m_out));
+                        call_frame.get_tensor_view_data<ET>(m_arg.index),
+                        m_arg,
+                        call_frame.get_tensor_view_data<ET>(m_out.index),
+                        m_out);
                 }
 
             protected:
-                size_t m_arg;
-                size_t m_out;
+                TH2 m_arg;
+                TH2 m_out;
             };
         }
     }

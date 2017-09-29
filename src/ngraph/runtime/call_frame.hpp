@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "ngraph/function.hpp"
-#include "ngraph/runtime/instruction.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
@@ -26,6 +25,25 @@ namespace ngraph
     namespace runtime
     {
         class PrimaryTensorView;
+        class Instruction;
+
+        // 1d tensor headers
+        struct TH1
+        {
+            size_t index;
+            size_t l0;
+            size_t s0;
+        };
+
+        // 2d tensor headers
+        struct TH2
+        {
+            size_t index;
+            size_t l0;
+            size_t s0;
+            size_t l1;
+            size_t s1;
+        };
 
         // A VM for executing lightly-compiled graph functions.
         class CallFrame
@@ -56,6 +74,14 @@ namespace ngraph
             {
                 return m_tensor_views[i]->get_parameterized_tensor_view<ET>();
             }
+
+            template<typename ET>
+            typename ET::type* get_tensor_view_data(size_t i)
+            {
+                return &get_parameterized_tensor_view<ET>(i)->get_vector()[0];
+            }
+
+
 
         protected:
             size_t                                                     m_n_inputs;

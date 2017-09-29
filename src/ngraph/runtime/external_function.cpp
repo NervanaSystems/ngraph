@@ -19,6 +19,7 @@
 #include <unordered_map>
 
 #include "ngraph/descriptor/input.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
@@ -70,6 +71,8 @@
 using namespace std;
 using namespace ngraph::runtime;
 
+using ngraph::descriptor::layout::DenseTensorViewLayout;
+
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                    bool                                     release_function)
     : m_function(function)
@@ -80,28 +83,36 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 }
 
 #define REGISTER_INSTRUCTION(op_class, instr_class, ...)                                           \
-    op_map[type_index(typeid(op_class))] = [](const Node*                n,                        \
-                                              ExternalFunction*          ef,                       \
-                                              const std::vector<size_t>& in,                       \
-                                              const std::vector<size_t>& out) {                    \
+    op_map[type_index(typeid(op_class))] = [](const Node*                        n,                \
+                                              ExternalFunction*                  ef,               \
+                                              const std::vector<TensorViewInfo>& in,               \
+                                              const std::vector<TensorViewInfo>& out) {            \
         ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__));                  \
     }
 
 #define REGISTER_UNOP(op_class, instr_class)                                                       \
-    REGISTER_INSTRUCTION(op_class, instr_class, in[0], out[0])
+    REGISTER_INSTRUCTION(op_class, instr_class, in[0].index, out[0].index)
 #define REGISTER_BINOP(op_class, instr_class)                                                      \
-    REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], out[0])
+    REGISTER_INSTRUCTION(op_class, instr_class, in[0].index, in[1].index, out[0].index)
 #define REGISTER_TERNOP(op_class, instr_class)                                                     \
+    REGISTER_INSTRUCTION(op_class, instr_class, in[0].index, in[1].index, in[2].index, out[0].index)
+
+// Versions the include the descriptor
+#define REGISTER_UNOP1(op_class, instr_class)                                                      \
+    REGISTER_INSTRUCTION(op_class, instr_class, in[0], out[0])
+#define REGISTER_BINOP1(op_class, instr_class)                                                     \
+    REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], out[0])
+#define REGISTER_TERNOP1(op_class, instr_class)                                                    \
     REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], in[2], out[0])
 
 // Define code generators for handled ops.
 ExternalFunction::OpMap& ExternalFunction::get_op_map()
 {
-    static bool initialized = false;
+    static bool  initialized = false;
     static OpMap op_map;
     if (!initialized)
     {
-        REGISTER_UNOP(op::Abs, runtime::eigen::AbsInstruction<element::Float32>);
+        REGISTER_UNOP1(op::Abs, runtime::eigen::AbsInstruction<element::Float32>);
         REGISTER_BINOP(op::Add, runtime::eigen::AddInstruction<element::Float32>);
         REGISTER_BINOP(op::Divide, runtime::eigen::DivideInstruction<element::Float32>);
         REGISTER_BINOP(op::Equal, runtime::eigen::EqualInstruction<element::Float32>);
@@ -119,18 +130,18 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             runtime::eigen::ConstantInstruction<element::Float32>,
             std::vector<element::Float32::type>{
                 dynamic_cast<const op::ScalarConstant<element::Float32>*>(n)->get_value()},
-            out[0]);
+            out[0].index);
 
         REGISTER_INSTRUCTION(
             op::TensorConstant<element::Float32>,
             runtime::eigen::ConstantInstruction<element::Float32>,
             dynamic_cast<const op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
-            out[0]);
+            out[0].index);
 
-        op_map[type_index(typeid(op::Concat))] = [](const Node*                n,
-                                                    ExternalFunction*          ef,
-                                                    const std::vector<size_t>& in,
-                                                    const std::vector<size_t>& out) {
+        op_map[type_index(typeid(op::Concat))] = [](const Node*                        n,
+                                                    ExternalFunction*                  ef,
+                                                    const std::vector<TensorViewInfo>& in,
+                                                    const std::vector<TensorViewInfo>& out) {
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
@@ -140,8 +151,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             if (result_shape.size() == 1)
             {
                 ef->get_instructions()->push_back(
-                    make_shared<runtime::eigen::ConcatVectorInstruction<element::Float32>>(in,
-                                                                                           out[0]));
+                    make_shared<runtime::eigen::ConcatVectorInstruction<element::Float32>>(
+                        in, out[0].index));
             }
             else if (result_shape.size() == 2)
             {
@@ -149,7 +160,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                     make_shared<runtime::eigen::ConcatMatrixInstruction<element::Float32>>(
                         in,
                         (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis(),
-                        out[0]));
+                        out[0].index));
             }
             else
             {
@@ -157,10 +168,10 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
         };
 
-        op_map[type_index(typeid(op::Dot))] = [](const Node*                n,
-                                                 ExternalFunction*          ef,
-                                                 const std::vector<size_t>& in,
-                                                 const std::vector<size_t>& out) {
+        op_map[type_index(typeid(op::Dot))] = [](const Node*                        n,
+                                                 ExternalFunction*                  ef,
+                                                 const std::vector<TensorViewInfo>& in,
+                                                 const std::vector<TensorViewInfo>& out) {
             auto& arg_nodes = n->get_arguments();
 
             assert(arg_nodes.size() == 2);
@@ -181,14 +192,14 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::ScalarTensorProductInstruction<element::Float32>>(
-                        in[0], in[1], out[0]));
+                        in[0].index, in[1].index, out[0].index));
             }
             else if (arg1_shape.size() == 0)
             {
                 // If arg1 is the scalar, do the same thing but switch the order of operands.
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::ScalarTensorProductInstruction<element::Float32>>(
-                        in[1], in[0], out[0]));
+                        in[1].index, in[0].index, out[0].index));
             }
 
             // If arg0 and arg1 are both vectors, emit a dot product.
@@ -196,7 +207,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::DotInstruction<element::Float32>>(
-                        in[0], in[1], out[0]));
+                        in[0].index, in[1].index, out[0].index));
             }
 
             // If arg0 is a matrix and arg1 is a vector, emit a matrix-vector product.
@@ -204,7 +215,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::MatrixVectorProductInstruction<element::Float32>>(
-                        in[0], in[1], out[0]));
+                        in[0].index, in[1].index, out[0].index));
             }
 
             // If arg0 and arg1 are both matrices, emit a matrix product.
@@ -212,7 +223,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::MatrixMultInstruction<element::Float32>>(
-                        in[0], in[1], out[0]));
+                        in[0].index, in[1].index, out[0].index));
             }
 
             else
@@ -222,32 +233,33 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         };
 
         // Parameter is a "runtime no-op" because the output tensor has already been filled.
-        op_map[type_index(typeid(op::Parameter))] = [](const Node*                n,
-                                                       ExternalFunction*          ef,
-                                                       const std::vector<size_t>& in,
-                                                       const std::vector<size_t>& out) {};
+        op_map[type_index(typeid(op::Parameter))] = [](const Node*                        n,
+                                                       ExternalFunction*                  ef,
+                                                       const std::vector<TensorViewInfo>& in,
+                                                       const std::vector<TensorViewInfo>& out) {};
 
         // GetTupleElement will be spliced out, with the users of out redirected to in's source, but, for now, we need to copy.
-        op_map[type_index(typeid(op::GetTupleElement))] = [](const Node*                n,
-                                                             ExternalFunction*          ef,
-                                                             const std::vector<size_t>& in,
-                                                             const std::vector<size_t>& out) {
-            auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
-            ef->get_instructions()->push_back(
-                make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
-                    in.at(get_tuple_element->get_n()), out.at(0)));
-        };
+        op_map[type_index(typeid(op::GetTupleElement))] =
+            [](const Node*                        n,
+               ExternalFunction*                  ef,
+               const std::vector<TensorViewInfo>& in,
+               const std::vector<TensorViewInfo>& out) {
+                auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
+                ef->get_instructions()->push_back(
+                    make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
+                        in.at(get_tuple_element->get_n()).index, out.at(0).index));
+            };
 
         // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
-        op_map[type_index(typeid(op::Tuple))] = [](const Node*                n,
-                                                   ExternalFunction*          ef,
-                                                   const std::vector<size_t>& in,
-                                                   const std::vector<size_t>& out) {
+        op_map[type_index(typeid(op::Tuple))] = [](const Node*                        n,
+                                                   ExternalFunction*                  ef,
+                                                   const std::vector<TensorViewInfo>& in,
+                                                   const std::vector<TensorViewInfo>& out) {
             for (size_t i = 0; i < in.size(); ++i)
             {
                 ef->get_instructions()->push_back(
-                    make_shared<runtime::eigen::CopyInstruction<element::Float32>>(in.at(i),
-                                                                                   out.at(i)));
+                    make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
+                        in.at(i).index, out.at(i).index));
             }
         };
 
@@ -270,6 +282,22 @@ void ExternalFunction::compile()
     pass_manager.register_pass<pass::PropagateTypes>();
     pass_manager.register_pass<pass::AssignTensors>();
     pass_manager.run_passes(m_function);
+
+    // Turn this into a pass
+    // Assign layouts
+    // For now, just make everyone row-major.
+    for (const Node* node : pass_manager.get_call_graph())
+    {
+        for (const descriptor::Output& output : node->get_outputs())
+        {
+            auto tv = output.get_tensor_view();
+            if (nullptr == tv->get_tensor_view_layout())
+            {
+                auto layout = std::make_shared<DenseTensorViewLayout>(*tv);
+                tv->set_tensor_view_layout(layout);
+            }
+        }
+    }
 
     // Determine tensor requirements for  the call frame
     unordered_map<shared_ptr<ngraph::descriptor::TensorView>, size_t> tensor_index;
@@ -318,18 +346,18 @@ void ExternalFunction::compile()
         {
             throw ngraph_error("Unhandled op during code generation");
         }
-        std::vector<size_t> in;
+        std::vector<TensorViewInfo> in;
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
             auto                      tv     = output.get_tensor_view();
-            in.push_back(tensor_index.at(tv));
+            in.push_back({tensor_index.at(tv), tv});
         }
-        std::vector<size_t> out;
+        std::vector<TensorViewInfo> out;
         for (const descriptor::Output& output : node->get_outputs())
         {
             auto tv = output.get_tensor_view();
-            out.push_back(tensor_index.at(tv));
+            out.push_back({tensor_index.at(tv), tv});
         }
         handler_it->second(node, this, in, out);
     }

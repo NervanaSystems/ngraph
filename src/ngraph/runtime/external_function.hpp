@@ -20,6 +20,7 @@
 #include <unordered_map>
 
 #include "ngraph/function.hpp"
+#include "ngraph/runtime/tensor_view_info.hpp"
 
 namespace ngraph
 {
@@ -29,8 +30,8 @@ namespace ngraph
         {
             using OpFunction = std::function<void(const ngraph::Node*,
                                                   ExternalFunction*,
-                                                  const std::vector<size_t>& inputs,
-                                                  const std::vector<size_t>& outputs)>;
+                                                  const std::vector<TensorViewInfo>& inputs,
+                                                  const std::vector<TensorViewInfo>& outputs)>;
             using OpMap      = std::unordered_map<std::type_index, OpFunction>;
 
         public:
