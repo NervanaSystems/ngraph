@@ -588,7 +588,7 @@ TEST(execute, test_function_call)
     auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto C     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>((A + B * C), op::Parameters{A, B, C});
+    auto f     = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
     auto X     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -613,10 +613,9 @@ TEST(execute, test_function_call)
     (*cf)({x, y, z}, {result});
     ASSERT_EQ((vector<float>{108, 160, 220, 288}), result->get_vector());
 
-/*
     (*cf)({y, x, z}, {result});
     ASSERT_EQ((vector<float>{108, 160, 220, 288}), result->get_vector());
 
     (*cf)({x, z, y}, {result});
-    ASSERT_EQ((vector<float>{100, 144, 196, 256}), result->get_vector());*/
+    ASSERT_EQ((vector<float>{100, 144, 196, 256}), result->get_vector());
 }

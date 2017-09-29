@@ -26,7 +26,6 @@ namespace ngraph
     {
         namespace eigen
         {
-//            template <typename ET>
             class CallInstruction : public Instruction
             {
             public:
@@ -40,6 +39,19 @@ namespace ngraph
                 virtual void execute(CallFrame& call_frame) const override
                 {
                     auto cf = m_external_function->make_call_frame();
+                    
+                    std::vector<std::shared_ptr<ngraph::runtime::Value>> inputs;
+                    std::vector<std::shared_ptr<ngraph::runtime::Value>> outputs;
+
+                    for (auto in : m_in)
+                    {
+                        inputs.push_back(call_frame.get_tensor_view(in));
+                    }
+                    for (auto out : m_out)
+                    {
+                        outputs.push_back(call_frame.get_tensor_view(out));
+                    }
+                    (*cf)(inputs,outputs);
                 }
 
             protected:

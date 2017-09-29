@@ -26,6 +26,7 @@ namespace ngraph
             /// @param arg_init The initial value for reduction.
             /// @param reduction_axes The axis positions (0-based) to be reduced.
             ///
+            /// TODO: add in the function param!
             Reduce(const std::shared_ptr<Node>&     arg_reductee,
                    const std::shared_ptr<Node>&     arg_init,
                    const AxisSet&                   reduction_axes)

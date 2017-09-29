@@ -73,23 +73,21 @@ using namespace std;
 using namespace ngraph::runtime;
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                   const std::shared_ptr<FunctionMap>       function_map,
                                    bool                                     release_function,
                                    bool                                     release_function_map)
     : m_function(function)
     , m_release_function(release_function)
     , m_is_compiled(false)
     , m_instructions(make_shared<std::vector<std::shared_ptr<ngraph::runtime::Instruction>>>())
-    , m_function_map((nullptr == function_map) ? std::make_shared<FunctionMap>() : function_map)
-    , m_release_function_map(release_function)
 {
 }
 
-#define REGISTER_TO_OP_MAP(op_class)                                                           \
-    op_map[type_index(typeid(op_class))] = [](const Node*                n,                    \
-                                              ExternalFunction*          ef,                   \
-                                              const std::vector<size_t>& in,                   \
-                                              const std::vector<size_t>& out)
+#define REGISTER_TO_OP_MAP(op_class)                                                          \
+    op_map[type_index(typeid(op_class))] = [](const Node*                       n,            \
+                                              std::shared_ptr<ExternalFunction> ef,           \
+                                              std::shared_ptr<FunctionMap>      function_map, \
+                                              const std::vector<size_t>&        in,           \
+                                              const std::vector<size_t>&        out)
 
 #define REGISTER_INSTRUCTION(op_class, instr_class, ...)                          \
     REGISTER_TO_OP_MAP(op_class) {                                                \
@@ -253,8 +251,21 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_TO_OP_MAP(op::FunctionCall)
         {
             auto function_call = static_cast<const op::FunctionCall*>(n);
-            auto external      = make_shared<ngraph::runtime::ExternalFunction>(
-                                     function_call->get_function());
+            auto function      = function_call->get_function();
+
+            std::shared_ptr<ExternalFunction> external;
+
+            try
+            {
+                external = function_map->at(function);
+            }
+            catch (const std::out_of_range)
+            {
+                external = make_shared<ngraph::runtime::ExternalFunction>(
+                               function_call->get_function());
+                function_map->insert({function,external});
+            }
+
             ef->get_instructions()->push_back(
                 make_shared<runtime::eigen::CallInstruction>(external,in,out));
         };
@@ -264,7 +275,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
     return op_map;
 }
 
-void ExternalFunction::compile()
+void ExternalFunction::compile(std::shared_ptr<FunctionMap> function_map)
 {
     if (m_is_compiled)
     {
@@ -284,9 +295,9 @@ void ExternalFunction::compile()
     // First come the function inputs
     for (auto param : m_function->get_parameters())
     {
-        for (const descriptor::Output& output : param->get_outputs())
+        for (const std::shared_ptr<descriptor::Output>& output : param->get_outputs())
         {
-            auto   tv        = output.get_tensor_view();
+            auto   tv        = output->get_tensor_view();
             size_t index     = tensor_index.size();
             tensor_index[tv] = index;
         }
@@ -294,9 +305,9 @@ void ExternalFunction::compile()
     m_n_inputs = tensor_index.size();
 
     // Next are the function outputs
-    for (const descriptor::Output& output : m_function->get_result()->get_outputs())
+    for (const std::shared_ptr<descriptor::Output>& output : m_function->get_result()->get_outputs())
     {
-        auto   tv        = output.get_tensor_view();
+        auto   tv        = output->get_tensor_view();
         size_t index     = tensor_index.size();
         tensor_index[tv] = index;
     }
@@ -305,9 +316,9 @@ void ExternalFunction::compile()
     // All remaining tensor views
     for (const Node* node : pass_manager.get_call_graph())
     {
-        for (const descriptor::Output& output : node->get_outputs())
+        for (const std::shared_ptr<descriptor::Output>& output : node->get_outputs())
         {
-            auto tv = output.get_tensor_view();
+            auto tv = output->get_tensor_view();
             if (0 == tensor_index.count(tv))
             {
                 size_t index     = tensor_index.size();
@@ -327,19 +338,19 @@ void ExternalFunction::compile()
             throw ngraph_error("Unhandled op during code generation");
         }
         std::vector<size_t> in;
-        for (const descriptor::Input& input : node->get_inputs())
+        for (const std::shared_ptr<descriptor::Input>& input : node->get_inputs())
         {
-            const descriptor::Output& output = input.get_output();
-            auto                      tv     = output.get_tensor_view();
+            const std::shared_ptr<descriptor::Output>& output = input->get_output();
+            auto                                       tv     = output->get_tensor_view();
             in.push_back(tensor_index.at(tv));
         }
         std::vector<size_t> out;
-        for (const descriptor::Output& output : node->get_outputs())
+        for (const std::shared_ptr<descriptor::Output>& output : node->get_outputs())
         {
-            auto tv = output.get_tensor_view();
+            auto tv = output->get_tensor_view();
             out.push_back(tensor_index.at(tv));
         }
-        handler_it->second(node, this, in, out);
+        handler_it->second(node, shared_from_this(), function_map, in, out);
     }
     m_instructions->push_back(make_shared<runtime::eigen::ReturnInstruction>());
     m_is_compiled = true;
@@ -347,17 +358,19 @@ void ExternalFunction::compile()
     {
         release_function();
     }
-    if (m_release_function_map)
-    {
-        release_function_map();
-    }
 }
 
 shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
 {
+    auto function_map = make_shared<FunctionMap>();
+    return make_call_frame(function_map);
+}
+
+shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame(std::shared_ptr<FunctionMap> function_map)
+{
     if (!m_is_compiled)
     {
-        compile();
+        compile(function_map);
     }
     std::vector<std::shared_ptr<ngraph::runtime::TensorView>> temps;
     for (auto tv : m_temp_views)
