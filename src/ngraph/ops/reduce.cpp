@@ -13,14 +13,13 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/topological_sort.hpp"
 
 using namespace std;
 using namespace ngraph::op;
 
 void Reduce::propagate_types()
 {
-    // TODO: For now we have to assume the reduction function is correctly typed.
-
     if (m_arguments.size() != 2)
     {
         throw ngraph_error("Wrong number of arguments.");
@@ -75,6 +74,37 @@ void Reduce::propagate_types()
         {
             result_shape.push_back(arg_reductee_shape.at(i));
         }
+    }
+
+    // FIXME: Temporary hack. We do this here to make sure that types have been
+    // propagated for the callee.
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::TopologicalSort>();
+    pass_manager.register_pass<pass::PropagateTypes>();
+    pass_manager.run_passes(m_reduction_function);
+
+    auto f_params = m_reduction_function->get_parameters();
+
+    if (f_params.size() != 2)
+    {
+        throw ngraph_error("Reduction function has wrong number of parameters (should be two)");
+    }
+
+    if (*(f_params.at(0)->get_value_type()) != *(arg_init_type))
+    {
+        throw ngraph_error("Argument 0 of reduction function has wrong type");
+    }
+    if (*(f_params.at(1)->get_value_type()) != *(arg_init_type))
+    {
+        throw ngraph_error("Argument 1 of reduction function has wrong type");
+    }
+
+    auto f_result = m_reduction_function->get_result();
+    auto f_result_type = f_result->get_value_type();
+
+    if (*(f_result_type) != *(arg_init_type))
+    {
+        throw ngraph_error("Return type from reduction function does not match expected");
     }
 
     set_value_type_checked(make_shared<TensorViewType>(arg_reductee_tensor_view_type->get_element_type(), result_shape));

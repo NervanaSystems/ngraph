@@ -37,6 +37,7 @@
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not_equal.hpp"
+#include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/tuple.hpp"
@@ -267,6 +268,11 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
             ef->get_instructions()->push_back(
                 make_shared<runtime::eigen::CallInstruction>(external,in,out));
+        };
+
+        REGISTER_TO_OP_MAP(op::Reduce)
+        {
+            throw ngraph_error("op::Reduce not implemented yet");
         };
 
         initialized = true;

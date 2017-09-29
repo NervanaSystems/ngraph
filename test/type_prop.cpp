@@ -699,19 +699,26 @@ TEST(type_prop, reduce_deduce)
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
 
-    auto r0 = make_shared<op::Reduce>(param_0,param_1,AxisSet{0});
+    auto f_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f         = make_shared<Function>(f_param_0 + f_param_1,
+                                           op::Parameters{f_param_0, f_param_1});
+
+    auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
     r0->propagate_types();
     ASSERT_EQ(*(r0->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{4}));
 
-    auto r1 = make_shared<op::Reduce>(param_0,param_1,AxisSet{1});
+    auto r1 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{1});
     r1->propagate_types();
     ASSERT_EQ(*(r1->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{2}));
 
-    auto r01 = make_shared<op::Reduce>(param_0,param_1,AxisSet{0,1});
+    auto r01 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0,1});
     r01->propagate_types();
     ASSERT_EQ(*(r01->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
 
-    auto r_none = make_shared<op::Reduce>(param_0,param_1,AxisSet{});
+    auto r_none = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{});
     r_none->propagate_types();
     ASSERT_EQ(*(r_none->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{2,4}));
 }
@@ -723,7 +730,14 @@ TEST(type_prop, reduce_deduce_correct)
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
 
-    auto r0 = make_shared<op::Reduce>(param_0,param_1,AxisSet{0});
+    auto f_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f         = make_shared<Function>(f_param_0 + f_param_1,
+                                           op::Parameters{f_param_0, f_param_1});
+
+    auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
     r0->set_value_type(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{4}));
     r0->propagate_types();
@@ -737,7 +751,14 @@ TEST(type_prop, reduce_nonscalar)
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2}));
 
-    auto r0 = make_shared<op::Reduce>(param_0,param_1,AxisSet{0});
+    auto f_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f         = make_shared<Function>(f_param_0 + f_param_1,
+                                           op::Parameters{f_param_0, f_param_1});
+
+    auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
     try
     {
         r0->propagate_types();
@@ -761,7 +782,14 @@ TEST(type_prop, reduce_elem_type_mismatch)
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Bool::element_type(), Shape{}));
 
-    auto r0 = make_shared<op::Reduce>(param_0,param_1,AxisSet{0});
+    auto f_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f         = make_shared<Function>(f_param_0 + f_param_1,
+                                           op::Parameters{f_param_0, f_param_1});
+
+    auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
     try
     {
         r0->propagate_types();
@@ -778,6 +806,136 @@ TEST(type_prop, reduce_elem_type_mismatch)
     }
 }
 
+TEST(type_prop, reduce_function_return_type_mismatch)
+{
+    auto param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f         = make_shared<Function>(
+                       make_shared<op::Equal>(f_param_0,f_param_1),
+                       op::Parameters{f_param_0, f_param_1});
+
+    auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
+    try
+    {
+        r0->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Return type from reduction function does not match expected"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_function_arg0_type_mismatch)
+{
+    auto param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Bool::element_type(), Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f         = make_shared<Function>(
+                       f_param_1,
+                       op::Parameters{f_param_0, f_param_1});
+
+    auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
+    try
+    {
+        r0->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Argument 0 of reduction function has wrong type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_function_arg1_type_mismatch)
+{
+    auto param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Bool::element_type(), Shape{}));
+    auto f         = make_shared<Function>(
+                       f_param_0,
+                       op::Parameters{f_param_0, f_param_1});
+
+    auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
+    try
+    {
+        r0->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Argument 1 of reduction function has wrong type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_function_arg_count_mismatch)
+{
+    auto param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
+    auto param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f_param_2 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f         = make_shared<Function>(
+                       f_param_0 + f_param_1 + f_param_2,
+                       op::Parameters{f_param_0, f_param_1, f_param_2});
+
+    auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
+    try
+    {
+        r0->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Reduction function has wrong number of parameters (should be two)"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, reduce_axis_oob)
 {
     auto param_0 = make_shared<op::Parameter>(
@@ -785,7 +943,14 @@ TEST(type_prop, reduce_axis_oob)
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
 
-    auto r = make_shared<op::Reduce>(param_0,param_1,AxisSet{0,2,1});
+    auto f_param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto f         = make_shared<Function>(f_param_0 + f_param_1,
+                                           op::Parameters{f_param_0, f_param_1});
+
+    auto r = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0,2,1});
     try
     {
         r->propagate_types();

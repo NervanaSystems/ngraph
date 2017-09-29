@@ -24,13 +24,15 @@ namespace ngraph
             ///
             /// @param arg_reductee The tensor view to be reduced.
             /// @param arg_init The initial value for reduction.
+            /// @param reduction_function The reduction function to use.
             /// @param reduction_axes The axis positions (0-based) to be reduced.
             ///
-            /// TODO: add in the function param!
             Reduce(const std::shared_ptr<Node>&     arg_reductee,
                    const std::shared_ptr<Node>&     arg_init,
+                   const std::shared_ptr<Function>& reduction_function,
                    const AxisSet&                   reduction_axes)
                 : Builtin({arg_reductee,arg_init})
+                , m_reduction_function(reduction_function)
                 , m_reduction_axes(reduction_axes)
             {
             }
@@ -38,7 +40,11 @@ namespace ngraph
             virtual std::string description() const override { return "Reduce"; }
             virtual void        propagate_types() override;
 
+            std::shared_ptr<Function> get_reduction_function() const { return m_reduction_function; }
+            const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
+
         protected:
+            std::shared_ptr<Function> m_reduction_function;
             AxisSet m_reduction_axes;
         };
     }

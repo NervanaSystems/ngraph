@@ -20,7 +20,8 @@ using namespace ngraph::op;
 
 void FunctionCall::propagate_types()
 {
-    // First we must make sure that types have been propagated for the callee.
+    // FIXME: Temporary hack. We do this here to make sure that types have been
+    // propagated for the callee.
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.register_pass<pass::PropagateTypes>();
