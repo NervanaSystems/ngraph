@@ -58,6 +58,11 @@ namespace ngraph
             size_t  m_argno;     // Arg number for this input
             size_t  m_arg_index; // Index into arg's tensors
             Output& m_output;
+
+        private:
+            // Input(const Input&) = default;
+            // Input(Input&&) = default;
+            // Input& operator=(const Input&) = delete;
         };
     }
 }
