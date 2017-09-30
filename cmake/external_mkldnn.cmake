@@ -20,6 +20,7 @@ include(ExternalProject)
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
     set(MKLDNN_GIT_REPO_URL https://github.com/01org/mkl-dnn)
+    set(MKLDNN_GIT_TAG "144e0db")
     set(MKLDNN_INSTALL_DIR ${EXTERNAL_INSTALL_DIR}/mkldnn)
 
     # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
@@ -27,7 +28,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         ExternalProject_Add(
             ext_mkldnn
             GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
-            GIT_TAG "144e0db"
+            GIT_TAG ${MKLDNN_GIT_TAG}
             UPDATE_COMMAND ""
             # Uncomment below with any in-flight MKL-DNN patches
             # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
@@ -37,7 +38,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         ExternalProject_Add(
             ext_mkldnn
             GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
-            GIT_TAG "144e0db"
+            GIT_TAG ${MKLDNN_GIT_TAG}
             UPDATE_COMMAND ""
             # Uncomment below with any in-flight MKL-DNN patches
             # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
