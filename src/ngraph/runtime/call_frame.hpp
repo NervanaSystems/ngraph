@@ -27,24 +27,6 @@ namespace ngraph
         class PrimaryTensorView;
         class Instruction;
 
-        // 1d tensor headers
-        struct TH1
-        {
-            size_t index;
-            size_t l0;
-            size_t s0;
-        };
-
-        // 2d tensor headers
-        struct TH2
-        {
-            size_t index;
-            size_t l0;
-            size_t s0;
-            size_t l1;
-            size_t s1;
-        };
-
         // A VM for executing lightly-compiled graph functions.
         class CallFrame
         {

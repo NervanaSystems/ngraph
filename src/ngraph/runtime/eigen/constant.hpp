@@ -18,6 +18,7 @@
 #include "ngraph/runtime/eigen/utils.hpp"
 #include "ngraph/runtime/instruction.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor_view_info.hpp"
 
 namespace ngraph
 {
@@ -25,17 +26,11 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename ET,typename T>
-            void assign_constant(const std::vector<ET>& value, T out)
-            {
-                out->get_vector() = value;
-            }
-
             template <typename ET>
             class ConstantInstruction : public Instruction
             {
             public:
-                ConstantInstruction(const std::vector<typename ET::type> value, size_t out)
+                ConstantInstruction(const std::vector<typename ET::type> value, const TensorViewInfo& out)
                     : m_value(value)
                     , m_out(out)
                 {
@@ -43,14 +38,12 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::assign_constant(
-                        m_value,
-                        call_frame.get_parameterized_tensor_view<ET>(m_out));
+                    call_frame.get_parameterized_tensor_view<ET>(m_out.get_index())->get_vector() = m_value;
                 }
 
             protected:
                 const std::vector<typename ET::type> m_value;
-                size_t m_out;
+                TensorViewInfo                                  m_out;
             };
         }
     }

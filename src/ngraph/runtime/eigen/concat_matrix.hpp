@@ -77,7 +77,7 @@ namespace ngraph
                     std::vector<ParameterizedTensorView<ET>*> ptvs;
                     for(auto arg : m_args)
                     {
-                        ptvs.push_back(call_frame.get_parameterized_tensor_view<ET>(arg.index));
+                        ptvs.push_back(call_frame.get_parameterized_tensor_view<ET>(arg.get_index()));
                     }
                     runtime::eigen::concat_matrix(
                         ptvs,

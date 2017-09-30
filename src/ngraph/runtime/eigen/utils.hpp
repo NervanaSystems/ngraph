@@ -18,72 +18,123 @@
 
 #include <Eigen/Dense>
 
+#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/runtime/tensor_view_info.hpp"
+
 namespace ngraph
 {
     namespace runtime
     {
-        struct TensorViewInfo;
+        class TensorViewInfo;
+        class CallFrame;
 
         namespace eigen
         {
-            TH2 get_tensor_header(const TensorViewInfo& tensor_view_info, bool flatten=false);
+            //TH2 get_tensor_header(const TensorViewInfo& tensor_view_info, bool flatten = false);
+
+            using DynamicStrides = Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>;
+
+            template <typename ET>
+            using DynamicArray = Eigen::Array<typename ET::type, Eigen::Dynamic, Eigen::Dynamic>;
+
+            template <typename ET>
+            using EigenArrayBase = Eigen::Map<DynamicArray<ET>, 0, DynamicStrides>;
+
+            template <typename ET>
+            using DynamicMatrix = Eigen::Matrix<typename ET::type, Eigen::Dynamic, Eigen::Dynamic>;
+
+            template <typename ET>
+            using EigenMatrixBase = Eigen::Map<DynamicMatrix<ET>, 0, DynamicStrides>;
+
+            template <typename ET>
+            class EigenArray : public EigenArrayBase<ET>
+            {
+                using base = EigenArrayBase<ET>;
+
+            public:
+                EigenArray(
+                    typename ET::type*                                                  t,
+                    const std::shared_ptr<ngraph::descriptor::layout::DenseTensorViewLayout>& layout)
+                    : base(t, layout->get_size(), 1, DynamicStrides(1, 1))
+                {
+                }
+
+                EigenArray(
+                    typename ET::type*                                                  t,
+                    const std::shared_ptr<ngraph::descriptor::layout::DenseTensorViewLayout>& layout)
+                    : base(t, layout->get_size(), 1, DynamicStrides(1, 1))
+                {
+                }
+
+                EigenArray(CallFrame& call_frame, const TensorViewInfo& tensor_view_info)
+                    : EigenArray(call_frame.get_tensor_view_data<ET>(tensor_view_info.get_index()),
+                           tensor_view_info.get_layout<
+                               ngraph::descriptor::layout::DenseTensorViewLayout>())
+                {
+                }
+
+                template <typename U>
+                EigenArray& operator=(const U& other)
+                {
+                    this->base::operator=(other);
+                    return *this;
+                }
+            };
 
             template <typename T, typename U>
-            void set_map_array(T* t, const TH2& th, const U& u)
+            void set_map_array(T* t, size_t l0, size_t l1, size_t s0, size_t s1, const U& u)
             {
                 Eigen::Map<Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>,
                            0,
                            Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>(
-                    t, th.l0, th.l1, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(th.s0, th.s1)) =
+                    t, l0, l1, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(s0, s1)) =
                     u;
             }
 
             template <typename T, typename U>
-            void set_map_array(T* t, const TH1& th, const U& u)
+            void set_map_array(T* t, size_t l0, size_t s0, const U& u)
             {
                 Eigen::Map<Eigen::Array<T, Eigen::Dynamic, 1>,
                            0,
                            Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>(
-                    t, th.l0, 1, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(th.s0, 1)) =
-                    u;
+                    t, l0, 1, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(s0, 1)) = u;
             }
 
             template <typename T>
             Eigen::Map<Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>,
                        0,
                        Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>
-                get_map_array(T* t, const TH2& th)
+                get_map_array(T* t, size_t l0, size_t l1, size_t s0, size_t s1)
             {
                 return Eigen::Map<Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>,
                                   0,
                                   Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>(
-                    t, th.l0, th.l1, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(th.s0, th.s1));
+                    t, l0, l1, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(s0, s1));
             }
 
             template <typename T>
             Eigen::Map<Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>,
                        0,
                        Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>
-                get_map_array(T* t, const TH1& th)
+                get_map_array(T* t, size_t l0, size_t s0)
             {
-                return Eigen::Map<Eigen::Array<T, Eigen::Dynamic, 1>,
-                                  0,
-                                  Eigen::Stride<Eigen::Dynamic, 1>>(
-                    t, th.l0, 1, Eigen::Stride<Eigen::Dynamic, 1>(th.s0, 1));
+                return Eigen::
+                    Map<Eigen::Array<T, Eigen::Dynamic, 1>, 0, Eigen::Stride<Eigen::Dynamic, 1>>(
+                        t, l0, 1, Eigen::Stride<Eigen::Dynamic, 1>(s0, 1));
             }
 
             template <typename T, typename U>
             void set_map_array(std::shared_ptr<T>& t, const U& u)
             {
                 auto& v = t->get_vector();
-                set_map_array(&v[0], TH1{0, v.size(), 1}, u);
+                set_map_array(&v[0], v.size(), 1, u);
             }
 
             template <typename T, typename U>
             void set_map_array(T* t, const U& u)
             {
                 auto& v = t->get_vector();
-                set_map_array(&v[0], TH1{0, v.size(), 1}, u);
+                set_map_array(&v[0], v.size(), 1, u);
             }
 
             template <typename T, typename U>
@@ -159,7 +210,7 @@ namespace ngraph
                 get_map_array(std::shared_ptr<T>& arg)
             {
                 auto& v = arg->get_vector();
-                return get_map_array(&v[0], TH2{0, v.size(), 1, 1, 1});
+                return get_map_array(&v[0], v.size(), 1, 1, 1);
             }
 
             template <typename T>
@@ -169,7 +220,7 @@ namespace ngraph
                 get_map_array(T* arg)
             {
                 auto& v = arg->get_vector();
-                return get_map_array(&v[0], TH2{0, v.size(), 1, 1, 1});
+                return get_map_array(&v[0], v.size(), 1, 1, 1);
             }
 
             template <typename T>

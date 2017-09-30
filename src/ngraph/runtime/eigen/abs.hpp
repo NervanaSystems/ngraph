@@ -26,34 +26,24 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename T>
-            void abs(T* arg, const TH2& arg_th, T* out, const TH2& out_th)
-            {
-                set_map_array(out, out_th, Eigen::abs(get_map_array(arg, arg_th)));
-            }
-
             template <typename ET>
             class AbsInstruction : public Instruction
             {
             public:
                 AbsInstruction(const TensorViewInfo& arg, const TensorViewInfo& out)
-                    : m_arg(get_tensor_header(arg, true))
-                    , m_out(get_tensor_header(out, true))
+                    : m_arg(arg)
+                    , m_out(out)
                 {
                 }
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::abs(
-                        call_frame.get_tensor_view_data<ET>(m_arg.index),
-                        m_arg,
-                        call_frame.get_tensor_view_data<ET>(m_out.index),
-                        m_out);
+                    EigenArray<ET>(call_frame, m_out) = Eigen::abs(EigenArray<ET>(call_frame, m_arg));
                 }
 
             protected:
-                TH2 m_arg;
-                TH2 m_out;
+                TensorViewInfo m_arg;
+                TensorViewInfo m_out;
             };
         }
     }

@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <memory>
+
 namespace ngraph
 {
     namespace runtime
@@ -21,10 +23,33 @@ namespace ngraph
         /// @brief Compile-time information about a tensor view.
         ///
         /// Contains the offset of the tensor view in the call frame and the tensor descriptor.
-        struct TensorViewInfo
+        class TensorViewInfo
         {
-            size_t                                          index;
-            std::shared_ptr<ngraph::descriptor::TensorView> descriptor;
+        public:
+            TensorViewInfo(size_t                                                 index,
+                           const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor)
+                : m_index(index)
+                , m_layout(descriptor->get_tensor_view_layout())
+            {
+            }
+
+            size_t get_index() const { return m_index; }
+
+            std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout>
+                get_tensor_view_layout() const
+            {
+                return m_layout;
+            }
+
+            template <typename LT>
+            std::shared_ptr<LT> get_layout() const
+            {
+                return std::static_pointer_cast<LT>(m_layout);
+            }
+
+        protected:
+            size_t                                                        m_index;
+            std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout> m_layout;
         };
     }
 }

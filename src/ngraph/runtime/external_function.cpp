@@ -91,11 +91,17 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
     }
 
 #define REGISTER_UNOP(op_class, instr_class)                                                       \
-    REGISTER_INSTRUCTION(op_class, instr_class, in[0].index, out[0].index)
+    REGISTER_INSTRUCTION(op_class, instr_class, in[0].get_index(), out[0].get_index())
 #define REGISTER_BINOP(op_class, instr_class)                                                      \
-    REGISTER_INSTRUCTION(op_class, instr_class, in[0].index, in[1].index, out[0].index)
+    REGISTER_INSTRUCTION(                                                                          \
+        op_class, instr_class, in[0].get_index(), in[1].get_index(), out[0].get_index())
 #define REGISTER_TERNOP(op_class, instr_class)                                                     \
-    REGISTER_INSTRUCTION(op_class, instr_class, in[0].index, in[1].index, in[2].index, out[0].index)
+    REGISTER_INSTRUCTION(op_class,                                                                 \
+                         instr_class,                                                              \
+                         in[0].get_index(),                                                        \
+                         in[1].get_index(),                                                        \
+                         in[2].get_index(),                                                        \
+                         out[0].get_index())
 
 // Versions the include the descriptor
 #define REGISTER_UNOP1(op_class, instr_class)                                                      \
@@ -130,13 +136,13 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             runtime::eigen::ConstantInstruction<element::Float32>,
             std::vector<element::Float32::type>{
                 dynamic_cast<const op::ScalarConstant<element::Float32>*>(n)->get_value()},
-            out[0].index);
+            out[0]);
 
         REGISTER_INSTRUCTION(
             op::TensorConstant<element::Float32>,
             runtime::eigen::ConstantInstruction<element::Float32>,
             dynamic_cast<const op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
-            out[0].index);
+            out[0]);
 
         op_map[type_index(typeid(op::Concat))] = [](const Node*                        n,
                                                     ExternalFunction*                  ef,
@@ -152,7 +158,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::ConcatVectorInstruction<element::Float32>>(
-                        in, out[0].index));
+                        in, out[0].get_index()));
             }
             else if (result_shape.size() == 2)
             {
@@ -160,7 +166,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                     make_shared<runtime::eigen::ConcatMatrixInstruction<element::Float32>>(
                         in,
                         (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis(),
-                        out[0].index));
+                        out[0].get_index()));
             }
             else
             {
@@ -192,14 +198,14 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::ScalarTensorProductInstruction<element::Float32>>(
-                        in[0].index, in[1].index, out[0].index));
+                        in[0].get_index(), in[1].get_index(), out[0].get_index()));
             }
             else if (arg1_shape.size() == 0)
             {
                 // If arg1 is the scalar, do the same thing but switch the order of operands.
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::ScalarTensorProductInstruction<element::Float32>>(
-                        in[1].index, in[0].index, out[0].index));
+                        in[1].get_index(), in[0].get_index(), out[0].get_index()));
             }
 
             // If arg0 and arg1 are both vectors, emit a dot product.
@@ -207,7 +213,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::DotInstruction<element::Float32>>(
-                        in[0].index, in[1].index, out[0].index));
+                        in[0].get_index(), in[1].get_index(), out[0].get_index()));
             }
 
             // If arg0 is a matrix and arg1 is a vector, emit a matrix-vector product.
@@ -215,7 +221,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::MatrixVectorProductInstruction<element::Float32>>(
-                        in[0].index, in[1].index, out[0].index));
+                        in[0].get_index(), in[1].get_index(), out[0].get_index()));
             }
 
             // If arg0 and arg1 are both matrices, emit a matrix product.
@@ -223,7 +229,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::MatrixMultInstruction<element::Float32>>(
-                        in[0].index, in[1].index, out[0].index));
+                        in[0].get_index(), in[1].get_index(), out[0].get_index()));
             }
 
             else
@@ -247,7 +253,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
-                        in.at(get_tuple_element->get_n()).index, out.at(0).index));
+                        in.at(get_tuple_element->get_n()).get_index(), out.at(0).get_index()));
             };
 
         // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
@@ -259,7 +265,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
-                        in.at(i).index, out.at(i).index));
+                        in.at(i).get_index(), out.at(i).get_index()));
             }
         };
 
