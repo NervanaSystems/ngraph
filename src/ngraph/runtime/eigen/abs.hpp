@@ -38,7 +38,7 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    EigenArray<ET>(call_frame, m_out) = Eigen::abs(EigenArray<ET>(call_frame, m_arg));
+                    EigenArray<ET, fmt::V>(call_frame, m_out) = Eigen::abs(EigenArray<ET, fmt::V>(call_frame, m_arg));
                 }
 
             protected:

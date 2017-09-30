@@ -119,8 +119,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
     if (!initialized)
     {
         REGISTER_UNOP1(op::Abs, runtime::eigen::AbsInstruction<element::Float32>);
-        REGISTER_BINOP(op::Add, runtime::eigen::AddInstruction<element::Float32>);
-        REGISTER_BINOP(op::Divide, runtime::eigen::DivideInstruction<element::Float32>);
+        REGISTER_BINOP1(op::Add, runtime::eigen::AddInstruction<element::Float32>);
+        REGISTER_BINOP1(op::Divide, runtime::eigen::DivideInstruction<element::Float32>);
         REGISTER_BINOP(op::Equal, runtime::eigen::EqualInstruction<element::Float32>);
         REGISTER_BINOP(op::Less, runtime::eigen::LessThanInstruction<element::Float32>);
         REGISTER_UNOP(op::Log, runtime::eigen::LogInstruction<element::Float32>);

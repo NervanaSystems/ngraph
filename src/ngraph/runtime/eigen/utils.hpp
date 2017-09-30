@@ -30,8 +30,6 @@ namespace ngraph
 
         namespace eigen
         {
-            //TH2 get_tensor_header(const TensorViewInfo& tensor_view_info, bool flatten = false);
-
             using DynamicStrides = Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>;
 
             template <typename ET>
@@ -46,40 +44,69 @@ namespace ngraph
             template <typename ET>
             using EigenMatrixBase = Eigen::Map<DynamicMatrix<ET>, 0, DynamicStrides>;
 
-            template <typename ET>
-            class EigenArray : public EigenArrayBase<ET>
+            namespace fmt
             {
-                using base = EigenArrayBase<ET>;
+                /// @brief vector format for Eigen wrappers.
+                class V
+                {
+                public:
+                    V(const TensorViewInfo& tensor_view_info)
+                        : l0(tensor_view_info
+                                 .get_layout<ngraph::descriptor::layout::DenseTensorViewLayout>()
+                                 ->get_size())
+                    {
+                    }
+
+                public:
+                    size_t l0;
+                    size_t l1{1};
+                    size_t s0{1};
+                    size_t s1{1};
+                };
+            }
+
+            // ET element type
+            // FMT array format (fmt::V for vector, etc.)
+            // BASE select array/matrix
+            template <typename ET, typename FMT, typename BASE>
+            class EigenWrapper : public BASE
+            {
+                using base = BASE;
 
             public:
-                EigenArray(
-                    typename ET::type*                                                  t,
-                    const std::shared_ptr<ngraph::descriptor::layout::DenseTensorViewLayout>& layout)
+                EigenWrapper(typename ET::type* t, const FMT& fmt)
+                    : base(t, fmt.l0, fmt.l1, DynamicStrides(fmt.s0, fmt.s1))
+                {
+                }
+
+                EigenWrapper(
+                    typename ET::type* t,
+                    const std::shared_ptr<ngraph::descriptor::layout::DenseTensorViewLayout>&
+                        layout)
                     : base(t, layout->get_size(), 1, DynamicStrides(1, 1))
                 {
                 }
 
-                EigenArray(
-                    typename ET::type*                                                  t,
-                    const std::shared_ptr<ngraph::descriptor::layout::DenseTensorViewLayout>& layout)
-                    : base(t, layout->get_size(), 1, DynamicStrides(1, 1))
-                {
-                }
-
-                EigenArray(CallFrame& call_frame, const TensorViewInfo& tensor_view_info)
-                    : EigenArray(call_frame.get_tensor_view_data<ET>(tensor_view_info.get_index()),
-                           tensor_view_info.get_layout<
-                               ngraph::descriptor::layout::DenseTensorViewLayout>())
+                EigenWrapper(CallFrame& call_frame, const TensorViewInfo& tensor_view_info)
+                    : EigenWrapper(
+                          call_frame.get_tensor_view_data<ET>(tensor_view_info.get_index()),
+                          FMT(tensor_view_info))
                 {
                 }
 
                 template <typename U>
-                EigenArray& operator=(const U& other)
+                EigenWrapper& operator=(const U& other)
                 {
                     this->base::operator=(other);
                     return *this;
                 }
             };
+
+            template <typename ET, typename FMT=fmt::V>
+            using EigenArray = EigenWrapper<ET, FMT, EigenArrayBase<ET>>;
+
+            template <typename ET, typename FMT=fmt::V>
+            using EigenMatrix = EigenWrapper<ET, FMT, EigenMatrixBase<ET>>;
 
             template <typename T, typename U>
             void set_map_array(T* t, size_t l0, size_t l1, size_t s0, size_t s1, const U& u)
@@ -87,8 +114,7 @@ namespace ngraph
                 Eigen::Map<Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>,
                            0,
                            Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>(
-                    t, l0, l1, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(s0, s1)) =
-                    u;
+                    t, l0, l1, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(s0, s1)) = u;
             }
 
             template <typename T, typename U>

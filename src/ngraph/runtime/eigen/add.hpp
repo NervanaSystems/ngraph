@@ -25,17 +25,13 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename T>
-            void add(T arg0, T arg1, T out)
-            {
-                set_map_array(&*out, get_map_array(&*arg0) + get_map_array(&*arg1));
-            }
-
             template <typename ET>
             class AddInstruction : public Instruction
             {
             public:
-                AddInstruction(size_t arg0, size_t arg1, size_t out)
+                AddInstruction(const TensorViewInfo& arg0,
+                               const TensorViewInfo& arg1,
+                               const TensorViewInfo& out)
                     : m_arg0(arg0)
                     , m_arg1(arg1)
                     , m_out(out)
@@ -44,16 +40,15 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::add(
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg0),
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg1),
-                        call_frame.get_parameterized_tensor_view<ET>(m_out));
+                    EigenArray<ET, fmt::V>(call_frame, m_out) =
+                        EigenArray<ET, fmt::V>(call_frame, m_arg0) +
+                        EigenArray<ET, fmt::V>(call_frame, m_arg1);
                 }
 
             protected:
-                size_t m_arg0;
-                size_t m_arg1;
-                size_t m_out;
+                TensorViewInfo m_arg0;
+                TensorViewInfo m_arg1;
+                TensorViewInfo m_out;
             };
         }
     }
