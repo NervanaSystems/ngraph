@@ -24,17 +24,16 @@ namespace ngraph
     namespace runtime
     {
         class TensorView;
-        
+
         /// @brief A first-class runtime value.
         class Value
         {
         public:
             virtual ~Value() {}
-
             /// @brief The compile-time descriptor for this value.
-            virtual std::shared_ptr<ngraph::descriptor::Value> get_descriptor() const         = 0;
+            virtual std::shared_ptr<ngraph::descriptor::Value> get_descriptor() const = 0;
 
-                        /// @brief helper for collecting all the tensor views in a sequence of values
+            /// @brief helper for collecting all the tensor views in a sequence of values
             ///
             /// @param views The vector of tensor views being collected.
             /// @param value A shared pointer for this.

@@ -28,7 +28,7 @@ namespace ngraph
             template <typename T>
             void matrix_mult(T arg0, T arg1, T out)
             {
-                set_map_matrix_2d(&*out,get_map_matrix_2d(&*arg0) * get_map_matrix_2d(&*arg1));
+                set_map_matrix_2d(&*out, get_map_matrix_2d(&*arg0) * get_map_matrix_2d(&*arg1));
             }
 
             template <typename ET>

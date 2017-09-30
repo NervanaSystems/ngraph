@@ -58,12 +58,16 @@ void Node::assign_tensors()
     size_t i = 0;
     for (auto tvt : tensor_view_types)
     {
-        auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(tvt, ngraph::descriptor::Tensor::make_tensor_name(this, i), is_output(), is_parameter());
+        auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
+            tvt,
+            ngraph::descriptor::Tensor::make_tensor_name(this, i),
+            is_output(),
+            is_parameter());
         m_outputs.emplace_back(this, i, tensor_view_descriptor);
         i++;
     }
 
-    i            = 0;
+    i = 0;
     size_t argno = 0;
     for (auto arg : get_arguments())
     {

@@ -17,8 +17,8 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/types/element_type.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/types/element_type.hpp"
 
 namespace ngraph
 {
@@ -35,12 +35,10 @@ namespace ngraph
 
     protected:
         ValueType() {}
-
     public:
         virtual ~ValueType() {}
         virtual bool operator==(const ValueType& that) const = 0;
-        bool         operator!=(const ValueType& that) const { return !(*this == that); }
-
+        bool operator!=(const ValueType& that) const { return !(*this == that); }
         /// Add tensor views in depth-first order.
         virtual void collect_tensor_views(
             std::vector<std::shared_ptr<const TensorViewType>>& views) const = 0;
@@ -61,8 +59,7 @@ namespace ngraph
         }
 
         const element::Type& get_element_type() const { return m_element_type; }
-        const Shape&         get_shape() const { return m_shape; }
-
+        const Shape& get_shape() const { return m_shape; }
         virtual bool operator==(const ValueType& that) const override;
         virtual void collect_tensor_views(
             std::vector<std::shared_ptr<const TensorViewType>>& views) const override;
@@ -71,7 +68,7 @@ namespace ngraph
 
     protected:
         const element::Type& m_element_type;
-        Shape                m_shape;
+        Shape m_shape;
     };
 
     /// Describes a tuple of values; a vector of types
@@ -80,7 +77,6 @@ namespace ngraph
     public:
         /// Construct empty tuple and add value types later.
         TupleType() {}
-
         /// @param element_types A vector of types for the tuple elements
         TupleType(const std::vector<std::shared_ptr<const ValueType>>& element_types)
             : m_element_types(element_types)
@@ -91,7 +87,10 @@ namespace ngraph
         {
             return m_element_types;
         }
-        std::vector<std::shared_ptr<const ValueType>> set_element_types() { return m_element_types; }
+        std::vector<std::shared_ptr<const ValueType>> set_element_types()
+        {
+            return m_element_types;
+        }
 
         virtual bool operator==(const ValueType& that) const override;
         virtual void collect_tensor_views(

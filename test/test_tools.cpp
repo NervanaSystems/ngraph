@@ -14,9 +14,9 @@
 
 #include <algorithm>
 
-#include "test_tools.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/util.hpp"
+#include "test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -28,8 +28,8 @@ bool validate_list(const list<Node*>& nodes)
     bool rc = true;
     for (auto it = nodes.rbegin(); it != nodes.rend(); it++)
     {
-        auto          node_tmp         = *it;
-        auto          dependencies_tmp = node_tmp->get_arguments();
+        auto node_tmp = *it;
+        auto dependencies_tmp = node_tmp->get_arguments();
         vector<Node*> dependencies;
         for (shared_ptr<Node> n : dependencies_tmp)
         {
@@ -39,7 +39,7 @@ bool validate_list(const list<Node*>& nodes)
         for (; tmp != nodes.rend(); tmp++)
         {
             auto dep_tmp = *tmp;
-            auto found   = find(dependencies.begin(), dependencies.end(), dep_tmp);
+            auto found = find(dependencies.begin(), dependencies.end(), dep_tmp);
             if (found != dependencies.end())
             {
                 dependencies.erase(found);
@@ -79,9 +79,6 @@ shared_ptr<Function> make_test_graph()
 size_t get_node_count(std::shared_ptr<Node> n)
 {
     size_t node_count = 0;
-    traverse_nodes(n, [&](const Node* node) {
-        node_count++;
-    });
+    traverse_nodes(n, [&](const Node* node) { node_count++; });
     return node_count;
 }
-

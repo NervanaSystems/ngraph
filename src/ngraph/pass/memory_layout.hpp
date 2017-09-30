@@ -62,12 +62,11 @@ public:
         node(size_t size, block_state state);
 
         bool is_free() const { return m_state == block_state::FREE; }
-
-        size_t          m_size;
-        block_state     m_state;
+        size_t m_size;
+        block_state m_state;
     };
 
-    MemoryManager(size_t alignment=1);
+    MemoryManager(size_t alignment = 1);
     // memory_manager& alignment(size_t a);
 
     size_t allocate(size_t size);
@@ -81,17 +80,14 @@ public:
     std::list<node>::iterator end() { return m_node_list.end(); }
     std::list<node>::const_iterator begin() const { return m_node_list.cbegin(); }
     std::list<node>::const_iterator end() const { return m_node_list.cend(); }
-
     const std::list<node>& get_node_list() const { return m_node_list; }
-
     size_t max_allocated() const { return m_max_allocated; }
-
 private:
     size_t first_fit(size_t size);
     size_t best_fit(size_t size);
 
-    std::list<node>     m_node_list;
-    size_t              m_alignment;
-    allocation_scheme   m_scheme;
-    size_t              m_max_allocated;
+    std::list<node> m_node_list;
+    size_t m_alignment;
+    allocation_scheme m_scheme;
+    size_t m_max_allocated;
 };

@@ -71,7 +71,7 @@ using namespace std;
 using namespace ngraph::runtime;
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                   bool                                     release_function)
+                                   bool release_function)
     : m_function(function)
     , m_release_function(release_function)
     , m_is_compiled(false)
@@ -80,8 +80,8 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 }
 
 #define REGISTER_INSTRUCTION(op_class, instr_class, ...)                                           \
-    op_map[type_index(typeid(op_class))] = [](const Node*                n,                        \
-                                              ExternalFunction*          ef,                       \
+    op_map[type_index(typeid(op_class))] = [](const Node* n,                                       \
+                                              ExternalFunction* ef,                                \
                                               const std::vector<size_t>& in,                       \
                                               const std::vector<size_t>& out) {                    \
         ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__));                  \
@@ -127,8 +127,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             dynamic_cast<const op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
             out[0]);
 
-        op_map[type_index(typeid(op::Concat))] = [](const Node*                n,
-                                                    ExternalFunction*          ef,
+        op_map[type_index(typeid(op::Concat))] = [](const Node* n,
+                                                    ExternalFunction* ef,
                                                     const std::vector<size_t>& in,
                                                     const std::vector<size_t>& out) {
             auto result_tensor_type =
@@ -157,8 +157,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
         };
 
-        op_map[type_index(typeid(op::Dot))] = [](const Node*                n,
-                                                 ExternalFunction*          ef,
+        op_map[type_index(typeid(op::Dot))] = [](const Node* n,
+                                                 ExternalFunction* ef,
                                                  const std::vector<size_t>& in,
                                                  const std::vector<size_t>& out) {
             auto& arg_nodes = n->get_arguments();
@@ -222,14 +222,14 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         };
 
         // Parameter is a "runtime no-op" because the output tensor has already been filled.
-        op_map[type_index(typeid(op::Parameter))] = [](const Node*                n,
-                                                       ExternalFunction*          ef,
+        op_map[type_index(typeid(op::Parameter))] = [](const Node* n,
+                                                       ExternalFunction* ef,
                                                        const std::vector<size_t>& in,
                                                        const std::vector<size_t>& out) {};
 
         // GetTupleElement will be spliced out, with the users of out redirected to in's source, but, for now, we need to copy.
-        op_map[type_index(typeid(op::GetTupleElement))] = [](const Node*                n,
-                                                             ExternalFunction*          ef,
+        op_map[type_index(typeid(op::GetTupleElement))] = [](const Node* n,
+                                                             ExternalFunction* ef,
                                                              const std::vector<size_t>& in,
                                                              const std::vector<size_t>& out) {
             auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
@@ -239,8 +239,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         };
 
         // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
-        op_map[type_index(typeid(op::Tuple))] = [](const Node*                n,
-                                                   ExternalFunction*          ef,
+        op_map[type_index(typeid(op::Tuple))] = [](const Node* n,
+                                                   ExternalFunction* ef,
                                                    const std::vector<size_t>& in,
                                                    const std::vector<size_t>& out) {
             for (size_t i = 0; i < in.size(); ++i)
@@ -278,8 +278,8 @@ void ExternalFunction::compile()
     {
         for (const descriptor::Output& output : param->get_outputs())
         {
-            auto   tv        = output.get_tensor_view();
-            size_t index     = tensor_index.size();
+            auto tv = output.get_tensor_view();
+            size_t index = tensor_index.size();
             tensor_index[tv] = index;
         }
     }
@@ -288,8 +288,8 @@ void ExternalFunction::compile()
     // Next are the function outputs
     for (const descriptor::Output& output : m_function->get_result()->get_outputs())
     {
-        auto   tv        = output.get_tensor_view();
-        size_t index     = tensor_index.size();
+        auto tv = output.get_tensor_view();
+        size_t index = tensor_index.size();
         tensor_index[tv] = index;
     }
     m_n_outputs = tensor_index.size() - m_n_inputs;
@@ -302,7 +302,7 @@ void ExternalFunction::compile()
             auto tv = output.get_tensor_view();
             if (0 == tensor_index.count(tv))
             {
-                size_t index     = tensor_index.size();
+                size_t index = tensor_index.size();
                 tensor_index[tv] = index;
                 m_temp_views.push_back(tv);
             }
@@ -322,7 +322,7 @@ void ExternalFunction::compile()
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
-            auto                      tv     = output.get_tensor_view();
+            auto tv = output.get_tensor_view();
             in.push_back(tensor_index.at(tv));
         }
         std::vector<size_t> out;

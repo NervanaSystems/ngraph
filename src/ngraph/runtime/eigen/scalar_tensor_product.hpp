@@ -28,7 +28,7 @@ namespace ngraph
             template <typename T>
             void scalar_tensor_product(T arg0, T arg1, T out)
             {
-                set_map_matrix(&*out,(&*arg0)->get_vector()[0] * get_map_matrix(&*arg1));
+                set_map_matrix(&*out, (&*arg0)->get_vector()[0] * get_map_matrix(&*arg1));
             }
 
             template <typename ET>

@@ -25,10 +25,12 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename TA,typename TB>
+            template <typename TA, typename TB>
             void select(TA arg0, TB arg1, TB arg2, TB out)
             {
-                set_map_array(&*out, get_map_array(&*arg0).select(get_map_array(&*arg1),get_map_array(&*arg2)));
+                set_map_array(
+                    &*out,
+                    get_map_array(&*arg0).select(get_map_array(&*arg1), get_map_array(&*arg2)));
             }
 
             template <typename ET>

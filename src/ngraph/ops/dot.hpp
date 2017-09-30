@@ -46,7 +46,7 @@ namespace ngraph
             }
 
             virtual std::string description() const override { return "Dot"; }
-            virtual void        propagate_types() override;
+            virtual void propagate_types() override;
         };
     }
 }

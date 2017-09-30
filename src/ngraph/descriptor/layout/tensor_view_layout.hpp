@@ -40,7 +40,6 @@ namespace ngraph
 
             public:
                 virtual ~TensorViewLayout() {}
-
                 /// Extent of this view in buffer.
                 ///
                 /// When we support non-linear buffers, this will need to be something other than size_t.
@@ -53,11 +52,10 @@ namespace ngraph
 
                 /// Where this view is located in the buffer.
                 const BufferPos& get_buffer_pos() const { return m_buffer_pos; }
-                BufferPos&       get_buffer_pos() { return m_buffer_pos; }
-
+                BufferPos& get_buffer_pos() { return m_buffer_pos; }
             protected:
                 const ngraph::descriptor::TensorView& m_tensor_view;
-                BufferPos                             m_buffer_pos;
+                BufferPos m_buffer_pos;
             };
         }
     }

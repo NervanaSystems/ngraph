@@ -37,23 +37,23 @@ namespace ngraph
             Type(size_t bitwidth, bool is_float, bool is_signed, const std::string& cname);
 
             const std::string& c_type_string() const;
-            size_t             size() const;
-            size_t             hash() const
+            size_t size() const;
+            size_t hash() const
             {
                 std::hash<std::string> h;
                 return h(m_cname);
             }
 
-            bool                 operator==(const Type& other) const;
-            bool                 operator!=(const Type& other) const { return !(*this == other); }
+            bool operator==(const Type& other) const;
+            bool operator!=(const Type& other) const { return !(*this == other); }
             friend std::ostream& operator<<(std::ostream&, const Type&);
 
         private:
             static std::map<std::string, Type> m_element_list;
-            size_t                             m_bitwidth;
-            bool                               m_is_float;
-            bool                               m_is_signed;
-            const std::string                  m_cname;
+            size_t m_bitwidth;
+            bool m_is_float;
+            bool m_is_signed;
+            const std::string m_cname;
         };
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);

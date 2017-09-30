@@ -44,10 +44,9 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::divide(
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg0),
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg1),
-                        call_frame.get_parameterized_tensor_view<ET>(m_out));
+                    runtime::eigen::divide(call_frame.get_parameterized_tensor_view<ET>(m_arg0),
+                                           call_frame.get_parameterized_tensor_view<ET>(m_arg1),
+                                           call_frame.get_parameterized_tensor_view<ET>(m_out));
                 }
 
             protected:
