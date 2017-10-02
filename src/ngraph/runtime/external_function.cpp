@@ -30,6 +30,7 @@
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/equal.hpp"
+#include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/log.hpp"
@@ -37,6 +38,7 @@
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not_equal.hpp"
+#include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/tuple.hpp"
@@ -46,6 +48,7 @@
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/eigen/abs.hpp"
 #include "ngraph/runtime/eigen/add.hpp"
+#include "ngraph/runtime/eigen/call.hpp"
 #include "ngraph/runtime/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/eigen/concat_vector.hpp"
 #include "ngraph/runtime/eigen/constant.hpp"
@@ -82,12 +85,16 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 {
 }
 
-#define REGISTER_INSTRUCTION(op_class, instr_class, ...)                                           \
-    op_map[type_index(typeid(op_class))] = [](const Node*                        n,                \
-                                              ExternalFunction*                  ef,               \
-                                              const std::vector<TensorViewInfo>& in,               \
-                                              const std::vector<TensorViewInfo>& out) {            \
-        ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__));                  \
+#define REGISTER_TO_OP_MAP(op_class)                                                   \
+    op_map[type_index(typeid(op_class))] = [](const Node*                n,            \
+                                              ExternalFunction*          ef,           \
+                                              FunctionMap&               function_map, \
+                                              const std::vector<TensorViewInfo>& in,           \
+                                              const std::vector<TensorViewInfo>& out)
+
+#define REGISTER_INSTRUCTION(op_class, instr_class, ...)                          \
+    REGISTER_TO_OP_MAP(op_class) {                                                \
+        ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__)); \
     }
 
 #define REGISTER_UNOP(op_class, instr_class)                                                       \
@@ -144,10 +151,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             dynamic_cast<const op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
             out[0]);
 
-        op_map[type_index(typeid(op::Concat))] = [](const Node*                        n,
-                                                    ExternalFunction*                  ef,
-                                                    const std::vector<TensorViewInfo>& in,
-                                                    const std::vector<TensorViewInfo>& out) {
+        REGISTER_TO_OP_MAP(op::Concat)
+        {
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
@@ -174,10 +179,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
         };
 
-        op_map[type_index(typeid(op::Dot))] = [](const Node*                        n,
-                                                 ExternalFunction*                  ef,
-                                                 const std::vector<TensorViewInfo>& in,
-                                                 const std::vector<TensorViewInfo>& out) {
+        REGISTER_TO_OP_MAP(op::Dot)
+        {
             auto& arg_nodes = n->get_arguments();
 
             assert(arg_nodes.size() == 2);
@@ -239,28 +242,21 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         };
 
         // Parameter is a "runtime no-op" because the output tensor has already been filled.
-        op_map[type_index(typeid(op::Parameter))] = [](const Node*                        n,
-                                                       ExternalFunction*                  ef,
-                                                       const std::vector<TensorViewInfo>& in,
-                                                       const std::vector<TensorViewInfo>& out) {};
+        REGISTER_TO_OP_MAP(op::Parameter) {};
 
         // GetTupleElement will be spliced out, with the users of out redirected to in's source, but, for now, we need to copy.
-        op_map[type_index(typeid(op::GetTupleElement))] =
-            [](const Node*                        n,
-               ExternalFunction*                  ef,
-               const std::vector<TensorViewInfo>& in,
-               const std::vector<TensorViewInfo>& out) {
-                auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
-                ef->get_instructions()->push_back(
-                    make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
-                        in.at(get_tuple_element->get_n()).get_index(), out.at(0).get_index()));
-            };
+        REGISTER_TO_OP_MAP(op::GetTupleElement)
+        {
+            auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
+
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
+                    in.at(get_tuple_element->get_n()).get_index(), out.at(0).get_index()));
+        };
 
         // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
-        op_map[type_index(typeid(op::Tuple))] = [](const Node*                        n,
-                                                   ExternalFunction*                  ef,
-                                                   const std::vector<TensorViewInfo>& in,
-                                                   const std::vector<TensorViewInfo>& out) {
+        REGISTER_TO_OP_MAP(op::Tuple)
+        {
             for (size_t i = 0; i < in.size(); ++i)
             {
                 ef->get_instructions()->push_back(
@@ -269,12 +265,39 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
         };
 
+        REGISTER_TO_OP_MAP(op::FunctionCall)
+        {
+            auto function_call = static_cast<const op::FunctionCall*>(n);
+            auto function      = function_call->get_function();
+
+            std::shared_ptr<ExternalFunction> external;
+
+            try
+            {
+                external = function_map.at(function);
+            }
+            catch (const std::out_of_range)
+            {
+                external = make_shared<ngraph::runtime::ExternalFunction>(
+                               function_call->get_function());
+                function_map.insert({function,external});
+            }
+
+            ef->get_instructions()->push_back(
+                make_shared<runtime::eigen::CallInstruction>(external,in,out));
+        };
+
+        REGISTER_TO_OP_MAP(op::Reduce)
+        {
+            throw ngraph_error("op::Reduce not implemented yet");
+        };
+
         initialized = true;
     }
     return op_map;
 }
 
-void ExternalFunction::compile()
+void ExternalFunction::compile(FunctionMap& function_map)
 {
     if (m_is_compiled)
     {
@@ -365,7 +388,7 @@ void ExternalFunction::compile()
             auto tv = output.get_tensor_view();
             out.push_back({tensor_index.at(tv), tv});
         }
-        handler_it->second(node, this, in, out);
+        handler_it->second(node, this, function_map, in, out);
     }
     m_instructions->push_back(make_shared<runtime::eigen::ReturnInstruction>());
     m_is_compiled = true;
@@ -377,9 +400,15 @@ void ExternalFunction::compile()
 
 shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
 {
+    FunctionMap function_map;
+    return make_call_frame(function_map);
+}
+
+shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame(FunctionMap& function_map)
+{
     if (!m_is_compiled)
     {
-        compile();
+        compile(function_map);
     }
     std::vector<std::shared_ptr<ngraph::runtime::TensorView>> temps;
     for (auto tv : m_temp_views)

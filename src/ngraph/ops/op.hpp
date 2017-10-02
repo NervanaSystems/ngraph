@@ -25,16 +25,6 @@ namespace ngraph
     // TODO: These class definitions are to be moved into separate files in the op directory
     namespace op
     {
-        /// A Function invokes a function on node arguments. In addition to the argument
-        /// we need to preserve the function.
-        class FunctionCall : public Node
-        {
-            virtual std::string description() const override { return "FunctionCall"; }
-
-        protected:
-            std::shared_ptr<Node> m_function;
-        };
-
         /// The is an operation we handle directly, i.e. all type checking, etc.
         /// are defined in C++ rather than in terms of ngraph operations.
         class Builtin : public Node

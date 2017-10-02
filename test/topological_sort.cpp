@@ -35,7 +35,7 @@ TEST(topological_sort, basic)
     vector<shared_ptr<op::Parameter>> args;
     for (int i = 0; i < 10; i++)
     {
-        auto arg = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+        auto arg = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
         ASSERT_NE(nullptr, arg);
         args.push_back(arg);
     }
@@ -55,7 +55,10 @@ TEST(topological_sort, basic)
     auto r0 = make_shared<op::Add>(t3, t4);
     ASSERT_NE(nullptr, r0);
 
-    auto f0 = make_shared<Function>(r0, args);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    ASSERT_NE(nullptr, rt);
+
+    auto f0 = make_shared<Function>(r0, rt, args);
     ASSERT_NE(nullptr, f0);
 
     ASSERT_EQ(2, r0->get_arguments().size());
@@ -102,16 +105,17 @@ TEST(benchmark, topological_sort)
     // x[i+1] = tanh(dot(W,x[i])+b)
     shared_ptr<Node> result;
     vector<shared_ptr<op::Parameter>> args;
-    result = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+    result = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     for (int i=0; i<1000000; i++)
     {
-        auto in_1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
-        auto in_2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+        auto in_1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+        auto in_2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
         args.push_back(in_1);
         args.push_back(in_2);
         result = make_cell(result, in_1, in_2);
     }
-    auto f0 = make_shared<Function>(result, args);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto f0 = make_shared<Function>(result, rt, args);
 
     timer.start();
     pass::Manager pass_manager;
