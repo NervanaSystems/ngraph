@@ -82,12 +82,44 @@ TEST(execute, test_abc_tuple)
 
     (*cf)({abc}, {result_tuple});
     ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector());
-    
+
     (*cf)({bac}, {result_tuple});
     ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector());
-    
+
     (*cf)({acb}, {result_tuple});
     ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector());
+}
+
+// Multiple retrive values
+TEST(execute, test_tuple_result)
+{
+    auto shape         = Shape{2, 2};
+    auto A             = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B             = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto C             = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto A_add_B       = make_shared<op::Add>(A, B);
+    auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
+
+    auto f = make_shared<Function>(make_shared<op::Tuple>(Nodes{A_add_B, A_add_B_mul_C}),
+                                   op::Parameters{A, B, C});
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a     = vector<float>{1, 2, 3, 4};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b     = vector<float>{5, 6, 7, 8};
+    auto c = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *c     = vector<float>{9, 10, 11, 12};
+
+    auto r0 = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto r1 = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result_tuple = ngraph::runtime::make_tuple({r0, r1});
+
+    (*cf)({a, b, c}, {result_tuple});
+
+    ASSERT_EQ((vector<float>{6, 8, 10, 12}), r0->get_vector());
+    ASSERT_EQ((vector<float>{54, 80, 110, 144}), r1->get_vector());
 }
 
 TEST(execute, test_abs)
