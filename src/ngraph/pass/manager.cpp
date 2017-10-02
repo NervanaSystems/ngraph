@@ -23,14 +23,14 @@
 using namespace std;
 using namespace ngraph;
 
-Function* ngraph::pass::ManagerState::get_function()
+vector<Function*>& ngraph::pass::ManagerState::get_functions()
 {
-    return m_function;
+    return m_function_list;
 }
 
-void ngraph::pass::ManagerState::set_function(Function* func)
+void ngraph::pass::ManagerState::add_function(Function* func)
 {
-    m_function = func;
+    m_function_list.push_back(func);
 }
 
 size_t ngraph::pass::ManagerState::get_temporary_pool_size()
@@ -92,7 +92,7 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 
 void ngraph::pass::Manager::run_passes(Function* func)
 {
-    m_state.set_function(func);
+    m_state.add_function(func);
     for (shared_ptr<TreeBase> p : m_tree_passes)
     {
         p->set_state(get_state());

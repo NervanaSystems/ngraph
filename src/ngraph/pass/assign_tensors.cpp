@@ -33,7 +33,7 @@ bool pass::AssignTensors::run_on_call_list(std::list<Node*>& node_list)
         {
             // We need to set the nodes is_output state prior to call assign_tensors
             // so that the output state can be passes to the constructed tensors.
-            if (node == get_state().get_function()->get_result().get())
+            if (node == get_state().get_functions().at(0)->get_result().get())
             {
                 node->set_is_output();
             }

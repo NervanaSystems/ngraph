@@ -14,25 +14,20 @@
 
 #pragma once
 
-#include <vector>
-#include <memory>
+#include "ngraph/pass/tree_pass.hpp"
 
 namespace ngraph
 {
-    class Module;
-    class Function;
+    namespace pass
+    {
+        class CollectFunctions;
+    }
 }
 
-class ngraph::Module
+class ngraph::pass::CollectFunctions : public TreeBase
 {
 public:
-    Module();
-    ~Module();
+    bool run_on_tree(std::shared_ptr<Node>) override;
 
-    void add_function(std::shared_ptr<Function>);
-    std::vector<std::shared_ptr<Function>>& get_functions();
-    const std::vector<std::shared_ptr<Function>>& get_functions() const;
-    
 private:
-    std::vector<std::shared_ptr<Function>> m_functions;
 };

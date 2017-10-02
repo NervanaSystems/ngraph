@@ -12,37 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/module.hpp"
-#include "ngraph/function.hpp"
-#include "ngraph/util.hpp"
+#include "collect_functions.hpp"
 
-using namespace ngraph;
 using namespace std;
+using namespace ngraph;
+using namespace ngraph::pass;
 
-Module::Module()
+bool CollectFunctions::run_on_tree(shared_ptr<Node> node)
 {
+    return false;
 }
-
-Module::~Module()
-{
-}
-
-void Module::add_function(shared_ptr<Function> func)
-{
-    m_functions.push_back(func);
-
-    traverse_nodes(func->get_result(), [](Node* node)
-    {
-    });
-}
-
-vector<shared_ptr<Function>>& Module::get_functions()
-{
-    return m_functions;
-}
-
-const vector<shared_ptr<Function>>& Module::get_functions() const
-{
-    return m_functions;
-}
-

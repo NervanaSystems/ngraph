@@ -36,8 +36,8 @@ namespace ngraph
 class ngraph::pass::ManagerState
 {
 public:
-    Function* get_function();
-    void      set_function(Function*);
+    std::vector<Function*>& get_functions();
+    void      add_function(Function*);
 
     size_t get_temporary_pool_size();
     void   set_temporary_pool_size(size_t);
@@ -46,9 +46,9 @@ public:
     const std::list<Node*>& get_call_graph() const;
 
 private:
-    Function*        m_function = nullptr;
     size_t           m_temporary_pool_size = 0;
     std::list<Node*> m_call_graph;
+    std::vector<Function*> m_function_list;
 };
 
 class ngraph::pass::Manager

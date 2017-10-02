@@ -20,7 +20,6 @@ set (SRC
     descriptor/tuple.cpp
     function.cpp
     log.cpp
-    module.cpp
     node.cpp
     ops/binary_elementwise_arithmetic.cpp
     ops/binary_elementwise_builtin.cpp
@@ -41,6 +40,7 @@ set (SRC
     ops/unary_elementwise_builtin.cpp
     pass/assign_tensors.cpp
     pass/call_pass.cpp
+    pass/collect_functions.cpp
     pass/dump_sorted.cpp
     pass/liveness.cpp
     pass/manager.cpp
