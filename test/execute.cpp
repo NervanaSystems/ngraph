@@ -102,8 +102,12 @@ TEST(execute, test_tuple_result)
     auto A_add_B       = make_shared<op::Add>(A, B);
     auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
 
+    auto rt = make_shared<TupleType>(
+                std::vector<shared_ptr<const ValueType>>(
+                 {make_shared<TensorViewType>(element::Float32::element_type(), shape),
+                  make_shared<TensorViewType>(element::Float32::element_type(), shape)}));
     auto f = make_shared<Function>(make_shared<op::Tuple>(Nodes{A_add_B, A_add_B_mul_C}),
-                                   op::Parameters{A, B, C});
+                                   op::Parameters{A, B, C}, rt);
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
     auto cf       = external->make_call_frame();
 
