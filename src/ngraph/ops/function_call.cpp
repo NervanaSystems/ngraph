@@ -27,7 +27,7 @@ void FunctionCall::propagate_types()
         throw ngraph_error("Wrong number of arguments.");
     }
 
-    for (Nodes::size_type i = 0; i < m_arguments.size(); i++)
+    for (size_t i = 0; i < m_arguments.size(); i++)
     {
         if (nullptr == m_arguments.at(i)->get_value_type())
         {

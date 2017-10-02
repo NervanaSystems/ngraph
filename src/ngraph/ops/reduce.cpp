@@ -68,7 +68,7 @@ void Reduce::propagate_types()
 
     Shape result_shape;
 
-    for (Shape::size_type i = 0; i < arg_reductee_shape.size(); i++)
+    for (size_t i = 0; i < arg_reductee_shape.size(); i++)
     {
         if (m_reduction_axes.count(i) == 0)
         {
