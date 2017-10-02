@@ -69,7 +69,7 @@ std::string Visualize::get_attributes(const Node* node)
 
 void Visualize::save_dot(const string& path) const
 {
-#if GRAPHVIZ_FOUND
+#ifdef GRAPHVIZ_FOUND
     auto     tmp_file = path + ".tmp";
     ofstream out(tmp_file);
     if (out)
