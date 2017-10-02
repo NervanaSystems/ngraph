@@ -20,6 +20,7 @@ set (SRC
     descriptor/tuple.cpp
     function.cpp
     log.cpp
+    module.cpp
     node.cpp
     ops/binary_elementwise_arithmetic.cpp
     ops/binary_elementwise_builtin.cpp
