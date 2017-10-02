@@ -72,7 +72,7 @@ std::string pass::VisualizeTree::get_attributes(const Node* node)
 
 void pass::VisualizeTree::render() const
 {
-#if GRAPHVIZ_FOUND
+#ifdef GRAPHVIZ_FOUND
     auto     tmp_file = m_name + ".tmp";
     ofstream out(tmp_file);
     if (out)
