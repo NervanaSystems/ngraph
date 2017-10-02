@@ -20,10 +20,12 @@ using namespace std;
 using namespace ngraph;
 
 Function::Function(const std::shared_ptr<Node>&                       result,
+                   const std::shared_ptr<ValueType>&                  result_type,
                    const std::vector<std::shared_ptr<op::Parameter>>& parameters)
     : m_result(result)
     , m_parameters(parameters)
     , m_name("Function")
+    , m_result_type(result_type)
 {
     size_t i = 0;
     for (auto parameter : parameters)

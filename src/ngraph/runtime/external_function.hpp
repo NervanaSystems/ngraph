@@ -27,16 +27,20 @@ namespace ngraph
     {
         class ExternalFunction
         {
-            using OpFunction = std::function<void(const ngraph::Node*,
-                                                  ExternalFunction*,
-                                                  const std::vector<size_t>& inputs,
-                                                  const std::vector<size_t>& outputs)>;
-            using OpMap      = std::unordered_map<std::type_index, OpFunction>;
+            using FunctionMap = std::unordered_map<std::shared_ptr<Function>,std::shared_ptr<ExternalFunction>>;
+
+            using OpFunction  = std::function<void(const ngraph::Node*,
+                                                   ExternalFunction*,
+                                                   FunctionMap&,
+                                                   const std::vector<size_t>& inputs,
+                                                   const std::vector<size_t>& outputs)>;
+            using OpMap       = std::unordered_map<std::type_index, OpFunction>;
 
         public:
             ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                              bool                                     release_function = true);
             std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
+            std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(FunctionMap& function_map);
             std::shared_ptr<std::vector<std::shared_ptr<ngraph::runtime::Instruction>>>
                 get_instructions()
             {
@@ -48,6 +52,7 @@ namespace ngraph
 
         protected:
             void compile();
+            void compile(FunctionMap& function_map);
 
             std::shared_ptr<ngraph::Function> m_function;
             bool                              m_release_function;
