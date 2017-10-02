@@ -34,7 +34,7 @@ TEST(build_graph, build_simple)
     ASSERT_EQ(dot->get_arguments()[1], arg0);
 
     auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), Shape{10,32,7});
-    auto cluster_0   = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg2, arg3}, result_type);
+    auto cluster_0   = make_shared<Function>(dot, result_type, op::Parameters{arg0, arg1, arg2, arg3});
 
     ASSERT_EQ(cluster_0->get_result(), dot);
 }

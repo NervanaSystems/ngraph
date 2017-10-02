@@ -38,7 +38,7 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    auto cf = m_external_function->make_call_frame();
+                    std::shared_ptr<CallFrame> cf = m_external_function->make_call_frame();
                     
                     std::vector<std::shared_ptr<ngraph::runtime::Value>> inputs;
                     std::vector<std::shared_ptr<ngraph::runtime::Value>> outputs;

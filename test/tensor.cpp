@@ -45,7 +45,7 @@ TEST(tensor, size)
         auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3});
         auto add  = make_shared<op::Add>(arg0, arg0);
         auto rt   = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 3});
-        auto f0   = make_shared<Function>(add, op::Parameters{arg0}, rt);
+        auto f0   = make_shared<Function>(add, rt, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -59,7 +59,7 @@ TEST(tensor, size)
         auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
         auto add  = make_shared<op::Add>(arg0, arg0);
         auto rt   = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
-        auto f0   = make_shared<Function>(add, op::Parameters{arg0}, rt);
+        auto f0   = make_shared<Function>(add, rt, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -73,7 +73,7 @@ TEST(tensor, size)
         auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
         auto add  = make_shared<op::Add>(arg0, arg0);
         auto rt   = make_shared<TensorViewType>(element::Float32::element_type(), Shape{1});
-        auto f0   = make_shared<Function>(add, op::Parameters{arg0}, rt);
+        auto f0   = make_shared<Function>(add, rt, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
 

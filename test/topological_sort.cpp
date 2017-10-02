@@ -58,7 +58,7 @@ TEST(topological_sort, basic)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     ASSERT_NE(nullptr, rt);
 
-    auto f0 = make_shared<Function>(r0, args, rt);
+    auto f0 = make_shared<Function>(r0, rt, args);
     ASSERT_NE(nullptr, f0);
 
     ASSERT_EQ(2, r0->get_arguments().size());
@@ -115,7 +115,7 @@ TEST(benchmark, topological_sort)
         result = make_cell(result, in_1, in_2);
     }
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
-    auto f0 = make_shared<Function>(result, args, rt);
+    auto f0 = make_shared<Function>(result, rt, args);
 
     timer.start();
     pass::Manager pass_manager;

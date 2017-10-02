@@ -705,8 +705,8 @@ TEST(type_prop, reduce_deduce)
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
     auto rt        = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f         = make_shared<Function>(f_param_0 + f_param_1,
-                                           op::Parameters{f_param_0, f_param_1},
-                                           rt);
+                                           rt,
+                                           op::Parameters{f_param_0, f_param_1});
 
     auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
     r0->propagate_types();
@@ -738,8 +738,8 @@ TEST(type_prop, reduce_deduce_correct)
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
     auto rt        = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f         = make_shared<Function>(f_param_0 + f_param_1,
-                                           op::Parameters{f_param_0, f_param_1},
-                                           rt);
+                                           rt,
+                                           op::Parameters{f_param_0, f_param_1});
 
     auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
     r0->set_value_type(
@@ -761,8 +761,8 @@ TEST(type_prop, reduce_nonscalar)
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
     auto rt        = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f         = make_shared<Function>(f_param_0 + f_param_1,
-                                           op::Parameters{f_param_0, f_param_1},
-                                           rt);
+                                           rt,
+                                           op::Parameters{f_param_0, f_param_1});
 
     auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
     try
@@ -794,8 +794,8 @@ TEST(type_prop, reduce_elem_type_mismatch)
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
     auto rt        = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f         = make_shared<Function>(f_param_0 + f_param_1,
-                                           op::Parameters{f_param_0, f_param_1},
-                                           rt);
+                                           rt,
+                                           op::Parameters{f_param_0, f_param_1});
 
     auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
     try
@@ -828,8 +828,8 @@ TEST(type_prop, reduce_function_return_type_mismatch)
     auto rt        = make_shared<TensorViewType>(element::Bool::element_type(), Shape{});
     auto f         = make_shared<Function>(
                        make_shared<op::Equal>(f_param_0,f_param_1),
-                       op::Parameters{f_param_0, f_param_1},
-                       rt);
+                       rt,
+                       op::Parameters{f_param_0, f_param_1});
 
     auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
     try
@@ -862,8 +862,8 @@ TEST(type_prop, reduce_function_arg0_type_mismatch)
     auto rt        = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f         = make_shared<Function>(
                        f_param_1,
-                       op::Parameters{f_param_0, f_param_1},
-                       rt);
+                       rt,
+                       op::Parameters{f_param_0, f_param_1});
 
     auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
     try
@@ -896,8 +896,8 @@ TEST(type_prop, reduce_function_arg1_type_mismatch)
     auto rt        = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f         = make_shared<Function>(
                        f_param_0,
-                       op::Parameters{f_param_0, f_param_1},
-                       rt);
+                       rt,
+                       op::Parameters{f_param_0, f_param_1});
 
     auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
     try
@@ -932,8 +932,8 @@ TEST(type_prop, reduce_function_arg_count_mismatch)
     auto rt        = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f         = make_shared<Function>(
                        f_param_0 + f_param_1 + f_param_2,
-                       op::Parameters{f_param_0, f_param_1, f_param_2},
-                       rt);
+                       rt,
+                       op::Parameters{f_param_0, f_param_1, f_param_2});
 
     auto r0 = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0});
     try
@@ -965,8 +965,8 @@ TEST(type_prop, reduce_axis_oob)
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
     auto rt        = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f         = make_shared<Function>(f_param_0 + f_param_1,
-                                           op::Parameters{f_param_0, f_param_1},
-                                           rt);
+                                           rt,
+                                           op::Parameters{f_param_0, f_param_1});
 
     auto r = make_shared<op::Reduce>(param_0,param_1,f,AxisSet{0,2,1});
     try
@@ -993,7 +993,7 @@ TEST(type_prop, function_call_deduce)
     auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto C     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto rt_f  = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>((A + B * C), op::Parameters{A, B, C}, rt_f);
+    auto f     = make_shared<Function>((A + B * C), rt_f, op::Parameters{A, B, C});
 
     // Now make "f(X,Y,Z) + f(X,Y,Z)"
     auto X     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
