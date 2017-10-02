@@ -76,13 +76,6 @@ void Reduce::propagate_types()
         }
     }
 
-    // FIXME: Temporary hack. We do this here to make sure that types have been
-    // propagated for the callee.
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::TopologicalSort>();
-    pass_manager.register_pass<pass::PropagateTypes>();
-    pass_manager.run_passes(m_reduction_function);
-
     auto f_params = m_reduction_function->get_parameters();
 
     if (f_params.size() != 2)
@@ -99,8 +92,7 @@ void Reduce::propagate_types()
         throw ngraph_error("Argument 1 of reduction function has wrong type");
     }
 
-    auto f_result = m_reduction_function->get_result();
-    auto f_result_type = f_result->get_value_type();
+    auto f_result_type = m_reduction_function->get_result_type();
 
     if (*(f_result_type) != *(arg_init_type))
     {

@@ -20,13 +20,6 @@ using namespace ngraph::op;
 
 void FunctionCall::propagate_types()
 {
-    // FIXME: Temporary hack. We do this here to make sure that types have been
-    // propagated for the callee.
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::TopologicalSort>();
-    pass_manager.register_pass<pass::PropagateTypes>();
-    pass_manager.run_passes(m_function);
-
     auto& function_params = m_function->get_parameters();
 
     if (m_arguments.size() != function_params.size())
@@ -52,5 +45,7 @@ void FunctionCall::propagate_types()
         }
     }
 
-    set_value_type_checked(m_function->get_result()->get_value_type());
+    auto f_result_type = m_function->get_result_type();
+
+    set_value_type_checked(f_result_type);
 }

@@ -33,17 +33,23 @@ namespace ngraph
     {
     public:
         Function(const std::shared_ptr<Node>&                       result,
-                 const std::vector<std::shared_ptr<op::Parameter>>& parameters);
+                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                 const std::shared_ptr<ValueType>&                  result_type);
 
         std::shared_ptr<Node>                             get_result() { return m_result; }
         const std::vector<std::shared_ptr<op::Parameter>> get_parameters() const
         {
             return m_parameters;
         }
+        const std::shared_ptr<ValueType> get_result_type() const
+        {
+            return m_result_type;
+        }
         std::string get_name() const { return m_name; }
     protected:
         std::shared_ptr<Node>                               m_result;
         std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;
         std::string                                         m_name;
+        std::shared_ptr<ValueType>                          m_result_type;
     };
 }
