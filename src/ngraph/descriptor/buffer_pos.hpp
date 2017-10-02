@@ -29,7 +29,6 @@ namespace ngraph
         {
         public:
             BufferPos() {}
-
             BufferPos(std::shared_ptr<Buffer> buffer, size_t offset, size_t size)
                 : m_buffer(buffer)
                 , m_offset(offset)
@@ -43,8 +42,8 @@ namespace ngraph
 
         protected:
             std::shared_ptr<Buffer> m_buffer;
-            size_t                  m_offset;
-            size_t                  m_size;
+            size_t m_offset;
+            size_t m_size;
         };
     }
 }

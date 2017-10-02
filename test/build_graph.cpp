@@ -23,13 +23,13 @@ using namespace ngraph;
 TEST(build_graph, build_simple)
 {
     // Function with 4 parameters
-    auto arg0        = make_shared<op::Parameter>(element::Float32::element_type(), Shape{7, 3});
-    auto arg1        = make_shared<op::Parameter>(element::Float32::element_type(), Shape{3});
-    auto arg2        = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
-    auto arg3        = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
+    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{7, 3});
+    auto arg1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{3});
+    auto arg2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
+    auto arg3 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
     auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
-    auto b1          = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
-    auto dot         = make_shared<op::Dot>(arg2, arg0);
+    auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
+    auto dot = make_shared<op::Dot>(arg2, arg0);
     ASSERT_EQ(dot->get_arguments()[0], arg2);
     ASSERT_EQ(dot->get_arguments()[1], arg0);
 
@@ -66,7 +66,7 @@ TEST(build_graph, node_comparison)
     auto dot = make_shared<op::Dot>(arg0, arg1);
     auto add = make_shared<op::Add>(dot, arg2);
 
-    auto parg        = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto parg = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     auto pattern_dot = make_shared<op::Dot>(parg, parg);
     ASSERT_TRUE(pattern_dot->is_same_op_type(dot));
     // TODO This passes because typeid is not behaving as documented.
@@ -78,7 +78,7 @@ TEST(build_graph, literal)
 {
     // float scalar from a float
     //auto float0 = FloatScalarConstant::make(3.0);
-    auto float0            = make_shared<op::Float32ScalarConstant>(3.0);
+    auto float0 = make_shared<op::Float32ScalarConstant>(3.0);
     auto float_scalar_type = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     ASSERT_EQ(float0->get_value(), 3.0);
     ASSERT_EQ(*float0->get_value_type(), *float_scalar_type);
@@ -91,7 +91,7 @@ TEST(build_graph, literal)
     ASSERT_EQ(float1->get_value(), 3);
     ASSERT_EQ(*float1->get_value_type(), *float_scalar_type);
 
-    auto int32_0           = make_shared<op::Int32ScalarConstant>(3.0);
+    auto int32_0 = make_shared<op::Int32ScalarConstant>(3.0);
     auto int32_scalar_type = make_shared<TensorViewType>(element::Int32::element_type(), Shape{});
     ASSERT_EQ(int32_0->get_value(), 3);
     ASSERT_EQ(*int32_0->get_value_type(), *int32_scalar_type);
@@ -181,4 +181,6 @@ TEST(build_graph, set_value_type_checked)
 }
 
 // Check argument inverses
-TEST(build_graph, arg_inverse) {}
+TEST(build_graph, arg_inverse)
+{
+}

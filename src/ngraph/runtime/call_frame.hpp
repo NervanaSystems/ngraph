@@ -32,10 +32,10 @@ namespace ngraph
         {
         public:
             CallFrame(
-                size_t                                                            n_inputs,
-                size_t                                                            n_outputs,
-                const TensorViewPtrs&                                             temps,
-                size_t                                                            initial_pc,
+                size_t n_inputs,
+                size_t n_outputs,
+                const TensorViewPtrs& temps,
+                size_t initial_pc,
                 const std::shared_ptr<std::vector<std::shared_ptr<Instruction>>>& instructions);
 
             /// @brief Invoke the function with values matching the signature of the function.
@@ -48,9 +48,7 @@ namespace ngraph
             void tensor_call(const TensorViewPtrs& inputs, const TensorViewPtrs& outpus);
 
             void set_return() { m_return = true; }
-
             std::shared_ptr<TensorView> get_tensor_view(size_t i) { return m_tensor_views[i]; }
-
             template <typename ET>
             ParameterizedTensorView<ET>* get_parameterized_tensor_view(size_t i)
             {
@@ -58,14 +56,14 @@ namespace ngraph
             }
 
         protected:
-            size_t                                                     m_n_inputs;
-            size_t                                                     m_n_outputs;
-            TensorViewPtrs                                             m_tensor_views;
-            size_t                                                     m_initial_pc;
+            size_t m_n_inputs;
+            size_t m_n_outputs;
+            TensorViewPtrs m_tensor_views;
+            size_t m_initial_pc;
             std::shared_ptr<std::vector<std::shared_ptr<Instruction>>> m_instructions;
-            size_t                                                     m_pc;
-            size_t                                                     m_next_pc;
-            bool                                                       m_return;
+            size_t m_pc;
+            size_t m_next_pc;
+            bool m_return;
         };
     }
 }

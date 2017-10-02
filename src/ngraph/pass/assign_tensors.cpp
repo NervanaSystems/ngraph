@@ -19,8 +19,8 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/propagate_types.hpp"
 
 using namespace std;
 using namespace ngraph;

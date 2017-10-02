@@ -6,8 +6,8 @@ Standard: Cpp11
 
 AccessModifierOffset: -4
 
-AlignConsecutiveDeclarations: true
-AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: false
+AlignConsecutiveAssignments: false
 AlignTrailingComments: true
 
 AllowShortBlocksOnASingleLine: true

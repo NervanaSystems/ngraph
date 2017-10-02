@@ -33,18 +33,18 @@ namespace ngraph
                 auto vec_out = get_map_matrix(&*out);
                 auto& out_shape = out->get_shape();
 
-                assert (out_shape.size() == 1);
+                assert(out_shape.size() == 1);
 
                 size_t concat_pos = 0;
 
-                for(T arg : args)
+                for (T arg : args)
                 {
                     auto vec_arg = get_map_matrix(&*arg);
                     auto& arg_shape = arg->get_shape();
 
-                    assert (arg_shape.size() == 1);
+                    assert(arg_shape.size() == 1);
 
-                    vec_out.segment(concat_pos,arg_shape.at(0)) << vec_arg;
+                    vec_out.segment(concat_pos, arg_shape.at(0)) << vec_arg;
                     concat_pos += arg_shape.at(0);
                 }
             }
@@ -62,13 +62,12 @@ namespace ngraph
                 virtual void execute(CallFrame& call_frame) const override
                 {
                     std::vector<ParameterizedTensorView<ET>*> ptvs;
-                    for(size_t arg : m_args)
+                    for (size_t arg : m_args)
                     {
                         ptvs.push_back(call_frame.get_parameterized_tensor_view<ET>(arg));
                     }
                     runtime::eigen::concat_vector(
-                        ptvs,
-                        call_frame.get_parameterized_tensor_view<ET>(m_out));
+                        ptvs, call_frame.get_parameterized_tensor_view<ET>(m_out));
                 }
 
             protected:

@@ -37,19 +37,19 @@ namespace ngraph
             /// @param tensor_view The view of this tensor; where the value will be written
             Output(Node* node, size_t index, const std::shared_ptr<TensorView>& tensor_view);
 
-            std::shared_ptr<Node>       get_node() const;
-            size_t                      get_index() const { return m_index; }
+            std::shared_ptr<Node> get_node() const;
+            size_t get_index() const { return m_index; }
             std::shared_ptr<TensorView> get_tensor_view() const { return m_tensor_view; }
             void add_input(Input* input);
             const std::set<Input*>& get_inputs() const { return m_inputs; }
-            const Tensor&           get_tensor() const;
-            Tensor&                 get_tensor();
+            const Tensor& get_tensor() const;
+            Tensor& get_tensor();
 
         protected:
-            Node*                       m_node;
-            size_t                      m_index;
+            Node* m_node;
+            size_t m_index;
             std::shared_ptr<TensorView> m_tensor_view;
-            std::set<Input*>            m_inputs;
+            std::set<Input*> m_inputs;
         };
     }
 }

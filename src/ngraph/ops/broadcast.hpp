@@ -28,8 +28,8 @@ namespace ngraph
             ///  the remaining axes in shape must be the same as the shape of arg.
             ///
             Broadcast(const std::shared_ptr<Node>& arg,
-                      const Shape&                 shape,
-                      const AxisSet&               broadcast_axes)
+                      const Shape& shape,
+                      const AxisSet& broadcast_axes)
                 : IndexBuiltin(arg)
                 , m_shape(shape)
                 , m_broadcast_axes(broadcast_axes)
@@ -37,10 +37,10 @@ namespace ngraph
             }
 
             virtual std::string description() const override { return "Broadcast"; }
-            virtual void        propagate_types() override;
+            virtual void propagate_types() override;
 
         protected:
-            Shape   m_shape;
+            Shape m_shape;
             AxisSet m_broadcast_axes;
         };
     }

@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "ngraph/pass/call_pass.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/pass/call_pass.hpp"
 
 namespace ngraph
 {

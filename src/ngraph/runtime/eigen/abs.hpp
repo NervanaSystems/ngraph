@@ -43,9 +43,8 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::abs(
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg),
-                        call_frame.get_parameterized_tensor_view<ET>(m_out));
+                    runtime::eigen::abs(call_frame.get_parameterized_tensor_view<ET>(m_arg),
+                                        call_frame.get_parameterized_tensor_view<ET>(m_out));
                 }
 
             protected:

@@ -49,7 +49,7 @@ namespace ngraph
                 const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor);
 
             using element_type = ET;
-            using value_type   = typename ET::type;
+            using value_type = typename ET::type;
             using storage_type = std::vector<value_type>;
 
             template <typename T>
@@ -61,7 +61,6 @@ namespace ngraph
 
             // For getting the data out
             storage_type& get_vector() { return m_vector; }
-
         protected:
             storage_type m_vector;
         };

@@ -18,8 +18,7 @@ using namespace std;
 using namespace ngraph;
 using namespace descriptor;
 
-Input::Input(
-    Node* node, size_t index, size_t argno, size_t arg_index, Output& output)
+Input::Input(Node* node, size_t index, size_t argno, size_t arg_index, Output& output)
     : m_node(node)
     , m_index(index)
     , m_argno(argno)

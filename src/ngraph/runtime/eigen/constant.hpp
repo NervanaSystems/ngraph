@@ -25,7 +25,7 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename ET,typename T>
+            template <typename ET, typename T>
             void assign_constant(const std::vector<ET>& value, T out)
             {
                 out->get_vector() = value;
@@ -44,8 +44,7 @@ namespace ngraph
                 virtual void execute(CallFrame& call_frame) const override
                 {
                     runtime::eigen::assign_constant(
-                        m_value,
-                        call_frame.get_parameterized_tensor_view<ET>(m_out));
+                        m_value, call_frame.get_parameterized_tensor_view<ET>(m_out));
                 }
 
             protected:

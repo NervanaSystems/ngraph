@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include <vector>
-#include <memory>
 #include <list>
+#include <memory>
+#include <vector>
 
 #include "ngraph/pass/call_pass.hpp"
 #include "ngraph/pass/tree_pass.hpp"
@@ -37,17 +37,17 @@ class ngraph::pass::ManagerState
 {
 public:
     Function* get_function();
-    void      set_function(Function*);
+    void set_function(Function*);
 
     size_t get_temporary_pool_size();
-    void   set_temporary_pool_size(size_t);
+    void set_temporary_pool_size(size_t);
 
     std::list<Node*>& get_call_graph();
     const std::list<Node*>& get_call_graph() const;
 
 private:
-    Function*        m_function = nullptr;
-    size_t           m_temporary_pool_size = 0;
+    Function* m_function = nullptr;
+    size_t m_temporary_pool_size = 0;
     std::list<Node*> m_call_graph;
 };
 
@@ -59,7 +59,7 @@ public:
 
     void initialize_default_passes();
 
-    template<typename T, class... Args>
+    template <typename T, class... Args>
     void register_pass(Args... args)
     {
         static_assert(std::is_base_of<pass::Base, T>::value, "pass not derived from pass base");
@@ -86,5 +86,5 @@ private:
 
     std::vector<std::shared_ptr<TreeBase>> m_tree_passes;
     std::vector<std::shared_ptr<CallBase>> m_call_passes;
-    ManagerState                           m_state;
+    ManagerState m_state;
 };

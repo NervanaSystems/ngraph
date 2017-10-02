@@ -30,7 +30,6 @@ namespace ngraph
         class FunctionCall : public Node
         {
             virtual std::string description() const override { return "FunctionCall"; }
-
         protected:
             std::shared_ptr<Node> m_function;
         };
@@ -41,7 +40,6 @@ namespace ngraph
         {
         public:
             virtual std::string description() const override { return "Builtin"; }
-
         protected:
             Builtin(const std::vector<std::shared_ptr<Node>>& args)
                 : Node(args)
@@ -83,8 +81,8 @@ namespace ngraph
                 : Builtin(Nodes{arg})
             {
             }
-            virtual const element::Type& propagate_element_types(
-                const element::Type& arg_element_type) const = 0;
+            virtual const element::Type&
+                propagate_element_types(const element::Type& arg_element_type) const = 0;
 
         public:
             virtual void propagate_types() override;
@@ -97,8 +95,8 @@ namespace ngraph
                 : UnaryElementwiseBuiltin({arg})
             {
             }
-            virtual const element::Type& propagate_element_types(
-                const element::Type& arg_element_type) const final override;
+            virtual const element::Type&
+                propagate_element_types(const element::Type& arg_element_type) const final override;
         };
 
         /// Op(X, Y)[I] = op(X[I], Y[I])
@@ -110,9 +108,9 @@ namespace ngraph
                 : Builtin(Nodes{arg0, arg1})
             {
             }
-            virtual const element::Type& propagate_element_types(
-                                            const element::Type& arg0_element_type,
-                                            const element::Type& arg1_element_type) const = 0;
+            virtual const element::Type&
+                propagate_element_types(const element::Type& arg0_element_type,
+                                        const element::Type& arg1_element_type) const = 0;
 
         public:
             virtual void propagate_types() override;
@@ -121,34 +119,39 @@ namespace ngraph
         class BinaryElementwiseComparison : public BinaryElementwiseBuiltin
         {
         public:
-            BinaryElementwiseComparison(
-                const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+            BinaryElementwiseComparison(const std::shared_ptr<Node>& arg0,
+                                        const std::shared_ptr<Node>& arg1)
                 : BinaryElementwiseBuiltin(arg0, arg1)
             {
             }
 
-            virtual std::string description() const override { return "BinaryElementwiseComparison"; }
+            virtual std::string description() const override
+            {
+                return "BinaryElementwiseComparison";
+            }
             //virtual void propagate_types() override;
-            virtual const element::Type& propagate_element_types(
-                                             const element::Type& arg0_element_type,
-                                             const element::Type& arg1_element_type) const override;
+            virtual const element::Type&
+                propagate_element_types(const element::Type& arg0_element_type,
+                                        const element::Type& arg1_element_type) const override;
         };
 
         class BinaryElementwiseArithmetic : public BinaryElementwiseBuiltin
         {
         public:
-            BinaryElementwiseArithmetic(
-                const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+            BinaryElementwiseArithmetic(const std::shared_ptr<Node>& arg0,
+                                        const std::shared_ptr<Node>& arg1)
                 : BinaryElementwiseBuiltin(arg0, arg1)
             {
             }
 
-            virtual std::string description() const override { return "BinaryElementwiseArithmetic"; }
+            virtual std::string description() const override
+            {
+                return "BinaryElementwiseArithmetic";
+            }
             //virtual void propagate_types() override;
             virtual const element::Type& propagate_element_types(
-                                           const element::Type& arg0_element_type,
-                                           const element::Type& arg1_element_type)
-                const final override;
+                const element::Type& arg0_element_type,
+                const element::Type& arg1_element_type) const final override;
         };
     }
 }
