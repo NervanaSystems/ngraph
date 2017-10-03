@@ -32,9 +32,7 @@ Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<ValueType>
     }
 }
 
-Node::~Node()
-{
-}
+Node::~Node() {}
 
 void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
 {
@@ -55,22 +53,27 @@ void Node::assign_tensors()
 {
     vector<std::shared_ptr<const TensorViewType>> tensor_view_types;
     get_value_type()->collect_tensor_views(tensor_view_types);
+    std::shared_ptr<Node> shared_this = shared_from_this();
     size_t i = 0;
     for (auto tvt : tensor_view_types)
     {
-        auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(tvt, ngraph::descriptor::Tensor::make_tensor_name(this, i), is_output(), is_parameter());
-        m_outputs.emplace_back(this, i, tensor_view_descriptor);
+        auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
+            tvt,
+            ngraph::descriptor::Tensor::make_tensor_name(this, i),
+            is_output(),
+            is_parameter());
+        m_outputs.emplace_back(shared_this, i, tensor_view_descriptor);
         i++;
     }
 
-    i            = 0;
+    i = 0;
     size_t argno = 0;
     for (auto arg : get_arguments())
     {
         size_t arg_index = 0;
         for (descriptor::Output& output : arg->get_outputs())
         {
-            m_inputs.emplace_back(this, i, argno, arg_index++, output);
+            m_inputs.emplace_back(shared_this, i, argno, arg_index++, output);
             i++;
         }
         argno++;

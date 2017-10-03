@@ -19,7 +19,7 @@ using namespace ngraph;
 using namespace descriptor;
 
 Input::Input(
-    Node* node, size_t index, size_t argno, size_t arg_index, Output& output)
+    const std::shared_ptr<Node>& node, size_t index, size_t argno, size_t arg_index, Output& output)
     : m_node(node)
     , m_index(index)
     , m_argno(argno)
@@ -31,7 +31,7 @@ Input::Input(
 
 std::shared_ptr<Node> Input::get_node()
 {
-    return m_node->shared_from_this();
+    return m_node.lock();
 }
 
 const Tensor& Input::get_tensor() const
