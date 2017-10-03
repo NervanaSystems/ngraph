@@ -165,19 +165,16 @@ TEST(execute, test_concat_matrix_colwise)
 
     // Create some tensors for input/output
     auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{2,  4,
-                                8, 16};
+    *a          = vector<float>{2, 4, 8, 16};
     auto b      = ngraph::runtime::make_tensor<element::Float32>(shape_b);
-    *b          = vector<float>{ 1, 2, 4,
-                                 8,16,32};
+    *b          = vector<float>{1, 2, 4, 8, 16, 32};
     auto c      = ngraph::runtime::make_tensor<element::Float32>(shape_c);
-    *c          = vector<float>{ 2, 3, 5,
-                                 7,11,13};
+    *c          = vector<float>{2, 3, 5, 7, 11, 13};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
-    (*cf)({a,b,c}, {result});
-    ASSERT_EQ((vector<float>{ 2,  4, 1,  2, 4, 2,  3,  5,
-                              8, 16, 8, 16,32, 7, 11, 13}), result->get_vector());
+    (*cf)({a, b, c}, {result});
+    ASSERT_EQ((vector<float>{2, 4, 1, 2, 4, 2, 3, 5, 8, 16, 8, 16, 32, 7, 11, 13}),
+              result->get_vector());
 }
 
 TEST(execute, test_concat_matrix_rowwise)
@@ -197,27 +194,16 @@ TEST(execute, test_concat_matrix_rowwise)
 
     // Create some tensors for input/output
     auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{2,  4,
-                                8, 16};
+    *a          = vector<float>{2, 4, 8, 16};
     auto b      = ngraph::runtime::make_tensor<element::Float32>(shape_b);
-    *b          = vector<float>{ 1, 2,
-                                 4, 8,
-                                16,32};
+    *b          = vector<float>{1, 2, 4, 8, 16, 32};
     auto c      = ngraph::runtime::make_tensor<element::Float32>(shape_c);
-    *c          = vector<float>{ 2, 3,
-                                 5, 7,
-                                11,13};
+    *c          = vector<float>{2, 3, 5, 7, 11, 13};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
-    (*cf)({a,b,c}, {result});
-    ASSERT_EQ((vector<float>{ 2,  4,
-                              8, 16,
-                              1,  2,
-                              4,  8,
-                             16, 32,
-                              2,  3,
-                              5,  7,
-                             11, 13}), result->get_vector());
+    (*cf)({a, b, c}, {result});
+    ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
+              result->get_vector());
 }
 
 TEST(execute, test_concat_vector)
@@ -237,15 +223,15 @@ TEST(execute, test_concat_vector)
 
     // Create some tensors for input/output
     auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{2,4,8,16};
+    *a          = vector<float>{2, 4, 8, 16};
     auto b      = ngraph::runtime::make_tensor<element::Float32>(shape_b);
-    *b          = vector<float>{1,2,4,8,16,32};
+    *b          = vector<float>{1, 2, 4, 8, 16, 32};
     auto c      = ngraph::runtime::make_tensor<element::Float32>(shape_c);
-    *c          = vector<float>{18,19};
+    *c          = vector<float>{18, 19};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
-    (*cf)({a,b,c}, {result});
-    ASSERT_EQ((vector<float>{2,4,8,16,1,2,4,8,16,32,18,19}), result->get_vector());
+    (*cf)({a, b, c}, {result});
+    ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), result->get_vector());
 }
 
 TEST(execute, test_divide)
@@ -311,13 +297,13 @@ TEST(execute, test_dot1d)
     *b          = vector<float>{1, 2, 4, 8};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
-    (*cf)({a,b}, {result});
+    (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{170}), result->get_vector());
 }
 
 TEST(execute, test_dot2d)
 {
-    auto shape   = Shape{2,2};
+    auto shape   = Shape{2, 2};
     auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto shape_r = Shape{2,2};
@@ -329,16 +315,13 @@ TEST(execute, test_dot2d)
 
     // Create some tensors for input/output
     auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{1, 2,
-                                3, 4};
+    *a          = vector<float>{1, 2, 3, 4};
     auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b          = vector<float>{5, 6,
-                                7, 8};
+    *b          = vector<float>{5, 6, 7, 8};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
-    (*cf)({a,b}, {result});
-    ASSERT_EQ((vector<float>{19,22,
-                             43,50}), result->get_vector());
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{19, 22, 43, 50}), result->get_vector());
 }
 
 TEST(execute, test_dot_scalar_tensor_arg0)
@@ -471,10 +454,14 @@ TEST(execute, test_log)
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
     *a     = vector<float>{expf(1), expf(2), expf(3), expf(4), expf(5), expf(6), expf(7), expf(8)};
+    vector<float> loga;
+    for (auto elt : a->get_vector()){
+        loga.push_back(logf(elt));
+    }
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
+    ASSERT_EQ(loga, result->get_vector());
 }
 
 TEST(execute, test_maximum)
@@ -619,7 +606,7 @@ TEST(execute, test_tensor_constant)
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
     (*cf)({}, {result});
-    ASSERT_EQ((vector<float>{1,2,3,4,5,6,7,8}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
 }
 
 TEST(execute, test_tensor_constant_with_op)
@@ -637,7 +624,7 @@ TEST(execute, test_tensor_constant_with_op)
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
     (*cf)({}, {result});
-    ASSERT_EQ((vector<float>{1,2,3,4,5,6,7,8}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
 }
 
 TEST(execute, test_function_call)

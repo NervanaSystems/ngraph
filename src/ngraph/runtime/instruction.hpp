@@ -14,17 +14,25 @@
 
 #pragma once
 
+#include <memory>
+
+#include "ngraph/runtime/call_frame.hpp"
+
 namespace ngraph
 {
     namespace runtime
     {
         class CallFrame;
 
-        // An interpreter for an Op
+        /// @brief An interpreter for an Op
+        ///
+        /// The call_frame has a vector of instructions and calls execute on each instruction, passing it the call_frame.
+        /// Instructions get argument, result, and intermediate tensor views from the call frame. Instructions may also
+        /// set a flag in the call_frame to end execution, or adjust execution by modifying the position in the instruction vector.
         class Instruction
         {
         public:
-            virtual ~Instruction(){}
+            virtual ~Instruction() {}
             virtual void execute(CallFrame& call_frame) const = 0;
         };
     }

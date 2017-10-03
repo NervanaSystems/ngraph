@@ -19,6 +19,7 @@
 #include <unordered_map>
 
 #include "ngraph/descriptor/input.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
@@ -73,6 +74,8 @@
 using namespace std;
 using namespace ngraph::runtime;
 
+using ngraph::descriptor::layout::DenseTensorViewLayout;
+
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                    bool                                     release_function)
     : m_function(function)
@@ -86,25 +89,26 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
     op_map[type_index(typeid(op_class))] = [](const Node*                n,            \
                                               ExternalFunction*          ef,           \
                                               FunctionMap&               function_map, \
-                                              const std::vector<size_t>& in,           \
-                                              const std::vector<size_t>& out)
+                                              const std::vector<TensorViewInfo>& in,           \
+                                              const std::vector<TensorViewInfo>& out)
 
 #define REGISTER_INSTRUCTION(op_class, instr_class, ...)                          \
     REGISTER_TO_OP_MAP(op_class) {                                                \
         ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__)); \
     }
 
-#define REGISTER_UNOP(op_class, instr_class)                                                       \
+// Versions the include the descriptor
+#define REGISTER_UNOP(op_class, instr_class)                                                      \
     REGISTER_INSTRUCTION(op_class, instr_class, in[0], out[0])
-#define REGISTER_BINOP(op_class, instr_class)                                                      \
+#define REGISTER_BINOP(op_class, instr_class)                                                     \
     REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], out[0])
-#define REGISTER_TERNOP(op_class, instr_class)                                                     \
+#define REGISTER_TERNOP(op_class, instr_class)                                                    \
     REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], in[2], out[0])
 
 // Define code generators for handled ops.
 ExternalFunction::OpMap& ExternalFunction::get_op_map()
 {
-    static bool initialized = false;
+    static bool  initialized = false;
     static OpMap op_map;
     if (!initialized)
     {
@@ -145,8 +149,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             if (result_shape.size() == 1)
             {
                 ef->get_instructions()->push_back(
-                    make_shared<runtime::eigen::ConcatVectorInstruction<element::Float32>>(in,
-                                                                                           out[0]));
+                    make_shared<runtime::eigen::ConcatVectorInstruction<element::Float32>>(
+                        in, out[0]));
             }
             else if (result_shape.size() == 2)
             {
@@ -184,14 +188,14 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::ScalarTensorProductInstruction<element::Float32>>(
-                        in[0], in[1], out[0]));
+                        in[0].get_index(), in[1].get_index(), out[0].get_index()));
             }
             else if (arg1_shape.size() == 0)
             {
                 // If arg1 is the scalar, do the same thing but switch the order of operands.
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::ScalarTensorProductInstruction<element::Float32>>(
-                        in[1], in[0], out[0]));
+                        in[1].get_index(), in[0].get_index(), out[0].get_index()));
             }
 
             // If arg0 and arg1 are both vectors, emit a dot product.
@@ -199,7 +203,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::DotInstruction<element::Float32>>(
-                        in[0], in[1], out[0]));
+                        in[0].get_index(), in[1].get_index(), out[0].get_index()));
             }
 
             // If arg0 is a matrix and arg1 is a vector, emit a matrix-vector product.
@@ -207,7 +211,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::MatrixVectorProductInstruction<element::Float32>>(
-                        in[0], in[1], out[0]));
+                        in[0].get_index(), in[1].get_index(), out[0].get_index()));
             }
 
             // If arg0 and arg1 are both matrices, emit a matrix product.
@@ -215,7 +219,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::MatrixMultInstruction<element::Float32>>(
-                        in[0], in[1], out[0]));
+                        in[0].get_index(), in[1].get_index(), out[0].get_index()));
             }
 
             else
@@ -234,7 +238,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
             ef->get_instructions()->push_back(
                 make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
-                    in.at(get_tuple_element->get_n()), out.at(0)));
+                    in.at(get_tuple_element->get_n()).get_index(), out.at(0).get_index()));
         };
 
         // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
@@ -243,8 +247,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             for (size_t i = 0; i < in.size(); ++i)
             {
                 ef->get_instructions()->push_back(
-                    make_shared<runtime::eigen::CopyInstruction<element::Float32>>(in.at(i),
-                                                                                   out.at(i)));
+                    make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
+                        in.at(i).get_index(), out.at(i).get_index()));
             }
         };
 
@@ -295,6 +299,22 @@ void ExternalFunction::compile(FunctionMap& function_map)
     pass_manager.register_pass<pass::AssignTensors>();
     pass_manager.run_passes(m_function);
 
+    // Turn this into a pass
+    // Assign layouts
+    // For now, just make everyone row-major.
+    for (const Node* node : pass_manager.get_call_graph())
+    {
+        for (const descriptor::Output& output : node->get_outputs())
+        {
+            auto tv = output.get_tensor_view();
+            if (nullptr == tv->get_tensor_view_layout())
+            {
+                auto layout = std::make_shared<DenseTensorViewLayout>(*tv);
+                tv->set_tensor_view_layout(layout);
+            }
+        }
+    }
+
     // Determine tensor requirements for  the call frame
     unordered_map<shared_ptr<ngraph::descriptor::TensorView>, size_t> tensor_index;
     // First come the function inputs
@@ -342,18 +362,18 @@ void ExternalFunction::compile(FunctionMap& function_map)
         {
             throw ngraph_error("Unhandled op during code generation");
         }
-        std::vector<size_t> in;
+        std::vector<TensorViewInfo> in;
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
             auto                      tv     = output.get_tensor_view();
-            in.push_back(tensor_index.at(tv));
+            in.push_back({tensor_index.at(tv), tv});
         }
-        std::vector<size_t> out;
+        std::vector<TensorViewInfo> out;
         for (const descriptor::Output& output : node->get_outputs())
         {
             auto tv = output.get_tensor_view();
-            out.push_back(tensor_index.at(tv));
+            out.push_back({tensor_index.at(tv), tv});
         }
         handler_it->second(node, this, function_map, in, out);
     }

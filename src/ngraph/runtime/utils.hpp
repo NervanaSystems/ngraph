@@ -17,7 +17,6 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/parameterized_tensor_view.hpp"
 #include "ngraph/runtime/tuple.hpp"
 #include "ngraph/runtime/value.hpp"
