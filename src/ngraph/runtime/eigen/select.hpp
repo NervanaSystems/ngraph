@@ -25,17 +25,14 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename TA,typename TB>
-            void select(TA arg0, TB arg1, TB arg2, TB out)
-            {
-                set_map_array(&*out, get_map_array(&*arg0).select(get_map_array(&*arg1),get_map_array(&*arg2)));
-            }
-
             template <typename ET>
             class SelectInstruction : public Instruction
             {
             public:
-                SelectInstruction(size_t arg0, size_t arg1, size_t arg2, size_t out)
+                SelectInstruction(TensorViewInfo arg0,
+                                  TensorViewInfo arg1,
+                                  TensorViewInfo arg2,
+                                  TensorViewInfo out)
                     : m_arg0(arg0)
                     , m_arg1(arg1)
                     , m_arg2(arg2)
@@ -45,18 +42,17 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::select(
-                        call_frame.get_parameterized_tensor_view<element::Bool>(m_arg0),
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg1),
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg2),
-                        call_frame.get_parameterized_tensor_view<ET>(m_out));
+                    EigenArray1d<ET>(call_frame, m_out) =
+                        EigenArray1d<element::Bool>(call_frame, m_arg0)
+                            .select(EigenArray1d<ET>(call_frame, m_arg1),
+                                    EigenArray1d<ET>(call_frame, m_arg2));
                 }
 
             protected:
-                size_t m_arg0;
-                size_t m_arg1;
-                size_t m_arg2;
-                size_t m_out;
+                TensorViewInfo m_arg0;
+                TensorViewInfo m_arg1;
+                TensorViewInfo m_arg2;
+                TensorViewInfo m_out;
             };
         }
     }

@@ -25,17 +25,11 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename T>
-            void log(T arg, T out)
-            {
-                set_map_array(&*out, Eigen::log(get_map_array(&*arg)));
-            }
-
             template <typename ET>
             class LogInstruction : public Instruction
             {
             public:
-                LogInstruction(size_t arg, size_t out)
+                LogInstruction(TensorViewInfo arg, TensorViewInfo out)
                     : m_arg(arg)
                     , m_out(out)
                 {
@@ -43,14 +37,12 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::log(
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg),
-                        call_frame.get_parameterized_tensor_view<ET>(m_out));
+                    EigenArray1d<ET, fmt::V>(call_frame, m_out) = Eigen::log(EigenArray1d<ET, fmt::V>(call_frame, m_arg));
                 }
 
             protected:
-                size_t m_arg;
-                size_t m_out;
+                TensorViewInfo m_arg;
+                TensorViewInfo m_out;
             };
         }
     }

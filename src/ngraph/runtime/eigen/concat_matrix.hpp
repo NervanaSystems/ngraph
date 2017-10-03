@@ -49,12 +49,12 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    EigenMatrix<ET, fmt::M> out(call_frame, m_out);
+                    EigenMatrix<ET> out(call_frame, m_out);
                     for (size_t i = 0; i < m_args.size(); i++)
                     {
                         auto& b = m_blocks[i];
                         out.block(b[0], b[1], b[2], b[3])
-                            << EigenMatrix<ET, fmt::M>(call_frame, m_args.at(i));
+                            << EigenMatrix<ET>(call_frame, m_args.at(i));
                     }
                 }
 

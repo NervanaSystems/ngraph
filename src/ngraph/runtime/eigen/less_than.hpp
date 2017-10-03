@@ -25,7 +25,7 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename TI,typename TO>
+            template <typename TI, typename TO>
             void less_than(TI arg0, TI arg1, TO out)
             {
                 auto result_as_float = get_map_array(&*arg0) < get_map_array(&*arg1);
@@ -37,7 +37,7 @@ namespace ngraph
             class LessThanInstruction : public Instruction
             {
             public:
-                LessThanInstruction(size_t arg0, size_t arg1, size_t out)
+                LessThanInstruction(TensorViewInfo arg0, TensorViewInfo arg1, TensorViewInfo out)
                     : m_arg0(arg0)
                     , m_arg1(arg1)
                     , m_out(out)
@@ -46,16 +46,16 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::less_than(
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg0),
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg1),
-                        call_frame.get_parameterized_tensor_view<element::Bool>(m_out));
+                    EigenArray1d<element::Bool>(call_frame, m_out) =
+                        (EigenArray1d<ET>(call_frame, m_arg0) <
+                         EigenArray1d<ET>(call_frame, m_arg1))
+                            .template cast<char>();
                 }
 
             protected:
-                size_t m_arg0;
-                size_t m_arg1;
-                size_t m_out;
+                TensorViewInfo m_arg0;
+                TensorViewInfo m_arg1;
+                TensorViewInfo m_out;
             };
         }
     }

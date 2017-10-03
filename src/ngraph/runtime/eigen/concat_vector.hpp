@@ -44,10 +44,10 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    EigenVector<ET, fmt::V> out(call_frame, m_out);
+                    EigenVector<ET> out(call_frame, m_out);
                     size_t concat_pos = 0;
                     for (size_t i = 0; i < m_args.size(); i++){
-                        out.segment(concat_pos, m_sizes[i]) << EigenVector<ET, fmt::V>(call_frame, m_args.at(i));
+                        out.segment(concat_pos, m_sizes[i]) << EigenVector<ET>(call_frame, m_args.at(i));
                         concat_pos += m_sizes[i];
                     }
                 }

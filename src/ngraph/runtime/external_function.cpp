@@ -97,25 +97,12 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__)); \
     }
 
-#define REGISTER_UNOP(op_class, instr_class)                                                       \
-    REGISTER_INSTRUCTION(op_class, instr_class, in[0].get_index(), out[0].get_index())
-#define REGISTER_BINOP(op_class, instr_class)                                                      \
-    REGISTER_INSTRUCTION(                                                                          \
-        op_class, instr_class, in[0].get_index(), in[1].get_index(), out[0].get_index())
-#define REGISTER_TERNOP(op_class, instr_class)                                                     \
-    REGISTER_INSTRUCTION(op_class,                                                                 \
-                         instr_class,                                                              \
-                         in[0].get_index(),                                                        \
-                         in[1].get_index(),                                                        \
-                         in[2].get_index(),                                                        \
-                         out[0].get_index())
-
 // Versions the include the descriptor
-#define REGISTER_UNOP1(op_class, instr_class)                                                      \
+#define REGISTER_UNOP(op_class, instr_class)                                                      \
     REGISTER_INSTRUCTION(op_class, instr_class, in[0], out[0])
-#define REGISTER_BINOP1(op_class, instr_class)                                                     \
+#define REGISTER_BINOP(op_class, instr_class)                                                     \
     REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], out[0])
-#define REGISTER_TERNOP1(op_class, instr_class)                                                    \
+#define REGISTER_TERNOP(op_class, instr_class)                                                    \
     REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], in[2], out[0])
 
 // Define code generators for handled ops.
@@ -125,9 +112,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
     static OpMap op_map;
     if (!initialized)
     {
-        REGISTER_UNOP1(op::Abs, runtime::eigen::AbsInstruction<element::Float32>);
-        REGISTER_BINOP1(op::Add, runtime::eigen::AddInstruction<element::Float32>);
-        REGISTER_BINOP1(op::Divide, runtime::eigen::DivideInstruction<element::Float32>);
+        REGISTER_UNOP(op::Abs, runtime::eigen::AbsInstruction<element::Float32>);
+        REGISTER_BINOP(op::Add, runtime::eigen::AddInstruction<element::Float32>);
+        REGISTER_BINOP(op::Divide, runtime::eigen::DivideInstruction<element::Float32>);
         REGISTER_BINOP(op::Equal, runtime::eigen::EqualInstruction<element::Float32>);
         REGISTER_BINOP(op::Less, runtime::eigen::LessThanInstruction<element::Float32>);
         REGISTER_UNOP(op::Log, runtime::eigen::LogInstruction<element::Float32>);

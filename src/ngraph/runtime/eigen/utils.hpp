@@ -140,31 +140,16 @@ namespace ngraph
             };
 
             template <typename ET, typename FMT = fmt::V>
-            using EigenArray = EigenWrapper<ET, FMT, EigenArrayBase<ET>>;
+            using EigenArray1d = EigenWrapper<ET, FMT, EigenArrayBase<ET>>;
+
+            template <typename ET, typename FMT = fmt::M>
+            using EigenArray2d = EigenWrapper<ET, FMT, EigenArrayBase<ET>>;
 
             template <typename ET, typename FMT = fmt::M>
             using EigenMatrix = EigenWrapper<ET, FMT, EigenMatrixBase<ET>>;
 
             template <typename ET, typename FMT = fmt::V>
             using EigenVector = EigenWrapper<ET, FMT, EigenVectorBase<ET>, VectorStrides>;
-
-            template <typename T, typename U>
-            void set_map_array(T* t, size_t l0, size_t l1, size_t s0, size_t s1, const U& u)
-            {
-                Eigen::Map<Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>,
-                           0,
-                           Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>(
-                    t, l0, l1, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(s0, s1)) = u;
-            }
-
-            template <typename T, typename U>
-            void set_map_array(T* t, size_t l0, size_t s0, const U& u)
-            {
-                Eigen::Map<Eigen::Array<T, Eigen::Dynamic, 1>,
-                           0,
-                           Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>(
-                    t, l0, 1, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(s0, 1)) = u;
-            }
 
             template <typename T>
             Eigen::Map<Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>,
@@ -176,31 +161,6 @@ namespace ngraph
                                   0,
                                   Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>(
                     t, l0, l1, Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(s0, s1));
-            }
-
-            template <typename T>
-            Eigen::Map<Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>,
-                       0,
-                       Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>
-                get_map_array(T* t, size_t l0, size_t s0)
-            {
-                return Eigen::
-                    Map<Eigen::Array<T, Eigen::Dynamic, 1>, 0, Eigen::Stride<Eigen::Dynamic, 1>>(
-                        t, l0, 1, Eigen::Stride<Eigen::Dynamic, 1>(s0, 1));
-            }
-
-            template <typename T, typename U>
-            void set_map_array(std::shared_ptr<T>& t, const U& u)
-            {
-                auto& v = t->get_vector();
-                set_map_array(&v[0], v.size(), 1, u);
-            }
-
-            template <typename T, typename U>
-            void set_map_array(T* t, const U& u)
-            {
-                auto& v = t->get_vector();
-                set_map_array(&v[0], v.size(), 1, u);
             }
 
             template <typename T, typename U>
@@ -217,32 +177,6 @@ namespace ngraph
                 auto& v = t->get_vector();
                 Eigen::Map<Eigen::Matrix<typename T::value_type, Eigen::Dynamic, 1>>(
                     &v[0], v.size(), 1) = u;
-            }
-
-            template <typename T, typename U>
-            void set_map_array_2d(std::shared_ptr<T>& t, const U& u)
-            {
-                auto& v      = t->get_vector();
-                auto& s      = t->get_shape();
-                auto  s_rest = std::vector<size_t>(s.begin() + 1, s.end());
-                Eigen::Map<Eigen::Array<typename T::value_type,
-                                        Eigen::Dynamic,
-                                        Eigen::Dynamic,
-                                        Eigen::RowMajor>>(&v[0], s[0], ngraph::shape_size(s_rest)) =
-                    u;
-            }
-
-            template <typename T, typename U>
-            void set_map_array_2d(T* t, const U& u)
-            {
-                auto& v      = t->get_vector();
-                auto& s      = t->get_shape();
-                auto  s_rest = std::vector<size_t>(s.begin() + 1, s.end());
-                Eigen::Map<Eigen::Array<typename T::value_type,
-                                        Eigen::Dynamic,
-                                        Eigen::Dynamic,
-                                        Eigen::RowMajor>>(&v[0], s[0], ngraph::shape_size(s_rest)) =
-                    u;
             }
 
             template <typename T, typename U>
@@ -272,24 +206,6 @@ namespace ngraph
             }
 
             template <typename T>
-            Eigen::Map<Eigen::Array<typename T::value_type, Eigen::Dynamic, Eigen::Dynamic>>
-                get_map_array(std::shared_ptr<T>& arg)
-            {
-                auto& v = arg->get_vector();
-                return get_map_array(&v[0], v.size(), 1, 1, 1);
-            }
-
-            template <typename T>
-            Eigen::Map<Eigen::Array<typename T::value_type, Eigen::Dynamic, Eigen::Dynamic>,
-                       0,
-                       Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>
-                get_map_array(T* arg)
-            {
-                auto& v = arg->get_vector();
-                return get_map_array(&v[0], v.size(), 1, 1, 1);
-            }
-
-            template <typename T>
             Eigen::Map<Eigen::Matrix<typename T::value_type, Eigen::Dynamic, 1>>
                 get_map_matrix(std::shared_ptr<T>& arg)
             {
@@ -305,54 +221,6 @@ namespace ngraph
                 auto& v = arg->get_vector();
                 return Eigen::Map<Eigen::Matrix<typename T::value_type, Eigen::Dynamic, 1>>(
                     &v[0], v.size(), 1);
-            }
-
-            template <typename T>
-            Eigen::Map<
-                Eigen::
-                    Array<typename T::value_type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
-                get_map_array_2d(std::shared_ptr<T>& arg)
-            {
-                auto& v      = arg->get_vector();
-                auto& s      = arg->get_shape();
-                auto  s_rest = std::vector<size_t>(s.begin() + 1, s.end());
-                return Eigen::Map<Eigen::Array<typename T::value_type,
-                                               Eigen::Dynamic,
-                                               Eigen::Dynamic,
-                                               Eigen::RowMajor>>(
-                    &v[0], s[0], ngraph::shape_size(s_rest));
-            }
-
-            template <typename T>
-            Eigen::Map<
-                Eigen::
-                    Array<typename T::value_type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
-                get_map_array_2d(T* arg)
-            {
-                auto& v      = arg->get_vector();
-                auto& s      = arg->get_shape();
-                auto  s_rest = std::vector<size_t>(s.begin() + 1, s.end());
-                return Eigen::Map<Eigen::Array<typename T::value_type,
-                                               Eigen::Dynamic,
-                                               Eigen::Dynamic,
-                                               Eigen::RowMajor>>(
-                    &v[0], s[0], ngraph::shape_size(s_rest));
-            }
-
-            template <typename T>
-            Eigen::Map<
-                Eigen::
-                    Matrix<typename T::value_type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
-                get_map_array_2d(std::shared_ptr<T>& arg)
-            {
-                auto& v      = arg->get_vector();
-                auto& s      = arg->get_shape();
-                auto  s_rest = std::vector<size_t>(s.begin() + 1, s.end());
-                return Eigen::Map<Eigen::Matrix<typename T::value_type,
-                                                Eigen::Dynamic,
-                                                Eigen::Dynamic,
-                                                Eigen::RowMajor>>(
-                    &v[0], s[0], ngraph::shape_size(s_rest));
             }
 
             template <typename T>
