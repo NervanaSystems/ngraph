@@ -26,13 +26,22 @@ using namespace ngraph::pass;
 
 bool CollectFunctions::run_on_function(ngraph::Function* func)
 {
+    set<Function*> functions;
     traverse_nodes(func->get_result(), [&](Node* node)
     {
-        if (typeid(ngraph::op::FunctionCall) == typeid(*node))
+        op::FunctionCall* fc = dynamic_cast<op::FunctionCall*>(node);
+        if (fc)
         {
-            NGRAPH_INFO;
+            NGRAPH_INFO << "function call";
+            Function* f = fc->get_function().get();
+            functions.insert(f);
         }
     });
+
+    for (Function* f : functions)
+    {
+        NGRAPH_INFO << f->get_name();
+    }
 
     return false;
 }
