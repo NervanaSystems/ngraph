@@ -188,14 +188,14 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::ScalarTensorProductInstruction<element::Float32>>(
-                        in[0].get_index(), in[1].get_index(), out[0].get_index()));
+                        in[0], in[1], out[0]));
             }
             else if (arg1_shape.size() == 0)
             {
                 // If arg1 is the scalar, do the same thing but switch the order of operands.
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::ScalarTensorProductInstruction<element::Float32>>(
-                        in[1].get_index(), in[0].get_index(), out[0].get_index()));
+                        in[1], in[0], out[0]));
             }
 
             // If arg0 and arg1 are both vectors, emit a dot product.
@@ -203,7 +203,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::DotInstruction<element::Float32>>(
-                        in[0].get_index(), in[1].get_index(), out[0].get_index()));
+                        in[0], in[1], out[0]));
             }
 
             // If arg0 is a matrix and arg1 is a vector, emit a matrix-vector product.
@@ -211,7 +211,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::MatrixVectorProductInstruction<element::Float32>>(
-                        in[0].get_index(), in[1].get_index(), out[0].get_index()));
+                        in[0], in[1], out[0]));
             }
 
             // If arg0 and arg1 are both matrices, emit a matrix product.
@@ -219,7 +219,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::MatrixMultInstruction<element::Float32>>(
-                        in[0].get_index(), in[1].get_index(), out[0].get_index()));
+                        in[0], in[1], out[0]));
             }
 
             else
