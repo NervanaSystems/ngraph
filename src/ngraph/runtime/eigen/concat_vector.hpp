@@ -25,55 +25,37 @@ namespace ngraph
     {
         namespace eigen
         {
-            // Intended substitutions for T are shared_ptr<ParameterizedTensorView<...>>
-            // and ParameterizedTensorView<...>*.
-            template <typename T>
-            void concat_vector(std::vector<T>& args, T out)
-            {
-                auto vec_out = get_map_matrix(&*out);
-                auto& out_shape = out->get_shape();
-
-                assert (out_shape.size() == 1);
-
-                size_t concat_pos = 0;
-
-                for(T arg : args)
-                {
-                    auto vec_arg = get_map_matrix(&*arg);
-                    auto& arg_shape = arg->get_shape();
-
-                    assert (arg_shape.size() == 1);
-
-                    vec_out.segment(concat_pos,arg_shape.at(0)) << vec_arg;
-                    concat_pos += arg_shape.at(0);
-                }
-            }
-
+            // Would be better to just generate a sequence of copy into slice of output instructions
             template <typename ET>
             class ConcatVectorInstruction : public Instruction
             {
             public:
-                ConcatVectorInstruction(const std::vector<TensorViewInfo>& args, size_t out)
+                ConcatVectorInstruction(const std::vector<TensorViewInfo>& args,
+                                        const TensorViewInfo&              out)
                     : m_args(args)
                     , m_out(out)
                 {
+                    for (auto arg : args)
+                    {
+                        auto& arg_shape = arg.get_tensor_view_layout()->get_shape();
+                        m_sizes.push_back(arg_shape.at(0));
+                    }
                 }
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    std::vector<ParameterizedTensorView<ET>*> ptvs;
-                    for(auto arg : m_args)
-                    {
-                        ptvs.push_back(call_frame.get_parameterized_tensor_view<ET>(arg.get_index()));
+                    EigenVector<ET, fmt::V> out(call_frame, m_out);
+                    size_t concat_pos = 0;
+                    for (size_t i = 0; i < m_args.size(); i++){
+                        out.segment(concat_pos, m_sizes[i]) << EigenVector<ET, fmt::V>(call_frame, m_args.at(i));
+                        concat_pos += m_sizes[i];
                     }
-                    runtime::eigen::concat_vector(
-                        ptvs,
-                        call_frame.get_parameterized_tensor_view<ET>(m_out));
                 }
 
             protected:
                 std::vector<TensorViewInfo> m_args;
-                size_t m_out;
+                TensorViewInfo              m_out;
+                std::vector<size_t> m_sizes;
             };
         }
     }

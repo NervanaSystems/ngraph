@@ -65,7 +65,7 @@ namespace ngraph
             class ConcatMatrixInstruction : public Instruction
             {
             public:
-                ConcatMatrixInstruction(const std::vector<TensorViewInfo>& args, size_t axis, size_t out)
+                ConcatMatrixInstruction(const std::vector<TensorViewInfo>& args, size_t axis, const TensorViewInfo& out)
                     : m_args(args)
                     , m_axis(axis)
                     , m_out(out)
@@ -81,14 +81,14 @@ namespace ngraph
                     }
                     runtime::eigen::concat_matrix(
                         ptvs,
-                        call_frame.get_parameterized_tensor_view<ET>(m_out),
+                        call_frame.get_parameterized_tensor_view<ET>(m_out.get_index()),
                         m_axis);
                 }
 
             protected:
                 std::vector<TensorViewInfo> m_args;
                 size_t m_axis;
-                size_t m_out;
+                TensorViewInfo m_out;
             };
         }
     }

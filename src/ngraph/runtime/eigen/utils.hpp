@@ -31,6 +31,7 @@ namespace ngraph
         namespace eigen
         {
             using DynamicStrides = Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>;
+            using VectorStrides = Eigen::Stride<Eigen::Dynamic, 1>;
 
             template <typename ET>
             using DynamicArray = Eigen::Array<typename ET::type, Eigen::Dynamic, Eigen::Dynamic>;
@@ -43,6 +44,12 @@ namespace ngraph
 
             template <typename ET>
             using EigenMatrixBase = Eigen::Map<DynamicMatrix<ET>, 0, DynamicStrides>;
+
+            template <typename ET>
+            using DynamicVector = Eigen::Matrix<typename ET::type, Eigen::Dynamic, 1>;
+
+            template <typename ET>
+            using EigenVectorBase = Eigen::Map<DynamicVector<ET>, 0, VectorStrides>;
 
             namespace fmt
             {
@@ -68,14 +75,14 @@ namespace ngraph
             // ET element type
             // FMT array format (fmt::V for vector, etc.)
             // BASE select array/matrix
-            template <typename ET, typename FMT, typename BASE>
+            template <typename ET, typename FMT, typename BASE, typename STRIDES=DynamicStrides>
             class EigenWrapper : public BASE
             {
                 using base = BASE;
 
             public:
                 EigenWrapper(typename ET::type* t, const FMT& fmt)
-                    : base(t, fmt.l0, fmt.l1, DynamicStrides(fmt.s0, fmt.s1))
+                    : base(t, fmt.l0, fmt.l1, STRIDES(fmt.s0, fmt.s1))
                 {
                 }
 
@@ -107,6 +114,9 @@ namespace ngraph
 
             template <typename ET, typename FMT=fmt::V>
             using EigenMatrix = EigenWrapper<ET, FMT, EigenMatrixBase<ET>>;
+
+            template <typename ET, typename FMT=fmt::V>
+            using EigenVector = EigenWrapper<ET, FMT, EigenVectorBase<ET>, VectorStrides>;
 
             template <typename T, typename U>
             void set_map_array(T* t, size_t l0, size_t l1, size_t s0, size_t s1, const U& u)

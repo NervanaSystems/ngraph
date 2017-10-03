@@ -163,7 +163,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::ConcatVectorInstruction<element::Float32>>(
-                        in, out[0].get_index()));
+                        in, out[0]));
             }
             else if (result_shape.size() == 2)
             {
@@ -171,7 +171,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                     make_shared<runtime::eigen::ConcatMatrixInstruction<element::Float32>>(
                         in,
                         (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis(),
-                        out[0].get_index()));
+                        out[0]));
             }
             else
             {
