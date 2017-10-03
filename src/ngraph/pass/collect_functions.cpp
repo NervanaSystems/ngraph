@@ -28,8 +28,9 @@ bool CollectFunctions::run_on_function(ngraph::Function* func)
 {
     traverse_nodes(func->get_result(), [&](Node* node)
     {
-        if (std::is_base_of<op::FunctionCall, decltype(*node)>::value)
+        if (typeid(ngraph::op::FunctionCall) == typeid(*node))
         {
+            NGRAPH_INFO;
         }
     });
 
