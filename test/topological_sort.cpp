@@ -69,7 +69,7 @@ TEST(topological_sort, basic)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.run_passes(f0);
-    auto sorted_list = pass_manager.get_call_graph();
+    auto sorted_list = f0->get_ordered_ops();
 
     size_t node_count = get_node_count(r0);
 
@@ -121,7 +121,7 @@ TEST(benchmark, topological_sort)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.run_passes(f0);
-    auto sorted_list = pass_manager.get_call_graph();
+    auto sorted_list = f0->get_ordered_ops();
     timer.stop();
     NGRAPH_INFO << "topological sort took " << timer.get_milliseconds() << "ms";
 

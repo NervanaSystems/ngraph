@@ -12,4 +12,33 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/pass/tree_pass.hpp"
+#include <iostream>
+#include <memory>
+
+#include "ngraph/log.hpp"
+#include "ngraph/pass/manager_state.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/function.hpp"
+
+using namespace std;
+using namespace ngraph;
+
+vector<Function*>& ngraph::pass::ManagerState::get_functions()
+{
+    return m_function_list;
+}
+
+void ngraph::pass::ManagerState::add_function(Function* func)
+{
+    m_function_list.push_back(func);
+}
+
+size_t ngraph::pass::ManagerState::get_temporary_pool_size()
+{
+    return m_temporary_pool_size;
+}
+
+void ngraph::pass::ManagerState::set_temporary_pool_size(size_t size)
+{
+    m_temporary_pool_size = size;
+}

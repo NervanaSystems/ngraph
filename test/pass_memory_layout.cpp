@@ -218,7 +218,7 @@ TEST(memory_layout, basic)
 
     auto graph = make_test_graph();
     pass_manager.run_passes(graph);
-    auto sorted = pass_manager.get_call_graph();
+    auto sorted = graph->get_ordered_ops();
     size_t temporary_pool_size = pass_manager.get_state().get_temporary_pool_size();
     EXPECT_EQ(12, temporary_pool_size);
 }

@@ -26,6 +26,7 @@ Function::Function(const std::shared_ptr<Node>&                       result,
     , m_parameters(parameters)
     , m_name("Function")
     , m_result_type(result_type)
+    , m_ordered_ops_valid(false)
 {
     size_t i = 0;
     for (auto parameter : parameters)
@@ -33,3 +34,28 @@ Function::Function(const std::shared_ptr<Node>&                       result,
         parameter->assign_function(this, i++);
     }
 }
+
+void Function::set_ordered_ops(const std::list<Node*>& ordered_ops)
+{
+    m_ordered_ops = ordered_ops;
+    m_ordered_ops_valid = true;
+}
+
+std::list<Node*>& Function::get_ordered_ops()
+{
+    if (!m_ordered_ops_valid)
+    {
+        throw ngraph_error("Access to ordered ops invalid");
+    }
+    return m_ordered_ops;
+}
+
+const std::list<Node*>& Function::get_ordered_ops() const
+{
+    if (!m_ordered_ops_valid)
+    {
+        throw ngraph_error("Access to ordered ops invalid");
+    }
+    return m_ordered_ops;
+}
+

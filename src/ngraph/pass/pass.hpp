@@ -14,24 +14,40 @@
 
 #pragma once
 
+#include <vector>
+#include <memory>
+
 namespace ngraph
 {
     namespace pass
     {
         class Base;
+        class FunctionPass;
         class Manager;
         class ManagerState;
     }
+    class Function;
 }
 
 class ngraph::pass::Base
 {
     friend class Manager;
 public:
+    virtual ~Base() {}
 protected:
     ManagerState& get_state();
     void set_state(ManagerState&);
 
 private:
     ManagerState* m_state;
+};
+
+class ngraph::pass::FunctionPass : public Base
+{
+public:
+    virtual ~FunctionPass() {}
+    virtual bool run_on_function(ngraph::Function*) = 0;
+
+    // derived class throws exception if its dependencies have not been met
+    virtual void check_dependencies(const std::vector<std::shared_ptr<FunctionPass>>&) const {}
 };

@@ -14,32 +14,30 @@
 
 #pragma once
 
-#include <functional>
+#include <vector>
 #include <memory>
-#include <set>
-#include <sstream>
 
 namespace ngraph
 {
-    class Visualize;
+    namespace pass
+    {
+        class ManagerState;
+    }
+
     class Node;
-    using node_ptr = std::shared_ptr<Node>;
+    class Function;
 }
 
-class ngraph::Visualize
+class ngraph::pass::ManagerState
 {
 public:
-    Visualize(const std::string& name = "ngraph");
+    std::vector<Function*>& get_functions();
+    void      add_function(Function*);
 
-    void add(node_ptr);
-
-    void save_dot(const std::string& path) const;
+    size_t get_temporary_pool_size();
+    void   set_temporary_pool_size(size_t);
 
 private:
-    std::string add_attributes(const Node* node);
-    std::string get_attributes(const Node* node);
-
-    std::stringstream     m_ss;
-    std::string           m_name;
-    std::set<const Node*> m_nodes_with_attributes;
+    size_t                 m_temporary_pool_size = 0;
+    std::vector<Function*> m_function_list;
 };

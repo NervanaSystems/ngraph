@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "ngraph/pass/tree_pass.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -24,10 +24,10 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::CollectFunctions : public TreeBase
+class ngraph::pass::CollectFunctions : public FunctionPass
 {
 public:
-    bool run_on_tree(std::shared_ptr<Node>) override;
+    bool run_on_function(ngraph::Function*) override;
 
 private:
 };

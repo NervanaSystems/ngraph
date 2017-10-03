@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <list>
 
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/node.hpp"
@@ -25,6 +26,7 @@
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/runtime/instruction.hpp"
 #include "ngraph/types/type.hpp"
+#include "ngraph/log.hpp"
 
 namespace ngraph
 {
@@ -46,10 +48,23 @@ namespace ngraph
             return m_result_type;
         }
         std::string get_name() const { return m_name; }
+
+        std::list<Node*>& get_ordered_ops();
+        const std::list<Node*>& get_ordered_ops() const;
+        void set_ordered_ops(const std::list<Node*>&);
+        void set_ordered_ops_valid() { NGRAPH_INFO; m_ordered_ops_valid = true; }
+        void clear_ordered_ops_valid() { NGRAPH_INFO; m_ordered_ops_valid = false; }
+
     protected:
         std::shared_ptr<Node>                               m_result;
         std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;
         std::string                                         m_name;
         std::shared_ptr<ValueType>                          m_result_type;
+        bool                                                m_ordered_ops_valid;
+        std::list<Node*>                                    m_ordered_ops;
+
+    private:
+        Function(const Function&) = delete;
+        Function(const Function&&) = delete;
     };
 }

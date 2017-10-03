@@ -15,6 +15,7 @@
 #include <deque>
 #include <unordered_map>
 
+#include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -24,14 +25,13 @@
 using namespace ngraph;
 using namespace std;
 
-bool ngraph::pass::TopologicalSort::run_on_tree(std::shared_ptr<Node> p)
+bool ngraph::pass::TopologicalSort::run_on_function(ngraph::Function* func)
 {
-    list<Node*>& sorted_list = get_state().get_call_graph();
-    sorted_list.clear();
+    list<Node*> result_list;
     deque<Node*> independent_nodes;
     unordered_map<Node*, size_t> node_depencency_count;
 
-    traverse_nodes(p, [&](Node* node) {
+    traverse_nodes(func->get_result(), [&](Node* node) {
         node_depencency_count[node] = node->get_arguments().size();
         if (node->get_arguments().size() == 0)
         {
@@ -42,7 +42,7 @@ bool ngraph::pass::TopologicalSort::run_on_tree(std::shared_ptr<Node> p)
     while (independent_nodes.size() > 0)
     {
         auto independent_node = independent_nodes.front();
-        sorted_list.push_back(independent_node);
+        result_list.push_back(independent_node);
         independent_nodes.pop_front();
 
         for (auto user : independent_node->users())
@@ -55,6 +55,8 @@ bool ngraph::pass::TopologicalSort::run_on_tree(std::shared_ptr<Node> p)
             }
         }
     }
+
+    func->set_ordered_ops(result_list);
 
     return false;
 }

@@ -44,12 +44,12 @@ set (SRC
     pass/dump_sorted.cpp
     pass/liveness.cpp
     pass/manager.cpp
+    pass/manager_state.cpp
     pass/memory_layout.cpp
     pass/memory_visualize.cpp
     pass/pass.cpp
     pass/propagate_types.cpp
     pass/topological_sort.cpp
-    pass/tree_pass.cpp
     pass/visualize_tree.cpp
     runtime/call_frame.cpp
     runtime/external_function.cpp
@@ -59,7 +59,6 @@ set (SRC
     types/element_type.cpp
     types/type.cpp
     util.cpp
-    visualize.cpp
     )
 
 # find_program (GRAPHVIZ dot)

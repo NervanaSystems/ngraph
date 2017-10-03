@@ -14,17 +14,19 @@
 
 #include <fstream>
 
+#include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-bool pass::VisualizeTree::run_on_tree(std::shared_ptr<Node> base_node)
+bool pass::VisualizeTree::run_on_function(ngraph::Function* func)
 {
     // map<size_t, list<node_ptr>> dependent_nodes;
-    traverse_nodes(base_node, [&](Node* node)
+    traverse_nodes(func->get_result(), [&](Node* node)
     {
         for (auto arg : node->get_arguments())
         {

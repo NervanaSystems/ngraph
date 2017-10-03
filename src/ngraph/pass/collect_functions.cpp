@@ -18,7 +18,7 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::pass;
 
-bool CollectFunctions::run_on_tree(shared_ptr<Node> node)
+bool CollectFunctions::run_on_function(ngraph::Function* func)
 {
     return false;
 }
