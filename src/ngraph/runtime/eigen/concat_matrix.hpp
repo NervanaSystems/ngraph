@@ -26,69 +26,43 @@ namespace ngraph
     {
         namespace eigen
         {
-            // Intended substitutions for T are shared_ptr<ParameterizedTensorView<...>>
-            // and ParameterizedTensorView<...>*.
-            template <typename T>
-            void concat_matrix(std::vector<T>& args, T out, size_t axis)
-            {
-                auto mat_out = get_map_matrix_2d(&*out);
-                auto& out_shape = out->get_shape();
-
-                assert (out_shape.size() == 2);
-                assert (axis == 0 || axis == 1);
-
-                size_t concat_pos = 0;
-
-                for(T arg : args)
-                {
-                    auto mat_arg = get_map_matrix_2d(&*arg);
-                    auto& arg_shape = arg->get_shape();
-
-                    assert (arg_shape.size() == 2);
-
-                    if (axis == 0)
-                    {
-                        mat_out.block(concat_pos,0,arg_shape.at(0),arg_shape.at(1))
-                          << mat_arg;
-                        concat_pos += arg_shape.at(0);
-                    }
-                    else
-                    {
-                        mat_out.block(0,concat_pos,arg_shape.at(0),arg_shape.at(1))
-                          << mat_arg;
-                        concat_pos += arg_shape.at(1);
-                    }
-                }
-            }
-
             template <typename ET>
             class ConcatMatrixInstruction : public Instruction
             {
             public:
-                ConcatMatrixInstruction(const std::vector<TensorViewInfo>& args, size_t axis, const TensorViewInfo& out)
+                ConcatMatrixInstruction(const std::vector<TensorViewInfo>& args,
+                                        size_t                             axis,
+                                        const TensorViewInfo&              out)
                     : m_args(args)
                     , m_axis(axis)
                     , m_out(out)
                 {
+                    size_t concat_pos[2]{0, 0};
+                    for (auto arg : args)
+                    {
+                        auto& arg_shape = arg.get_tensor_view_layout()->get_shape();
+                        m_blocks.push_back(
+                            {concat_pos[0], concat_pos[1], arg_shape.at(0), arg_shape.at(1)});
+                        concat_pos[axis] += arg_shape.at(axis);
+                    }
                 }
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    std::vector<ParameterizedTensorView<ET>*> ptvs;
-                    for(auto arg : m_args)
+                    EigenMatrix<ET, fmt::M> out(call_frame, m_out);
+                    for (size_t i = 0; i < m_args.size(); i++)
                     {
-                        ptvs.push_back(call_frame.get_parameterized_tensor_view<ET>(arg.get_index()));
+                        auto& b = m_blocks[i];
+                        out.block(b[0], b[1], b[2], b[3])
+                            << EigenMatrix<ET, fmt::M>(call_frame, m_args.at(i));
                     }
-                    runtime::eigen::concat_matrix(
-                        ptvs,
-                        call_frame.get_parameterized_tensor_view<ET>(m_out.get_index()),
-                        m_axis);
                 }
 
             protected:
-                std::vector<TensorViewInfo> m_args;
-                size_t m_axis;
-                TensorViewInfo m_out;
+                std::vector<TensorViewInfo>      m_args;
+                size_t                           m_axis;
+                TensorViewInfo                   m_out;
+                std::vector<std::vector<size_t>> m_blocks;
             };
         }
     }

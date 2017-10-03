@@ -31,7 +31,7 @@ namespace ngraph
         namespace eigen
         {
             using DynamicStrides = Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>;
-            using VectorStrides = Eigen::Stride<Eigen::Dynamic, 1>;
+            using VectorStrides  = Eigen::Stride<Eigen::Dynamic, 1>;
 
             template <typename ET>
             using DynamicArray = Eigen::Array<typename ET::type, Eigen::Dynamic, Eigen::Dynamic>;
@@ -40,7 +40,7 @@ namespace ngraph
             using EigenArrayBase = Eigen::Map<DynamicArray<ET>, 0, DynamicStrides>;
 
             template <typename ET>
-            using DynamicMatrix = Eigen::Matrix<typename ET::type, Eigen::Dynamic, Eigen::Dynamic>;
+            using DynamicMatrix = Eigen::Matrix<typename ET::type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
             template <typename ET>
             using EigenMatrixBase = Eigen::Map<DynamicMatrix<ET>, 0, DynamicStrides>;
@@ -70,12 +70,42 @@ namespace ngraph
                     size_t s0{1};
                     size_t s1{1};
                 };
+
+                class M
+                {
+                    M(const Shape& shape, const Strides& strides)
+                        : l0(shape.at(0))
+                        , l1(shape.at(1))
+                        , s0(strides.at(0))
+                        , s1(strides.at(1))
+                    {
+                    }
+
+                    M(const std::shared_ptr<ngraph::descriptor::layout::DenseTensorViewLayout>&
+                          layout)
+                        : M(layout->get_shape(), layout->get_strides())
+                    {
+                    }
+
+                public:
+                    M(const TensorViewInfo& tensor_view_info)
+                        : M(tensor_view_info
+                                .get_layout<ngraph::descriptor::layout::DenseTensorViewLayout>())
+                    {
+                    }
+
+                public:
+                    size_t l0;
+                    size_t l1;
+                    size_t s0;
+                    size_t s1;
+                };
             }
 
             // ET element type
             // FMT array format (fmt::V for vector, etc.)
             // BASE select array/matrix
-            template <typename ET, typename FMT, typename BASE, typename STRIDES=DynamicStrides>
+            template <typename ET, typename FMT, typename BASE, typename STRIDES = DynamicStrides>
             class EigenWrapper : public BASE
             {
                 using base = BASE;
@@ -109,13 +139,13 @@ namespace ngraph
                 }
             };
 
-            template <typename ET, typename FMT=fmt::V>
+            template <typename ET, typename FMT = fmt::V>
             using EigenArray = EigenWrapper<ET, FMT, EigenArrayBase<ET>>;
 
-            template <typename ET, typename FMT=fmt::V>
+            template <typename ET, typename FMT = fmt::M>
             using EigenMatrix = EigenWrapper<ET, FMT, EigenMatrixBase<ET>>;
 
-            template <typename ET, typename FMT=fmt::V>
+            template <typename ET, typename FMT = fmt::V>
             using EigenVector = EigenWrapper<ET, FMT, EigenVectorBase<ET>, VectorStrides>;
 
             template <typename T, typename U>
