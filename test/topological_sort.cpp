@@ -21,6 +21,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/collect_functions.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/log.hpp"
@@ -135,4 +136,32 @@ TEST(benchmark, topological_sort)
     ngraph::free_nodes(result);
     timer.stop();
     NGRAPH_INFO << "delete nodes took " << timer.get_milliseconds() << "ms";
+}
+
+TEST(topological_sort, functions)
+{
+    // First create "f(A,B,C) = (A+B)*C".
+    auto shape = Shape{2, 2};
+    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto C     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt_f  = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f     = make_shared<Function>((A + B) * C, rt_f, op::Parameters{A, B, C});
+
+    // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
+    auto X     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto Y     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto Z     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt_g  = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto g     = make_shared<Function>(
+                     make_shared<op::FunctionCall>(f,Nodes{X,Y,Z})
+                     + make_shared<op::FunctionCall>(f,Nodes{X,Y,Z}),
+                     rt_g,
+                     op::Parameters{X, Y, Z});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CollectFunctions>();
+    pass_manager.register_pass<pass::TopologicalSort>();
+    pass_manager.run_passes(g);
+    auto sorted_list = g->get_ordered_ops();
 }

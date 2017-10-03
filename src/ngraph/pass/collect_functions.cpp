@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "collect_functions.hpp"
+#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/function_call.hpp"
+#include "ngraph/pass/collect_functions.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/util.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -20,5 +26,12 @@ using namespace ngraph::pass;
 
 bool CollectFunctions::run_on_function(ngraph::Function* func)
 {
+    traverse_nodes(func->get_result(), [&](Node* node)
+    {
+        if (std::is_base_of<op::FunctionCall, decltype(*node)>::value)
+        {
+        }
+    });
+
     return false;
 }
