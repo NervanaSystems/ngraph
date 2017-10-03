@@ -22,7 +22,6 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/visualize.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/log.hpp"
 #include "test_tools.hpp"
