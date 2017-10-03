@@ -25,17 +25,11 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename T>
-            void negate(T arg, T out)
-            {
-                set_map_array(&*out, -(get_map_array(&*arg)));
-            }
-
             template <typename ET>
             class NegateInstruction : public Instruction
             {
             public:
-                NegateInstruction(size_t arg, size_t out)
+                NegateInstruction(TensorViewInfo arg, TensorViewInfo out)
                     : m_arg(arg)
                     , m_out(out)
                 {
@@ -43,14 +37,12 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::negate(
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg),
-                        call_frame.get_parameterized_tensor_view<ET>(m_out));
+                    EigenArray1d<ET>(call_frame, m_out) = -EigenArray1d<ET>(call_frame, m_arg);
                 }
 
             protected:
-                size_t m_arg;
-                size_t m_out;
+                TensorViewInfo m_arg;
+                TensorViewInfo m_out;
             };
         }
     }

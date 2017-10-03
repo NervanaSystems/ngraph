@@ -24,17 +24,11 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename T>
-            void multiply(T arg0, T arg1, T out)
-            {
-                set_map_array(&*out, get_map_array(&*arg0) * get_map_array(&*arg1));
-            }
-
             template <typename ET>
             class MultiplyInstruction : public Instruction
             {
             public:
-                MultiplyInstruction(size_t arg0, size_t arg1, size_t out)
+                MultiplyInstruction(TensorViewInfo arg0, TensorViewInfo arg1, TensorViewInfo out)
                     : m_arg0(arg0)
                     , m_arg1(arg1)
                     , m_out(out)
@@ -43,16 +37,14 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::multiply(
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg0),
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg1),
-                        call_frame.get_parameterized_tensor_view<ET>(m_out));
+                    EigenArray1d<ET>(call_frame, m_out) =
+                        EigenArray1d<ET>(call_frame, m_arg0) * EigenArray1d<ET>(call_frame, m_arg1);
                 }
 
             protected:
-                size_t m_arg0;
-                size_t m_arg1;
-                size_t m_out;
+                TensorViewInfo m_arg0;
+                TensorViewInfo m_arg1;
+                TensorViewInfo m_out;
             };
         }
     }

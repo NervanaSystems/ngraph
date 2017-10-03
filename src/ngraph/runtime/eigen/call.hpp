@@ -29,7 +29,7 @@ namespace ngraph
             class CallInstruction : public Instruction
             {
             public:
-                CallInstruction(std::shared_ptr<ExternalFunction> ef,std::vector<size_t> in, std::vector<size_t> out)
+                CallInstruction(std::shared_ptr<ExternalFunction> ef,std::vector<TensorViewInfo> in, std::vector<TensorViewInfo> out)
                     : m_external_function(ef)
                     , m_in(in)
                     , m_out(out)
@@ -45,19 +45,19 @@ namespace ngraph
 
                     for (auto in : m_in)
                     {
-                        inputs.push_back(call_frame.get_tensor_view(in));
+                        inputs.push_back(call_frame.get_tensor_view(in.get_index()));
                     }
                     for (auto out : m_out)
                     {
-                        outputs.push_back(call_frame.get_tensor_view(out));
+                        outputs.push_back(call_frame.get_tensor_view(out.get_index()));
                     }
                     (*cf)(inputs,outputs);
                 }
 
             protected:
                 std::shared_ptr<ExternalFunction> m_external_function;
-                std::vector<size_t> m_in;
-                std::vector<size_t> m_out;
+                std::vector<TensorViewInfo> m_in;
+                std::vector<TensorViewInfo> m_out;
             };
         }
     }
