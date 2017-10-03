@@ -25,6 +25,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/divide.hpp"
@@ -48,6 +49,7 @@
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/eigen/abs.hpp"
 #include "ngraph/runtime/eigen/add.hpp"
+#include "ngraph/runtime/eigen/broadcast_scalar.hpp"
 #include "ngraph/runtime/eigen/call.hpp"
 #include "ngraph/runtime/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/eigen/concat_vector.hpp"
@@ -137,6 +139,30 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             runtime::eigen::ConstantInstruction<element::Float32>,
             dynamic_cast<const op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
             out[0]);
+
+        REGISTER_TO_OP_MAP(op::Broadcast)
+        {
+            auto arg_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type());
+            assert(nullptr != arg_tensor_type);
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+
+            auto arg_shape    = arg_tensor_type->get_shape();
+            auto result_shape = result_tensor_type->get_shape();
+
+            if (arg_shape.size() == 0)
+            {
+                ef->get_instructions()->push_back(
+                    make_shared<runtime::eigen::BroadcastScalarInstruction<element::Float32>>(
+                        in[0], out[0]));
+            }
+            else
+            {
+                throw ngraph_error("Broadcast not implemented for non-scalar arguments in VM yet");
+            }
+        };
 
         REGISTER_TO_OP_MAP(op::Concat)
         {

@@ -669,3 +669,63 @@ TEST(execute, test_function_call)
     (*cf)({x, z, y}, {result});
     ASSERT_EQ((vector<float>{100, 144, 196, 256}), result->get_vector());
 }
+
+TEST(execute, test_broadcast_scalar_vector)
+{
+    auto shape_a = Shape{};
+    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_r = Shape{4};
+    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f       = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a          = vector<float>{6};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector());
+}
+
+TEST(execute, test_broadcast_scalar_matrix)
+{
+    auto shape_a = Shape{};
+    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_r = Shape{2,2};
+    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f       = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0,1}), rt, op::Parameters{A});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a          = vector<float>{6};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector());
+}
+
+TEST(execute, test_broadcast_scalar_tensor)
+{
+    auto shape_a = Shape{};
+    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_r = Shape{2,2,2};
+    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f       = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0,1,2}), rt, op::Parameters{A});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a          = vector<float>{6};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), result->get_vector());
+}
