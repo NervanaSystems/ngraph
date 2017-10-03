@@ -50,6 +50,8 @@
 #include "ngraph/runtime/eigen/abs.hpp"
 #include "ngraph/runtime/eigen/add.hpp"
 #include "ngraph/runtime/eigen/broadcast_scalar.hpp"
+#include "ngraph/runtime/eigen/broadcast_vector_colwise.hpp"
+#include "ngraph/runtime/eigen/broadcast_vector_rowwise.hpp"
 #include "ngraph/runtime/eigen/call.hpp"
 #include "ngraph/runtime/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/eigen/concat_vector.hpp"
@@ -142,6 +144,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_TO_OP_MAP(op::Broadcast)
         {
+            auto broadcast = static_cast<const op::Broadcast*>(n);
+
             auto arg_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type());
             assert(nullptr != arg_tensor_type);
@@ -152,15 +156,41 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto arg_shape    = arg_tensor_type->get_shape();
             auto result_shape = result_tensor_type->get_shape();
 
-            if (arg_shape.size() == 0)
+            if (broadcast->get_broadcast_axes() == AxisSet{})
+            {
+                // Degenerate case: no broadcast axes is just a copy.
+                ef->get_instructions()->push_back(
+                    make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
+                        in[0].get_index(), out[0].get_index()));
+            }
+            else if (arg_shape.size() == 0)
             {
                 ef->get_instructions()->push_back(
                     make_shared<runtime::eigen::BroadcastScalarInstruction<element::Float32>>(
                         in[0], out[0]));
             }
+            else if (arg_shape.size() == 1 && result_shape.size() == 2)
+            {
+                if (broadcast->get_broadcast_axes() == AxisSet{1})
+                {
+                    ef->get_instructions()->push_back(
+                        make_shared<runtime::eigen::BroadcastVectorColwiseInstruction<element::Float32>>(
+                            in[0], out[0]));
+                }
+                else if (broadcast->get_broadcast_axes() == AxisSet{0})
+                {
+                    ef->get_instructions()->push_back(
+                        make_shared<runtime::eigen::BroadcastVectorRowwiseInstruction<element::Float32>>(
+                            in[0], out[0]));
+                }
+                else
+                {
+                    throw ngraph_error("Internal error: axis set for vector-matrix broadcast is neither {0} or {1}");
+                }
+            }
             else
             {
-                throw ngraph_error("Broadcast not implemented for non-scalar arguments in VM yet");
+                throw ngraph_error("Broadcast not implemented for rank>2 in VM yet");
             }
         };
 
