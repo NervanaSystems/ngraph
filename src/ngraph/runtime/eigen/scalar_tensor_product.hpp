@@ -25,17 +25,13 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename T>
-            void scalar_tensor_product(T arg0, T arg1, T out)
-            {
-                set_map_matrix(&*out,(&*arg0)->get_vector()[0] * get_map_matrix(&*arg1));
-            }
-
             template <typename ET>
             class ScalarTensorProductInstruction : public Instruction
             {
             public:
-                ScalarTensorProductInstruction(size_t arg0, size_t arg1, size_t out)
+                ScalarTensorProductInstruction(const TensorViewInfo& arg0,
+                                               const TensorViewInfo& arg1,
+                                               const TensorViewInfo& out)
                     : m_arg0(arg0)
                     , m_arg1(arg1)
                     , m_out(out)
@@ -44,16 +40,19 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    runtime::eigen::scalar_tensor_product(
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg0),
-                        call_frame.get_parameterized_tensor_view<ET>(m_arg1),
-                        call_frame.get_parameterized_tensor_view<ET>(m_out));
+                    // This is a bit hacky: regardless of the tensor rank we
+                    // pull it out as a vector. This works because of the way
+                    // fmt::V computes sizes---it lumps together any higher
+                    // dimensions---while fmt::M ignores them.
+                    EigenVector<ET>(call_frame, m_out) =
+                        call_frame.get_tensor_view_data<ET>(m_arg0.get_index())[0]
+                          * EigenVector<ET>(call_frame, m_arg1);
                 }
 
             protected:
-                size_t m_arg0;
-                size_t m_arg1;
-                size_t m_out;
+                TensorViewInfo m_arg0;
+                TensorViewInfo m_arg1;
+                TensorViewInfo m_out;
             };
         }
     }
