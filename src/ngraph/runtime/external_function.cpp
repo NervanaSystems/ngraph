@@ -149,6 +149,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto arg_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type());
             assert(nullptr != arg_tensor_type);
+
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
@@ -156,7 +157,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto arg_shape    = arg_tensor_type->get_shape();
             auto result_shape = result_tensor_type->get_shape();
 
-            if (broadcast->get_broadcast_axes() == AxisSet{})
+            if (broadcast->get_broadcast_axes().empty())
             {
                 // Degenerate case: no broadcast axes is just a copy.
                 ef->get_instructions()->push_back(
