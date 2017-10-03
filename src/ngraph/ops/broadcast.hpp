@@ -39,6 +39,8 @@ namespace ngraph
             virtual std::string description() const override { return "Broadcast"; }
             virtual void        propagate_types() override;
 
+            const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
+
         protected:
             Shape   m_shape;
             AxisSet m_broadcast_axes;
