@@ -50,6 +50,37 @@ TEST(execute, test_abc)
     ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector());
 }
 
+TEST(execute, test_abc_int64)
+{
+    auto shape = Shape{2, 2};
+    auto A     = make_shared<op::Parameter>(element::Int64::element_type(), shape);
+    auto B     = make_shared<op::Parameter>(element::Int64::element_type(), shape);
+    auto C     = make_shared<op::Parameter>(element::Int64::element_type(), shape);
+    auto rt    = make_shared<TensorViewType>(element::Int64::element_type(), shape);
+    auto f     = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a      = ngraph::runtime::make_tensor<element::Int64>(shape);
+    *a          = vector<element::Int64::type>{1, 2, 3, 4};
+    auto b      = ngraph::runtime::make_tensor<element::Int64>(shape);
+    *b          = vector<element::Int64::type>{5, 6, 7, 8};
+    auto c      = ngraph::runtime::make_tensor<element::Int64>(shape);
+    *c          = vector<element::Int64::type>{9, 10, 11, 12};
+    auto result = ngraph::runtime::make_tensor<element::Int64>(shape);
+
+    (*cf)({a, b, c}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+
+    (*cf)({b, a, c}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+
+    (*cf)({a, c, b}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector());
+}
+
 // Same as test_abc, but using tuples for input and output
 TEST(execute, test_abc_tuple)
 {

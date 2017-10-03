@@ -94,12 +94,75 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__)); \
     }
 
-#define REGISTER_UNOP(op_class, instr_class)                                                       \
-    REGISTER_INSTRUCTION(op_class, instr_class, in[0], out[0])
-#define REGISTER_BINOP(op_class, instr_class)                                                      \
-    REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], out[0])
-#define REGISTER_TERNOP(op_class, instr_class)                                                     \
-    REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], in[2], out[0])
+#define REGISTER_SIGNED_NUMERIC_UNOP(op_class, instr_class)                                                                                            \
+    REGISTER_TO_OP_MAP(op_class)                                                                                                                       \
+    {                                                                                                                                                  \
+        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))->get_element_type();        \
+        if      (et == element::Float32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Float32>>(in[0], out[0])); \
+        else if (et == element::Int8::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int8>>(in[0], out[0]));       \
+        else if (et == element::Int32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int32>>(in[0], out[0]));     \
+        else if (et == element::Int64::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int64>>(in[0], out[0]));     \
+        else    throw ngraph_error("Internal error: signed numeric unop has unhandled element type");                                                  \
+    }
+
+#define REGISTER_NUMERIC_UNOP(op_class, instr_class)                                                                                                   \
+    REGISTER_TO_OP_MAP(op_class)                                                                                                                       \
+    {                                                                                                                                                  \
+        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))->get_element_type();        \
+        if      (et == element::Float32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Float32>>(in[0], out[0])); \
+        else if (et == element::Int8::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int8>>(in[0], out[0]));       \
+        else if (et == element::Int32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int32>>(in[0], out[0]));     \
+        else if (et == element::Int64::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int64>>(in[0], out[0]));     \
+        else if (et == element::UInt8::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::UInt8>>(in[0], out[0]));     \
+        else if (et == element::UInt32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::UInt32>>(in[0], out[0]));   \
+        else if (et == element::UInt64::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::UInt64>>(in[0], out[0]));   \
+        else    throw ngraph_error("Internal error: numeric unop has unhandled element type");                                                         \
+    }
+
+#define REGISTER_NUMERIC_BINOP(op_class, instr_class)                                                                                                         \
+    REGISTER_TO_OP_MAP(op_class)                                                                                                                              \
+    {                                                                                                                                                         \
+        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))->get_element_type();               \
+        if      (et == element::Float32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Float32>>(in[0], in[1], out[0])); \
+        else if (et == element::Int8::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int8>>(in[0], in[1], out[0]));       \
+        else if (et == element::Int32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int32>>(in[0], in[1], out[0]));     \
+        else if (et == element::Int64::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int64>>(in[0], in[1], out[0]));     \
+        else if (et == element::UInt8::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::UInt8>>(in[0], in[1], out[0]));     \
+        else if (et == element::UInt32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::UInt32>>(in[0], in[1], out[0]));   \
+        else if (et == element::UInt64::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::UInt64>>(in[0], in[1], out[0]));   \
+        else    throw ngraph_error("Internal error: numeric binop has unhandled element type");                                                               \
+    }
+
+#define REGISTER_POLYMORPHIC_BINOP(op_class, instr_class)                                                                                                     \
+    REGISTER_TO_OP_MAP(op_class)                                                                                                                              \
+    {                                                                                                                                                         \
+        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))->get_element_type();               \
+        if      (et == element::Bool::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Bool>>(in[0], in[1], out[0]));       \
+        else if (et == element::Float32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Float32>>(in[0], in[1], out[0])); \
+        else if (et == element::Int8::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int8>>(in[0], in[1], out[0]));       \
+        else if (et == element::Int32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int32>>(in[0], in[1], out[0]));     \
+        else if (et == element::Int64::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int64>>(in[0], in[1], out[0]));     \
+        else if (et == element::UInt8::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::UInt8>>(in[0], in[1], out[0]));     \
+        else if (et == element::UInt32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::UInt32>>(in[0], in[1], out[0]));   \
+        else if (et == element::UInt64::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::UInt64>>(in[0], in[1], out[0]));   \
+        else    throw ngraph_error("Internal error: polymorphic binop has unhandled element type");                                                           \
+    }
+
+// Something sneaky here: note the at(1) instead of at(0).
+#define REGISTER_POLYMORPHIC_TERNOP(op_class, instr_class)                                                                                                           \
+    REGISTER_TO_OP_MAP(op_class)                                                                                                                                     \
+    {                                                                                                                                                                \
+        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(1)->get_value_type()))->get_element_type();                      \
+        if      (et == element::Bool::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Bool>>(in[0], in[1], in[2], out[0]));       \
+        else if (et == element::Float32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Float32>>(in[0], in[1], in[2], out[0])); \
+        else if (et == element::Int8::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int8>>(in[0], in[1], in[2], out[0]));       \
+        else if (et == element::Int32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int32>>(in[0], in[1], in[2], out[0]));     \
+        else if (et == element::Int64::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::Int64>>(in[0], in[1], in[2], out[0]));     \
+        else if (et == element::UInt8::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::UInt8>>(in[0], in[1], in[2], out[0]));     \
+        else if (et == element::UInt32::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::UInt32>>(in[0], in[1], in[2], out[0]));   \
+        else if (et == element::UInt64::element_type()) ef->get_instructions()->push_back(make_shared<instr_class<element::UInt64>>(in[0], in[1], in[2], out[0]));   \
+        else    throw ngraph_error("Internal error: polymorphic ternop has unhandled element type");                                                                 \
+    }
 
 // Define code generators for handled ops.
 ExternalFunction::OpMap& ExternalFunction::get_op_map()
@@ -108,31 +171,57 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
     static OpMap op_map;
     if (!initialized)
     {
-        REGISTER_UNOP(op::Abs, runtime::eigen::AbsInstruction<element::Float32>);
-        REGISTER_BINOP(op::Add, runtime::eigen::AddInstruction<element::Float32>);
-        REGISTER_BINOP(op::Divide, runtime::eigen::DivideInstruction<element::Float32>);
-        REGISTER_BINOP(op::Equal, runtime::eigen::EqualInstruction<element::Float32>);
-        REGISTER_BINOP(op::Less, runtime::eigen::LessThanInstruction<element::Float32>);
-        REGISTER_UNOP(op::Log, runtime::eigen::LogInstruction<element::Float32>);
-        REGISTER_BINOP(op::Maximum, runtime::eigen::MaximumInstruction<element::Float32>);
-        REGISTER_BINOP(op::Multiply, runtime::eigen::MultiplyInstruction<element::Float32>);
-        REGISTER_UNOP(op::Negative, runtime::eigen::NegateInstruction<element::Float32>);
-        REGISTER_BINOP(op::NotEqual, runtime::eigen::NotEqualInstruction<element::Float32>);
-        REGISTER_TERNOP(op::Select, runtime::eigen::SelectInstruction<element::Float32>);
-        REGISTER_BINOP(op::Subtract, runtime::eigen::SubtractInstruction<element::Float32>);
+        REGISTER_NUMERIC_UNOP(op::Log, runtime::eigen::LogInstruction);
+        REGISTER_NUMERIC_UNOP(op::Negative, runtime::eigen::NegateInstruction);
 
-        REGISTER_INSTRUCTION(
-            op::ScalarConstant<element::Float32>,
-            runtime::eigen::ConstantInstruction<element::Float32>,
-            std::vector<element::Float32::type>{
-                dynamic_cast<const op::ScalarConstant<element::Float32>*>(n)->get_value()},
+        REGISTER_SIGNED_NUMERIC_UNOP(op::Abs, runtime::eigen::AbsInstruction);
+
+        REGISTER_NUMERIC_BINOP(op::Add, runtime::eigen::AddInstruction);
+        REGISTER_NUMERIC_BINOP(op::Divide, runtime::eigen::DivideInstruction);
+        REGISTER_NUMERIC_BINOP(op::Less, runtime::eigen::LessThanInstruction);
+        REGISTER_NUMERIC_BINOP(op::Maximum, runtime::eigen::MaximumInstruction);
+        REGISTER_NUMERIC_BINOP(op::Multiply, runtime::eigen::MultiplyInstruction);
+        REGISTER_NUMERIC_BINOP(op::Subtract, runtime::eigen::SubtractInstruction);
+
+        REGISTER_POLYMORPHIC_BINOP(op::Equal, runtime::eigen::EqualInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::NotEqual, runtime::eigen::NotEqualInstruction);
+
+        REGISTER_POLYMORPHIC_TERNOP(op::Select, runtime::eigen::SelectInstruction);
+
+#define REGISTER_SCALAR_CONSTANT(T)                                          \
+        REGISTER_INSTRUCTION(                                                \
+            op::ScalarConstant<T>,                                           \
+            runtime::eigen::ConstantInstruction<T>,                          \
+            std::vector<T::type>{                                            \
+                dynamic_cast<const op::ScalarConstant<T>*>(n)->get_value()}, \
             out[0]);
 
-        REGISTER_INSTRUCTION(
-            op::TensorConstant<element::Float32>,
-            runtime::eigen::ConstantInstruction<element::Float32>,
-            dynamic_cast<const op::TensorConstant<element::Float32>*>(n)->get_value()->get_vector(),
+        REGISTER_SCALAR_CONSTANT(element::Bool);
+        REGISTER_SCALAR_CONSTANT(element::Float32);
+        REGISTER_SCALAR_CONSTANT(element::Int8);
+        REGISTER_SCALAR_CONSTANT(element::Int32);
+        REGISTER_SCALAR_CONSTANT(element::Int64);
+        REGISTER_SCALAR_CONSTANT(element::UInt8);
+        REGISTER_SCALAR_CONSTANT(element::UInt32);
+        REGISTER_SCALAR_CONSTANT(element::UInt64);
+#undef REGISTER_SCALAR_CONSTANT
+
+#define REGISTER_TENSOR_CONSTANT(T)                                                   \
+        REGISTER_INSTRUCTION(                                                         \
+            op::TensorConstant<T>,                                                    \
+            runtime::eigen::ConstantInstruction<T>,                                   \
+            dynamic_cast<const op::TensorConstant<T>*>(n)->get_value()->get_vector(), \
             out[0]);
+
+        REGISTER_TENSOR_CONSTANT(element::Bool);
+        REGISTER_TENSOR_CONSTANT(element::Float32);
+        REGISTER_TENSOR_CONSTANT(element::Int8);
+        REGISTER_TENSOR_CONSTANT(element::Int32);
+        REGISTER_TENSOR_CONSTANT(element::Int64);
+        REGISTER_TENSOR_CONSTANT(element::UInt8);
+        REGISTER_TENSOR_CONSTANT(element::UInt32);
+        REGISTER_TENSOR_CONSTANT(element::UInt64);
+#undef REGISTER_TENSOR_CONSTANT
 
         REGISTER_TO_OP_MAP(op::Concat)
         {
@@ -380,8 +469,26 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame(Functio
     std::vector<std::shared_ptr<ngraph::runtime::TensorView>> temps;
     for (auto tv : m_temp_views)
     {
-        temps.push_back(ngraph::runtime::make_tensor<ngraph::element::Float32>(
-            tv->get_tensor_view_type()->get_shape()));
+        // TODO: more types here...
+        if (tv->get_tensor_view_type()->get_element_type() == element::Bool::element_type())
+        {
+            temps.push_back(ngraph::runtime::make_tensor<ngraph::element::Bool>(
+                tv->get_tensor_view_type()->get_shape()));
+        }
+        else if (tv->get_tensor_view_type()->get_element_type() == element::Float32::element_type())
+        {
+            temps.push_back(ngraph::runtime::make_tensor<ngraph::element::Float32>(
+                tv->get_tensor_view_type()->get_shape()));
+        }
+        else if (tv->get_tensor_view_type()->get_element_type() == element::Int64::element_type())
+        {
+            temps.push_back(ngraph::runtime::make_tensor<ngraph::element::Int64>(
+                tv->get_tensor_view_type()->get_shape()));
+        }
+        else
+        {
+            throw ngraph_error("Internal error: tried to create temporary for unhandled element type");
+        }
     }
     return make_shared<ngraph::runtime::CallFrame>(
         m_n_inputs, m_n_outputs, temps, 0, m_instructions);
