@@ -1,0 +1,14 @@
+This file is created (in branch chrisl/test-merge-trigger) so I have a change
+on a branch, which then allows me to create a pull-request.  The pull-request
+is then used to test the Jenkins merge job which I am setting up.  If there is
+no change on a branch, then Github intelligently does not let you create a
+pull-request.  (Seems a little too hand-holding to me, but there you have it.)
+
+If you have any questions about this file, please contact me (Chris Lishka).
+This file should never appear on the master branch -- it should only ever exist
+on branch chrisl/test-merge-trigger, which will be deleted once the merge-
+trigger is working.
+
+Additional line to force pull-request change (and build).
+
+-- ChrisL, September 18, 2017
