@@ -29,8 +29,7 @@ namespace ngraph
             class BroadcastScalarInstruction : public Instruction
             {
             public:
-                BroadcastScalarInstruction(const TensorViewInfo& arg,
-                                           const TensorViewInfo& out)
+                BroadcastScalarInstruction(const TensorViewInfo& arg, const TensorViewInfo& out)
                     : m_arg(arg)
                     , m_out(out)
                 {
@@ -42,7 +41,7 @@ namespace ngraph
                     // pull it out as a vector. This works because of the way
                     // fmt::V computes sizes---it lumps together any higher
                     // dimensions---while fmt::M ignores them.
-                    EigenArray1d<ET>(call_frame, m_out) = EigenArray1d<ET>(call_frame, m_arg)(0,0);
+                    EigenArray1d<ET>(call_frame, m_out) = EigenArray1d<ET>(call_frame, m_arg)(0, 0);
                 }
 
             protected:

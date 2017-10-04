@@ -24,7 +24,7 @@ namespace ngraph
             Select(const std::shared_ptr<Node>& arg0,
                    const std::shared_ptr<Node>& arg1,
                    const std::shared_ptr<Node>& arg2)
-	      : Builtin(Nodes{arg0, arg1, arg2})
+                : Builtin(Nodes{arg0, arg1, arg2})
             {
             }
             virtual std::string description() const override { return "Select"; }

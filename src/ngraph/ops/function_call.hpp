@@ -28,7 +28,7 @@ namespace ngraph
             /// @param function The function to be called
             /// @param args The function arguments
             ///
-            FunctionCall(const std::shared_ptr<Function>&          function,
+            FunctionCall(const std::shared_ptr<Function>& function,
                          const std::vector<std::shared_ptr<Node>>& args)
                 : Builtin(args)
                 , m_function(function)
@@ -36,10 +36,9 @@ namespace ngraph
             }
 
             virtual std::string description() const override { return "FunctionCall"; }
-            virtual void        propagate_types() override;
+            virtual void propagate_types() override;
 
             std::shared_ptr<Function> get_function() const { return m_function; }
-
         protected:
             std::shared_ptr<Function> m_function;
         };

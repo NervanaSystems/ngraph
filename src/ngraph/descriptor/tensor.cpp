@@ -20,10 +20,10 @@ using namespace ngraph;
 using namespace ngraph::descriptor;
 
 Tensor::Tensor(const element::Type& element_type,
-               PrimaryTensorView*   primary_tensor_view,
-               const std::string&   name,
-               bool                 is_output,
-               bool                 is_input)
+               PrimaryTensorView* primary_tensor_view,
+               const std::string& name,
+               bool is_output,
+               bool is_input)
     : m_element_type(element_type)
     , m_primary_tensor_view(primary_tensor_view)
     , m_is_output{is_output}

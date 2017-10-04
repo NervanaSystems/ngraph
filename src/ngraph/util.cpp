@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <iomanip>
-#include <map>
 #include <deque>
 #include <forward_list>
+#include <iomanip>
+#include <map>
 #include <unordered_set>
 
-#include "ngraph/util.hpp"
-#include "ngraph/node.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 
@@ -28,10 +28,10 @@ map<string, ngraph::stopwatch*> ngraph::stopwatch_statistics;
 
 void ngraph::dump(ostream& out, const void* _data, size_t _size)
 {
-    auto           flags = out.flags();
-    const uint8_t* data  = reinterpret_cast<const uint8_t*>(_data);
-    size_t            len   = _size;
-    size_t            index = 0;
+    auto flags = out.flags();
+    const uint8_t* data = reinterpret_cast<const uint8_t*>(_data);
+    size_t len = _size;
+    size_t index = 0;
     while (index < len)
     {
         out << std::hex << std::setw(8) << std::setfill('0') << index;
@@ -99,9 +99,9 @@ string ngraph::trim(const string& s)
 
 vector<string> ngraph::split(const string& src, char delimiter, bool do_trim)
 {
-    size_t         pos;
-    string         token;
-    size_t         start = 0;
+    size_t pos;
+    string token;
+    size_t start = 0;
     vector<string> rc;
     while ((pos = src.find(delimiter, start)) != std::string::npos)
     {
@@ -135,8 +135,7 @@ size_t ngraph::hash_combine(const std::vector<size_t>& list)
     return seed;
 }
 
-void ngraph::traverse_nodes(const std::shared_ptr<ngraph::Node>& p,
-                            std::function<void(Node*)>           f)
+void ngraph::traverse_nodes(const std::shared_ptr<ngraph::Node>& p, std::function<void(Node*)> f)
 {
     std::unordered_set<Node*> instances_seen;
     deque<Node*> stack;
@@ -151,7 +150,10 @@ void ngraph::traverse_nodes(const std::shared_ptr<ngraph::Node>& p,
             f(n);
         }
         stack.pop_front();
-        for (auto arg : n->get_arguments()) { stack.push_front(arg.get()); }
+        for (auto arg : n->get_arguments())
+        {
+            stack.push_front(arg.get());
+        }
     }
 }
 
@@ -159,10 +161,7 @@ void ngraph::free_nodes(shared_ptr<Node> p)
 {
     std::deque<Node*> sorted_list;
 
-    traverse_nodes(p, [&](Node* n)
-    {
-        sorted_list.push_front(n);
-    });
+    traverse_nodes(p, [&](Node* n) { sorted_list.push_front(n); });
 
     for (Node* n : sorted_list)
     {

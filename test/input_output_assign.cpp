@@ -66,7 +66,7 @@ TEST(input_output, simple_output)
     auto tv_tp_0 = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4});
     auto param_0 = make_shared<op::Parameter>(tv_tp_0);
     auto param_1 = make_shared<op::Parameter>(tv_tp_0);
-    auto add     = make_shared<op::Add>(param_0, param_1);
+    auto add = make_shared<op::Add>(param_0, param_1);
 
     // Sort the ops
     vector<shared_ptr<Node>> nodes;

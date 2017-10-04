@@ -16,7 +16,10 @@
 
 using namespace ngraph::op;
 
-void ScalarConstantBase::propagate_types() {}
+void ScalarConstantBase::propagate_types()
+{
+}
 
-void TensorConstantBase::propagate_types() {}
-
+void TensorConstantBase::propagate_types()
+{
+}
