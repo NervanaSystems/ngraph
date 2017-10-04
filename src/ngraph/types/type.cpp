@@ -14,8 +14,8 @@
 
 #include <memory>
 
-#include "ngraph/ngraph.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/ngraph.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -39,7 +39,8 @@ bool TensorViewType::operator==(const ValueType& that) const
     return true;
 }
 
-void TensorViewType::collect_tensor_views(std::vector<std::shared_ptr<const TensorViewType>>& views) const
+void TensorViewType::collect_tensor_views(
+    std::vector<std::shared_ptr<const TensorViewType>>& views) const
 {
     views.push_back(shared_from_this());
 }
@@ -54,9 +55,10 @@ bool TupleType::operator==(const ValueType& that) const
     return that_tvt->get_element_types() == get_element_types();
 }
 
-void TupleType::collect_tensor_views(std::vector<std::shared_ptr<const TensorViewType>>& views) const
+void TupleType::collect_tensor_views(
+    std::vector<std::shared_ptr<const TensorViewType>>& views) const
 {
-    for(auto elt : m_element_types)
+    for (auto elt : m_element_types)
     {
         elt->collect_tensor_views(views);
     }
@@ -70,7 +72,7 @@ std::ostream& ngraph::operator<<(std::ostream& out, const ValueType& obj)
 
 std::ostream& ngraph::operator<<(std::ostream& out, const TensorViewType& obj)
 {
-    out << "TensorViewType(" << obj.m_element_type << ", {" << join(obj.m_shape)  << "})";
+    out << "TensorViewType(" << obj.m_element_type << ", {" << join(obj.m_shape) << "})";
     return out;
 }
 

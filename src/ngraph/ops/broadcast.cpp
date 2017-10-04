@@ -19,7 +19,8 @@ using namespace ngraph::op;
 
 void Broadcast::propagate_types()
 {
-    if (m_arguments.size() != 1){
+    if (m_arguments.size() != 1)
+    {
         throw ngraph_error("Wrong number of arguments.");
     }
 
@@ -42,5 +43,6 @@ void Broadcast::propagate_types()
     {
         throw ngraph_error("Broadcast arg, shape, and axes are incompatible");
     }
-    set_value_type_checked(make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), m_shape));
+    set_value_type_checked(
+        make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), m_shape));
 }

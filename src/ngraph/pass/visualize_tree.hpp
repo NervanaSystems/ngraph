@@ -14,9 +14,9 @@
 
 #pragma once
 
+#include <set>
 #include <sstream>
 #include <string>
-#include <set>
 
 #include "ngraph/pass/pass.hpp"
 
@@ -40,7 +40,7 @@ private:
     std::string get_attributes(const Node* node);
     void render() const;
 
-    std::stringstream     m_ss;
-    std::string           m_name;
+    std::stringstream m_ss;
+    std::string m_name;
     std::set<const Node*> m_nodes_with_attributes;
 };

@@ -15,8 +15,8 @@
 #pragma once
 
 #include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/eigen/utils.hpp"
+#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/instruction.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
@@ -29,7 +29,9 @@ namespace ngraph
             class CallInstruction : public Instruction
             {
             public:
-                CallInstruction(std::shared_ptr<ExternalFunction> ef,std::vector<size_t> in, std::vector<size_t> out)
+                CallInstruction(std::shared_ptr<ExternalFunction> ef,
+                                std::vector<size_t> in,
+                                std::vector<size_t> out)
                     : m_external_function(ef)
                     , m_in(in)
                     , m_out(out)
@@ -39,7 +41,7 @@ namespace ngraph
                 virtual void execute(CallFrame& call_frame) const override
                 {
                     std::shared_ptr<CallFrame> cf = m_external_function->make_call_frame();
-                    
+
                     std::vector<std::shared_ptr<ngraph::runtime::Value>> inputs;
                     std::vector<std::shared_ptr<ngraph::runtime::Value>> outputs;
 
@@ -51,7 +53,7 @@ namespace ngraph
                     {
                         outputs.push_back(call_frame.get_tensor_view(out));
                     }
-                    (*cf)(inputs,outputs);
+                    (*cf)(inputs, outputs);
                 }
 
             protected:

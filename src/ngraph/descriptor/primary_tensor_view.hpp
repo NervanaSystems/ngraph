@@ -41,12 +41,12 @@ namespace ngraph
             /// @param is_output The view can be read from the host at the end of a computation.
             /// @param is_input The view can be written from the host at the beginning of a computation.
             PrimaryTensorView(const std::shared_ptr<const TensorViewType>& tensor_view_type,
-                              const std::string&                           name,
-                              bool                                         is_output,
-                              bool                                         is_input);
+                              const std::string& name,
+                              bool is_output,
+                              bool is_input);
 
             virtual const Tensor& get_tensor() const override;
-            virtual Tensor&       get_tensor() override;
+            virtual Tensor& get_tensor() override;
 
         protected:
             Tensor m_tensor;

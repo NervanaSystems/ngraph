@@ -21,6 +21,7 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/add.hpp"
@@ -69,13 +70,12 @@
 #include "ngraph/runtime/eigen/subtract.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
-#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph::runtime;
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                   bool                                     release_function)
+                                   bool release_function)
     : m_function(function)
     , m_release_function(release_function)
     , m_is_compiled(false)
@@ -83,16 +83,17 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 {
 }
 
-#define REGISTER_TO_OP_MAP(op_class)                                                   \
-    op_map[type_index(typeid(op_class))] = [](const Node*                n,            \
-                                              ExternalFunction*          ef,           \
-                                              FunctionMap&               function_map, \
-                                              const std::vector<size_t>& in,           \
+#define REGISTER_TO_OP_MAP(op_class)                                                               \
+    op_map[type_index(typeid(op_class))] = [](const Node* n,                                       \
+                                              ExternalFunction* ef,                                \
+                                              FunctionMap& function_map,                           \
+                                              const std::vector<size_t>& in,                       \
                                               const std::vector<size_t>& out)
 
-#define REGISTER_INSTRUCTION(op_class, instr_class, ...)                          \
-    REGISTER_TO_OP_MAP(op_class) {                                                \
-        ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__)); \
+#define REGISTER_INSTRUCTION(op_class, instr_class, ...)                                           \
+    REGISTER_TO_OP_MAP(op_class)                                                                   \
+    {                                                                                              \
+        ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__));                  \
     }
 
 #define REGISTER_UNOP(op_class, instr_class)                                                       \
@@ -226,7 +227,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         };
 
         // Parameter is a "runtime no-op" because the output tensor has already been filled.
-        REGISTER_TO_OP_MAP(op::Parameter) {};
+        REGISTER_TO_OP_MAP(op::Parameter){};
 
         // GetTupleElement will be spliced out, with the users of out redirected to in's source, but, for now, we need to copy.
         REGISTER_TO_OP_MAP(op::GetTupleElement)
@@ -252,7 +253,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_TO_OP_MAP(op::FunctionCall)
         {
             auto function_call = static_cast<const op::FunctionCall*>(n);
-            auto function      = function_call->get_function();
+            auto function = function_call->get_function();
 
             std::shared_ptr<ExternalFunction> external;
 
@@ -262,20 +263,16 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
             catch (const std::out_of_range)
             {
-                external = make_shared<ngraph::runtime::ExternalFunction>(
-                               function_call->get_function());
-                function_map.insert({function,external});
+                external =
+                    make_shared<ngraph::runtime::ExternalFunction>(function_call->get_function());
+                function_map.insert({function, external});
             }
 
             ef->get_instructions()->push_back(
-                make_shared<runtime::eigen::CallInstruction>(external,in,out));
+                make_shared<runtime::eigen::CallInstruction>(external, in, out));
         };
 
-        REGISTER_TO_OP_MAP(op::Reduce)
-        {
-            throw ngraph_error("op::Reduce not implemented yet");
-        };
-
+        REGISTER_TO_OP_MAP(op::Reduce) { throw ngraph_error("op::Reduce not implemented yet"); };
         initialized = true;
     }
     return op_map;
@@ -302,8 +299,8 @@ void ExternalFunction::compile(FunctionMap& function_map)
     {
         for (const descriptor::Output& output : param->get_outputs())
         {
-            auto   tv        = output.get_tensor_view();
-            size_t index     = tensor_index.size();
+            auto tv = output.get_tensor_view();
+            size_t index = tensor_index.size();
             tensor_index[tv] = index;
         }
     }
@@ -312,8 +309,8 @@ void ExternalFunction::compile(FunctionMap& function_map)
     // Next are the function outputs
     for (const descriptor::Output& output : m_function->get_result()->get_outputs())
     {
-        auto   tv        = output.get_tensor_view();
-        size_t index     = tensor_index.size();
+        auto tv = output.get_tensor_view();
+        size_t index = tensor_index.size();
         tensor_index[tv] = index;
     }
     m_n_outputs = tensor_index.size() - m_n_inputs;
@@ -326,7 +323,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
             auto tv = output.get_tensor_view();
             if (0 == tensor_index.count(tv))
             {
-                size_t index     = tensor_index.size();
+                size_t index = tensor_index.size();
                 tensor_index[tv] = index;
                 m_temp_views.push_back(tv);
             }
@@ -346,7 +343,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
-            auto                      tv     = output.get_tensor_view();
+            auto tv = output.get_tensor_view();
             in.push_back(tensor_index.at(tv));
         }
         std::vector<size_t> out;

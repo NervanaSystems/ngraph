@@ -20,15 +20,15 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/assign_tensors.hpp"
+#include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
-#include "ngraph/pass/dump_sorted.hpp"
-#include "ngraph/pass/memory_layout.hpp"
 #include "test_tools.hpp"
 
 using namespace ngraph;

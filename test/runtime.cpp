@@ -30,22 +30,22 @@ namespace ngeigen = ngraph::runtime::eigen;
 
 TEST(runtime, test_add)
 {
-    auto x          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    auto x = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
     x->get_vector() = {1, 2, 3, 4};
-    auto y          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    auto y = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
     y->get_vector() = {5, 6, 7, 8};
-    auto z          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    auto z = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
     ngraph::runtime::eigen::add(x, y, z);
     ASSERT_EQ((vector<float>{6, 8, 10, 12}), z->get_vector());
 }
 
 TEST(runtime, test_multiply)
 {
-    auto x          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    auto x = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
     x->get_vector() = {1, 2, 3, 4};
-    auto y          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    auto y = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
     y->get_vector() = {5, 6, 7, 8};
-    auto z          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    auto z = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
     ngraph::runtime::eigen::multiply(x, y, z);
     ASSERT_EQ((vector<float>{5, 12, 21, 32}), z->get_vector());
 }
@@ -71,13 +71,13 @@ TEST(runtime, test_add_multiply)
         3, 1, {ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2})}, 0, instructions};
 
     // Create some tensors for input/output
-    auto a          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    auto a = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
     a->get_vector() = {1, 2, 3, 4};
-    auto b          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    auto b = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
     b->get_vector() = {5, 6, 7, 8};
-    auto c          = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    auto c = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
     c->get_vector() = {9, 10, 11, 12};
-    auto result     = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
+    auto result = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 2});
 
     cf({a, b, c}, {result});
     ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector());

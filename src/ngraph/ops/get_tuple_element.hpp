@@ -31,11 +31,9 @@ namespace ngraph
             {
             }
 
-            virtual void        propagate_types() override;
+            virtual void propagate_types() override;
             virtual std::string description() const override { return "GetTupleElement"; }
-
             size_t get_n() const { return m_n; }
-
         protected:
             size_t m_n;
         };

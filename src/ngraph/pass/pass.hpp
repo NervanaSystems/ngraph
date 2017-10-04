@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace ngraph
 {
@@ -32,6 +32,7 @@ namespace ngraph
 class ngraph::pass::Base
 {
     friend class Manager;
+
 public:
     virtual ~Base() {}
 protected:

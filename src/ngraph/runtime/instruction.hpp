@@ -24,7 +24,7 @@ namespace ngraph
         class Instruction
         {
         public:
-            virtual ~Instruction(){}
+            virtual ~Instruction() {}
             virtual void execute(CallFrame& call_frame) const = 0;
         };
     }

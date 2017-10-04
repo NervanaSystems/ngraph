@@ -41,8 +41,8 @@ namespace ngraph
 
             protected:
                 Strides m_strides;
-                size_t  m_offset;
-                size_t  m_size;
+                size_t m_offset;
+                size_t m_size;
             };
         }
     }

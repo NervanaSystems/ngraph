@@ -29,7 +29,7 @@ namespace ngraph
         {
         public:
             virtual ~Value() {}
-            virtual std::shared_ptr<const ngraph::ValueType> get_value_type() const      = 0;
+            virtual std::shared_ptr<const ngraph::ValueType> get_value_type() const = 0;
 
             /// @brief helper for collecting all the tensor views in a sequence of values
             ///

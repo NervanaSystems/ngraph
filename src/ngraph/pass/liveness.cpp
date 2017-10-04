@@ -17,11 +17,11 @@
 #include <unordered_set>
 
 #include "ngraph/log.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -31,7 +31,7 @@ bool pass::Liveness::run_on_call_list(list<Node*>& ops)
 {
     unordered_set<Tensor*> currently_live;
 
-    for(auto it=ops.rbegin(); it!=ops.rend(); it++)
+    for (auto it = ops.rbegin(); it != ops.rend(); it++)
     {
         Node* node = *it;
         node->liveness_live_list.clear();
@@ -119,7 +119,6 @@ bool pass::Liveness::run_on_call_list(list<Node*>& ops)
         }
     }
 
-
     // validate_liveness(ops);
     return false;
 }
@@ -144,13 +143,10 @@ void pass::Liveness::check_dependencies(
 
 bool pass::Liveness::is_temporary(const Tensor& tensor)
 {
-    return
-        tensor.is_persistent() == false
-        && tensor.is_input() == false
-        && tensor.is_output() == false
-        ;
-        // && tensor.is_constant() == false
-        // && tensor.is_compile_only() == false;
+    return tensor.is_persistent() == false && tensor.is_input() == false &&
+           tensor.is_output() == false;
+    // && tensor.is_constant() == false
+    // && tensor.is_compile_only() == false;
 }
 
 void pass::Liveness::validate_liveness(const list<Node*>& ops)
@@ -171,4 +167,3 @@ void pass::Liveness::validate_liveness(const list<Node*>& ops)
         dead_tensors.insert(node->liveness_free_list.begin(), node->liveness_free_list.end());
     }
 }
-

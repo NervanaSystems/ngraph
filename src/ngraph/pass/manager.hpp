@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include <vector>
-#include <memory>
 #include <list>
+#include <memory>
+#include <vector>
 
 #include "ngraph/pass/call_pass.hpp"
 #include "ngraph/pass/manager_state.hpp"
@@ -41,7 +41,7 @@ public:
 
     void initialize_default_passes();
 
-    template<typename T, class... Args>
+    template <typename T, class... Args>
     void register_pass(Args... args)
     {
         static_assert(std::is_base_of<pass::Base, T>::value, "pass not derived from pass base");
@@ -66,5 +66,5 @@ private:
 
     std::vector<std::shared_ptr<CallBase>> m_call_passes;
     std::vector<std::shared_ptr<FunctionPass>> m_function_passes;
-    ManagerState                           m_state;
+    ManagerState m_state;
 };

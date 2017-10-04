@@ -33,28 +33,26 @@ namespace ngraph
                 auto mat_out = get_map_matrix_2d(&*out);
                 auto& out_shape = out->get_shape();
 
-                assert (out_shape.size() == 2);
-                assert (axis == 0 || axis == 1);
+                assert(out_shape.size() == 2);
+                assert(axis == 0 || axis == 1);
 
                 size_t concat_pos = 0;
 
-                for(T arg : args)
+                for (T arg : args)
                 {
                     auto mat_arg = get_map_matrix_2d(&*arg);
                     auto& arg_shape = arg->get_shape();
 
-                    assert (arg_shape.size() == 2);
+                    assert(arg_shape.size() == 2);
 
                     if (axis == 0)
                     {
-                        mat_out.block(concat_pos,0,arg_shape.at(0),arg_shape.at(1))
-                          << mat_arg;
+                        mat_out.block(concat_pos, 0, arg_shape.at(0), arg_shape.at(1)) << mat_arg;
                         concat_pos += arg_shape.at(0);
                     }
                     else
                     {
-                        mat_out.block(0,concat_pos,arg_shape.at(0),arg_shape.at(1))
-                          << mat_arg;
+                        mat_out.block(0, concat_pos, arg_shape.at(0), arg_shape.at(1)) << mat_arg;
                         concat_pos += arg_shape.at(1);
                     }
                 }
@@ -74,14 +72,12 @@ namespace ngraph
                 virtual void execute(CallFrame& call_frame) const override
                 {
                     std::vector<ParameterizedTensorView<ET>*> ptvs;
-                    for(size_t arg : m_args)
+                    for (size_t arg : m_args)
                     {
                         ptvs.push_back(call_frame.get_parameterized_tensor_view<ET>(arg));
                     }
                     runtime::eigen::concat_matrix(
-                        ptvs,
-                        call_frame.get_parameterized_tensor_view<ET>(m_out),
-                        m_axis);
+                        ptvs, call_frame.get_parameterized_tensor_view<ET>(m_out), m_axis);
                 }
 
             protected:
