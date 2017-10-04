@@ -62,6 +62,9 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 
 void ngraph::pass::Manager::run_passes(Function* func)
 {
+    // TODO: rkimball fix how functions list is populated
+    vector<Function*> fs = {func};
+    get_state().set_functions(fs);
     for (shared_ptr<FunctionPass> p : m_function_passes)
     {
         p->set_state(get_state());
