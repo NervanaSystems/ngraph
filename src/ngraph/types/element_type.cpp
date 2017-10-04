@@ -16,16 +16,15 @@
 #include <cmath>
 #include <iostream>
 
-#include "ngraph/types/element_type.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/runtime/parameterized_tensor_view.hpp"
+#include "ngraph/types/element_type.hpp"
 
 using namespace ngraph;
 
-std::map<std::string, ngraph::element::Type> ngraph::element::Type::m_element_list;
-
-ngraph::element::Type::Type(size_t             bitwidth,
-                            bool               is_float,
-                            bool               is_signed,
+ngraph::element::Type::Type(size_t bitwidth,
+                            bool is_float,
+                            bool is_signed,
                             const std::string& cname)
     : m_bitwidth{bitwidth}
     , m_is_float{is_float}
@@ -56,3 +55,21 @@ std::ostream& ngraph::element::operator<<(std::ostream& out, const ngraph::eleme
     out << obj.m_cname;
     return out;
 }
+
+#if 0
+template <typename T>
+std::shared_ptr<ngraph::runtime::TensorView>
+    ngraph::element::TraitedType<T>::make_primary_tensor_view(const ngraph::Shape& shape) const
+{
+    return std::make_shared<runtime::ParameterizedTensorView<TraitedType<T>>>(shape);
+}
+
+template class ngraph::element::TraitedType<char>;
+template class ngraph::element::TraitedType<float>;
+template class ngraph::element::TraitedType<int8_t>;
+template class ngraph::element::TraitedType<int32_t>;
+template class ngraph::element::TraitedType<int64_t>;
+template class ngraph::element::TraitedType<uint8_t>;
+template class ngraph::element::TraitedType<uint32_t>;
+template class ngraph::element::TraitedType<uint64_t>;
+#endif
