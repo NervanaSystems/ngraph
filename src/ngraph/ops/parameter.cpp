@@ -38,7 +38,9 @@ void Parameter::assign_function(Function* function, size_t index)
         throw ngraph_error("Re-assigning function to a parameter.");
     }
     m_function = function;
-    m_index    = index;
+    m_index = index;
 }
 
-void Parameter::propagate_types() {}
+void Parameter::propagate_types()
+{
+}

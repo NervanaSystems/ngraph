@@ -37,7 +37,7 @@ TEST(pass_manager, add)
     pass_manager.register_pass<pass::PropagateTypes>();
     pass_manager.register_pass<pass::AssignTensors>();
 
-    auto   graph      = make_test_graph();
+    auto graph = make_test_graph();
     size_t node_count = get_node_count(graph->get_result());
     pass_manager.run_passes(graph.get());
     auto sorted = pass_manager.get_call_graph();

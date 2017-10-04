@@ -33,7 +33,7 @@ size_t ngraph::shape_size(const Shape& shape)
 Strides ngraph::row_major_strides(const Shape& shape)
 {
     Strides strides;
-    size_t  s = 1;
+    size_t s = 1;
     for (auto d = shape.rbegin(); d != shape.rend(); d++)
     {
         strides.push_back(s);

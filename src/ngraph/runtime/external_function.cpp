@@ -81,7 +81,7 @@ using namespace ngraph::runtime;
 using ngraph::descriptor::layout::DenseTensorViewLayout;
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                   bool                                     release_function)
+                                   bool release_function)
     : m_function(function)
     , m_release_function(release_function)
     , m_is_compiled(false)
@@ -89,30 +89,31 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 {
 }
 
-#define REGISTER_TO_OP_MAP(op_class)                                                   \
-    op_map[type_index(typeid(op_class))] = [](const Node*                n,            \
-                                              ExternalFunction*          ef,           \
-                                              FunctionMap&               function_map, \
-                                              const std::vector<TensorViewInfo>& in,           \
+#define REGISTER_TO_OP_MAP(op_class)                                                               \
+    op_map[type_index(typeid(op_class))] = [](const Node* n,                                       \
+                                              ExternalFunction* ef,                                \
+                                              FunctionMap& function_map,                           \
+                                              const std::vector<TensorViewInfo>& in,               \
                                               const std::vector<TensorViewInfo>& out)
 
-#define REGISTER_INSTRUCTION(op_class, instr_class, ...)                          \
-    REGISTER_TO_OP_MAP(op_class) {                                                \
-        ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__)); \
+#define REGISTER_INSTRUCTION(op_class, instr_class, ...)                                           \
+    REGISTER_TO_OP_MAP(op_class)                                                                   \
+    {                                                                                              \
+        ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__));                  \
     }
 
 // Versions the include the descriptor
-#define REGISTER_UNOP(op_class, instr_class)                                                      \
+#define REGISTER_UNOP(op_class, instr_class)                                                       \
     REGISTER_INSTRUCTION(op_class, instr_class, in[0], out[0])
-#define REGISTER_BINOP(op_class, instr_class)                                                     \
+#define REGISTER_BINOP(op_class, instr_class)                                                      \
     REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], out[0])
-#define REGISTER_TERNOP(op_class, instr_class)                                                    \
+#define REGISTER_TERNOP(op_class, instr_class)                                                     \
     REGISTER_INSTRUCTION(op_class, instr_class, in[0], in[1], in[2], out[0])
 
 // Define code generators for handled ops.
 ExternalFunction::OpMap& ExternalFunction::get_op_map()
 {
-    static bool  initialized = false;
+    static bool initialized = false;
     static OpMap op_map;
     if (!initialized)
     {
@@ -146,15 +147,15 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto broadcast = static_cast<const op::Broadcast*>(n);
 
-            auto arg_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type());
+            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_arguments().at(0)->get_value_type());
             assert(nullptr != arg_tensor_type);
 
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
 
-            auto arg_shape    = arg_tensor_type->get_shape();
+            auto arg_shape = arg_tensor_type->get_shape();
             auto result_shape = result_tensor_type->get_shape();
 
             if (broadcast->get_broadcast_axes().empty())
@@ -175,18 +176,22 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 if (broadcast->get_broadcast_axes() == AxisSet{1})
                 {
                     ef->get_instructions()->push_back(
-                        make_shared<runtime::eigen::BroadcastVectorColwiseInstruction<element::Float32>>(
+                        make_shared<
+                            runtime::eigen::BroadcastVectorColwiseInstruction<element::Float32>>(
                             in[0], out[0]));
                 }
                 else if (broadcast->get_broadcast_axes() == AxisSet{0})
                 {
                     ef->get_instructions()->push_back(
-                        make_shared<runtime::eigen::BroadcastVectorRowwiseInstruction<element::Float32>>(
+                        make_shared<
+                            runtime::eigen::BroadcastVectorRowwiseInstruction<element::Float32>>(
                             in[0], out[0]));
                 }
                 else
                 {
-                    throw ngraph_error("Internal error: axis set for vector-matrix broadcast is neither {0} or {1}");
+                    throw ngraph_error(
+                        "Internal error: axis set for vector-matrix broadcast is neither {0} or "
+                        "{1}");
                 }
             }
             else
@@ -206,8 +211,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             if (result_shape.size() == 1)
             {
                 ef->get_instructions()->push_back(
-                    make_shared<runtime::eigen::ConcatVectorInstruction<element::Float32>>(
-                        in, out[0]));
+                    make_shared<runtime::eigen::ConcatVectorInstruction<element::Float32>>(in,
+                                                                                           out[0]));
             }
             else if (result_shape.size() == 2)
             {
@@ -286,7 +291,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         };
 
         // Parameter is a "runtime no-op" because the output tensor has already been filled.
-        REGISTER_TO_OP_MAP(op::Parameter) {};
+        REGISTER_TO_OP_MAP(op::Parameter){};
 
         // GetTupleElement will be spliced out, with the users of out redirected to in's source, but, for now, we need to copy.
         REGISTER_TO_OP_MAP(op::GetTupleElement)
@@ -312,7 +317,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_TO_OP_MAP(op::FunctionCall)
         {
             auto function_call = static_cast<const op::FunctionCall*>(n);
-            auto function      = function_call->get_function();
+            auto function = function_call->get_function();
 
             std::shared_ptr<ExternalFunction> external;
 
@@ -322,20 +327,16 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
             catch (const std::out_of_range)
             {
-                external = make_shared<ngraph::runtime::ExternalFunction>(
-                               function_call->get_function());
-                function_map.insert({function,external});
+                external =
+                    make_shared<ngraph::runtime::ExternalFunction>(function_call->get_function());
+                function_map.insert({function, external});
             }
 
             ef->get_instructions()->push_back(
-                make_shared<runtime::eigen::CallInstruction>(external,in,out));
+                make_shared<runtime::eigen::CallInstruction>(external, in, out));
         };
 
-        REGISTER_TO_OP_MAP(op::Reduce)
-        {
-            throw ngraph_error("op::Reduce not implemented yet");
-        };
-
+        REGISTER_TO_OP_MAP(op::Reduce) { throw ngraph_error("op::Reduce not implemented yet"); };
         initialized = true;
     }
     return op_map;
@@ -379,8 +380,8 @@ void ExternalFunction::compile(FunctionMap& function_map)
     {
         for (const descriptor::Output& output : param->get_outputs())
         {
-            auto   tv        = output.get_tensor_view();
-            size_t index     = tensor_index.size();
+            auto tv = output.get_tensor_view();
+            size_t index = tensor_index.size();
             tensor_index[tv] = index;
         }
     }
@@ -389,8 +390,8 @@ void ExternalFunction::compile(FunctionMap& function_map)
     // Next are the function outputs
     for (const descriptor::Output& output : m_function->get_result()->get_outputs())
     {
-        auto   tv        = output.get_tensor_view();
-        size_t index     = tensor_index.size();
+        auto tv = output.get_tensor_view();
+        size_t index = tensor_index.size();
         tensor_index[tv] = index;
     }
     m_n_outputs = tensor_index.size() - m_n_inputs;
@@ -403,7 +404,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
             auto tv = output.get_tensor_view();
             if (0 == tensor_index.count(tv))
             {
-                size_t index     = tensor_index.size();
+                size_t index = tensor_index.size();
                 tensor_index[tv] = index;
                 m_temp_views.push_back(tv);
             }
@@ -423,7 +424,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
-            auto                      tv     = output.get_tensor_view();
+            auto tv = output.get_tensor_view();
             in.push_back({tensor_index.at(tv), tv});
         }
         std::vector<TensorViewInfo> out;

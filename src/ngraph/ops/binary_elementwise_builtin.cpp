@@ -14,8 +14,8 @@
 
 #include <memory>
 
-#include "ngraph/ngraph.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/ngraph.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -41,11 +41,9 @@ void BinaryElementwiseBuiltin::propagate_types()
         throw ngraph_error("Arguments must have the same tensor view shape");
     }
 
-    const element::Type& result_element_type =
-        propagate_element_types(arg0_tensor_type->get_element_type(),
-                                arg1_tensor_type->get_element_type());
+    const element::Type& result_element_type = propagate_element_types(
+        arg0_tensor_type->get_element_type(), arg1_tensor_type->get_element_type());
 
-    set_value_type_checked(make_shared<TensorViewType>(result_element_type,
-                                                       arg0_tensor_type->get_shape()));
+    set_value_type_checked(
+        make_shared<TensorViewType>(result_element_type, arg0_tensor_type->get_shape()));
 }
-

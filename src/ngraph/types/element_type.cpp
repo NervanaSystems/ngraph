@@ -16,16 +16,16 @@
 #include <cmath>
 #include <iostream>
 
-#include "ngraph/types/element_type.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/types/element_type.hpp"
 
 using namespace ngraph;
 
 std::map<std::string, ngraph::element::Type> ngraph::element::Type::m_element_list;
 
-ngraph::element::Type::Type(size_t             bitwidth,
-                            bool               is_float,
-                            bool               is_signed,
+ngraph::element::Type::Type(size_t bitwidth,
+                            bool is_float,
+                            bool is_signed,
                             const std::string& cname)
     : m_bitwidth{bitwidth}
     , m_is_float{is_float}

@@ -37,6 +37,6 @@ void UnaryElementwiseBuiltin::propagate_types()
     const element::Type& result_element_type =
         propagate_element_types(arg_tensor_type->get_element_type());
 
-    set_value_type_checked(make_shared<TensorViewType>(result_element_type,
-                                                       arg_tensor_type->get_shape()));
+    set_value_type_checked(
+        make_shared<TensorViewType>(result_element_type, arg_tensor_type->get_shape()));
 }

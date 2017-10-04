@@ -31,7 +31,7 @@ namespace ngraph
             {
             public:
                 ConcatVectorInstruction(const std::vector<TensorViewInfo>& args,
-                                        const TensorViewInfo&              out)
+                                        const TensorViewInfo& out)
                     : m_args(args)
                     , m_out(out)
                 {
@@ -46,15 +46,17 @@ namespace ngraph
                 {
                     EigenVector<ET> out(call_frame, m_out);
                     size_t concat_pos = 0;
-                    for (size_t i = 0; i < m_args.size(); i++){
-                        out.segment(concat_pos, m_sizes[i]) << EigenVector<ET>(call_frame, m_args.at(i));
+                    for (size_t i = 0; i < m_args.size(); i++)
+                    {
+                        out.segment(concat_pos, m_sizes[i])
+                            << EigenVector<ET>(call_frame, m_args.at(i));
                         concat_pos += m_sizes[i];
                     }
                 }
 
             protected:
                 std::vector<TensorViewInfo> m_args;
-                TensorViewInfo              m_out;
+                TensorViewInfo m_out;
                 std::vector<size_t> m_sizes;
             };
         }

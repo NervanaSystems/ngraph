@@ -40,8 +40,9 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    EigenArray1d<ET>(call_frame, m_out) <<
-                        EigenVector<ET>(call_frame, m_arg0).dot(EigenVector<ET>(call_frame, m_arg1));
+                    EigenArray1d<ET>(call_frame, m_out)
+                        << EigenVector<ET>(call_frame, m_arg0)
+                               .dot(EigenVector<ET>(call_frame, m_arg1));
                 }
 
             protected:

@@ -19,12 +19,12 @@
 
 #include "gtest/gtest.h"
 
+#include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/visualize.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/log.hpp"
+#include "ngraph/visualize.hpp"
 #include "test_tools.hpp"
 
 using namespace std;
@@ -106,7 +106,7 @@ TEST(benchmark, topological_sort)
     shared_ptr<Node> result;
     vector<shared_ptr<op::Parameter>> args;
     result = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
-    for (int i=0; i<1000000; i++)
+    for (int i = 0; i < 1000000; i++)
     {
         auto in_1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
         auto in_2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
@@ -126,9 +126,7 @@ TEST(benchmark, topological_sort)
     NGRAPH_INFO << "topological sort took " << timer.get_milliseconds() << "ms";
 
     size_t node_count = 0;
-    traverse_nodes(result, [&](const Node* node) {
-        node_count++;
-    });
+    traverse_nodes(result, [&](const Node* node) { node_count++; });
 
     NGRAPH_INFO << "node count " << node_count;
 

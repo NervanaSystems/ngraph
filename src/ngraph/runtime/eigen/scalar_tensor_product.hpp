@@ -45,8 +45,8 @@ namespace ngraph
                     // fmt::V computes sizes---it lumps together any higher
                     // dimensions---while fmt::M ignores them.
                     EigenVector<ET>(call_frame, m_out) =
-                        call_frame.get_tensor_view_data<ET>(m_arg0.get_index())[0]
-                          * EigenVector<ET>(call_frame, m_arg1);
+                        call_frame.get_tensor_view_data<ET>(m_arg0.get_index())[0] *
+                        EigenVector<ET>(call_frame, m_arg1);
                 }
 
             protected:

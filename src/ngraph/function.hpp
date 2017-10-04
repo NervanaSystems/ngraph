@@ -16,8 +16,8 @@
 
 #include <initializer_list>
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/node.hpp"
@@ -32,24 +32,21 @@ namespace ngraph
     class Function
     {
     public:
-        Function(const std::shared_ptr<Node>&                       result,
-                 const std::shared_ptr<ValueType>&                  result_type,
+        Function(const std::shared_ptr<Node>& result,
+                 const std::shared_ptr<ValueType>& result_type,
                  const std::vector<std::shared_ptr<op::Parameter>>& parameters);
 
-        std::shared_ptr<Node>                             get_result() { return m_result; }
+        std::shared_ptr<Node> get_result() { return m_result; }
         const std::vector<std::shared_ptr<op::Parameter>> get_parameters() const
         {
             return m_parameters;
         }
-        const std::shared_ptr<ValueType> get_result_type() const
-        {
-            return m_result_type;
-        }
+        const std::shared_ptr<ValueType> get_result_type() const { return m_result_type; }
         std::string get_name() const { return m_name; }
     protected:
-        std::shared_ptr<Node>                               m_result;
+        std::shared_ptr<Node> m_result;
         std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;
-        std::string                                         m_name;
-        std::shared_ptr<ValueType>                          m_result_type;
+        std::string m_name;
+        std::shared_ptr<ValueType> m_result_type;
     };
 }
