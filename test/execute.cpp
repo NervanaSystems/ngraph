@@ -237,6 +237,35 @@ TEST(execute, test_concat_matrix_rowwise)
               result->get_vector());
 }
 
+TEST(execute, test_concat_matrix_int64)
+{
+    auto shape_a = Shape{2, 2};
+    auto A       = make_shared<op::Parameter>(element::Int64::element_type(), shape_a);
+    auto shape_b = Shape{3, 2};
+    auto B       = make_shared<op::Parameter>(element::Int64::element_type(), shape_b);
+    auto shape_c = Shape{3, 2};
+    auto C       = make_shared<op::Parameter>(element::Int64::element_type(), shape_c);
+    auto shape_r = Shape{8, 2};
+    auto rt      = make_shared<TensorViewType>(element::Int64::element_type(), Shape{8,2});
+    auto f       = make_shared<Function>(make_shared<op::Concat>(Nodes{A,B,C},0), rt, op::Parameters{A,B,C});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a      = ngraph::runtime::make_tensor<element::Int64>(shape_a);
+    *a          = vector<element::Int64::type>{2, 4, 8, 16};
+    auto b      = ngraph::runtime::make_tensor<element::Int64>(shape_b);
+    *b          = vector<element::Int64::type>{1, 2, 4, 8, 16, 32};
+    auto c      = ngraph::runtime::make_tensor<element::Int64>(shape_c);
+    *c          = vector<element::Int64::type>{2, 3, 5, 7, 11, 13};
+    auto result = ngraph::runtime::make_tensor<element::Int64>(shape_r);
+
+    (*cf)({a, b, c}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
+              result->get_vector());
+}
+
 TEST(execute, test_concat_vector)
 {
     auto shape_a = Shape{4};
@@ -448,6 +477,33 @@ TEST(execute, test_dot_matrix_vector)
 
     (*cf)({a,b}, {result});
     ASSERT_EQ((vector<float>{190,486,782,1078}), result->get_vector());
+}
+
+TEST(execute, test_dot_matrix_vector_int64)
+{
+    auto shape_a = Shape{4,4};
+    auto shape_b = Shape{4};
+    auto A       = make_shared<op::Parameter>(element::Int64::element_type(), shape_a);
+    auto B       = make_shared<op::Parameter>(element::Int64::element_type(), shape_b);
+    auto rt      = make_shared<TensorViewType>(element::Int64::element_type(), shape_b);
+    auto f       = make_shared<Function>(make_shared<op::Dot>(A,B), rt, op::Parameters{A,B});
+    auto shape_r = Shape{4};
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a      = ngraph::runtime::make_tensor<element::Int64>(shape_a);
+    *a          = vector<element::Int64::type>{ 1, 2, 3, 4,
+                                                5, 6, 7, 8,
+                                                9,10,11,12,
+                                               13,14,15,16};
+    auto b      = ngraph::runtime::make_tensor<element::Int64>(shape_b);
+    *b          = vector<element::Int64::type>{17,18,19,20};
+    auto result = ngraph::runtime::make_tensor<element::Int64>(shape_r);
+
+    (*cf)({a,b}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{190,486,782,1078}), result->get_vector());
 }
 
 TEST(execute, test_lessthan)
@@ -818,4 +874,24 @@ TEST(execute, test_broadcast_vector_rowwise)
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), result->get_vector());
+}
+
+TEST(execute, test_broadcast_vector_rowwise_int64)
+{
+    auto shape_a = Shape{4};
+    auto A       = make_shared<op::Parameter>(element::Int64::element_type(), shape_a);
+    auto shape_r = Shape{3,4};
+    auto rt      = make_shared<TensorViewType>(element::Int64::element_type(), shape_r);
+    auto f       = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf       = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a      = ngraph::runtime::make_tensor<element::Int64>(shape_a);
+    *a          = vector<element::Int64::type>{1,2,3,4};
+    auto result = ngraph::runtime::make_tensor<element::Int64>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), result->get_vector());
 }
