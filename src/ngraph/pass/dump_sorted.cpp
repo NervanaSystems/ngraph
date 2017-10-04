@@ -14,8 +14,8 @@
 
 #include <fstream>
 
-#include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -34,7 +34,7 @@ bool pass::DumpSorted::run_on_call_list(list<Node*>& nodes)
     {
         for (const Node* node : nodes)
         {
-            out << node->get_node_id() << "(";
+            out << node->get_name() << "(";
             vector<string> inputs;
             for (const Input& input : node->get_inputs())
             {
@@ -50,7 +50,6 @@ bool pass::DumpSorted::run_on_call_list(list<Node*>& nodes)
             }
             out << join(outputs);
             out << "\n";
-
 
             for (const Tensor* tensor : node->liveness_live_list)
             {

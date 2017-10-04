@@ -58,12 +58,16 @@ void Node::assign_tensors()
     size_t i = 0;
     for (auto tvt : tensor_view_types)
     {
-        auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(tvt, ngraph::descriptor::Tensor::make_tensor_name(this, i), is_output(), is_parameter());
+        auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
+            tvt,
+            ngraph::descriptor::Tensor::make_tensor_name(this, i),
+            is_output(),
+            is_parameter());
         m_outputs.emplace_back(this, i, tensor_view_descriptor);
         i++;
     }
 
-    i            = 0;
+    i = 0;
     size_t argno = 0;
     for (auto arg : get_arguments())
     {
@@ -92,11 +96,25 @@ void Node::set_is_output()
     m_is_output = true;
 }
 
-std::string Node::get_node_id() const
+const std::string& Node::get_name() const
 {
-    stringstream ss;
-    ss << description() << "_" << m_instance_id;
-    return ss.str();
+    if (m_name.empty())
+    {
+        (string) m_name = description() + "_" + to_string(m_instance_id);
+    }
+    return m_name;
+}
+
+void Node::set_name(const string& name)
+{
+    if (m_name.empty())
+    {
+        m_name = name;
+    }
+    else
+    {
+        throw ngraph_error("Node name may be set exactly once");
+    }
 }
 
 namespace ngraph
@@ -106,11 +124,11 @@ namespace ngraph
         auto parameter_tmp = dynamic_cast<const op::Parameter*>(&node);
         if (parameter_tmp)
         {
-            out << "Parameter(" << parameter_tmp->get_node_id() << ")";
+            out << "Parameter(" << parameter_tmp->get_name() << ")";
         }
         else
         {
-            out << "Node(" << node.get_node_id() << ")";
+            out << "Node(" << node.get_name() << ")";
         }
         return out;
     }

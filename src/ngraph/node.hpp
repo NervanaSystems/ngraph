@@ -55,6 +55,8 @@ namespace ngraph
     public:
         /// The class name, must not contain spaces
         virtual std::string description() const = 0;
+        const std::string& get_name() const;
+        void set_name(const std::string& name);
 
         /// Propagate types and check arguments for consistency
         virtual void propagate_types() = 0;
@@ -64,12 +66,8 @@ namespace ngraph
         void assign_tensors();
 
         const Nodes& get_arguments() const { return m_arguments; }
-        void         clear_arguments() { m_arguments.clear(); }
-
+        void clear_arguments() { m_arguments.clear(); }
         const std::multiset<Node*>& users() const { return m_users; }
-
-        virtual std::string get_node_id() const;
-
         /// Return true if this has the same implementing class as node. This
         /// will be used by the pattern matcher when comparing a pattern
         /// graph against the graph.
@@ -78,9 +76,8 @@ namespace ngraph
             return typeid(*this) == typeid(*node.get());
         }
 
-        std::shared_ptr<const ValueType>       get_value_type() { return m_value_type; }
+        std::shared_ptr<const ValueType> get_value_type() { return m_value_type; }
         const std::shared_ptr<const ValueType> get_value_type() const { return m_value_type; }
-
         void set_value_type(const element::Type& element_type, const Shape& shape)
         {
             m_value_type = std::make_shared<TensorViewType>(element_type, shape);
@@ -101,27 +98,26 @@ namespace ngraph
         bool is_output() const;
         void set_is_output();
 
-        size_t               get_instance_id() const { return m_instance_id; }
+        size_t get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
-        std::vector<descriptor::Input>&        get_inputs() { return m_inputs; }
-        const std::vector<descriptor::Input>&  get_inputs() const { return m_inputs; }
-        std::vector<descriptor::Output>&       get_outputs() { return m_outputs; }
+        std::vector<descriptor::Input>& get_inputs() { return m_inputs; }
+        const std::vector<descriptor::Input>& get_inputs() const { return m_inputs; }
+        std::vector<descriptor::Output>& get_outputs() { return m_outputs; }
         const std::vector<descriptor::Output>& get_outputs() const { return m_outputs; }
-
         std::unordered_set<descriptor::Tensor*> liveness_live_list;
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
     protected:
-        Nodes                            m_arguments;
+        Nodes m_arguments;
         std::shared_ptr<const ValueType> m_value_type;
-        std::multiset<Node*>             m_users;
-        std::string                      m_name;
-        size_t                           m_instance_id;
-        static size_t                    m_next_instance_id;
-        std::vector<descriptor::Input>   m_inputs;
-        std::vector<descriptor::Output>  m_outputs;
-        bool                             m_is_output;
+        std::multiset<Node*> m_users;
+        std::string m_name;
+        size_t m_instance_id;
+        static size_t m_next_instance_id;
+        std::vector<descriptor::Input> m_inputs;
+        std::vector<descriptor::Output> m_outputs;
+        bool m_is_output;
     };
 }

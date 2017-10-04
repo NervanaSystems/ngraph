@@ -14,10 +14,10 @@
 
 #include <fstream>
 
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/pass/pass.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -26,13 +26,12 @@ using namespace std;
 bool pass::VisualizeTree::run_on_function(ngraph::Function* func)
 {
     // map<size_t, list<node_ptr>> dependent_nodes;
-    traverse_nodes(func->get_result(), [&](Node* node)
-    {
+    traverse_nodes(func->get_result(), [&](Node* node) {
         for (auto arg : node->get_arguments())
         {
             m_ss << add_attributes(arg.get());
             m_ss << add_attributes(node);
-            m_ss << "    " << arg->get_node_id() << " -> " << node->get_node_id();
+            m_ss << "    " << arg->get_name() << " -> " << node->get_name();
             m_ss << ";\n";
         }
     });
@@ -63,11 +62,11 @@ std::string pass::VisualizeTree::get_attributes(const Node* node)
     stringstream ss;
     if (node->is_parameter())
     {
-        ss << "    " << node->get_node_id() << " [shape=box color=blue]\n";
+        ss << "    " << node->get_name() << " [shape=box color=blue]\n";
     }
     else
     {
-        ss << "    " << node->get_node_id() << " [shape=ellipse color=black]\n";
+        ss << "    " << node->get_name() << " [shape=ellipse color=black]\n";
     }
     return ss.str();
 }
@@ -75,7 +74,7 @@ std::string pass::VisualizeTree::get_attributes(const Node* node)
 void pass::VisualizeTree::render() const
 {
 #ifdef GRAPHVIZ_FOUND
-    auto     tmp_file = m_name + ".tmp";
+    auto tmp_file = m_name + ".tmp";
     ofstream out(tmp_file);
     if (out)
     {
@@ -86,7 +85,7 @@ void pass::VisualizeTree::render() const
 
         stringstream ss;
         ss << "dot -Tpng " << tmp_file << " -o " << m_name;
-        auto cmd    = ss.str();
+        auto cmd = ss.str();
         auto stream = popen(cmd.c_str(), "r");
         pclose(stream);
 

@@ -16,8 +16,8 @@
 
 #include <sstream>
 
-#include "ngraph/types/element_type.hpp"
 #include "ngraph/runtime/utils.hpp"
+#include "ngraph/types/element_type.hpp"
 
 namespace ngraph
 {
@@ -53,29 +53,18 @@ namespace ngraph
             }
 
             virtual std::string description() const override { return "ScalarConstant"; }
-            virtual std::string get_node_id() const override
-            {
-                std::stringstream ss;
-                ss << description() << "_" /* << node_id() */;
-                return ss.str();
-            }
-
-            type get_value() const
-            {
-                return m_value;
-            }
-
+            type get_value() const { return m_value; }
         protected:
             typename T::type m_value;
         };
 
         using Float32ScalarConstant = ScalarConstant<element::Float32>;
-        using Int8ScalarConstant    = ScalarConstant<element::Int8>;
-        using Int32ScalarConstant   = ScalarConstant<element::Int32>;
-        using Int64ScalarConstant   = ScalarConstant<element::Int64>;
-        using UInt8ScalarConstant   = ScalarConstant<element::UInt8>;
-        using UInt32ScalarConstant  = ScalarConstant<element::UInt32>;
-        using UInt64ScalarConstant  = ScalarConstant<element::UInt64>;
+        using Int8ScalarConstant = ScalarConstant<element::Int8>;
+        using Int32ScalarConstant = ScalarConstant<element::Int32>;
+        using Int64ScalarConstant = ScalarConstant<element::Int64>;
+        using UInt8ScalarConstant = ScalarConstant<element::UInt8>;
+        using UInt32ScalarConstant = ScalarConstant<element::UInt32>;
+        using UInt64ScalarConstant = ScalarConstant<element::UInt64>;
 
         // Defines methods to all constant tensors
         class TensorConstantBase : public Node
@@ -106,25 +95,21 @@ namespace ngraph
             }
 
             virtual std::string description() const override { return "TensorConstant"; }
-            virtual std::string get_node_id() const override
+            typename std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>> get_value() const
             {
-                std::stringstream ss;
-                ss << description() << "_" /* << node_id() */;
-                return ss.str();
+                return m_value;
             }
-
-            typename std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>> get_value() const { return m_value; }
 
         protected:
             std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>> m_value;
         };
 
         using Float32TensorConstant = TensorConstant<element::Float32>;
-        using Int8TensorConstant    = TensorConstant<element::Int8>;
-        using Int32TensorConstant   = TensorConstant<element::Int32>;
-        using Int64TensorConstant   = TensorConstant<element::Int64>;
-        using UInt8TensorConstant   = TensorConstant<element::UInt8>;
-        using UInt32TensorConstant  = TensorConstant<element::UInt32>;
-        using UInt64TensorConstant  = TensorConstant<element::UInt64>;
+        using Int8TensorConstant = TensorConstant<element::Int8>;
+        using Int32TensorConstant = TensorConstant<element::Int32>;
+        using Int64TensorConstant = TensorConstant<element::Int64>;
+        using UInt8TensorConstant = TensorConstant<element::UInt8>;
+        using UInt32TensorConstant = TensorConstant<element::UInt32>;
+        using UInt64TensorConstant = TensorConstant<element::UInt64>;
     }
 }
