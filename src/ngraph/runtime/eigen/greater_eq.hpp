@@ -29,7 +29,7 @@ namespace ngraph
             void greater_eq(TI arg0, TI arg1, TO out)
             {
                 auto result_as_float = get_map_array(&*arg0) <= get_map_array(&*arg1);
-                auto result_as_char  = result_as_float.template cast<char>();
+                auto result_as_char = result_as_float.template cast<char>();
                 set_map_array(&*out, result_as_char);
             }
 
