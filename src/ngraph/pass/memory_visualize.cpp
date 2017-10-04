@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <fstream>
-#include <unordered_set>
-#include <unordered_map>
 #include <algorithm>
+#include <fstream>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "memory_visualize.hpp"
 #include "ngraph/descriptor/tensor.hpp"
@@ -154,8 +154,7 @@ void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<Node*>&
             }
             i++;
         }
-        sort(tensor_set.begin(), tensor_set.end(), [](const Tensor* t1, const Tensor* t2)
-        {
+        sort(tensor_set.begin(), tensor_set.end(), [](const Tensor* t1, const Tensor* t2) {
             return t1->size() < t2->size();
         });
         for (const Tensor* tensor : tensor_set)
@@ -206,12 +205,16 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<Node*>& nod
         y += line_spacing;
         size_t x1 = offset;
         size_t x2 = ((usage / memory_footprint) * scale) + offset;
-        file << "<text x=\"" << 0 << "\" y=\"" << y + text_offset << "\" fill=\"" << "black" << "\">" << node->get_node_id() << "</text>\n";
-        file << "<line x1=\"" << x1 << "\" y1=\"" << y << "\" x2=\"" << x2 << "\" y2=\"" << y << "\"";
+        file << "<text x=\"" << 0 << "\" y=\"" << y + text_offset << "\" fill=\""
+             << "black"
+             << "\">" << node->get_node_id() << "</text>\n";
+        file << "<line x1=\"" << x1 << "\" y1=\"" << y << "\" x2=\"" << x2 << "\" y2=\"" << y
+             << "\"";
         file << " style=\"stroke:forestgreen;stroke-width:" << stroke_width << "\" />\n";
         x1 = x2;
         x2 = ((footprint / memory_footprint) * scale) + offset;
-        file << "<line x1=\"" << x1 << "\" y1=\"" << y << "\" x2=\"" << x2 << "\" y2=\"" << y << "\"";
+        file << "<line x1=\"" << x1 << "\" y1=\"" << y << "\" x2=\"" << x2 << "\" y2=\"" << y
+             << "\"";
         file << " style=\"stroke:firebrick;stroke-width:" << stroke_width << "\" />\n";
     }
     file << "</svg>\n";

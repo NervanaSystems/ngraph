@@ -33,7 +33,10 @@
 #include "ngraph/ops/equal.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/greater.hpp"
+#include "ngraph/ops/greater_eq.hpp"
 #include "ngraph/ops/less.hpp"
+#include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
 #include "ngraph/ops/maximum.hpp"
 #include "ngraph/ops/multiply.hpp"
@@ -60,6 +63,9 @@
 #include "ngraph/runtime/eigen/divide.hpp"
 #include "ngraph/runtime/eigen/dot.hpp"
 #include "ngraph/runtime/eigen/equal.hpp"
+#include "ngraph/runtime/eigen/greater_eq.hpp"
+#include "ngraph/runtime/eigen/greater_than.hpp"
+#include "ngraph/runtime/eigen/less_eq.hpp"
 #include "ngraph/runtime/eigen/less_than.hpp"
 #include "ngraph/runtime/eigen/log.hpp"
 #include "ngraph/runtime/eigen/matrix_mult.hpp"
@@ -81,7 +87,7 @@ using namespace ngraph::runtime;
 using ngraph::descriptor::layout::DenseTensorViewLayout;
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                   bool                                     release_function)
+                                   bool release_function)
     : m_function(function)
     , m_release_function(release_function)
     , m_is_compiled(false)
@@ -89,95 +95,193 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 {
 }
 
-#define REGISTER_TO_OP_MAP(op_class)                                                   \
-    op_map[type_index(typeid(op_class))] = [](const Node*                n,            \
-                                              ExternalFunction*          ef,           \
-                                              FunctionMap&               function_map, \
-                                              const std::vector<TensorViewInfo>& in,   \
+#define REGISTER_TO_OP_MAP(op_class)                                                               \
+    op_map[type_index(typeid(op_class))] = [](const Node* n,                                       \
+                                              ExternalFunction* ef,                                \
+                                              FunctionMap& function_map,                           \
+                                              const std::vector<TensorViewInfo>& in,               \
                                               const std::vector<TensorViewInfo>& out)
 
 // Suppress Clang's complaints about the ,##__VA_ARGS__ token-pasting hack, which is a GNU extension
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 
-#define DO_ON_ELEMENT_TYPE(et,err_msg,macro,...)                                                    \
-    {                                                                                               \
-        if      (et == element::Bool::element_type()) { macro(element::Bool,##__VA_ARGS__); }       \
-        else if (et == element::Float32::element_type()) { macro(element::Float32,##__VA_ARGS__); } \
-        else if (et == element::Int8::element_type()) { macro(element::Int8,##__VA_ARGS__); }       \
-        else if (et == element::Int32::element_type()) { macro(element::Int32,##__VA_ARGS__); }     \
-        else if (et == element::Int64::element_type()) { macro(element::Int64,##__VA_ARGS__); }     \
-        else if (et == element::UInt8::element_type()) { macro(element::UInt8,##__VA_ARGS__); }     \
-        else if (et == element::UInt32::element_type()) { macro(element::UInt32,##__VA_ARGS__); }   \
-        else if (et == element::UInt64::element_type()) { macro(element::UInt64,##__VA_ARGS__); }   \
-        else    { throw ngraph_error(err_msg); }                                                    \
+#define DO_ON_ELEMENT_TYPE(et, err_msg, macro, ...)                                                \
+    {                                                                                              \
+        if (et == element::Bool::element_type())                                                   \
+        {                                                                                          \
+            macro(element::Bool, ##__VA_ARGS__);                                                   \
+        }                                                                                          \
+        else if (et == element::Float32::element_type())                                           \
+        {                                                                                          \
+            macro(element::Float32, ##__VA_ARGS__);                                                \
+        }                                                                                          \
+        else if (et == element::Int8::element_type())                                              \
+        {                                                                                          \
+            macro(element::Int8, ##__VA_ARGS__);                                                   \
+        }                                                                                          \
+        else if (et == element::Int32::element_type())                                             \
+        {                                                                                          \
+            macro(element::Int32, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
+        else if (et == element::Int64::element_type())                                             \
+        {                                                                                          \
+            macro(element::Int64, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
+        else if (et == element::UInt8::element_type())                                             \
+        {                                                                                          \
+            macro(element::UInt8, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
+        else if (et == element::UInt32::element_type())                                            \
+        {                                                                                          \
+            macro(element::UInt32, ##__VA_ARGS__);                                                 \
+        }                                                                                          \
+        else if (et == element::UInt64::element_type())                                            \
+        {                                                                                          \
+            macro(element::UInt64, ##__VA_ARGS__);                                                 \
+        }                                                                                          \
+        else                                                                                       \
+        {                                                                                          \
+            throw ngraph_error(err_msg);                                                           \
+        }                                                                                          \
     }
 
-#define DO_ON_NUMERIC_TYPE(et,err_msg,macro,...)                                                    \
-    {                                                                                               \
-        if      (et == element::Float32::element_type()) { macro(element::Float32,##__VA_ARGS__); } \
-        else if (et == element::Int8::element_type()) { macro(element::Int8,##__VA_ARGS__); }       \
-        else if (et == element::Int32::element_type()) { macro(element::Int32,##__VA_ARGS__); }     \
-        else if (et == element::Int64::element_type()) { macro(element::Int64,##__VA_ARGS__); }     \
-        else if (et == element::UInt8::element_type()) { macro(element::UInt8,##__VA_ARGS__); }     \
-        else if (et == element::UInt32::element_type()) { macro(element::UInt32,##__VA_ARGS__); }   \
-        else if (et == element::UInt64::element_type()) { macro(element::UInt64,##__VA_ARGS__); }   \
-        else    { throw ngraph_error(err_msg); }                                                    \
+#define DO_ON_NUMERIC_TYPE(et, err_msg, macro, ...)                                                \
+    {                                                                                              \
+        if (et == element::Float32::element_type())                                                \
+        {                                                                                          \
+            macro(element::Float32, ##__VA_ARGS__);                                                \
+        }                                                                                          \
+        else if (et == element::Int8::element_type())                                              \
+        {                                                                                          \
+            macro(element::Int8, ##__VA_ARGS__);                                                   \
+        }                                                                                          \
+        else if (et == element::Int32::element_type())                                             \
+        {                                                                                          \
+            macro(element::Int32, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
+        else if (et == element::Int64::element_type())                                             \
+        {                                                                                          \
+            macro(element::Int64, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
+        else if (et == element::UInt8::element_type())                                             \
+        {                                                                                          \
+            macro(element::UInt8, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
+        else if (et == element::UInt32::element_type())                                            \
+        {                                                                                          \
+            macro(element::UInt32, ##__VA_ARGS__);                                                 \
+        }                                                                                          \
+        else if (et == element::UInt64::element_type())                                            \
+        {                                                                                          \
+            macro(element::UInt64, ##__VA_ARGS__);                                                 \
+        }                                                                                          \
+        else                                                                                       \
+        {                                                                                          \
+            throw ngraph_error(err_msg);                                                           \
+        }                                                                                          \
     }
 
-#define DO_ON_SIGNED_NUMERIC_TYPE(et,err_msg,macro,...)                                             \
-    {                                                                                               \
-        if      (et == element::Float32::element_type()) { macro(element::Float32,##__VA_ARGS__); } \
-        else if (et == element::Int8::element_type()) { macro(element::Int8,##__VA_ARGS__); }       \
-        else if (et == element::Int32::element_type()) { macro(element::Int32,##__VA_ARGS__); }     \
-        else if (et == element::Int64::element_type()) { macro(element::Int64,##__VA_ARGS__); }     \
-        else    { throw ngraph_error(err_msg); }                                                    \
+#define DO_ON_SIGNED_NUMERIC_TYPE(et, err_msg, macro, ...)                                         \
+    {                                                                                              \
+        if (et == element::Float32::element_type())                                                \
+        {                                                                                          \
+            macro(element::Float32, ##__VA_ARGS__);                                                \
+        }                                                                                          \
+        else if (et == element::Int8::element_type())                                              \
+        {                                                                                          \
+            macro(element::Int8, ##__VA_ARGS__);                                                   \
+        }                                                                                          \
+        else if (et == element::Int32::element_type())                                             \
+        {                                                                                          \
+            macro(element::Int32, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
+        else if (et == element::Int64::element_type())                                             \
+        {                                                                                          \
+            macro(element::Int64, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
+        else                                                                                       \
+        {                                                                                          \
+            throw ngraph_error(err_msg);                                                           \
+        }                                                                                          \
     }
 
-#define REGISTER_INSTRUCTION(op_class, instr_class, ...)                          \
-    REGISTER_TO_OP_MAP(op_class) {                                                \
-        ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__)); \
+#define REGISTER_INSTRUCTION(op_class, instr_class, ...)                                           \
+    REGISTER_TO_OP_MAP(op_class)                                                                   \
+    {                                                                                              \
+        ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__));                  \
     }
 
-#define M_REGISTER_SIGNED_NUMERIC_UNOP(T,instr_class) ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], out[0]));
-#define REGISTER_SIGNED_NUMERIC_UNOP(op_class, instr_class)                                                                                        \
-    REGISTER_TO_OP_MAP(op_class)                                                                                                                   \
-    {                                                                                                                                              \
-        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))->get_element_type();    \
-        DO_ON_SIGNED_NUMERIC_TYPE(et,"Internal error: signed numeric unop has unhandled element type",M_REGISTER_SIGNED_NUMERIC_UNOP,instr_class); \
+#define M_REGISTER_SIGNED_NUMERIC_UNOP(T, instr_class)                                             \
+    ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], out[0]));
+#define REGISTER_SIGNED_NUMERIC_UNOP(op_class, instr_class)                                        \
+    REGISTER_TO_OP_MAP(op_class)                                                                   \
+    {                                                                                              \
+        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
+                                       n->get_arguments().at(0)->get_value_type()))                \
+                                      ->get_element_type();                                        \
+        DO_ON_SIGNED_NUMERIC_TYPE(                                                                 \
+            et,                                                                                    \
+            "Internal error: signed numeric unop has unhandled element type",                      \
+            M_REGISTER_SIGNED_NUMERIC_UNOP,                                                        \
+            instr_class);                                                                          \
     }
 
-#define M_REGISTER_NUMERIC_UNOP(T,instr_class) ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], out[0]));
-#define REGISTER_NUMERIC_UNOP(op_class, instr_class)                                                                                            \
-    REGISTER_TO_OP_MAP(op_class)                                                                                                                \
-    {                                                                                                                                           \
-        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))->get_element_type(); \
-        DO_ON_NUMERIC_TYPE(et,"Internal error: numeric unop has unhandled element type",M_REGISTER_NUMERIC_UNOP,instr_class);                   \
+#define M_REGISTER_NUMERIC_UNOP(T, instr_class)                                                    \
+    ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], out[0]));
+#define REGISTER_NUMERIC_UNOP(op_class, instr_class)                                               \
+    REGISTER_TO_OP_MAP(op_class)                                                                   \
+    {                                                                                              \
+        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
+                                       n->get_arguments().at(0)->get_value_type()))                \
+                                      ->get_element_type();                                        \
+        DO_ON_NUMERIC_TYPE(et,                                                                     \
+                           "Internal error: numeric unop has unhandled element type",              \
+                           M_REGISTER_NUMERIC_UNOP,                                                \
+                           instr_class);                                                           \
     }
 
-#define M_REGISTER_NUMERIC_BINOP(T,instr_class) ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], in[1], out[0]));
-#define REGISTER_NUMERIC_BINOP(op_class, instr_class)                                                                                           \
-    REGISTER_TO_OP_MAP(op_class)                                                                                                                \
-    {                                                                                                                                           \
-        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))->get_element_type(); \
-        DO_ON_NUMERIC_TYPE(et,"Internal error: numeric binop has unhandled element type",M_REGISTER_NUMERIC_BINOP,instr_class);                 \
+#define M_REGISTER_NUMERIC_BINOP(T, instr_class)                                                   \
+    ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], in[1], out[0]));
+#define REGISTER_NUMERIC_BINOP(op_class, instr_class)                                              \
+    REGISTER_TO_OP_MAP(op_class)                                                                   \
+    {                                                                                              \
+        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
+                                       n->get_arguments().at(0)->get_value_type()))                \
+                                      ->get_element_type();                                        \
+        DO_ON_NUMERIC_TYPE(et,                                                                     \
+                           "Internal error: numeric binop has unhandled element type",             \
+                           M_REGISTER_NUMERIC_BINOP,                                               \
+                           instr_class);                                                           \
     }
 
-#define M_REGISTER_POLYMORPHIC_BINOP(T,instr_class) ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], in[1], out[0]));
-#define REGISTER_POLYMORPHIC_BINOP(op_class, instr_class)                                                                                       \
-    REGISTER_TO_OP_MAP(op_class)                                                                                                                \
-    {                                                                                                                                           \
-        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))->get_element_type(); \
-        DO_ON_ELEMENT_TYPE(et,"Internal error: polymorphic binop has unhandled element type",M_REGISTER_POLYMORPHIC_BINOP,instr_class);         \
+#define M_REGISTER_POLYMORPHIC_BINOP(T, instr_class)                                               \
+    ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], in[1], out[0]));
+#define REGISTER_POLYMORPHIC_BINOP(op_class, instr_class)                                          \
+    REGISTER_TO_OP_MAP(op_class)                                                                   \
+    {                                                                                              \
+        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
+                                       n->get_arguments().at(0)->get_value_type()))                \
+                                      ->get_element_type();                                        \
+        DO_ON_ELEMENT_TYPE(et,                                                                     \
+                           "Internal error: polymorphic binop has unhandled element type",         \
+                           M_REGISTER_POLYMORPHIC_BINOP,                                           \
+                           instr_class);                                                           \
     }
 
 // Something sneaky here: note the at(1) instead of at(0).
-#define M_REGISTER_POLYMORPHIC_TERNOP(T,instr_class) ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], in[1], in[2], out[0]));
-#define REGISTER_POLYMORPHIC_TERNOP(op_class, instr_class)                                                                                      \
-    REGISTER_TO_OP_MAP(op_class)                                                                                                                \
-    {                                                                                                                                           \
-        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(1)->get_value_type()))->get_element_type(); \
-        DO_ON_ELEMENT_TYPE(et,"Internal error: polymorphic ternop has unhandled element type",M_REGISTER_POLYMORPHIC_TERNOP,instr_class);       \
+#define M_REGISTER_POLYMORPHIC_TERNOP(T, instr_class)                                              \
+    ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], in[1], in[2], out[0]));
+#define REGISTER_POLYMORPHIC_TERNOP(op_class, instr_class)                                         \
+    REGISTER_TO_OP_MAP(op_class)                                                                   \
+    {                                                                                              \
+        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
+                                       n->get_arguments().at(1)->get_value_type()))                \
+                                      ->get_element_type();                                        \
+        DO_ON_ELEMENT_TYPE(et,                                                                     \
+                           "Internal error: polymorphic ternop has unhandled element type",        \
+                           M_REGISTER_POLYMORPHIC_TERNOP,                                          \
+                           instr_class);                                                           \
     }
 
 // Turn off complaint suppression (see above)
@@ -186,7 +290,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 // Define code generators for handled ops.
 ExternalFunction::OpMap& ExternalFunction::get_op_map()
 {
-    static bool  initialized = false;
+    static bool initialized = false;
     static OpMap op_map;
     if (!initialized)
     {
@@ -197,7 +301,10 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_NUMERIC_BINOP(op::Add, runtime::eigen::AddInstruction);
         REGISTER_NUMERIC_BINOP(op::Divide, runtime::eigen::DivideInstruction);
+        REGISTER_NUMERIC_BINOP(op::Greater, runtime::eigen::GreaterThanInstruction);
+        REGISTER_NUMERIC_BINOP(op::GreaterEq, runtime::eigen::GreaterEqInstruction);
         REGISTER_NUMERIC_BINOP(op::Less, runtime::eigen::LessThanInstruction);
+        REGISTER_NUMERIC_BINOP(op::LessEq, runtime::eigen::LessEqInstruction);
         REGISTER_NUMERIC_BINOP(op::Maximum, runtime::eigen::MaximumInstruction);
         REGISTER_NUMERIC_BINOP(op::Multiply, runtime::eigen::MultiplyInstruction);
         REGISTER_NUMERIC_BINOP(op::Subtract, runtime::eigen::SubtractInstruction);
@@ -207,13 +314,12 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_POLYMORPHIC_TERNOP(op::Select, runtime::eigen::SelectInstruction);
 
-#define REGISTER_SCALAR_CONSTANT(T)                                          \
-        REGISTER_INSTRUCTION(                                                \
-            op::ScalarConstant<T>,                                           \
-            runtime::eigen::ConstantInstruction<T>,                          \
-            std::vector<T::type>{                                            \
-                dynamic_cast<const op::ScalarConstant<T>*>(n)->get_value()}, \
-            out[0]);
+#define REGISTER_SCALAR_CONSTANT(T)                                                                \
+    REGISTER_INSTRUCTION(                                                                          \
+        op::ScalarConstant<T>,                                                                     \
+        runtime::eigen::ConstantInstruction<T>,                                                    \
+        std::vector<T::type>{dynamic_cast<const op::ScalarConstant<T>*>(n)->get_value()},          \
+        out[0]);
 
         REGISTER_SCALAR_CONSTANT(element::Bool);
         REGISTER_SCALAR_CONSTANT(element::Float32);
@@ -225,12 +331,11 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_SCALAR_CONSTANT(element::UInt64);
 #undef REGISTER_SCALAR_CONSTANT
 
-#define REGISTER_TENSOR_CONSTANT(T)                                                   \
-        REGISTER_INSTRUCTION(                                                         \
-            op::TensorConstant<T>,                                                    \
-            runtime::eigen::ConstantInstruction<T>,                                   \
-            dynamic_cast<const op::TensorConstant<T>*>(n)->get_value()->get_vector(), \
-            out[0]);
+#define REGISTER_TENSOR_CONSTANT(T)                                                                \
+    REGISTER_INSTRUCTION(op::TensorConstant<T>,                                                    \
+                         runtime::eigen::ConstantInstruction<T>,                                   \
+                         dynamic_cast<const op::TensorConstant<T>*>(n)->get_value()->get_vector(), \
+                         out[0]);
 
         REGISTER_TENSOR_CONSTANT(element::Bool);
         REGISTER_TENSOR_CONSTANT(element::Float32);
@@ -245,56 +350,60 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto broadcast = static_cast<const op::Broadcast*>(n);
 
-            auto arg_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type());
+            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_arguments().at(0)->get_value_type());
             assert(nullptr != arg_tensor_type);
 
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
 
-            auto arg_shape            = arg_tensor_type->get_shape();
-            auto result_shape         = result_tensor_type->get_shape();
+            auto arg_shape = arg_tensor_type->get_shape();
+            auto result_shape = result_tensor_type->get_shape();
             auto& result_element_type = result_tensor_type->get_element_type();
 
             if (broadcast->get_broadcast_axes().empty())
             {
-                // Degenerate case: no broadcast axes is just a copy.
-#define M(T)    ef->get_instructions()->push_back(                   \
-                    make_shared<runtime::eigen::CopyInstruction<T>>( \
-                        in[0].get_index(), out[0].get_index()));
-                DO_ON_ELEMENT_TYPE(result_element_type,"Broadcast has unhandled element type",M);
+// Degenerate case: no broadcast axes is just a copy.
+#define M(T)                                                                                       \
+    ef->get_instructions()->push_back(                                                             \
+        make_shared<runtime::eigen::CopyInstruction<T>>(in[0].get_index(), out[0].get_index()));
+                DO_ON_ELEMENT_TYPE(result_element_type, "Broadcast has unhandled element type", M);
 #undef M
             }
             else if (arg_shape.size() == 0)
             {
-#define M(T)    ef->get_instructions()->push_back(                              \
-                    make_shared<runtime::eigen::BroadcastScalarInstruction<T>>( \
-                        in[0], out[0]));
-                DO_ON_ELEMENT_TYPE(result_element_type,"Broadcast has unhandled element type",M);
+#define M(T)                                                                                       \
+    ef->get_instructions()->push_back(                                                             \
+        make_shared<runtime::eigen::BroadcastScalarInstruction<T>>(in[0], out[0]));
+                DO_ON_ELEMENT_TYPE(result_element_type, "Broadcast has unhandled element type", M);
 #undef M
             }
             else if (arg_shape.size() == 1 && result_shape.size() == 2)
             {
                 if (broadcast->get_broadcast_axes() == AxisSet{1})
                 {
-#define M(T)        ef->get_instructions()->push_back(                                     \
-                        make_shared<runtime::eigen::BroadcastVectorColwiseInstruction<T>>( \
-                            in[0], out[0]));
-                    DO_ON_ELEMENT_TYPE(result_element_type,"Broadcast has unhandled element type",M);
+#define M(T)                                                                                       \
+    ef->get_instructions()->push_back(                                                             \
+        make_shared<runtime::eigen::BroadcastVectorColwiseInstruction<T>>(in[0], out[0]));
+                    DO_ON_ELEMENT_TYPE(
+                        result_element_type, "Broadcast has unhandled element type", M);
 #undef M
                 }
                 else if (broadcast->get_broadcast_axes() == AxisSet{0})
                 {
-#define M(T)        ef->get_instructions()->push_back(                                     \
-                        make_shared<runtime::eigen::BroadcastVectorRowwiseInstruction<T>>( \
-                            in[0], out[0]));
-                    DO_ON_ELEMENT_TYPE(result_element_type,"Broadcast has unhandled element type",M);
+#define M(T)                                                                                       \
+    ef->get_instructions()->push_back(                                                             \
+        make_shared<runtime::eigen::BroadcastVectorRowwiseInstruction<T>>(in[0], out[0]));
+                    DO_ON_ELEMENT_TYPE(
+                        result_element_type, "Broadcast has unhandled element type", M);
 #undef M
                 }
                 else
                 {
-                    throw ngraph_error("Internal error: axis set for vector-matrix broadcast is neither {0} or {1}");
+                    throw ngraph_error(
+                        "Internal error: axis set for vector-matrix broadcast is neither {0} or "
+                        "{1}");
                 }
             }
             else
@@ -309,25 +418,23 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
 
-            auto result_shape         = result_tensor_type->get_shape();
+            auto result_shape = result_tensor_type->get_shape();
             auto& result_element_type = result_tensor_type->get_element_type();
 
             if (result_shape.size() == 1)
             {
-#define M(T)    ef->get_instructions()->push_back(                           \
-                    make_shared<runtime::eigen::ConcatVectorInstruction<T>>( \
-                        in, out[0]));
-                DO_ON_ELEMENT_TYPE(result_element_type,"Concat has unhandled element type",M);
+#define M(T)                                                                                       \
+    ef->get_instructions()->push_back(                                                             \
+        make_shared<runtime::eigen::ConcatVectorInstruction<T>>(in, out[0]));
+                DO_ON_ELEMENT_TYPE(result_element_type, "Concat has unhandled element type", M);
 #undef M
             }
             else if (result_shape.size() == 2)
             {
-#define M(T)    ef->get_instructions()->push_back(                                      \
-                    make_shared<runtime::eigen::ConcatMatrixInstruction<T>>(            \
-                        in,                                                             \
-                        (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis(), \
-                        out[0]));
-                DO_ON_ELEMENT_TYPE(result_element_type,"Concat has unhandled element type",M);
+#define M(T)                                                                                       \
+    ef->get_instructions()->push_back(make_shared<runtime::eigen::ConcatMatrixInstruction<T>>(     \
+        in, (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis(), out[0]));
+                DO_ON_ELEMENT_TYPE(result_element_type, "Concat has unhandled element type", M);
 #undef M
             }
             else
@@ -357,49 +464,49 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             // If arg0 or arg1 is a scalar, emit a scalar-tensor product.
             if (arg0_shape.size() == 0)
             {
-#define M(T)    ef->get_instructions()->push_back(                                  \
-                    make_shared<runtime::eigen::ScalarTensorProductInstruction<T>>( \
-                        in[0], in[1], out[0]));
-                DO_ON_NUMERIC_TYPE(arg0_element_type,"Dot has unhandled element type",M);
+#define M(T)                                                                                       \
+    ef->get_instructions()->push_back(                                                             \
+        make_shared<runtime::eigen::ScalarTensorProductInstruction<T>>(in[0], in[1], out[0]));
+                DO_ON_NUMERIC_TYPE(arg0_element_type, "Dot has unhandled element type", M);
 #undef M
             }
             else if (arg1_shape.size() == 0)
             {
-                // If arg1 is the scalar, do the same thing but switch the order of operands.
-#define M(T)    ef->get_instructions()->push_back(                                  \
-                    make_shared<runtime::eigen::ScalarTensorProductInstruction<T>>( \
-                        in[1], in[0], out[0]));
-                DO_ON_NUMERIC_TYPE(arg0_element_type,"Dot has unhandled element type",M);
+// If arg1 is the scalar, do the same thing but switch the order of operands.
+#define M(T)                                                                                       \
+    ef->get_instructions()->push_back(                                                             \
+        make_shared<runtime::eigen::ScalarTensorProductInstruction<T>>(in[1], in[0], out[0]));
+                DO_ON_NUMERIC_TYPE(arg0_element_type, "Dot has unhandled element type", M);
 #undef M
             }
 
             // If arg0 and arg1 are both vectors, emit a dot product.
             else if (arg0_shape.size() == 1 && arg1_shape.size() == 1)
             {
-#define M(T)    ef->get_instructions()->push_back(                  \
-                    make_shared<runtime::eigen::DotInstruction<T>>( \
-                        in[0], in[1], out[0]));
-                DO_ON_NUMERIC_TYPE(arg0_element_type,"Dot has unhandled element type",M);
+#define M(T)                                                                                       \
+    ef->get_instructions()->push_back(                                                             \
+        make_shared<runtime::eigen::DotInstruction<T>>(in[0], in[1], out[0]));
+                DO_ON_NUMERIC_TYPE(arg0_element_type, "Dot has unhandled element type", M);
 #undef M
             }
 
             // If arg0 is a matrix and arg1 is a vector, emit a matrix-vector product.
             else if (arg0_shape.size() == 2 && arg1_shape.size() == 1)
             {
-#define M(T)    ef->get_instructions()->push_back(                                  \
-                    make_shared<runtime::eigen::MatrixVectorProductInstruction<T>>( \
-                        in[0], in[1], out[0]));
-                DO_ON_NUMERIC_TYPE(arg0_element_type,"Dot has unhandled element type",M);
+#define M(T)                                                                                       \
+    ef->get_instructions()->push_back(                                                             \
+        make_shared<runtime::eigen::MatrixVectorProductInstruction<T>>(in[0], in[1], out[0]));
+                DO_ON_NUMERIC_TYPE(arg0_element_type, "Dot has unhandled element type", M);
 #undef M
             }
 
             // If arg0 and arg1 are both matrices, emit a matrix product.
             else if (arg0_shape.size() == 2 && arg1_shape.size() == 2)
             {
-#define M(T)    ef->get_instructions()->push_back(                                        \
-                    make_shared<runtime::eigen::MatrixMultInstruction<T>>( \
-                        in[0], in[1], out[0]));
-                DO_ON_NUMERIC_TYPE(arg0_element_type,"Dot has unhandled element type",M);
+#define M(T)                                                                                       \
+    ef->get_instructions()->push_back(                                                             \
+        make_shared<runtime::eigen::MatrixMultInstruction<T>>(in[0], in[1], out[0]));
+                DO_ON_NUMERIC_TYPE(arg0_element_type, "Dot has unhandled element type", M);
 #undef M
             }
 
@@ -410,7 +517,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         };
 
         // Parameter is a "runtime no-op" because the output tensor has already been filled.
-        REGISTER_TO_OP_MAP(op::Parameter) {};
+        REGISTER_TO_OP_MAP(op::Parameter){};
 
         // GetTupleElement will be spliced out, with the users of out redirected to in's source, but, for now, we need to copy.
         REGISTER_TO_OP_MAP(op::GetTupleElement)
@@ -423,11 +530,11 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
             auto& result_element_type = result_tensor_type->get_element_type();
 
-#define M(T)                                                                                \
-            ef->get_instructions()->push_back(                                              \
-                make_shared<runtime::eigen::CopyInstruction<T>>(                            \
-                    in.at(get_tuple_element->get_n()).get_index(), out.at(0).get_index()));
-            DO_ON_ELEMENT_TYPE(result_element_type,"GetTupleElement has unhandled element type",M);
+#define M(T)                                                                                       \
+    ef->get_instructions()->push_back(make_shared<runtime::eigen::CopyInstruction<T>>(             \
+        in.at(get_tuple_element->get_n()).get_index(), out.at(0).get_index()));
+            DO_ON_ELEMENT_TYPE(
+                result_element_type, "GetTupleElement has unhandled element type", M);
 #undef M
         };
 
@@ -446,7 +553,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_TO_OP_MAP(op::FunctionCall)
         {
             auto function_call = static_cast<const op::FunctionCall*>(n);
-            auto function      = function_call->get_function();
+            auto function = function_call->get_function();
 
             std::shared_ptr<ExternalFunction> external;
 
@@ -456,20 +563,16 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
             catch (const std::out_of_range)
             {
-                external = make_shared<ngraph::runtime::ExternalFunction>(
-                               function_call->get_function());
-                function_map.insert({function,external});
+                external =
+                    make_shared<ngraph::runtime::ExternalFunction>(function_call->get_function());
+                function_map.insert({function, external});
             }
 
             ef->get_instructions()->push_back(
-                make_shared<runtime::eigen::CallInstruction>(external,in,out));
+                make_shared<runtime::eigen::CallInstruction>(external, in, out));
         };
 
-        REGISTER_TO_OP_MAP(op::Reduce)
-        {
-            throw ngraph_error("op::Reduce not implemented yet");
-        };
-
+        REGISTER_TO_OP_MAP(op::Reduce) { throw ngraph_error("op::Reduce not implemented yet"); };
         initialized = true;
     }
     return op_map;
@@ -513,8 +616,8 @@ void ExternalFunction::compile(FunctionMap& function_map)
     {
         for (const descriptor::Output& output : param->get_outputs())
         {
-            auto   tv        = output.get_tensor_view();
-            size_t index     = tensor_index.size();
+            auto tv = output.get_tensor_view();
+            size_t index = tensor_index.size();
             tensor_index[tv] = index;
         }
     }
@@ -523,8 +626,8 @@ void ExternalFunction::compile(FunctionMap& function_map)
     // Next are the function outputs
     for (const descriptor::Output& output : m_function->get_result()->get_outputs())
     {
-        auto   tv        = output.get_tensor_view();
-        size_t index     = tensor_index.size();
+        auto tv = output.get_tensor_view();
+        size_t index = tensor_index.size();
         tensor_index[tv] = index;
     }
     m_n_outputs = tensor_index.size() - m_n_inputs;
@@ -537,7 +640,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
             auto tv = output.get_tensor_view();
             if (0 == tensor_index.count(tv))
             {
-                size_t index     = tensor_index.size();
+                size_t index = tensor_index.size();
                 tensor_index[tv] = index;
                 m_temp_views.push_back(tv);
             }
@@ -557,7 +660,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
-            auto                      tv     = output.get_tensor_view();
+            auto tv = output.get_tensor_view();
             in.push_back({tensor_index.at(tv), tv});
         }
         std::vector<TensorViewInfo> out;
@@ -595,7 +698,8 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame(Functio
         auto shape = tv->get_tensor_view_type()->get_shape();
 
 #define M(T) temps.push_back(ngraph::runtime::make_tensor<T>(shape));
-        DO_ON_ELEMENT_TYPE(et,"Internal error: tried to create temporary for unhandled element type",M);
+        DO_ON_ELEMENT_TYPE(
+            et, "Internal error: tried to create temporary for unhandled element type", M);
 #undef M
     }
     return make_shared<ngraph::runtime::CallFrame>(

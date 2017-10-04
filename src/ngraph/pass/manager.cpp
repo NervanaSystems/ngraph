@@ -15,10 +15,10 @@
 #include <iostream>
 #include <memory>
 
-#include "ngraph/log.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/node.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/pass/manager.hpp"
 
 using namespace std;
 using namespace ngraph;

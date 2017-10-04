@@ -17,8 +17,8 @@
 #include <list>
 
 #include "ngraph/node.hpp"
-#include "ngraph/visualize.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/visualize.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -70,7 +70,7 @@ std::string Visualize::get_attributes(const Node* node)
 void Visualize::save_dot(const string& path) const
 {
 #ifdef GRAPHVIZ_FOUND
-    auto     tmp_file = path + ".tmp";
+    auto tmp_file = path + ".tmp";
     ofstream out(tmp_file);
     if (out)
     {
@@ -81,7 +81,7 @@ void Visualize::save_dot(const string& path) const
 
         stringstream ss;
         ss << "dot -Tpng " << tmp_file << " -o " << path;
-        auto cmd    = ss.str();
+        auto cmd = ss.str();
         auto stream = popen(cmd.c_str(), "r");
         pclose(stream);
 

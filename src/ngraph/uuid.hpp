@@ -32,17 +32,17 @@ class ngraph::uuid_type
 public:
     uuid_type()
     {
-        m_data[0]  = random_generator();
-        m_data[1]  = random_generator();
+        m_data[0] = random_generator();
+        m_data[1] = random_generator();
         uint8_t* p = (uint8_t*)m_data;
-        p[6]       = (p[6] & 0x0F) | 0x40;
-        p[8]       = (p[8] & 0x3F) | 0x80;
+        p[6] = (p[6] & 0x0F) | 0x40;
+        p[8] = (p[8] & 0x3F) | 0x80;
     }
 
     std::string to_string() const
     {
         std::stringstream ss;
-        uint8_t*          p = (uint8_t*)m_data;
+        uint8_t* p = (uint8_t*)m_data;
         for (int i = 0; i < 4; i++)
             ss << std::hex << std::setw(2) << std::setfill('0') << (int)*p++;
         ss << "-";
