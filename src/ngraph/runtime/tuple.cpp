@@ -33,7 +33,7 @@ Tuple::Tuple(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& element
 }
 
 void Tuple::collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
-                                 const std::shared_ptr<Value>&        value) const
+                                 const std::shared_ptr<Value>& value) const
 {
     for (auto element : m_elements)
     {

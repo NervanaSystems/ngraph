@@ -30,12 +30,12 @@ namespace nervana
     class thread_starter;
 }
 
-string                    nervana::logger::log_path;
-deque<string>             nervana::logger::queue;
-static mutex              queue_mutex;
+string nervana::logger::log_path;
+deque<string> nervana::logger::queue;
+static mutex queue_mutex;
 static condition_variable queue_condition;
 static unique_ptr<thread> queue_thread;
-static bool               active = false;
+static bool active = false;
 
 class nervana::thread_starter
 {
@@ -53,7 +53,7 @@ void nervana::logger::set_log_path(const string& path)
 
 void nervana::logger::start()
 {
-    active       = true;
+    active = true;
     queue_thread = unique_ptr<thread>(new thread(&thread_entry, nullptr));
 }
 
@@ -103,8 +103,8 @@ nervana::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const
     }
 
     std::time_t tt = chrono::system_clock::to_time_t(chrono::system_clock::now());
-    auto        tm = std::gmtime(&tt);
-    char        buffer[256];
+    auto tm = std::gmtime(&tt);
+    char buffer[256];
     //    strftime(buffer,sizeof(buffer), "%d/%b/%Y:%H:%M:%S %z", tm);
     //    strftime(buffer,sizeof(buffer), "%Y-%m-%d %H:%M:%S UTC", tm);
     strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%Sz", tm);

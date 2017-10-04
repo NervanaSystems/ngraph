@@ -16,11 +16,11 @@
 #include <sstream>
 
 #include "ngraph/log.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -69,7 +69,6 @@ pass::MemoryManager::node::node(size_t size, block_state state)
     : m_size{size}
     , m_state{state}
 {
-
 }
 
 pass::MemoryManager::MemoryManager(size_t alignment)
@@ -84,14 +83,10 @@ pass::MemoryManager::MemoryManager(size_t alignment)
 size_t pass::MemoryManager::allocate(size_t size)
 {
     size_t rc;
-    switch(m_scheme)
+    switch (m_scheme)
     {
-    case allocation_scheme::FIRST_FIT:
-        rc = first_fit(size);
-        break;
-    case allocation_scheme::BEST_FIT:
-        rc = best_fit(size);
-        break;
+    case allocation_scheme::FIRST_FIT: rc = first_fit(size); break;
+    case allocation_scheme::BEST_FIT: rc = best_fit(size); break;
     }
     return rc;
 }
@@ -103,7 +98,7 @@ size_t pass::MemoryManager::best_fit(size_t size)
     size_t min_delta = numeric_limits<size_t>::max();
     auto best_fit = m_node_list.end();
     size_t best_offset = offset;
-    for (auto it=m_node_list.begin(); it != m_node_list.end(); ++it)
+    for (auto it = m_node_list.begin(); it != m_node_list.end(); ++it)
     {
         if (it->m_state == block_state::FREE && it->m_size >= size)
         {
@@ -143,7 +138,7 @@ size_t pass::MemoryManager::first_fit(size_t size)
     size = align(size, m_alignment);
     size_t offset = 0;
     bool found = false;
-    for (auto it=m_node_list.begin(); it != m_node_list.end(); ++it)
+    for (auto it = m_node_list.begin(); it != m_node_list.end(); ++it)
     {
         if (it->m_state == block_state::FREE && it->m_size >= size)
         {
@@ -176,7 +171,7 @@ void pass::MemoryManager::free(size_t offset)
 {
     size_t search_offset = 0;
     bool found = false;
-    for (auto it=m_node_list.begin(); it != m_node_list.end(); ++it)
+    for (auto it = m_node_list.begin(); it != m_node_list.end(); ++it)
     {
         if (offset == search_offset)
         {

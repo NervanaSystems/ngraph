@@ -25,14 +25,6 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename TI, typename TO>
-            void less_than(TI arg0, TI arg1, TO out)
-            {
-                auto result_as_float = get_map_array(&*arg0) < get_map_array(&*arg1);
-                auto result_as_char  = result_as_float.template cast<char>();
-                set_map_array(&*out, result_as_char);
-            }
-
             template <typename ET>
             class LessThanInstruction : public Instruction
             {

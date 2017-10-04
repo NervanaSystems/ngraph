@@ -20,8 +20,7 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::op;
 
-const element::Type& Convert::propagate_element_types(
-                         const element::Type& arg_element_type) const
+const element::Type& Convert::propagate_element_types(const element::Type& arg_element_type) const
 {
     return m_element_type;
 }

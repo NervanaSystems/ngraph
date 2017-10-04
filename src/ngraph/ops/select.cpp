@@ -14,8 +14,8 @@
 
 #include <memory>
 
-#include "ngraph/ngraph.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/ngraph.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -42,8 +42,8 @@ void Select::propagate_types()
     {
         throw ngraph_error("Argument 0 for arithmetic operators must have boolean element type");
     }
-    if (arg0_tensor_type->get_shape() != arg1_tensor_type->get_shape()
-     || arg0_tensor_type->get_shape() != arg2_tensor_type->get_shape())
+    if (arg0_tensor_type->get_shape() != arg1_tensor_type->get_shape() ||
+        arg0_tensor_type->get_shape() != arg2_tensor_type->get_shape())
     {
         throw ngraph_error("Arguments must have the same tensor view shape");
     }
@@ -54,4 +54,3 @@ void Select::propagate_types()
 
     set_value_type_checked(arg1_tensor_type);
 }
-

@@ -22,22 +22,22 @@ using namespace ngraph;
 TEST(execute, test_abc)
 {
     auto shape = Shape{2, 2};
-    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto C     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{1, 2, 3, 4};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b          = vector<float>{5, 6, 7, 8};
-    auto c      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *c          = vector<float>{9, 10, 11, 12};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 2, 3, 4};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{5, 6, 7, 8};
+    auto c = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *c = vector<float>{9, 10, 11, 12};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
     (*cf)({a, b, c}, {result});
@@ -63,24 +63,23 @@ TEST(execute, test_abc_tuple)
     auto A = make_shared<op::GetTupleElement>(ABC, 0);
     auto B = make_shared<op::GetTupleElement>(ABC, 1);
     auto C = make_shared<op::GetTupleElement>(ABC, 2);
-    auto f = make_shared<Function>(make_shared<op::Tuple>(Nodes{(A + B) * C}),
-                                   tensor_view_type,
-                                   op::Parameters{ABC});
+    auto f = make_shared<Function>(
+        make_shared<op::Tuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a            = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a                = vector<float>{1, 2, 3, 4};
-    auto b            = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b                = vector<float>{5, 6, 7, 8};
-    auto c            = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *c                = vector<float>{9, 10, 11, 12};
-    auto abc          = ngraph::runtime::make_tuple({a, b, c});
-    auto bac          = ngraph::runtime::make_tuple({b, a, c});
-    auto acb          = ngraph::runtime::make_tuple({a, c, b});
-    auto result       = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 2, 3, 4};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{5, 6, 7, 8};
+    auto c = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *c = vector<float>{9, 10, 11, 12};
+    auto abc = ngraph::runtime::make_tuple({a, b, c});
+    auto bac = ngraph::runtime::make_tuple({b, a, c});
+    auto acb = ngraph::runtime::make_tuple({a, c, b});
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
     auto result_tuple = ngraph::runtime::make_tuple({result});
 
     (*cf)({abc}, {result_tuple});
@@ -96,28 +95,27 @@ TEST(execute, test_abc_tuple)
 // Multiple retrive values
 TEST(execute, test_tuple_result)
 {
-    auto shape         = Shape{2, 2};
-    auto A             = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B             = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto C             = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto A_add_B       = make_shared<op::Add>(A, B);
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto A_add_B = make_shared<op::Add>(A, B);
     auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
 
-    auto rt = make_shared<TupleType>(
-                std::vector<shared_ptr<const ValueType>>(
-                 {make_shared<TensorViewType>(element::Float32::element_type(), shape),
-                  make_shared<TensorViewType>(element::Float32::element_type(), shape)}));
-    auto f = make_shared<Function>(make_shared<op::Tuple>(Nodes{A_add_B, A_add_B_mul_C}),
-                                   rt, op::Parameters{A, B, C});
+    auto rt = make_shared<TupleType>(std::vector<shared_ptr<const ValueType>>(
+        {make_shared<TensorViewType>(element::Float32::element_type(), shape),
+         make_shared<TensorViewType>(element::Float32::element_type(), shape)}));
+    auto f = make_shared<Function>(
+        make_shared<op::Tuple>(Nodes{A_add_B, A_add_B_mul_C}), rt, op::Parameters{A, B, C});
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a     = vector<float>{1, 2, 3, 4};
+    *a = vector<float>{1, 2, 3, 4};
     auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b     = vector<float>{5, 6, 7, 8};
+    *b = vector<float>{5, 6, 7, 8};
     auto c = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *c     = vector<float>{9, 10, 11, 12};
+    *c = vector<float>{9, 10, 11, 12};
 
     auto r0 = ngraph::runtime::make_tensor<element::Float32>(shape);
     auto r1 = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -131,17 +129,17 @@ TEST(execute, test_tuple_result)
 
 TEST(execute, test_abs)
 {
-    auto shape       = Shape{2, 2};
-    auto A           = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f           = make_shared<Function>(make_shared<op::Abs>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Abs>(A), result_type, op::Parameters{A});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{1, -2, 0, -4.8f};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, -2, 0, -4.8f};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
     (*cf)({a}, {result});
@@ -151,25 +149,26 @@ TEST(execute, test_abs)
 TEST(execute, test_concat_matrix_colwise)
 {
     auto shape_a = Shape{2, 2};
-    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
     auto shape_b = Shape{2, 3};
-    auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
     auto shape_c = Shape{2, 3};
-    auto C       = make_shared<op::Parameter>(element::Float32::element_type(), shape_c);
+    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape_c);
     auto shape_r = Shape{2, 8};
-    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2,8});
-    auto f       = make_shared<Function>(make_shared<op::Concat>(Nodes{A,B,C},1), rt, op::Parameters{A,B,C});
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 8});
+    auto f = make_shared<Function>(
+        make_shared<op::Concat>(Nodes{A, B, C}, 1), rt, op::Parameters{A, B, C});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{2, 4, 8, 16};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape_b);
-    *b          = vector<float>{1, 2, 4, 8, 16, 32};
-    auto c      = ngraph::runtime::make_tensor<element::Float32>(shape_c);
-    *c          = vector<float>{2, 3, 5, 7, 11, 13};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{2, 4, 8, 16};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b = vector<float>{1, 2, 4, 8, 16, 32};
+    auto c = ngraph::runtime::make_tensor<element::Float32>(shape_c);
+    *c = vector<float>{2, 3, 5, 7, 11, 13};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
     (*cf)({a, b, c}, {result});
@@ -180,25 +179,26 @@ TEST(execute, test_concat_matrix_colwise)
 TEST(execute, test_concat_matrix_rowwise)
 {
     auto shape_a = Shape{2, 2};
-    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
     auto shape_b = Shape{3, 2};
-    auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
     auto shape_c = Shape{3, 2};
-    auto C       = make_shared<op::Parameter>(element::Float32::element_type(), shape_c);
+    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape_c);
     auto shape_r = Shape{8, 2};
-    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), Shape{8,2});
-    auto f       = make_shared<Function>(make_shared<op::Concat>(Nodes{A,B,C},0), rt, op::Parameters{A,B,C});
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{8, 2});
+    auto f = make_shared<Function>(
+        make_shared<op::Concat>(Nodes{A, B, C}, 0), rt, op::Parameters{A, B, C});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{2, 4, 8, 16};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape_b);
-    *b          = vector<float>{1, 2, 4, 8, 16, 32};
-    auto c      = ngraph::runtime::make_tensor<element::Float32>(shape_c);
-    *c          = vector<float>{2, 3, 5, 7, 11, 13};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{2, 4, 8, 16};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b = vector<float>{1, 2, 4, 8, 16, 32};
+    auto c = ngraph::runtime::make_tensor<element::Float32>(shape_c);
+    *c = vector<float>{2, 3, 5, 7, 11, 13};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
     (*cf)({a, b, c}, {result});
@@ -209,25 +209,26 @@ TEST(execute, test_concat_matrix_rowwise)
 TEST(execute, test_concat_vector)
 {
     auto shape_a = Shape{4};
-    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
     auto shape_b = Shape{6};
-    auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
     auto shape_c = Shape{2};
-    auto C       = make_shared<op::Parameter>(element::Float32::element_type(), shape_c);
+    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape_c);
     auto shape_r = Shape{12};
-    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), Shape{12});
-    auto f       = make_shared<Function>(make_shared<op::Concat>(Nodes{A,B,C},0), rt, op::Parameters{A,B,C});
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{12});
+    auto f = make_shared<Function>(
+        make_shared<op::Concat>(Nodes{A, B, C}, 0), rt, op::Parameters{A, B, C});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{2, 4, 8, 16};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape_b);
-    *b          = vector<float>{1, 2, 4, 8, 16, 32};
-    auto c      = ngraph::runtime::make_tensor<element::Float32>(shape_c);
-    *c          = vector<float>{18, 19};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{2, 4, 8, 16};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b = vector<float>{1, 2, 4, 8, 16, 32};
+    auto c = ngraph::runtime::make_tensor<element::Float32>(shape_c);
+    *c = vector<float>{18, 19};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
     (*cf)({a, b, c}, {result});
@@ -237,19 +238,19 @@ TEST(execute, test_concat_vector)
 TEST(execute, test_divide)
 {
     auto shape = Shape{2, 2};
-    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Divide>(A, B), rt, op::Parameters{A, B});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), rt, op::Parameters{A, B});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{2, 4, 8, 16};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b          = vector<float>{1, 2, 4, 8};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{2, 4, 8, 16};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{1, 2, 4, 8};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
     (*cf)({a, b}, {result});
@@ -259,19 +260,19 @@ TEST(execute, test_divide)
 TEST(execute, test_equal)
 {
     auto shape = Shape{2, 2, 2};
-    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Bool::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{A, B});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{A, B});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b          = vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5};
     auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
 
     (*cf)({a, b}, {result});
@@ -280,21 +281,21 @@ TEST(execute, test_equal)
 
 TEST(execute, test_dot1d)
 {
-    auto shape   = Shape{4};
-    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto shape = Shape{4};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto shape_r = Shape{1};
-    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
-    auto f       = make_shared<Function>(make_shared<op::Dot>(A,B), rt, op::Parameters{A,B});
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{2, 4, 8, 16};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b          = vector<float>{1, 2, 4, 8};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{2, 4, 8, 16};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{1, 2, 4, 8};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
     (*cf)({a, b}, {result});
@@ -303,21 +304,21 @@ TEST(execute, test_dot1d)
 
 TEST(execute, test_dot2d)
 {
-    auto shape   = Shape{2, 2};
-    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto shape_r = Shape{2,2};
-    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f       = make_shared<Function>(make_shared<op::Dot>(A,B), rt, op::Parameters{A,B});
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto shape_r = Shape{2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{1, 2, 3, 4};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b          = vector<float>{5, 6, 7, 8};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 2, 3, 4};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{5, 6, 7, 8};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
     (*cf)({a, b}, {result});
@@ -327,135 +328,199 @@ TEST(execute, test_dot2d)
 TEST(execute, test_dot_scalar_tensor_arg0)
 {
     auto shape_a = Shape{};
-    auto shape_b = Shape{2,2,2};
-    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
-    auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
-    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), shape_b);
-    auto f       = make_shared<Function>(make_shared<op::Dot>(A,B), rt, op::Parameters{A,B});
+    auto shape_b = Shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_b);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{6};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape_b);
-    *b          = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{6};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_b);
 
-    (*cf)({a,b}, {result});
+    (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector());
 }
 
 TEST(execute, test_dot_scalar_tensor_arg1)
 {
-    auto shape_a = Shape{2,2,2};
+    auto shape_a = Shape{2, 2, 2};
     auto shape_b = Shape{};
-    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
-    auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
-    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), shape_a);
-    auto f       = make_shared<Function>(make_shared<op::Dot>(A,B), rt, op::Parameters{A,B});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_a);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape_b);
-    *b          = vector<float>{6};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b = vector<float>{6};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_a);
 
-    (*cf)({a,b}, {result});
+    (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector());
 }
 
 TEST(execute, test_dot_scalar_scalar)
 {
     auto shape = Shape{};
-    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Dot>(A,B), rt, op::Parameters{A,B});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{8};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b          = vector<float>{6};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{8};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{6};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
-    (*cf)({a,b}, {result});
+    (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{48}), result->get_vector());
 }
 
 TEST(execute, test_dot_matrix_vector)
 {
-    auto shape_a = Shape{4,4};
+    auto shape_a = Shape{4, 4};
     auto shape_b = Shape{4};
-    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
-    auto B       = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
-    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), shape_b);
-    auto f       = make_shared<Function>(make_shared<op::Dot>(A,B), rt, op::Parameters{A,B});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_b);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
     auto shape_r = Shape{4};
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{ 1, 2, 3, 4,
-                                 5, 6, 7, 8,
-                                 9,10,11,12,
-                                13,14,15,16};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape_b);
-    *b          = vector<float>{17,18,19,20};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b = vector<float>{17, 18, 19, 20};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
-    (*cf)({a,b}, {result});
-    ASSERT_EQ((vector<float>{190,486,782,1078}), result->get_vector());
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{190, 486, 782, 1078}), result->get_vector());
 }
 
-TEST(execute, test_lessthan)
+TEST(execute, test_greater)
 {
     auto shape = Shape{2, 2, 2};
-    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Bool::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Less>(A, B), rt, op::Parameters{A, B});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Greater>(A, B), rt, op::Parameters{A, B});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b          = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
+    auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), result->get_vector());
+}
+
+TEST(execute, test_greatereq)
+{
+    auto shape = Shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::GreaterEq>(A, B), rt, op::Parameters{A, B});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 8, -8, 17, -0.5, 0, 2, 1};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5};
+    auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), result->get_vector());
+}
+
+TEST(execute, test_less)
+{
+    auto shape = Shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Less>(A, B), rt, op::Parameters{A, B});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
     auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<char>{0, 0, 1, 0, 1, 0, 0, 1}), result->get_vector());
 }
 
-TEST(execute, test_log)
+TEST(execute, test_lesseq)
 {
     auto shape = Shape{2, 2, 2};
-    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Log>(A), rt, op::Parameters{A});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::LessEq>(A, B), rt, op::Parameters{A, B});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a     = vector<float>{expf(1), expf(2), expf(3), expf(4), expf(5), expf(6), expf(7), expf(8)};
+    *a = vector<float>{1, 8, -8, 17, -0.5, 0, 2, 1};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5};
+    auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), result->get_vector());
+}
+
+TEST(execute, test_log)
+{
+    auto shape = Shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Log>(A), rt, op::Parameters{A});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{expf(1), expf(2), expf(3), expf(4), expf(5), expf(6), expf(7), expf(8)};
     vector<float> loga;
-    for (auto elt : a->get_vector()){
+    for (auto elt : a->get_vector())
+    {
         loga.push_back(logf(elt));
     }
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -467,19 +532,19 @@ TEST(execute, test_log)
 TEST(execute, test_maximum)
 {
     auto shape = Shape{2, 2, 2};
-    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Maximum>(A, B), rt, op::Parameters{A, B});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), rt, op::Parameters{A, B});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b          = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
     (*cf)({a, b}, {result});
@@ -489,16 +554,16 @@ TEST(execute, test_maximum)
 TEST(execute, test_negative)
 {
     auto shape = Shape{2, 3};
-    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Negative>(A), rt, op::Parameters{A});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Negative>(A), rt, op::Parameters{A});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{1, -2, 0, -4.8f, 8.6f, -8.6f};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, -2, 0, -4.8f, 8.6f, -8.6f};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
     (*cf)({a}, {result});
@@ -508,19 +573,19 @@ TEST(execute, test_negative)
 TEST(execute, test_notequal)
 {
     auto shape = Shape{2, 2, 2};
-    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Bool::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::NotEqual>(A, B), rt, op::Parameters{A, B});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::NotEqual>(A, B), rt, op::Parameters{A, B});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b          = vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5};
     auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
 
     (*cf)({a, b}, {result});
@@ -530,22 +595,22 @@ TEST(execute, test_notequal)
 TEST(execute, test_select)
 {
     auto shape = Shape{2, 2, 2};
-    auto A     = make_shared<op::Parameter>(element::Bool::element_type(), shape);
-    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto C     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Select>(A, B, C), rt, op::Parameters{A, B, C});
+    auto A = make_shared<op::Parameter>(element::Bool::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Select>(A, B, C), rt, op::Parameters{A, B, C});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Bool>(shape);
-    *a          = vector<char>{0, 1, 1, 0, 0, 1, 0, 1};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b          = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
-    auto c      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *c          = vector<float>{11, 12, 13, 14, 15, 16, 17, 18};
+    auto a = ngraph::runtime::make_tensor<element::Bool>(shape);
+    *a = vector<char>{0, 1, 1, 0, 0, 1, 0, 1};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
+    auto c = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *c = vector<float>{11, 12, 13, 14, 15, 16, 17, 18};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
     (*cf)({a, b, c}, {result});
@@ -555,19 +620,19 @@ TEST(execute, test_select)
 TEST(execute, test_subtract)
 {
     auto shape = Shape{2, 2};
-    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Subtract>(A, B), rt, op::Parameters{A, B});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Subtract>(A, B), rt, op::Parameters{A, B});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{2, 4, 8, 16};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b          = vector<float>{1, 2, 4, 8};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{2, 4, 8, 16};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{1, 2, 4, 8};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
     (*cf)({a, b}, {result});
@@ -577,12 +642,12 @@ TEST(execute, test_subtract)
 TEST(execute, test_scalar_constant)
 {
     auto shape = Shape{};
-    auto A     = make_shared<op::ScalarConstant<element::Float32>>(-3.0f);
-    auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>(A, rt, op::Parameters{});
+    auto A = make_shared<op::ScalarConstant<element::Float32>>(-3.0f);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(A, rt, op::Parameters{});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -593,14 +658,14 @@ TEST(execute, test_scalar_constant)
 
 TEST(execute, test_tensor_constant)
 {
-    auto shape = Shape{2,2,2};
-    auto A     = make_shared<op::TensorConstant<element::Float32>>(shape);
-    A->get_value()->get_vector() = {1,2,3,4,5,6,7,8};
-    auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>(A, rt, op::Parameters{});
+    auto shape = Shape{2, 2, 2};
+    auto A = make_shared<op::TensorConstant<element::Float32>>(shape);
+    A->get_value()->get_vector() = {1, 2, 3, 4, 5, 6, 7, 8};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(A, rt, op::Parameters{});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -611,14 +676,14 @@ TEST(execute, test_tensor_constant)
 
 TEST(execute, test_tensor_constant_with_op)
 {
-    auto shape = Shape{2,2,2};
-    auto A     = make_shared<op::TensorConstant<element::Float32>>(shape);
-    A->get_value()->get_vector() = {-1,2,3,-4,5,-6,-7,8};
-    auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Abs>(A), rt, op::Parameters{});
+    auto shape = Shape{2, 2, 2};
+    auto A = make_shared<op::TensorConstant<element::Float32>>(shape);
+    A->get_value()->get_vector() = {-1, 2, 3, -4, 5, -6, -7, 8};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Abs>(A), rt, op::Parameters{});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -631,33 +696,32 @@ TEST(execute, test_function_call)
 {
     // First create "f(A,B,C) = (A+B)*C".
     auto shape = Shape{2, 2};
-    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto C     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt_f  = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>((A + B) * C, rt_f, op::Parameters{A, B, C});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt_f = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>((A + B) * C, rt_f, op::Parameters{A, B, C});
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
-    auto X     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Y     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Z     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt_g  = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto g     = make_shared<Function>(
-                     make_shared<op::FunctionCall>(f,Nodes{X,Y,Z})
-                     + make_shared<op::FunctionCall>(f,Nodes{X,Y,Z}),
-                     rt_g,
-                     op::Parameters{X, Y, Z});
+    auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto Y = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto Z = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt_g = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}) +
+                                       make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}),
+                                   rt_g,
+                                   op::Parameters{X, Y, Z});
 
     // Now call g on some test vectors.
     auto external = make_shared<ngraph::runtime::ExternalFunction>(g);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
-    auto x      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *x          = vector<float>{1, 2, 3, 4};
-    auto y      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *y          = vector<float>{5, 6, 7, 8};
-    auto z      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *z          = vector<float>{9, 10, 11, 12};
+    auto x = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *x = vector<float>{1, 2, 3, 4};
+    auto y = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *y = vector<float>{5, 6, 7, 8};
+    auto z = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *z = vector<float>{9, 10, 11, 12};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
     (*cf)({x, y, z}, {result});
@@ -673,17 +737,18 @@ TEST(execute, test_function_call)
 TEST(execute, test_broadcast_scalar_vector)
 {
     auto shape_a = Shape{};
-    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
     auto shape_r = Shape{4};
-    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
-    auto f       = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{6};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{6};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
     (*cf)({a}, {result});
@@ -693,17 +758,18 @@ TEST(execute, test_broadcast_scalar_vector)
 TEST(execute, test_broadcast_scalar_matrix)
 {
     auto shape_a = Shape{};
-    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
-    auto shape_r = Shape{2,2};
-    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
-    auto f       = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0,1}), rt, op::Parameters{A});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_r = Shape{2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1}), rt, op::Parameters{A});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{6};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{6};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
     (*cf)({a}, {result});
@@ -713,17 +779,18 @@ TEST(execute, test_broadcast_scalar_matrix)
 TEST(execute, test_broadcast_scalar_tensor)
 {
     auto shape_a = Shape{};
-    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
-    auto shape_r = Shape{2,2,2};
-    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
-    auto f       = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0,1,2}), rt, op::Parameters{A});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_r = Shape{2, 2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1, 2}), rt, op::Parameters{A});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{6};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{6};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
     (*cf)({a}, {result});
@@ -732,17 +799,18 @@ TEST(execute, test_broadcast_scalar_tensor)
 
 TEST(execute, test_broadcast_trivial)
 {
-    auto shape = Shape{2,2,2};
-    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}), rt, op::Parameters{A});
+    auto shape = Shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(A, shape, AxisSet{}), rt, op::Parameters{A});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<float>{2, 4, 6, 8, 16, 32, 64, 128};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{2, 4, 6, 8, 16, 32, 64, 128};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
     (*cf)({a}, {result});
@@ -752,17 +820,18 @@ TEST(execute, test_broadcast_trivial)
 TEST(execute, test_broadcast_vector_colwise)
 {
     auto shape_a = Shape{3};
-    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
-    auto shape_r = Shape{3,4};
-    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
-    auto f       = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{1}), rt, op::Parameters{A});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_r = Shape{3, 4};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(A, shape_r, AxisSet{1}), rt, op::Parameters{A});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{1,2,3};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
     (*cf)({a}, {result});
@@ -772,39 +841,38 @@ TEST(execute, test_broadcast_vector_colwise)
 TEST(execute, test_broadcast_vector_rowwise)
 {
     auto shape_a = Shape{4};
-    auto A       = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
-    auto shape_r = Shape{3,4};
-    auto rt      = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
-    auto f       = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_r = Shape{3, 4};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a          = vector<float>{1,2,3,4};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), result->get_vector());
 }
 
-
 TEST(execute, test_convert_int32_float32)
 {
     auto shape = Shape{2, 2};
-    auto A     = make_shared<op::Parameter>(element::Int32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Convert>(A, element::Float32::element_type()),
-                   rt,
-                   op::Parameters{A});
+    auto A = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(
+        make_shared<op::Convert>(A, element::Float32::element_type()), rt, op::Parameters{A});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Int32>(shape);
-    *a          = vector<element::Int32::type>{1, 2, 3, 4};
+    auto a = ngraph::runtime::make_tensor<element::Int32>(shape);
+    *a = vector<element::Int32::type>{1, 2, 3, 4};
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
 
     (*cf)({a}, {result});
@@ -814,18 +882,17 @@ TEST(execute, test_convert_int32_float32)
 TEST(execute, test_convert_int32_bool)
 {
     auto shape = Shape{2, 2};
-    auto A     = make_shared<op::Parameter>(element::Int32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Bool::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Convert>(A, element::Bool::element_type()),
-                   rt,
-                   op::Parameters{A});
+    auto A = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(
+        make_shared<op::Convert>(A, element::Bool::element_type()), rt, op::Parameters{A});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Int32>(shape);
-    *a          = vector<element::Int32::type>{1, 2, 3, 4};
+    auto a = ngraph::runtime::make_tensor<element::Int32>(shape);
+    *a = vector<element::Int32::type>{1, 2, 3, 4};
     auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
 
     (*cf)({a}, {result});
@@ -835,18 +902,17 @@ TEST(execute, test_convert_int32_bool)
 TEST(execute, test_convert_float32_bool)
 {
     auto shape = Shape{2, 2};
-    auto A     = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt    = make_shared<TensorViewType>(element::Bool::element_type(), shape);
-    auto f     = make_shared<Function>(make_shared<op::Convert>(A, element::Bool::element_type()),
-                   rt,
-                   op::Parameters{A});
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(
+        make_shared<op::Convert>(A, element::Bool::element_type()), rt, op::Parameters{A});
 
     auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto cf = external->make_call_frame();
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a          = vector<element::Float32::type>{1, 2, 3, 4};
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<element::Float32::type>{1, 2, 3, 4};
     auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
 
     (*cf)({a}, {result});

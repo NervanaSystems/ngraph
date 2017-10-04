@@ -25,13 +25,19 @@ namespace ngraph
     {
         namespace eigen
         {
+            template <typename TI, typename TO>
+            void greater_eq(TI arg0, TI arg1, TO out)
+            {
+                auto result_as_float = get_map_array(&*arg0) <= get_map_array(&*arg1);
+                auto result_as_char = result_as_float.template cast<char>();
+                set_map_array(&*out, result_as_char);
+            }
+
             template <typename ET>
-            class ScalarTensorProductInstruction : public Instruction
+            class GreaterEqInstruction : public Instruction
             {
             public:
-                ScalarTensorProductInstruction(const TensorViewInfo& arg0,
-                                               const TensorViewInfo& arg1,
-                                               const TensorViewInfo& out)
+                GreaterEqInstruction(TensorViewInfo arg0, TensorViewInfo arg1, TensorViewInfo out)
                     : m_arg0(arg0)
                     , m_arg1(arg1)
                     , m_out(out)
@@ -40,13 +46,10 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    // This is a bit hacky: regardless of the tensor rank we
-                    // pull it out as a vector. This works because of the way
-                    // fmt::V computes sizes---it lumps together any higher
-                    // dimensions---while fmt::M ignores them.
-                    EigenVector<ET>(call_frame, m_out) =
-                        call_frame.get_tensor_view_data<ET>(m_arg0.get_index())[0] *
-                        EigenVector<ET>(call_frame, m_arg1);
+                    EigenArray1d<element::Bool>(call_frame, m_out) =
+                        (EigenArray1d<ET>(call_frame, m_arg0) >=
+                         EigenArray1d<ET>(call_frame, m_arg1))
+                            .template cast<char>();
                 }
 
             protected:

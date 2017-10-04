@@ -27,6 +27,7 @@ namespace ngraph
 class ngraph::pass::Base
 {
     friend class Manager;
+
 public:
 protected:
     ManagerState& get_state();

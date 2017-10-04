@@ -26,7 +26,7 @@ namespace ngraph
     {
         namespace eigen
         {
-            template <typename ETI,typename ETO>
+            template <typename ETI, typename ETO>
             class ConvertInstruction : public Instruction
             {
             public:
@@ -39,8 +39,7 @@ namespace ngraph
                 virtual void execute(CallFrame& call_frame) const override
                 {
                     EigenArray1d<ETO>(call_frame, m_out) =
-                        EigenArray1d<ETI>(call_frame, m_arg)
-                            .template cast<typename ETO::type>();
+                        EigenArray1d<ETI>(call_frame, m_arg).template cast<typename ETO::type>();
                 }
 
             protected:

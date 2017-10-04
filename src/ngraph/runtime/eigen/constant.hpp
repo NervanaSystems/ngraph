@@ -30,7 +30,8 @@ namespace ngraph
             class ConstantInstruction : public Instruction
             {
             public:
-                ConstantInstruction(const std::vector<typename ET::type> value, const TensorViewInfo& out)
+                ConstantInstruction(const std::vector<typename ET::type> value,
+                                    const TensorViewInfo& out)
                     : m_value(value)
                     , m_out(out)
                 {
@@ -38,12 +39,13 @@ namespace ngraph
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    call_frame.get_parameterized_tensor_view<ET>(m_out.get_index())->get_vector() = m_value;
+                    call_frame.get_parameterized_tensor_view<ET>(m_out.get_index())->get_vector() =
+                        m_value;
                 }
 
             protected:
                 const std::vector<typename ET::type> m_value;
-                TensorViewInfo                                  m_out;
+                TensorViewInfo m_out;
             };
         }
     }

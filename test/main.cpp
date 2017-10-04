@@ -22,7 +22,7 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-    const char*   exclude = "--gtest_filter=-benchmark.*";
+    const char* exclude = "--gtest_filter=-benchmark.*";
     vector<char*> argv_vector;
     argv_vector.push_back(argv[0]);
     argv_vector.push_back((char*)exclude);
