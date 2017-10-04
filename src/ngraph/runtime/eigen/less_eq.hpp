@@ -26,10 +26,10 @@ namespace ngraph
         namespace eigen
         {
             template <typename ET>
-            class LessThanInstruction : public Instruction
+            class LessEqInstruction : public Instruction
             {
             public:
-                LessThanInstruction(TensorViewInfo arg0, TensorViewInfo arg1, TensorViewInfo out)
+                LessEqInstruction(TensorViewInfo arg0, TensorViewInfo arg1, TensorViewInfo out)
                     : m_arg0(arg0)
                     , m_arg1(arg1)
                     , m_out(out)
@@ -39,7 +39,7 @@ namespace ngraph
                 virtual void execute(CallFrame& call_frame) const override
                 {
                     EigenArray1d<element::Bool>(call_frame, m_out) =
-                        (EigenArray1d<ET>(call_frame, m_arg0) <
+                        (EigenArray1d<ET>(call_frame, m_arg0) <=
                          EigenArray1d<ET>(call_frame, m_arg1))
                             .template cast<char>();
                 }

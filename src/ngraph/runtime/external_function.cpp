@@ -33,7 +33,10 @@
 #include "ngraph/ops/equal.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/greater.hpp"
+#include "ngraph/ops/greater_eq.hpp"
 #include "ngraph/ops/less.hpp"
+#include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
 #include "ngraph/ops/maximum.hpp"
 #include "ngraph/ops/multiply.hpp"
@@ -60,6 +63,9 @@
 #include "ngraph/runtime/eigen/divide.hpp"
 #include "ngraph/runtime/eigen/dot.hpp"
 #include "ngraph/runtime/eigen/equal.hpp"
+#include "ngraph/runtime/eigen/greater_eq.hpp"
+#include "ngraph/runtime/eigen/greater_than.hpp"
+#include "ngraph/runtime/eigen/less_eq.hpp"
 #include "ngraph/runtime/eigen/less_than.hpp"
 #include "ngraph/runtime/eigen/log.hpp"
 #include "ngraph/runtime/eigen/matrix_mult.hpp"
@@ -121,7 +127,10 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_BINOP(op::Add, runtime::eigen::AddInstruction<element::Float32>);
         REGISTER_BINOP(op::Divide, runtime::eigen::DivideInstruction<element::Float32>);
         REGISTER_BINOP(op::Equal, runtime::eigen::EqualInstruction<element::Float32>);
+        REGISTER_BINOP(op::Greater, runtime::eigen::GreaterThanInstruction<element::Float32>);
+        REGISTER_BINOP(op::GreaterEq, runtime::eigen::GreaterEqInstruction<element::Float32>);
         REGISTER_BINOP(op::Less, runtime::eigen::LessThanInstruction<element::Float32>);
+        REGISTER_BINOP(op::LessEq, runtime::eigen::LessEqInstruction<element::Float32>);
         REGISTER_UNOP(op::Log, runtime::eigen::LogInstruction<element::Float32>);
         REGISTER_BINOP(op::Maximum, runtime::eigen::MaximumInstruction<element::Float32>);
         REGISTER_BINOP(op::Multiply, runtime::eigen::MultiplyInstruction<element::Float32>);
