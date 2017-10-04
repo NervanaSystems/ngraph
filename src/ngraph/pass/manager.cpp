@@ -15,10 +15,10 @@
 #include <iostream>
 #include <memory>
 
-#include "ngraph/log.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/node.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/pass/manager.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -62,7 +62,6 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 
 void ngraph::pass::Manager::run_passes(Function* func)
 {
-    m_state.add_function(func);
     for (shared_ptr<FunctionPass> p : m_function_passes)
     {
         p->set_state(get_state());

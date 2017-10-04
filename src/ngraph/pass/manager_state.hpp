@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace ngraph
 {
@@ -32,12 +32,18 @@ class ngraph::pass::ManagerState
 {
 public:
     std::vector<Function*>& get_functions();
-    void      add_function(Function*);
+
+    template <typename T>
+    void set_functions(const T& collection)
+    {
+        m_function_list.clear();
+        m_function_list.insert(m_function_list.begin(), collection.begin(), collection.end());
+    }
 
     size_t get_temporary_pool_size();
-    void   set_temporary_pool_size(size_t);
+    void set_temporary_pool_size(size_t);
 
 private:
-    size_t                 m_temporary_pool_size = 0;
+    size_t m_temporary_pool_size = 0;
     std::vector<Function*> m_function_list;
 };

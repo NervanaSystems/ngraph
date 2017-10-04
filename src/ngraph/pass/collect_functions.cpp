@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ops/op.hpp"
-#include "ngraph/ops/function_call.hpp"
 #include "ngraph/pass/collect_functions.hpp"
 #include "ngraph/function.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/ops/function_call.hpp"
+#include "ngraph/ops/op.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -27,21 +27,24 @@ using namespace ngraph::pass;
 bool CollectFunctions::run_on_function(ngraph::Function* func)
 {
     set<Function*> functions;
-    traverse_nodes(func->get_result(), [&](Node* node)
-    {
-        op::FunctionCall* fc = dynamic_cast<op::FunctionCall*>(node);
-        if (fc)
-        {
-            NGRAPH_INFO << "function call";
-            Function* f = fc->get_function().get();
-            functions.insert(f);
-        }
-    });
+    deque<Function*> stack;
+    stack.push_back(func);
 
-    for (Function* f : functions)
+    while (stack.empty() == false)
     {
-        NGRAPH_INFO << f->get_name();
+        Function* f = stack.front();
+        stack.pop_front();
+        functions.insert(f);
+        traverse_nodes(f->get_result(), [&](Node* node) {
+            op::FunctionCall* fc = dynamic_cast<op::FunctionCall*>(node);
+            if (fc)
+            {
+                stack.push_back(fc->get_function().get());
+            }
+        });
     }
+
+    get_state().set_functions(functions);
 
     return false;
 }

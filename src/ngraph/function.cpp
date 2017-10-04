@@ -45,6 +45,16 @@ void Function::set_ordered_ops(const std::list<Node*>& ordered_ops)
     m_ordered_ops_valid = true;
 }
 
+std::list<Node*>& Function::get_ops()
+{
+    return m_ops;
+}
+
+const std::list<Node*>& Function::get_ops() const
+{
+    return m_ops;
+}
+
 std::list<Node*>& Function::get_ordered_ops()
 {
     if (!m_ordered_ops_valid)
@@ -82,4 +92,10 @@ void Function::set_name(const string& name)
     {
         throw ngraph_error("Function name may be set exactly once");
     }
+}
+
+std::ostream& ngraph::operator<<(std::ostream& out, const Function& f)
+{
+    out << "Function(" << f.get_name() << ")";
+    return out;
 }

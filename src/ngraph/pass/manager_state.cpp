@@ -15,10 +15,10 @@
 #include <iostream>
 #include <memory>
 
-#include "ngraph/log.hpp"
-#include "ngraph/pass/manager_state.hpp"
-#include "ngraph/node.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/pass/manager_state.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -26,11 +26,6 @@ using namespace ngraph;
 vector<Function*>& ngraph::pass::ManagerState::get_functions()
 {
     return m_function_list;
-}
-
-void ngraph::pass::ManagerState::add_function(Function* func)
-{
-    m_function_list.push_back(func);
 }
 
 size_t ngraph::pass::ManagerState::get_temporary_pool_size()
