@@ -32,31 +32,31 @@ namespace ngraph
             friend class Node;
 
         public:
-            /// @param node The node that owns this input; not shared to prevent owner loop
+            /// @param node The node that owns this input
             /// @param index The position of this this tensor in all input tensors
             /// @param argno The position of the argument with this tensor
             /// @param arg_index The position of the tensor within the argument's tensors
             /// @param output The output that supplies a value for this input
-            Input(Node*   node,
-                  size_t  index,
-                  size_t  argno,
-                  size_t  arg_index,
+            Input(const std::shared_ptr<Node>& node,
+                  size_t index,
+                  size_t argno,
+                  size_t arg_index,
                   Output& output);
 
             std::shared_ptr<Node> get_node();
-            size_t                get_argno() const { return m_argno; }
-            size_t                get_arg_index() const { return m_arg_index; }
-            size_t                get_index() const { return m_index; }
-            const Output&         get_output() const { return m_output; }
-            Output&               get_output() { return m_output; }
-            const Tensor&         get_tensor() const;
-            Tensor&               get_tensor();
+            size_t get_argno() const { return m_argno; }
+            size_t get_arg_index() const { return m_arg_index; }
+            size_t get_index() const { return m_index; }
+            const Output& get_output() const { return m_output; }
+            Output& get_output() { return m_output; }
+            const Tensor& get_tensor() const;
+            Tensor& get_tensor();
 
         protected:
-            Node*   m_node;      // The node we are an input for
-            size_t  m_index;     // Index into all input tensors
-            size_t  m_argno;     // Arg number for this input
-            size_t  m_arg_index; // Index into arg's tensors
+            std::weak_ptr<Node> m_node; // The node we are an input for
+            size_t m_index;             // Index into all input tensors
+            size_t m_argno;             // Arg number for this input
+            size_t m_arg_index;         // Index into arg's tensors
             Output& m_output;
 
         private:

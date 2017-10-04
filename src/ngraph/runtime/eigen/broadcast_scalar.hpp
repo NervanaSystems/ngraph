@@ -25,37 +25,29 @@ namespace ngraph
     {
         namespace eigen
         {
-            // Would be better to just generate a sequence of copy into slice of output instructions
             template <typename ET>
-            class ConcatVectorInstruction : public Instruction
+            class BroadcastScalarInstruction : public Instruction
             {
             public:
-                ConcatVectorInstruction(const std::vector<TensorViewInfo>& args,
-                                        const TensorViewInfo&              out)
-                    : m_args(args)
+                BroadcastScalarInstruction(const TensorViewInfo& arg,
+                                           const TensorViewInfo& out)
+                    : m_arg(arg)
                     , m_out(out)
                 {
-                    for (auto arg : args)
-                    {
-                        auto& arg_shape = arg.get_tensor_view_layout()->get_shape();
-                        m_sizes.push_back(arg_shape.at(0));
-                    }
                 }
 
                 virtual void execute(CallFrame& call_frame) const override
                 {
-                    EigenVector<ET> out(call_frame, m_out);
-                    size_t concat_pos = 0;
-                    for (size_t i = 0; i < m_args.size(); i++){
-                        out.segment(concat_pos, m_sizes[i]) << EigenVector<ET>(call_frame, m_args.at(i));
-                        concat_pos += m_sizes[i];
-                    }
+                    // This is a bit hacky: regardless of the tensor rank we
+                    // pull it out as a vector. This works because of the way
+                    // fmt::V computes sizes---it lumps together any higher
+                    // dimensions---while fmt::M ignores them.
+                    EigenArray1d<ET>(call_frame, m_out) = EigenArray1d<ET>(call_frame, m_arg)(0,0);
                 }
 
             protected:
-                std::vector<TensorViewInfo> m_args;
-                TensorViewInfo              m_out;
-                std::vector<size_t> m_sizes;
+                TensorViewInfo m_arg;
+                TensorViewInfo m_out;
             };
         }
     }
