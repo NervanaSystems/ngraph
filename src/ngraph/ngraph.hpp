@@ -82,6 +82,8 @@
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/instruction.hpp"
+#include "ngraph/runtime/ngvm/ngvm_backend.hpp"
+#include "ngraph/runtime/ngvm/ngvm_transformer.hpp"
 #include "ngraph/runtime/parameterized_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/runtime/transformer.hpp"

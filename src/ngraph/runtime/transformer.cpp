@@ -12,23 +12,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "ngraph/runtime/transformer.hpp"
 
-#include "ngraph/runtime/backend.hpp"
+using namespace ngraph::runtime;
 
-namespace ngraph
+Transformer::FactoryMap& Transformer::get_factory_map()
 {
-    namespace runtime
-    {
-        namespace ngvm
-        {
-            /// @brief Transformer for the interpreted backend
-            class NGVMBackend : public Backend
-            {
-            public:
-                virtual std::shared_ptr<ngraph::runtime::CallFrame>
-                    make_call_frame(const std::shared_ptr<ExternalFunction>& external_function);
-            };
-        }
-    }
+    static FactoryMap factory_map;
+    return factory_map;
+}
+
+std::shared_ptr<Transformer> Transformer::get_transformer(const std::string& name)
+{
+    return get_factory_map().at(name)(name);
+}
+
+Transformer::Factory Transformer::register_factory(std::string name, Factory factory)
+{
+    get_factory_map()[name] = factory;
+    return factory;
 }

@@ -14,10 +14,15 @@
 
 #pragma once
 
+#include <functional>
+#include <map>
 #include <memory>
+#include <string>
 
 namespace ngraph
 {
+    class Function;
+
     namespace runtime
     {
         class Backend;
@@ -40,6 +45,15 @@ namespace ngraph
             /// @brief Convert a function to a form that can be run on a backend.
             virtual std::shared_ptr<ExternalFunction>
                 compile(const std::shared_ptr<ngraph::Function>& fun) = 0;
+
+            using Factory = std::function<std::shared_ptr<Transformer>(const std::string&)>;
+            using FactoryMap = std::map<std::string, Factory>;
+
+            static FactoryMap& get_factory_map();
+
+            static std::shared_ptr<Transformer> get_transformer(const std::string& name);
+
+            static Factory register_factory(std::string name, Factory factory);
         };
     }
 }

@@ -28,17 +28,20 @@ TEST(execute, test_abc)
     auto rt    = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f     = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf       = external->make_call_frame();
+    auto transformer = runtime::Transformer::get_transformer("NGVM");
+    auto external = transformer->compile(f);
+    
+    auto backend = transformer->allocate_backend();
+    auto cf       = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a      = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a      = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a          = vector<float>{1, 2, 3, 4};
-    auto b      = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b      = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b          = vector<float>{5, 6, 7, 8};
-    auto c      = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto c      = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *c          = vector<float>{9, 10, 11, 12};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({a, b, c}, {result});
     ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector());

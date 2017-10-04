@@ -14,18 +14,31 @@
 
 #pragma once
 
+#include <memory>
+
+#include "ngraph/runtime/transformer.hpp"
+
 namespace ngraph
 {
+    class Function;
+
     namespace runtime
     {
+        class ExternalFunction;
+
         namespace ngvm
         {
             /// @brief Transformer for the interpreted backend
-            class NGVM_Transformer : public Transformer
+            class NGVMTransformer : public Transformer
             {
             public:
-                
+                virtual std::shared_ptr<Backend> allocate_backend() override;
+
+                virtual std::shared_ptr<ExternalFunction>
+                    compile(const std::shared_ptr<ngraph::Function>& fun) override;
+
+                static Factory factory;
             };
-        }
+        };
     }
 }

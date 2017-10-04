@@ -12,5 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/runtime/nvgm/nvgm_backend.hpp"
+#include "ngraph/runtime/ngvm/ngvm_backend.hpp"
+#include "ngraph/runtime/external_function.hpp"
 
+using namespace ngraph::runtime::ngvm;
+
+std::shared_ptr<ngraph::runtime::CallFrame>
+    NGVMBackend::make_call_frame(const std::shared_ptr<ExternalFunction>& external_function)
+{
+    return external_function->make_call_frame();
+}

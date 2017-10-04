@@ -53,6 +53,9 @@ set (SRC
     runtime/backend.cpp
     runtime/call_frame.cpp
     runtime/external_function.cpp
+    runtime/ngvm/ngvm_backend.cpp
+    runtime/ngvm/ngvm_transformer.cpp
+    runtime/transformer.cpp
     runtime/tuple.cpp
     runtime/utils.cpp
     shape.cpp
