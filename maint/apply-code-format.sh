@@ -41,7 +41,7 @@ for ROOT_SUBDIR in src test; do
     fi
 
     echo "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
-    find "${ROOT_SUBDIR}" -name '*.cpp' -or -name '*.hpp' | xargs "${CLANG_FORMAT_PROG}" -i -style=file
+    find "${ROOT_SUBDIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' \) | xargs "${CLANG_FORMAT_PROG}" -i -style=file
     echo "Done."
 done
 
