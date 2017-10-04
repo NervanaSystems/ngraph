@@ -12,4 +12,22 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/pass/tree_pass.hpp"
+#pragma once
+
+#include "ngraph/pass/pass.hpp"
+
+namespace ngraph
+{
+    namespace pass
+    {
+        class CollectFunctions;
+    }
+}
+
+class ngraph::pass::CollectFunctions : public FunctionPass
+{
+public:
+    bool run_on_function(ngraph::Function*) override;
+
+private:
+};

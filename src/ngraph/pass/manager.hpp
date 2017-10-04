@@ -19,7 +19,7 @@
 #include <list>
 
 #include "ngraph/pass/call_pass.hpp"
-#include "ngraph/pass/tree_pass.hpp"
+#include "ngraph/pass/manager_state.hpp"
 
 namespace ngraph
 {
@@ -33,24 +33,6 @@ namespace ngraph
     class Function;
 }
 
-class ngraph::pass::ManagerState
-{
-public:
-    Function* get_function();
-    void      set_function(Function*);
-
-    size_t get_temporary_pool_size();
-    void   set_temporary_pool_size(size_t);
-
-    std::list<Node*>& get_call_graph();
-    const std::list<Node*>& get_call_graph() const;
-
-private:
-    Function*        m_function = nullptr;
-    size_t           m_temporary_pool_size = 0;
-    std::list<Node*> m_call_graph;
-};
-
 class ngraph::pass::Manager
 {
 public:
@@ -63,11 +45,11 @@ public:
     void register_pass(Args... args)
     {
         static_assert(std::is_base_of<pass::Base, T>::value, "pass not derived from pass base");
-        if (std::is_base_of<TreeBase, T>::value)
+        if (std::is_base_of<CallBase, T>::value)
         {
             register_pass_ptr(std::make_shared<T>(args...));
         }
-        else if (std::is_base_of<CallBase, T>::value)
+        else if (std::is_base_of<FunctionPass, T>::value)
         {
             register_pass_ptr(std::make_shared<T>(args...));
         }
@@ -76,15 +58,13 @@ public:
     void run_passes(Function*);
     void run_passes(std::shared_ptr<Function>);
 
-    const std::list<Node*>& get_call_graph() const;
-
     ManagerState& get_state();
 
 private:
-    void register_pass_ptr(std::shared_ptr<TreeBase>);
     void register_pass_ptr(std::shared_ptr<CallBase>);
+    void register_pass_ptr(std::shared_ptr<FunctionPass>);
 
-    std::vector<std::shared_ptr<TreeBase>> m_tree_passes;
     std::vector<std::shared_ptr<CallBase>> m_call_passes;
+    std::vector<std::shared_ptr<FunctionPass>> m_function_passes;
     ManagerState                           m_state;
 };

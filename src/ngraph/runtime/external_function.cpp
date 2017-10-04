@@ -74,6 +74,7 @@
 #include "ngraph/runtime/eigen/subtract.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph::runtime;
@@ -348,7 +349,6 @@ void ExternalFunction::compile(FunctionMap& function_map)
         return;
     }
 
-    // This will be replaced with the pass manager
     // Get the ordered list of ops in execution order
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
@@ -396,7 +396,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
     m_n_outputs = tensor_index.size() - m_n_inputs;
 
     // All remaining tensor views
-    for (const Node* node : pass_manager.get_call_graph())
+    for (const Node* node : m_function->get_ordered_ops())
     {
         for (const descriptor::Output& output : node->get_outputs())
         {
@@ -412,7 +412,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
 
     // Now we build the eigen-VM instructions
     auto op_map = get_op_map();
-    for (const Node* node : pass_manager.get_call_graph())
+    for (const Node* node : m_function->get_ordered_ops())
     {
         auto handler_it = op_map.find(type_index(typeid(*node)));
         if (handler_it == op_map.end())
