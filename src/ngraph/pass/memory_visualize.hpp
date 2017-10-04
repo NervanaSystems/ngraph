@@ -14,9 +14,9 @@
 
 #pragma once
 
+#include <iostream>
 #include <limits>
 #include <list>
-#include <iostream>
 
 #include "ngraph/pass/call_pass.hpp"
 
@@ -47,6 +47,6 @@ private:
     static size_t memory_usage(const Node*);
     static size_t memory_footprint(const Node*);
     static size_t memory_footprint(const std::list<Node*>&);
-    
+
     const std::string m_filename;
 };

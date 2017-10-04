@@ -31,7 +31,7 @@ namespace ngraph
             Tuple(const std::vector<std::shared_ptr<ngraph::descriptor::Value>>& elements);
 
             const std::shared_ptr<ngraph::TupleType> get_tuple_type() const;
-            std::shared_ptr<ngraph::TupleType>       get_tuple_type();
+            std::shared_ptr<ngraph::TupleType> get_tuple_type();
 
             virtual std::shared_ptr<const ValueType> get_value_type() const override
             {
@@ -42,7 +42,7 @@ namespace ngraph
                                               const std::shared_ptr<Value>& value) const override;
 
         protected:
-            std::shared_ptr<ngraph::TupleType>                      m_tuple_type;
+            std::shared_ptr<ngraph::TupleType> m_tuple_type;
             std::vector<std::shared_ptr<ngraph::descriptor::Value>> m_elements;
         };
     }

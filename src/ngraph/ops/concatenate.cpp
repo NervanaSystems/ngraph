@@ -47,7 +47,7 @@ void Concat::propagate_types()
     size_t concatenation_axis_length = arg0_shape.at(m_concatenation_axis);
     auto& arg0_element_type = arg0_tensor_view_type->get_element_type();
 
-    for(auto i = 1; i < m_arguments.size(); i++)
+    for (auto i = 1; i < m_arguments.size(); i++)
     {
         auto argi_type = m_arguments.at(i)->get_value_type();
         if (nullptr == argi_type)
@@ -72,11 +72,12 @@ void Concat::propagate_types()
             throw ngraph_error("Argument element types do not match");
         }
 
-        for(auto j = 0; j < argi_shape.size(); j++)
+        for (auto j = 0; j < argi_shape.size(); j++)
         {
             if (j != m_concatenation_axis && arg0_shape.at(j) != argi_shape.at(j))
             {
-                throw ngraph_error("Arguments to concat do not have same dimension on a non-concatenation axis");
+                throw ngraph_error(
+                    "Arguments to concat do not have same dimension on a non-concatenation axis");
             }
             else if (j == m_concatenation_axis)
             {

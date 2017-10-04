@@ -49,7 +49,7 @@ namespace ngraph
         public:
             virtual ~TensorView() {}
             virtual const Tensor& get_tensor() const = 0;
-            virtual Tensor&       get_tensor()       = 0;
+            virtual Tensor& get_tensor() = 0;
 
             virtual std::shared_ptr<const ValueType> get_value_type() const override
             {
@@ -57,7 +57,6 @@ namespace ngraph
             }
 
             const std::string& get_name() const { return m_name; }
-
             std::shared_ptr<const TensorViewType> get_tensor_view_type() const
             {
                 return m_tensor_view_type;
@@ -81,9 +80,9 @@ namespace ngraph
             }
 
         protected:
-            std::shared_ptr<const TensorViewType>     m_tensor_view_type;
+            std::shared_ptr<const TensorViewType> m_tensor_view_type;
             std::shared_ptr<layout::TensorViewLayout> m_tensor_view_layout;
-            std::string                               m_name;
+            std::string m_name;
         };
 
         using TensorViewPtrs = std::vector<std::shared_ptr<TensorView>>;

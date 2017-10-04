@@ -31,8 +31,8 @@ namespace ngraph
             {
             public:
                 ConcatMatrixInstruction(const std::vector<TensorViewInfo>& args,
-                                        size_t                             axis,
-                                        const TensorViewInfo&              out)
+                                        size_t axis,
+                                        const TensorViewInfo& out)
                     : m_args(args)
                     , m_axis(axis)
                     , m_out(out)
@@ -59,9 +59,9 @@ namespace ngraph
                 }
 
             protected:
-                std::vector<TensorViewInfo>      m_args;
-                size_t                           m_axis;
-                TensorViewInfo                   m_out;
+                std::vector<TensorViewInfo> m_args;
+                size_t m_axis;
+                TensorViewInfo m_out;
                 std::vector<std::vector<size_t>> m_blocks;
             };
         }
