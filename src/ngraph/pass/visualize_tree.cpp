@@ -23,18 +23,21 @@
 using namespace ngraph;
 using namespace std;
 
-bool pass::VisualizeTree::run_on_function(ngraph::Function* func)
+bool pass::VisualizeTree::run_on_module(vector<ngraph::Function*>& functions)
 {
-    // map<size_t, list<node_ptr>> dependent_nodes;
-    traverse_nodes(func->get_result(), [&](Node* node) {
-        for (auto arg : node->get_arguments())
-        {
-            m_ss << add_attributes(arg.get());
-            m_ss << add_attributes(node);
-            m_ss << "    " << arg->get_name() << " -> " << node->get_name();
-            m_ss << ";\n";
-        }
-    });
+    for (Function* f : functions)
+    {
+        // map<size_t, list<node_ptr>> dependent_nodes;
+        traverse_nodes(f->get_result(), [&](Node* node) {
+            for (auto arg : node->get_arguments())
+            {
+                m_ss << add_attributes(arg.get());
+                m_ss << add_attributes(node);
+                m_ss << "    " << arg->get_name() << " -> " << node->get_name();
+                m_ss << ";\n";
+            }
+        });
+    }
 
     render();
 

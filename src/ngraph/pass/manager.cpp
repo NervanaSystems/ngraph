@@ -19,6 +19,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/pass.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -35,26 +36,6 @@ void ngraph::pass::Manager::initialize_default_passes()
 {
 }
 
-void ngraph::pass::Manager::register_pass_ptr(std::shared_ptr<CallBase> p)
-{
-    if (p == nullptr)
-    {
-        throw invalid_argument("null pass registered");
-    }
-    p->check_dependencies(m_call_passes);
-    m_call_passes.push_back(p);
-}
-
-void ngraph::pass::Manager::register_pass_ptr(std::shared_ptr<FunctionPass> p)
-{
-    if (p == nullptr)
-    {
-        throw invalid_argument("null pass registered");
-    }
-    p->check_dependencies(m_function_passes);
-    m_function_passes.push_back(p);
-}
-
 void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 {
     run_passes(func.get());
@@ -64,17 +45,92 @@ void ngraph::pass::Manager::run_passes(Function* func)
 {
     vector<Function*> fs = {func};
     get_state().set_functions(fs);
-    for (shared_ptr<FunctionPass> p : m_function_passes)
-    {
-        p->set_state(get_state());
-        p->run_on_function(func);
-    }
 
-    for (shared_ptr<CallBase>& p : m_call_passes)
+    for (shared_ptr<PassBase> pass : m_pass_list)
     {
-        p->set_state(get_state());
-        p->run_on_call_list(func->get_ordered_ops());
+        auto module_pass = dynamic_pointer_cast<ModulePass>(pass);
+        auto function_pass = dynamic_pointer_cast<FunctionPass>(pass);
+        auto node_pass = dynamic_pointer_cast<NodePass>(pass);
+        auto call_graph_pass = dynamic_pointer_cast<CallGraphPass>(pass);
+        if (module_pass)
+        {
+            NGRAPH_INFO;
+            module_pass->run_on_module(fs);
+            NGRAPH_INFO;
+        }
+        else if (function_pass)
+        {
+            NGRAPH_INFO;
+            for (Function* f : fs)
+            {
+                NGRAPH_INFO;
+                function_pass->run_on_function(f);
+                NGRAPH_INFO;
+            }
+            NGRAPH_INFO;
+        }
+        else if (node_pass)
+        {
+            NGRAPH_INFO;
+            for (Function* f : fs)
+            {
+                NGRAPH_INFO;
+                for (Node* n : f->get_ops())
+                {
+                    NGRAPH_INFO;
+                    node_pass->run_on_node(n);
+                    NGRAPH_INFO;
+                }
+                NGRAPH_INFO;
+            }
+            NGRAPH_INFO;
+        }
+        else if (call_graph_pass)
+        {
+            NGRAPH_INFO;
+            for (Function* f : fs)
+            {
+                NGRAPH_INFO;
+                call_graph_pass->run_on_call_graph(f->get_ordered_ops());
+                NGRAPH_INFO;
+            }
+            NGRAPH_INFO;
+        }
     }
+    // for (shared_ptr<ModulePass>& p : m_module_passes)
+    // {
+    //     p->set_state(get_state());
+    //     p->run_on_module(fs);
+    // }
+
+    // for (Function* f : fs)
+    // {
+    //     for (shared_ptr<FunctionPass> p : m_function_passes)
+    //     {
+    //         p->set_state(get_state());
+    //         p->run_on_function(f);
+    //     }
+    // }
+
+    // for (Function* f : fs)
+    // {
+    //     NGRAPH_INFO;
+    //     for (shared_ptr<NodePass> p : m_node_passes)
+    //     {
+    //         for (Node* node : f->get_ops())
+    //         {
+    //             NGRAPH_INFO;
+    //             p->set_state(get_state());
+    //             p->run_on_node(node);
+    //         }
+    //     }
+    // }
+
+    // for (shared_ptr<CallGraphPass>& p : m_call_graph_passes)
+    // {
+    //     p->set_state(get_state());
+    //     p->run_on_call_graph(func->get_ordered_ops());
+    // }
 }
 
 ngraph::pass::ManagerState& ngraph::pass::Manager::get_state()

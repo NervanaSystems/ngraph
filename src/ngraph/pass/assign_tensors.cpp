@@ -25,12 +25,13 @@
 using namespace std;
 using namespace ngraph;
 
-bool pass::AssignTensors::run_on_call_list(std::list<Node*>& node_list)
+bool pass::AssignTensors::run_on_call_graph(list<Node*>& nodes)
 {
-    for (Node* node : node_list)
+    for (Node* node : nodes)
     {
         try
         {
+            NGRAPH_INFO;
             // We need to set the nodes is_output state prior to call assign_tensors
             // so that the output state can be passes to the constructed tensors.
             if (node == get_state().get_functions().at(0)->get_result().get())
@@ -39,6 +40,7 @@ bool pass::AssignTensors::run_on_call_list(std::list<Node*>& node_list)
             }
 
             node->assign_tensors();
+            NGRAPH_INFO;
         }
         catch (exception& e)
         {
@@ -49,22 +51,4 @@ bool pass::AssignTensors::run_on_call_list(std::list<Node*>& node_list)
         }
     }
     return false;
-}
-
-void pass::AssignTensors::check_dependencies(
-    const std::vector<std::shared_ptr<CallBase>>& registered_passes) const
-{
-    bool found_propagate_types = false;
-    for (auto pass : registered_passes)
-    {
-        if (dynamic_pointer_cast<PropagateTypes>(pass))
-        {
-            found_propagate_types = true;
-        }
-    }
-
-    if (!found_propagate_types)
-    {
-        throw runtime_error("Dependency 'PropagateTypes' not found for pass 'AssignTensors'");
-    }
 }

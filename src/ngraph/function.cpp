@@ -15,6 +15,7 @@
 #include <memory>
 
 #include "ngraph/function.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -37,6 +38,9 @@ Function::Function(const std::shared_ptr<Node>& result,
     {
         parameter->assign_function(this, i++);
     }
+
+    traverse_nodes(result, [&](Node* node) { m_ops.push_back(node); });
+    NGRAPH_INFO << m_ops.size();
 }
 
 void Function::set_ordered_ops(const std::list<Node*>& ordered_ops)

@@ -27,7 +27,7 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::descriptor;
 
-bool pass::MemoryLayout::run_on_call_list(std::list<Node*>& node_list)
+bool pass::MemoryLayout::run_on_call_graph(std::list<Node*>& node_list)
 {
     MemoryManager mm;
     for (const Node* node : node_list)
@@ -45,24 +45,6 @@ bool pass::MemoryLayout::run_on_call_list(std::list<Node*>& node_list)
     get_state().set_temporary_pool_size(mm.max_allocated());
 
     return false;
-}
-
-void pass::MemoryLayout::check_dependencies(
-    const std::vector<std::shared_ptr<CallBase>>& registered_passes) const
-{
-    bool found_propagate_types = false;
-    for (auto pass : registered_passes)
-    {
-        if (dynamic_pointer_cast<Liveness>(pass))
-        {
-            found_propagate_types = true;
-        }
-    }
-
-    if (!found_propagate_types)
-    {
-        throw runtime_error("Dependency 'PropagateTypes' not found for pass 'AssignTensors'");
-    }
 }
 
 pass::MemoryManager::node::node(size_t size, block_state state)

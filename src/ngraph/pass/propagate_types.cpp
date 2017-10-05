@@ -20,13 +20,15 @@
 using namespace std;
 using namespace ngraph;
 
-bool pass::PropagateTypes::run_on_call_list(std::list<Node*>& node_list)
+bool pass::PropagateTypes::run_on_call_graph(list<Node*>& nodes)
 {
-    for (Node* node : node_list)
+    for (Node* node : nodes)
     {
         try
         {
+            NGRAPH_INFO;
             node->propagate_types();
+            NGRAPH_INFO;
         }
         catch (exception& e)
         {

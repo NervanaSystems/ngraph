@@ -39,7 +39,6 @@ set (SRC
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise_builtin.cpp
     pass/assign_tensors.cpp
-    pass/call_pass.cpp
     pass/collect_functions.cpp
     pass/dump_sorted.cpp
     pass/liveness.cpp
