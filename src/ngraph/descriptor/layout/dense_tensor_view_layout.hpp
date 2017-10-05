@@ -33,7 +33,7 @@ namespace ngraph
             {
             public:
                 ~DenseTensorViewLayout() {}
-                DenseTensorViewLayout(const std::shared_ptr <TensorView>& tensor_view);
+                DenseTensorViewLayout(const std::shared_ptr<TensorView>& tensor_view);
 
                 virtual size_t get_size() override { return m_size; }
                 size_t get_offset() const { return m_offset; }

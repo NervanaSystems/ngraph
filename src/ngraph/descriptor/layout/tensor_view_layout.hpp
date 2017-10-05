@@ -34,7 +34,8 @@ namespace ngraph
             class TensorViewLayout
             {
             protected:
-                TensorViewLayout(const std::shared_ptr<const ngraph::descriptor::TensorView>& tensor_view)
+                TensorViewLayout(
+                    const std::shared_ptr<const ngraph::descriptor::TensorView>& tensor_view)
                     : m_tensor_view(tensor_view)
                 {
                 }
