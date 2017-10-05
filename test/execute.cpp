@@ -74,16 +74,16 @@ TEST(execute, test_abc_tuple)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{1, 2, 3, 4};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{5, 6, 7, 8};
-    auto c = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *c = vector<float>{9, 10, 11, 12};
     auto abc = ngraph::runtime::make_tuple({a, b, c});
     auto bac = ngraph::runtime::make_tuple({b, a, c});
     auto acb = ngraph::runtime::make_tuple({a, c, b});
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
     auto result_tuple = ngraph::runtime::make_tuple({result});
 
     (*cf)({abc}, {result_tuple});
@@ -117,15 +117,15 @@ TEST(execute, test_tuple_result)
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{1, 2, 3, 4};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{5, 6, 7, 8};
-    auto c = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *c = vector<float>{9, 10, 11, 12};
 
-    auto r0 = ngraph::runtime::make_tensor<element::Float32>(shape);
-    auto r1 = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto r0 = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto r1 = backend->make_parameterized_tensor_view<element::Float32>(shape);
     auto result_tuple = ngraph::runtime::make_tuple({r0, r1});
 
     (*cf)({a, b, c}, {result_tuple});
@@ -147,9 +147,9 @@ TEST(execute, test_abs)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{1, -2, 0, -4.8f};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 0, 4.8f}), result->get_vector());
@@ -174,13 +174,13 @@ TEST(execute, test_concat_matrix_colwise)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{2, 4, 8, 16};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
     *b = vector<float>{1, 2, 4, 8, 16, 32};
-    auto c = ngraph::runtime::make_tensor<element::Float32>(shape_c);
+    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape_c);
     *c = vector<float>{2, 3, 5, 7, 11, 13};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a, b, c}, {result});
     ASSERT_EQ((vector<float>{2, 4, 1, 2, 4, 2, 3, 5, 8, 16, 8, 16, 32, 7, 11, 13}),
@@ -206,13 +206,13 @@ TEST(execute, test_concat_matrix_rowwise)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{2, 4, 8, 16};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
     *b = vector<float>{1, 2, 4, 8, 16, 32};
-    auto c = ngraph::runtime::make_tensor<element::Float32>(shape_c);
+    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape_c);
     *c = vector<float>{2, 3, 5, 7, 11, 13};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a, b, c}, {result});
     ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
@@ -238,13 +238,13 @@ TEST(execute, test_concat_vector)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{2, 4, 8, 16};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
     *b = vector<float>{1, 2, 4, 8, 16, 32};
-    auto c = ngraph::runtime::make_tensor<element::Float32>(shape_c);
+    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape_c);
     *c = vector<float>{18, 19};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a, b, c}, {result});
     ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), result->get_vector());
@@ -264,11 +264,11 @@ TEST(execute, test_divide)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{2, 4, 8, 16};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{1, 2, 4, 8};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{2, 2, 2, 2}), result->get_vector());
@@ -288,11 +288,11 @@ TEST(execute, test_equal)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5};
-    auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), result->get_vector());
@@ -313,11 +313,11 @@ TEST(execute, test_dot_0_0)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{0}), result->get_vector());
@@ -339,11 +339,11 @@ TEST(execute, test_dot_matrix_2x0_0x2)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
     *b = vector<float>{};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{0, 0, 0, 0}), result->get_vector());
@@ -365,11 +365,11 @@ TEST(execute, test_dot_matrix_0x2_2x0)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
     *b = vector<float>{};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{}), result->get_vector());
@@ -391,11 +391,11 @@ TEST(execute, test_dot_matrix_3x2_2x0)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{1, 2, 3, 4, 5, 6};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
     *b = vector<float>{};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{}), result->get_vector());
@@ -417,11 +417,11 @@ TEST(execute, test_dot_scalar_0x2)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{1};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
     *b = vector<float>{};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{}), result->get_vector());
@@ -443,11 +443,11 @@ TEST(execute, test_dot_2x0_0)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
     *b = vector<float>{};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{0, 0}), result->get_vector());
@@ -468,11 +468,11 @@ TEST(execute, test_dot1d)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{2, 4, 8, 16};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{1, 2, 4, 8};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{170}), result->get_vector());
@@ -493,11 +493,11 @@ TEST(execute, test_dot2d)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{1, 2, 3, 4};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{5, 6, 7, 8};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{19, 22, 43, 50}), result->get_vector());
@@ -518,11 +518,11 @@ TEST(execute, test_dot_scalar_tensor_arg0)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{6};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
     *b = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector());
@@ -543,11 +543,11 @@ TEST(execute, test_dot_scalar_tensor_arg1)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
     *b = vector<float>{6};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector());
@@ -567,11 +567,11 @@ TEST(execute, test_dot_scalar_scalar)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{8};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{6};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{48}), result->get_vector());
@@ -593,11 +593,11 @@ TEST(execute, test_dot_matrix_vector)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
     *b = vector<float>{17, 18, 19, 20};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{190, 486, 782, 1078}), result->get_vector());
@@ -617,11 +617,11 @@ TEST(execute, test_greater)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
-    auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), result->get_vector());
@@ -641,11 +641,11 @@ TEST(execute, test_greatereq)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{1, 8, -8, 17, -0.5, 0, 2, 1};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5};
-    auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), result->get_vector());
@@ -665,11 +665,11 @@ TEST(execute, test_less)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
-    auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<char>{0, 0, 1, 0, 1, 0, 0, 1}), result->get_vector());
@@ -689,11 +689,11 @@ TEST(execute, test_lesseq)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{1, 8, -8, 17, -0.5, 0, 2, 1};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5};
-    auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), result->get_vector());
@@ -712,14 +712,14 @@ TEST(execute, test_log)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{expf(1), expf(2), expf(3), expf(4), expf(5), expf(6), expf(7), expf(8)};
     vector<float> loga;
     for (auto elt : a->get_vector())
     {
         loga.push_back(logf(elt));
     }
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({a}, {result});
     ASSERT_EQ(loga, result->get_vector());
@@ -739,11 +739,11 @@ TEST(execute, test_maximum)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), result->get_vector());
@@ -762,9 +762,9 @@ TEST(execute, test_negative)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{1, -2, 0, -4.8f, 8.6f, -8.6f};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{-1, 2, 0, 4.8f, -8.6f, 8.6f}), result->get_vector());
@@ -784,11 +784,11 @@ TEST(execute, test_notequal)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5};
-    auto result = ngraph::runtime::make_tensor<element::Bool>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), result->get_vector());
@@ -809,13 +809,13 @@ TEST(execute, test_select)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Bool>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Bool>(shape);
     *a = vector<char>{0, 1, 1, 0, 0, 1, 0, 1};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
-    auto c = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *c = vector<float>{11, 12, 13, 14, 15, 16, 17, 18};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({a, b, c}, {result});
     ASSERT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), result->get_vector());
@@ -835,11 +835,11 @@ TEST(execute, test_subtract)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{2, 4, 8, 16};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *b = vector<float>{1, 2, 4, 8};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{1, 2, 4, 8}), result->get_vector());
@@ -858,7 +858,7 @@ TEST(execute, test_scalar_constant)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({}, {result});
     ASSERT_EQ((vector<float>{-3.0f}), result->get_vector());
@@ -878,7 +878,7 @@ TEST(execute, test_tensor_constant)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
@@ -898,7 +898,7 @@ TEST(execute, test_tensor_constant_with_op)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
@@ -930,13 +930,13 @@ TEST(execute, test_function_call)
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
-    auto x = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto x = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *x = vector<float>{1, 2, 3, 4};
-    auto y = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto y = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *y = vector<float>{5, 6, 7, 8};
-    auto z = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto z = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *z = vector<float>{9, 10, 11, 12};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({x, y, z}, {result});
     ASSERT_EQ((vector<float>{108, 160, 220, 288}), result->get_vector());
@@ -963,9 +963,9 @@ TEST(execute, test_broadcast_scalar_vector)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{6};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector());
@@ -986,9 +986,9 @@ TEST(execute, test_broadcast_scalar_matrix)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{6};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector());
@@ -1009,9 +1009,9 @@ TEST(execute, test_broadcast_scalar_tensor)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{6};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), result->get_vector());
@@ -1031,9 +1031,9 @@ TEST(execute, test_broadcast_trivial)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
     *a = vector<float>{2, 4, 6, 8, 16, 32, 64, 128};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), result->get_vector());
@@ -1054,9 +1054,9 @@ TEST(execute, test_broadcast_vector_colwise)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{1, 2, 3};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), result->get_vector());
@@ -1077,9 +1077,9 @@ TEST(execute, test_broadcast_vector_rowwise)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
     *a = vector<float>{1, 2, 3, 4};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), result->get_vector());
