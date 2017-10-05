@@ -34,7 +34,7 @@ namespace ngraph
             class TensorViewLayout
             {
             protected:
-                TensorViewLayout(const ngraph::descriptor::TensorView& tensor_view)
+                TensorViewLayout(const std::shared_ptr<const ngraph::descriptor::TensorView>& tensor_view)
                     : m_tensor_view(tensor_view)
                 {
                 }
@@ -53,14 +53,14 @@ namespace ngraph
 
                 const Shape& get_shape() const
                 {
-                    return m_tensor_view.get_tensor_view_type()->get_shape();
+                    return m_tensor_view->get_tensor_view_type()->get_shape();
                 }
 
                 /// Where this view is located in the buffer.
                 const BufferPos& get_buffer_pos() const { return m_buffer_pos; }
                 BufferPos& get_buffer_pos() { return m_buffer_pos; }
             protected:
-                const ngraph::descriptor::TensorView& m_tensor_view;
+                std::shared_ptr<const ngraph::descriptor::TensorView> m_tensor_view;
                 BufferPos m_buffer_pos;
             };
         }

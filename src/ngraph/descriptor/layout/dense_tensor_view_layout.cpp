@@ -21,10 +21,10 @@ using ngraph::Shape;
 using ngraph::descriptor::TensorView;
 using ngraph::TensorViewType;
 
-DenseTensorViewLayout::DenseTensorViewLayout(const TensorView& tensor_view)
+DenseTensorViewLayout::DenseTensorViewLayout(const std::shared_ptr<TensorView>& tensor_view)
     : TensorViewLayout(tensor_view)
 {
-    auto tensor_view_type = tensor_view.get_tensor_view_type();
+    auto tensor_view_type = tensor_view->get_tensor_view_type();
     Shape shape = tensor_view_type->get_shape();
     m_size = ngraph::shape_size(shape);
     m_strides = ngraph::row_major_strides(shape);

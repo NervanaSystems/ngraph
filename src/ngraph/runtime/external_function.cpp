@@ -376,7 +376,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
             auto tv = output.get_tensor_view();
             if (nullptr == tv->get_tensor_view_layout())
             {
-                auto layout = std::make_shared<DenseTensorViewLayout>(*tv);
+                auto layout = std::make_shared<DenseTensorViewLayout>(tv);
                 tv->set_tensor_view_layout(layout);
             }
         }
