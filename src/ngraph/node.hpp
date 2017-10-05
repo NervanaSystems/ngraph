@@ -55,6 +55,8 @@ namespace ngraph
     public:
         /// The class name, must not contain spaces
         virtual std::string description() const = 0;
+        const std::string& get_name() const;
+        void set_name(const std::string& name);
 
         /// Propagate types and check arguments for consistency
         virtual void propagate_types() = 0;

@@ -23,36 +23,6 @@
 using namespace std;
 using namespace ngraph;
 
-Function* ngraph::pass::ManagerState::get_function()
-{
-    return m_function;
-}
-
-void ngraph::pass::ManagerState::set_function(Function* func)
-{
-    m_function = func;
-}
-
-size_t ngraph::pass::ManagerState::get_temporary_pool_size()
-{
-    return m_temporary_pool_size;
-}
-
-void ngraph::pass::ManagerState::set_temporary_pool_size(size_t size)
-{
-    m_temporary_pool_size = size;
-}
-
-std::list<Node*>& ngraph::pass::ManagerState::get_call_graph()
-{
-    return m_call_graph;
-}
-
-const std::list<Node*>& ngraph::pass::ManagerState::get_call_graph() const
-{
-    return m_call_graph;
-}
-
 ngraph::pass::Manager::Manager()
 {
 }
@@ -65,16 +35,6 @@ void ngraph::pass::Manager::initialize_default_passes()
 {
 }
 
-void ngraph::pass::Manager::register_pass_ptr(std::shared_ptr<TreeBase> p)
-{
-    if (p == nullptr)
-    {
-        throw invalid_argument("null pass registered");
-    }
-    p->check_dependencies(m_tree_passes);
-    m_tree_passes.push_back(p);
-}
-
 void ngraph::pass::Manager::register_pass_ptr(std::shared_ptr<CallBase> p)
 {
     if (p == nullptr)
@@ -85,6 +45,16 @@ void ngraph::pass::Manager::register_pass_ptr(std::shared_ptr<CallBase> p)
     m_call_passes.push_back(p);
 }
 
+void ngraph::pass::Manager::register_pass_ptr(std::shared_ptr<FunctionPass> p)
+{
+    if (p == nullptr)
+    {
+        throw invalid_argument("null pass registered");
+    }
+    p->check_dependencies(m_function_passes);
+    m_function_passes.push_back(p);
+}
+
 void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 {
     run_passes(func.get());
@@ -92,23 +62,19 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 
 void ngraph::pass::Manager::run_passes(Function* func)
 {
-    m_state.set_function(func);
-    for (shared_ptr<TreeBase> p : m_tree_passes)
+    vector<Function*> fs = {func};
+    get_state().set_functions(fs);
+    for (shared_ptr<FunctionPass> p : m_function_passes)
     {
         p->set_state(get_state());
-        p->run_on_tree(func->get_result());
+        p->run_on_function(func);
     }
 
     for (shared_ptr<CallBase>& p : m_call_passes)
     {
         p->set_state(get_state());
-        p->run_on_call_list(get_state().get_call_graph());
+        p->run_on_call_list(func->get_ordered_ops());
     }
-}
-
-const std::list<ngraph::Node*>& ngraph::pass::Manager::get_call_graph() const
-{
-    return m_state.get_call_graph();
 }
 
 ngraph::pass::ManagerState& ngraph::pass::Manager::get_state()

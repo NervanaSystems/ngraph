@@ -40,7 +40,7 @@ TEST(pass_manager, add)
     auto graph = make_test_graph();
     size_t node_count = get_node_count(graph->get_result());
     pass_manager.run_passes(graph.get());
-    auto sorted = pass_manager.get_call_graph();
+    auto sorted = graph->get_ordered_ops();
     EXPECT_EQ(node_count, sorted.size());
     EXPECT_TRUE(validate_list(sorted));
 }

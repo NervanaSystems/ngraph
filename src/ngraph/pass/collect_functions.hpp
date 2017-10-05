@@ -14,32 +14,20 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
-#include <set>
-#include <sstream>
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    class Visualize;
-    class Node;
-    using node_ptr = std::shared_ptr<Node>;
+    namespace pass
+    {
+        class CollectFunctions;
+    }
 }
 
-class ngraph::Visualize
+class ngraph::pass::CollectFunctions : public FunctionPass
 {
 public:
-    Visualize(const std::string& name = "ngraph");
-
-    void add(node_ptr);
-
-    void save_dot(const std::string& path) const;
+    bool run_on_function(ngraph::Function*) override;
 
 private:
-    std::string add_attributes(const Node* node);
-    std::string get_attributes(const Node* node);
-
-    std::stringstream m_ss;
-    std::string m_name;
-    std::set<const Node*> m_nodes_with_attributes;
 };

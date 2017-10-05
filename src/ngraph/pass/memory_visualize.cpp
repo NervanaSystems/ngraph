@@ -207,7 +207,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<Node*>& nod
         size_t x2 = ((usage / memory_footprint) * scale) + offset;
         file << "<text x=\"" << 0 << "\" y=\"" << y + text_offset << "\" fill=\""
              << "black"
-             << "\">" << node->get_node_id() << "</text>\n";
+             << "\">" << node->get_name() << "</text>\n";
         file << "<line x1=\"" << x1 << "\" y1=\"" << y << "\" x2=\"" << x2 << "\" y2=\"" << y
              << "\"";
         file << " style=\"stroke:forestgreen;stroke-width:" << stroke_width << "\" />\n";
@@ -231,7 +231,7 @@ void pass::MemoryVisualize::draw_op_influence(ostream& file, const list<Node*>& 
     {
         int weight = compute_op_weight(exop);
         file << "    <tr>";
-        file << "<td>" << exop->get_node_id() << "</td>";
+        file << "<td>" << exop->get_name() << "</td>";
         file << "<td align=\"right\">" << weight << "</td>";
         file << "</tr>\n";
     }

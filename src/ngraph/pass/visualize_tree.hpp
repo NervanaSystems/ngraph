@@ -18,7 +18,7 @@
 #include <sstream>
 #include <string>
 
-#include "ngraph/pass/tree_pass.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -29,11 +29,11 @@ namespace ngraph
     class Node;
 }
 
-class ngraph::pass::VisualizeTree : public TreeBase
+class ngraph::pass::VisualizeTree : public FunctionPass
 {
 public:
     VisualizeTree(const std::string& file_name);
-    bool run_on_tree(std::shared_ptr<Node>) override;
+    bool run_on_function(ngraph::Function*) override;
 
 private:
     std::string add_attributes(const Node* node);

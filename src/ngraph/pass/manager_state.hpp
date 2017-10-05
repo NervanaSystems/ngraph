@@ -21,34 +21,29 @@ namespace ngraph
 {
     namespace pass
     {
-        class Base;
-        class FunctionPass;
-        class Manager;
         class ManagerState;
     }
+
+    class Node;
     class Function;
 }
 
-class ngraph::pass::Base
+class ngraph::pass::ManagerState
 {
-    friend class Manager;
-
 public:
-    virtual ~Base() {}
-protected:
-    ManagerState& get_state();
-    void set_state(ManagerState&);
+    std::vector<Function*>& get_functions();
+
+    template <typename T>
+    void set_functions(const T& collection)
+    {
+        m_function_list.clear();
+        m_function_list.insert(m_function_list.begin(), collection.begin(), collection.end());
+    }
+
+    size_t get_temporary_pool_size();
+    void set_temporary_pool_size(size_t);
 
 private:
-    ManagerState* m_state;
-};
-
-class ngraph::pass::FunctionPass : public Base
-{
-public:
-    virtual ~FunctionPass() {}
-    virtual bool run_on_function(ngraph::Function*) = 0;
-
-    // derived class throws exception if its dependencies have not been met
-    virtual void check_dependencies(const std::vector<std::shared_ptr<FunctionPass>>&) const {}
+    size_t m_temporary_pool_size = 0;
+    std::vector<Function*> m_function_list;
 };

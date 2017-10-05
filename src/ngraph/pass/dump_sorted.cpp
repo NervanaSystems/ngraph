@@ -34,7 +34,7 @@ bool pass::DumpSorted::run_on_call_list(list<Node*>& nodes)
     {
         for (const Node* node : nodes)
         {
-            out << node->get_node_id() << "(";
+            out << node->get_name() << "(";
             vector<string> inputs;
             for (const Input& input : node->get_inputs())
             {

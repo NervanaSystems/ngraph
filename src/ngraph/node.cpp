@@ -104,6 +104,27 @@ std::string Node::get_node_id() const
     return ss.str();
 }
 
+const std::string& Node::get_name() const
+{
+    if (m_name.empty())
+    {
+        (string) m_name = description() + "_" + to_string(m_instance_id);
+    }
+    return m_name;
+}
+
+void Node::set_name(const string& name)
+{
+    if (m_name.empty())
+    {
+        m_name = name;
+    }
+    else
+    {
+        throw ngraph_error("Node name may be set exactly once");
+    }
+}
+
 namespace ngraph
 {
     ostream& operator<<(ostream& out, const Node& node)

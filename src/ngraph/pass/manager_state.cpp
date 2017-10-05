@@ -12,43 +12,28 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
-
+#include <iostream>
 #include <memory>
-#include <vector>
 
-namespace ngraph
+#include "ngraph/function.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/pass/manager_state.hpp"
+
+using namespace std;
+using namespace ngraph;
+
+vector<Function*>& ngraph::pass::ManagerState::get_functions()
 {
-    namespace pass
-    {
-        class Base;
-        class FunctionPass;
-        class Manager;
-        class ManagerState;
-    }
-    class Function;
+    return m_function_list;
 }
 
-class ngraph::pass::Base
+size_t ngraph::pass::ManagerState::get_temporary_pool_size()
 {
-    friend class Manager;
+    return m_temporary_pool_size;
+}
 
-public:
-    virtual ~Base() {}
-protected:
-    ManagerState& get_state();
-    void set_state(ManagerState&);
-
-private:
-    ManagerState* m_state;
-};
-
-class ngraph::pass::FunctionPass : public Base
+void ngraph::pass::ManagerState::set_temporary_pool_size(size_t size)
 {
-public:
-    virtual ~FunctionPass() {}
-    virtual bool run_on_function(ngraph::Function*) = 0;
-
-    // derived class throws exception if its dependencies have not been met
-    virtual void check_dependencies(const std::vector<std::shared_ptr<FunctionPass>>&) const {}
-};
+    m_temporary_pool_size = size;
+}
