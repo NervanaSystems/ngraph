@@ -16,23 +16,22 @@
 
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/ngvm/ngvm_backend.hpp"
-#include "ngraph/runtime/ngvm/ngvm_transformer.hpp"
+#include "ngraph/runtime/ngvm/ngvm_manager.hpp"
 
 using namespace ngraph::runtime::ngvm;
 
-std::shared_ptr<ngraph::runtime::Backend> NGVMTransformer::allocate_backend()
+std::shared_ptr<ngraph::runtime::Backend> NGVMManager::allocate_backend()
 {
     return std::make_shared<NGVMBackend>();
 }
 
 std::shared_ptr<ngraph::runtime::ExternalFunction>
-    NGVMTransformer::compile(const std::shared_ptr<ngraph::Function>& fun)
+    NGVMManager::compile(const std::shared_ptr<ngraph::Function>& fun)
 {
     return std::make_shared<ExternalFunction>(fun);
 }
 
-ngraph::runtime::Transformer::Factory NGVMTransformer::factory =
-    ngraph::runtime::Transformer::register_factory(
-        "NGVM", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Transformer> {
-            return std::make_shared<NGVMTransformer>();
-        });
+ngraph::runtime::Manager::Factory NGVMManager::factory = ngraph::runtime::Manager::register_factory(
+    "NGVM", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
+        return std::make_shared<NGVMManager>();
+    });

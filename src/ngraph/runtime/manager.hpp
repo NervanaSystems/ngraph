@@ -28,14 +28,14 @@ namespace ngraph
         class Backend;
         class ExternalFunction;
 
-        /// @brief Interface to a generic transformer.
+        /// @brief Interface to a generic manager.
         ///
-        /// A transformer provides access to compilation for a backend, and a means to obtain
+        /// A manager provides access to compilation for a backend, and a means to obtain
         /// a backed for execution and allocation.
-        class Transformer
+        class Manager
         {
         public:
-            virtual ~Transformer() {}
+            virtual ~Manager() {}
             /// @brief Allocate a backend for this transformer.
             ///
             /// Specific transformers may provide addtional methods for allocating customized backends.
@@ -45,12 +45,12 @@ namespace ngraph
             virtual std::shared_ptr<ExternalFunction>
                 compile(const std::shared_ptr<ngraph::Function>& fun) = 0;
 
-            using Factory = std::function<std::shared_ptr<Transformer>(const std::string&)>;
+            using Factory = std::function<std::shared_ptr<Manager>(const std::string&)>;
             using FactoryMap = std::map<std::string, Factory>;
 
             static FactoryMap& get_factory_map();
 
-            static std::shared_ptr<Transformer> get_transformer(const std::string& name);
+            static std::shared_ptr<Manager> get(const std::string& name);
 
             static Factory register_factory(std::string name, Factory factory);
         };

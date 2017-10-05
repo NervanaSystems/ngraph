@@ -28,10 +28,9 @@ TEST(execute, test_abc)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
 
-    auto transformer = runtime::Transformer::get_transformer("NGVM");
-    auto external = transformer->compile(f);
-
-    auto backend = transformer->allocate_backend();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
@@ -69,8 +68,10 @@ TEST(execute, test_abc_tuple)
     auto f = make_shared<Function>(
         make_shared<op::Tuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -110,8 +111,11 @@ TEST(execute, test_tuple_result)
          make_shared<TensorViewType>(element::Float32::element_type(), shape)}));
     auto f = make_shared<Function>(
         make_shared<op::Tuple>(Nodes{A_add_B, A_add_B_mul_C}), rt, op::Parameters{A, B, C});
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
     *a = vector<float>{1, 2, 3, 4};
@@ -137,8 +141,10 @@ TEST(execute, test_abs)
     auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Abs>(A), result_type, op::Parameters{A});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -162,8 +168,10 @@ TEST(execute, test_concat_matrix_colwise)
     auto f = make_shared<Function>(
         make_shared<op::Concat>(Nodes{A, B, C}, 1), rt, op::Parameters{A, B, C});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -192,8 +200,10 @@ TEST(execute, test_concat_matrix_rowwise)
     auto f = make_shared<Function>(
         make_shared<op::Concat>(Nodes{A, B, C}, 0), rt, op::Parameters{A, B, C});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -222,8 +232,10 @@ TEST(execute, test_concat_vector)
     auto f = make_shared<Function>(
         make_shared<op::Concat>(Nodes{A, B, C}, 0), rt, op::Parameters{A, B, C});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -246,8 +258,10 @@ TEST(execute, test_divide)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Divide>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -268,8 +282,10 @@ TEST(execute, test_equal)
     auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -291,8 +307,10 @@ TEST(execute, test_dot_0_0)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -315,8 +333,10 @@ TEST(execute, test_dot_matrix_2x0_0x2)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -339,8 +359,10 @@ TEST(execute, test_dot_matrix_0x2_2x0)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -363,8 +385,10 @@ TEST(execute, test_dot_matrix_3x2_2x0)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -387,8 +411,10 @@ TEST(execute, test_dot_scalar_0x2)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -411,8 +437,10 @@ TEST(execute, test_dot_2x0_0)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -434,8 +462,10 @@ TEST(execute, test_dot1d)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -457,8 +487,10 @@ TEST(execute, test_dot2d)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -480,8 +512,10 @@ TEST(execute, test_dot_scalar_tensor_arg0)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_b);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -503,8 +537,10 @@ TEST(execute, test_dot_scalar_tensor_arg1)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_a);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -525,8 +561,10 @@ TEST(execute, test_dot_scalar_scalar)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -549,8 +587,10 @@ TEST(execute, test_dot_matrix_vector)
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
     auto shape_r = Shape{4};
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -571,8 +611,10 @@ TEST(execute, test_greater)
     auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Greater>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -593,8 +635,10 @@ TEST(execute, test_greatereq)
     auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::GreaterEq>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -615,8 +659,10 @@ TEST(execute, test_less)
     auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Less>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -637,8 +683,10 @@ TEST(execute, test_lesseq)
     auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::LessEq>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -658,8 +706,10 @@ TEST(execute, test_log)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Log>(A), rt, op::Parameters{A});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -683,8 +733,10 @@ TEST(execute, test_maximum)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -704,8 +756,10 @@ TEST(execute, test_negative)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Negative>(A), rt, op::Parameters{A});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -724,8 +778,10 @@ TEST(execute, test_notequal)
     auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::NotEqual>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -747,8 +803,10 @@ TEST(execute, test_select)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Select>(A, B, C), rt, op::Parameters{A, B, C});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Bool>(shape);
@@ -771,8 +829,10 @@ TEST(execute, test_subtract)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Subtract>(A, B), rt, op::Parameters{A, B});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -792,8 +852,10 @@ TEST(execute, test_scalar_constant)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -810,8 +872,10 @@ TEST(execute, test_tensor_constant)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -828,8 +892,10 @@ TEST(execute, test_tensor_constant_with_op)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Abs>(A), rt, op::Parameters{});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -859,8 +925,10 @@ TEST(execute, test_function_call)
                                    op::Parameters{X, Y, Z});
 
     // Now call g on some test vectors.
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(g);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(g);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     auto x = ngraph::runtime::make_tensor<element::Float32>(shape);
     *x = vector<float>{1, 2, 3, 4};
@@ -889,8 +957,10 @@ TEST(execute, test_broadcast_scalar_vector)
     auto f = make_shared<Function>(
         make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -910,8 +980,10 @@ TEST(execute, test_broadcast_scalar_matrix)
     auto f = make_shared<Function>(
         make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1}), rt, op::Parameters{A});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -931,8 +1003,10 @@ TEST(execute, test_broadcast_scalar_tensor)
     auto f = make_shared<Function>(
         make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1, 2}), rt, op::Parameters{A});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -951,8 +1025,10 @@ TEST(execute, test_broadcast_trivial)
     auto f = make_shared<Function>(
         make_shared<op::Broadcast>(A, shape, AxisSet{}), rt, op::Parameters{A});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -972,8 +1048,10 @@ TEST(execute, test_broadcast_vector_colwise)
     auto f = make_shared<Function>(
         make_shared<op::Broadcast>(A, shape_r, AxisSet{1}), rt, op::Parameters{A});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
@@ -993,8 +1071,10 @@ TEST(execute, test_broadcast_vector_rowwise)
     auto f = make_shared<Function>(
         make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
 
-    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
-    auto cf = external->make_call_frame();
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
     auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);

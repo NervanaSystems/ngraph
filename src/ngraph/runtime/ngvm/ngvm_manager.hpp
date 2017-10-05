@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "ngraph/runtime/transformer.hpp"
+#include "ngraph/runtime/manager.hpp"
 
 namespace ngraph
 {
@@ -29,7 +29,7 @@ namespace ngraph
         namespace ngvm
         {
             /// @brief Transformer for the interpreted backend
-            class NGVMTransformer : public Transformer
+            class NGVMManager : public Manager
             {
             public:
                 virtual std::shared_ptr<Backend> allocate_backend() override;
