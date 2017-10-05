@@ -48,6 +48,7 @@ void ngraph::pass::Manager::run_passes(Function* func)
 
     for (shared_ptr<PassBase> pass : m_pass_list)
     {
+        pass->set_state(get_state());
         auto module_pass = dynamic_pointer_cast<ModulePass>(pass);
         auto function_pass = dynamic_pointer_cast<FunctionPass>(pass);
         auto node_pass = dynamic_pointer_cast<NodePass>(pass);
