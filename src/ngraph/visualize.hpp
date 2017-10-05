@@ -39,7 +39,7 @@ private:
     std::string add_attributes(const Node* node);
     std::string get_attributes(const Node* node);
 
-    std::stringstream     m_ss;
-    std::string           m_name;
+    std::stringstream m_ss;
+    std::string m_name;
     std::set<const Node*> m_nodes_with_attributes;
 };

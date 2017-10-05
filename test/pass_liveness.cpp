@@ -19,16 +19,16 @@
 
 #include "gtest/gtest.h"
 
-#include "ngraph/pass/liveness.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/ngraph.hpp"
 #include "ngraph/pass/assign_tensors.hpp"
+#include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
-#include "ngraph/pass/dump_sorted.hpp"
-#include "ngraph/ngraph.hpp"
-#include "ngraph/log.hpp"
 
 #include "test_tools.hpp"
 
@@ -49,7 +49,7 @@ TEST(pass, liveness)
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::DumpSorted>(dump_file);
 
-    shared_ptr<Function>   func      = make_test_graph();
+    shared_ptr<Function> func = make_test_graph();
     pass_manager.run_passes(func.get());
     auto sorted = pass_manager.get_call_graph();
 
@@ -80,8 +80,6 @@ TEST(pass, liveness)
 
     // auto exc = ex.executor(seq_stuff);
     // return exc;
-
-
 
     // lg = LivenessGraph(exc.exop.ops)
     // lg.layout_memory()

@@ -27,7 +27,7 @@ TEST(util, split)
 {
     {
         string s1 = "this,is,a,test";
-        auto   r1 = split(s1, ',');
+        auto r1 = split(s1, ',');
         ASSERT_EQ(4, r1.size());
         EXPECT_STRCASEEQ("this", r1[0].c_str());
         EXPECT_STRCASEEQ("is", r1[1].c_str());
@@ -37,7 +37,7 @@ TEST(util, split)
 
     {
         string s1 = "this,is,a,test,";
-        auto   r1 = split(s1, ',');
+        auto r1 = split(s1, ',');
         ASSERT_EQ(5, r1.size());
         EXPECT_STRCASEEQ("this", r1[0].c_str());
         EXPECT_STRCASEEQ("is", r1[1].c_str());
@@ -48,7 +48,7 @@ TEST(util, split)
 
     {
         string s1 = ",this,is,a,test";
-        auto   r1 = split(s1, ',');
+        auto r1 = split(s1, ',');
         ASSERT_EQ(5, r1.size());
         EXPECT_STRCASEEQ("", r1[0].c_str());
         EXPECT_STRCASEEQ("this", r1[1].c_str());
@@ -59,7 +59,7 @@ TEST(util, split)
 
     {
         string s1 = "this,,is,a,test";
-        auto   r1 = split(s1, ',');
+        auto r1 = split(s1, ',');
         ASSERT_EQ(5, r1.size());
         EXPECT_STRCASEEQ("this", r1[0].c_str());
         EXPECT_STRCASEEQ("", r1[1].c_str());
@@ -70,14 +70,14 @@ TEST(util, split)
 
     {
         string s1 = "this";
-        auto   r1 = split(s1, ',');
+        auto r1 = split(s1, ',');
         ASSERT_EQ(1, r1.size());
         EXPECT_STRCASEEQ("this", r1[0].c_str());
     }
 
     {
         string s1 = "";
-        auto   r1 = split(s1, ',');
+        auto r1 = split(s1, ',');
         ASSERT_EQ(1, r1.size());
         EXPECT_STRCASEEQ("", r1[0].c_str());
     }
@@ -134,36 +134,38 @@ TEST(util, contains)
     EXPECT_FALSE(contains(v1, 8));
 }
 
-TEST(util, remove_from) {}
+TEST(util, remove_from)
+{
+}
 
 TEST(util, reduce)
 {
     {
         std::vector<size_t> x = {};
-        size_t              actual =
+        size_t actual =
             ngraph::reduce(x.begin(), x.end(), [](size_t a, size_t b) { return a + b; });
         EXPECT_EQ(actual, 0);
     }
     {
         std::vector<size_t> x = {10};
-        size_t              actual =
+        size_t actual =
             ngraph::reduce(x.begin(), x.end(), [](size_t a, size_t b) { return a + b; });
         EXPECT_EQ(actual, 10);
     }
     {
         std::vector<size_t> x = {1, 2, 3, 4, 5, 6};
-        size_t              actual =
+        size_t actual =
             ngraph::reduce(x.begin(), x.end(), [](size_t a, size_t b) { return a + b; });
         EXPECT_EQ(actual, 21);
     }
     {
-        std::vector<size_t> x      = {1, 2, 3, 4, 5, 6};
-        size_t              actual = ngraph::reduce(x.begin(), x.end(), ngraph::plus<size_t>);
+        std::vector<size_t> x = {1, 2, 3, 4, 5, 6};
+        size_t actual = ngraph::reduce(x.begin(), x.end(), ngraph::plus<size_t>);
         EXPECT_EQ(actual, 21);
     }
     {
-        std::vector<size_t> x      = {1, 2, 3, 4, 5, 6};
-        size_t              actual = ngraph::reduce(x.begin(), x.end(), ngraph::mul<size_t>);
+        std::vector<size_t> x = {1, 2, 3, 4, 5, 6};
+        size_t actual = ngraph::reduce(x.begin(), x.end(), ngraph::mul<size_t>);
         EXPECT_EQ(actual, 720);
     }
 }

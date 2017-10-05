@@ -14,8 +14,8 @@
 
 #include <fstream>
 
-#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -24,8 +24,7 @@ using namespace std;
 bool pass::VisualizeTree::run_on_tree(std::shared_ptr<Node> base_node)
 {
     // map<size_t, list<node_ptr>> dependent_nodes;
-    traverse_nodes(base_node, [&](Node* node)
-    {
+    traverse_nodes(base_node, [&](Node* node) {
         for (auto arg : node->get_arguments())
         {
             m_ss << add_attributes(arg.get());
@@ -73,7 +72,7 @@ std::string pass::VisualizeTree::get_attributes(const Node* node)
 void pass::VisualizeTree::render() const
 {
 #ifdef GRAPHVIZ_FOUND
-    auto     tmp_file = m_name + ".tmp";
+    auto tmp_file = m_name + ".tmp";
     ofstream out(tmp_file);
     if (out)
     {
@@ -84,7 +83,7 @@ void pass::VisualizeTree::render() const
 
         stringstream ss;
         ss << "dot -Tpng " << tmp_file << " -o " << m_name;
-        auto cmd    = ss.str();
+        auto cmd = ss.str();
         auto stream = popen(cmd.c_str(), "r");
         pclose(stream);
 

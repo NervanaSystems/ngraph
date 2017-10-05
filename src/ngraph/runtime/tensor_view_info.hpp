@@ -26,7 +26,7 @@ namespace ngraph
         class TensorViewInfo
         {
         public:
-            TensorViewInfo(size_t                                                 index,
+            TensorViewInfo(size_t index,
                            const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor)
                 : m_index(index)
                 , m_layout(descriptor->get_tensor_view_layout())
@@ -34,7 +34,6 @@ namespace ngraph
             }
 
             size_t get_index() const { return m_index; }
-
             std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout>
                 get_tensor_view_layout() const
             {
@@ -48,7 +47,7 @@ namespace ngraph
             }
 
         protected:
-            size_t                                                        m_index;
+            size_t m_index;
             std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout> m_layout;
         };
     }

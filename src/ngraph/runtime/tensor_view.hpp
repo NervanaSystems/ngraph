@@ -39,9 +39,7 @@ namespace ngraph
 
         public:
             TensorView() {}
-
             virtual ~TensorView() {}
-
             template <typename ET>
             ParameterizedTensorView<ET>* get_parameterized_tensor_view()
             {
@@ -65,7 +63,6 @@ namespace ngraph
             }
 
             const Shape& get_shape() { return m_descriptor->get_tensor_view_type()->get_shape(); }
-
         protected:
             std::shared_ptr<ngraph::descriptor::TensorView> m_descriptor;
         };

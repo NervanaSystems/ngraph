@@ -35,5 +35,5 @@ public:
     virtual bool run_on_call_list(std::list<Node*>&) override;
 
 private:
-    const std::string   m_output_file;
+    const std::string m_output_file;
 };

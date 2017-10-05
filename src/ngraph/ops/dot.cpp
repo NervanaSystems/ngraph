@@ -34,11 +34,11 @@ void Dot::propagate_types()
         throw ngraph_error("Arguments to dot must have the same element type");
     }
 
-    vector<size_t> arg0_shape     = arg0_tensor_type->get_shape();
-    vector<size_t> arg1_shape     = arg1_tensor_type->get_shape();
-    size_t         arg0_reduction = arg0_shape.size() - 1;
-    size_t         arg1_reduction;
-    const bool     is_scalar_mult = arg0_shape.size() == 0 || arg1_shape.size() == 0;
+    vector<size_t> arg0_shape = arg0_tensor_type->get_shape();
+    vector<size_t> arg1_shape = arg1_tensor_type->get_shape();
+    size_t arg0_reduction = arg0_shape.size() - 1;
+    size_t arg1_reduction;
+    const bool is_scalar_mult = arg0_shape.size() == 0 || arg1_shape.size() == 0;
 
     if (arg1_shape.size() > 1)
     {
@@ -56,22 +56,23 @@ void Dot::propagate_types()
     vector<size_t> result_shape;
     result_shape.reserve(arg0_shape.size() + arg1_shape.size() - (is_scalar_mult ? 0 : 2));
 
-    for(auto i = 0; i < arg0_shape.size(); i++)
+    for (auto i = 0; i < arg0_shape.size(); i++)
     {
-        if(is_scalar_mult || i != arg0_reduction)
+        if (is_scalar_mult || i != arg0_reduction)
         {
             result_shape.push_back(arg0_shape[i]);
         }
     }
 
-    for(auto i = 0; i < arg1_shape.size(); i++)
+    for (auto i = 0; i < arg1_shape.size(); i++)
     {
-        if(is_scalar_mult || i != arg1_reduction)
+        if (is_scalar_mult || i != arg1_reduction)
         {
             result_shape.push_back(arg1_shape[i]);
         }
     }
 
-    auto result_type = make_shared<TensorViewType>(arg0_tensor_type->get_element_type(), result_shape);
+    auto result_type =
+        make_shared<TensorViewType>(arg0_tensor_type->get_element_type(), result_shape);
     set_value_type_checked(result_type);
 }
