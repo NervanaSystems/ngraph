@@ -77,8 +77,22 @@ include_directories(
     "${EIGEN_INCLUDE_DIR}"
     )
 
+if(LLVM_INCLUDE_DIR)
+    include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
+    link_directories(${LLVM_LIB_DIR})
+    # Add sources for the LLVM-based code generator
+    set(SRC ${SRC}
+        codegen/compiler.cpp
+        )
+    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
+endif()
+
 add_library(ngraph SHARED ${SRC})
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
+
+if(LLVM_LINK_LIBS)
+    target_link_libraries(ngraph LINK_PRIVATE ${LLVM_LINK_LIBS})
+endif()
 
 if (APPLE)
     set_property(TARGET ngraph PROPERTY PREFIX "lib")
@@ -137,4 +151,4 @@ install(DIRECTORY
     DESTINATION "${CMAKE_INSTALL_LIB}"
 )
 
-add_dependencies(ngraph eigen)
+add_dependencies(ngraph eigen ext_llvm)
