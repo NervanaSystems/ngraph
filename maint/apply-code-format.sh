@@ -41,6 +41,9 @@ for ROOT_SUBDIR in src test; do
     fi
 
     echo "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
+    # Note that we restrict to "-type f" to exclude symlinks. Emacs sometimes
+    # creates dangling symlinks with .cpp/.hpp suffixes as a sort of locking
+    # mechanism, and this confuses clang-format.
     find "${ROOT_SUBDIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' \) | xargs "${CLANG_FORMAT_PROG}" -i -style=file
     echo "Done."
 done
