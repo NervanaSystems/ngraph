@@ -45,7 +45,6 @@ namespace ngraph
 
         public:
             virtual ~Type() {}
-
             Type(size_t bitwidth, bool is_float, bool is_signed, const std::string& cname);
 
             const std::string& c_type_string() const;
@@ -120,10 +119,9 @@ namespace ngraph
 
             virtual std::shared_ptr<ngraph::runtime::TensorView>
                 make_primary_tensor_view(const ngraph::Shape& shape) const override
-                {
-                    return std::make_shared<runtime::ParameterizedTensorView<TraitedType<T>>>(shape);
-                }
-                
+            {
+                return std::make_shared<runtime::ParameterizedTensorView<TraitedType<T>>>(shape);
+            }
         };
 
         NGRAPH_DEFINE_TRAITED_TYPE_NAME(char)

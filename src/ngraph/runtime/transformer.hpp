@@ -36,7 +36,6 @@ namespace ngraph
         {
         public:
             virtual ~Transformer() {}
-
             /// @brief Allocate a backend for this transformer.
             ///
             /// Specific transformers may provide addtional methods for allocating customized backends.

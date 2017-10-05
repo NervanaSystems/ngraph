@@ -40,12 +40,11 @@ namespace ngraph
                 return m_descriptor;
             }
 
-            virtual void
-                collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
-                                     const std::shared_ptr<Value>& value) const override;
+            virtual void collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
+                                              const std::shared_ptr<Value>& value) const override;
 
         protected:
-            std::vector<std::shared_ptr<Value>>        m_elements;
+            std::vector<std::shared_ptr<Value>> m_elements;
             std::shared_ptr<ngraph::descriptor::Tuple> m_descriptor;
         };
     }

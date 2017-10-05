@@ -36,10 +36,10 @@ namespace nervana
             return i < _size ? _string[i] : throw std::out_of_range("");
         }
         constexpr const char* get_ptr(size_t offset) const { return &_string[offset]; }
-        constexpr size_t                     size() const { return _size; }
+        constexpr size_t size() const { return _size; }
     private:
         const char* _string;
-        size_t      _size;
+        size_t _size;
     };
 
     constexpr const char* find_last(conststring s, size_t offset, char ch)
@@ -84,23 +84,23 @@ namespace nervana
         static void log_item(const std::string& s);
         static void process_event(const std::string& s);
         static void thread_entry(void* param);
-        static std::string             log_path;
+        static std::string log_path;
         static std::deque<std::string> queue;
     };
 
-#define NGRAPH_ERR                                                                                     \
+#define NGRAPH_ERR                                                                                 \
     nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_ERROR,                                        \
                         nervana::get_file_name(__FILE__),                                          \
                         __LINE__,                                                                  \
                         __PRETTY_FUNCTION__)                                                       \
         .stream()
-#define NGRAPH_WARN                                                                                    \
+#define NGRAPH_WARN                                                                                \
     nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_WARNING,                                      \
                         nervana::get_file_name(__FILE__),                                          \
                         __LINE__,                                                                  \
                         __PRETTY_FUNCTION__)                                                       \
         .stream()
-#define NGRAPH_INFO                                                                                    \
+#define NGRAPH_INFO                                                                                \
     nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_INFO,                                         \
                         nervana::get_file_name(__FILE__),                                          \
                         __LINE__,                                                                  \

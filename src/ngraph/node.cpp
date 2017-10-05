@@ -32,7 +32,9 @@ Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<ValueType>
     }
 }
 
-Node::~Node() {}
+Node::~Node()
+{
+}
 
 void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
 {

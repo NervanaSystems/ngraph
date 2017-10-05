@@ -27,7 +27,6 @@ namespace ngraph
         {
         public:
             size_t size() const { return m_size; }
-
         protected:
             size_t m_size;
         };

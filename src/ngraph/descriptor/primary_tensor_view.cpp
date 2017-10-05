@@ -18,9 +18,9 @@ using namespace ngraph;
 using namespace descriptor;
 
 PrimaryTensorView::PrimaryTensorView(const std::shared_ptr<const TensorViewType>& tensor_view_type,
-                                     const std::string&                           name,
-                                     bool                                         is_output,
-                                     bool                                         is_input)
+                                     const std::string& name,
+                                     bool is_output,
+                                     bool is_input)
     : TensorView(tensor_view_type)
     , m_tensor(tensor_view_type->get_element_type(), this, name, is_output, is_input)
 {

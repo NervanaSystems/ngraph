@@ -62,6 +62,18 @@ target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
 add_dependencies(unit-test ngraph libgtest eigen)
 
-add_custom_target(check
+add_custom_target(style-check
+        COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
+        )
+
+add_custom_target(unit-test-check
 	COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
-	DEPENDS unit-test)
+	DEPENDS unit-test
+        )
+
+add_custom_target(check
+        DEPENDS
+        style-check
+        unit-test-check
+        )
+

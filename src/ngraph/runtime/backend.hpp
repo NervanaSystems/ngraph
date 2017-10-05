@@ -43,7 +43,6 @@ namespace ngraph
         {
         public:
             virtual ~Backend() {}
-
             /// @brief Make a call frame that can support one concurrent call of an external function.
             ///
             /// If more than one concurrent execution is needed, each execution will require its own call frame.

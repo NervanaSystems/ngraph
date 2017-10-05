@@ -18,10 +18,10 @@
 #include <chrono>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <memory>
 
 namespace ngraph
 {
@@ -114,7 +114,7 @@ namespace ngraph
             if (m_active == false)
             {
                 m_total_count++;
-                m_active     = true;
+                m_active = true;
                 m_start_time = m_clock.now();
             }
         }
@@ -124,7 +124,7 @@ namespace ngraph
             if (m_active == true)
             {
                 auto end_time = m_clock.now();
-                m_last_time   = end_time - m_start_time;
+                m_last_time = end_time - m_start_time;
                 m_total_time += m_last_time;
                 m_active = false;
             }
@@ -151,14 +151,14 @@ namespace ngraph
         size_t get_total_microseconds() const { return get_total_nanoseconds() / 1e3; }
         size_t get_total_nanoseconds() const { return m_total_time.count(); }
     private:
-        std::chrono::high_resolution_clock                          m_clock;
+        std::chrono::high_resolution_clock m_clock;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_start_time;
-        bool                                                        m_active = false;
-        std::chrono::nanoseconds                                    m_total_time =
+        bool m_active = false;
+        std::chrono::nanoseconds m_total_time =
             std::chrono::high_resolution_clock::duration::zero();
         std::chrono::nanoseconds m_last_time;
-        size_t                   m_total_count = 0;
-        std::string              m_name;
+        size_t m_total_count = 0;
+        std::string m_name;
     };
 
     template <class InputIt, class BinaryOp>

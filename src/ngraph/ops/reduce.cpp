@@ -30,7 +30,8 @@ void Reduce::propagate_types()
     {
         throw ngraph_error("Argument to reduce is missing type.");
     }
-    auto arg_reductee_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_reductee_type);
+    auto arg_reductee_tensor_view_type =
+        dynamic_pointer_cast<const TensorViewType>(arg_reductee_type);
     if (nullptr == arg_reductee_tensor_view_type)
     {
         throw ngraph_error("Argument to reduce is not a tensor view");
@@ -51,7 +52,8 @@ void Reduce::propagate_types()
         throw ngraph_error("Argument for initial value is not a scalar");
     }
 
-    if (arg_init_tensor_view_type->get_element_type() != arg_reductee_tensor_view_type->get_element_type())
+    if (arg_init_tensor_view_type->get_element_type() !=
+        arg_reductee_tensor_view_type->get_element_type())
     {
         throw ngraph_error("Element types for reductee and initial values do not match");
     }
@@ -99,5 +101,6 @@ void Reduce::propagate_types()
         throw ngraph_error("Return type from reduction function does not match expected");
     }
 
-    set_value_type_checked(make_shared<TensorViewType>(arg_reductee_tensor_view_type->get_element_type(), result_shape));
+    set_value_type_checked(make_shared<TensorViewType>(
+        arg_reductee_tensor_view_type->get_element_type(), result_shape));
 }

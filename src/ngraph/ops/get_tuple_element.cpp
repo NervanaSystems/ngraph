@@ -33,7 +33,8 @@ void GetTupleElement::propagate_types()
         throw ngraph_error("Argument must be a tuple view");
     }
 
-    if (m_n >= arg0_tuple_type->get_element_types().size()){
+    if (m_n >= arg0_tuple_type->get_element_types().size())
+    {
         throw ngraph_error("Indexing tuple beyond its size");
     }
 

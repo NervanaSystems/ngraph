@@ -27,7 +27,6 @@ namespace ngraph
             {
             public:
                 ReturnInstruction() {}
-
                 virtual void execute(CallFrame& call_frame) const override
                 {
                     call_frame.set_return();
