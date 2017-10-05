@@ -279,6 +279,149 @@ TEST(execute, test_equal)
     ASSERT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), result->get_vector());
 }
 
+TEST(execute, test_dot_0_0)
+{
+    auto shape = Shape{0};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto shape_r = Shape{};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{0}), result->get_vector());
+}
+
+TEST(execute, test_dot_matrix_2x0_0x2)
+{
+    auto shape_a = Shape{2, 0};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_b = Shape{0, 2};
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto shape_r = Shape{2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{0, 0, 0, 0}), result->get_vector());
+}
+
+TEST(execute, test_dot_matrix_0x2_2x0)
+{
+    auto shape_a = Shape{0, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_b = Shape{2, 0};
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto shape_r = Shape{0, 0};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{}), result->get_vector());
+}
+
+TEST(execute, test_dot_matrix_3x2_2x0)
+{
+    auto shape_a = Shape{3, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_b = Shape{2, 0};
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto shape_r = Shape{0, 0};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4, 5, 6};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{}), result->get_vector());
+}
+
+TEST(execute, test_dot_scalar_0x2)
+{
+    auto shape_a = Shape{};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_b = Shape{0, 2};
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto shape_r = Shape{0, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{}), result->get_vector());
+}
+
+TEST(execute, test_dot_2x0_0)
+{
+    auto shape_a = Shape{2, 0};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_b = Shape{0};
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto shape_r = Shape{2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape_b);
+    *b = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{0, 0}), result->get_vector());
+}
+
 TEST(execute, test_dot1d)
 {
     auto shape = Shape{4};
