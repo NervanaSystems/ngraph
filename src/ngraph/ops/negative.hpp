@@ -29,4 +29,8 @@ namespace ngraph
             virtual std::string description() const override { return "Negative"; }
         };
     }
+    inline std::shared_ptr<ngraph::Node> operator-(const std::shared_ptr<ngraph::Node> arg0)
+    {
+        return std::make_shared<ngraph::op::Negative>(arg0);
+    }
 }
