@@ -45,7 +45,10 @@ for ROOT_SUBDIR in src test; do
 
     echo "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
     declare SRC_FILE
-    for SRC_FILE in $(find "${ROOT_SUBDIR}" -name '*.cpp' -or -name '*.hpp'); do
+    # Note that we restrict to "-type f" to exclude symlinks. Emacs sometimes
+    # creates dangling symlinks with .cpp/.hpp suffixes as a sort of locking
+    # mechanism, and this confuses clang-format.
+    for SRC_FILE in $(find "${ROOT_SUBDIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' \) ); do
         if "${CLANG_FORMAT_PROG}" -style=file -output-replacements-xml "${SRC_FILE}" | grep -c "<replacement " >/dev/null; then
             FAILED_FILES+=( "${SRC_FILE}" )
         fi
