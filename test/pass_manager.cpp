@@ -45,14 +45,6 @@ TEST(pass_manager, add)
     EXPECT_TRUE(validate_list(sorted));
 }
 
-TEST(pass_manager, dependency)
-{
-    pass::Manager pass_manager;
-
-    pass_manager.register_pass<pass::TopologicalSort>();
-    EXPECT_THROW(pass_manager.register_pass<pass::AssignTensors>(), runtime_error);
-}
-
 TEST(pass_manager, module_add_function)
 {
     // First create "f(A,B,C) = (A+B)*C".
