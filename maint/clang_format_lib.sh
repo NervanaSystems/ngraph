@@ -32,7 +32,7 @@ clang_format_lib_verify_version() {
     local REQUIRED_VERSION_X_Y="${2}"
 
     if ! [[ "${REQUIRED_VERSION_X_Y}" =~ ^[0-9]+.[0-9]+$ ]]; then
-        bash_lib_print_error "${FUNCNAME[0]}: required-version-number must have the form (numerber).(number)."
+        bash_lib_print_error "${FUNCNAME[0]}: required-version-number must have the form (number).(number)."
         return 1
     fi
 
@@ -47,8 +47,15 @@ clang_format_lib_verify_version() {
         return 1
     fi
 
+    local SED_FLAGS
+    if [[ "$(uname)" == 'Darwin' ]]; then
+        SED_FLAGS='-En'
+    else
+        SED_FLAGS='-rn'
+    fi
+
     local VERSION_X_Y
-    if ! VERSION_X_Y=$(echo "${VERSION_LINE}" | sed -rn 's/^clang-format version ([0-9]+.[0-9]+).*$/\1/p')
+    if ! VERSION_X_Y=$(echo "${VERSION_LINE}" | sed ${SED_FLAGS} 's/^clang-format version ([0-9]+.[0-9]+).*$/\1/p')
     then
         bash_lib_print_error "Failed invocation of sed."
         return 1
