@@ -284,6 +284,30 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
                            instr_class);                                                           \
     }
 
+#define REGISTER_CONSTANT_INSTRUCTIONS(T)                                                          \
+    {                                                                                              \
+        REGISTER_INSTRUCTION(                                                                      \
+            op::ScalarConstant<T>,                                                                 \
+            runtime::eigen::ConstantInstruction<T>,                                                \
+            std::vector<T::type>{dynamic_cast<const op::ScalarConstant<T>*>(n)->get_value()},      \
+            out[0]);                                                                               \
+        REGISTER_INSTRUCTION(                                                                      \
+            op::TensorConstant<T>,                                                                 \
+            runtime::eigen::ConstantInstruction<T>,                                                \
+            std::vector<T::type>{                                                                  \
+                dynamic_cast<const op::TensorConstant<T>*>(n)->get_value()->get_vector()},         \
+            out[0]);                                                                               \
+    }
+
+#define PUSH_INSTRUCTION(T, instr, ...)                                                            \
+    {                                                                                              \
+        ef->get_instructions()->push_back(make_shared<instr<T>>(__VA_ARGS__));                     \
+    }
+#define PUSH_TEMPLATED_INSTRUCTION(et, err_msg, instr, ...)                                        \
+    DO_ON_ELEMENT_TYPE(et, err_msg, PUSH_INSTRUCTION, instr, __VA_ARGS__)
+#define PUSH_NUMERIC_TEMPLATED_INSTRUCTION(et, err_msg, instr, ...)                                \
+    DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_INSTRUCTION, instr, __VA_ARGS__)
+
 // Turn off complaint suppression (see above)
 #pragma clang diagnostic pop
 
@@ -314,37 +338,14 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_POLYMORPHIC_TERNOP(op::Select, runtime::eigen::SelectInstruction);
 
-#define REGISTER_SCALAR_CONSTANT(T)                                                                \
-    REGISTER_INSTRUCTION(                                                                          \
-        op::ScalarConstant<T>,                                                                     \
-        runtime::eigen::ConstantInstruction<T>,                                                    \
-        std::vector<T::type>{dynamic_cast<const op::ScalarConstant<T>*>(n)->get_value()},          \
-        out[0]);
-
-        REGISTER_SCALAR_CONSTANT(element::Bool);
-        REGISTER_SCALAR_CONSTANT(element::Float32);
-        REGISTER_SCALAR_CONSTANT(element::Int8);
-        REGISTER_SCALAR_CONSTANT(element::Int32);
-        REGISTER_SCALAR_CONSTANT(element::Int64);
-        REGISTER_SCALAR_CONSTANT(element::UInt8);
-        REGISTER_SCALAR_CONSTANT(element::UInt32);
-        REGISTER_SCALAR_CONSTANT(element::UInt64);
-#undef REGISTER_SCALAR_CONSTANT
-
-#define REGISTER_TENSOR_CONSTANT(T)                                                                \
-    REGISTER_INSTRUCTION(op::TensorConstant<T>,                                                    \
-                         runtime::eigen::ConstantInstruction<T>,                                   \
-                         dynamic_cast<const op::TensorConstant<T>*>(n)->get_value()->get_vector(), \
-                         out[0]);
-
-        REGISTER_TENSOR_CONSTANT(element::Bool);
-        REGISTER_TENSOR_CONSTANT(element::Float32);
-        REGISTER_TENSOR_CONSTANT(element::Int8);
-        REGISTER_TENSOR_CONSTANT(element::Int32);
-        REGISTER_TENSOR_CONSTANT(element::Int64);
-        REGISTER_TENSOR_CONSTANT(element::UInt8);
-        REGISTER_TENSOR_CONSTANT(element::UInt32);
-        REGISTER_TENSOR_CONSTANT(element::UInt64);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::Bool);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::Float32);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::Int8);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::Int32);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::Int64);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::UInt8);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::UInt32);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::UInt64);
 
         REGISTER_TO_OP_MAP(op::Broadcast)
         {
@@ -364,45 +365,42 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
             if (broadcast->get_broadcast_axes().empty())
             {
-// Degenerate case: no broadcast axes is just a copy.
-#define M(T)                                                                                       \
-    ef->get_instructions()->push_back(                                                             \
-        make_shared<runtime::eigen::CopyInstruction<T>>(in[0].get_index(), out[0].get_index()));
-                DO_ON_ELEMENT_TYPE(result_element_type, "Broadcast has unhandled element type", M);
-#undef M
+                PUSH_TEMPLATED_INSTRUCTION(result_element_type,
+                                           "Broadcast has unhandled element type",
+                                           runtime::eigen::CopyInstruction,
+                                           in[0].get_index(),
+                                           out[0].get_index());
             }
             else if (arg_shape.size() == 0)
             {
-#define M(T)                                                                                       \
-    ef->get_instructions()->push_back(                                                             \
-        make_shared<runtime::eigen::BroadcastScalarInstruction<T>>(in[0], out[0]));
-                DO_ON_ELEMENT_TYPE(result_element_type, "Broadcast has unhandled element type", M);
-#undef M
+                PUSH_TEMPLATED_INSTRUCTION(result_element_type,
+                                           "Broadcast has unhandled element type",
+                                           runtime::eigen::BroadcastScalarInstruction,
+                                           in[0],
+                                           out[0]);
             }
             else if (arg_shape.size() == 1 && result_shape.size() == 2)
             {
                 if (broadcast->get_broadcast_axes() == AxisSet{1})
                 {
-#define M(T)                                                                                       \
-    ef->get_instructions()->push_back(                                                             \
-        make_shared<runtime::eigen::BroadcastVectorColwiseInstruction<T>>(in[0], out[0]));
-                    DO_ON_ELEMENT_TYPE(
-                        result_element_type, "Broadcast has unhandled element type", M);
-#undef M
+                    PUSH_TEMPLATED_INSTRUCTION(result_element_type,
+                                               "Broadcast has unhandled element type",
+                                               runtime::eigen::BroadcastVectorColwiseInstruction,
+                                               in[0],
+                                               out[0]);
                 }
                 else if (broadcast->get_broadcast_axes() == AxisSet{0})
                 {
-#define M(T)                                                                                       \
-    ef->get_instructions()->push_back(                                                             \
-        make_shared<runtime::eigen::BroadcastVectorRowwiseInstruction<T>>(in[0], out[0]));
-                    DO_ON_ELEMENT_TYPE(
-                        result_element_type, "Broadcast has unhandled element type", M);
-#undef M
+                    PUSH_TEMPLATED_INSTRUCTION(result_element_type,
+                                               "Broadcast has unhandled element type",
+                                               runtime::eigen::BroadcastVectorRowwiseInstruction,
+                                               in[0],
+                                               out[0]);
                 }
                 else
                 {
                     throw ngraph_error(
-                        "Internal error: axis set for vector-matrix broadcast is neither {0} or "
+                        "Internal error: axis set for vector-matrix broadcast is neither {0} nor "
                         "{1}");
                 }
             }
@@ -423,19 +421,21 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
             if (result_shape.size() == 1)
             {
-#define M(T)                                                                                       \
-    ef->get_instructions()->push_back(                                                             \
-        make_shared<runtime::eigen::ConcatVectorInstruction<T>>(in, out[0]));
-                DO_ON_ELEMENT_TYPE(result_element_type, "Concat has unhandled element type", M);
-#undef M
+                PUSH_TEMPLATED_INSTRUCTION(result_element_type,
+                                           "Concat has unhandled element type",
+                                           runtime::eigen::ConcatVectorInstruction,
+                                           in,
+                                           out[0]);
             }
             else if (result_shape.size() == 2)
             {
-#define M(T)                                                                                       \
-    ef->get_instructions()->push_back(make_shared<runtime::eigen::ConcatMatrixInstruction<T>>(     \
-        in, (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis(), out[0]));
-                DO_ON_ELEMENT_TYPE(result_element_type, "Concat has unhandled element type", M);
-#undef M
+                PUSH_TEMPLATED_INSTRUCTION(
+                    result_element_type,
+                    "Concat has unhandled element type",
+                    runtime::eigen::ConcatMatrixInstruction,
+                    in,
+                    (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis(),
+                    out[0]);
             }
             else
             {
@@ -464,50 +464,54 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             // If arg0 or arg1 is a scalar, emit a scalar-tensor product.
             if (arg0_shape.size() == 0)
             {
-#define M(T)                                                                                       \
-    ef->get_instructions()->push_back(                                                             \
-        make_shared<runtime::eigen::ScalarTensorProductInstruction<T>>(in[0], in[1], out[0]));
-                DO_ON_NUMERIC_TYPE(arg0_element_type, "Dot has unhandled element type", M);
-#undef M
+                PUSH_NUMERIC_TEMPLATED_INSTRUCTION(arg0_element_type,
+                                                   "Dot has unhandled element type",
+                                                   runtime::eigen::ScalarTensorProductInstruction,
+                                                   in[0],
+                                                   in[1],
+                                                   out[0]);
             }
             else if (arg1_shape.size() == 0)
             {
-// If arg1 is the scalar, do the same thing but switch the order of operands.
-#define M(T)                                                                                       \
-    ef->get_instructions()->push_back(                                                             \
-        make_shared<runtime::eigen::ScalarTensorProductInstruction<T>>(in[1], in[0], out[0]));
-                DO_ON_NUMERIC_TYPE(arg0_element_type, "Dot has unhandled element type", M);
-#undef M
+                PUSH_NUMERIC_TEMPLATED_INSTRUCTION(arg0_element_type,
+                                                   "Dot has unhandled element type",
+                                                   runtime::eigen::ScalarTensorProductInstruction,
+                                                   in[1],
+                                                   in[0],
+                                                   out[0]);
             }
 
             // If arg0 and arg1 are both vectors, emit a dot product.
             else if (arg0_shape.size() == 1 && arg1_shape.size() == 1)
             {
-#define M(T)                                                                                       \
-    ef->get_instructions()->push_back(                                                             \
-        make_shared<runtime::eigen::DotInstruction<T>>(in[0], in[1], out[0]));
-                DO_ON_NUMERIC_TYPE(arg0_element_type, "Dot has unhandled element type", M);
-#undef M
+                PUSH_NUMERIC_TEMPLATED_INSTRUCTION(arg0_element_type,
+                                                   "Dot has unhandled element type",
+                                                   runtime::eigen::DotInstruction,
+                                                   in[0],
+                                                   in[1],
+                                                   out[0]);
             }
 
             // If arg0 is a matrix and arg1 is a vector, emit a matrix-vector product.
             else if (arg0_shape.size() == 2 && arg1_shape.size() == 1)
             {
-#define M(T)                                                                                       \
-    ef->get_instructions()->push_back(                                                             \
-        make_shared<runtime::eigen::MatrixVectorProductInstruction<T>>(in[0], in[1], out[0]));
-                DO_ON_NUMERIC_TYPE(arg0_element_type, "Dot has unhandled element type", M);
-#undef M
+                PUSH_NUMERIC_TEMPLATED_INSTRUCTION(arg0_element_type,
+                                                   "Dot has unhandled element type",
+                                                   runtime::eigen::MatrixVectorProductInstruction,
+                                                   in[0],
+                                                   in[1],
+                                                   out[0]);
             }
 
             // If arg0 and arg1 are both matrices, emit a matrix product.
             else if (arg0_shape.size() == 2 && arg1_shape.size() == 2)
             {
-#define M(T)                                                                                       \
-    ef->get_instructions()->push_back(                                                             \
-        make_shared<runtime::eigen::MatrixMultInstruction<T>>(in[0], in[1], out[0]));
-                DO_ON_NUMERIC_TYPE(arg0_element_type, "Dot has unhandled element type", M);
-#undef M
+                PUSH_NUMERIC_TEMPLATED_INSTRUCTION(arg0_element_type,
+                                                   "Dot has unhandled element type",
+                                                   runtime::eigen::MatrixMultInstruction,
+                                                   in[0],
+                                                   in[1],
+                                                   out[0]);
             }
 
             else
@@ -530,12 +534,11 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
             auto& result_element_type = result_tensor_type->get_element_type();
 
-#define M(T)                                                                                       \
-    ef->get_instructions()->push_back(make_shared<runtime::eigen::CopyInstruction<T>>(             \
-        in.at(get_tuple_element->get_n()).get_index(), out.at(0).get_index()));
-            DO_ON_ELEMENT_TYPE(
-                result_element_type, "GetTupleElement has unhandled element type", M);
-#undef M
+            PUSH_TEMPLATED_INSTRUCTION(result_element_type,
+                                       "GetTupleElement has unhandled element type",
+                                       runtime::eigen::CopyInstruction,
+                                       in.at(get_tuple_element->get_n()).get_index(),
+                                       out.at(0).get_index());
         };
 
         // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
