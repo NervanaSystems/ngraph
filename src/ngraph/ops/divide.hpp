@@ -29,4 +29,9 @@ namespace ngraph
             virtual std::string description() const override { return "Divide"; }
         };
     }
+    inline std::shared_ptr<ngraph::Node> operator/(const std::shared_ptr<ngraph::Node> arg0,
+                                                   const std::shared_ptr<ngraph::Node> arg1)
+    {
+        return std::make_shared<ngraph::op::Divide>(arg0, arg1);
+    }
 }
