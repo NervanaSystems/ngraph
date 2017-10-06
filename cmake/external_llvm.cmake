@@ -29,6 +29,11 @@ if(NOT LLVM_FOUND)
         message(STATUS "Fetching LLVM from llvm.org")
         set(LLVM_RELEASE_URL http://releases.llvm.org/5.0.0/clang+llvm-5.0.0-linux-x86_64-ubuntu16.04.tar.xz)
 
+        # Override default LLVM binaries
+        if(PREBUILT_LLVM)
+            set(LLVM_RELEASE_URL ${PREBUILT_LLVM})
+        endif()
+
         # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
         if(${CMAKE_VERSION} VERSION_LESS 3.2)
             ExternalProject_Add(
