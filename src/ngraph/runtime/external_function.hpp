@@ -26,45 +26,29 @@ namespace ngraph
 {
     namespace runtime
     {
+        class CallFrame;
+
         class ExternalFunction
         {
-            using FunctionMap =
-                std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<ExternalFunction>>;
-
-            using OpFunction = std::function<void(const ngraph::Node*,
-                                                  ExternalFunction*,
-                                                  FunctionMap&,
-                                                  const std::vector<TensorViewInfo>& inputs,
-                                                  const std::vector<TensorViewInfo>& outputs)>;
-            using OpMap = std::unordered_map<std::type_index, OpFunction>;
-
-        public:
+        protected:
             ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                             bool release_function = true);
-            std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
-            std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(FunctionMap& function_map);
-            std::shared_ptr<std::vector<std::shared_ptr<ngraph::runtime::Instruction>>>
-                get_instructions()
+                             bool release_function = true)
+                : m_function(function)
+                , m_release_function(release_function)
+                , m_is_compiled(false)
             {
-                return m_instructions;
             }
 
             // Release original function's resources
             void release_function() { m_function = nullptr; }
-        protected:
-            void compile();
-            void compile(FunctionMap& function_map);
+        public:
+            virtual ~ExternalFunction() {}
+            virtual std::shared_ptr<CallFrame> make_call_frame() = 0;
 
+        protected:
             std::shared_ptr<ngraph::Function> m_function;
             bool m_release_function;
             bool m_is_compiled;
-            size_t m_n_inputs;
-            size_t m_n_outputs;
-            std::shared_ptr<std::vector<std::shared_ptr<ngraph::runtime::Instruction>>>
-                m_instructions;
-            ngraph::descriptor::TensorViewPtrs m_temp_views;
-
-            static OpMap& get_op_map();
         };
     }
 }

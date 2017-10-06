@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cstring>
 #include <memory>
 #include <vector>
 
@@ -61,6 +62,48 @@ namespace ngraph
 
             // For getting the data out
             storage_type& get_vector() { return m_vector; }
+            virtual void write(const void* p, size_t tensor_offset, size_t n) override
+            {
+                size_t elt_offset = tensor_offset / sizeof(typename ET::type);
+                if (elt_offset * sizeof(typename ET::type) != tensor_offset)
+                {
+                    throw ngraph_error("Attempt to write to an address not aligned on an element");
+                }
+                size_t elt_n = n / sizeof(typename ET::type);
+                if (elt_n * sizeof(typename ET::type) != n)
+                {
+                    throw ngraph_error("Attemmpt to write a partial element");
+                }
+                size_t elt_byte_size = sizeof(typename ET::type) * n;
+                if (tensor_offset + n > elt_byte_size)
+                {
+                    throw ngraph_error("Attempt to write beyond the tensor");
+                }
+
+                std::memcpy(&m_vector[elt_offset], p, n);
+            }
+
+            virtual void read(void* p, size_t tensor_offset, size_t n) const override
+            {
+                size_t elt_offset = tensor_offset / sizeof(typename ET::type);
+                if (elt_offset * sizeof(typename ET::type) != tensor_offset)
+                {
+                    throw ngraph_error("Attempt to read from an address not aligned on an element");
+                }
+                size_t elt_n = n / sizeof(typename ET::type);
+                if (elt_n * sizeof(typename ET::type) != n)
+                {
+                    throw ngraph_error("Attemmpt to read a partial element");
+                }
+                size_t elt_byte_size = sizeof(typename ET::type) * n;
+                if (tensor_offset + n > elt_byte_size)
+                {
+                    throw ngraph_error("Attempt to read beyond the tensor");
+                }
+
+                std::memcpy(p, &m_vector[elt_offset], n);
+            }
+
         protected:
             storage_type m_vector;
         };

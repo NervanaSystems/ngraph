@@ -25,51 +25,23 @@ namespace ngraph
     namespace runtime
     {
         class PrimaryTensorView;
-        class Instruction;
+        class Value;
 
         // A VM for executing lightly-compiled graph functions.
         class CallFrame
         {
         public:
-            CallFrame(
-                size_t n_inputs,
-                size_t n_outputs,
-                const TensorViewPtrs& temps,
-                size_t initial_pc,
-                const std::shared_ptr<std::vector<std::shared_ptr<Instruction>>>& instructions);
-
+            virtual ~CallFrame() {}
             /// @brief Invoke the function with values matching the signature of the function.
             ///
             /// Tuples will be expanded into their tensor views to build the call frame.
-            void operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
-                            const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outputs);
+            virtual void
+                operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
+                           const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outputs) = 0;
 
             /// @brief Invoke the function with tuples pre-expanded to their underlying tensor views.
-            void tensor_call(const TensorViewPtrs& inputs, const TensorViewPtrs& outputs);
-
-            void set_return() { m_return = true; }
-            std::shared_ptr<TensorView> get_tensor_view(size_t i) { return m_tensor_views[i]; }
-            template <typename ET>
-            ParameterizedTensorView<ET>* get_parameterized_tensor_view(size_t i)
-            {
-                return m_tensor_views[i]->get_parameterized_tensor_view<ET>();
-            }
-
-            template <typename ET>
-            typename ET::type* get_tensor_view_data(size_t i)
-            {
-                return &get_parameterized_tensor_view<ET>(i)->get_vector()[0];
-            }
-
-        protected:
-            size_t m_n_inputs;
-            size_t m_n_outputs;
-            TensorViewPtrs m_tensor_views;
-            size_t m_initial_pc;
-            std::shared_ptr<std::vector<std::shared_ptr<Instruction>>> m_instructions;
-            size_t m_pc;
-            size_t m_next_pc;
-            bool m_return;
+            virtual void tensor_call(const TensorViewPtrs& inputs,
+                                     const TensorViewPtrs& outputs) = 0;
         };
     }
 }

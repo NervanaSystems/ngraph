@@ -19,10 +19,14 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <string>
 #include <type_traits>
 
+#include "ngraph/common.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/runtime/parameterized_tensor_view.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
 {
@@ -34,6 +38,7 @@ namespace ngraph
             Type& operator=(const Type&) = delete;
 
         public:
+            virtual ~Type() {}
             Type(size_t bitwidth, bool is_float, bool is_signed, const std::string& cname);
 
             const std::string& c_type_string() const;
@@ -43,6 +48,9 @@ namespace ngraph
                 std::hash<std::string> h;
                 return h(m_cname);
             }
+
+            virtual std::shared_ptr<ngraph::runtime::TensorView>
+                make_primary_tensor_view(const Shape& shape) const = 0;
 
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
@@ -101,6 +109,12 @@ namespace ngraph
             {
                 static TraitedType<T> t;
                 return t;
+            }
+
+            virtual std::shared_ptr<ngraph::runtime::TensorView>
+                make_primary_tensor_view(const ngraph::Shape& shape) const override
+            {
+                return std::make_shared<runtime::ParameterizedTensorView<TraitedType<T>>>(shape);
             }
         };
 
