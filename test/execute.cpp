@@ -362,16 +362,22 @@ TEST(execute, concat_vector)
 
 TEST(execute, divide)
 {
-    auto shape = Shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), rt, op::Parameters{A, B});
-
     auto manager = runtime::Manager::get("NGVM");
-    auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+
+    auto shape = Shape{2, 2};
+
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), rt, op::Parameters{A, B});
+
+        auto external = manager->compile(f);
+        return external;
+    };
+
+    auto cf = backend->make_call_frame(make_external());
 
     // Create some tensors for input/output
     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
@@ -436,17 +442,23 @@ TEST(execute, dot_0_0)
 TEST(execute, dot_matrix_2x0_0x2)
 {
     auto shape_a = Shape{2, 0};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
     auto shape_b = Shape{0, 2};
-    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
     auto shape_r = Shape{2, 2};
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("NGVM");
-    auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
+
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+        auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+        auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+        auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+
+        auto external = manager->compile(f);
+        return external;
+    };
+
+    auto cf = backend->make_call_frame(make_external());
 
     // Create some tensors for input/output
     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);

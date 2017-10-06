@@ -2,22 +2,13 @@
 
 FROM ubuntu:16.04
 
-RUN apt-get update
+RUN apt-get update && apt-get install -y \
+        build-essential cmake \
+        clang-3.9 clang-format-3.9 \
+        git \
+        wget patch diffutils  
 
-RUN apt-get install -y build-essential cmake && \
-    apt-get clean autoclean && \
-    apt-get autoremove -y
-
-RUN apt-get install -y clang-3.9 clang-format-3.9 && \
-    apt-get clean autoclean && \
-    apt-get autoremove -y
-
-RUN apt-get install -y git && \
-    apt-get clean autoclean && \
-    apt-get autoremove -y
-
-RUN apt-get install -y wget patch diffutils && \
-    apt-get clean autoclean && \
+RUN apt-get clean autoclean && \
     apt-get autoremove -y
 
 # Add chown_files script to avoid 
