@@ -1223,3 +1223,67 @@ TEST(execute, test_convert_float32_bool)
     (*cf)({a}, {result});
     ASSERT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector());
 }
+
+// Trivial case with no reduction axes.
+TEST(execute, test_reduce_trivial)
+{
+    // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
+    auto f_A = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto f_B = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto f_rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A,f_B), f_rt, op::Parameters{f_A,f_B});
+
+    // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
+    auto shape = Shape{2, 2};
+    auto g_A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto g_B = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto g_rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{}), g_rt, op::Parameters{g_A, g_B});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(g);
+    auto cf = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 2, 3, 4};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *b = vector<float>{0};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{1, 2, 3, 4}), result->get_vector());
+}
+
+TEST(execute, test_reduce_to_scalar)
+{
+    // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
+    auto f_A = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto f_B = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto f_rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A,f_B), f_rt, op::Parameters{f_A,f_B});
+
+    // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
+    auto shape = Shape{2, 2};
+    auto g_A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto g_B = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto g_rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0,1}), g_rt, op::Parameters{g_A, g_B});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(g);
+    auto cf = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 2, 3, 4};
+    auto b = ngraph::runtime::make_tensor<element::Float32>(Shape{});
+    *b = vector<float>{0};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(Shape{});
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{10}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{1,2,3,4}), a->get_vector());
+    ASSERT_EQ((vector<float>{0}), b->get_vector());
+}

@@ -76,6 +76,7 @@
 #include "ngraph/runtime/eigen/multiply.hpp"
 #include "ngraph/runtime/eigen/negate.hpp"
 #include "ngraph/runtime/eigen/not_equal.hpp"
+#include "ngraph/runtime/eigen/reduce_to_scalar.hpp"
 #include "ngraph/runtime/eigen/return.hpp"
 #include "ngraph/runtime/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/eigen/select.hpp"
@@ -627,7 +628,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             catch (const std::out_of_range)
             {
                 external =
-                    make_shared<ngraph::runtime::ExternalFunction>(function_call->get_function());
+                    make_shared<ngraph::runtime::ExternalFunction>(function);
                 function_map.insert({function, external});
             }
 
@@ -635,7 +636,58 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 make_shared<runtime::eigen::CallInstruction>(external, in, out));
         };
 
-        REGISTER_TO_OP_MAP(op::Reduce) { throw ngraph_error("op::Reduce not implemented yet"); };
+        REGISTER_TO_OP_MAP(op::Reduce)
+        {
+            auto reduce = static_cast<const op::Reduce*>(n);
+            auto reduction_function = reduce->get_reduction_function();
+
+            std::shared_ptr<ExternalFunction> external;
+
+            try
+            {
+                external = function_map.at(reduction_function);
+            }
+            catch (const std::out_of_range)
+            {
+                external =
+                    make_shared<ngraph::runtime::ExternalFunction>(reduction_function);
+                function_map.insert({reduction_function, external});
+            }
+
+            auto f_result_type = reduction_function->get_result_type();
+
+            auto f_result_tensor_view_type =
+                dynamic_pointer_cast<const TensorViewType>(f_result_type);
+            assert (nullptr != f_result_tensor_view_type);
+
+            auto& f_result_shape = f_result_tensor_view_type->get_shape();
+            auto& f_result_element_type = f_result_tensor_view_type->get_element_type();
+
+            // Trivial case: no reduction axes (this includes the scalar-reductee case).
+            if (reduce->get_reduction_axes().empty())
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
+                                             "Reduce has unhandled element type",
+                                             runtime::eigen::CopyInstruction,
+                                             in.at(0).get_index(),
+                                             out.at(0).get_index());
+            }
+            else if (f_result_shape.size() == 0)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
+                                             "Reduce has unhandled element type",
+                                             runtime::eigen::ReduceToScalarInstruction,
+                                             external,
+                                             in[0],
+                                             in[1],
+                                             out[0]);
+            }
+            else
+            {
+                throw ngraph_error("Reduce: Only the trivial case is implemented");
+            }
+        };
+
         initialized = true;
     }
     return op_map;
