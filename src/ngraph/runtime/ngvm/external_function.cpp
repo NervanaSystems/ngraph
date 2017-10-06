@@ -76,6 +76,9 @@
 #include "ngraph/runtime/ngvm/eigen/multiply.hpp"
 #include "ngraph/runtime/ngvm/eigen/negate.hpp"
 #include "ngraph/runtime/ngvm/eigen/not_equal.hpp"
+#include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
+#include "ngraph/runtime/ngvm/eigen/reduce_matrix_rows.hpp"
+#include "ngraph/runtime/ngvm/eigen/reduce_to_scalar.hpp"
 #include "ngraph/runtime/ngvm/eigen/return.hpp"
 #include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/eigen/select.hpp"
@@ -624,7 +627,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
             catch (const std::out_of_range)
             {
-                external = make_shared<ExternalFunction>(function_call->get_function());
+                external = make_shared<ExternalFunction>(function);
                 function_map.insert({function, external});
             }
 
@@ -632,7 +635,148 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 make_shared<eigen::CallInstruction>(external, in, out));
         };
 
-        REGISTER_TO_OP_MAP(op::Reduce) { throw ngraph_error("op::Reduce not implemented yet"); };
+        REGISTER_TO_OP_MAP(op::Reduce)
+        {
+            auto reduce = static_cast<const op::Reduce*>(n);
+            auto reduction_function = reduce->get_reduction_function();
+
+            std::shared_ptr<ExternalFunction> external;
+
+            try
+            {
+                external = function_map.at(reduction_function);
+            }
+            catch (const std::out_of_range)
+            {
+                external = make_shared<ExternalFunction>(reduction_function);
+                function_map.insert({reduction_function, external});
+            }
+
+            auto reductee_type = reduce->get_arguments().at(0)->get_value_type();
+            auto reductee_tensor_view_type =
+                dynamic_pointer_cast<const TensorViewType>(reductee_type);
+            assert(nullptr != reductee_tensor_view_type);
+            auto reductee_shape = reductee_tensor_view_type->get_shape();
+
+            auto f_result_type = reduction_function->get_result_type();
+            auto f_result_tensor_view_type =
+                dynamic_pointer_cast<const TensorViewType>(f_result_type);
+            assert(nullptr != f_result_tensor_view_type);
+            auto& f_result_element_type = f_result_tensor_view_type->get_element_type();
+
+            auto result_type = reduce->get_value_type();
+            auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
+            assert(nullptr != result_tensor_view_type);
+            auto result_shape = result_tensor_view_type->get_shape();
+
+            auto& reduction_axes = reduce->get_reduction_axes();
+
+            // Trivial case: no reduction axes (this includes the scalar-reductee case).
+            if (reduction_axes.empty())
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
+                                             "Reduce has unhandled element type",
+                                             runtime::ngvm::eigen::CopyInstruction,
+                                             in.at(0).get_index(),
+                                             out.at(0).get_index());
+            }
+            // Behavior for zero-size axes bears some explanation here. XLA's reduce
+            // operator provides an "base" element (usually, but not necessarily,
+            // an identity element) that it apparently *may* choose to insert anywhere
+            // in the reduction any number of times. For example, given:
+            //
+            //   reduce{{1,2,3},b,+)
+            //
+            // any of the following are valid reductions (I think!):
+            //
+            //   b+(b+1+2)+3
+            //   b+(1+(2+3))
+            //   (1+2)+3 (I think!)
+            //
+            // etc. Here we will choose never to instantiate the base element, which
+            // works well with Eigen's default behavior for non-zero-length axes. The
+            // exceptional case is when we reduce on a zero-length axis. In this case,
+            // Eigen's default behavior is to put a zero in the output,  which is not
+            // what we want, so we detect that case here and override with a copy
+            // instruction (for reduce-to-scalar) or a broadcast (for reduce-to-vector)
+            // from the base element.
+            //
+            // What I'm actually not sure about is whether the identity element is
+            // required to appear at least once. If so, this will need to be reworked,
+            // assuming we actually want to mimic XLA's semantics that closely, which
+            // we may not.
+            else if ((reductee_shape.size() == 1 && reduction_axes == AxisSet{0}) ||
+                     (reductee_shape.size() == 2 && reduction_axes == AxisSet{0, 1}))
+            {
+                if (reductee_shape.at(0) == 0 ||
+                    (reductee_shape.size() == 2 && reductee_shape.at(1) == 0))
+                {
+                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
+                                                 "Reduce has unhandled element type",
+                                                 runtime::ngvm::eigen::CopyInstruction,
+                                                 in.at(1).get_index(),
+                                                 out.at(0).get_index());
+                }
+                else
+                {
+                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
+                                                 "Reduce has unhandled element type",
+                                                 runtime::ngvm::eigen::ReduceToScalarInstruction,
+                                                 external,
+                                                 in[0],
+                                                 in[1],
+                                                 out[0]);
+                }
+            }
+            else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{1})
+            {
+                if (reductee_shape.at(1) == 0)
+                {
+                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
+                                                 "Reduce has unhandled element type",
+                                                 runtime::ngvm::eigen::BroadcastScalarInstruction,
+                                                 in[1],
+                                                 out[0]);
+                }
+                else
+                {
+                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
+                                                 "Reduce has unhandled element type",
+                                                 runtime::ngvm::eigen::ReduceMatrixRowsInstruction,
+                                                 external,
+                                                 in[0],
+                                                 in[1],
+                                                 out[0]);
+                }
+            }
+            else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{0})
+            {
+                if (reductee_shape.at(0) == 0)
+                {
+                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
+                                                 "Reduce has unhandled element type",
+                                                 runtime::ngvm::eigen::BroadcastScalarInstruction,
+                                                 in[1],
+                                                 out[0]);
+                }
+                else
+                {
+                    PUSH_POLYMORPHIC_INSTRUCTION(
+                        f_result_element_type,
+                        "Reduce has unhandled element type",
+                        runtime::ngvm::eigen::ReduceMatrixColumnsInstruction,
+                        external,
+                        in[0],
+                        in[1],
+                        out[0]);
+                }
+            }
+            else
+            {
+                throw ngraph_error("Reduce: only vectors and matrices are currently supported");
+            }
+        };
+
         initialized = true;
     }
     return op_map;
