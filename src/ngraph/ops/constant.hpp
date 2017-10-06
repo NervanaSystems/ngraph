@@ -16,6 +16,7 @@
 
 #include <sstream>
 
+#include "ngraph/node.hpp"
 #include "ngraph/runtime/utils.hpp"
 #include "ngraph/types/element_type.hpp"
 

@@ -12,11 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <memory>
+#include "ngraph/ops/op.hpp"
 
-#include "ngraph/ngraph.hpp"
-
-using namespace std;
 using namespace ngraph;
 using namespace ngraph::op;
 

@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "ngraph/pass/manager.hpp"
+#include "ngraph/ops/op.hpp"
 #include "ngraph/pass/propagate_types.hpp"
 
 namespace ngraph
