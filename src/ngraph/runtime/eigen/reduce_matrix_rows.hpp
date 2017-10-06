@@ -27,13 +27,13 @@ namespace ngraph
         namespace eigen
         {
             template <typename ET>
-            class ReduceToScalarInstruction : public Instruction
+            class ReduceMatrixRowsInstruction : public Instruction
             {
             public:
-                ReduceToScalarInstruction(std::shared_ptr<ExternalFunction> ef,
-                                          const TensorViewInfo& arg0,
-                                          const TensorViewInfo& arg1,
-                                          const TensorViewInfo& out)
+                ReduceMatrixRowsInstruction(std::shared_ptr<ExternalFunction> ef,
+                                            const TensorViewInfo& arg0,
+                                            const TensorViewInfo& arg1,
+                                            const TensorViewInfo& out)
                     : m_external_function(ef)
                     , m_arg0(arg0)
                     , m_arg1(arg1)
@@ -57,8 +57,8 @@ namespace ngraph
                         (*cf)({tx, ty}, {tr});
                         return tr->get_vector()[0];
                     };
-                    EigenArray1d<ET>(call_frame, m_out) =
-                        EigenArray1d<ET>(call_frame, m_arg0).redux(f);
+                    EigenVector<ET>(call_frame, m_out) =
+                        EigenMatrix<ET>(call_frame, m_arg0).rowwise().redux(f);
                 }
 
             protected:
