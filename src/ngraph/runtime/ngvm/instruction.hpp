@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "ngraph/runtime/backend.hpp"
+#include <memory>
 
 namespace ngraph
 {
@@ -22,12 +22,18 @@ namespace ngraph
     {
         namespace ngvm
         {
-            /// @brief Transformer for the interpreted backend
-            class NGVMBackend : public Backend
+            class CallFrame;
+
+            /// @brief An interpreter for an Op
+            ///
+            /// The call_frame has a vector of instructions and calls execute on each instruction, passing it the call_frame.
+            /// Instructions get argument, result, and intermediate tensor views from the call frame. Instructions may also
+            /// set a flag in the call_frame to end execution, or adjust execution by modifying the position in the instruction vector.
+            class Instruction
             {
             public:
-                virtual std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
-                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function);
+                virtual ~Instruction() {}
+                virtual void execute(CallFrame& call_frame) const = 0;
             };
         }
     }

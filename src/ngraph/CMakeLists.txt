@@ -51,9 +51,9 @@ set (SRC
     pass/topological_sort.cpp
     pass/visualize_tree.cpp
     runtime/backend.cpp
-    runtime/call_frame.cpp
-    runtime/external_function.cpp
     runtime/manager.cpp
+    runtime/ngvm/call_frame.cpp
+    runtime/ngvm/external_function.cpp
     runtime/ngvm/ngvm_backend.cpp
     runtime/ngvm/ngvm_manager.cpp
     runtime/tuple.cpp

@@ -14,7 +14,7 @@
 
 #include <memory>
 
-#include "ngraph/runtime/external_function.hpp"
+#include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/ngvm/ngvm_backend.hpp"
 #include "ngraph/runtime/ngvm/ngvm_manager.hpp"
 

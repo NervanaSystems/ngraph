@@ -14,7 +14,8 @@
 
 #pragma once
 
-#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/ngvm/call_frame.hpp"
+#include "ngraph/runtime/ngvm/instruction.hpp"
 
 namespace ngraph
 {
@@ -22,13 +23,18 @@ namespace ngraph
     {
         namespace ngvm
         {
-            /// @brief Transformer for the interpreted backend
-            class NGVMBackend : public Backend
+            namespace eigen
             {
-            public:
-                virtual std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
-                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function);
-            };
+                class ReturnInstruction : public Instruction
+                {
+                public:
+                    ReturnInstruction() {}
+                    virtual void execute(CallFrame& call_frame) const override
+                    {
+                        call_frame.set_return();
+                    }
+                };
+            }
         }
     }
 }
