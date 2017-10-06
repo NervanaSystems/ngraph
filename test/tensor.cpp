@@ -107,13 +107,13 @@ void test_read_write(const std::vector<typename ET::type>& x)
 
     std::vector<T> result1(x.size());
     std::vector<T> result2(x.size());
-    std::copy(result.begin() + 1, result.end() + x.size(), result1.begin());
+    std::copy(result.begin() + 1, result.begin() + 1 + x.size(), result1.begin());
     a->read(&result2[0], sizeof(T), sizeof(T) * x.size());
     ASSERT_EQ(result1, result2);
 }
 
 TEST(tensor, read_write)
 {
-    //test_read_write<element::Float32>({1.0, 3.0, 5.0});
+    test_read_write<element::Float32>({1.0, 3.0, 5.0});
     test_read_write<element::Int64>({-1, 2, 4});
 }
