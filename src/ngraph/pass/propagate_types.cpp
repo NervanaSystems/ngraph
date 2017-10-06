@@ -26,9 +26,7 @@ bool pass::PropagateTypes::run_on_call_graph(list<Node*>& nodes)
     {
         try
         {
-            NGRAPH_INFO;
             node->propagate_types();
-            NGRAPH_INFO;
         }
         catch (exception& e)
         {

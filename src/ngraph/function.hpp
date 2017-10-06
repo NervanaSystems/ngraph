@@ -45,7 +45,7 @@ namespace ngraph
             return m_parameters;
         }
         const std::shared_ptr<ValueType> get_result_type() const { return m_result_type; }
-        const std::string& get_name() const;
+        std::string get_name() const;
         void set_name(const std::string& name);
         std::list<Node*>& get_ops();
         const std::list<Node*>& get_ops() const;

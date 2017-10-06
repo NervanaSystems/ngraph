@@ -27,7 +27,6 @@ using namespace std;
 
 bool ngraph::pass::TopologicalSort::run_on_function(ngraph::Function* func)
 {
-    NGRAPH_INFO;
     list<Node*> result_list;
     deque<Node*> independent_nodes;
     unordered_map<Node*, size_t> node_depencency_count;

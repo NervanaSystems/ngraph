@@ -40,7 +40,6 @@ Function::Function(const std::shared_ptr<Node>& result,
     }
 
     traverse_nodes(result, [&](Node* node) { m_ops.push_back(node); });
-    NGRAPH_INFO << m_ops.size();
 }
 
 void Function::set_ordered_ops(const std::list<Node*>& ordered_ops)
@@ -77,13 +76,18 @@ const std::list<Node*>& Function::get_ordered_ops() const
     return m_ordered_ops;
 }
 
-const std::string& Function::get_name() const
+std::string Function::get_name() const
 {
+    string rc;
     if (m_name.empty())
     {
-        (string) m_name = "Function_" + to_string(m_instance_id);
+        rc = "Function_" + to_string(m_instance_id);
     }
-    return m_name;
+    else
+    {
+        rc = m_name;
+    }
+    return rc;
 }
 
 void Function::set_name(const string& name)

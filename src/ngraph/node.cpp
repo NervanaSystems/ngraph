@@ -104,13 +104,18 @@ std::string Node::get_node_id() const
     return ss.str();
 }
 
-const std::string& Node::get_name() const
+std::string Node::get_name() const
 {
+    string rc;
     if (m_name.empty())
     {
-        (string) m_name = description() + "_" + to_string(m_instance_id);
+        rc = description() + "_" + to_string(m_instance_id);
     }
-    return m_name;
+    else
+    {
+        rc = m_name;
+    }
+    return rc;
 }
 
 void Node::set_name(const string& name)

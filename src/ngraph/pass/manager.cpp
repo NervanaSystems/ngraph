@@ -55,47 +55,31 @@ void ngraph::pass::Manager::run_passes(Function* func)
         auto call_graph_pass = dynamic_pointer_cast<CallGraphPass>(pass);
         if (module_pass)
         {
-            NGRAPH_INFO;
             module_pass->run_on_module(fs);
-            NGRAPH_INFO;
         }
         else if (function_pass)
         {
-            NGRAPH_INFO;
             for (Function* f : fs)
             {
-                NGRAPH_INFO;
                 function_pass->run_on_function(f);
-                NGRAPH_INFO;
             }
-            NGRAPH_INFO;
         }
         else if (node_pass)
         {
-            NGRAPH_INFO;
             for (Function* f : fs)
             {
-                NGRAPH_INFO;
                 for (Node* n : f->get_ops())
                 {
-                    NGRAPH_INFO;
                     node_pass->run_on_node(n);
-                    NGRAPH_INFO;
                 }
-                NGRAPH_INFO;
             }
-            NGRAPH_INFO;
         }
         else if (call_graph_pass)
         {
-            NGRAPH_INFO;
             for (Function* f : fs)
             {
-                NGRAPH_INFO;
                 call_graph_pass->run_on_call_graph(f->get_ordered_ops());
-                NGRAPH_INFO;
             }
-            NGRAPH_INFO;
         }
     }
     // for (shared_ptr<ModulePass>& p : m_module_passes)

@@ -31,7 +31,6 @@ bool pass::AssignTensors::run_on_call_graph(list<Node*>& nodes)
     {
         try
         {
-            NGRAPH_INFO;
             // We need to set the nodes is_output state prior to call assign_tensors
             // so that the output state can be passes to the constructed tensors.
             if (node == get_state().get_functions().at(0)->get_result().get())
@@ -40,7 +39,6 @@ bool pass::AssignTensors::run_on_call_graph(list<Node*>& nodes)
             }
 
             node->assign_tensors();
-            NGRAPH_INFO;
         }
         catch (exception& e)
         {
