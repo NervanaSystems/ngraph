@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
         build-essential cmake \
         clang-3.9 clang-format-3.9 \
         git \
-        wget patch diffutils zlib1g libtinfo5
+        wget patch diffutils zlib1g-dev libtinfo-dev
 
 RUN apt-get clean autoclean && \
     apt-get autoremove -y
