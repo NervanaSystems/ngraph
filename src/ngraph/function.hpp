@@ -15,11 +15,13 @@
 #pragma once
 
 #include <initializer_list>
+#include <list>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/op.hpp"
 #include "ngraph/ops/parameter.hpp"
@@ -34,7 +36,8 @@ namespace ngraph
     public:
         Function(const std::shared_ptr<Node>& result,
                  const std::shared_ptr<ValueType>& result_type,
-                 const std::vector<std::shared_ptr<op::Parameter>>& parameters);
+                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                 const std::string& name = "");
 
         std::shared_ptr<Node> get_result() { return m_result; }
         const std::vector<std::shared_ptr<op::Parameter>> get_parameters() const
@@ -42,11 +45,31 @@ namespace ngraph
             return m_parameters;
         }
         const std::shared_ptr<ValueType> get_result_type() const { return m_result_type; }
-        std::string get_name() const { return m_name; }
+        std::string get_name() const;
+        void set_name(const std::string& name);
+        std::list<Node*>& get_ops();
+        const std::list<Node*>& get_ops() const;
+        std::list<Node*>& get_ordered_ops();
+        const std::list<Node*>& get_ordered_ops() const;
+        void set_ordered_ops(const std::list<Node*>&);
+        void set_ordered_ops_valid() { m_ordered_ops_valid = true; }
+        void clear_ordered_ops_valid() { m_ordered_ops_valid = false; }
+        friend std::ostream& operator<<(std::ostream&, const Function&);
+
     protected:
         std::shared_ptr<Node> m_result;
         std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;
         std::string m_name;
         std::shared_ptr<ValueType> m_result_type;
+        bool m_ordered_ops_valid;
+        std::list<Node*> m_ordered_ops;
+        std::list<Node*> m_ops;
+
+    private:
+        Function(const Function&) = delete;
+        Function(const Function&&) = delete;
+
+        static size_t m_next_instance_id;
+        size_t m_instance_id;
     };
 }

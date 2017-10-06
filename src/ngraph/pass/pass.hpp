@@ -14,25 +14,65 @@
 
 #pragma once
 
+#include <list>
+#include <memory>
+#include <vector>
+
+#include "ngraph/node.hpp"
+
 namespace ngraph
 {
     namespace pass
     {
-        class Base;
+        class PassBase;
+        class ModulePass;
+        class FunctionPass;
+        class NodePass;
+        class CallGraphPass;
         class Manager;
         class ManagerState;
     }
+    class Function;
 }
 
-class ngraph::pass::Base
+class ngraph::pass::PassBase
 {
     friend class Manager;
 
 public:
+    virtual ~PassBase() {}
 protected:
     ManagerState& get_state();
     void set_state(ManagerState&);
 
 private:
     ManagerState* m_state;
+};
+
+class ngraph::pass::ModulePass : public PassBase
+{
+public:
+    virtual ~ModulePass() {}
+    virtual bool run_on_module(std::vector<ngraph::Function*>&) = 0;
+};
+
+class ngraph::pass::FunctionPass : public PassBase
+{
+public:
+    virtual ~FunctionPass() {}
+    virtual bool run_on_function(ngraph::Function*) = 0;
+};
+
+class ngraph::pass::NodePass : public PassBase
+{
+public:
+    virtual ~NodePass() {}
+    virtual bool run_on_node(ngraph::Node*) = 0;
+};
+
+class ngraph::pass::CallGraphPass : public PassBase
+{
+public:
+    virtual ~CallGraphPass() {}
+    virtual bool run_on_call_graph(std::list<ngraph::Node*>&) = 0;
 };
