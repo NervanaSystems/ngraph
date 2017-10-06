@@ -12,31 +12,28 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
-
-#include <list>
+#include <iostream>
 #include <memory>
-#include <vector>
 
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/pass/manager_state.hpp"
 
-namespace ngraph
+using namespace std;
+using namespace ngraph;
+
+vector<Function*>& ngraph::pass::ManagerState::get_functions()
 {
-    namespace pass
-    {
-        class CallBase;
-    }
-
-    class Node;
+    return m_function_list;
 }
 
-class ngraph::pass::CallBase : public Base
+size_t ngraph::pass::ManagerState::get_temporary_pool_size()
 {
-public:
-    virtual ~CallBase() {}
-    virtual bool run_on_call_list(std::list<Node*>&) = 0;
+    return m_temporary_pool_size;
+}
 
-    // derived class throws exception if its dependencies have not been met
-    virtual void check_dependencies(const std::vector<std::shared_ptr<CallBase>>&) const {}
-private:
-};
+void ngraph::pass::ManagerState::set_temporary_pool_size(size_t size)
+{
+    m_temporary_pool_size = size;
+}

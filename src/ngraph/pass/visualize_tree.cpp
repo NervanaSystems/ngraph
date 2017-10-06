@@ -14,25 +14,30 @@
 
 #include <fstream>
 
+#include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-bool pass::VisualizeTree::run_on_tree(std::shared_ptr<Node> base_node)
+bool pass::VisualizeTree::run_on_module(vector<ngraph::Function*>& functions)
 {
-    // map<size_t, list<node_ptr>> dependent_nodes;
-    traverse_nodes(base_node, [&](Node* node) {
-        for (auto arg : node->get_arguments())
-        {
-            m_ss << add_attributes(arg.get());
-            m_ss << add_attributes(node);
-            m_ss << "    " << arg->get_node_id() << " -> " << node->get_node_id();
-            m_ss << ";\n";
-        }
-    });
+    for (Function* f : functions)
+    {
+        // map<size_t, list<node_ptr>> dependent_nodes;
+        traverse_nodes(f->get_result(), [&](Node* node) {
+            for (auto arg : node->get_arguments())
+            {
+                m_ss << add_attributes(arg.get());
+                m_ss << add_attributes(node);
+                m_ss << "    " << arg->get_name() << " -> " << node->get_name();
+                m_ss << ";\n";
+            }
+        });
+    }
 
     render();
 
@@ -60,11 +65,11 @@ std::string pass::VisualizeTree::get_attributes(const Node* node)
     stringstream ss;
     if (node->is_parameter())
     {
-        ss << "    " << node->get_node_id() << " [shape=box color=blue]\n";
+        ss << "    " << node->get_name() << " [shape=box color=blue]\n";
     }
     else
     {
-        ss << "    " << node->get_node_id() << " [shape=ellipse color=black]\n";
+        ss << "    " << node->get_name() << " [shape=ellipse color=black]\n";
     }
     return ss.str();
 }

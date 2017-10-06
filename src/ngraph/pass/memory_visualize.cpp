@@ -19,6 +19,7 @@
 
 #include "memory_visualize.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/util.hpp"
 
@@ -31,69 +32,68 @@ pass::MemoryVisualize::MemoryVisualize(const string& filename)
 {
 }
 
-bool pass::MemoryVisualize::run_on_call_list(list<Node*>& _nodes)
+bool pass::MemoryVisualize::run_on_module(vector<Function*>& functions)
 {
-    const list<Node*> nodes = _nodes;
     ofstream file(m_filename);
     {
-        file << "<!DOCTYPE html>\n<html>\n";
-        file << "<head>\n";
-        file << "    <style>\n";
-        file << "        th, td {\n";
-        file << "            border-bottom: 1px solid #ddd;\n";
-        file << "            width: 200px;\n";
-        file << "        }\n";
-        file << "        table, td, th {\n";
-        // file << "            border: 1px solid #ddd;\n";
-        // file << "            text-align: left;\n";
-        file << "        }\n";
-        file << "        table {\n";
-        file << "            border-collapse: collapse;\n";
-        // file << "            width: 100%;\n";
-        file << "        }\n";
-        // file << "        tr:hover {background-color: #f5f5f5}\n";
-        file << "        tr:nth-child(even) {background-color: #f2f2f2}\n";
-        file << "    </style>\n";
-        file << "</head>\n";
+        for (const Function* f : functions)
+        {
+            const list<Node*> nodes = f->get_ordered_ops();
+            file << "<!DOCTYPE html>\n<html>\n";
+            file << "<head>\n";
+            file << "    <style>\n";
+            file << "        th, td {\n";
+            file << "            border-bottom: 1px solid #ddd;\n";
+            file << "            width: 200px;\n";
+            file << "        }\n";
+            file << "        table, td, th {\n";
+            // file << "            border: 1px solid #ddd;\n";
+            // file << "            text-align: left;\n";
+            file << "        }\n";
+            file << "        table {\n";
+            file << "            border-collapse: collapse;\n";
+            // file << "            width: 100%;\n";
+            file << "        }\n";
+            // file << "        tr:hover {background-color: #f5f5f5}\n";
+            file << "        tr:nth-child(even) {background-color: #f2f2f2}\n";
+            file << "    </style>\n";
+            file << "</head>\n";
 
-        file << "<body>\n";
-        unordered_set<descriptor::Tensor*> tensors;
-        size_t temp_max_size = 0;
-        for (Node* node : nodes)
-        {
-            tensors.insert(node->liveness_live_list.begin(), node->liveness_live_list.end());
-        }
-        for (descriptor::Tensor* tensor : tensors)
-        {
-            if (tensor->is_persistent() == false)
+            file << "<body>\n";
+            unordered_set<descriptor::Tensor*> tensors;
+            size_t temp_max_size = 0;
+            for (Node* node : nodes)
             {
-                temp_max_size += tensor->size();
+                tensors.insert(node->liveness_live_list.begin(), node->liveness_live_list.end());
             }
+            for (descriptor::Tensor* tensor : tensors)
+            {
+                if (tensor->is_persistent() == false)
+                {
+                    temp_max_size += tensor->size();
+                }
+            }
+
+            // file << "<table>\n";
+            // file << "<tr><td>Persistent Memory Footprint</td><td align=\"right\">";
+            // file << computation_decl.exop_block.persistent_size() << "</td></tr>\n";
+            // file << "<tr><td>Temporary Memory Footprint</td><td align=\"right\">";
+            // file << computation_decl.exop_block.memory_footprint() << "</td></tr>\n";
+            // file << "<tr><td>Max temporary Memory Footprint</td><td align=\"right\">";
+            // file << temp_max_size << "</td></tr>\n";
+            // file << "</table>\n";
+
+            file << "<hr>\n";
+            draw_tensor_weight(file, nodes);
+            // file << "<hr>\n";
+            // draw_op_influence(file);
+            file << "<hr>\n";
+            draw_histogram(file, nodes);
+            // file << "<hr>\n";
+            file << "</body>\n</html>\n";
         }
-
-        // file << "<table>\n";
-        // file << "<tr><td>Persistent Memory Footprint</td><td align=\"right\">";
-        // file << computation_decl.exop_block.persistent_size() << "</td></tr>\n";
-        // file << "<tr><td>Temporary Memory Footprint</td><td align=\"right\">";
-        // file << computation_decl.exop_block.memory_footprint() << "</td></tr>\n";
-        // file << "<tr><td>Max temporary Memory Footprint</td><td align=\"right\">";
-        // file << temp_max_size << "</td></tr>\n";
-        // file << "</table>\n";
-
-        file << "<hr>\n";
-        draw_tensor_weight(file, nodes);
-        // file << "<hr>\n";
-        // draw_op_influence(file);
-        file << "<hr>\n";
-        draw_histogram(file, nodes);
-        // file << "<hr>\n";
-        file << "</body>\n</html>\n";
     }
     return false;
-}
-
-void pass::MemoryVisualize::check_dependencies(const vector<shared_ptr<CallBase>>& deps) const
-{
 }
 
 const Node* pass::MemoryVisualize::find_largest_op(const list<Node*>& nodes)
@@ -207,7 +207,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<Node*>& nod
         size_t x2 = ((usage / memory_footprint) * scale) + offset;
         file << "<text x=\"" << 0 << "\" y=\"" << y + text_offset << "\" fill=\""
              << "black"
-             << "\">" << node->get_node_id() << "</text>\n";
+             << "\">" << node->get_name() << "</text>\n";
         file << "<line x1=\"" << x1 << "\" y1=\"" << y << "\" x2=\"" << x2 << "\" y2=\"" << y
              << "\"";
         file << " style=\"stroke:forestgreen;stroke-width:" << stroke_width << "\" />\n";
@@ -231,7 +231,7 @@ void pass::MemoryVisualize::draw_op_influence(ostream& file, const list<Node*>& 
     {
         int weight = compute_op_weight(exop);
         file << "    <tr>";
-        file << "<td>" << exop->get_node_id() << "</td>";
+        file << "<td>" << exop->get_name() << "</td>";
         file << "<td align=\"right\">" << weight << "</td>";
         file << "</tr>\n";
     }
