@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <memory>
+#include <algorithm>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -82,4 +82,38 @@ TEST(tensor, size)
         Tensor& output = outputs[0].get_tensor();
         EXPECT_EQ(1 * 4, output.size());
     }
+}
+
+template <typename ET>
+void test_read_write(const std::vector<typename ET::type>& x)
+{
+    using T = typename ET::type;
+
+    auto manager = ngraph::runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    auto a = backend->make_primary_tensor_view(ET::element_type(), Shape{2, x.size()});
+    auto af = a->template get_parameterized_tensor_view<ET>();
+
+    std::vector<T> result(2 * x.size());
+
+    a->write(&x[0], 0, x.size() * sizeof(T));
+    std::copy(x.begin(), x.end(), result.begin());
+    a->write(&x[0], x.size() * sizeof(T), x.size() * sizeof(T));
+    std::copy(x.begin(), x.end(), result.begin() + x.size());
+
+    auto& af_vector = af->get_vector();
+    ASSERT_EQ(af_vector, result);
+
+    std::vector<T> result1(x.size());
+    std::vector<T> result2(x.size());
+    std::copy(result.begin() + 1, result.end() + x.size(), result1.begin());
+    a->read(&result2[0], sizeof(T), sizeof(T) * x.size());
+    ASSERT_EQ(result1, result2);
+}
+
+TEST(tensor, read_write)
+{
+    //test_read_write<element::Float32>({1.0, 3.0, 5.0});
+    test_read_write<element::Int64>({-1, 2, 4});
 }

@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(execute, test_abc)
+TEST(execute, abc)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -52,8 +52,8 @@ TEST(execute, test_abc)
     ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector());
 }
 
-// Same as test_abc, but using tuples for input and output
-TEST(execute, test_abc_tuple)
+// Same as abc, but using tuples for input and output
+TEST(execute, abc_tuple)
 {
     auto shape = Shape{2, 2};
 
@@ -97,7 +97,7 @@ TEST(execute, test_abc_tuple)
 }
 
 // Multiple retrive values
-TEST(execute, test_tuple_result)
+TEST(execute, tuple_result)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -134,7 +134,7 @@ TEST(execute, test_tuple_result)
     ASSERT_EQ((vector<float>{54, 80, 110, 144}), r1->get_vector());
 }
 
-TEST(execute, test_abs)
+TEST(execute, abs)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -155,7 +155,7 @@ TEST(execute, test_abs)
     ASSERT_EQ((vector<float>{1, 2, 0, 4.8f}), result->get_vector());
 }
 
-TEST(execute, test_concat_matrix_colwise)
+TEST(execute, concat_matrix_colwise)
 {
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -187,7 +187,7 @@ TEST(execute, test_concat_matrix_colwise)
               result->get_vector());
 }
 
-TEST(execute, test_concat_matrix_rowwise)
+TEST(execute, concat_matrix_rowwise)
 {
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -219,7 +219,7 @@ TEST(execute, test_concat_matrix_rowwise)
               result->get_vector());
 }
 
-TEST(execute, test_concat_vector)
+TEST(execute, concat_vector)
 {
     auto shape_a = Shape{4};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -250,7 +250,7 @@ TEST(execute, test_concat_vector)
     ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), result->get_vector());
 }
 
-TEST(execute, test_divide)
+TEST(execute, divide)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -274,7 +274,7 @@ TEST(execute, test_divide)
     ASSERT_EQ((vector<float>{2, 2, 2, 2}), result->get_vector());
 }
 
-TEST(execute, test_equal)
+TEST(execute, equal)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -298,7 +298,7 @@ TEST(execute, test_equal)
     ASSERT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), result->get_vector());
 }
 
-TEST(execute, test_dot_0_0)
+TEST(execute, dot_0_0)
 {
     auto shape = Shape{0};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -323,7 +323,7 @@ TEST(execute, test_dot_0_0)
     ASSERT_EQ((vector<float>{0}), result->get_vector());
 }
 
-TEST(execute, test_dot_matrix_2x0_0x2)
+TEST(execute, dot_matrix_2x0_0x2)
 {
     auto shape_a = Shape{2, 0};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -349,7 +349,7 @@ TEST(execute, test_dot_matrix_2x0_0x2)
     ASSERT_EQ((vector<float>{0, 0, 0, 0}), result->get_vector());
 }
 
-TEST(execute, test_dot_matrix_0x2_2x0)
+TEST(execute, dot_matrix_0x2_2x0)
 {
     auto shape_a = Shape{0, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -375,7 +375,7 @@ TEST(execute, test_dot_matrix_0x2_2x0)
     ASSERT_EQ((vector<float>{}), result->get_vector());
 }
 
-TEST(execute, test_dot_matrix_3x2_2x0)
+TEST(execute, dot_matrix_3x2_2x0)
 {
     auto shape_a = Shape{3, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -401,7 +401,7 @@ TEST(execute, test_dot_matrix_3x2_2x0)
     ASSERT_EQ((vector<float>{}), result->get_vector());
 }
 
-TEST(execute, test_dot_scalar_0x2)
+TEST(execute, dot_scalar_0x2)
 {
     auto shape_a = Shape{};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -427,7 +427,7 @@ TEST(execute, test_dot_scalar_0x2)
     ASSERT_EQ((vector<float>{}), result->get_vector());
 }
 
-TEST(execute, test_dot_2x0_0)
+TEST(execute, dot_2x0_0)
 {
     auto shape_a = Shape{2, 0};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -453,7 +453,7 @@ TEST(execute, test_dot_2x0_0)
     ASSERT_EQ((vector<float>{0, 0}), result->get_vector());
 }
 
-TEST(execute, test_dot1d)
+TEST(execute, dot1d)
 {
     auto shape = Shape{4};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -478,7 +478,7 @@ TEST(execute, test_dot1d)
     ASSERT_EQ((vector<float>{170}), result->get_vector());
 }
 
-TEST(execute, test_dot2d)
+TEST(execute, dot2d)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -503,7 +503,7 @@ TEST(execute, test_dot2d)
     ASSERT_EQ((vector<float>{19, 22, 43, 50}), result->get_vector());
 }
 
-TEST(execute, test_dot_scalar_tensor_arg0)
+TEST(execute, dot_scalar_tensor_arg0)
 {
     auto shape_a = Shape{};
     auto shape_b = Shape{2, 2, 2};
@@ -528,7 +528,7 @@ TEST(execute, test_dot_scalar_tensor_arg0)
     ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector());
 }
 
-TEST(execute, test_dot_scalar_tensor_arg1)
+TEST(execute, dot_scalar_tensor_arg1)
 {
     auto shape_a = Shape{2, 2, 2};
     auto shape_b = Shape{};
@@ -553,7 +553,7 @@ TEST(execute, test_dot_scalar_tensor_arg1)
     ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector());
 }
 
-TEST(execute, test_dot_scalar_scalar)
+TEST(execute, dot_scalar_scalar)
 {
     auto shape = Shape{};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -577,7 +577,7 @@ TEST(execute, test_dot_scalar_scalar)
     ASSERT_EQ((vector<float>{48}), result->get_vector());
 }
 
-TEST(execute, test_dot_matrix_vector)
+TEST(execute, dot_matrix_vector)
 {
     auto shape_a = Shape{4, 4};
     auto shape_b = Shape{4};
@@ -603,7 +603,7 @@ TEST(execute, test_dot_matrix_vector)
     ASSERT_EQ((vector<float>{190, 486, 782, 1078}), result->get_vector());
 }
 
-TEST(execute, test_greater)
+TEST(execute, greater)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -627,7 +627,7 @@ TEST(execute, test_greater)
     ASSERT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), result->get_vector());
 }
 
-TEST(execute, test_greatereq)
+TEST(execute, greatereq)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -651,7 +651,7 @@ TEST(execute, test_greatereq)
     ASSERT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), result->get_vector());
 }
 
-TEST(execute, test_less)
+TEST(execute, less)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -675,7 +675,7 @@ TEST(execute, test_less)
     ASSERT_EQ((vector<char>{0, 0, 1, 0, 1, 0, 0, 1}), result->get_vector());
 }
 
-TEST(execute, test_lesseq)
+TEST(execute, lesseq)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -699,7 +699,7 @@ TEST(execute, test_lesseq)
     ASSERT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), result->get_vector());
 }
 
-TEST(execute, test_log)
+TEST(execute, log)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -725,7 +725,7 @@ TEST(execute, test_log)
     ASSERT_EQ(loga, result->get_vector());
 }
 
-TEST(execute, test_maximum)
+TEST(execute, maximum)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -749,7 +749,7 @@ TEST(execute, test_maximum)
     ASSERT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), result->get_vector());
 }
 
-TEST(execute, test_negative)
+TEST(execute, negative)
 {
     auto shape = Shape{2, 3};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -770,7 +770,7 @@ TEST(execute, test_negative)
     ASSERT_EQ((vector<float>{-1, 2, 0, 4.8f, -8.6f, 8.6f}), result->get_vector());
 }
 
-TEST(execute, test_notequal)
+TEST(execute, notequal)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -794,7 +794,7 @@ TEST(execute, test_notequal)
     ASSERT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), result->get_vector());
 }
 
-TEST(execute, test_select)
+TEST(execute, select)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Bool::element_type(), shape);
@@ -821,7 +821,7 @@ TEST(execute, test_select)
     ASSERT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), result->get_vector());
 }
 
-TEST(execute, test_subtract)
+TEST(execute, subtract)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -845,7 +845,7 @@ TEST(execute, test_subtract)
     ASSERT_EQ((vector<float>{1, 2, 4, 8}), result->get_vector());
 }
 
-TEST(execute, test_scalar_constant)
+TEST(execute, scalar_constant)
 {
     auto shape = Shape{};
     auto A = make_shared<op::ScalarConstant<element::Float32>>(-3.0f);
@@ -864,7 +864,7 @@ TEST(execute, test_scalar_constant)
     ASSERT_EQ((vector<float>{-3.0f}), result->get_vector());
 }
 
-TEST(execute, test_tensor_constant)
+TEST(execute, tensor_constant)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::TensorConstant<element::Float32>>(shape);
@@ -884,7 +884,7 @@ TEST(execute, test_tensor_constant)
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
 }
 
-TEST(execute, test_tensor_constant_with_op)
+TEST(execute, tensor_constant_with_op)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::TensorConstant<element::Float32>>(shape);
@@ -904,7 +904,7 @@ TEST(execute, test_tensor_constant_with_op)
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
 }
 
-TEST(execute, test_function_call)
+TEST(execute, function_call)
 {
     // First create "f(A,B,C) = (A+B)*C".
     auto shape = Shape{2, 2};
@@ -948,7 +948,7 @@ TEST(execute, test_function_call)
     ASSERT_EQ((vector<float>{100, 144, 196, 256}), result->get_vector());
 }
 
-TEST(execute, test_broadcast_scalar_vector)
+TEST(execute, broadcast_scalar_vector)
 {
     auto shape_a = Shape{};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -971,7 +971,7 @@ TEST(execute, test_broadcast_scalar_vector)
     ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector());
 }
 
-TEST(execute, test_broadcast_scalar_matrix)
+TEST(execute, broadcast_scalar_matrix)
 {
     auto shape_a = Shape{};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -994,7 +994,7 @@ TEST(execute, test_broadcast_scalar_matrix)
     ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector());
 }
 
-TEST(execute, test_broadcast_scalar_tensor)
+TEST(execute, broadcast_scalar_tensor)
 {
     auto shape_a = Shape{};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -1017,7 +1017,7 @@ TEST(execute, test_broadcast_scalar_tensor)
     ASSERT_EQ((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), result->get_vector());
 }
 
-TEST(execute, test_broadcast_trivial)
+TEST(execute, broadcast_trivial)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -1039,7 +1039,7 @@ TEST(execute, test_broadcast_trivial)
     ASSERT_EQ((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), result->get_vector());
 }
 
-TEST(execute, test_broadcast_vector_colwise)
+TEST(execute, broadcast_vector_colwise)
 {
     auto shape_a = Shape{3};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -1062,7 +1062,7 @@ TEST(execute, test_broadcast_vector_colwise)
     ASSERT_EQ((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), result->get_vector());
 }
 
-TEST(execute, test_broadcast_vector_rowwise)
+TEST(execute, broadcast_vector_rowwise)
 {
     auto shape_a = Shape{4};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
