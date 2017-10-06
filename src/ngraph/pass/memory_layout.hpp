@@ -18,7 +18,7 @@
 #include <list>
 #include <sstream>
 
-#include "ngraph/pass/call_pass.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -31,12 +31,10 @@ namespace ngraph
     class Node;
 }
 
-class ngraph::pass::MemoryLayout : public CallBase
+class ngraph::pass::MemoryLayout : public CallGraphPass
 {
 public:
-    virtual bool run_on_call_list(std::list<Node*>&) override;
-
-    void check_dependencies(const std::vector<std::shared_ptr<CallBase>>&) const override;
+    virtual bool run_on_call_graph(std::list<Node*>&) override;
 
 private:
 };

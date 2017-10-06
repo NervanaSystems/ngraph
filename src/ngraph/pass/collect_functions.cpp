@@ -12,41 +12,39 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/pass/assign_tensors.hpp"
-
-#include <exception>
-#include <sstream>
-
+#include "ngraph/pass/collect_functions.hpp"
+#include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/ngraph.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/propagate_types.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/ops/function_call.hpp"
+#include "ngraph/ops/op.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
+using namespace ngraph::pass;
 
-bool pass::AssignTensors::run_on_call_graph(list<Node*>& nodes)
+bool CollectFunctions::run_on_function(ngraph::Function* func)
 {
-    for (Node* node : nodes)
-    {
-        try
-        {
-            // We need to set the nodes is_output state prior to call assign_tensors
-            // so that the output state can be passes to the constructed tensors.
-            if (node == get_state().get_functions().at(0)->get_result().get())
-            {
-                node->set_is_output();
-            }
+    set<Function*> functions;
+    deque<Function*> stack;
+    stack.push_back(func);
 
-            node->assign_tensors();
-        }
-        catch (exception& e)
-        {
-            stringstream ss;
-            ss << "Error with node " << *node << ": ";
-            ss << e.what();
-            throw invalid_argument(ss.str());
-        }
+    while (stack.empty() == false)
+    {
+        Function* f = stack.front();
+        stack.pop_front();
+        functions.insert(f);
+        traverse_nodes(f->get_result(), [&](Node* node) {
+            op::FunctionCall* fc = dynamic_cast<op::FunctionCall*>(node);
+            if (fc)
+            {
+                stack.push_back(fc->get_function().get());
+            }
+        });
     }
+
+    get_state().set_functions(functions);
+
     return false;
 }

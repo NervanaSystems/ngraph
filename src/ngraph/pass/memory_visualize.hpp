@@ -18,7 +18,7 @@
 #include <limits>
 #include <list>
 
-#include "ngraph/pass/call_pass.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -29,13 +29,11 @@ namespace ngraph
     class Node;
 }
 
-class ngraph::pass::MemoryVisualize : public CallBase
+class ngraph::pass::MemoryVisualize : public ModulePass
 {
 public:
     MemoryVisualize(const std::string& filename);
-    virtual bool run_on_call_list(std::list<Node*>&) override;
-
-    void check_dependencies(const std::vector<std::shared_ptr<CallBase>>&) const override;
+    virtual bool run_on_module(std::vector<Function*>&) override;
 
 private:
     const Node* find_largest_op(const std::list<Node*>& nodes);
