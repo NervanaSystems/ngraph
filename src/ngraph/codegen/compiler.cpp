@@ -55,7 +55,7 @@ using namespace std;
 
 using namespace nervana::cpu;
 
-std::string GetExecutablePath(const char* Argv0)
+static std::string GetExecutablePath(const char* Argv0)
 {
     // This just needs to be some symbol in the binary; C++ doesn't
     // allow taking the address of ::main however.
