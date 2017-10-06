@@ -303,9 +303,9 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
     {                                                                                              \
         ef->get_instructions()->push_back(make_shared<instr<T>>(__VA_ARGS__));                     \
     }
-#define PUSH_TEMPLATED_INSTRUCTION(et, err_msg, instr, ...)                                        \
+#define PUSH_POLYMORPHIC_INSTRUCTION(et, err_msg, instr, ...)                                      \
     DO_ON_ELEMENT_TYPE(et, err_msg, PUSH_INSTRUCTION, instr, __VA_ARGS__)
-#define PUSH_NUMERIC_TEMPLATED_INSTRUCTION(et, err_msg, instr, ...)                                \
+#define PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(et, err_msg, instr, ...)                              \
     DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_INSTRUCTION, instr, __VA_ARGS__)
 
 // Turn off complaint suppression (see above)
@@ -365,37 +365,37 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
             if (broadcast->get_broadcast_axes().empty())
             {
-                PUSH_TEMPLATED_INSTRUCTION(result_element_type,
-                                           "Broadcast has unhandled element type",
-                                           runtime::eigen::CopyInstruction,
-                                           in[0].get_index(),
-                                           out[0].get_index());
+                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                             "Broadcast has unhandled element type",
+                                             runtime::eigen::CopyInstruction,
+                                             in[0].get_index(),
+                                             out[0].get_index());
             }
             else if (arg_shape.size() == 0)
             {
-                PUSH_TEMPLATED_INSTRUCTION(result_element_type,
-                                           "Broadcast has unhandled element type",
-                                           runtime::eigen::BroadcastScalarInstruction,
-                                           in[0],
-                                           out[0]);
+                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                             "Broadcast has unhandled element type",
+                                             runtime::eigen::BroadcastScalarInstruction,
+                                             in[0],
+                                             out[0]);
             }
             else if (arg_shape.size() == 1 && result_shape.size() == 2)
             {
                 if (broadcast->get_broadcast_axes() == AxisSet{1})
                 {
-                    PUSH_TEMPLATED_INSTRUCTION(result_element_type,
-                                               "Broadcast has unhandled element type",
-                                               runtime::eigen::BroadcastVectorColwiseInstruction,
-                                               in[0],
-                                               out[0]);
+                    PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                                 "Broadcast has unhandled element type",
+                                                 runtime::eigen::BroadcastVectorColwiseInstruction,
+                                                 in[0],
+                                                 out[0]);
                 }
                 else if (broadcast->get_broadcast_axes() == AxisSet{0})
                 {
-                    PUSH_TEMPLATED_INSTRUCTION(result_element_type,
-                                               "Broadcast has unhandled element type",
-                                               runtime::eigen::BroadcastVectorRowwiseInstruction,
-                                               in[0],
-                                               out[0]);
+                    PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                                 "Broadcast has unhandled element type",
+                                                 runtime::eigen::BroadcastVectorRowwiseInstruction,
+                                                 in[0],
+                                                 out[0]);
                 }
                 else
                 {
@@ -421,15 +421,15 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
             if (result_shape.size() == 1)
             {
-                PUSH_TEMPLATED_INSTRUCTION(result_element_type,
-                                           "Concat has unhandled element type",
-                                           runtime::eigen::ConcatVectorInstruction,
-                                           in,
-                                           out[0]);
+                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                             "Concat has unhandled element type",
+                                             runtime::eigen::ConcatVectorInstruction,
+                                             in,
+                                             out[0]);
             }
             else if (result_shape.size() == 2)
             {
-                PUSH_TEMPLATED_INSTRUCTION(
+                PUSH_POLYMORPHIC_INSTRUCTION(
                     result_element_type,
                     "Concat has unhandled element type",
                     runtime::eigen::ConcatMatrixInstruction,
@@ -464,54 +464,54 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             // If arg0 or arg1 is a scalar, emit a scalar-tensor product.
             if (arg0_shape.size() == 0)
             {
-                PUSH_NUMERIC_TEMPLATED_INSTRUCTION(arg0_element_type,
-                                                   "Dot has unhandled element type",
-                                                   runtime::eigen::ScalarTensorProductInstruction,
-                                                   in[0],
-                                                   in[1],
-                                                   out[0]);
+                PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+                                                     "Dot has unhandled element type",
+                                                     runtime::eigen::ScalarTensorProductInstruction,
+                                                     in[0],
+                                                     in[1],
+                                                     out[0]);
             }
             else if (arg1_shape.size() == 0)
             {
-                PUSH_NUMERIC_TEMPLATED_INSTRUCTION(arg0_element_type,
-                                                   "Dot has unhandled element type",
-                                                   runtime::eigen::ScalarTensorProductInstruction,
-                                                   in[1],
-                                                   in[0],
-                                                   out[0]);
+                PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+                                                     "Dot has unhandled element type",
+                                                     runtime::eigen::ScalarTensorProductInstruction,
+                                                     in[1],
+                                                     in[0],
+                                                     out[0]);
             }
 
             // If arg0 and arg1 are both vectors, emit a dot product.
             else if (arg0_shape.size() == 1 && arg1_shape.size() == 1)
             {
-                PUSH_NUMERIC_TEMPLATED_INSTRUCTION(arg0_element_type,
-                                                   "Dot has unhandled element type",
-                                                   runtime::eigen::DotInstruction,
-                                                   in[0],
-                                                   in[1],
-                                                   out[0]);
+                PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+                                                     "Dot has unhandled element type",
+                                                     runtime::eigen::DotInstruction,
+                                                     in[0],
+                                                     in[1],
+                                                     out[0]);
             }
 
             // If arg0 is a matrix and arg1 is a vector, emit a matrix-vector product.
             else if (arg0_shape.size() == 2 && arg1_shape.size() == 1)
             {
-                PUSH_NUMERIC_TEMPLATED_INSTRUCTION(arg0_element_type,
-                                                   "Dot has unhandled element type",
-                                                   runtime::eigen::MatrixVectorProductInstruction,
-                                                   in[0],
-                                                   in[1],
-                                                   out[0]);
+                PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+                                                     "Dot has unhandled element type",
+                                                     runtime::eigen::MatrixVectorProductInstruction,
+                                                     in[0],
+                                                     in[1],
+                                                     out[0]);
             }
 
             // If arg0 and arg1 are both matrices, emit a matrix product.
             else if (arg0_shape.size() == 2 && arg1_shape.size() == 2)
             {
-                PUSH_NUMERIC_TEMPLATED_INSTRUCTION(arg0_element_type,
-                                                   "Dot has unhandled element type",
-                                                   runtime::eigen::MatrixMultInstruction,
-                                                   in[0],
-                                                   in[1],
-                                                   out[0]);
+                PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+                                                     "Dot has unhandled element type",
+                                                     runtime::eigen::MatrixMultInstruction,
+                                                     in[0],
+                                                     in[1],
+                                                     out[0]);
             }
 
             else
@@ -534,11 +534,11 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
             auto& result_element_type = result_tensor_type->get_element_type();
 
-            PUSH_TEMPLATED_INSTRUCTION(result_element_type,
-                                       "GetTupleElement has unhandled element type",
-                                       runtime::eigen::CopyInstruction,
-                                       in.at(get_tuple_element->get_n()).get_index(),
-                                       out.at(0).get_index());
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "GetTupleElement has unhandled element type",
+                                         runtime::eigen::CopyInstruction,
+                                         in.at(get_tuple_element->get_n()).get_index(),
+                                         out.at(0).get_index());
         };
 
         // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
@@ -547,11 +547,11 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             for (size_t i = 0; i < in.size(); ++i)
             {
                 auto& et = in.at(i).get_tensor_view_layout()->get_element_type();
-                PUSH_TEMPLATED_INSTRUCTION(et,
-                                           "Tuple has unhandled element type",
-                                           runtime::eigen::CopyInstruction,
-                                           in.at(i).get_index(),
-                                           out.at(i).get_index());
+                PUSH_POLYMORPHIC_INSTRUCTION(et,
+                                             "Tuple has unhandled element type",
+                                             runtime::eigen::CopyInstruction,
+                                             in.at(i).get_index(),
+                                             out.at(i).get_index());
             }
         };
 
