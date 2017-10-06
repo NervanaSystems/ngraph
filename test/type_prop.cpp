@@ -237,9 +237,49 @@ TEST(type_prop, concat_deduce_elem_type_mismatch)
     }
 }
 
-//
-// Tests for dot product.
-//
+TEST(type_prop, convert_deduce)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
+    auto c = make_shared<op::Convert>(param, element::Int32::element_type());
+    c->propagate_types();
+    auto c_vt = c->get_value_type();
+    ASSERT_EQ(*c_vt, TensorViewType(element::Int32::element_type(), Shape{2, 3, 4}));
+}
+
+TEST(type_prop, convert_deduce_correct)
+{
+    // Check deduced type against incorrectly specified type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
+    auto c = make_shared<op::Convert>(param, element::Int32::element_type());
+    c->set_value_type(make_shared<TensorViewType>(element::Int32::element_type(), Shape{2, 3, 4}));
+    c->propagate_types();
+    auto c_vt = c->get_value_type();
+    ASSERT_EQ(*c_vt, TensorViewType(element::Int32::element_type(), Shape{2, 3, 4}));
+}
+
+TEST(type_prop, convert_deduce_incorrect)
+{
+    // Check deduced type against incorrectly specified type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
+    auto c = make_shared<op::Convert>(param, element::Int32::element_type());
+    c->set_value_type(make_shared<TensorViewType>(element::Int32::element_type(), Shape{2, 14, 4}));
+    try
+    {
+        c->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Deduced type should disagree with specified type";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Setting value type to a different ValueType"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, dot_deduce_scalar_2d)
 {
     // Deduce type for scalar/matrix arguments
