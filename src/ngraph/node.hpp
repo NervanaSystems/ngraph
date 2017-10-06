@@ -22,17 +22,13 @@
 #include <iostream>
 
 #include "ngraph/common.hpp"
+#include "ngraph/descriptor/input.hpp"
+#include "ngraph/descriptor/output.hpp"
+#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph
 {
-    namespace descriptor
-    {
-        class Input;
-        class Output;
-        class Tensor;
-    }
-
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// view or a (possibly empty) tuple of values.
