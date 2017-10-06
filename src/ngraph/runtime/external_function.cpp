@@ -28,6 +28,7 @@
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/convert.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/equal.hpp"
@@ -59,6 +60,7 @@
 #include "ngraph/runtime/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/eigen/concat_vector.hpp"
 #include "ngraph/runtime/eigen/constant.hpp"
+#include "ngraph/runtime/eigen/convert.hpp"
 #include "ngraph/runtime/eigen/copy.hpp"
 #include "ngraph/runtime/eigen/divide.hpp"
 #include "ngraph/runtime/eigen/dot.hpp"
@@ -441,6 +443,62 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 throw ngraph_error("Concat not implemented for rank>2 in VM yet");
             }
+        };
+
+        REGISTER_TO_OP_MAP(op::Convert)
+        {
+            auto arg = n->get_arguments().at(0);
+
+            auto arg_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(arg->get_value_type());
+            assert(nullptr != arg_tensor_type);
+
+            auto& arg_element_type = arg_tensor_type->get_element_type();
+
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+
+            auto& result_element_type = result_tensor_type->get_element_type();
+
+// Hacky macro: we are going to be building up a series of else-ifs for each possible
+// pair of element types.
+#define REGISTER_CONVERT(TI, TO)                                                                   \
+    else if (arg_element_type == (TI::element_type()) &&                                           \
+             result_element_type == (TO::element_type()))                                          \
+    {                                                                                              \
+        ef->get_instructions()->push_back(                                                         \
+            make_shared<runtime::eigen::ConvertInstruction<TI, TO>>(in[0], out[0]));               \
+    }
+// End hacky macro
+
+// Hacky macro: Given some type TI, generate the else-ifs for TI to every other element
+// type.
+#define REGISTER_CONVERTS(TI)                                                                      \
+    REGISTER_CONVERT(TI, element::Bool)                                                            \
+    REGISTER_CONVERT(TI, element::Float32)                                                         \
+    REGISTER_CONVERT(TI, element::Int8)                                                            \
+    REGISTER_CONVERT(TI, element::Int32)                                                           \
+    REGISTER_CONVERT(TI, element::Int64)                                                           \
+    REGISTER_CONVERT(TI, element::UInt8)                                                           \
+    REGISTER_CONVERT(TI, element::UInt32)                                                          \
+    REGISTER_CONVERT(TI, element::UInt64)
+            // End hacky macro
+
+            if (false)
+            {
+            }
+            REGISTER_CONVERTS(element::Bool)
+            REGISTER_CONVERTS(element::Float32)
+            REGISTER_CONVERTS(element::Int8)
+            REGISTER_CONVERTS(element::Int32)
+            REGISTER_CONVERTS(element::Int64)
+            REGISTER_CONVERTS(element::UInt8)
+            REGISTER_CONVERTS(element::UInt32)
+            REGISTER_CONVERTS(element::UInt64)
+            else { throw ngraph_error("Internal error: cannot convert between element types"); }
+#undef REGISTER_CONVERTS
+#undef REGISTER_CONVERT
         };
 
         REGISTER_TO_OP_MAP(op::Dot)
