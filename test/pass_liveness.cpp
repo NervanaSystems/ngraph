@@ -51,7 +51,7 @@ TEST(pass, liveness)
 
     shared_ptr<Function> func = make_test_graph();
     pass_manager.run_passes(func.get());
-    auto sorted = pass_manager.get_call_graph();
+    auto sorted = func->get_ordered_ops();
 
     // for (const Node* node : sorted)
     // {

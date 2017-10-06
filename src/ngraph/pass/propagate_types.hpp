@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "ngraph/pass/call_pass.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -25,10 +25,10 @@ namespace ngraph
     class Node;
 }
 
-class ngraph::pass::PropagateTypes : public CallBase
+class ngraph::pass::PropagateTypes : public CallGraphPass
 {
 public:
-    virtual bool run_on_call_list(std::list<Node*>&) override;
+    virtual bool run_on_call_graph(std::list<Node*>&) override;
 
 private:
 };
