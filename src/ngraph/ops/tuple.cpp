@@ -15,7 +15,7 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph/ops/tuple.hpp"
 
 using namespace std;
 using namespace ngraph::op;

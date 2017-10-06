@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <vector>
 
 #include "ngraph/descriptor/buffer.hpp"

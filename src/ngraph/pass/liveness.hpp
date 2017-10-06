@@ -23,7 +23,6 @@ namespace ngraph
     {
         class Liveness;
     }
-    class Node;
 }
 
 class ngraph::pass::Liveness : public CallGraphPass

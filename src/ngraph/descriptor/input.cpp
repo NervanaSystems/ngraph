@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph/descriptor/input.hpp"
+#include "ngraph/descriptor/output.hpp"
 
-using namespace std;
 using namespace ngraph;
 using namespace descriptor;
 

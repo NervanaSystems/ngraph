@@ -18,6 +18,7 @@
 #include <set>
 
 #include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {

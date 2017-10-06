@@ -14,7 +14,7 @@
 
 #include <memory>
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph/ops/dot.hpp"
 
 using namespace std;
 using namespace ngraph::op;

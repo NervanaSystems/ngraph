@@ -17,15 +17,14 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/function.hpp"
+
 namespace ngraph
 {
     namespace pass
     {
         class ManagerState;
     }
-
-    class Node;
-    class Function;
 }
 
 class ngraph::pass::ManagerState
