@@ -35,8 +35,7 @@ namespace ngraph
             {
             protected:
                 TensorViewLayout(const ngraph::descriptor::TensorView& tensor_view)
-                    : m_element_type(tensor_view.get_tensor_view_type()->get_element_type())
-                    , m_shape(tensor_view.get_tensor_view_type()->get_shape())
+                    : m_tensor_view_type(tensor_view.get_tensor_view_type())
                 {
                 }
 
@@ -52,14 +51,16 @@ namespace ngraph
                 /// With non-linear buffers, this will need to be something other than size_t.
                 virtual size_t get_index_offset(const std::vector<size_t>& indices) = 0;
 
-                const element::Type& get_element_type() const { return m_element_type; }
-                const Shape& get_shape() const { return m_shape; }
+                const element::Type& get_element_type() const
+                {
+                    return m_tensor_view_type->get_element_type();
+                }
+                const Shape& get_shape() const { return m_tensor_view_type->get_shape(); }
                 /// Where this view is located in the buffer.
                 const BufferPos& get_buffer_pos() const { return m_buffer_pos; }
                 BufferPos& get_buffer_pos() { return m_buffer_pos; }
             protected:
-                const element::Type& m_element_type;
-                const Shape m_shape;
+                std::shared_ptr<const TensorViewType> m_tensor_view_type;
                 BufferPos m_buffer_pos;
             };
         }
