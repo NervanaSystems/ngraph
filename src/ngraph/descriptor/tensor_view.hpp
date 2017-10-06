@@ -16,15 +16,13 @@
 
 #include <memory>
 
-#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/descriptor/value.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/types/type.hpp"
 
 namespace ngraph
 {
     class Node;
+    class TensorViewType;
 
     namespace descriptor
     {
@@ -33,6 +31,9 @@ namespace ngraph
             class Tensor;
             class TensorViewLayout;
         }
+
+        class Tensor;
+        class TensorView;
 
         /// @brief Compile-time descriptor of a first-class value that is a view of a tensor.
         class TensorView : public Value
@@ -51,10 +52,7 @@ namespace ngraph
             virtual const Tensor& get_tensor() const = 0;
             virtual Tensor& get_tensor() = 0;
 
-            virtual std::shared_ptr<const ValueType> get_value_type() const override
-            {
-                return m_tensor_view_type;
-            }
+            virtual std::shared_ptr<const ValueType> get_value_type() const override;
 
             const std::string& get_name() const { return m_name; }
             std::shared_ptr<const TensorViewType> get_tensor_view_type() const

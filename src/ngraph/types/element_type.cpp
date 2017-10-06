@@ -21,8 +21,6 @@
 
 using namespace ngraph;
 
-std::map<std::string, ngraph::element::Type> ngraph::element::Type::m_element_list;
-
 ngraph::element::Type::Type(size_t bitwidth,
                             bool is_float,
                             bool is_signed,
