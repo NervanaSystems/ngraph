@@ -24,7 +24,6 @@ namespace ngraph
     {
         class DumpSorted;
     }
-    class Node;
 }
 
 class ngraph::pass::DumpSorted : public ModulePass

@@ -26,7 +26,6 @@ namespace ngraph
     {
         class VisualizeTree;
     }
-    class Node;
 }
 
 class ngraph::pass::VisualizeTree : public ModulePass

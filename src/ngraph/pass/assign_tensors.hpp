@@ -22,7 +22,6 @@ namespace ngraph
     {
         class AssignTensors;
     }
-    class Node;
 }
 
 class ngraph::pass::AssignTensors : public CallGraphPass

@@ -26,7 +26,6 @@ namespace ngraph
     {
         class MemoryVisualize;
     }
-    class Node;
 }
 
 class ngraph::pass::MemoryVisualize : public ModulePass

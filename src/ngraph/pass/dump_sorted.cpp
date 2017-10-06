@@ -14,7 +14,8 @@
 
 #include <fstream>
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph/descriptor/input.hpp"
+#include "ngraph/descriptor/output.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/util.hpp"
 

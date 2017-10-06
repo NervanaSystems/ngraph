@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <memory>
-
 namespace ngraph
 {
     namespace descriptor

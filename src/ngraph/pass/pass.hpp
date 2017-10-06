@@ -18,7 +18,9 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/pass/manager_state.hpp"
 
 namespace ngraph
 {
@@ -30,9 +32,7 @@ namespace ngraph
         class NodePass;
         class CallGraphPass;
         class Manager;
-        class ManagerState;
     }
-    class Function;
 }
 
 class ngraph::pass::PassBase

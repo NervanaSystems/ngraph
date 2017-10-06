@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ngraph.hpp"
-#include "ngraph/pass/topological_sort.hpp"
+#include "ngraph/ops/function_call.hpp"
+#include "ngraph/function.hpp"
 
 using namespace std;
 using namespace ngraph::op;
