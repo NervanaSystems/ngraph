@@ -14,6 +14,10 @@
 
 #pragma once
 
+#include <functional>
+#include <memory>
+#include <string>
+
 #include <llvm/ExecutionEngine/MCJIT.h> // forces JIT to link in
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/Option/Arg.h>
@@ -56,6 +60,7 @@ public:
 
 private:
     llvm::ExecutionEngine* m_execution_engine;
+    std::string jit_error;
 
     template <typename signature>
     std::function<signature> f_cast(void* f)

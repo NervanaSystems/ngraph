@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <iostream>
-
 #include <clang/CodeGen/ObjectFilePCHContainerOperations.h>
 #include <clang/Driver/DriverDiagnostic.h>
 #include <clang/Driver/Options.h>
@@ -150,40 +148,31 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
 
 bool execution_state::add_module(std::unique_ptr<llvm::Module>& module)
 {
-    bool rc = false;
     if (module)
     {
-        rc = true;
         if (!m_execution_engine)
         {
-            std::string jit_error_string;
             // auto mm = unique_ptr<RTDyldMemoryManager>(new method_resolver(this));
             m_execution_engine = llvm::EngineBuilder(move(module))
                                      .setEngineKind(llvm::EngineKind::JIT)
                                      .setOptLevel(llvm::CodeGenOpt::Aggressive)
-                                     .setErrorStr(&jit_error_string)
+                                     .setErrorStr(&jit_error)
                                      // .setUseMCJIT(true)
                                      // .setMCJITMemoryManager(std::move(mm))
                                      .create();
 
-            if (m_execution_engine)
+            if (!m_execution_engine)
             {
-            }
-            else
-            {
-                cout << "nullptr engine\n";
-                cout << jit_error_string << endl;
-                rc = false;
+                return false;
             }
         }
     }
     else
     {
-        cout << "nullptr module\n";
-        rc = false;
+        return false;
     }
 
-    return rc;
+    return true;
 }
 
 void execution_state::finalize()
@@ -195,6 +184,8 @@ void execution_state::finalize()
     }
     else
     {
-        throw std::runtime_error("must add_module before finalize");
+        throw std::runtime_error(
+            "Error in finalize: " +
+            (jit_error.empty() ? "Could not create an execution engine" : jit_error));
     }
 }
