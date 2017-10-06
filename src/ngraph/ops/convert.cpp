@@ -17,9 +17,10 @@
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
+using namespace ngraph;
 using namespace ngraph::op;
 
-void Convert::propagate_types()
+const element::Type& Convert::propagate_element_types(const element::Type& arg_element_type) const
 {
-    throw ngraph_error("NIY");
+    return m_element_type;
 }
