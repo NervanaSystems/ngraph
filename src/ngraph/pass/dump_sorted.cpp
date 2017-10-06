@@ -28,41 +28,44 @@ pass::DumpSorted::DumpSorted(const string& output_file)
 {
 }
 
-bool pass::DumpSorted::run_on_call_list(list<Node*>& nodes)
+bool pass::DumpSorted::run_on_module(vector<Function*>& functions)
 {
     ofstream out{m_output_file};
     if (out)
     {
-        for (const Node* node : nodes)
+        for (Function* f : functions)
         {
-            out << node->get_node_id() << "(";
-            vector<string> inputs;
-            for (const Input& input : node->get_inputs())
+            for (const Node* node : f->get_ordered_ops())
             {
-                inputs.push_back(input.get_tensor().get_name());
-            }
-            out << join(inputs);
-            out << ") -> ";
+                out << node->get_name() << "(";
+                vector<string> inputs;
+                for (const Input& input : node->get_inputs())
+                {
+                    inputs.push_back(input.get_tensor().get_name());
+                }
+                out << join(inputs);
+                out << ") -> ";
 
-            vector<string> outputs;
-            for (const Output& output : node->get_outputs())
-            {
-                outputs.push_back(output.get_tensor().get_name());
-            }
-            out << join(outputs);
-            out << "\n";
+                vector<string> outputs;
+                for (const Output& output : node->get_outputs())
+                {
+                    outputs.push_back(output.get_tensor().get_name());
+                }
+                out << join(outputs);
+                out << "\n";
 
-            for (const Tensor* tensor : node->liveness_live_list)
-            {
-                out << "    L " << tensor->get_name() << "\n";
-            }
-            for (const Tensor* tensor : node->liveness_new_list)
-            {
-                out << "    N " << tensor->get_name() << "\n";
-            }
-            for (const Tensor* tensor : node->liveness_free_list)
-            {
-                out << "    F " << tensor->get_name() << "\n";
+                for (const Tensor* tensor : node->liveness_live_list)
+                {
+                    out << "    L " << tensor->get_name() << "\n";
+                }
+                for (const Tensor* tensor : node->liveness_new_list)
+                {
+                    out << "    N " << tensor->get_name() << "\n";
+                }
+                for (const Tensor* tensor : node->liveness_free_list)
+                {
+                    out << "    F " << tensor->get_name() << "\n";
+                }
             }
         }
     }

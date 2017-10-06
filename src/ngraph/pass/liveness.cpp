@@ -28,7 +28,7 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::descriptor;
 
-bool pass::Liveness::run_on_call_list(list<Node*>& ops)
+bool pass::Liveness::run_on_call_graph(list<Node*>& ops)
 {
     unordered_set<Tensor*> currently_live;
 
@@ -122,24 +122,6 @@ bool pass::Liveness::run_on_call_list(list<Node*>& ops)
 
     // validate_liveness(ops);
     return false;
-}
-
-void pass::Liveness::check_dependencies(
-    const std::vector<std::shared_ptr<CallBase>>& registered_passes) const
-{
-    bool found_propagate_types = false;
-    for (auto pass : registered_passes)
-    {
-        if (dynamic_pointer_cast<AssignTensors>(pass))
-        {
-            found_propagate_types = true;
-        }
-    }
-
-    if (!found_propagate_types)
-    {
-        throw runtime_error("Dependency 'PropagateTypes' not found for pass 'AssignTensors'");
-    }
 }
 
 bool pass::Liveness::is_temporary(const Tensor& tensor)

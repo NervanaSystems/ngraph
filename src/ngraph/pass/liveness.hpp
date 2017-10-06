@@ -15,7 +15,7 @@
 #pragma once
 
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/pass/call_pass.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -25,12 +25,10 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::Liveness : public CallBase
+class ngraph::pass::Liveness : public CallGraphPass
 {
 public:
-    virtual bool run_on_call_list(std::list<Node*>&) override;
-
-    void check_dependencies(const std::vector<std::shared_ptr<CallBase>>&) const override;
+    virtual bool run_on_call_graph(std::list<Node*>&) override;
 
 private:
     bool is_temporary(const descriptor::Tensor&);

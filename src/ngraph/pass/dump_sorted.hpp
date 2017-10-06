@@ -16,7 +16,7 @@
 
 #include <string>
 
-#include "ngraph/pass/call_pass.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -26,12 +26,12 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::DumpSorted : public CallBase
+class ngraph::pass::DumpSorted : public ModulePass
 {
 public:
     DumpSorted(const std::string& output_file);
 
-    virtual bool run_on_call_list(std::list<Node*>&) override;
+    virtual bool run_on_module(std::vector<Function*>&) override;
 
 private:
     const std::string m_output_file;

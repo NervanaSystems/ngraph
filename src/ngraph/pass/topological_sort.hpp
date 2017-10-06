@@ -17,7 +17,7 @@
 #include <list>
 #include <memory>
 
-#include "ngraph/pass/tree_pass.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -27,9 +27,9 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::TopologicalSort : public TreeBase
+class ngraph::pass::TopologicalSort : public FunctionPass
 {
 public:
     TopologicalSort() {}
-    bool run_on_tree(std::shared_ptr<Node>) override;
+    bool run_on_function(ngraph::Function*) override;
 };
