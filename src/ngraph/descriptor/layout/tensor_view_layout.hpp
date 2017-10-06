@@ -51,6 +51,11 @@ namespace ngraph
                 /// With non-linear buffers, this will need to be something other than size_t.
                 virtual size_t get_index_offset(const std::vector<size_t>& indices) = 0;
 
+                const element::Type& get_element_type() const
+                {
+                    return m_tensor_view.get_tensor_view_type()->get_element_type();
+                }
+
                 const Shape& get_shape() const
                 {
                     return m_tensor_view.get_tensor_view_type()->get_shape();

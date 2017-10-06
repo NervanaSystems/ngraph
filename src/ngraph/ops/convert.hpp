@@ -27,9 +27,9 @@ namespace ngraph
             {
             }
 
+            virtual const element::Type&
+                propagate_element_types(const element::Type& arg_element_type) const override;
             virtual std::string description() const override { return "Convert"; }
-            virtual void propagate_types() override;
-
         protected:
             const ngraph::element::Type& m_element_type;
         };
