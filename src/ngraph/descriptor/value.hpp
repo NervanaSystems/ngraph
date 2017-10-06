@@ -16,10 +16,10 @@
 
 #include <memory>
 
-#include "ngraph/types/type.hpp"
-
 namespace ngraph
 {
+    class ValueType;
+
     namespace descriptor
     {
         class TensorView;

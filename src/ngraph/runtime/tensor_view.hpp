@@ -20,10 +20,14 @@
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/runtime/value.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/types/element_type.hpp"
 
 namespace ngraph
 {
+    namespace descriptor
+    {
+        class Value;
+    }
+
     namespace runtime
     {
         template <typename ET>
@@ -46,23 +50,16 @@ namespace ngraph
                 return dynamic_cast<ParameterizedTensorView<ET>*>(this);
             }
 
-            std::shared_ptr<const ngraph::descriptor::TensorView> get_tensor_view_descriptor() const
-            {
-                return m_descriptor;
-            }
+            std::shared_ptr<const ngraph::descriptor::TensorView>
+                get_tensor_view_descriptor() const;
 
-            virtual std::shared_ptr<ngraph::descriptor::Value> get_descriptor() const override
-            {
-                return m_descriptor;
-            }
+            virtual std::shared_ptr<ngraph::descriptor::Value> get_descriptor() const override;
 
             virtual void collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
-                                              const std::shared_ptr<Value>& value) const override
-            {
-                views.push_back(std::static_pointer_cast<TensorView>(value));
-            }
+                                              const std::shared_ptr<Value>& value) const override;
 
-            const Shape& get_shape() { return m_descriptor->get_tensor_view_type()->get_shape(); }
+            const ngraph::Shape& get_shape() const;
+
             /// @brief Write bytes directly into the tensor
             /// @param p Pointer to source of data
             /// @param tensor_offset Offset into tensor storage to begin writing. Must be element-aligned.

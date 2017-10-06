@@ -25,17 +25,11 @@
 
 #include "ngraph/common.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/runtime/parameterized_tensor_view.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
 {
-    namespace runtime
-    {
-        template <typename ET>
-        class ParameterizedTensorView;
-
-        class TensorView;
-    }
-
     namespace element
     {
         class Type
@@ -56,7 +50,7 @@ namespace ngraph
             }
 
             virtual std::shared_ptr<ngraph::runtime::TensorView>
-                make_primary_tensor_view(const ngraph::Shape& shape) const = 0;
+                make_primary_tensor_view(const Shape& shape) const = 0;
 
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
