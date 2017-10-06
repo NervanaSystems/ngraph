@@ -14,7 +14,7 @@
 
 #include <sstream>
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph/ops/parameter.hpp"
 
 using namespace std;
 using namespace ngraph::op;

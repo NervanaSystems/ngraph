@@ -22,7 +22,6 @@ namespace ngraph
     {
         class PropagateTypes;
     }
-    class Node;
 }
 
 class ngraph::pass::PropagateTypes : public CallBase

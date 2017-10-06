@@ -28,7 +28,6 @@ namespace ngraph
         class MemoryNode;
         class MemoryManager;
     }
-    class Node;
 }
 
 class ngraph::pass::MemoryLayout : public CallBase

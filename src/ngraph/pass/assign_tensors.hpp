@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "ngraph/node.hpp"
 #include "ngraph/pass/call_pass.hpp"
 
 namespace ngraph
@@ -22,7 +23,6 @@ namespace ngraph
     {
         class AssignTensors;
     }
-    class Node;
 }
 
 class ngraph::pass::AssignTensors : public CallBase

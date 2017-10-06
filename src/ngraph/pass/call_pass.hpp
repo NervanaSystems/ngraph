@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/node.hpp"
 #include "ngraph/pass/pass.hpp"
 
 namespace ngraph
@@ -26,8 +27,6 @@ namespace ngraph
     {
         class CallBase;
     }
-
-    class Node;
 }
 
 class ngraph::pass::CallBase : public Base

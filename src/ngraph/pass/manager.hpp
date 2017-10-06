@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/function.hpp"
 #include "ngraph/pass/call_pass.hpp"
 #include "ngraph/pass/tree_pass.hpp"
 
@@ -28,9 +29,6 @@ namespace ngraph
         class Manager;
         class ManagerState;
     }
-
-    class Node;
-    class Function;
 }
 
 class ngraph::pass::ManagerState
