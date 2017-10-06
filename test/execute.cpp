@@ -123,6 +123,48 @@ TEST(execute, test_abc_tuple)
     ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector());
 }
 
+// Same as test_abc, but using tuples for input and output
+TEST(execute, test_abc_tuple_int64)
+{
+    auto shape = Shape{2, 2};
+
+    auto tensor_view_type = make_shared<TensorViewType>(element::Int64::element_type(), shape);
+
+    auto ABC = make_shared<op::Parameter>(
+        make_shared<TupleType>(ValueTypes{tensor_view_type, tensor_view_type, tensor_view_type}));
+
+    auto A = make_shared<op::GetTupleElement>(ABC, 0);
+    auto B = make_shared<op::GetTupleElement>(ABC, 1);
+    auto C = make_shared<op::GetTupleElement>(ABC, 2);
+    auto f = make_shared<Function>(
+        make_shared<op::Tuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
+
+    auto external = make_shared<ngraph::runtime::ExternalFunction>(f);
+    auto cf = external->make_call_frame();
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Int64>(shape);
+    *a = vector<element::Int64::type>{1, 2, 3, 4};
+    auto b = ngraph::runtime::make_tensor<element::Int64>(shape);
+    *b = vector<element::Int64::type>{5, 6, 7, 8};
+    auto c = ngraph::runtime::make_tensor<element::Int64>(shape);
+    *c = vector<element::Int64::type>{9, 10, 11, 12};
+    auto abc = ngraph::runtime::make_tuple({a, b, c});
+    auto bac = ngraph::runtime::make_tuple({b, a, c});
+    auto acb = ngraph::runtime::make_tuple({a, c, b});
+    auto result = ngraph::runtime::make_tensor<element::Int64>(shape);
+    auto result_tuple = ngraph::runtime::make_tuple({result});
+
+    (*cf)({abc}, {result_tuple});
+    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+
+    (*cf)({bac}, {result_tuple});
+    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+
+    (*cf)({acb}, {result_tuple});
+    ASSERT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector());
+}
+
 // Multiple retrive values
 TEST(execute, test_tuple_result)
 {

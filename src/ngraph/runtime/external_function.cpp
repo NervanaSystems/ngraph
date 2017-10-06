@@ -542,14 +542,16 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         };
 
         // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
-        // TODO: Not sure how to make this polymorphic!
         REGISTER_TO_OP_MAP(op::Tuple)
         {
             for (size_t i = 0; i < in.size(); ++i)
             {
-                ef->get_instructions()->push_back(
-                    make_shared<runtime::eigen::CopyInstruction<element::Float32>>(
-                        in.at(i).get_index(), out.at(i).get_index()));
+                auto& et = in.at(i).get_tensor_view_layout()->get_element_type();
+                PUSH_TEMPLATED_INSTRUCTION(et,
+                                           "Tuple has unhandled element type",
+                                           runtime::eigen::CopyInstruction,
+                                           in.at(i).get_index(),
+                                           out.at(i).get_index());
             }
         };
 
