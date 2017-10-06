@@ -52,6 +52,39 @@ TEST(execute, abc)
     ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector());
 }
 
+TEST(execute, abc_int64)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Int64::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Int64::element_type(), shape);
+    auto C = make_shared<op::Parameter>(element::Int64::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Int64::element_type(), shape);
+    auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Int64>(shape);
+    *a = vector<element::Int64::type>{1, 2, 3, 4};
+    auto b = backend->make_parameterized_tensor_view<element::Int64>(shape);
+    *b = vector<element::Int64::type>{5, 6, 7, 8};
+    auto c = backend->make_parameterized_tensor_view<element::Int64>(shape);
+    *c = vector<element::Int64::type>{9, 10, 11, 12};
+    auto result = backend->make_parameterized_tensor_view<element::Int64>(shape);
+
+    (*cf)({a, b, c}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+
+    (*cf)({b, a, c}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+
+    (*cf)({a, c, b}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector());
+}
+
 // Same as abc, but using tuples for input and output
 TEST(execute, abc_tuple)
 {
@@ -94,6 +127,50 @@ TEST(execute, abc_tuple)
 
     (*cf)({acb}, {result_tuple});
     ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector());
+}
+
+// Same as abc, but using tuples for input and output
+TEST(execute, abc_tuple_int64)
+{
+    auto shape = Shape{2, 2};
+
+    auto tensor_view_type = make_shared<TensorViewType>(element::Int64::element_type(), shape);
+
+    auto ABC = make_shared<op::Parameter>(
+        make_shared<TupleType>(ValueTypes{tensor_view_type, tensor_view_type, tensor_view_type}));
+
+    auto A = make_shared<op::GetTupleElement>(ABC, 0);
+    auto B = make_shared<op::GetTupleElement>(ABC, 1);
+    auto C = make_shared<op::GetTupleElement>(ABC, 2);
+    auto f = make_shared<Function>(
+        make_shared<op::Tuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Int64>(shape);
+    *a = vector<element::Int64::type>{1, 2, 3, 4};
+    auto b = backend->make_parameterized_tensor_view<element::Int64>(shape);
+    *b = vector<element::Int64::type>{5, 6, 7, 8};
+    auto c = backend->make_parameterized_tensor_view<element::Int64>(shape);
+    *c = vector<element::Int64::type>{9, 10, 11, 12};
+    auto abc = ngraph::runtime::make_tuple({a, b, c});
+    auto bac = ngraph::runtime::make_tuple({b, a, c});
+    auto acb = ngraph::runtime::make_tuple({a, c, b});
+    auto result = ngraph::runtime::make_tensor<element::Int64>(shape);
+    auto result_tuple = ngraph::runtime::make_tuple({result});
+
+    (*cf)({abc}, {result_tuple});
+    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+
+    (*cf)({bac}, {result_tuple});
+    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+
+    (*cf)({acb}, {result_tuple});
+    ASSERT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector());
 }
 
 // Multiple retrive values
@@ -216,6 +293,38 @@ TEST(execute, concat_matrix_rowwise)
 
     (*cf)({a, b, c}, {result});
     ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
+              result->get_vector());
+}
+
+TEST(execute, concat_matrix_int64)
+{
+    auto shape_a = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Int64::element_type(), shape_a);
+    auto shape_b = Shape{3, 2};
+    auto B = make_shared<op::Parameter>(element::Int64::element_type(), shape_b);
+    auto shape_c = Shape{3, 2};
+    auto C = make_shared<op::Parameter>(element::Int64::element_type(), shape_c);
+    auto shape_r = Shape{8, 2};
+    auto rt = make_shared<TensorViewType>(element::Int64::element_type(), Shape{8, 2});
+    auto f = make_shared<Function>(
+        make_shared<op::Concat>(Nodes{A, B, C}, 0), rt, op::Parameters{A, B, C});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Int64>(shape_a);
+    *a = vector<element::Int64::type>{2, 4, 8, 16};
+    auto b = backend->make_parameterized_tensor_view<element::Int64>(shape_b);
+    *b = vector<element::Int64::type>{1, 2, 4, 8, 16, 32};
+    auto c = backend->make_parameterized_tensor_view<element::Int64>(shape_c);
+    *c = vector<element::Int64::type>{2, 3, 5, 7, 11, 13};
+    auto result = backend->make_parameterized_tensor_view<element::Int64>(shape_r);
+
+    (*cf)({a, b, c}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
               result->get_vector());
 }
 
@@ -601,6 +710,32 @@ TEST(execute, dot_matrix_vector)
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<float>{190, 486, 782, 1078}), result->get_vector());
+}
+
+TEST(execute, dot_matrix_vector_int64)
+{
+    auto shape_a = Shape{4, 4};
+    auto shape_b = Shape{4};
+    auto A = make_shared<op::Parameter>(element::Int64::element_type(), shape_a);
+    auto B = make_shared<op::Parameter>(element::Int64::element_type(), shape_b);
+    auto rt = make_shared<TensorViewType>(element::Int64::element_type(), shape_b);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto shape_r = Shape{4};
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Int64>(shape_a);
+    *a = vector<element::Int64::type>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    auto b = backend->make_parameterized_tensor_view<element::Int64>(shape_b);
+    *b = vector<element::Int64::type>{17, 18, 19, 20};
+    auto result = backend->make_parameterized_tensor_view<element::Int64>(shape_r);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{190, 486, 782, 1078}), result->get_vector());
 }
 
 TEST(execute, greater)
@@ -1083,4 +1218,94 @@ TEST(execute, broadcast_vector_rowwise)
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), result->get_vector());
+}
+
+TEST(execute, broadcast_vector_rowwise_int64)
+{
+    auto shape_a = Shape{4};
+    auto A = make_shared<op::Parameter>(element::Int64::element_type(), shape_a);
+    auto shape_r = Shape{3, 4};
+    auto rt = make_shared<TensorViewType>(element::Int64::element_type(), shape_r);
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Int64>(shape_a);
+    *a = vector<element::Int64::type>{1, 2, 3, 4};
+    auto result = backend->make_parameterized_tensor_view<element::Int64>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}),
+              result->get_vector());
+}
+
+TEST(execute, convert_int32_float32)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(
+        make_shared<op::Convert>(A, element::Float32::element_type()), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Int32>(shape);
+    *a = vector<element::Int32::type>{1, 2, 3, 4};
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<element::Float32::type>{1, 2, 3, 4}), result->get_vector());
+}
+
+TEST(execute, convert_int32_bool)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(
+        make_shared<op::Convert>(A, element::Bool::element_type()), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Int32>(shape);
+    *a = vector<element::Int32::type>{1, 2, 3, 4};
+    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector());
+}
+
+TEST(execute, convert_float32_bool)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(
+        make_shared<op::Convert>(A, element::Bool::element_type()), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    *a = vector<element::Float32::type>{1, 2, 3, 4};
+    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector());
 }
