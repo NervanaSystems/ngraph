@@ -157,4 +157,8 @@ install(DIRECTORY
     DESTINATION "${CMAKE_INSTALL_LIB}"
 )
 
-add_dependencies(ngraph eigen ext_llvm)
+add_dependencies(ngraph eigen)
+
+if(LLVM_INCLUDE_DIR)
+    add_dependencies(ngraph ext_llvm)
+endif()
