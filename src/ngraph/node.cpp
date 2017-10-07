@@ -13,6 +13,10 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/node.hpp"
+#include <memory>
+#include <typeindex>
+#include <typeinfo>
+
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/ops/parameter.hpp"
