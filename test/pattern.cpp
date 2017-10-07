@@ -47,7 +47,7 @@ public:
     bool compare_nodes(std::shared_ptr<ngraph::Node>& pattern_node,
                        const std::shared_ptr<ngraph::Node>& graph_node);
 
-    virtual void on_match_class(std::shared_ptr<ngraph::Node>& pattern_node,
+    virtual void on_match_class(const std::shared_ptr<ngraph::Node>& pattern_node,
                                 const std::shared_ptr<ngraph::Node>& graph_node,
                                 bool is_match);
 
@@ -61,7 +61,7 @@ protected:
     std::shared_ptr<ngraph::Node> m_graph_node;
 };
 
-void TestMatcher::on_match_class(std::shared_ptr<ngraph::Node>& pattern_node,
+void TestMatcher::on_match_class(const std::shared_ptr<ngraph::Node>& pattern_node,
                                  const std::shared_ptr<ngraph::Node>& graph_node,
                                  bool is_match)
 {
