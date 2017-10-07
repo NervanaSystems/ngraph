@@ -159,6 +159,6 @@ install(DIRECTORY
 
 add_dependencies(ngraph eigen)
 
-if(LLVM_INCLUDE_DIR)
+if(NOT LLVM_PACKAGED AND LLVM_INCLUDE_DIR)
     add_dependencies(ngraph ext_llvm)
 endif()
