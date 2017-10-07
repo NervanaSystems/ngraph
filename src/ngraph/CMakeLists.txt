@@ -46,6 +46,7 @@ set (SRC
     pass/assign_tensors.cpp
     pass/collect_functions.cpp
     pass/dump_sorted.cpp
+    pass/graph_rewrite.cpp
     pass/liveness.cpp
     pass/manager.cpp
     pass/manager_state.cpp
