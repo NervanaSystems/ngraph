@@ -76,7 +76,7 @@ endif()
 
 # Populate header and library paths from package-exported info
 # if we found system-level LLVM and Clang packages
-if(NOT LLVM_INCLUDE_DIR)
+if(LLVM_FOUND AND NOT LLVM_INCLUDE_DIR)
     set(LLVM_INCLUDE_DIR ${LLVM_INCLUDE_DIRS})
     set(LLVM_LIB_DIR ${LLVM_LIBRARY_DIRS})
     llvm_map_components_to_libnames(llvm_libs support core engine)
