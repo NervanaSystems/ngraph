@@ -16,6 +16,8 @@
 
 #include <memory>
 
+#include "ngraph/ngraph.hpp"
+
 namespace ngraph
 {
     namespace pattern

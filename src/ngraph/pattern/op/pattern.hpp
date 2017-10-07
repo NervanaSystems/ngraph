@@ -23,6 +23,8 @@ namespace ngraph
     {
         namespace op
         {
+
+
             class Pattern : public Node
             {
             public:
@@ -32,9 +34,9 @@ namespace ngraph
 
                 void virtual match_class(ngraph::pattern::Matcher& matcher, std::shared_ptr<Node> graph_node) override;
                 bool is_binded() { return (bool)m_binded;  };
-                shared_ptr<Node> get_binded_node() { return m_binded; }
+                std::shared_ptr<Node> get_binded_node() { return m_binded; }
             private:
-                shared_ptr<Node> m_binded;
+                std::shared_ptr<Node> m_binded;
             };
         }
     }
