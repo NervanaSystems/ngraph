@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include "matcher.hpp"
 #include <algorithm>
 #include "ngraph/ngraph.hpp"
-#include "matcher.hpp"
 
 namespace ngraph
 {
@@ -33,8 +33,8 @@ namespace ngraph
         }
 
         void Matcher::on_match_class(const std::shared_ptr<ngraph::Node>& pattern_node,
-            const std::shared_ptr<ngraph::Node>& graph_node,
-            bool is_match)
+                                     const std::shared_ptr<ngraph::Node>& graph_node,
+                                     bool is_match)
         {
             if (!is_match)
             {
@@ -53,11 +53,12 @@ namespace ngraph
 
             if (graph_node->is_commutative())
             {
-
-                auto args_copy = Nodes(args); //@TODO [nikolayk] remove if there are no implicit dependencies
-                do                            //on the order of arguments in the rest of the compiler
+                auto args_copy =
+                    Nodes(args); //@TODO [nikolayk] remove if there are no implicit dependencies
+                do               //on the order of arguments in the rest of the compiler
                 {
-                    m_is_match = true; //previous permutation wasn't a match; reset m_is_match back to true
+                    m_is_match =
+                        true; //previous permutation wasn't a match; reset m_is_match back to true
                     match_arguments(pattern_args, args_copy);
                     if (m_is_match)
                     {
@@ -71,7 +72,8 @@ namespace ngraph
             }
         }
 
-        bool Matcher::match(std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node)
+        bool Matcher::match(std::shared_ptr<Node>& pattern_node,
+                            const std::shared_ptr<Node>& graph_node)
         {
             m_is_valid = true;
             pattern_node->match_class(*this, graph_node);
@@ -79,4 +81,3 @@ namespace ngraph
         }
     }
 }
-
