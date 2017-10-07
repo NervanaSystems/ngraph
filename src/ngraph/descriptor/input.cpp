@@ -24,9 +24,15 @@ Input::Input(Node* node, size_t index, size_t argno, size_t arg_index, Output& o
     , m_index(index)
     , m_argno(argno)
     , m_arg_index(arg_index)
-    , m_output(output)
+    , m_output(&output)
 {
     output.add_input(this);
+}
+
+void Input::replace_output(Output& new_output)
+{
+	m_output->remove_input(this);
+	new_output.add_input(this);
 }
 
 std::shared_ptr<Node> Input::get_node()
@@ -36,25 +42,25 @@ std::shared_ptr<Node> Input::get_node()
 
 const Tensor& Input::get_tensor() const
 {
-    return m_output.get_tensor();
+    return m_output->get_tensor();
 }
 
 Tensor& Input::get_tensor()
 {
-    return m_output.get_tensor();
+    return m_output->get_tensor();
 }
 
 std::shared_ptr<const TensorView> Input::get_tensor_view() const
 {
-    return m_output.get_tensor_view();
+    return m_output->get_tensor_view();
 }
 
 std::shared_ptr<TensorView> Input::get_tensor_view()
 {
-    return m_output.get_tensor_view();
+    return m_output->get_tensor_view();
 }
 
 std::shared_ptr<const TensorViewType> Input::get_tensor_view_type() const
 {
-    return m_output.get_tensor_view()->get_tensor_view_type();
+    return m_output->get_tensor_view()->get_tensor_view_type();
 }

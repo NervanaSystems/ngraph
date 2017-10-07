@@ -33,6 +33,11 @@ void Output::add_input(Input* input)
     m_inputs.insert(input);
 }
 
+void Output::remove_input(Input* input)
+{
+	m_inputs.erase(input);
+}
+
 std::shared_ptr<Node> Output::get_node() const
 {
     return m_node->shared_from_this();

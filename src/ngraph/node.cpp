@@ -12,8 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <memory>
+#include <typeindex>
+#include <typeinfo>
 #include "ngraph/autodiff/adjoints.hpp"
+
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
 using namespace std;
 using namespace ngraph;

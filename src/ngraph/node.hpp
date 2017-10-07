@@ -35,6 +35,11 @@
 
 namespace ngraph
 {
+    namespace pattern
+    {
+        class Matcher;
+    }
+
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// view or a (possibly empty) tuple of values.
@@ -90,7 +95,7 @@ namespace ngraph
         bool is_output() const;
         void set_is_output();
         virtual bool is_constant() const;
-
+        virtual bool is_commutative() { return false; };
         size_t get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
