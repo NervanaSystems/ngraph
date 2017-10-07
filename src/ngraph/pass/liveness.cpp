@@ -39,7 +39,7 @@ bool pass::Liveness::run_on_call_graph(list<Node*>& ops)
         node->liveness_new_list.clear();
         node->liveness_free_list.clear();
         unordered_set<Tensor*> input_tensor_decls;
-        for (auto input_decl : node->get_inputs())
+        for (Input& input_decl : node->get_inputs())
         {
             Tensor& tensor = input_decl.get_tensor();
             if (is_temporary(tensor))
@@ -49,7 +49,7 @@ bool pass::Liveness::run_on_call_graph(list<Node*>& ops)
         }
 
         unordered_set<Tensor*> output_tensor_decls;
-        for (auto output_decl : node->get_outputs())
+        for (Output& output_decl : node->get_outputs())
         {
             Tensor& tensor = output_decl.get_tensor();
             if (is_temporary(tensor))
