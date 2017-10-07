@@ -14,9 +14,11 @@
 set (SRC
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
+    descriptor/layout/tensor_view_layout.cpp
     descriptor/output.cpp
     descriptor/primary_tensor_view.cpp
     descriptor/tensor.cpp
+    descriptor/tensor_view.cpp
     descriptor/tuple.cpp
     function.cpp
     log.cpp
@@ -50,8 +52,13 @@ set (SRC
     pass/propagate_types.cpp
     pass/topological_sort.cpp
     pass/visualize_tree.cpp
-    runtime/call_frame.cpp
-    runtime/external_function.cpp
+    runtime/backend.cpp
+    runtime/manager.cpp
+    runtime/ngvm/call_frame.cpp
+    runtime/ngvm/external_function.cpp
+    runtime/ngvm/ngvm_backend.cpp
+    runtime/ngvm/ngvm_manager.cpp
+    runtime/tensor_view.cpp
     runtime/tuple.cpp
     runtime/utils.cpp
     shape.cpp

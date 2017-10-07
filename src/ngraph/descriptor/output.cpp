@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph/descriptor/output.hpp"
+#include "ngraph/descriptor/input.hpp"
 
 using namespace std;
 using namespace ngraph;
-using namespace descriptor;
+using namespace ngraph::descriptor;
 
 Output::Output(const std::shared_ptr<Node>& node,
                size_t index,

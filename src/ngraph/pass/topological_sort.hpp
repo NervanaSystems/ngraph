@@ -25,7 +25,6 @@ namespace ngraph
     {
         class TopologicalSort;
     }
-    class Node;
 }
 
 class ngraph::pass::TopologicalSort : public FunctionPass

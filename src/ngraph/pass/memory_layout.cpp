@@ -17,7 +17,6 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/ngraph.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"

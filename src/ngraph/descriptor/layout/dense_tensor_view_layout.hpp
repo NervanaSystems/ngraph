@@ -14,16 +14,17 @@
 
 #pragma once
 
+#include <cstddef>
 #include <vector>
 
-#include "ngraph/descriptor/buffer.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
-#include "ngraph/descriptor/tensor_view.hpp"
 
 namespace ngraph
 {
     namespace descriptor
     {
+        class TensorView;
+
         namespace layout
         {
             /// @brief The standard strided layout, used for row-major and column-major, their permutations and slices.

@@ -15,7 +15,7 @@
 #include <memory>
 
 #include "ngraph/log.hpp"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/ops/select.hpp"
 
 using namespace std;
 using namespace ngraph;

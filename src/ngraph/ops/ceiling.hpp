@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "ngraph/ops/op.hpp"
+
 namespace ngraph
 {
     namespace op

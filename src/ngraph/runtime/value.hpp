@@ -21,6 +21,11 @@
 
 namespace ngraph
 {
+    namespace descriptor
+    {
+        class Value;
+    }
+
     namespace runtime
     {
         class TensorView;

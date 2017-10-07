@@ -28,9 +28,6 @@ namespace ngraph
         class Manager;
         class ManagerState;
     }
-
-    class Node;
-    class Function;
 }
 
 class ngraph::pass::Manager
