@@ -30,26 +30,7 @@ namespace ngraph
                 virtual std::string description() const { return "pattern"; } //@TODO [nikolayk] edit description to print out if the pattern is binded and if so the binded node
                 virtual void propagate_types() {}
 
-                void virtual match_class(ngraph::pattern::Matcher& matcher, std::shared_ptr<Node> graph_node) override
-                {
-                    bool is_match = true;
-                    if (is_binded())
-                    {
-                        if (get_binded_node() != graph_node)
-                        {
-                            is_match = false;
-                        }
-                    }
-                    else
-                    {
-                        m_binded = graph_node;
-                    }
-
-                    matcher.on_match_class(shared_from_this(),
-                        graph_node,
-                        is_match);
-                }
-
+                void virtual match_class(ngraph::pattern::Matcher& matcher, std::shared_ptr<Node> graph_node) override;
                 bool is_binded() { return (bool)m_binded;  };
                 shared_ptr<Node> get_binded_node() { return m_binded; }
             private:
