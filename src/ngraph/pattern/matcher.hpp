@@ -13,11 +13,6 @@
 // ----------------------------------------------------------------------------
 
 #pragma once
-
-#include <memory>
-
-#include "ngraph/ngraph.hpp"
-
 namespace ngraph
 {
     namespace pattern
@@ -30,7 +25,7 @@ namespace ngraph
             /// Called whern the pattern node matches a graph node.
             virtual void on_match_class(const std::shared_ptr<Node>& pattern_node,
                                         const std::shared_ptr<Node>& graph_node,
-                                        bool is_match) = 0;
+                                        bool is_match);
 
 
             bool match(std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node);
