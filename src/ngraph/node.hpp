@@ -34,6 +34,11 @@
 
 namespace ngraph
 {
+    namespace pattern
+    {
+        class Matcher;
+    }
+
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// view or a (possibly empty) tuple of values.
@@ -62,6 +67,11 @@ namespace ngraph
 
         /// Propagate types and check arguments for consistency
         virtual void propagate_types() = 0;
+
+        /// Treating this node as a pattern, process node.
+        /// @param matcher Callback for reporting match
+        /// @param node The node to check against this pattern.
+        virtual void match_class(pattern::Matcher& matcher, std::shared_ptr<Node> node);
 
         /// Assign Input and Output vectors
         // This might later need to be virtual.

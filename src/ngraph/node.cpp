@@ -13,7 +13,12 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/autodiff/adjoints.hpp"
+#include <memory>
+#include <typeindex>
+#include <typeinfo>
+
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -159,6 +164,7 @@ void Node::set_name(const string& name)
     }
 }
 
+<<<<<<< fff318bd32c054c2d5aa4385ac8591cb9a3d918d
 std::shared_ptr<Node> Node::backprop_node(const std::shared_ptr<Node>& x,
                                           const std::shared_ptr<Node>& c)
 {
@@ -169,6 +175,13 @@ std::shared_ptr<Node> Node::backprop_node(const std::shared_ptr<Node>& x,
             m_adjoint_map.insert({c.get(), autodiff::Adjoints(shared_from_this(), c)}).first;
     }
     return adjoints_it->second.get(x);
+=======
+void Node::match_class(ngraph::pattern::Matcher& matcher, std::shared_ptr<Node> graph_node)
+{
+    matcher.on_match_class(shared_from_this(),
+                           graph_node,
+                           type_index(typeid(*this)) == type_index(typeid(*&*graph_node)));
+>>>>>>> Start of pattern matcher
 }
 
 namespace ngraph
