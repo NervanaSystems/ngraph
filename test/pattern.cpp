@@ -21,26 +21,6 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 
-void ngraph::pattern::op::Pattern::match_class(ngraph::pattern::Matcher& matcher, std::shared_ptr<Node> graph_node)
-{
-    bool is_match = true;
-    if (is_binded())
-    {
-        if (get_binded_node() != graph_node)
-        {
-            is_match = false;
-        }
-    }
-    else
-    {
-        m_binded = graph_node;
-    }
-
-    matcher.on_match_class(shared_from_this(),
-        graph_node,
-        is_match);
-}
-
 class TestMatcher : public ngraph::pattern::Matcher
 {
 public:
