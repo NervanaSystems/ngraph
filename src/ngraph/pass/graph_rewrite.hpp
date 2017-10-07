@@ -24,13 +24,15 @@ namespace ngraph
     {
         class GraphRewrite;
     }
-    using gr_callback_fn = std::function<void(std::shared_ptr<pattern::Matcher> m, std::shared_ptr<Node> match_root)>;
+    using gr_callback_fn =
+        std::function<void(std::shared_ptr<pattern::Matcher> m, std::shared_ptr<Node> match_root)>;
 }
 
 class ngraph::pass::GraphRewrite : public CallGraphPass
 {
 public:
-    GraphRewrite() : CallGraphPass() {};
+    GraphRewrite()
+        : CallGraphPass(){};
     virtual void process_match() = 0;
 
     void add_matcher_callback_pair(std::shared_ptr<pattern::Matcher> m, gr_callback_fn callback)
@@ -39,10 +41,10 @@ public:
     };
     virtual bool run_on_call_graph(std::list<Node*>&) override;
 
-
 private:
     //enable cascading rewrites
-    std::vector<std::pair<std::shared_ptr<pattern::Matcher>, gr_callback_fn>> m_matcher_callback_pairs;
+    std::vector<std::pair<std::shared_ptr<pattern::Matcher>, gr_callback_fn>>
+        m_matcher_callback_pairs;
 
 private:
 };

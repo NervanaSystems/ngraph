@@ -23,17 +23,20 @@ namespace ngraph
     {
         namespace op
         {
-
-
             class Pattern : public Node
             {
             public:
-                Pattern() : Node(), m_binded(nullptr) {};
-                virtual std::string description() const { return "pattern"; } //@TODO [nikolayk] edit description to print out if the pattern is binded and if so the binded node
+                Pattern()
+                    : Node()
+                    , m_binded(nullptr){};
+                virtual std::string description() const
+                {
+                    return "pattern";
+                } //@TODO [nikolayk] edit description to print out if the pattern is binded and if so the binded node
                 virtual void propagate_types() {}
-
-                void virtual match_class(ngraph::pattern::Matcher& matcher, std::shared_ptr<Node> graph_node) override;
-                bool is_binded() { return (bool)m_binded;  };
+                void virtual match_class(ngraph::pattern::Matcher& matcher,
+                                         std::shared_ptr<Node> graph_node) override;
+                bool is_binded() { return (bool)m_binded; };
                 std::shared_ptr<Node> get_binded_node() { return m_binded; }
             private:
                 std::shared_ptr<Node> m_binded;

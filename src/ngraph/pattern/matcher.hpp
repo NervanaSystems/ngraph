@@ -20,15 +20,19 @@ namespace ngraph
         class Matcher
         {
         public:
-            Matcher() : m_is_valid(false), m_is_match(true) {}
+            Matcher()
+                : m_is_valid(false)
+                , m_is_match(true)
+            {
+            }
             virtual ~Matcher() {}
             /// Called whern the pattern node matches a graph node.
             virtual void on_match_class(const std::shared_ptr<Node>& pattern_node,
                                         const std::shared_ptr<Node>& graph_node,
                                         bool is_match);
 
-
-            bool match(std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node);
+            bool match(std::shared_ptr<Node>& pattern_node,
+                       const std::shared_ptr<Node>& graph_node);
 
         private:
             void match_arguments(const Nodes& pattern_args, const Nodes& args);
