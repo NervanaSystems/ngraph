@@ -48,6 +48,8 @@
 
 #include "compiler.hpp"
 
+// TODO: Fix leaks
+
 using namespace clang;
 using namespace llvm;
 using namespace llvm::opt;
