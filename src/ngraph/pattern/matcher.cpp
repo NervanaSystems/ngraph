@@ -18,7 +18,7 @@ namespace ngraph
             }
         }
 
-        void Matcher::on_match_class(std::shared_ptr<ngraph::Node>& pattern_node,
+        void Matcher::on_match_class(const std::shared_ptr<ngraph::Node>& pattern_node,
             const std::shared_ptr<ngraph::Node>& graph_node,
             bool is_match)
         {
