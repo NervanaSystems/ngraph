@@ -57,7 +57,7 @@ namespace ngraph
                 auto args_copy = Nodes(args); //@TODO [nikolayk] remove if there are no implicit dependencies
                 do                            //on the order of arguments in the rest of the compiler
                 {
-                    m_is_match = true; //in case if m_is_match was set to false by the previous permutation
+                    m_is_match = true; //previous permutation wasn't a match; reset m_is_match back to true
                     match_arguments(pattern_args, args_copy);
                     if (m_is_match)
                     {
