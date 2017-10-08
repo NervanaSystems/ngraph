@@ -27,11 +27,6 @@ namespace ngraph
         // Describes an output tensor of an op
         class Output
         {
-            // For some odd reason emplace_back is requiring a copy constructor
-            // it should not. See issue #111 for details
-            // Output(const Output&) = delete;
-            // Output& operator=(const Output&) = delete;
-
         public:
             /// @param node Node that owns this output.
             /// @param index Position of the output tensor in all output tensors
@@ -53,6 +48,11 @@ namespace ngraph
             size_t m_index;
             std::shared_ptr<TensorView> m_tensor_view;
             std::set<Input*> m_inputs;
+
+        private:
+            Output(const Output&) = delete;
+            Output(Output&&) = delete;
+            Output& operator=(const Output&) = delete;
         };
     }
 }

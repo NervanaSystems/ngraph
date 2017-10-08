@@ -31,7 +31,7 @@ TEST(input_output, param_tensor)
     ASSERT_EQ(param->get_outputs().size(), 1);
     for (size_t i = 0; i < param->get_outputs().size(); i++)
     {
-        auto output = param->get_outputs()[i];
+        auto& output = param->get_outputs()[i];
         ASSERT_EQ(i, output.get_index());
         ASSERT_EQ(param, output.get_node());
     }
@@ -52,7 +52,7 @@ TEST(input_output, param_tuple)
     ASSERT_EQ(param->get_outputs().size(), 2);
     for (size_t i = 0; i < param->get_outputs().size(); i++)
     {
-        auto output = param->get_outputs()[i];
+        auto& output = param->get_outputs()[i];
         ASSERT_EQ(i, output.get_index());
         ASSERT_EQ(param, output.get_node());
     }
@@ -87,11 +87,11 @@ TEST(input_output, simple_output)
     }
 
     // At this point, the add should have each input associated with the output of the appropriate parameter
-    auto inputs = add->get_inputs();
+    auto& inputs = add->get_inputs();
     ASSERT_EQ(2, inputs.size());
     for (size_t i = 0; i < inputs.size(); i++)
     {
-        auto input = inputs[i];
+        auto& input = inputs[i];
         ASSERT_EQ(i, input.get_index());
         ASSERT_EQ(i, input.get_argno());
         ASSERT_EQ(0, input.get_arg_index());

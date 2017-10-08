@@ -99,10 +99,10 @@ namespace ngraph
         size_t get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
 
-        std::vector<descriptor::Input>& get_inputs() { return m_inputs; }
-        const std::vector<descriptor::Input>& get_inputs() const { return m_inputs; }
-        std::vector<descriptor::Output>& get_outputs() { return m_outputs; }
-        const std::vector<descriptor::Output>& get_outputs() const { return m_outputs; }
+        std::deque<descriptor::Input>& get_inputs() { return m_inputs; }
+        const std::deque<descriptor::Input>& get_inputs() const { return m_inputs; }
+        std::deque<descriptor::Output>& get_outputs() { return m_outputs; }
+        const std::deque<descriptor::Output>& get_outputs() const { return m_outputs; }
         std::unordered_set<descriptor::Tensor*> liveness_live_list;
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
@@ -114,8 +114,8 @@ namespace ngraph
         std::string m_name;
         size_t m_instance_id;
         static size_t m_next_instance_id;
-        std::vector<descriptor::Input> m_inputs;
-        std::vector<descriptor::Output> m_outputs;
+        std::deque<descriptor::Input> m_inputs;
+        std::deque<descriptor::Output> m_outputs;
         bool m_is_output;
     };
 }
