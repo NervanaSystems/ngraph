@@ -13,6 +13,10 @@
 // ----------------------------------------------------------------------------
 
 #pragma once
+
+#include <memory.h>
+#include "ngraph/ngraph.hpp"
+
 namespace ngraph
 {
     namespace pattern
