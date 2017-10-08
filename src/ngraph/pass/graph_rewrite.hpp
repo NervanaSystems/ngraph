@@ -15,6 +15,7 @@
 #pragma once
 
 #include <functional>
+#include <set>
 
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -24,8 +25,9 @@ namespace ngraph
     {
         class GraphRewrite;
     }
-    using gr_callback_fn =
-        std::function<void(std::shared_ptr<pattern::Matcher> m, std::shared_ptr<Node> match_root)>;
+    using gr_callback_fn = std::function<void(std::shared_ptr<pattern::Matcher> m,
+                                              std::shared_ptr<Node> match_root,
+                                              class GraphRewrite& gr)>;
 }
 
 class ngraph::pass::GraphRewrite : public CallGraphPass
@@ -39,12 +41,15 @@ public:
     {
         m_matcher_callback_pairs.push_back(std::make_pair(m, callback));
     };
+
+    void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
     virtual bool run_on_call_graph(std::list<Node*>&) override;
 
 private:
     //enable cascading rewrites
     std::vector<std::pair<std::shared_ptr<pattern::Matcher>, gr_callback_fn>>
         m_matcher_callback_pairs;
+    std::set<std::shared_ptr<Node>> marked_for_replacement;
 
 private:
 };
