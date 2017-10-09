@@ -72,7 +72,7 @@ namespace ngraph
             }
         }
 
-        bool Matcher::match(std::shared_ptr<Node>& pattern_node,
+        bool Matcher::match(const std::shared_ptr<Node>& pattern_node,
                             const std::shared_ptr<Node>& graph_node)
         {
             m_is_valid = true;

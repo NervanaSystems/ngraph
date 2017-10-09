@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <cstdio>
 #include <memory>
-
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
@@ -67,6 +67,70 @@ using namespace std;
 
 TEST(pattern, op_op)
 {
+    auto shape = Shape{1};
+
+    auto a = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+    pattern::Matcher n;
+
+    ASSERT_TRUE(n.match(a, a));
+    n.reset();
+    auto pattern = std::make_shared<pattern::op::Pattern>();
+    ASSERT_TRUE(n.match(pattern, a));
+    ASSERT_EQ(pattern->get_binded_node(), a);
+    pattern->reset();
+    ASSERT_FALSE(pattern->is_binded());
+
+    auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+    auto sum = a + b;
+
+    auto any = std::make_shared<pattern::op::Any>();
+    auto any_sum = any + b;
+
+    n.reset();
+    ASSERT_TRUE(n.match(pattern, a));
+    n.reset();
+    ASSERT_TRUE(n.match(any_sum, sum));
+    n.reset();
+    auto pattern_sum = pattern + b;
+    ASSERT_TRUE(n.match(pattern_sum, sum));
+    ASSERT_EQ(pattern->get_binded_node(), a);
+    n.reset();
+    pattern->reset();
+    auto pattern_sum_perm = b + pattern;
+    ASSERT_TRUE(n.match(pattern_sum_perm, sum));
+    ASSERT_EQ(pattern->get_binded_node(), b);
+    //auto c = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+    //
+    //{AT}
+    //ASSERT_TRUE(n.match(ANY, A));
+
+    //auto PATTERN3 = std::make_shared<pattern::op::Pattern>();
+    //auto PATTERN_SUM = A + PATTERN3;
+    //ASSERT_TRUE(n.match(PATTERN_SUM, SUM);
+
+    //auto PATTERN_SUM_PERM = B + PATTERN;
+    //ASSERT_TRUE(PATTERN_SUM_PERM, SUM);
+
+    //auto PATTERN2 = std::make_shared<pattern::op::Pattern>();
+    //auto ANYmulPATTERN2 = ANY*PATTERN2;
+    //auto ANYmulPATTERN2_2 = ANY*PATTERN2;
+    //A*B + C*B
+
+    //auto AmulB = A * B;
+    //auto BmulC = B * C;
+    //auto SumOfMul = AmulB + BmulC;
+
+    //TestMatcher test_matcher;
+    /*ASSERT_TRUE(test_matcher.compare_nodes(A, B));
+    ASSERT_FALSE(test_matcher.compare_nodes(A, SUM));
+    ASSERT_TRUE(test_matcher.compare_nodes(ANY, A));
+    ASSERT_TRUE(test_matcher.compare_nodes(ANY, B));
+    ASSERT_TRUE(test_matcher.compare_nodes(ANY, SUM));*/
+}
+
+/*
+TEST(pattern, op_op)
+{
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -80,3 +144,4 @@ TEST(pattern, op_op)
     ASSERT_TRUE(test_matcher.compare_nodes(ANY, B));
     ASSERT_TRUE(test_matcher.compare_nodes(ANY, SUM));
 }
+*/

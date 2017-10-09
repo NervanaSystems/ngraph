@@ -38,6 +38,7 @@ namespace ngraph
                                          std::shared_ptr<Node> graph_node) override;
                 bool is_binded() { return (bool)m_binded; };
                 std::shared_ptr<Node> get_binded_node() { return m_binded; }
+                void reset() { m_binded.reset(); }
             private:
                 std::shared_ptr<Node> m_binded;
             };
