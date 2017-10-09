@@ -30,8 +30,7 @@ void Reshape::propagate_types()
     {
         throw ngraph_error("Argument to reshape is missing type.");
     }
-    auto arg_tensor_view_type =
-        dynamic_pointer_cast<const TensorViewType>(arg_type);
+    auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
     if (nullptr == arg_type)
     {
         throw ngraph_error("Argument to reshape is not a tensor view");
@@ -45,12 +44,13 @@ void Reshape::propagate_types()
         throw ngraph_error("Input axis order for reshape is not a permutation of argument's axes");
     }
 
-    for(size_t i = 0; i < arg_rank; i++)
+    for (size_t i = 0; i < arg_rank; i++)
     {
-        auto it = std::find(std::begin(m_input_order),std::end(m_input_order),i);
+        auto it = std::find(std::begin(m_input_order), std::end(m_input_order), i);
         if (std::end(m_input_order) == it)
         {
-            throw ngraph_error("Input axis order for reshape is not a permutation of argument's axes");
+            throw ngraph_error(
+                "Input axis order for reshape is not a permutation of argument's axes");
         }
     }
 
@@ -68,9 +68,11 @@ void Reshape::propagate_types()
 
     if (arg_shape_product != output_shape_product)
     {
-        throw ngraph_error("Product of output shape dimensions does not match product of argument shape dimensions for reshape");
+        throw ngraph_error(
+            "Product of output shape dimensions does not match product of argument shape "
+            "dimensions for reshape");
     }
 
-    set_value_type_checked(make_shared<TensorViewType>(
-        arg_tensor_view_type->get_element_type(), m_output_shape));
+    set_value_type_checked(
+        make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), m_output_shape));
 }

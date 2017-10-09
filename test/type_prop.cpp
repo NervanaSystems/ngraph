@@ -1046,119 +1046,109 @@ TEST(type_prop, reshape_deduce_s2v)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{},Shape{1});
+    auto r = make_shared<op::Reshape>(param, AxisVector{}, Shape{1});
     r->propagate_types();
-    ASSERT_EQ(*(r->get_value_type()),
-              TensorViewType(element::Float32::element_type(), Shape{1}));
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{1}));
 }
 
 TEST(type_prop, reshape_deduce_s2m)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{},Shape{1,1});
+    auto r = make_shared<op::Reshape>(param, AxisVector{}, Shape{1, 1});
     r->propagate_types();
     ASSERT_EQ(*(r->get_value_type()),
-              TensorViewType(element::Float32::element_type(), Shape{1,1}));
+              TensorViewType(element::Float32::element_type(), Shape{1, 1}));
 }
 
 TEST(type_prop, reshape_deduce_s2t)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{},Shape{1,1,1});
+    auto r = make_shared<op::Reshape>(param, AxisVector{}, Shape{1, 1, 1});
     r->propagate_types();
     ASSERT_EQ(*(r->get_value_type()),
-              TensorViewType(element::Float32::element_type(), Shape{1,1,1}));
+              TensorViewType(element::Float32::element_type(), Shape{1, 1, 1}));
 }
 
 TEST(type_prop, reshape_deduce_v2s)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{1}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{0},Shape{});
+    auto r = make_shared<op::Reshape>(param, AxisVector{0}, Shape{});
     r->propagate_types();
-    ASSERT_EQ(*(r->get_value_type()),
-              TensorViewType(element::Float32::element_type(), Shape{}));
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
 }
 
 TEST(type_prop, reshape_deduce_m2s)
 {
     auto param = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{1,1}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{0,1},Shape{});
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{1, 1}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{0, 1}, Shape{});
     r->propagate_types();
-    ASSERT_EQ(*(r->get_value_type()),
-              TensorViewType(element::Float32::element_type(), Shape{}));
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
 }
 
 TEST(type_prop, reshape_deduce_t2s)
 {
     auto param = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{1,1,1}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{0,1,2},Shape{});
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{1, 1, 1}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{0, 1, 2}, Shape{});
     r->propagate_types();
-    ASSERT_EQ(*(r->get_value_type()),
-              TensorViewType(element::Float32::element_type(), Shape{}));
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
 }
 
 TEST(type_prop, reshape_deduce_m2v_01)
 {
     auto param = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3,4}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{0,1},Shape{12});
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{0, 1}, Shape{12});
     r->propagate_types();
-    ASSERT_EQ(*(r->get_value_type()),
-              TensorViewType(element::Float32::element_type(), Shape{12}));
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{12}));
 }
 
 TEST(type_prop, reshape_deduce_m2v_10)
 {
     auto param = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3,4}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{1,0},Shape{12});
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 0}, Shape{12});
     r->propagate_types();
-    ASSERT_EQ(*(r->get_value_type()),
-              TensorViewType(element::Float32::element_type(), Shape{12}));
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{12}));
 }
 
 TEST(type_prop, reshape_deduce_t2v_012)
 {
     auto param = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3,4,5}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{0,1,2},Shape{60});
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{0, 1, 2}, Shape{60});
     r->propagate_types();
-    ASSERT_EQ(*(r->get_value_type()),
-              TensorViewType(element::Float32::element_type(), Shape{60}));
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{60}));
 }
 
 TEST(type_prop, reshape_deduce_t2v_120)
 {
     auto param = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3,4,5}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{1,2,0},Shape{60});
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0}, Shape{60});
     r->propagate_types();
-    ASSERT_EQ(*(r->get_value_type()),
-              TensorViewType(element::Float32::element_type(), Shape{60}));
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{60}));
 }
 
 TEST(type_prop, reshape_deduce_correct_t2v_120)
 {
     auto param = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3,4,5}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{1,2,0},Shape{60});
-    r->set_value_type(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{60}));
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0}, Shape{60});
+    r->set_value_type(make_shared<TensorViewType>(element::Float32::element_type(), Shape{60}));
     r->propagate_types();
-    ASSERT_EQ(*(r->get_value_type()),
-              TensorViewType(element::Float32::element_type(), Shape{60}));
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{60}));
 }
 
 TEST(type_prop, reshape_deduce_not_enough_axes)
 {
     auto param = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3,4,5}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{1,0},Shape{60});
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 0}, Shape{60});
     try
     {
         r->propagate_types();
@@ -1167,7 +1157,9 @@ TEST(type_prop, reshape_deduce_not_enough_axes)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Input axis order for reshape is not a permutation of argument's axes"));
+        EXPECT_EQ(
+            error.what(),
+            std::string("Input axis order for reshape is not a permutation of argument's axes"));
     }
     catch (...)
     {
@@ -1178,8 +1170,8 @@ TEST(type_prop, reshape_deduce_not_enough_axes)
 TEST(type_prop, reshape_deduce_too_many_axes)
 {
     auto param = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3,4,5}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{1,2,0,3},Shape{60});
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0, 3}, Shape{60});
     try
     {
         r->propagate_types();
@@ -1188,7 +1180,9 @@ TEST(type_prop, reshape_deduce_too_many_axes)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Input axis order for reshape is not a permutation of argument's axes"));
+        EXPECT_EQ(
+            error.what(),
+            std::string("Input axis order for reshape is not a permutation of argument's axes"));
     }
     catch (...)
     {
@@ -1199,8 +1193,8 @@ TEST(type_prop, reshape_deduce_too_many_axes)
 TEST(type_prop, reshape_deduce_duplicate_axes)
 {
     auto param = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3,4,5}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{1,1,0},Shape{60});
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 1, 0}, Shape{60});
     try
     {
         r->propagate_types();
@@ -1209,7 +1203,9 @@ TEST(type_prop, reshape_deduce_duplicate_axes)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Input axis order for reshape is not a permutation of argument's axes"));
+        EXPECT_EQ(
+            error.what(),
+            std::string("Input axis order for reshape is not a permutation of argument's axes"));
     }
     catch (...)
     {
@@ -1220,8 +1216,8 @@ TEST(type_prop, reshape_deduce_duplicate_axes)
 TEST(type_prop, reshape_deduce_wrong_output_shape)
 {
     auto param = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3,4,5}));
-    auto r = make_shared<op::Reshape>(param,AxisVector{1,2,0},Shape{3,3,3});
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0}, Shape{3, 3, 3});
     try
     {
         r->propagate_types();
@@ -1230,7 +1226,8 @@ TEST(type_prop, reshape_deduce_wrong_output_shape)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Product of output shape dimensions does not match product of argument shape dimensions for reshape"));
+        EXPECT_EQ(error.what(), std::string("Product of output shape dimensions does not match "
+                                            "product of argument shape dimensions for reshape"));
     }
     catch (...)
     {
