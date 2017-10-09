@@ -1226,8 +1226,9 @@ TEST(type_prop, reshape_deduce_wrong_output_shape)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Product of output shape dimensions does not match "
-                                            "product of argument shape dimensions for reshape"));
+        EXPECT_EQ(error.what(),
+                  std::string("Product of output shape dimensions does not match "
+                              "product of argument shape dimensions for reshape"));
     }
     catch (...)
     {

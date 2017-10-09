@@ -31,8 +31,7 @@ namespace ngraph
                 class MatrixTransposeInstruction : public Instruction
                 {
                 public:
-                    MatrixTransposeInstruction(const TensorViewInfo& arg,
-                                               const TensorViewInfo& out)
+                    MatrixTransposeInstruction(const TensorViewInfo& arg, const TensorViewInfo& out)
                         : m_arg(arg)
                         , m_out(out)
                     {
@@ -40,7 +39,8 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        EigenMatrix<ET>(call_frame, m_out) = EigenMatrix<ET>(call_frame, m_arg).transpose();
+                        EigenMatrix<ET>(call_frame, m_out) =
+                            EigenMatrix<ET>(call_frame, m_arg).transpose();
                     }
 
                 protected:
