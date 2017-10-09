@@ -71,7 +71,8 @@ namespace ngraph
         /// graph against the graph.
         bool is_same_op_type(const std::shared_ptr<Node>& node) const
         {
-            return typeid(*this) == typeid(*node.get());
+            Node* n = node.get();
+            return typeid(*this) == typeid(*n);
         }
 
         std::shared_ptr<const ValueType> get_value_type() { return m_value_type; }
