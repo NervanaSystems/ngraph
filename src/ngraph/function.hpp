@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <initializer_list>
 #include <list>
 #include <memory>
@@ -68,7 +69,7 @@ namespace ngraph
         Function(const Function&) = delete;
         Function(const Function&&) = delete;
 
-        static size_t m_next_instance_id;
+        static std::atomic<size_t> m_next_instance_id;
         size_t m_instance_id;
     };
 }

@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <set>
 #include <string>
 #include <unordered_set>
@@ -114,7 +115,7 @@ namespace ngraph
         std::multiset<Node*> m_users;
         std::string m_name;
         size_t m_instance_id;
-        static size_t m_next_instance_id;
+        static std::atomic<size_t> m_next_instance_id;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         bool m_is_output;
