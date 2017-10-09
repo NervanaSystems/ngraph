@@ -48,21 +48,6 @@ namespace ngraph
             }
         };
 
-        class Reshape : public IndexBuiltin
-        {
-        public:
-            Reshape(const std::shared_ptr<Node>& arg0, const Shape& shape)
-                : IndexBuiltin(arg0)
-                , m_shape(shape)
-            {
-            }
-
-            virtual std::string description() const override { return "Reshape"; }
-            //virtual void propagate_types() override;
-        protected:
-            Shape m_shape;
-        };
-
         /// Operations where the same element function is applied to each element
         /// Op(X)[I] = op(X[I])
         class UnaryElementwiseBuiltin : public Builtin

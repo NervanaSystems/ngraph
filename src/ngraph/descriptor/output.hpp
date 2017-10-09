@@ -18,12 +18,15 @@
 #include <set>
 
 #include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/node.hpp"
 
 namespace ngraph
 {
+    class Node;
+
     namespace descriptor
     {
+        class Input;
+
         // Describes an output tensor of an op
         class Output
         {
