@@ -44,6 +44,7 @@
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/tuple.hpp"
@@ -71,6 +72,7 @@
 #include "ngraph/runtime/ngvm/eigen/less_than.hpp"
 #include "ngraph/runtime/ngvm/eigen/log.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_mult.hpp"
+#include "ngraph/runtime/ngvm/eigen/matrix_transpose.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_vector_product.hpp"
 #include "ngraph/runtime/ngvm/eigen/maximum.hpp"
 #include "ngraph/runtime/ngvm/eigen/multiply.hpp"
@@ -774,6 +776,59 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             else
             {
                 throw ngraph_error("Reduce: only vectors and matrices are currently supported");
+            }
+        };
+
+        REGISTER_TO_OP_MAP(op::Reshape)
+        {
+            auto reshape = static_cast<const op::Reshape*>(n);
+
+            auto arg_type = reshape->get_arguments().at(0)->get_value_type();
+            auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
+            assert(nullptr != arg_tensor_view_type);
+            auto arg_shape = arg_tensor_view_type->get_shape();
+            auto arg_rank = arg_shape.size();
+
+            auto result_type = reshape->get_value_type();
+            auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
+            assert(nullptr != result_tensor_view_type);
+            auto result_shape = result_tensor_view_type->get_shape();
+            auto& result_element_type = result_tensor_view_type->get_element_type();
+
+            auto input_order = reshape->get_input_order();
+
+            bool same_layout = std::is_sorted(input_order.begin(), input_order.end());
+
+            size_t result_shape_product = 1;
+            for (auto i : result_shape)
+            {
+                result_shape_product *= i;
+            }
+
+            // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor, we can just copy.
+            if (same_layout || result_shape_product < 2)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                             "Reshape has unhandled element type",
+                                             runtime::ngvm::eigen::CopyInstruction,
+                                             in.at(0).get_index(),
+                                             out.at(0).get_index());
+            }
+            // If there *is* a layout change in the 2D case, we transpose the input.
+            else if (arg_rank == 2)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                             "Reshape has unhandled element type",
+                                             runtime::ngvm::eigen::MatrixTransposeInstruction,
+                                             in[0],
+                                             out[0]);
+            }
+            // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
+            else
+            {
+                throw ngraph_error(
+                    "Axis permutation in reshape is not implemented yet for tensors with rank>2 in "
+                    "VM");
             }
         };
 

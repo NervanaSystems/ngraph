@@ -34,7 +34,7 @@ public:
     {
         m_data[0] = random_generator();
         m_data[1] = random_generator();
-        uint8_t* p = (uint8_t*)m_data;
+        uint8_t* p = reinterpret_cast<uint8_t*>(m_data);
         p[6] = (p[6] & 0x0F) | 0x40;
         p[8] = (p[8] & 0x3F) | 0x80;
     }
@@ -42,21 +42,31 @@ public:
     std::string to_string() const
     {
         std::stringstream ss;
-        uint8_t* p = (uint8_t*)m_data;
+        const uint8_t* p = reinterpret_cast<const uint8_t*>(m_data);
         for (int i = 0; i < 4; i++)
-            ss << std::hex << std::setw(2) << std::setfill('0') << (int)*p++;
+        {
+            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(*p++);
+        }
         ss << "-";
         for (int i = 0; i < 2; i++)
-            ss << std::hex << std::setw(2) << std::setfill('0') << (int)*p++;
+        {
+            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(*p++);
+        }
         ss << "-";
         for (int i = 0; i < 2; i++)
-            ss << std::hex << std::setw(2) << std::setfill('0') << (int)*p++;
+        {
+            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(*p++);
+        }
         ss << "-";
         for (int i = 0; i < 2; i++)
-            ss << std::hex << std::setw(2) << std::setfill('0') << (int)*p++;
+        {
+            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(*p++);
+        }
         ss << "-";
         for (int i = 0; i < 6; i++)
-            ss << std::hex << std::setw(2) << std::setfill('0') << (int)*p++;
+        {
+            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(*p++);
+        }
         return ss.str();
     }
 
@@ -68,11 +78,7 @@ public:
         return rc;
     }
 
-    bool operator==(const uuid_type& other) const
-    {
-        return memcmp((char*)m_data, (char*)other.m_data, 16) == 0;
-    }
-
+    bool operator==(const uuid_type& other) const { return memcmp(m_data, other.m_data, 16) == 0; }
     bool operator!=(const uuid_type& other) const { return !(*this == other); }
     friend std::ostream& operator<<(std::ostream& out, const uuid_type& id)
     {
