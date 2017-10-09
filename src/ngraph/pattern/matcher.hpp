@@ -35,8 +35,14 @@ namespace ngraph
                                         const std::shared_ptr<Node>& graph_node,
                                         bool is_match);
 
-            bool match(std::shared_ptr<Node>& pattern_node,
+            bool match(const std::shared_ptr<Node>& pattern_node,
                        const std::shared_ptr<Node>& graph_node);
+
+            void reset()
+            {
+                m_is_valid = false;
+                m_is_match = true;
+            }
 
         private:
             void match_arguments(const Nodes& pattern_args, const Nodes& args);

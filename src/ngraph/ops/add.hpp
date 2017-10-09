@@ -63,9 +63,13 @@ namespace ngraph
             }
 
             virtual std::string description() const override { return "Add"; }
+<<<<<<< 48c176d249f2253ec21cc0b4543fe012e2fdfa9b
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
+=======
+            virtual bool is_commutative() override { return true; };
+>>>>>>> getting simple test cases to work
         };
     }
 
