@@ -15,6 +15,8 @@
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/function.hpp"
 
+#include <algorithm>
+
 using namespace std;
 using namespace ngraph::op;
 
