@@ -17,16 +17,17 @@
 #include <memory>
 #include <set>
 
+#include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/tensor_view.hpp"
 
 namespace ngraph
 {
+    // The forward declaration of Node is needed here because Node has a deque of
+    // Outputs, which does not work on all platforms.
     class Node;
 
     namespace descriptor
     {
-        class Input;
-
         // Describes an output tensor of an op
         class Output
         {
