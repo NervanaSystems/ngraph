@@ -39,7 +39,8 @@ void ngraph::dump(ostream& out, const void* _data, size_t _size)
         {
             if (index + i < len)
             {
-                out << " " << std::hex << std::setw(2) << std::setfill('0') << (uint32_t)data[i];
+                out << " " << std::hex << std::setw(2) << std::setfill('0')
+                    << static_cast<uint32_t>(data[i]);
             }
             else
             {
@@ -51,7 +52,8 @@ void ngraph::dump(ostream& out, const void* _data, size_t _size)
         {
             if (index + i < len)
             {
-                out << " " << std::hex << std::setw(2) << std::setfill('0') << (uint32_t)data[i];
+                out << " " << std::hex << std::setw(2) << std::setfill('0')
+                    << static_cast<uint32_t>(data[i]);
             }
             else
             {
