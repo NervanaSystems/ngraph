@@ -38,16 +38,6 @@ namespace ngraph
             }
         };
 
-        /// Index ops create a new way to index the same tensor elements
-        class IndexBuiltin : public Builtin
-        {
-        protected:
-            IndexBuiltin(const std::shared_ptr<Node>& arg)
-                : Builtin(Nodes{arg})
-            {
-            }
-        };
-
         /// Operations where the same element function is applied to each element
         /// Op(X)[I] = op(X[I])
         class UnaryElementwiseBuiltin : public Builtin
