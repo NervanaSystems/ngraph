@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-size_t Function::m_next_instance_id = 0;
+atomic<size_t> Function::m_next_instance_id(0);
 
 Function::Function(const std::shared_ptr<Node>& result,
                    const std::shared_ptr<ValueType>& result_type,
@@ -31,7 +31,7 @@ Function::Function(const std::shared_ptr<Node>& result,
     , m_name(name)
     , m_result_type(result_type)
     , m_ordered_ops_valid(false)
-    , m_instance_id(m_next_instance_id++)
+    , m_instance_id(m_next_instance_id.fetch_add(1))
 {
     size_t i = 0;
     for (auto parameter : parameters)

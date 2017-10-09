@@ -17,12 +17,12 @@
 using namespace std;
 using namespace ngraph;
 
-size_t Node::m_next_instance_id = 0;
+atomic<size_t> Node::m_next_instance_id(0);
 
 Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<ValueType> value_type)
     : m_arguments(arguments)
     , m_value_type(value_type)
-    , m_instance_id(m_next_instance_id++)
+    , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_is_output(false)
 {
     // Add this node as a user of each argument.
