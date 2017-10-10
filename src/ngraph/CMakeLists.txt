@@ -38,6 +38,7 @@ set (SRC
     ops/reduce.cpp
     ops/reshape.cpp
     ops/select.cpp
+    ops/slice.cpp
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise_builtin.cpp

@@ -43,6 +43,9 @@ namespace ngraph
     /// @brief A set of axes, for example, reduction axes
     using AxisSet = std::set<size_t>;
 
+    /// @brief Coordinate in a tensor
+    using Coordinate = std::vector<size_t>;
+
     /// @brief Shape for a tensor
     using Shape = std::vector<size_t>;
 
