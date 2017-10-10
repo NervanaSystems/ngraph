@@ -1861,6 +1861,29 @@ TEST(execute, reshape_m2m_dim_change_transpose)
     ASSERT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), result->get_vector());
 }
 
+TEST(execute, exp)
+{
+    auto shape = Shape{8};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Exp>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    *a = vector<float>{-4, -3, -2, -1, 0, 1, 2, 3};
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(
+        (vector<float>{expf(-4), expf(-3), expf(-2), expf(-1), expf(0), expf(1), expf(2), expf(3)}),
+        result->get_vector());
+}
+
 TEST(execute, slice_scalar)
 {
     auto shape_a = Shape{};
