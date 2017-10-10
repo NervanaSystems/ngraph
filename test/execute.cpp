@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <algorithm>
 #include "gtest/gtest.h"
 
 #include <cmath>
@@ -1859,6 +1860,234 @@ TEST(execute, reshape_m2m_dim_change_transpose)
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), result->get_vector());
+}
+
+TEST(execute, sin)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Sin>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    float pi = acosf(-1);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{pi / 2, 0.0f, -0.0f, pi / 6, -pi, pi};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float f) -> float { return sinf(f); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, cos)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Cos>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    float pi = acosf(-1);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{pi / 2, 0.0f, -0.0f, pi / 3, -pi, pi};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float f) -> float { return cosf(f); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, tan)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Tan>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    float pi = acosf(-1);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{pi / 4, 0.0f, -0.0f, 7 * pi / 4, 3 * pi / 4, 5 * pi / 4};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float f) -> float { return tanf(f); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, asin)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Asin>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float f) -> float { return asinf(f); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, acos)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Acos>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float f) -> float { return acosf(f); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, atan)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Atan>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float f) -> float { return atanf(f); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, sinh)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Sinh>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 5.0f, -5.0f};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float f) -> float { return sinhf(f); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, cosh)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Cosh>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 5.0f, -5.0f};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float f) -> float { return coshf(f); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, tanh)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Tanh>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float f) -> float { return tanhf(f); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
 }
 
 TEST(execute, exp)
