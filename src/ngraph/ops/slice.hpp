@@ -26,7 +26,7 @@ namespace ngraph
             ///
             /// @param arg The tensor view to be sliced.
             /// @param lower_bounds The axiswise lower bounds of the slice.
-            /// @param upper_bounds The axiswise upper bounds of the slice.
+            /// @param upper_bounds The axiswise upper bounds of the slice (exclusive).
             ///
             Slice(const std::shared_ptr<Node>& arg,
                   const Coordinate& lower_bounds,
