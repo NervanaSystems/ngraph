@@ -79,6 +79,7 @@
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
+#include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/runtime/backend.hpp"

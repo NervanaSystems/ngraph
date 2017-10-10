@@ -47,6 +47,7 @@
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
+#include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/assign_tensors.hpp"
@@ -74,6 +75,7 @@
 #include "ngraph/runtime/ngvm/eigen/less_than.hpp"
 #include "ngraph/runtime/ngvm/eigen/log.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_mult.hpp"
+#include "ngraph/runtime/ngvm/eigen/matrix_slice.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_transpose.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_vector_product.hpp"
 #include "ngraph/runtime/ngvm/eigen/maximum.hpp"
@@ -87,6 +89,7 @@
 #include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/eigen/select.hpp"
 #include "ngraph/runtime/ngvm/eigen/subtract.hpp"
+#include "ngraph/runtime/ngvm/eigen/vector_slice.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
 
@@ -832,6 +835,67 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 throw ngraph_error(
                     "Axis permutation in reshape is not implemented yet for tensors with rank>2 in "
                     "VM");
+            }
+        };
+
+        REGISTER_TO_OP_MAP(op::Slice)
+        {
+            auto slice = static_cast<const op::Slice*>(n);
+
+            for (auto d : slice->get_step())
+            {
+                if (1 != d)
+                {
+                    throw ngraph_error("Slice does not support non-unit step yet in the VM");
+                }
+            }
+
+            auto arg_type = slice->get_arguments().at(0)->get_value_type();
+            auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
+            assert(nullptr != arg_tensor_view_type);
+            auto arg_shape = arg_tensor_view_type->get_shape();
+            auto arg_rank = arg_shape.size();
+            auto& arg_element_type = arg_tensor_view_type->get_element_type();
+
+            auto& lower_bounds = slice->get_lower_bounds();
+            auto& upper_bounds = slice->get_upper_bounds();
+
+            // Scalar slice is necessarily just a copy.
+            if (arg_rank == 0)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
+                                             "Slice has unhandled element type",
+                                             runtime::ngvm::eigen::CopyInstruction,
+                                             in.at(0).get_index(),
+                                             out.at(0).get_index());
+            }
+            else if (arg_rank == 1)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
+                                             "Slice has unhandled element type",
+                                             runtime::ngvm::eigen::VectorSliceInstruction,
+                                             in[0],
+                                             out[0],
+                                             lower_bounds[0],
+                                             upper_bounds[0]);
+            }
+            else if (arg_rank == 2)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
+                                             "Slice has unhandled element type",
+                                             runtime::ngvm::eigen::MatrixSliceInstruction,
+                                             in[0],
+                                             out[0],
+                                             lower_bounds[0],
+                                             lower_bounds[1],
+                                             upper_bounds[0],
+                                             upper_bounds[1]);
+            }
+
+            // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
+            else
+            {
+                throw ngraph_error("Slice is not implemented yet for tensors with rank>2 in VM");
             }
         };
 
