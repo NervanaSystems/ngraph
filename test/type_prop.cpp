@@ -1255,6 +1255,26 @@ TEST(type_prop, slice_deduce_matrix)
               TensorViewType(element::Float32::element_type(), Shape{3, 6}));
 }
 
+TEST(type_prop, slice_deduce_matrix_strided)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7}, Shape{3, 2});
+    sl->propagate_types();
+    ASSERT_EQ(*(sl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{1, 3}));
+}
+
+TEST(type_prop, slice_deduce_matrix_strided_uneven)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7}, Shape{3, 4});
+    sl->propagate_types();
+    ASSERT_EQ(*(sl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{1, 2}));
+}
+
 TEST(type_prop, slice_deduce_vector_edge)
 {
     auto param = make_shared<op::Parameter>(
@@ -1292,6 +1312,30 @@ TEST(type_prop, slice_deduce_matrix_zero_zero)
     sl->propagate_types();
     ASSERT_EQ(*(sl->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{0, 0}));
+}
+
+TEST(type_prop, slice_deduce_vector_invalid_step)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{7}, Shape{1, 2});
+    try
+    {
+        sl->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid slice step not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Number of step axes provided for slice does not match number of input axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }
 
 TEST(type_prop, slice_deduce_vector_edge_upper_oob)

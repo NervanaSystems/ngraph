@@ -27,13 +27,27 @@ namespace ngraph
             /// @param arg The tensor view to be sliced.
             /// @param lower_bounds The axiswise lower bounds of the slice.
             /// @param upper_bounds The axiswise upper bounds of the slice (exclusive).
+            /// @param step The slicing step; for example, step of {n,m} means to take
+            ///             every nth row and everyth mth column of the input matrix.
             ///
+            Slice(const std::shared_ptr<Node>& arg,
+                  const Coordinate& lower_bounds,
+                  const Coordinate& upper_bounds,
+                  const Shape& step)
+                : Builtin({arg})
+                , m_lower_bounds(lower_bounds)
+                , m_upper_bounds(upper_bounds)
+                , m_step(step)
+            {
+            }
+
             Slice(const std::shared_ptr<Node>& arg,
                   const Coordinate& lower_bounds,
                   const Coordinate& upper_bounds)
                 : Builtin({arg})
                 , m_lower_bounds(lower_bounds)
                 , m_upper_bounds(upper_bounds)
+                , m_step(Shape(lower_bounds.size(), 1))
             {
             }
 
@@ -42,9 +56,11 @@ namespace ngraph
 
             const Coordinate& get_lower_bounds() const { return m_lower_bounds; }
             const Coordinate& get_upper_bounds() const { return m_upper_bounds; }
+            const Shape& get_step() const { return m_step; }
         protected:
             const Coordinate m_lower_bounds;
             const Coordinate m_upper_bounds;
+            const Shape m_step;
         };
     }
 }

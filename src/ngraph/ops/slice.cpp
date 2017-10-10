@@ -36,36 +36,47 @@ void Slice::propagate_types()
     }
     auto& arg_shape = arg_tensor_view_type->get_shape();
 
-    auto lower_bounds = m_lower_bounds;
-    auto upper_bounds = m_upper_bounds;
-
-    if (lower_bounds.size() != arg_shape.size())
+    if (m_lower_bounds.size() != arg_shape.size())
     {
         throw ngraph_error(
             "Number of lower bounds provided for slice does not match number of input axes");
     }
 
-    if (upper_bounds.size() != arg_shape.size())
+    if (m_upper_bounds.size() != arg_shape.size())
     {
         throw ngraph_error(
             "Number of upper bounds provided for slice does not match number of input axes");
+    }
+
+    if (m_step.size() != arg_shape.size())
+    {
+        throw ngraph_error(
+            "Number of step axes provided for slice does not match number of input axes");
     }
 
     Shape result_shape;
 
     for (size_t i = 0; i < arg_shape.size(); i++)
     {
-        if (upper_bounds[i] > arg_shape[i])
+        if (m_upper_bounds[i] > arg_shape[i])
         {
             throw ngraph_error("Upper bound for slice is out of range");
         }
 
-        if (lower_bounds[i] > upper_bounds[i])
+        if (m_lower_bounds[i] > m_upper_bounds[i])
         {
             throw ngraph_error("Lower bound for slice is greater than upper bound");
         }
 
-        result_shape.push_back(upper_bounds[i] - lower_bounds[i]);
+        if (0 == m_step[i])
+        {
+            throw ngraph_error("Step distance for slice is zero");
+        }
+
+        size_t result_axis_size = m_upper_bounds[i] - m_lower_bounds[i];
+        result_axis_size =
+            result_axis_size / m_step[i] + ((result_axis_size % m_step[i] == 0) ? 0 : 1);
+        result_shape.push_back(result_axis_size);
     }
 
     set_value_type_checked(

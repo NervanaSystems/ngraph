@@ -842,6 +842,14 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto slice = static_cast<const op::Slice*>(n);
 
+            for (auto d : slice->get_step())
+            {
+                if (1 != d)
+                {
+                    throw ngraph_error("Slice does not support non-unit step yet in the VM");
+                }
+            }
+
             auto arg_type = slice->get_arguments().at(0)->get_value_type();
             auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
             assert(nullptr != arg_tensor_view_type);
