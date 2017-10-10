@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <cstdio>
 #include <memory>
+#include <cstdio>
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
@@ -65,12 +65,13 @@ bool TestMatcher::compare_nodes(const std::shared_ptr<ngraph::Node>& pattern_nod
 using namespace ngraph;
 using namespace std;
 
+
 TEST(pattern, op_op)
 {
     auto shape = Shape{1};
-
+    
     auto a = make_shared<op::Parameter>(element::Int32::element_type(), shape);
-    pattern::Matcher n;
+    pattern::Matcher n(nullptr);
 
     ASSERT_TRUE(n.match(a, a));
     n.reset();
@@ -82,10 +83,10 @@ TEST(pattern, op_op)
 
     auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);
     auto sum = a + b;
-
+    
     auto any = std::make_shared<pattern::op::Any>();
     auto any_sum = any + b;
-
+    
     n.reset();
     ASSERT_TRUE(n.match(pattern, a));
     n.reset();
@@ -99,13 +100,34 @@ TEST(pattern, op_op)
     auto pattern_sum_perm = b + pattern;
     ASSERT_TRUE(n.match(pattern_sum_perm, sum));
     ASSERT_EQ(pattern->get_binded_node(), b);
-    //auto c = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+
+    auto c = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+    pattern->reset();
+    auto pattern_mul_perm = c * pattern_sum_perm;
+    auto mul = c * sum;
+    ASSERT_TRUE(n.match(pattern_mul_perm, mul));
+    ASSERT_EQ(pattern->get_binded_node(), b);
+
+    pattern->reset();
+    
+    auto mula = a*b;
+    auto mulc = c*b;
+    auto sumac = mula + mulc;
+
+    auto any_pattern_mul = any * pattern;
+    auto any_pattern_mul2 = any * pattern;
+    auto sum_mul_pattern = any_pattern_mul + any_pattern_mul2;
+    ASSERT_TRUE(n.match(sum_mul_pattern, sumac));
+    ASSERT_EQ(pattern->get_binded_node(), b);
+
     //
+    // 
     //{AT}
     //ASSERT_TRUE(n.match(ANY, A));
-
-    //auto PATTERN3 = std::make_shared<pattern::op::Pattern>();
-    //auto PATTERN_SUM = A + PATTERN3;
+    
+	
+	//auto PATTERN3 = std::make_shared<pattern::op::Pattern>();
+	//auto PATTERN_SUM = A + PATTERN3;
     //ASSERT_TRUE(n.match(PATTERN_SUM, SUM);
 
     //auto PATTERN_SUM_PERM = B + PATTERN;
@@ -120,12 +142,21 @@ TEST(pattern, op_op)
     //auto BmulC = B * C;
     //auto SumOfMul = AmulB + BmulC;
 
+    
+    
+
     //TestMatcher test_matcher;
     /*ASSERT_TRUE(test_matcher.compare_nodes(A, B));
     ASSERT_FALSE(test_matcher.compare_nodes(A, SUM));
     ASSERT_TRUE(test_matcher.compare_nodes(ANY, A));
     ASSERT_TRUE(test_matcher.compare_nodes(ANY, B));
     ASSERT_TRUE(test_matcher.compare_nodes(ANY, SUM));*/
+}
+
+
+TEST(graph_rewrite, basic)
+{
+    //auto float0 = make_shared<op::Float32ScalarConstant>(3.0);
 }
 
 /*

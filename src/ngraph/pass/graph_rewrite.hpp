@@ -25,9 +25,8 @@ namespace ngraph
     {
         class GraphRewrite;
     }
-    using gr_callback_fn = std::function<void(std::shared_ptr<pattern::Matcher> m,
-                                              std::shared_ptr<Node> match_root,
-                                              class GraphRewrite& gr)>;
+    using gr_callback_fn =
+        std::function<void(std::shared_ptr<pattern::Matcher> m, std::shared_ptr<Node> match_root, class pass::GraphRewrite& gr)>;
 }
 
 class ngraph::pass::GraphRewrite : public CallGraphPass
@@ -43,7 +42,8 @@ public:
     };
 
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
-    virtual bool run_on_call_graph(std::list<Node*>&) override;
+    virtual bool run_on_call_graph(std::list<Node*>&) override; //stub until @bob fixes run_on_call_graph
+    bool run_on_call_graph(std::list<std::shared_ptr<Node>>& nodes); //this one is being tested
 
 private:
     //enable cascading rewrites
