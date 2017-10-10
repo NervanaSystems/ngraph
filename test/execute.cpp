@@ -1621,7 +1621,7 @@ TEST(execute, reduce_matrix_to_scalar_zero_by_zero)
     ASSERT_EQ((vector<float>{99}), b->get_vector());
 }
 
-TEST(type_prop, reshape_t2v_012)
+TEST(execute, reshape_t2v_012)
 {
     auto shape_a = Shape{2, 2, 3};
     auto A = make_shared<op::Parameter>(
@@ -1645,7 +1645,7 @@ TEST(type_prop, reshape_t2v_012)
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}), result->get_vector());
 }
 
-TEST(type_prop, reshape_t2s_012)
+TEST(execute, reshape_t2s_012)
 {
     auto shape_a = Shape{1, 1, 1};
     auto A = make_shared<op::Parameter>(
@@ -1669,7 +1669,7 @@ TEST(type_prop, reshape_t2s_012)
     ASSERT_EQ((vector<float>{6}), result->get_vector());
 }
 
-TEST(type_prop, reshape_t2s_120)
+TEST(execute, reshape_t2s_120)
 {
     auto shape_a = Shape{1, 1, 1};
     auto A = make_shared<op::Parameter>(
@@ -1693,7 +1693,7 @@ TEST(type_prop, reshape_t2s_120)
     ASSERT_EQ((vector<float>{6}), result->get_vector());
 }
 
-TEST(type_prop, reshape_s2t)
+TEST(execute, reshape_s2t)
 {
     auto shape_a = Shape{};
     auto A = make_shared<op::Parameter>(
@@ -1717,7 +1717,7 @@ TEST(type_prop, reshape_s2t)
     ASSERT_EQ((vector<float>{42}), result->get_vector());
 }
 
-TEST(type_prop, reshape_v2m_col)
+TEST(execute, reshape_v2m_col)
 {
     auto shape_a = Shape{3};
     auto A = make_shared<op::Parameter>(
@@ -1741,7 +1741,7 @@ TEST(type_prop, reshape_v2m_col)
     ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector());
 }
 
-TEST(type_prop, reshape_v2m_row)
+TEST(execute, reshape_v2m_row)
 {
     auto shape_a = Shape{3};
     auto A = make_shared<op::Parameter>(
@@ -1765,7 +1765,7 @@ TEST(type_prop, reshape_v2m_row)
     ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector());
 }
 
-TEST(type_prop, reshape_v2t_middle)
+TEST(execute, reshape_v2t_middle)
 {
     auto shape_a = Shape{3};
     auto A = make_shared<op::Parameter>(
@@ -1789,7 +1789,7 @@ TEST(type_prop, reshape_v2t_middle)
     ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector());
 }
 
-TEST(type_prop, reshape_m2m_same)
+TEST(execute, reshape_m2m_same)
 {
     auto shape_a = Shape{3, 3};
     auto A = make_shared<op::Parameter>(
@@ -1813,7 +1813,7 @@ TEST(type_prop, reshape_m2m_same)
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), result->get_vector());
 }
 
-TEST(type_prop, reshape_m2m_transpose)
+TEST(execute, reshape_m2m_transpose)
 {
     auto shape_a = Shape{3, 3};
     auto A = make_shared<op::Parameter>(
@@ -1837,7 +1837,7 @@ TEST(type_prop, reshape_m2m_transpose)
     ASSERT_EQ((vector<float>{1, 4, 7, 2, 5, 8, 3, 6, 9}), result->get_vector());
 }
 
-TEST(type_prop, reshape_m2m_dim_change_transpose)
+TEST(execute, reshape_m2m_dim_change_transpose)
 {
     auto shape_a = Shape{3, 2};
     auto A = make_shared<op::Parameter>(
@@ -1859,4 +1859,76 @@ TEST(type_prop, reshape_m2m_dim_change_transpose)
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), result->get_vector());
+}
+
+TEST(execute, slice_scalar)
+{
+    auto shape_a = Shape{};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{}, Coordinate{});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{312};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{312}), result->get_vector());
+}
+
+TEST(execute, slice_matrix)
+{
+    auto shape_a = Shape{4, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{2, 3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{0, 1}, Coordinate{3, 3});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{2, 3, 6, 7, 10, 11}), result->get_vector());
+}
+
+TEST(execute, slice_vector)
+{
+    auto shape_a = Shape{16};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{12};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{2}, Coordinate{14});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), result->get_vector());
 }
