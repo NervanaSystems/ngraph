@@ -79,5 +79,14 @@ namespace ngraph
             pattern_node->match_class(*this, graph_node);
             return m_is_match;
         }
+
+
+        void Matcher::reset()
+        {
+            //TODO: clean up all pattern nodes
+            m_is_valid = false;
+            m_is_match = true;
+        }
+
     }
 }

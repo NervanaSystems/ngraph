@@ -24,8 +24,9 @@ namespace ngraph
         class Matcher
         {
         public:
-            Matcher()
+            Matcher(const std::shared_ptr<Node>& pattern_node)
                 : m_is_valid(false)
+                , m_pattern_node(pattern_node)
                 , m_is_match(true)
             {
             }
@@ -35,19 +36,18 @@ namespace ngraph
                                         const std::shared_ptr<Node>& graph_node,
                                         bool is_match);
 
-            bool match(const std::shared_ptr<Node>& pattern_node,
-                       const std::shared_ptr<Node>& graph_node);
+            bool match(const std::shared_ptr<Node>& graph_node) { return match(m_pattern_node, graph_node); };
+            
+            bool match(const std::shared_ptr<Node>& pattern_node, //keep public for testing for now
+                const std::shared_ptr<Node>& graph_node);
 
-            void reset()
-            {
-                m_is_valid = false;
-                m_is_match = true;
-            }
-
+            void reset();
         private:
+
             void match_arguments(const Nodes& pattern_args, const Nodes& args);
             bool m_is_valid;
             bool m_is_match;
+            std::shared_ptr<Node> m_pattern_node;
         };
     }
 }
