@@ -32,6 +32,7 @@
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/equal.hpp"
+#include "ngraph/ops/exp.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
@@ -66,6 +67,7 @@
 #include "ngraph/runtime/ngvm/eigen/divide.hpp"
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
 #include "ngraph/runtime/ngvm/eigen/equal.hpp"
+#include "ngraph/runtime/ngvm/eigen/exp.hpp"
 #include "ngraph/runtime/ngvm/eigen/greater_eq.hpp"
 #include "ngraph/runtime/ngvm/eigen/greater_than.hpp"
 #include "ngraph/runtime/ngvm/eigen/less_eq.hpp"
@@ -323,6 +325,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
     static OpMap op_map;
     if (!initialized)
     {
+        REGISTER_NUMERIC_UNOP(op::Exp, eigen::ExpInstruction);
         REGISTER_NUMERIC_UNOP(op::Log, eigen::LogInstruction);
         REGISTER_NUMERIC_UNOP(op::Negative, eigen::NegateInstruction);
 
