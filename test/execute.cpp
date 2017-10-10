@@ -996,7 +996,7 @@ TEST(execute, subtract)
 TEST(execute, scalar_constant)
 {
     auto shape = Shape{};
-    auto A = make_shared<op::ScalarConstant<element::Float32>>(-3.0f);
+    auto A = make_shared<op::ParameterizedScalarConstant<element::Float32>>(-3.0f);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
 
@@ -1954,4 +1954,40 @@ TEST(execute, slice_vector)
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), result->get_vector());
+}
+
+TEST(execute, scalar_constant_float32)
+{
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto r = make_shared<op::ScalarConstant>(element::Float32::element_type(), "4.8");
+    auto f = make_shared<Function>(r, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = ngraph::runtime::make_tensor<element::Float32>(Shape{});
+
+    (*cf)({}, {result});
+    ASSERT_EQ(vector<float>{std::strtof("4.8",NULL)}, result->get_vector());
+}
+
+TEST(execute, scalar_constant_int64)
+{
+    auto rt = make_shared<TensorViewType>(element::Int64::element_type(), Shape{});
+    auto r = make_shared<op::ScalarConstant>(element::Int64::element_type(), "2112");
+    auto f = make_shared<Function>(r, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = ngraph::runtime::make_tensor<element::Int64>(Shape{});
+
+    (*cf)({}, {result});
+    ASSERT_EQ(vector<element::Int64::type>{std::strtol("2112",NULL,10)}, result->get_vector());
 }

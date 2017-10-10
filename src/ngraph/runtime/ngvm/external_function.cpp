@@ -297,9 +297,9 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 #define REGISTER_CONSTANT_INSTRUCTIONS(T)                                                          \
     {                                                                                              \
         REGISTER_INSTRUCTION(                                                                      \
-            op::ScalarConstant<T>,                                                                 \
+            op::ParameterizedScalarConstant<T>,                                                                 \
             eigen::ConstantInstruction<T>,                                                         \
-            std::vector<T::type>{dynamic_cast<const op::ScalarConstant<T>*>(n)->get_value()},      \
+            std::vector<T::type>{dynamic_cast<const op::ParameterizedScalarConstant<T>*>(n)->get_value()},      \
             out[0]);                                                                               \
         REGISTER_INSTRUCTION(                                                                      \
             op::TensorConstant<T>,                                                                 \
@@ -343,6 +343,23 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_NUMERIC_BINOP(op::Maximum, eigen::MaximumInstruction);
         REGISTER_NUMERIC_BINOP(op::Multiply, eigen::MultiplyInstruction);
         REGISTER_NUMERIC_BINOP(op::Subtract, eigen::SubtractInstruction);
+
+        REGISTER_TO_OP_MAP(op::ScalarConstant)
+        {
+            auto sc = static_cast<const op::ScalarConstant*>(n);
+            auto sc_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(sc->get_value_type());
+            assert(nullptr != sc_tensor_type);
+            auto& sc_element_type = sc_tensor_type->get_element_type();
+            auto sc_value_string = sc->get_value_string();
+
+#define M_REGISTER_POLYMORPHIC_CONSTANT(ET)                                            \
+    ef->get_instructions()->push_back(make_shared<eigen::ConstantInstruction<ET>>(std::vector<ET::type>{ET::read(sc_value_string)},out[0]));
+
+            DO_ON_ELEMENT_TYPE(sc_element_type,
+                               "ScalarConstant has unhandled element type",
+                               M_REGISTER_POLYMORPHIC_CONSTANT);
+        };
 
         REGISTER_POLYMORPHIC_BINOP(op::Equal, eigen::EqualInstruction);
         REGISTER_POLYMORPHIC_BINOP(op::NotEqual, eigen::NotEqualInstruction);

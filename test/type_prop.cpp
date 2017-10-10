@@ -1517,3 +1517,17 @@ TEST(type_prop, slice_deduce_matrix_upper_extra)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, scalar_constant_deduce_float32)
+{
+    auto c = make_shared<op::ScalarConstant>(element::Float32::element_type(),"208");
+    // propagate_types() doesn't do anything here
+    ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
+}
+
+TEST(type_prop, scalar_constant_deduce_bool)
+{
+    auto c = make_shared<op::ScalarConstant>(element::Bool::element_type(),"1");
+    // propagate_types() doesn't do anything here
+    ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Bool::element_type(), Shape{}));
+}

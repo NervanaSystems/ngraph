@@ -39,7 +39,7 @@ namespace ngraph
         // Implement a constant scalar for each element type.
         // The static make method takes a
         template <typename T>
-        class ScalarConstant : public ScalarConstantBase
+        class ParameterizedScalarConstant : public ScalarConstantBase
         {
         public:
             // The ngraph element type
@@ -47,13 +47,13 @@ namespace ngraph
             // The C++ type that holds the element type
             using type = typename T::type;
 
-            ScalarConstant(typename T::type value)
+            ParameterizedScalarConstant(typename T::type value)
                 : ScalarConstantBase(std::make_shared<TensorViewType>(T::element_type(), Shape{}))
                 , m_value(value)
             {
             }
 
-            virtual std::string description() const override { return "ScalarConstant"; }
+            virtual std::string description() const override { return "ParameterizedScalarConstant"; }
             virtual std::string get_node_id() const override
             {
                 std::stringstream ss;
@@ -66,13 +66,35 @@ namespace ngraph
             typename T::type m_value;
         };
 
-        using Float32ScalarConstant = ScalarConstant<element::Float32>;
-        using Int8ScalarConstant = ScalarConstant<element::Int8>;
-        using Int32ScalarConstant = ScalarConstant<element::Int32>;
-        using Int64ScalarConstant = ScalarConstant<element::Int64>;
-        using UInt8ScalarConstant = ScalarConstant<element::UInt8>;
-        using UInt32ScalarConstant = ScalarConstant<element::UInt32>;
-        using UInt64ScalarConstant = ScalarConstant<element::UInt64>;
+        using Float32ScalarConstant = ParameterizedScalarConstant<element::Float32>;
+        using Int8ScalarConstant = ParameterizedScalarConstant<element::Int8>;
+        using Int32ScalarConstant = ParameterizedScalarConstant<element::Int32>;
+        using Int64ScalarConstant = ParameterizedScalarConstant<element::Int64>;
+        using UInt8ScalarConstant = ParameterizedScalarConstant<element::UInt8>;
+        using UInt32ScalarConstant = ParameterizedScalarConstant<element::UInt32>;
+        using UInt64ScalarConstant = ParameterizedScalarConstant<element::UInt64>;
+
+        class ScalarConstant : public ScalarConstantBase
+        {
+        public:
+            ScalarConstant(const element::Type& et, const std::string& value_string)
+                : ScalarConstantBase(std::make_shared<TensorViewType>(et, Shape{}))
+                , m_value_string(value_string)
+            {
+            }
+
+            virtual std::string description() const override { return "ScalarConstant"; }
+            virtual std::string get_node_id() const override
+            {
+                std::stringstream ss;
+                ss << description() << "_" /* << node_id() */;
+                return ss.str();
+            }
+
+            const std::string& get_value_string() const { return m_value_string; }
+        protected:
+            const std::string m_value_string;
+        };
 
         // Defines methods to all constant tensors
         class TensorConstantBase : public Node

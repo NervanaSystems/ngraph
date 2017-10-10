@@ -116,6 +116,17 @@ namespace ngraph
             {
                 return std::make_shared<runtime::ParameterizedTensorView<TraitedType<T>>>(shape);
             }
+
+            static T read(const std::string& s)
+            {
+                T result;
+                std::stringstream ss;
+
+                ss << s;
+                ss >> result;
+
+                return result;
+            }
         };
 
         NGRAPH_DEFINE_TRAITED_TYPE_NAME(char)
