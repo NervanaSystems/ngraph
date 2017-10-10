@@ -1971,7 +1971,7 @@ TEST(execute, scalar_constant_float32)
     auto result = ngraph::runtime::make_tensor<element::Float32>(Shape{});
 
     (*cf)({}, {result});
-    ASSERT_EQ(vector<float>{std::strtof("4.8",NULL)}, result->get_vector());
+    ASSERT_EQ(vector<float>{std::strtof("4.8", NULL)}, result->get_vector());
 }
 
 TEST(execute, scalar_constant_int64)
@@ -1989,5 +1989,5 @@ TEST(execute, scalar_constant_int64)
     auto result = ngraph::runtime::make_tensor<element::Int64>(Shape{});
 
     (*cf)({}, {result});
-    ASSERT_EQ(vector<element::Int64::type>{std::strtol("2112",NULL,10)}, result->get_vector());
+    ASSERT_EQ(vector<element::Int64::type>{std::strtol("2112", NULL, 10)}, result->get_vector());
 }

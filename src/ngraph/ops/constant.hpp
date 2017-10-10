@@ -53,7 +53,10 @@ namespace ngraph
             {
             }
 
-            virtual std::string description() const override { return "ParameterizedScalarConstant"; }
+            virtual std::string description() const override
+            {
+                return "ParameterizedScalarConstant";
+            }
             virtual std::string get_node_id() const override
             {
                 std::stringstream ss;
