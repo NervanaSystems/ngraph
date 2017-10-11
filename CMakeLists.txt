@@ -13,19 +13,6 @@
 
 cmake_minimum_required (VERSION 2.8)
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
-        message(FATAL_ERROR "GCC version must be at least 4.9!")
-    endif()
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    # require at least clang 3.8
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.8)
-        message(FATAL_ERROR "Clang version must be at least 3.8!")
-    endif()
-else()
-    message(WARNING "You are using an unsupported compiler! Compilation has only been tested with Clang and GCC.")
-endif()
-
 set(NGRAPH_INCLUDE_PATH
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
@@ -35,6 +22,22 @@ if (POLICY CMP0042)
 endif()
 
 project (ngraph)
+
+SET( GCC_MIN_VERSION 4.9)
+SET( CLANG_MIN_VERSION 3.8)
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS GCC_MIN_VERSION)
+        message(FATAL_ERROR "GCC version must be at least ${GCC_MIN_VERSION}!")
+    endif()
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    # require at least clang 3.8
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS CLANG_MIN_VERSION)
+        message(FATAL_ERROR "Clang version must be at least ${CLANG_MIN_VERSION}!")
+    endif()
+else()
+    message(WARNING "You are using an unsupported compiler! Compilation has only been tested with Clang ( ${CLANG_MIN_VERSION} and up) and GCC ( ${GCC_MIN_VERSION} and up). ")
+endif()
 
 # These variables are undocumented but useful.
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
