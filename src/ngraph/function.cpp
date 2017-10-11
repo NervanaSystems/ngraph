@@ -23,7 +23,7 @@ using namespace ngraph;
 atomic<size_t> Function::m_next_instance_id(0);
 
 Function::Function(const std::shared_ptr<Node>& result,
-                   const std::shared_ptr<ValueType>& result_type,
+                   const std::shared_ptr<const ValueType>& result_type,
                    const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                    const std::string& name)
     : m_result(result)

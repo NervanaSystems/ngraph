@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
@@ -32,6 +33,16 @@ Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<ValueType>
     }
 }
 
+Node::Node()
+    : Node({}, nullptr)
+{
+}
+
+Node::Node(std::shared_ptr<ValueType> value_type)
+    : Node({}, value_type)
+{
+}
+
 Node::~Node()
 {
 }
@@ -49,6 +60,24 @@ void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
             throw ngraph_error("Setting value type to a different ValueType");
         }
     }
+}
+
+std::shared_ptr<const ValueType> Node::get_value_type()
+{
+    if (nullptr == m_value_type)
+    {
+        propagate_types();
+    }
+    return m_value_type;
+}
+
+const std::shared_ptr<const ValueType> Node::get_value_type() const
+{
+    if (nullptr == m_value_type)
+    {
+        const_cast<Node*>(this)->propagate_types();
+    }
+    return m_value_type;
 }
 
 void Node::assign_tensors()
@@ -128,6 +157,20 @@ void Node::set_name(const string& name)
     {
         throw ngraph_error("Node name may be set exactly once");
     }
+}
+
+std::shared_ptr<Node> Node::backwards_derivative(const std::shared_ptr<Node>& x,
+                                                 const std::shared_ptr<Node>& c)
+{
+    auto adjoints_it = m_adjoint_map.find(c.get());
+    if (adjoints_it == m_adjoint_map.end())
+    {
+        adjoints_it =
+            m_adjoint_map
+                .insert(std::make_tuple(c.get(), autodiff::Adjoints(shared_from_this(), c)))
+                .first;
+    }
+    return adjoints_it->second.get(x);
 }
 
 namespace ngraph

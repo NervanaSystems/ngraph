@@ -12,6 +12,7 @@
 # limitations under the License.
 
 set (SRC
+    autodiff/adjoints.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
     descriptor/layout/tensor_view_layout.cpp
@@ -23,6 +24,7 @@ set (SRC
     function.cpp
     log.cpp
     node.cpp
+    ops/add.cpp
     ops/binary_elementwise_arithmetic.cpp
     ops/binary_elementwise_builtin.cpp
     ops/binary_elementwise_comparison.cpp
@@ -33,6 +35,7 @@ set (SRC
     ops/dot.cpp
     ops/function_call.cpp
     ops/get_tuple_element.cpp
+    ops/multiply.cpp
     ops/op.cpp
     ops/parameter.cpp
     ops/reduce.cpp
