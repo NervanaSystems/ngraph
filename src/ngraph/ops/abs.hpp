@@ -30,9 +30,9 @@ namespace ngraph
         ///
         /// ## Output
         ///
-        /// | Type                   | Description                                                                                  |
-        /// | ---------------------- | -------------------------------------------------------------------------------------------- |
-        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \lvert \texttt{arg}[i_1,\dots,i_n] \rvert\f$ |
+        /// | Type                   | Description                                                                      |
+        /// | ---------------------- | -------------------------------------------------------------------------------- |
+        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = |\texttt{arg}[i_1,\dots,i_n]|\f$ |
         ///
         /// ## Implementation Status
         ///
