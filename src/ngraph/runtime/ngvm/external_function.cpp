@@ -24,11 +24,16 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/abs.hpp"
+#include "ngraph/ops/acos.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/asin.hpp"
+#include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
+#include "ngraph/ops/cos.hpp"
+#include "ngraph/ops/cosh.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/equal.hpp"
@@ -47,15 +52,22 @@
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
+#include "ngraph/ops/sin.hpp"
+#include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/subtract.hpp"
+#include "ngraph/ops/tan.hpp"
+#include "ngraph/ops/tanh.hpp"
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/ngvm/eigen/abs.hpp"
+#include "ngraph/runtime/ngvm/eigen/acos.hpp"
 #include "ngraph/runtime/ngvm/eigen/add.hpp"
+#include "ngraph/runtime/ngvm/eigen/asin.hpp"
+#include "ngraph/runtime/ngvm/eigen/atan.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_scalar.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_vector_colwise.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_vector_rowwise.hpp"
@@ -65,6 +77,8 @@
 #include "ngraph/runtime/ngvm/eigen/constant.hpp"
 #include "ngraph/runtime/ngvm/eigen/convert.hpp"
 #include "ngraph/runtime/ngvm/eigen/copy.hpp"
+#include "ngraph/runtime/ngvm/eigen/cos.hpp"
+#include "ngraph/runtime/ngvm/eigen/cosh.hpp"
 #include "ngraph/runtime/ngvm/eigen/divide.hpp"
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
 #include "ngraph/runtime/ngvm/eigen/equal.hpp"
@@ -88,7 +102,11 @@
 #include "ngraph/runtime/ngvm/eigen/return.hpp"
 #include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/eigen/select.hpp"
+#include "ngraph/runtime/ngvm/eigen/sin.hpp"
+#include "ngraph/runtime/ngvm/eigen/sinh.hpp"
 #include "ngraph/runtime/ngvm/eigen/subtract.hpp"
+#include "ngraph/runtime/ngvm/eigen/tan.hpp"
+#include "ngraph/runtime/ngvm/eigen/tanh.hpp"
 #include "ngraph/runtime/ngvm/eigen/vector_slice.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
@@ -329,9 +347,18 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
     static OpMap op_map;
     if (!initialized)
     {
+        REGISTER_NUMERIC_UNOP(op::Acos, eigen::AcosInstruction);
+        REGISTER_NUMERIC_UNOP(op::Asin, eigen::AsinInstruction);
+        REGISTER_NUMERIC_UNOP(op::Atan, eigen::AtanInstruction);
+        REGISTER_NUMERIC_UNOP(op::Cos, eigen::CosInstruction);
+        REGISTER_NUMERIC_UNOP(op::Cosh, eigen::CoshInstruction);
         REGISTER_NUMERIC_UNOP(op::Exp, eigen::ExpInstruction);
         REGISTER_NUMERIC_UNOP(op::Log, eigen::LogInstruction);
         REGISTER_NUMERIC_UNOP(op::Negative, eigen::NegateInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sin, eigen::SinInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sinh, eigen::SinhInstruction);
+        REGISTER_NUMERIC_UNOP(op::Tan, eigen::TanInstruction);
+        REGISTER_NUMERIC_UNOP(op::Tanh, eigen::TanhInstruction);
 
         REGISTER_SIGNED_NUMERIC_UNOP(op::Abs, eigen::AbsInstruction);
 
