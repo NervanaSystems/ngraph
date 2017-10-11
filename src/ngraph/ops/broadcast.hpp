@@ -55,7 +55,7 @@ namespace ngraph
         /// | Backend | Status                                          |
         /// | ------- | ----------------------------------------------- |
         /// | NGVM    | Implemented for scalars, matrices, and vectors. |
-        
+
         class Broadcast : public Builtin
         {
         public:
