@@ -20,9 +20,33 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Elementwise not-equal operation.
+        ///
+        /// ## Inputs
+        ///
+        /// |        | Type                              | Description                                            |
+        /// | ------ | --------------------------------- | ------------------------------------------------------ |
+        /// | `arg0` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and element type.                |
+        /// | `arg1` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of the same shape and element type as `arg0`. |
+        ///
+        /// ## Output
+        ///
+        /// | Type                               | Description                                                                                                                                   |
+        /// | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+        /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = 1\text{ if }\texttt{arg0}[i_1,\dots,i_n] \neq \texttt{arg1}[i_1,\dots,i_n]\text{, else } 0\f$ |
+        ///
+        /// ## Implementation Status
+        ///
+        /// | Backend | Status             |
+        /// | ------- | ------------------ |
+        /// | NGVM    | Fully implemented. |
         class NotEqual : public BinaryElementwiseComparison
         {
         public:
+            /// \brief Constructs an not-equal operation.
+            ///
+            /// \param arg0 Node that produces the first input tensor.
+            /// \param arg1 Node that produces the second input tensor.
             NotEqual(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
                 : BinaryElementwiseComparison(arg0, arg1)
             {

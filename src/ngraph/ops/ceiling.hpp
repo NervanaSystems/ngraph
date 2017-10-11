@@ -20,9 +20,31 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Elementwise ceiling operation.
+        ///
+        /// ## Inputs
+        ///
+        /// |       | Type                              | Description                                     |
+        /// | ----- | --------------------------------- | ----------------------------------------------- |
+        /// | `arg` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type. |
+        ///
+        /// ## Output
+        ///
+        /// | Type                   | Description                                                                                  |
+        /// | ---------------------- | -------------------------------------------------------------------------------------------- |
+        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \lceil \texttt{arg}[i_1,\dots,i_n] \rceil\f$ |
+        ///
+        /// ## Implementation Status
+        ///
+        /// | Backend | Status           |
+        /// | ------- | ---------------- |
+        /// | NGVM    | Not implemented. |
         class Ceiling : public UnaryElementwiseArithmetic
         {
         public:
+            /// \brief Constructs a ceiling operation.
+            ///
+            /// \param arg Node that produces the input tensor.
             Ceiling(const std::shared_ptr<Node>& arg)
                 : UnaryElementwiseArithmetic(arg)
             {

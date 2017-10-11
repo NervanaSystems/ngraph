@@ -20,9 +20,31 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Elementwise negation operation.
+        ///
+        /// ## Inputs
+        ///
+        /// |       | Type                              | Description                                     |
+        /// | ----- | --------------------------------- | ----------------------------------------------- |
+        /// | `arg` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type. |
+        ///
+        /// ## Output
+        ///
+        /// | Type                   | Description                                                                       |
+        /// | ---------------------- | --------------------------------------------------------------------------------- |
+        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = -(\texttt{arg}[i_1,\dots,i_n])\f$ |
+        ///
+        /// ## Implementation Status
+        ///
+        /// | Backend | Status             |
+        /// | ------- | ------------------ |
+        /// | NGVM    | Fully implemented. |
         class Negative : public UnaryElementwiseArithmetic
         {
         public:
+            /// \brief Constructs a negation operation.
+            ///
+            /// \param arg Node that produces the input tensor.
             Negative(const std::shared_ptr<Node>& arg)
                 : UnaryElementwiseArithmetic(arg)
             {
