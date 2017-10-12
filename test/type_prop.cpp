@@ -1521,14 +1521,14 @@ TEST(type_prop, slice_deduce_matrix_upper_extra)
 TEST(type_prop, scalar_constant_deduce_float32)
 {
     auto c = make_shared<op::Constant>(element::Float32::element_type(), Shape{}, "208");
-    // propagate_types() doesn't do anything here
+    c->propagate_types();
     ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
 }
 
 TEST(type_prop, scalar_constant_deduce_bool)
 {
     auto c = make_shared<op::Constant>(element::Bool::element_type(), Shape{}, "1");
-    // propagate_types() doesn't do anything here
+    c->propagate_types();
     ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Bool::element_type(), Shape{}));
 }
 
@@ -1537,7 +1537,7 @@ TEST(type_prop, tensor_constant_deduce_float32)
     auto c = make_shared<op::Constant>(element::Float32::element_type(),
                                        Shape{2, 2},
                                        std::vector<std::string>{"208", "208", "208", "208"});
-    // propagate_types() doesn't do anything here
+    c->propagate_types();
     ASSERT_EQ(*(c->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{2, 2}));
 }
@@ -1546,6 +1546,71 @@ TEST(type_prop, tensor_constant_deduce_bool)
 {
     auto c = make_shared<op::Constant>(
         element::Bool::element_type(), Shape{2, 2}, std::vector<std::string>{"1", "1", "1", "1"});
-    // propagate_types() doesn't do anything here
+    c->propagate_types();
     ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Bool::element_type(), Shape{2, 2}));
+}
+
+TEST(type_prop, tensor_constant_bad_parse)
+{
+    auto c = make_shared<op::Constant>(element::Bool::element_type(),
+                                       Shape{2, 2},
+                                       std::vector<std::string>{"1", "grunk", "1", "1"});
+    try
+    {
+        c->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Bad literal parse not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Could not parse literal"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, tensor_constant_bad_parse_float_for_int)
+{
+    auto c = make_shared<op::Constant>(element::Int32::element_type(),
+                                       Shape{2, 2},
+                                       std::vector<std::string>{"1", "2.7", "1", "1"});
+    try
+    {
+        c->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Bad literal parse not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Could not parse literal"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, tensor_constant_bad_count)
+{
+    auto c = make_shared<op::Constant>(
+        element::Bool::element_type(), Shape{2, 2}, std::vector<std::string>{"1", "1", "1"});
+    try
+    {
+        c->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect number of literals not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Constant does not have the expected number of literals"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }

@@ -105,6 +105,8 @@ namespace ngraph
             }
 
             const std::vector<std::string>& get_value_strings() const { return m_value_strings; }
+            virtual void propagate_types() override;
+
         protected:
             const std::vector<std::string> m_value_strings;
         };

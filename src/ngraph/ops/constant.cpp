@@ -19,3 +19,32 @@ using namespace ngraph::op;
 void ConstantBase::propagate_types()
 {
 }
+
+template <typename ET>
+void check_value_strings(const std::vector<std::string>& value_strings)
+{
+    auto result = ET::read(value_strings);
+}
+
+void Constant::propagate_types()
+{
+    // No actual type propagation is done here; however, we check the number of value strings and
+    // also call check_value_strings just to make sure the result will be parseable at runtime.
+    // (It will throw an exception if not.)
+    auto tvt = std::dynamic_pointer_cast<const TensorViewType>(get_value_type());
+    if (nullptr == tvt)
+    {
+        throw ngraph_error("Constant does not have tensor view type");
+    }
+    auto shape = tvt->get_shape();
+
+    if (ngraph::shape_size(shape) != m_value_strings.size())
+    {
+        throw ngraph_error("Constant does not have the expected number of literals");
+    }
+
+    auto& et = tvt->get_element_type();
+
+    FUNCTION_ON_ELEMENT_TYPE(
+        et, "Constant has unhandled element type", check_value_strings, m_value_strings);
+}
