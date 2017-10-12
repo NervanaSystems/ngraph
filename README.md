@@ -12,7 +12,7 @@ TODO
 
 ## Steps
 
-_If you are developing ngraph on macOS (officially unsupported) please see the section "macOS Prerequisites" below._
+_If you are developing ngraph on macOS (officially unsupported) please see the section "macOS Development Prerequisites" below._
 
 `libngraph` is build in the customary manner for a CMake-based project:
 
@@ -27,7 +27,7 @@ _If you are developing ngraph on macOS (officially unsupported) please see the s
 
 ## macOS Development Prerequisites
 
-The repository includes two scripts (`maint/check-code-format.sh` and `maint/apply-code-format.sh`) that are used respectively to check adherence to `libngraph` code formatting conventions, and automatically reformat code according to those conventions. These scripts require the command `clang-format-3.9` to be in your `PATH`. Run the following commands (you will need to adjust them if you are not using `bash`).
+The repository includes two scripts (`maint/check-code-format.sh` and `maint/apply-code-format.sh`) that are used respectively to check adherence to `libngraph` code formatting conventions, and to automatically reformat code according to those conventions. These scripts require the command `clang-format-3.9` to be in your `PATH`. Run the following commands (you will need to adjust them if you are not using `bash`).
 
 ```
 $ brew install llvm@3.9
