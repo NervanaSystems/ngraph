@@ -53,26 +53,26 @@ class ngraph::pass::ModulePass : public PassBase
 {
 public:
     virtual ~ModulePass() {}
-    virtual bool run_on_module(std::vector<ngraph::Function*>&) = 0;
+    virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) = 0;
 };
 
 class ngraph::pass::FunctionPass : public PassBase
 {
 public:
     virtual ~FunctionPass() {}
-    virtual bool run_on_function(ngraph::Function*) = 0;
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function>) = 0;
 };
 
 class ngraph::pass::NodePass : public PassBase
 {
 public:
     virtual ~NodePass() {}
-    virtual bool run_on_node(ngraph::Node*) = 0;
+    virtual bool run_on_node(std::shared_ptr<ngraph::Node>) = 0;
 };
 
 class ngraph::pass::CallGraphPass : public PassBase
 {
 public:
     virtual ~CallGraphPass() {}
-    virtual bool run_on_call_graph(std::list<ngraph::Node*>&) = 0;
+    virtual bool run_on_call_graph(std::list<std::shared_ptr<ngraph::Node>>&) = 0;
 };

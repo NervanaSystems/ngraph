@@ -33,7 +33,7 @@ namespace ngraph
 class ngraph::pass::MemoryLayout : public CallGraphPass
 {
 public:
-    virtual bool run_on_call_graph(std::list<Node*>&) override;
+    virtual bool run_on_call_graph(std::list<std::shared_ptr<Node>>&) override;
 
 private:
 };

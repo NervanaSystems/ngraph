@@ -50,7 +50,7 @@ TEST(pass, liveness)
     pass_manager.register_pass<pass::DumpSorted>(dump_file);
 
     shared_ptr<Function> func = make_test_graph();
-    pass_manager.run_passes(func.get());
+    pass_manager.run_passes(func);
     auto sorted = func->get_ordered_ops();
 
     // for (const Node* node : sorted)

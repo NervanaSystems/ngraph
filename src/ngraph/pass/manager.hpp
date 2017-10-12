@@ -47,7 +47,6 @@ public:
         m_pass_list.push_back(pass_base);
     }
 
-    void run_passes(Function*);
     void run_passes(std::shared_ptr<Function>);
 
     ManagerState& get_state();
