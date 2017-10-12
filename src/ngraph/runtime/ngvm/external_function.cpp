@@ -949,7 +949,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
     // Turn this into a pass
     // Assign layouts
     // For now, just make everyone row-major.
-    for (const Node* node : m_function->get_ordered_ops())
+    for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
         for (const descriptor::Output& output : node->get_outputs())
         {
@@ -986,7 +986,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
     m_n_outputs = tensor_index.size() - m_n_inputs;
 
     // All remaining tensor views
-    for (const Node* node : m_function->get_ordered_ops())
+    for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
         for (const descriptor::Output& output : node->get_outputs())
         {
@@ -1002,7 +1002,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
 
     // Now we build the eigen-VM instructions
     auto op_map = get_op_map();
-    for (const Node* node : m_function->get_ordered_ops())
+    for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
         auto handler_it = op_map.find(type_index(typeid(*node)));
         if (handler_it == op_map.end())
@@ -1022,7 +1022,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
             auto tv = output.get_tensor_view();
             out.push_back({tensor_index.at(tv), tv});
         }
-        handler_it->second(node, this, function_map, in, out);
+        handler_it->second(node.get(), this, function_map, in, out);
     }
     m_instructions->push_back(make_shared<eigen::ReturnInstruction>());
     m_is_compiled = true;

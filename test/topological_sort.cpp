@@ -126,7 +126,7 @@ TEST(benchmark, topological_sort)
     NGRAPH_INFO << "topological sort took " << timer.get_milliseconds() << "ms";
 
     size_t node_count = 0;
-    traverse_nodes(result, [&](const Node* node) { node_count++; });
+    traverse_nodes(result, [&](shared_ptr<Node> node) { node_count++; });
 
     NGRAPH_INFO << "node count " << node_count;
 
@@ -135,6 +135,7 @@ TEST(benchmark, topological_sort)
     timer.stop();
     NGRAPH_INFO << "delete nodes took " << timer.get_milliseconds() << "ms";
 }
+
 TEST(topological_sort, collect_functions)
 {
     // First create "f(A,B,C) = (A+B)*C".
@@ -174,7 +175,7 @@ TEST(topological_sort, collect_functions)
     set<string> expected = {"f", "g", "h"};
     auto functions = pass_manager.get_state().get_functions();
     vector<string> fnames;
-    for (Function* func : functions)
+    for (shared_ptr<Function> func : functions)
     {
         fnames.push_back(func->get_name());
     }
