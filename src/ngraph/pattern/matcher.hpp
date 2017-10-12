@@ -28,6 +28,7 @@ namespace ngraph
                 : m_is_valid(false)
                 , m_pattern_node(pattern_node)
                 , m_is_match(true)
+                , m_depth(0)
             {
             }
             virtual ~Matcher() {}
@@ -42,11 +43,13 @@ namespace ngraph
                 const std::shared_ptr<Node>& graph_node);
 
             void reset();
+            bool is_match() { return m_is_match; };
         private:
 
             void match_arguments(const Nodes& pattern_args, const Nodes& args);
             bool m_is_valid;
             bool m_is_match;
+            size_t m_depth;
             std::shared_ptr<Node> m_pattern_node;
         };
     }

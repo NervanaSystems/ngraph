@@ -14,8 +14,11 @@
 
 #pragma once
 
+#include <functional>
+
 #include "ngraph/node.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
@@ -23,24 +26,25 @@ namespace ngraph
     {
         namespace op
         {
+            using Predicate = std::function<bool(std::shared_ptr<Node>)>;
+
             class Pattern : public Node
             {
             public:
-                Pattern()
+                Pattern() : Pattern(nullptr) {};
+
+                Pattern(Predicate pred)
                     : Node()
-                    , m_binded(nullptr){};
+                    , m_predicate(pred)
+                {}
+
                 virtual std::string description() const
                 {
-                    return "pattern";
+                    return "Pattern";
                 } //@TODO [nikolayk] edit description to print out if the pattern is binded and if so the binded node
                 virtual void propagate_types() {}
-                void virtual match_class(ngraph::pattern::Matcher& matcher,
-                                         std::shared_ptr<Node> graph_node) override;
-                bool is_binded() { return (bool)m_binded; };
-                std::shared_ptr<Node> get_binded_node() { return m_binded; }
-                void reset() { m_binded.reset(); }
-            private:
-                std::shared_ptr<Node> m_binded;
+            protected:
+                std::function<bool(std::shared_ptr<Node>)> m_predicate;
             };
         }
     }

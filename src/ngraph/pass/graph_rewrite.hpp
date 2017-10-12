@@ -34,7 +34,6 @@ class ngraph::pass::GraphRewrite : public CallGraphPass
 public:
     GraphRewrite()
         : CallGraphPass(){};
-    virtual void process_match() = 0;
 
     void add_matcher_callback_pair(std::shared_ptr<pattern::Matcher> m, gr_callback_fn callback)
     {
@@ -49,7 +48,9 @@ private:
     //enable cascading rewrites
     std::vector<std::pair<std::shared_ptr<pattern::Matcher>, gr_callback_fn>>
         m_matcher_callback_pairs;
-    std::set<std::shared_ptr<Node>> marked_for_replacement;
+    
+    //nodes in traversal are visited exactly once
+    //std::set<std::shared_ptr<Node>> marked_for_replacement;
 
 private:
 };
