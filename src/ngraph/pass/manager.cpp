@@ -38,12 +38,7 @@ void ngraph::pass::Manager::initialize_default_passes()
 
 void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 {
-    run_passes(func.get());
-}
-
-void ngraph::pass::Manager::run_passes(Function* func)
-{
-    vector<Function*> fs = {func};
+    vector<shared_ptr<Function>> fs = {func};
     get_state().set_functions(fs);
 
     for (shared_ptr<PassBase> pass : m_pass_list)
@@ -59,16 +54,16 @@ void ngraph::pass::Manager::run_passes(Function* func)
         }
         else if (function_pass)
         {
-            for (Function* f : fs)
+            for (shared_ptr<Function> f : fs)
             {
                 function_pass->run_on_function(f);
             }
         }
         else if (node_pass)
         {
-            for (Function* f : fs)
+            for (shared_ptr<Function> f : fs)
             {
-                for (Node* n : f->get_ops())
+                for (shared_ptr<Node> n : f->get_ops())
                 {
                     node_pass->run_on_node(n);
                 }
@@ -76,7 +71,7 @@ void ngraph::pass::Manager::run_passes(Function* func)
         }
         else if (call_graph_pass)
         {
-            for (Function* f : fs)
+            for (shared_ptr<Function> f : fs)
             {
                 call_graph_pass->run_on_call_graph(f->get_ordered_ops());
             }

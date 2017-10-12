@@ -31,5 +31,5 @@ class ngraph::pass::TopologicalSort : public FunctionPass
 {
 public:
     TopologicalSort() {}
-    bool run_on_function(ngraph::Function*) override;
+    bool run_on_function(std::shared_ptr<ngraph::Function>) override;
 };

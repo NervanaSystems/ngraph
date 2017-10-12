@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-vector<Function*>& ngraph::pass::ManagerState::get_functions()
+vector<shared_ptr<Function>>& ngraph::pass::ManagerState::get_functions()
 {
     return m_function_list;
 }

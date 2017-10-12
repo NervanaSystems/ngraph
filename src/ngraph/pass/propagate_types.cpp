@@ -20,9 +20,9 @@
 using namespace std;
 using namespace ngraph;
 
-bool pass::PropagateTypes::run_on_call_graph(list<Node*>& nodes)
+bool pass::PropagateTypes::run_on_call_graph(list<shared_ptr<Node>>& nodes)
 {
-    for (Node* node : nodes)
+    for (shared_ptr<Node> node : nodes)
     {
         try
         {
