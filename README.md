@@ -12,6 +12,8 @@ TODO
 
 ## Steps
 
+_If you are developing ngraph on macOS (officially unsupported) please see the section "macOS Prerequisites" below._
+
 `libngraph` is build in the customary manner for a CMake-based project:
 
 1. Create a build directory outside of source directory tree.
@@ -22,6 +24,17 @@ TODO
     * This will install `libngraph.so` and the header files to `$HOME/ngraph_dist`.
 6. _(Optional, requires `doxygen`)_ Run `make doc`.
     * This will build API documentation in the directory `doc` inside the build directory.
+
+## macOS Development Prerequisites
+
+The repository includes two scripts (`maint/check-code-format.sh` and `maint/apply-code-format.sh`) that are used respectively to check adherence to `libngraph` code formatting conventions, and automatically reformat code according to those conventions. These scripts require the command `clang-format-3.9` to be in your `PATH`. Run the following commands (you will need to adjust them if you are not using `bash`).
+
+```
+$ brew install llvm@3.9
+$ mkdir -p $HOME/bin
+$ ln -s /usr/local/opt/llvm@3.9/bin/clang-format $HOME/bin/clang-format-3.9
+$ echo 'export PATH=$HOME/bin:$PATH' >> $HOME/.bash_profile
+```
 
 # Testing `libngraph`
 
