@@ -125,6 +125,23 @@ namespace ngraph
                 ss << s;
                 ss >> result;
 
+                if (ss.fail())
+                {
+                    throw ngraph_error("Could not parse literal");
+                }
+
+                return result;
+            }
+
+            static std::vector<T> read(const std::vector<std::string>& ss)
+            {
+                std::vector<T> result;
+
+                for (auto s : ss)
+                {
+                    result.push_back(read(s));
+                }
+
                 return result;
             }
         };
