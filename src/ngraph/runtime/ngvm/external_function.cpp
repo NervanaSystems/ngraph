@@ -315,15 +315,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 #define REGISTER_CONSTANT_INSTRUCTIONS(T)                                                          \
     {                                                                                              \
         REGISTER_INSTRUCTION(                                                                      \
-            op::ScalarConstant<T>,                                                                 \
-            eigen::ConstantInstruction<T>,                                                         \
-            std::vector<T::type>{dynamic_cast<const op::ScalarConstant<T>*>(n)->get_value()},      \
-            out[0]);                                                                               \
-        REGISTER_INSTRUCTION(                                                                      \
-            op::TensorConstant<T>,                                                                 \
+            op::ParameterizedConstant<T>,                                                          \
             eigen::ConstantInstruction<T>,                                                         \
             std::vector<T::type>{                                                                  \
-                dynamic_cast<const op::TensorConstant<T>*>(n)->get_value()->get_vector()},         \
+                dynamic_cast<const op::ParameterizedConstant<T>*>(n)->get_value()->get_vector()},  \
             out[0]);                                                                               \
     }
 
@@ -370,6 +365,23 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_NUMERIC_BINOP(op::Maximum, eigen::MaximumInstruction);
         REGISTER_NUMERIC_BINOP(op::Multiply, eigen::MultiplyInstruction);
         REGISTER_NUMERIC_BINOP(op::Subtract, eigen::SubtractInstruction);
+
+        REGISTER_TO_OP_MAP(op::Constant)
+        {
+            auto c = static_cast<const op::Constant*>(n);
+            auto c_tensor_type = dynamic_pointer_cast<const TensorViewType>(c->get_value_type());
+            assert(nullptr != c_tensor_type);
+            auto& c_element_type = c_tensor_type->get_element_type();
+            auto c_value_strings = c->get_value_strings();
+
+#define M_REGISTER_POLYMORPHIC_CONSTANT(ET)                                                        \
+    ef->get_instructions()->push_back(                                                             \
+        make_shared<eigen::ConstantInstruction<ET>>(ET::read(c_value_strings), out[0]));
+
+            DO_ON_ELEMENT_TYPE(c_element_type,
+                               "Constant has unhandled element type",
+                               M_REGISTER_POLYMORPHIC_CONSTANT);
+        };
 
         REGISTER_POLYMORPHIC_BINOP(op::Equal, eigen::EqualInstruction);
         REGISTER_POLYMORPHIC_BINOP(op::NotEqual, eigen::NotEqualInstruction);
