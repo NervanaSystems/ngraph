@@ -167,7 +167,7 @@ std::shared_ptr<Node> Node::backwards_derivative(const std::shared_ptr<Node>& x,
     {
         adjoints_it =
             m_adjoint_map
-                .insert(std::make_tuple(c.get(), autodiff::Adjoints(shared_from_this(), c)))
+	  .insert({c.get(), autodiff::Adjoints(shared_from_this(), c)})
                 .first;
     }
     return adjoints_it->second.get(x);
