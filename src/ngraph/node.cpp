@@ -166,9 +166,7 @@ std::shared_ptr<Node> Node::backwards_derivative(const std::shared_ptr<Node>& x,
     if (adjoints_it == m_adjoint_map.end())
     {
         adjoints_it =
-            m_adjoint_map
-	  .insert({c.get(), autodiff::Adjoints(shared_from_this(), c)})
-                .first;
+            m_adjoint_map.insert({c.get(), autodiff::Adjoints(shared_from_this(), c)}).first;
     }
     return adjoints_it->second.get(x);
 }

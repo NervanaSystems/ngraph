@@ -160,11 +160,10 @@ void autodiff::Adjoints::add_delta(const std::shared_ptr<Node>& x,
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)
     {
-      m_adjoint_map.insert({x.get(), delta});
+        m_adjoint_map.insert({x.get(), delta});
     }
     else
     {
-        m_adjoint_map.insert(
-			     {x.get(), std::make_shared<op::Add>(adjoint_it->second, delta)});
+        m_adjoint_map.insert({x.get(), std::make_shared<op::Add>(adjoint_it->second, delta)});
     }
 }

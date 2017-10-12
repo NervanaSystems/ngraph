@@ -18,6 +18,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <typeindex>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -76,7 +77,7 @@ namespace ngraph
         bool is_same_op_type(const std::shared_ptr<Node>& node) const
         {
             Node* n = node.get();
-            return typeid(*this) == typeid(*n);
+            return std::type_index(typeid(*this)) == std::type_index(typeid(*n));
         }
 
         std::shared_ptr<const ValueType> get_value_type();

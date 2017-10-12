@@ -1882,7 +1882,7 @@ TEST(execute, sin)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return sinf(f); });
+        input.begin(), input.end(), input.begin(), [](float v) -> float { return sinf(v); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -1908,7 +1908,7 @@ TEST(execute, cos)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return cosf(f); });
+        input.begin(), input.end(), input.begin(), [](float v) -> float { return cosf(v); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -1934,7 +1934,7 @@ TEST(execute, tan)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return tanf(f); });
+        input.begin(), input.end(), input.begin(), [](float v) -> float { return tanf(v); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -1959,7 +1959,7 @@ TEST(execute, asin)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return asinf(f); });
+        input.begin(), input.end(), input.begin(), [](float v) -> float { return asinf(v); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -1984,7 +1984,7 @@ TEST(execute, acos)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return acosf(f); });
+        input.begin(), input.end(), input.begin(), [](float v) -> float { return acosf(v); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -2009,7 +2009,7 @@ TEST(execute, atan)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return atanf(f); });
+        input.begin(), input.end(), input.begin(), [](float v) -> float { return atanf(v); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -2034,7 +2034,7 @@ TEST(execute, sinh)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return sinhf(f); });
+        input.begin(), input.end(), input.begin(), [](float v) -> float { return sinhf(v); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -2059,7 +2059,7 @@ TEST(execute, cosh)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return coshf(f); });
+        input.begin(), input.end(), input.begin(), [](float v) -> float { return coshf(v); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -2084,7 +2084,7 @@ TEST(execute, tanh)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return tanhf(f); });
+        input.begin(), input.end(), input.begin(), [](float v) -> float { return tanhf(v); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
