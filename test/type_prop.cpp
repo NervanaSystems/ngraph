@@ -1604,10 +1604,8 @@ TEST(type_prop, tensor_constant_bad_count)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Constant does not have the expected number of literals"));
+        EXPECT_EQ(error.what(),
+                  std::string("Constant does not have the expected number of literals"));
     }
     catch (...)
     {
