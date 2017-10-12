@@ -30,7 +30,7 @@ namespace ngraph
 class ngraph::pass::ManagerState
 {
 public:
-    std::vector<Function*>& get_functions();
+    std::vector<std::shared_ptr<Function>>& get_functions();
 
     template <typename T>
     void set_functions(const T& collection)
@@ -44,5 +44,5 @@ public:
 
 private:
     size_t m_temporary_pool_size = 0;
-    std::vector<Function*> m_function_list;
+    std::vector<std::shared_ptr<Function>> m_function_list;
 };

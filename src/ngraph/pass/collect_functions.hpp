@@ -27,7 +27,7 @@ namespace ngraph
 class ngraph::pass::CollectFunctions : public FunctionPass
 {
 public:
-    bool run_on_function(ngraph::Function*) override;
+    bool run_on_function(std::shared_ptr<ngraph::Function>) override;
 
 private:
 };

@@ -997,7 +997,9 @@ TEST(execute, subtract)
 TEST(execute, scalar_constant)
 {
     auto shape = Shape{};
-    auto A = make_shared<op::ScalarConstant<element::Float32>>(-3.0f);
+    auto t = ngraph::runtime::make_tensor<element::Float32>(shape);
+    (*t) = std::vector<float>{-3.0f};
+    auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
 
@@ -1016,8 +1018,9 @@ TEST(execute, scalar_constant)
 TEST(execute, tensor_constant)
 {
     auto shape = Shape{2, 2, 2};
-    auto A = make_shared<op::TensorConstant<element::Float32>>(shape);
-    A->get_value()->get_vector() = {1, 2, 3, 4, 5, 6, 7, 8};
+    auto t = ngraph::runtime::make_tensor<element::Float32>(shape);
+    (*t) = std::vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
+    auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
 
@@ -1036,8 +1039,9 @@ TEST(execute, tensor_constant)
 TEST(execute, tensor_constant_with_op)
 {
     auto shape = Shape{2, 2, 2};
-    auto A = make_shared<op::TensorConstant<element::Float32>>(shape);
-    A->get_value()->get_vector() = {-1, 2, 3, -4, 5, -6, -7, 8};
+    auto t = ngraph::runtime::make_tensor<element::Float32>(shape);
+    (*t) = std::vector<float>{-1, 2, 3, -4, 5, -6, -7, 8};
+    auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Abs>(A), rt, op::Parameters{});
 
@@ -1882,7 +1886,7 @@ TEST(execute, sin)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return sinf(f); });
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return sinf(x); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -1908,7 +1912,7 @@ TEST(execute, cos)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return cosf(f); });
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return cosf(x); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -1934,7 +1938,7 @@ TEST(execute, tan)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return tanf(f); });
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return tanf(x); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -1959,7 +1963,7 @@ TEST(execute, asin)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return asinf(f); });
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return asinf(x); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -1984,7 +1988,7 @@ TEST(execute, acos)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return acosf(f); });
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return acosf(x); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -2009,7 +2013,7 @@ TEST(execute, atan)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return atanf(f); });
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return atanf(x); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -2034,7 +2038,7 @@ TEST(execute, sinh)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return sinhf(f); });
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return sinhf(x); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -2059,7 +2063,7 @@ TEST(execute, cosh)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return coshf(f); });
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return coshf(x); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -2084,7 +2088,7 @@ TEST(execute, tanh)
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     std::transform(
-        input.begin(), input.end(), input.begin(), [](float f) -> float { return tanhf(f); });
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return tanhf(x); });
 
     (*cf)({a}, {result});
     ASSERT_EQ(input, result->get_vector());
@@ -2183,4 +2187,90 @@ TEST(execute, slice_vector)
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), result->get_vector());
+}
+
+TEST(execute, scalar_constant_float32)
+{
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto r = make_shared<op::Constant>(element::Float32::element_type(), Shape{}, "4.8");
+    auto f = make_shared<Function>(r, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = ngraph::runtime::make_tensor<element::Float32>(Shape{});
+
+    (*cf)({}, {result});
+    ASSERT_EQ(vector<float>{std::strtof("4.8", NULL)}, result->get_vector());
+}
+
+TEST(execute, scalar_constant_int64)
+{
+    auto rt = make_shared<TensorViewType>(element::Int64::element_type(), Shape{});
+    auto r = make_shared<op::Constant>(element::Int64::element_type(), Shape{}, "2112");
+    auto f = make_shared<Function>(r, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = ngraph::runtime::make_tensor<element::Int64>(Shape{});
+
+    (*cf)({}, {result});
+    ASSERT_EQ(vector<element::Int64::type>{std::strtol("2112", NULL, 10)}, result->get_vector());
+}
+
+TEST(execute, tensor_constant_float32)
+{
+    auto shape = Shape{2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto r = make_shared<op::Constant>(element::Float32::element_type(),
+                                       shape,
+                                       std::vector<std::string>{"4.8", "4.7", "-5.3", "0"});
+    auto f = make_shared<Function>(r, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<float>{std::strtof("4.8", NULL),
+                             std::strtof("4.7", NULL),
+                             std::strtof("-5.3", NULL),
+                             std::strtof("0", NULL)}),
+              result->get_vector());
+}
+
+TEST(execute, tensor_constant_int64)
+{
+    auto shape = Shape{2, 2};
+    auto rt = make_shared<TensorViewType>(element::Int64::element_type(), shape);
+    auto r = make_shared<op::Constant>(element::Int64::element_type(),
+                                       shape,
+                                       std::vector<std::string>{"2112", "1848", "1776", "1964"});
+    auto f = make_shared<Function>(r, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = ngraph::runtime::make_tensor<element::Int64>(shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{std::strtol("2112", NULL, 10),
+                                            std::strtol("1848", NULL, 10),
+                                            std::strtol("1776", NULL, 10),
+                                            std::strtol("1964", NULL, 10)}),
+              result->get_vector());
 }

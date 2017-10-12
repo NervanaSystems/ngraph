@@ -28,7 +28,7 @@ namespace ngraph
             /// @param function The function to be called
             /// @param args The function arguments
             ///
-            FunctionCall(const std::shared_ptr<Function>& function,
+            FunctionCall(std::shared_ptr<Function> function,
                          const std::vector<std::shared_ptr<Node>>& args)
                 : Builtin(args)
                 , m_function(function)

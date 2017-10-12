@@ -39,26 +39,26 @@ Function::Function(const std::shared_ptr<Node>& result,
         parameter->assign_function(this, i++);
     }
 
-    traverse_nodes(result, [&](Node* node) { m_ops.push_back(node); });
+    traverse_nodes(result, [&](shared_ptr<Node> node) { m_ops.push_back(node); });
 }
 
-void Function::set_ordered_ops(const std::list<Node*>& ordered_ops)
+void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)
 {
     m_ordered_ops = ordered_ops;
     m_ordered_ops_valid = true;
 }
 
-std::list<Node*>& Function::get_ops()
+std::list<shared_ptr<Node>>& Function::get_ops()
 {
     return m_ops;
 }
 
-const std::list<Node*>& Function::get_ops() const
+const std::list<shared_ptr<Node>>& Function::get_ops() const
 {
     return m_ops;
 }
 
-std::list<Node*>& Function::get_ordered_ops()
+std::list<shared_ptr<Node>>& Function::get_ordered_ops()
 {
     if (!m_ordered_ops_valid)
     {
@@ -67,7 +67,7 @@ std::list<Node*>& Function::get_ordered_ops()
     return m_ordered_ops;
 }
 
-const std::list<Node*>& Function::get_ordered_ops() const
+const std::list<shared_ptr<Node>>& Function::get_ordered_ops() const
 {
     if (!m_ordered_ops_valid)
     {

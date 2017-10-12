@@ -32,13 +32,13 @@ pass::MemoryVisualize::MemoryVisualize(const string& filename)
 {
 }
 
-bool pass::MemoryVisualize::run_on_module(vector<Function*>& functions)
+bool pass::MemoryVisualize::run_on_module(vector<shared_ptr<ngraph::Function>>& functions)
 {
     ofstream file(m_filename);
     {
-        for (const Function* f : functions)
+        for (shared_ptr<Function> f : functions)
         {
-            const list<Node*> nodes = f->get_ordered_ops();
+            list<shared_ptr<Node>> nodes = f->get_ordered_ops();
             file << "<!DOCTYPE html>\n<html>\n";
             file << "<head>\n";
             file << "    <style>\n";
@@ -62,7 +62,7 @@ bool pass::MemoryVisualize::run_on_module(vector<Function*>& functions)
             file << "<body>\n";
             unordered_set<descriptor::Tensor*> tensors;
             size_t temp_max_size = 0;
-            for (Node* node : nodes)
+            for (shared_ptr<Node> node : nodes)
             {
                 tensors.insert(node->liveness_live_list.begin(), node->liveness_live_list.end());
             }
@@ -96,11 +96,11 @@ bool pass::MemoryVisualize::run_on_module(vector<Function*>& functions)
     return false;
 }
 
-const Node* pass::MemoryVisualize::find_largest_op(const list<Node*>& nodes)
+shared_ptr<Node> pass::MemoryVisualize::find_largest_op(const list<shared_ptr<Node>>& nodes)
 {
-    const Node* largest_op = nullptr;
+    shared_ptr<Node> largest_op = nullptr;
     size_t largest_size = 0;
-    for (const Node* exop : nodes)
+    for (shared_ptr<Node> exop : nodes)
     {
         size_t size = 0;
         for (const Tensor* tensor : exop->liveness_live_list)
@@ -116,9 +116,9 @@ const Node* pass::MemoryVisualize::find_largest_op(const list<Node*>& nodes)
     return largest_op;
 }
 
-void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<Node*>& nodes)
+void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<shared_ptr<Node>>& nodes)
 {
-    const Node* largest_op = find_largest_op(nodes);
+    shared_ptr<Node> largest_op = find_largest_op(nodes);
 
     if (largest_op)
     {
@@ -130,7 +130,7 @@ void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<Node*>&
 
         unordered_map<const Tensor*, size_t> age_list;
         vector<const Tensor*> tensor_set;
-        unordered_map<const Tensor*, const Node*> generator_op;
+        unordered_map<const Tensor*, shared_ptr<Node>> generator_op;
         file << "<table>\n";
         file << "    <tr>";
         file << "<th align=\"left\">tensor</th>";
@@ -139,7 +139,7 @@ void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<Node*>&
         file << "<th align=\"right\">generator weight</th>";
         file << "</tr>\n";
         size_t i = 0;
-        for (const Node* exop : nodes)
+        for (shared_ptr<Node> exop : nodes)
         {
             for (const Tensor* tensor : exop->liveness_new_list)
             {
@@ -179,7 +179,7 @@ void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<Node*>&
     }
 }
 
-void pass::MemoryVisualize::draw_histogram(ostream& file, const list<Node*>& nodes)
+void pass::MemoryVisualize::draw_histogram(ostream& file, const list<shared_ptr<Node>>& nodes)
 {
     size_t stroke_width = 14;
     size_t text_offset = 4;
@@ -188,7 +188,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<Node*>& nod
     size_t scale = width - offset;
     size_t line_spacing = stroke_width * 1.5;
     size_t line_count = 0;
-    for (const Node* node : nodes)
+    for (shared_ptr<Node> node : nodes)
     {
         (void)node;
         line_count += 1;
@@ -198,7 +198,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<Node*>& nod
 
     file << "<svg viewBox=\"0 0 " << width << " " << height << "\">\n";
     size_t y = 0;
-    for (const Node* node : nodes)
+    for (shared_ptr<Node> node : nodes)
     {
         float usage = float(MemoryVisualize::memory_usage(node));
         float footprint = float(MemoryVisualize::memory_footprint(node));
@@ -220,14 +220,14 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<Node*>& nod
     file << "</svg>\n";
 }
 
-void pass::MemoryVisualize::draw_op_influence(ostream& file, const list<Node*>& nodes)
+void pass::MemoryVisualize::draw_op_influence(ostream& file, const list<shared_ptr<Node>>& nodes)
 {
     file << "<table>\n";
     file << "    <tr>";
     file << "<th align=\"left\">op</th>";
     file << "<th align=\"right\">influence</th>";
     file << "</tr>\n";
-    for (const Node* exop : nodes)
+    for (shared_ptr<Node> exop : nodes)
     {
         int weight = compute_op_weight(exop);
         file << "    <tr>";
@@ -237,7 +237,7 @@ void pass::MemoryVisualize::draw_op_influence(ostream& file, const list<Node*>& 
     }
 }
 
-int pass::MemoryVisualize::compute_op_weight(const Node* exop)
+int pass::MemoryVisualize::compute_op_weight(const shared_ptr<Node> exop)
 {
     int mass = 0;
     // for input_decl in exop.input_decls:
@@ -265,17 +265,17 @@ int pass::MemoryVisualize::compute_op_weight(const Node* exop)
     return mass;
 }
 
-size_t pass::MemoryVisualize::memory_usage(const Node* node)
+size_t pass::MemoryVisualize::memory_usage(shared_ptr<Node> node)
 {
     return 0;
 }
 
-size_t pass::MemoryVisualize::memory_footprint(const Node* node)
+size_t pass::MemoryVisualize::memory_footprint(shared_ptr<Node> node)
 {
     return 0;
 }
 
-size_t pass::MemoryVisualize::memory_footprint(const std::list<Node*>& nodes)
+size_t pass::MemoryVisualize::memory_footprint(const std::list<shared_ptr<Node>>& nodes)
 {
     return 0;
 }

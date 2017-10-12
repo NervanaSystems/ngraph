@@ -26,10 +26,10 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::descriptor;
 
-bool pass::MemoryLayout::run_on_call_graph(std::list<Node*>& node_list)
+bool pass::MemoryLayout::run_on_call_graph(std::list<std::shared_ptr<Node>>& node_list)
 {
     MemoryManager mm;
-    for (const Node* node : node_list)
+    for (shared_ptr<Node> node : node_list)
     {
         for (Tensor* tensor : node->liveness_new_list)
         {

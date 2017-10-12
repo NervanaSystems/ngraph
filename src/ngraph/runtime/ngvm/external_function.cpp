@@ -315,15 +315,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 #define REGISTER_CONSTANT_INSTRUCTIONS(T)                                                          \
     {                                                                                              \
         REGISTER_INSTRUCTION(                                                                      \
-            op::ScalarConstant<T>,                                                                 \
-            eigen::ConstantInstruction<T>,                                                         \
-            std::vector<T::type>{dynamic_cast<const op::ScalarConstant<T>*>(n)->get_value()},      \
-            out[0]);                                                                               \
-        REGISTER_INSTRUCTION(                                                                      \
-            op::TensorConstant<T>,                                                                 \
+            op::ParameterizedConstant<T>,                                                          \
             eigen::ConstantInstruction<T>,                                                         \
             std::vector<T::type>{                                                                  \
-                dynamic_cast<const op::TensorConstant<T>*>(n)->get_value()->get_vector()},         \
+                dynamic_cast<const op::ParameterizedConstant<T>*>(n)->get_value()->get_vector()},  \
             out[0]);                                                                               \
     }
 
@@ -370,6 +365,23 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_NUMERIC_BINOP(op::Maximum, eigen::MaximumInstruction);
         REGISTER_NUMERIC_BINOP(op::Multiply, eigen::MultiplyInstruction);
         REGISTER_NUMERIC_BINOP(op::Subtract, eigen::SubtractInstruction);
+
+        REGISTER_TO_OP_MAP(op::Constant)
+        {
+            auto c = static_cast<const op::Constant*>(n);
+            auto c_tensor_type = dynamic_pointer_cast<const TensorViewType>(c->get_value_type());
+            assert(nullptr != c_tensor_type);
+            auto& c_element_type = c_tensor_type->get_element_type();
+            auto c_value_strings = c->get_value_strings();
+
+#define M_REGISTER_POLYMORPHIC_CONSTANT(ET)                                                        \
+    ef->get_instructions()->push_back(                                                             \
+        make_shared<eigen::ConstantInstruction<ET>>(ET::read(c_value_strings), out[0]));
+
+            DO_ON_ELEMENT_TYPE(c_element_type,
+                               "Constant has unhandled element type",
+                               M_REGISTER_POLYMORPHIC_CONSTANT);
+        };
 
         REGISTER_POLYMORPHIC_BINOP(op::Equal, eigen::EqualInstruction);
         REGISTER_POLYMORPHIC_BINOP(op::NotEqual, eigen::NotEqualInstruction);
@@ -949,7 +961,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
     // Turn this into a pass
     // Assign layouts
     // For now, just make everyone row-major.
-    for (const Node* node : m_function->get_ordered_ops())
+    for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
         for (const descriptor::Output& output : node->get_outputs())
         {
@@ -986,7 +998,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
     m_n_outputs = tensor_index.size() - m_n_inputs;
 
     // All remaining tensor views
-    for (const Node* node : m_function->get_ordered_ops())
+    for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
         for (const descriptor::Output& output : node->get_outputs())
         {
@@ -1002,9 +1014,11 @@ void ExternalFunction::compile(FunctionMap& function_map)
 
     // Now we build the eigen-VM instructions
     auto op_map = get_op_map();
-    for (const Node* node : m_function->get_ordered_ops())
+    for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
-        auto handler_it = op_map.find(type_index(typeid(*node)));
+        auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
+                         // with shared pointers, which is fine here but clang doesn't like it.)
+        auto handler_it = op_map.find(type_index(typeid(n)));
         if (handler_it == op_map.end())
         {
             throw ngraph_error("Unhandled op during code generation");
@@ -1022,7 +1036,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
             auto tv = output.get_tensor_view();
             out.push_back({tensor_index.at(tv), tv});
         }
-        handler_it->second(node, this, function_map, in, out);
+        handler_it->second(node.get(), this, function_map, in, out);
     }
     m_instructions->push_back(make_shared<eigen::ReturnInstruction>());
     m_is_compiled = true;
