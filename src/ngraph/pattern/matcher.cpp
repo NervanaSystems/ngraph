@@ -15,6 +15,7 @@
 #include "matcher.hpp"
 #include <algorithm>
 #include "ngraph/ngraph.hpp"
+#include "ngraph/log.hpp"
 
 namespace ngraph
 {
@@ -36,6 +37,8 @@ namespace ngraph
                                      const std::shared_ptr<ngraph::Node>& graph_node,
                                      bool is_match)
         {
+            NGRAPH_DEBUG << "[MATCHER] " << "pattern = " << pattern_node << " , " << pattern_node->description()
+               << " " << (is_match ? " " : "NOT ") << "matched " << graph_node << " , " << graph_node->description();
             if (!is_match)
             {
                 m_is_match = false;
@@ -51,12 +54,15 @@ namespace ngraph
                 return;
             }
 
+            m_depth++;
+
             if (graph_node->is_commutative())
             {
                 auto args_copy =
                     Nodes(args); //@TODO [nikolayk] remove if there are no implicit dependencies
                 do               //on the order of arguments in the rest of the compiler
                 {
+
                     m_is_match =
                         true; //previous permutation wasn't a match; reset m_is_match back to true
                     match_arguments(pattern_args, args_copy);
@@ -70,6 +76,8 @@ namespace ngraph
             {
                 match_arguments(pattern_args, args);
             }
+
+            m_depth--;
         }
 
         bool Matcher::match(const std::shared_ptr<Node>& pattern_node,
@@ -84,6 +92,7 @@ namespace ngraph
         void Matcher::reset()
         {
             //TODO: clean up all pattern nodes
+            m_depth = 0;
             m_is_valid = false;
             m_is_match = true;
         }

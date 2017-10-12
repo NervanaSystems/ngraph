@@ -14,8 +14,7 @@
 
 #include "pattern.hpp"
 
-void ngraph::pattern::op::Pattern::match_class(ngraph::pattern::Matcher& matcher,
-                                               std::shared_ptr<Node> graph_node)
+void ngraph::pattern::op::Pattern::match_class(ngraph::pattern::Matcher& matcher, std::shared_ptr<Node> graph_node)
 {
     bool is_match = true;
     if (is_binded())
@@ -30,5 +29,13 @@ void ngraph::pattern::op::Pattern::match_class(ngraph::pattern::Matcher& matcher
         m_binded = graph_node;
     }
 
-    matcher.on_match_class(shared_from_this(), graph_node, is_match);
+    matcher.on_match_class(shared_from_this(),
+        graph_node,
+        is_match);
+
+    //if subgraph underneath doesn't match unbind m_binded
+    if (!matcher.is_match())
+    {
+        reset();
+    }
 }
