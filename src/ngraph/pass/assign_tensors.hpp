@@ -27,7 +27,7 @@ namespace ngraph
 class ngraph::pass::AssignTensors : public CallGraphPass
 {
 public:
-    virtual bool run_on_call_graph(std::list<Node*>& nodes) override;
+    virtual bool run_on_call_graph(std::list<std::shared_ptr<Node>>& nodes) override;
 
 private:
 };

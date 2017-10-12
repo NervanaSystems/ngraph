@@ -25,15 +25,15 @@
 using namespace std;
 using namespace ngraph;
 
-bool pass::AssignTensors::run_on_call_graph(list<Node*>& nodes)
+bool pass::AssignTensors::run_on_call_graph(list<std::shared_ptr<Node>>& nodes)
 {
-    for (Node* node : nodes)
+    for (shared_ptr<Node> node : nodes)
     {
         try
         {
             // We need to set the nodes is_output state prior to call assign_tensors
             // so that the output state can be passes to the constructed tensors.
-            if (node == get_state().get_functions().at(0)->get_result().get())
+            if (node == get_state().get_functions().at(0)->get_result())
             {
                 node->set_is_output();
             }

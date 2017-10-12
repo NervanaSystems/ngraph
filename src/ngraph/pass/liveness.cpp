@@ -28,13 +28,13 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::descriptor;
 
-bool pass::Liveness::run_on_call_graph(list<Node*>& ops)
+bool pass::Liveness::run_on_call_graph(list<shared_ptr<Node>>& ops)
 {
     unordered_set<Tensor*> currently_live;
 
     for (auto it = ops.rbegin(); it != ops.rend(); it++)
     {
-        Node* node = *it;
+        shared_ptr<Node> node = *it;
         node->liveness_live_list.clear();
         node->liveness_new_list.clear();
         node->liveness_free_list.clear();
@@ -91,7 +91,7 @@ bool pass::Liveness::run_on_call_graph(list<Node*>& ops)
     // Add outputs to live_list and remove from free_list
     unordered_set<Tensor*> outputs;
     unordered_set<Tensor*> seen;
-    for (Node* node : ops)
+    for (shared_ptr<Node> node : ops)
     {
         for (Tensor* tensor : node->liveness_live_list)
         {
