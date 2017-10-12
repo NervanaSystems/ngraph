@@ -1016,7 +1016,9 @@ void ExternalFunction::compile(FunctionMap& function_map)
     auto op_map = get_op_map();
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
-        auto handler_it = op_map.find(type_index(typeid(*node)));
+        auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
+                         // with shared pointers, which is fine here but clang doesn't like it.)
+        auto handler_it = op_map.find(type_index(typeid(n)));
         if (handler_it == op_map.end())
         {
             throw ngraph_error("Unhandled op during code generation");
