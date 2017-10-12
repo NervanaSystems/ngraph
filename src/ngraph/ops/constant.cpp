@@ -29,8 +29,8 @@ void check_value_strings(const std::vector<std::string>& value_strings)
 void Constant::propagate_types()
 {
     // No actual type propagation is done here; however, we check the number of value strings and
-    // also call check_value_strings just to make sure the result will be parseable at runtime.
-    // (It will throw an exception if not.)
+    // also call check_value_strings just to make sure the result will be parseable at compile
+    // time. (It will throw an exception if not.)
     auto tvt = std::dynamic_pointer_cast<const TensorViewType>(get_value_type());
     if (nullptr == tvt)
     {
