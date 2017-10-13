@@ -24,20 +24,19 @@ include(ExternalProject)
 # added to LD_LIBRARY_PATH already during Argon setup.
 message(STATUS "Lib path: $ENV{NRV_SYSTEM_GIT_ROOT}/_out/$ENV{BUILD_PLATFORM}/lib")
 find_library(ARGON_EXTERNAL_LIB
-    names
+    NAMES
     argon_api
     optimizer
     ir_builder
     umd
     flex
     disasm
-    paths
+    HINTS
     $ENV{NRV_SYSTEM_GIT_ROOT}/_out/$ENV{BUILD_PLATFORM}/lib
     $ENV{LD_LIBRARY_PATH}
 )
 
 message(STATUS "Header path: $ENV{NRV_SYSTEM_GIT_ROOT}/_out/$ENV{BUILD_PLATFORM}/include")
-
 # Argon headers
 include_directories(
     $ENV{NRV_SYSTEM_GIT_ROOT}/_out/$ENV{BUILD_PLATFORM}/include
