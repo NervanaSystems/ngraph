@@ -24,10 +24,17 @@ namespace ngraph
 {
     namespace op
     {
-        // Defines methods to all constants
+        /// \brief Abstract base class for constants.
+        ///
+        /// There are two subclasses: ParameterizedConstant and Constant. ParameterizedConstant allows constant values to be supplied via vectors of the corresponding C++ type;
+        /// however, it can only be used when type information is available at C++ compile-time. In other cases, where types are not known until C++ runtime, Constant must be
+        /// used instead.
         class ConstantBase : public Node
         {
         protected:
+            /// \brief Constructs a constant base-type node.
+            ///
+            /// \param type The TensorViewType for the constant.
             ConstantBase(const std::shared_ptr<TensorViewType>& type)
                 : Node({}, type)
             {
@@ -36,7 +43,9 @@ namespace ngraph
             virtual void propagate_types() override;
         };
 
-        // Implement a constant tensor for each element type.
+        /// \brief Class for constants whose element types are known at C++ compile-time.
+        ///
+        /// \tparam T The ngraph::element::Type for the tensor's elements.
         template <typename T>
         class ParameterizedConstant : public ConstantBase
         {
