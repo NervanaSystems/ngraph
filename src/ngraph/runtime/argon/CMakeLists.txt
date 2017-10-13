@@ -37,10 +37,10 @@ find_library(ARGON_EXTERNAL_LIB
 )
 
 message(STATUS "Header path: $ENV{NRV_SYSTEM_GIT_ROOT}/_out/$ENV{BUILD_PLATFORM}/include")
+
 # Argon headers
 include_directories(
     $ENV{NRV_SYSTEM_GIT_ROOT}/_out/$ENV{BUILD_PLATFORM}/include
-    ${NGRAPH_INCLUDE_DIR}
 )
 
 #-----------------------------------------------------------------------------------------------
@@ -48,6 +48,7 @@ include_directories(
 #-----------------------------------------------------------------------------------------------
 # Sources
 set (ARGON_BACKEND_UNIT_TEST_SRC
+    tests/main.cpp
     tests/simple_ew.cpp
 )
 
@@ -59,8 +60,15 @@ target_link_libraries(argon_backend_unit_test ${ARGON_EXTERNAL_LIB})
 target_link_libraries(argon_backend_unit_test ngraph libgtest pthread)
 target_link_libraries(argon_backend_unit_test ${CMAKE_DL_LIBS})
 
-# MKL Lib and Dependencies
-if(MKLDNN_INCLUDE_DIR)
-    target_link_libraries(argon_backend_unit_test mkldnn)
-    add_dependencies(argon_backend_unit_test ext_mkldnn)
-endif()
+# # MKL Lib and Dependencies
+# if(MKLDNN_INCLUDE_DIR)
+#     target_link_libraries(argon_backend_unit_test mkldnn)
+#     add_dependencies(argon_backend_unit_test ext_mkldnn)
+# endif()
+
+# Headers
+include_directories(
+    SYSTEM
+    ${GTEST_INCLUDE_DIR}
+    ${EIGEN_INCLUDE_DIR}
+)
