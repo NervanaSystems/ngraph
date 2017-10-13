@@ -39,6 +39,7 @@ namespace ngraph
     /// view or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
+        // So Adjoints can call generate_adjoints
         friend class autodiff::Adjoints;
 
     protected:

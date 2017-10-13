@@ -82,7 +82,7 @@ autodiff::Adjoints::Adjoints(const std::shared_ptr<Node>& y, const std::shared_p
     // Pass 1 determines which nodes contribute to y as well as setting up a reverse
     // topological sort.
 
-    // Number of nodes that use the a node's value
+    // Number of nodes that use the node's value
     std::unordered_map<std::shared_ptr<Node>, size_t> parent_counts;
 
     // Nodes that have been processed
