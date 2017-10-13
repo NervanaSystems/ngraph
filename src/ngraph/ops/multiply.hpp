@@ -34,10 +34,10 @@ namespace ngraph
                                            const std::shared_ptr<Node>& delta) override;
         };
     };
-}
 
-inline std::shared_ptr<ngraph::Node> operator*(const std::shared_ptr<ngraph::Node> arg0,
-                                               const std::shared_ptr<ngraph::Node> arg1)
-{
-    return std::make_shared<ngraph::op::Multiply>(arg0, arg1);
+    inline std::shared_ptr<ngraph::Node> operator*(const std::shared_ptr<ngraph::Node> arg0,
+                                                   const std::shared_ptr<ngraph::Node> arg1)
+    {
+        return std::make_shared<ngraph::op::Multiply>(arg0, arg1);
+    }
 }
