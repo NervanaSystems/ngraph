@@ -34,13 +34,8 @@ std::shared_ptr<Node> make_zero(const std::shared_ptr<const ValueType>& value_ty
 
 std::shared_ptr<Node> make_zero(const std::shared_ptr<const TensorViewType>& tensor_view_type)
 {
-    std::shared_ptr<Node> zero = std::make_shared<op::Float32ScalarConstant>(0.0);
-    std::shared_ptr<const TensorViewType> zero_type =
-        std::dynamic_pointer_cast<const TensorViewType>(zero->get_value_type());
-    if (zero_type->get_element_type() != tensor_view_type->get_element_type())
-    {
-        zero = std::make_shared<op::Convert>(zero, tensor_view_type->get_element_type());
-    }
+    std::shared_ptr<Node> zero =
+        std::make_shared<op::Constant>(tensor_view_type->get_element_type(), Shape{}, "0");
     const Shape& shape = tensor_view_type->get_shape();
     if (shape.size() > 0)
     {
