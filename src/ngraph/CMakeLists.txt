@@ -146,3 +146,5 @@ install(DIRECTORY
 )
 
 add_dependencies(ngraph eigen)
+
+add_subdirectory(runtime/argon)
