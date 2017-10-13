@@ -32,14 +32,14 @@ class ngraph::pass::VisualizeTree : public ModulePass
 {
 public:
     VisualizeTree(const std::string& file_name);
-    bool run_on_module(std::vector<ngraph::Function*>&) override;
+    bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
 
 private:
-    std::string add_attributes(const Node* node);
-    std::string get_attributes(const Node* node);
+    std::string add_attributes(std::shared_ptr<Node> node);
+    std::string get_attributes(std::shared_ptr<Node> node);
     void render() const;
 
     std::stringstream m_ss;
     std::string m_name;
-    std::set<const Node*> m_nodes_with_attributes;
+    std::set<std::shared_ptr<Node>> m_nodes_with_attributes;
 };

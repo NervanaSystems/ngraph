@@ -28,14 +28,14 @@ pass::DumpSorted::DumpSorted(const string& output_file)
 {
 }
 
-bool pass::DumpSorted::run_on_module(vector<Function*>& functions)
+bool pass::DumpSorted::run_on_module(vector<shared_ptr<ngraph::Function>>& functions)
 {
     ofstream out{m_output_file};
     if (out)
     {
-        for (Function* f : functions)
+        for (shared_ptr<Function> f : functions)
         {
-            for (const Node* node : f->get_ordered_ops())
+            for (const shared_ptr<Node>& node : f->get_ordered_ops())
             {
                 out << node->get_name() << "(";
                 vector<string> inputs;
