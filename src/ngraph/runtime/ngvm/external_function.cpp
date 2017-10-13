@@ -56,6 +56,7 @@
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/subtract.hpp"
+#include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/ops/tuple.hpp"
@@ -105,6 +106,9 @@
 #include "ngraph/runtime/ngvm/eigen/sin.hpp"
 #include "ngraph/runtime/ngvm/eigen/sinh.hpp"
 #include "ngraph/runtime/ngvm/eigen/subtract.hpp"
+#include "ngraph/runtime/ngvm/eigen/sum_matrix_columns.hpp"
+#include "ngraph/runtime/ngvm/eigen/sum_matrix_rows.hpp"
+#include "ngraph/runtime/ngvm/eigen/sum_to_scalar.hpp"
 #include "ngraph/runtime/ngvm/eigen/tan.hpp"
 #include "ngraph/runtime/ngvm/eigen/tanh.hpp"
 #include "ngraph/runtime/ngvm/eigen/vector_slice.hpp"
@@ -821,6 +825,65 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             else
             {
                 throw ngraph_error("Reduce: only vectors and matrices are currently supported");
+            }
+        };
+
+        REGISTER_TO_OP_MAP(op::Sum)
+        {
+            auto s = static_cast<const op::Sum*>(n);
+            auto s_tensor_view_type =
+                dynamic_pointer_cast<const TensorViewType>(s->get_value_type());
+            assert(nullptr != s_tensor_view_type);
+            auto& s_element_type = s_tensor_view_type->get_element_type();
+            auto s_shape = s_tensor_view_type->get_shape();
+
+            auto arg = s->get_arguments().at(0);
+            auto arg_type = arg->get_value_type();
+            auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
+            assert(nullptr != arg_tensor_view_type);
+            auto arg_shape = arg_tensor_view_type->get_shape();
+            auto arg_rank = arg_shape.size();
+
+            auto& summed_axes = s->get_summed_axes();
+
+            // Trivial case: no summed axes.
+            if (summed_axes.size() == 0)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
+                                             "Sum has unhandled element type",
+                                             runtime::ngvm::eigen::CopyInstruction,
+                                             in.at(0).get_index(),
+                                             out.at(0).get_index());
+            }
+            // Full reduction? Then sum to scalar.
+            else if ((arg_rank == 1 && summed_axes == AxisSet{0}) ||
+                     (arg_rank == 2 && summed_axes == AxisSet{0, 1}))
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
+                                             "Sum has unhandled element type",
+                                             runtime::ngvm::eigen::SumToScalarInstruction,
+                                             in[0],
+                                             out[0]);
+            }
+            else if (arg_rank == 2 && summed_axes == AxisSet{1})
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
+                                             "Sum has unhandled element type",
+                                             runtime::ngvm::eigen::SumMatrixRowsInstruction,
+                                             in[0],
+                                             out[0]);
+            }
+            else if (arg_rank == 2 && summed_axes == AxisSet{0})
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
+                                             "Sum has unhandled element type",
+                                             runtime::ngvm::eigen::SumMatrixColumnsInstruction,
+                                             in[0],
+                                             out[0]);
+            }
+            else
+            {
+                throw ngraph_error("Sum: only vectors and matrices are currently supported");
             }
         };
 
