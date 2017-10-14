@@ -14,12 +14,16 @@
 
 #pragma once
 
+#include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
+#include "ngraph/runtime/ndarray.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
@@ -60,8 +64,17 @@ namespace ngraph
                 return *this;
             }
 
+            template <typename T, size_t N>
+            ParameterizedTensorView<ET>& operator=(const NDArray<T, N>& ndarray)
+            {
+                assert(ndarray.get_shape() == get_shape());
+                std::copy(ndarray.begin(), ndarray.end(), m_vector.begin());
+                return *this;
+            }
+
             // For getting the data out
             storage_type& get_vector() { return m_vector; }
+            const storage_type& get_vector() const { return m_vector; }
             virtual void write(const void* p, size_t tensor_offset, size_t n) override
             {
                 size_t elt_offset = tensor_offset / sizeof(typename ET::type);
@@ -102,6 +115,11 @@ namespace ngraph
                 }
 
                 std::memcpy(p, &m_vector[elt_offset], n);
+            }
+
+            bool operator==(const NDArrayBase<typename ET::type>& ndarray) const
+            {
+                return get_shape() == ndarray.get_shape() && get_vector() == ndarray.get_vector();
             }
 
         protected:

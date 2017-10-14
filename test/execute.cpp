@@ -37,21 +37,21 @@ TEST(execute, abc)
 
     // Create some tensors for input/output
     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, 2, 3, 4};
+    *a = runtime::NDArray<float, 2>({{1, 2}, {3, 4}});
     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{5, 6, 7, 8};
+    *b = runtime::NDArray<float, 2>({{5, 6}, {7, 8}});
     auto c = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *c = vector<float>{9, 10, 11, 12};
+    *c = runtime::NDArray<float, 2>({{9, 10}, {11, 12}});
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({a, b, c}, {result});
-    ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector());
+    ASSERT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
 
     (*cf)({b, a, c}, {result});
-    ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector());
+    ASSERT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
 
     (*cf)({a, c, b}, {result});
-    ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector());
+    ASSERT_EQ(*result, (runtime::NDArray<float, 2>({{50, 72}, {98, 128}})));
 }
 
 TEST(execute, abc_int64)
