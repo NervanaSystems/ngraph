@@ -36,12 +36,12 @@ TEST(execute, abc)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = runtime::NDArray<float, 2>({{1, 2}, {3, 4}});
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = runtime::NDArray<float, 2>({{5, 6}, {7, 8}});
-    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *c = runtime::NDArray<float, 2>({{9, 10}, {11, 12}});
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(
+        runtime::NDArray<float, 2>({{1, 2}, {3, 4}}));
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(
+        runtime::NDArray<float, 2>({{5, 6}, {7, 8}}));
+    auto c = backend->make_parameterized_tensor_view<element::Float32>(
+        runtime::NDArray<float, 2>({{9, 10}, {11, 12}}));
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
 
     (*cf)({a, b, c}, {result});
