@@ -49,6 +49,7 @@ include_directories(
 set (ARGON_BACKEND_UNIT_TEST_SRC
     tests/main.cpp
     tests/simple_ew.cpp
+    tests/unary_op.cpp
 )
 
 # Executable
