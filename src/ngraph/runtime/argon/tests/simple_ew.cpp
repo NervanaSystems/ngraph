@@ -58,6 +58,11 @@ TEST(BinaryOpTest, DotProductOfTwoTensors)
 
     // Step 2: Prepare three argon tensors.
     //         Important is to preserve their id.
+
+    //***************condition 
+    //***************Dot Product of Square Matrix  
+    //*************************
+
     ArTensorId A1id, B1id, C1id;
     ArApiShape shape{128, 128};
     // Note: You can check api calls parameters in argon_api.h
@@ -81,8 +86,40 @@ TEST(BinaryOpTest, DotProductOfTwoTensors)
     // Step 6: Check if results are correct.
     for (size_t i = 0; i < size; i++)
     {
-        EXPECT_EQ(array[i], 128.0f );
+        EXPECT_EQ(array[i], 128.0f )<< "Dot Product of two square matrix "; 
     }
+
+
+    //***************condition 
+    //***************Dot Product of Rectangular Matrix  
+    //*************************
+    
+    ArApiShape shapeA{128, 64};
+    ArApiShape shapeB{64, 128};
+    ArApiShape shapeC{128, 128};
+    // Note: You can check api calls parameters in argon_api.h
+    arCreateTensor(shapeA, 0, 1, 0, &A1id);
+    arCreateTensor(shapeB, 0, 1, 0, &B1id);
+    arCreateTensor(shapeC, 0, 1, 0, &C1id);
+
+    // // Step 3: Fill A and B tensors with ones.
+    arSelf(AR_SELF_EW_FILL, A1id, 1.0f);
+    arSelf(AR_SELF_EW_FILL, B1id, 1.0f);
+
+    // // Step 4: Do element wise addition of A and B tensors.
+    arBinary(AR_BINARY_MAT_MUL, A1id, B1id, C1id);
+
+    // // Step 5: Get results.
+    size = shapeC.rows_ * shapeC.cols_;
+    // std::unique_ptr<float[]> array(new float[size]);
+    arCopyToArray(C1id, array.get(), size * sizeof(float), true);
+
+    // Step 6: Check if results are correct.
+    for (size_t i = 0; i < size; i++)
+    {
+        EXPECT_EQ(array[i], 64.0f )<< "Dot Product of two rectangular matrix ";
+    }
+
 
     // Step 7: Delete tensors.
     arDeleteTensor(A1id);
