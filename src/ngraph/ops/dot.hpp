@@ -20,9 +20,9 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Dot product/tensor contraction/inner product operation.
+        /// \brief Inner product/dot product/matrix product/tensor contraction operation.
         ///
-        /// Takes two arguments `arg0` and `arg1. There are three possible cases:
+        /// Takes two arguments `arg0` and `arg1`. There are three possible cases:
         ///
         /// 1. `arg0` or `arg1` is 0-dimensional. Then, treats that 0-dimensional argument as a scalars and computes a scalar-tensor product.
         ///     (Example: `arg0` has shape `{1,2,3}` and arg1 has shape `{}`; then the result will have shape `{1,2,3}`.)
@@ -89,7 +89,7 @@ namespace ngraph
         /// | `arg0` | \f$E[d_1,\dots,d_n]~(n \geq 1)\f$                           | A tensor of any shape with rank of at least 1, and any element type.                                                                                         |
         /// | `arg1` | \f$E[d'_1,\dots,d'_m]~(m \geq 2\text{ and }d'_{m-1}=d_n)\f$ | A tensor with the same element type as `arg0`, and any shape with rank of at least 2 whose next-to-innermost dimension matches `arg0`'s innermost dimension. |
         ///
-        /// <i>(Note: in the particular case where \f$n = m = 2\f$, this is a matrix product.)</I>
+        /// <i>(Note: in the particular case where \f$n = m = 2\f$, this is a matrix product.)</i>
         ///
         /// ## Output
         ///
