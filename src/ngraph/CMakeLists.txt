@@ -39,6 +39,7 @@ set (SRC
     ops/reshape.cpp
     ops/select.cpp
     ops/slice.cpp
+    ops/sum.cpp
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise_builtin.cpp
