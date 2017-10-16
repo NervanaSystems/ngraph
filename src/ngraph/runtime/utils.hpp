@@ -37,5 +37,49 @@ namespace ngraph
         /// @brief Framework constructor of a tuple from a sequence of values.
         std::shared_ptr<ngraph::runtime::Tuple>
             make_tuple(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& elements);
+
+        /// @brief Same as numpy.allclose
+        /// @param a First tensor to compare
+        /// @param b Second tensor to compare
+        /// @param rtol Relative tolerance
+        /// @param atol Absolute tolerance
+        /// Returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
+        template <typename ET>
+        bool all_close(const std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>& a,
+                       const std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>& b,
+                       typename ET::type rtol = 1e-5f,
+                       typename ET::type atol = 1e-8f);
+
+        extern template bool ngraph::runtime::all_close<ngraph::element::Float32>(
+            const std::shared_ptr<
+                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>>& a,
+            const std::shared_ptr<
+                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>>& b,
+            ngraph::element::Float32::type rtol,
+            ngraph::element::Float32::type atol);
+
+        extern template bool ngraph::runtime::all_close<ngraph::element::Float64>(
+            const std::shared_ptr<
+                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float64>>& a,
+            const std::shared_ptr<
+                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float64>>& b,
+            ngraph::element::Float64::type rtol,
+            ngraph::element::Float64::type atol);
+
+        template <typename T>
+        bool all_close(const std::vector<T>& a,
+                       const std::vector<T>& b,
+                       T rtol = 1e-5f,
+                       T atol = 1e-8f);
+
+        extern template bool ngraph::runtime::all_close<float>(const std::vector<float>& a,
+                                                               const std::vector<float>& b,
+                                                               float rtol,
+                                                               float atol);
+
+        extern template bool ngraph::runtime::all_close<double>(const std::vector<double>& a,
+                                                                const std::vector<double>& b,
+                                                                double rtol,
+                                                                double atol);
     }
 }

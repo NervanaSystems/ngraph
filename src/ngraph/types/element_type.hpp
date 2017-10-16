@@ -153,6 +153,9 @@ namespace ngraph
         NGRAPH_DEFINE_TRAITED_TYPE_NAME(float)
         using Float32 = TraitedType<float>;
 
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(double)
+        using Float64 = TraitedType<double>;
+
         NGRAPH_DEFINE_TRAITED_TYPE_NAME(int8_t)
         using Int8 = TraitedType<int8_t>;
 

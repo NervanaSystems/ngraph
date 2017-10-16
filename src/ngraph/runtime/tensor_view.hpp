@@ -60,6 +60,9 @@ namespace ngraph
 
             const ngraph::Shape& get_shape() const;
 
+            std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout>
+                get_tensor_view_layout() const;
+
             /// @brief Write bytes directly into the tensor
             /// @param p Pointer to source of data
             /// @param tensor_offset Offset into tensor storage to begin writing. Must be element-aligned.
