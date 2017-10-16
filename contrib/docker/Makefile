@@ -5,10 +5,23 @@
 #   make PARELLEL=
 PARALLEL=-j
 
+# DIR is an internal variable that serves as an anchor to this cloned git
+# repository.  DIR is mounted into the docker container, so that builds
+# can occur within the container on this cloned git repository.  DIR should
+# not be modified - if it is, then the build system will not work.
 DIR = $(realpath ../..)
+
+# DOCKUSER_HOME is the location of the home directory of the fabricated
+# "dockuser" user, used only within the docker containers.  "dockuser" is
+# created (from the passed-in RUN_UID) to map the docker-caller user's UID to a
+# first-class user (/etc/passwd entry, member of sudo group, proper home dir)
+# /home/dockuser is also used in other scripts, notably run_as_user.sh, so if
+# changed it must be done in other areas for the builds to work.
+DOCKUSER_HOME='/home/dockuser'
+
 # Use /home/dockuser/ngraph-cpp-test, because we run as the user (and not root)
 # /root/ngraph-cpp-test is not used, because /root is not accessible to user
-VOLUME = -v ${DIR}:/home/dockuser/ngraph-cpp-test
+VOLUME = -v ${DIR}:${DOCKUSER_HOME}/ngraph-cpp-test
 GIT_COMMIT = $(shell git rev-parse HEAD)
 BUILD_VERSION = ${GIT_COMMIT}_${PYTHON_VERSION}
 BUILD_DIR = ${DIR}/contrib/docker/.build-${BUILD_VERSION}
@@ -61,18 +74,18 @@ check_cpu: build_ngraph_cpp_cpu
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
-            --env RUN_UID=`id -u` \
-            --env RUN_CMD='set -e ; set -o pipefail ; cd /home/dockuser/ngraph-cpp-test/BUILD; cmake -DCMAKE_CXX_COMPILER=clang++-3.9 -DCMAKE_C_COMPILER=clang-3.9 .. 2>&1 | tee cmake.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make.log ; env VERBOSE=1 make check 2>&1 | tee make_check.log' \
+            --env RUN_UID=$(shell id -u) \
+            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD; cmake -DCMAKE_CXX_COMPILER=clang++-3.9 -DCMAKE_C_COMPILER=clang-3.9 .. 2>&1 | tee cmake.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make.log ; env VERBOSE=1 make check 2>&1 | tee make_check.log" \
             ngraph_cpp_cpu:${BUILD_VERSION} \
-	    sh -c '/home/dockuser/ngraph-cpp-test/contrib/docker/run_as_user.sh'
+	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
 shell: build_ngraph_cpp_cpu
 	docker run --rm --tty --interactive \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
-            --env RUN_UID=`id -u` \
+            --env RUN_UID=$(shell id -u) \
             ngraph_cpp_cpu:${BUILD_VERSION} \
-            sh -c 'cd /home/dockuser ; /home/dockuser/ngraph-cpp-test/contrib/docker/run_as_user.sh'
+            sh -c "cd ${DOCKUSER_HOME} ; /home/dockuser/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
 install:
 	# Puts ngraph_dist in BUILD directory.  This is used by Jenkins ngraph-tensorflow batch job.
@@ -81,9 +94,9 @@ install:
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
-            --env RUN_UID=`id -u` \
-            --env RUN_CMD='set -e ; set -o pipefail; cd /home/dockuser/ngraph-cpp-test/BUILD ; test -d ngraph_dist && rm -fr ngraph_dist && echo "Removed old ngraph_dist directory" ; make install 2>&1 | tee make_install.log ; mv -v /home/dockuser/ngraph_dist /home/dockuser/ngraph-cpp-test/BUILD' \
+            --env RUN_UID=$(shell id -u) \
+            --env RUN_CMD="set -e ; set -o pipefail; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD ; test -d ngraph_dist && rm -fr ngraph_dist && echo 'Removed old ngraph_dist directory' ; make install 2>&1 | tee make_install.log ; mv -v ${DOCKUSER_HOME}/ngraph_dist ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD" \
             ngraph_cpp_cpu:${BUILD_VERSION} \
-	    sh -c '/home/dockuser/ngraph-cpp-test/contrib/docker/run_as_user.sh'
+	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
 all: build_ngraph_cpp_cpu
