@@ -46,9 +46,9 @@ namespace ngraph
         ///
         /// ## Inputs
         ///
-        /// |                 | Type                                              | Description                                                                                                              |
-        /// | --------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-        /// | `args`[\f$i\f$] | \f$E[d_1,d_{a-1},d^i_a,d_{a+1},d_n]~(n \geq 1)\f$ | One or more input tensors, all of which have the same element type, and the same shape, except possibly at axis \f$a\f$. |
+        /// |                 | Type                                                          | Description                                                                                                              |
+        /// | --------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+        /// | `args`[\f$i\f$] | \f$E[d_1,\dots,d_{a-1},d^i_a,d_{a+1},\dots,d_n]~(n \geq 1)\f$ | One or more input tensors, all of which have the same element type, and the same shape, except possibly at axis \f$a\f$. |
         ///
         /// ## Output
         ///
