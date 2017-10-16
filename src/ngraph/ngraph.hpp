@@ -88,6 +88,7 @@
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/subtract.hpp"
+#include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/ops/tuple.hpp"

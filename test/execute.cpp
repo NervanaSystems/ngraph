@@ -2274,3 +2274,207 @@ TEST(execute, tensor_constant_int64)
                                             std::strtol("1964", NULL, 10)}),
               result->get_vector());
 }
+
+// Trivial case with no summed axes.
+TEST(execute, sum_trivial)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 2, 3, 4};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{1, 2, 3, 4}), result->get_vector());
+}
+
+TEST(execute, sum_to_scalar)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 2, 3, 4};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(Shape{});
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{10}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{1, 2, 3, 4}), a->get_vector());
+}
+
+TEST(execute, sum_matrix_columns)
+{
+    auto shape_a = Shape{3, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4, 5, 6};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{9, 12}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), a->get_vector());
+}
+
+TEST(execute, sum_matrix_rows)
+{
+    auto shape_a = Shape{3, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4, 5, 6};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{3, 7, 11}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), a->get_vector());
+}
+
+TEST(execute, sum_matrix_rows_zero)
+{
+    auto shape_a = Shape{3, 0};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{0, 0, 0}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{}), a->get_vector());
+}
+
+TEST(execute, sum_matrix_cols_zero)
+{
+    // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
+    auto shape_a = Shape{0, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{0, 0}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{}), a->get_vector());
+}
+
+TEST(execute, sum_vector_zero)
+{
+    auto shape_a = Shape{0};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{0}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{}), a->get_vector());
+}
+
+TEST(execute, sum_matrix_to_scalar_zero_by_zero)
+{
+    auto shape_a = Shape{0, 0};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{0}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{}), a->get_vector());
+}
