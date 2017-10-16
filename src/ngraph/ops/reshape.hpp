@@ -34,7 +34,7 @@ namespace ngraph
         /// followed by axis \f$a-2\f$, and so on down to \f$a_0\f$.
         ///
         /// (TODO: example.)
-        /// 
+        ///
         /// ## Parameters
         ///
         /// |                | Description                                                |
