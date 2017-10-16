@@ -127,11 +127,11 @@ namespace ngraph
         ///
         /// ## Parameters
         ///
-        /// |                 | Description                                                                                                                                   |
-        /// | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | `et`            | The ngraph::element::Type of the tensor constant.                                                                                             |
-        /// | `shape`         | The ngraph::Shape of the tensor constant.                                                                                                     |
-        /// | `value_strings` | A list of strings containing literals for initialization of the tensor constant. These strings are parsed with `ngraph::element::Type::read`. |
+        /// |                 | Description                                                                                                                                                                    |
+        /// | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+        /// | `et`            | The ngraph::element::Type of the tensor constant.                                                                                                                              |
+        /// | `shape`         | The ngraph::Shape of the tensor constant.                                                                                                                                      |
+        /// | `value_strings` | A list of strings containing literals for initialization of the tensor constant. These strings are parsed with the appropriate instance of ngraph::element::TraitedType::read. |
         ///
         /// ## Output
         ///

@@ -3,7 +3,8 @@ PROJECT_BRIEF    = "Nervana graph compiler"
 
 OUTPUT_DIRECTORY = @CMAKE_CURRENT_BINARY_DIR@
 INPUT            = @CMAKE_SOURCE_DIR@/src
-
 RECURSIVE        = YES
+
+EXTRACT_STATIC   = YES
 
 USE_MATHJAX      = YES
