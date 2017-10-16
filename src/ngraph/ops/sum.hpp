@@ -26,7 +26,7 @@ namespace ngraph
         /// For example:
         ///
         /// \f[
-        ///     \mathit{sum}\left(
+        ///     \mathit{sum}\left(\{0\},
         ///         \left[ \begin{array}{ccc}
         ///                1 & 2 \\
         ///                3 & 4 \\
@@ -36,7 +36,7 @@ namespace ngraph
         /// \f]
         ///
         /// \f[
-        ///     \mathit{sum}\left(
+        ///     \mathit{sum}\left(\{1\},
         ///         \left[ \begin{array}{ccc}
         ///                1 & 2 \\
         ///                3 & 4 \\
@@ -46,7 +46,7 @@ namespace ngraph
         /// \f]
         ///
         /// \f[
-        ///     \mathit{sum}\left(
+        ///     \mathit{sum}\left(\{0,1\},
         ///         \left[ \begin{array}{ccc}
         ///                1 & 2 \\
         ///                3 & 4 \\
