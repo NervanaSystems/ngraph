@@ -15,6 +15,9 @@
 include(ExternalProject)
 
 set(EIGEN_INSTALL_DIR ${EXTERNAL_INSTALL_DIR}/eigen)
+set(EIGEN_PROJECT eigen)
+set(EIGEN_SHA1_HASH dd238ca6c6b5d2ce2e7e2e9ded4c59bad77ce6d0)
+set(EIGEN_URL http://bitbucket.org/eigen/eigen/get/3.3.3.zip)
 
 #----------------------------------------------------------------------------------------------------------
 # Download and install GoogleTest ...
@@ -23,17 +26,17 @@ set(EIGEN_INSTALL_DIR ${EXTERNAL_INSTALL_DIR}/eigen)
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
     ExternalProject_Add(
-        eigen
-        URL http://bitbucket.org/eigen/eigen/get/3.3.3.zip
-        # PREFIX ${CMAKE_CURRENT_BINARY_DIR}/eigen
+        ${EIGEN_PROJECT}
+        URL ${EIGEN_URL}
+        URL_HASH SHA1=${EIGEN_SHA1_HASH}
         UPDATE_COMMAND ""
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EIGEN_INSTALL_DIR}
         )
 else()
     ExternalProject_Add(
-        eigen
-        URL http://bitbucket.org/eigen/eigen/get/3.3.3.zip
-        # PREFIX ${CMAKE_CURRENT_BINARY_DIR}/eigen
+        ${EIGEN_PROJECT}
+        URL ${EIGEN_URL}
+        URL_HASH SHA1=${EIGEN_SHA1_HASH}
         UPDATE_COMMAND ""
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EIGEN_INSTALL_DIR}
         BUILD_BYPRODUCTS "${EIGEN_INSTALL_DIR}/include/eigen3"
