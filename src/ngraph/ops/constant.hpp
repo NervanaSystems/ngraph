@@ -27,7 +27,7 @@ namespace ngraph
         /// \brief Abstract base class for constants.
         ///
         /// There are two subclasses: ParameterizedConstant and Constant. ParameterizedConstant allows constant values to be supplied via vectors of the corresponding C++ type;
-        /// however, the ParameterizedConstant subclass can only be used when type information is available at C++ compile-time. In cases where types are not known until 
+        /// however, the ParameterizedConstant subclass can only be used when type information is available at C++ compile-time. In cases where types are not known until
         /// C++ runtime, the Constant subclass must be used instead.
         class ConstantBase : public Node
         {
