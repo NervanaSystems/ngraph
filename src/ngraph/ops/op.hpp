@@ -25,7 +25,7 @@ namespace ngraph
     // TODO: These class definitions are to be moved into separate files in the op directory
     namespace op
     {
-        /// \brief Abstract base class for builtin (primitive) operations.
+        /// \brief Abstract base class for built-in (primitive) operations.
         class Builtin : public Node
         {
         public:
@@ -70,9 +70,9 @@ namespace ngraph
 
             /// \brief Propagate element type from input to output.
             ///
-            /// Subclasses must override this method to:
+            /// Subclasses must override this method to both:
             ///
-            /// 1. Verify that `arg_element_type` is valid, throwing an ngraph_error message if not; and
+            /// 1. Verify that `arg_element_type` is valid, throwing an ngraph_error message if it is not.
             /// 2. Infer and return the element type for the return tensor.
             ///
             /// \param arg_element_type The element type of the input tensor.
@@ -114,7 +114,7 @@ namespace ngraph
 
             /// \brief Propagate element type from input to output.
             ///
-            /// Throws ngraph_error if the input type is not numeric, and returns the input type.
+            /// Throws ngraph_error and returns the input type if the input type is not numeric.
             ///
             /// \param arg_element_type The element type of the input tensor.
             /// \return The inferred element type (same as arg_element_type).
@@ -211,7 +211,7 @@ namespace ngraph
 
             /// \brief Propagate element type from inputs to output.
             ///
-            /// Throws ngraph_error if the input types are not the same, and returns element::Bool::element_type().
+            /// Throws ngraph_error and returns element::Bool::element_type() if the input types are not the same.
             ///
             /// \param arg0_element_type The element type of the first input tensor.
             /// \param arg1_element_type The element type of the second input tensor.
@@ -260,7 +260,7 @@ namespace ngraph
 
             /// \brief Propagate element type from inputs to output.
             ///
-            /// Throws ngraph_error if the input types are not the same or are not numeric, and returns the same element type as the input types.
+            /// Throws ngraph_error and returns the same element type as the input types if the input types are not the same or are not numeric.
             ///
             /// \param arg0_element_type The element type of the first input tensor.
             /// \param arg1_element_type The element type of the second input tensor.
