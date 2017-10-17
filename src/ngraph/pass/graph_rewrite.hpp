@@ -45,8 +45,10 @@ public:
     };
 
     static void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
-    virtual bool run_on_call_graph(std::list<Node*>&) override; //stub until @bob fixes run_on_call_graph
-    bool run_on_call_graph(std::list<std::shared_ptr<Node>>& nodes); //this one is being tested
+    //virtual bool run_on_call_graph(std::list<Node*>&) override; //stub until @bob fixes run_on_call_graph
+
+    virtual bool run_on_call_graph(std::list<std::shared_ptr<ngraph::Node>>&) override;
+    //bool run_on_call_graph(std::list<std::shared_ptr<Node>>& nodes); //this one is being tested
 
 private:
     //enable cascading rewrites
