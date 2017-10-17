@@ -16,17 +16,21 @@
 
 #include <functional>
 #include <set>
-
 #include "ngraph/pass/pass.hpp"
-#include "ngraph/pattern/matcher.hpp"
+
 namespace ngraph
 {
     namespace pass
     {
         class GraphRewrite;
     }
-    using gr_callback_fn =
-        std::function<void(std::shared_ptr<pattern::Matcher> m, std::shared_ptr<Node> match_root, class pass::GraphRewrite& gr)>;
+    namespace pattern 
+    {
+        class Matcher;
+    }
+
+    //using gr_callback_fn =
+    //    std::function<void(std::shared_ptr<pattern::Matcher> m, std::shared_ptr<Node> match_root, class pass::GraphRewrite& gr)>;
 }
 
 class ngraph::pass::GraphRewrite : public CallGraphPass
@@ -35,19 +39,19 @@ public:
     GraphRewrite()
         : CallGraphPass(){};
 
-    void add_matcher_callback_pair(std::shared_ptr<pattern::Matcher> m, gr_callback_fn callback)
-    {
-        m_matcher_callback_pairs.push_back(std::make_pair(m, callback));
-    };
+    //void add_matcher_callback_pair(std::shared_ptr<pattern::Matcher> m, gr_callback_fn callback)
+    //{
+    //    m_matcher_callback_pairs.push_back(std::make_pair(m, callback));
+    //};
 
-    void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
+    static void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
     virtual bool run_on_call_graph(std::list<Node*>&) override; //stub until @bob fixes run_on_call_graph
     bool run_on_call_graph(std::list<std::shared_ptr<Node>>& nodes); //this one is being tested
 
 private:
     //enable cascading rewrites
-    std::vector<std::pair<std::shared_ptr<pattern::Matcher>, gr_callback_fn>>
-        m_matcher_callback_pairs;
+    std::vector<::ngraph::pattern::Matcher*> m_matchers;
+    //    m_matcher_callback_pairs;
     
     //nodes in traversal are visited exactly once
     //std::set<std::shared_ptr<Node>> marked_for_replacement;

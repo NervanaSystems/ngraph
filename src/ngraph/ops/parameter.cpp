@@ -15,6 +15,7 @@
 #include <sstream>
 
 #include "ngraph/ops/parameter.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
 using namespace std;
 using namespace ngraph::op;
@@ -31,6 +32,11 @@ Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& sha
 
 void Parameter::propagate_types()
 {
+}
+
+void Parameter::match_class(pattern::Matcher& matcher, std::shared_ptr<Node> graph_node)
+{
+    matcher.on_match_class(shared_from_this(), graph_node, this == dynamic_cast<Parameter*>(graph_node.get()));
 }
 
 void Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
