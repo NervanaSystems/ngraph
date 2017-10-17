@@ -1,5 +1,30 @@
 #!  /bin/bash
 
+# This script is designed to simulate running as a user with a particular UID
+# within a docker container.
+#
+# Normally a docker container runs as root, which can cause problems with file
+# ownership when a host directory tree is mounted into the docker container.
+# There are other problems with building and running software as root as
+# well.  Good practice when validating software builds in a docker container
+# is to run as a normal user, since many (most?) end users will not be building
+# and installing software as root.
+#
+# This script should be run using "docker run", with RUN_UID (set to the user
+# you want to run as) passed into the docker container as an environment
+# variable.  The script will then add the UID as user "dockuser" to
+# /etc/passwd (important for some software, like bazel), add the new dockuser
+# to the sudo group (whether or not sudo is installed), and su to a new shell
+# as the dockuser (passing in the existing environment, which is important).
+#
+# If the environment variable RUN_CMD is passed into the docker container, then
+# this script will use RUN_CMD as a command to run when su'ing.  If RUN_CMD is
+# not defined, then /bin/bash will run, which effectively provides an
+# interactive shell in the docker container, for debugging.
+
+set -e  # Make sure we exit on any command that returns non-zero
+set -u  # No unset variables
+
 if [ -z "$RUN_UID" ] ; then
 
     # >&2 redirects echo output to stderr.
@@ -46,7 +71,7 @@ else
     # user, uncomment this and add 'sudo' as a package installed in Dockerfile
     # echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-    if [ -z "$RUN_CMD" ] ; then  # Launch a shell as dockuser
+    if [ -z "${RUN_CMD+x}" ] ; then  # Launch a shell as dockuser
       su -m "${DOCK_USER}" -c /bin/bash
     else                         # Run command as dockuser
       su -m "${DOCK_USER}" -c "${RUN_CMD}"
