@@ -22,9 +22,38 @@ namespace ngraph
     {
         class Node;
 
+        /// \brief Operation to get an element from a tuple.
+        ///
+        /// ## Parameters
+        ///
+        /// |     | Description                                                        |
+        /// | --- | ------------------------------------------------------------------ |
+        /// | `n` | The position of the element (0-based) to get from the input tuple. |
+        ///
+        /// ## Inputs
+        ///
+        /// |        | Type                                                        | Description                                |
+        /// | ------ | ----------------------------------------------------------- | ------------------------------------------ |
+        /// | `arg`  | \f$(T_1,\dots,T_{n-1},T_n,T_{n+1},\dots,T_m)~(m \geq 1)\f$ | An input tuple with at least `n` elements. |
+        ///
+        /// ## Output
+        ///
+        /// | Type      | Description                           |
+        /// | --------- | ------------------------------------- |
+        /// | \f$T_n\f$ | The `n`th element of the input tuple. |
+        ///
+        /// ## Implementation Status
+        ///
+        /// | Backend | Status             |
+        /// | ------- | ------------------ |
+        /// | NGVM    | Fully implemented. |
         class GetTupleElement : public Builtin
         {
         public:
+            /// \brief Constructs a get-tuple-element operation.
+            ///
+            /// \param arg The input tuple.
+            /// \param n The index of the tuple element to get.
             GetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
                 : Builtin({arg})
                 , m_n{n}
@@ -33,6 +62,7 @@ namespace ngraph
 
             virtual void propagate_types() override;
             virtual std::string description() const override { return "GetTupleElement"; }
+            /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }
         protected:
             size_t m_n;

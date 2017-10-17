@@ -847,10 +847,10 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto arg_shape = arg_tensor_view_type->get_shape();
             auto arg_rank = arg_shape.size();
 
-            auto& summed_axes = s->get_summed_axes();
+            auto& reduction_axes = s->get_reduction_axes();
 
-            // Trivial case: no summed axes.
-            if (summed_axes.size() == 0)
+            // Trivial case: no reduction axes.
+            if (reduction_axes.size() == 0)
             {
                 PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
                                              "Sum has unhandled element type",
@@ -859,8 +859,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                              out.at(0).get_index());
             }
             // Full reduction? Then sum to scalar.
-            else if ((arg_rank == 1 && summed_axes == AxisSet{0}) ||
-                     (arg_rank == 2 && summed_axes == AxisSet{0, 1}))
+            else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
+                     (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
             {
                 PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
                                              "Sum has unhandled element type",
@@ -868,7 +868,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                              in[0],
                                              out[0]);
             }
-            else if (arg_rank == 2 && summed_axes == AxisSet{1})
+            else if (arg_rank == 2 && reduction_axes == AxisSet{1})
             {
                 PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
                                              "Sum has unhandled element type",
@@ -876,7 +876,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                              in[0],
                                              out[0]);
             }
-            else if (arg_rank == 2 && summed_axes == AxisSet{0})
+            else if (arg_rank == 2 && reduction_axes == AxisSet{0})
             {
                 PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
                                              "Sum has unhandled element type",

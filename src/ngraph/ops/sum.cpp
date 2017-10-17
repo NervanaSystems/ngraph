@@ -44,11 +44,11 @@ void Sum::propagate_types()
 
     auto arg_shape = arg_tensor_view_type->get_shape();
 
-    for (auto axis : m_summed_axes)
+    for (auto axis : m_reduction_axes)
     {
         if (axis >= arg_shape.size())
         {
-            throw ngraph_error("Summed axis is out of bounds");
+            throw ngraph_error("Reduction axis for sum is out of bounds");
         }
     }
 
@@ -56,7 +56,7 @@ void Sum::propagate_types()
 
     for (size_t i = 0; i < arg_shape.size(); i++)
     {
-        if (m_summed_axes.count(i) == 0)
+        if (m_reduction_axes.count(i) == 0)
         {
             result_shape.push_back(arg_shape.at(i));
         }
