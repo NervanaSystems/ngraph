@@ -2,9 +2,11 @@
 
 if [ -z "$RUN_UID" ] ; then
 
-    echo 'ERROR: Environment variable RUN_UID was not set when run-as-user.sh was run'
-    echo '       Running as default user (root, in docker)'
-    echo ' '
+    # >&2 redirects echo output to stderr.
+    # See: https://stackoverflow.com/questions/2990414/echo-that-outputs-to-stderr
+    ( >&2 echo 'ERROR: Environment variable RUN_UID was not set when run-as-user.sh was run' )
+    ( >&2 echo '       Running as default user (root, in docker)' )
+    ( >&2 echo ' ' )
 
     exit 1
 
