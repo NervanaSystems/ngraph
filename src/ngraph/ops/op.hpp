@@ -114,7 +114,8 @@ namespace ngraph
 
             /// \brief Propagate element type from input to output.
             ///
-            /// Throws ngraph_error and returns the input type if the input type is not numeric.
+            /// If the input type is numeric, returns the input type.
+            /// If the input type is not numeric, throws ngraph_error.
             ///
             /// \param arg_element_type The element type of the input tensor.
             /// \return The inferred element type (same as arg_element_type).
@@ -211,7 +212,9 @@ namespace ngraph
 
             /// \brief Propagate element type from inputs to output.
             ///
-            /// Throws ngraph_error and returns element::Bool::element_type() if the input types are not the same.
+            /// If the input types are the same, returns
+            /// element::Bool::element_type(). If the input types are not the
+            /// same, throws ngraph_error.
             ///
             /// \param arg0_element_type The element type of the first input tensor.
             /// \param arg1_element_type The element type of the second input tensor.
@@ -260,7 +263,9 @@ namespace ngraph
 
             /// \brief Propagate element type from inputs to output.
             ///
-            /// Throws ngraph_error and returns the same element type as the input types if the input types are not the same or are not numeric.
+            /// If the input types are the same type, and that type is numeric,
+            /// returns the input type. If the input types are not the same or
+            /// are not numeric, throws ngraph_error.
             ///
             /// \param arg0_element_type The element type of the first input tensor.
             /// \param arg1_element_type The element type of the second input tensor.
