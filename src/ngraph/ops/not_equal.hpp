@@ -43,7 +43,7 @@ namespace ngraph
         class NotEqual : public BinaryElementwiseComparison
         {
         public:
-            /// \brief Constructs an not-equal operation.
+            /// \brief Constructs a not-equal operation.
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
