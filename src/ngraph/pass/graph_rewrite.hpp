@@ -39,10 +39,10 @@ public:
     GraphRewrite()
         : CallGraphPass(){};
 
-    //void add_matcher_callback_pair(std::shared_ptr<pattern::Matcher> m, gr_callback_fn callback)
-    //{
-    //    m_matcher_callback_pairs.push_back(std::make_pair(m, callback));
-    //};
+    void add_matcher(std::shared_ptr<pattern::Matcher> m)
+    {
+        m_matchers.push_back(m);
+    };
 
     static void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
     virtual bool run_on_call_graph(std::list<Node*>&) override; //stub until @bob fixes run_on_call_graph
@@ -50,11 +50,5 @@ public:
 
 private:
     //enable cascading rewrites
-    std::vector<::ngraph::pattern::Matcher*> m_matchers;
-    //    m_matcher_callback_pairs;
-    
-    //nodes in traversal are visited exactly once
-    //std::set<std::shared_ptr<Node>> marked_for_replacement;
-
-private:
+    std::vector<std::shared_ptr<pattern::Matcher>> m_matchers;
 };
