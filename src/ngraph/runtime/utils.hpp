@@ -17,6 +17,8 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/manager.hpp"
 #include "ngraph/runtime/parameterized_tensor_view.hpp"
 #include "ngraph/runtime/tuple.hpp"
 #include "ngraph/runtime/value.hpp"
@@ -66,6 +68,12 @@ namespace ngraph
             ngraph::element::Float64::type rtol,
             ngraph::element::Float64::type atol);
 
+        /// @brief Same as numpy.allclose
+        /// @param a First tensor to compare
+        /// @param b Second tensor to compare
+        /// @param rtol Relative tolerance
+        /// @param atol Absolute tolerance
+        /// @returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
         bool all_close(const std::vector<T>& a,
                        const std::vector<T>& b,
@@ -81,5 +89,42 @@ namespace ngraph
                                                                 const std::vector<double>& b,
                                                                 double rtol,
                                                                 double atol);
+
+        /// @brief numeric approximation of the derivative
+        /// @param f A function
+        /// @param args Values for the arguments (the independent variables)
+        /// @param delta increment for the variables
+        /// @returns vector of dy/dvar, where each dy/dvar's shape is concat(y.shape(), var.shape())
+        template <typename ET>
+        std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
+            numeric_derivative(
+                const std::shared_ptr<runtime::Manager>& manager,
+                const std::shared_ptr<runtime::Backend>& backend,
+                const std::shared_ptr<Function>& f,
+                const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>&
+                    args,
+                typename ET::type delta);
+
+        extern template std::vector<
+            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float32>>>
+            ngraph::runtime::numeric_derivative(
+                const std::shared_ptr<runtime::Manager>& manager,
+                const std::shared_ptr<runtime::Backend>& backend,
+                const std::shared_ptr<ngraph::Function>& f,
+                const std::vector<
+                    std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float32>>>&
+                    args,
+                element::Float32::type delta);
+
+        extern template std::vector<
+            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float64>>>
+            ngraph::runtime::numeric_derivative(
+                const std::shared_ptr<runtime::Manager>& manager,
+                const std::shared_ptr<runtime::Backend>& backend,
+                const std::shared_ptr<ngraph::Function>& f,
+                const std::vector<
+                    std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float64>>>&
+                    args,
+                element::Float64::type delta);
     }
 }

@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <tuple>
 
 #include "gtest/gtest.h"
 
@@ -65,22 +66,27 @@ shared_ptr<Function> derivative(const std::shared_ptr<Node>& Y,
 TEST(backwards, multiply)
 {
     auto shape = Shape{2, 3};
-    auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Y = X0 * X1;
-    auto f = derivative(Y, {X0, X1});
+    auto make_graph = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return std::make_tuple(X0 * X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+    };
+    auto val_and_vars = make_graph();
+    auto Y = std::get<0>(val_and_vars);
+    auto vars = std::get<1>(val_and_vars);
+    auto f = derivative(Y, vars);
 
     auto manager = runtime::Manager::get("NGVM");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
-    auto x0 = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *x0 = vector<float>{1, 3, 5, 7, 9, 11};
-    auto x1 = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *x1 = vector<float>{0, 2, 4, 6, 8, 10};
-    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *c = vector<float>{0, 0, 0, 0, 0, 0};
+    auto x0 = backend->make_parameterized_tensor_view<element::Float32>(
+        runtime::NDArray<float, 2>({{1, 3, 5}, {7, 9, 11}}));
+    auto x1 = backend->make_parameterized_tensor_view<element::Float32>(
+        runtime::NDArray<float, 2>({{0, 2, 4}, {6, 8, 10}}));
+    auto c = backend->make_parameterized_tensor_view<element::Float32>(
+        runtime::NDArray<float, 2>({{0, 0, 0}, {0, 0, 0}}));
 
     auto dx0 = backend->make_parameterized_tensor_view<element::Float32>(shape);
     auto dx1 = backend->make_parameterized_tensor_view<element::Float32>(shape);
