@@ -69,3 +69,7 @@ config_args.txt
 .nfs*
 venv/
 .vscode/
+
+# VisualGDB files
+VisualGDB/
+toolchain.cmake
