@@ -2,6 +2,7 @@
 #include <iostream>
 #include "ngraph/log.hpp"
 #include "graph_rewrite.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
 bool ngraph::pass::GraphRewrite::run_on_call_graph(std::list<Node*>& nodes)
 {
@@ -23,17 +24,16 @@ bool ngraph::pass::GraphRewrite::run_on_call_graph(std::list<std::shared_ptr<Nod
         }
         */
 
-        for (auto pair : m_matcher_callback_pairs)
+        for (auto matcher : m_matchers)
         {
-            
-            auto matcher = pair.first;
-            //NGRAPH_DEBUG << "Running matcher " << matcher << " on " << node << " , " << node->description() << std::endl;
-            matcher->reset();
+            NGRAPH_DEBUG << "Running matcher " << matcher << " on " << node << " , " << node->description() << std::endl;
+            //matcher->reset();
             if (matcher->match(node))
             {
                 NGRAPH_DEBUG << "Matcher " << matcher << " matched " << node << " , " << node->description() << std::endl;
                 rewritten = true;
-                pair.second(matcher, node, *this);
+                matcher->process_match();
+                //pair.second(matcher, node, *this);
             }
         }
     }
