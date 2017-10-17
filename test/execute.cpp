@@ -2499,4 +2499,3 @@ TEST(execute, sign)
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), result->get_vector());
 }
-
