@@ -34,7 +34,7 @@ namespace ngraph
         ///      The number of columns in the resulting matrix is the sum of the number of columns for each
         ///      input matrix.
         ///   3. Concatenating 3-tensors on axis 2 (the depth axis) stacks them from front to back.
-        ///      The depth of the resulting tensor is the sum of the depth of each input tensor.
+        ///      The depth of the resulting tensor is the sum of the total depth for each input tensor.
         ///
         /// The resulting tensor will have the same rank as the input tensors.
         ///
