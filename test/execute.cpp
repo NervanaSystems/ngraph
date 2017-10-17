@@ -2478,3 +2478,24 @@ TEST(execute, sum_matrix_to_scalar_zero_by_zero)
     // input tensors, so let's do this too.
     ASSERT_EQ((vector<float>{}), a->get_vector());
 }
+
+TEST(execute, sign)
+{
+    auto shape = Shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Sign>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    *a = vector<float>{1, -2, 0, -4.8f, 4.8f, -0.0};
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), result->get_vector());
+}
