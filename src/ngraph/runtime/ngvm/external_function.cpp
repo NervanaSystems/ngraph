@@ -52,6 +52,7 @@
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
+#include "ngraph/ops/sign.hpp"
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
@@ -103,6 +104,7 @@
 #include "ngraph/runtime/ngvm/eigen/return.hpp"
 #include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/eigen/select.hpp"
+#include "ngraph/runtime/ngvm/eigen/sign.hpp"
 #include "ngraph/runtime/ngvm/eigen/sin.hpp"
 #include "ngraph/runtime/ngvm/eigen/sinh.hpp"
 #include "ngraph/runtime/ngvm/eigen/subtract.hpp"
@@ -353,6 +355,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_NUMERIC_UNOP(op::Exp, eigen::ExpInstruction);
         REGISTER_NUMERIC_UNOP(op::Log, eigen::LogInstruction);
         REGISTER_NUMERIC_UNOP(op::Negative, eigen::NegateInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sign, eigen::SignInstruction);
         REGISTER_NUMERIC_UNOP(op::Sin, eigen::SinInstruction);
         REGISTER_NUMERIC_UNOP(op::Sinh, eigen::SinhInstruction);
         REGISTER_NUMERIC_UNOP(op::Tan, eigen::TanInstruction);
