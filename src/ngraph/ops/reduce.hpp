@@ -55,10 +55,10 @@ namespace ngraph
         ///      21~~~\text{(both dimensions (rows and columns) are eliminated)}
         /// \f]
         ///
-        /// It is assumed that \f$f\f$ is associative; in other words, order of operations is undefined. In the case where a collapsed dimension is 0,
+        /// It is assumed that \f$f\f$ is associative. In other words, the order of operations is undefined. In the case where a collapsed dimension is 0,
         /// the value of `arg_init` will be substituted.
         ///
-        /// Note that the parameter `reduction_axes` specifies which axes are to <i>eliminated</i>, which can be a bit counterintuitive. For example,
+        /// Note that the parameter `reduction_axes` specifies which axes are to be <i>eliminated</i>, which can be a bit counterintuitive. For example,
         /// as seen above, eliminating the column dimension results in the <i>rows</i> being summed, not the columns.
         ///
         /// ## Parameters
