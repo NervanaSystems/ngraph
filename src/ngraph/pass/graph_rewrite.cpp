@@ -4,10 +4,12 @@
 #include "graph_rewrite.hpp"
 #include "ngraph/pattern/matcher.hpp"
 
+/*
 bool ngraph::pass::GraphRewrite::run_on_call_graph(std::list<Node*>& nodes)
 {
     //until @bob implements 
 };
+*/
 
 bool ngraph::pass::GraphRewrite::run_on_call_graph(std::list<std::shared_ptr<Node>>& nodes) 
 {
