@@ -87,7 +87,6 @@ ngraph::runtime::FunctionSpec::operator std::shared_ptr<Function>() const
     return std::make_shared<ngraph::Function>(m_result, m_result_type, m_parameters);
 }
 
-// Returns (dy/(dXs))(C, Xs)
 std::shared_ptr<ngraph::runtime::FunctionSpec>
     ngraph::runtime::derivative(const std::shared_ptr<ngraph::runtime::FunctionSpec>& f)
 {
@@ -121,7 +120,7 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
     Shape y_shape =
         std::dynamic_pointer_cast<const ngraph::TensorViewType>(y->get_value_type())->get_shape();
 
-    // Check all the shapes
+    // Results for each derivative, shape Y|X_i
     std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>> results;
     for (size_t i = 0; i < args.size(); i++)
     {
@@ -141,11 +140,11 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
     args_tv.insert(args_tv.begin(), args.begin(), args.end());
 
     cf->tensor_call(args_tv, TensorViewPtrs{ref_y});
-    auto ref_vec = ref_y->get_vector();
+    auto& ref_vec = ref_y->get_vector();
 
     // inc_y will hold f(x+dx) values
     auto inc_y = backend->make_parameterized_tensor_view<ET>(y_shape);
-    auto inc_vec = inc_y->get_vector();
+    auto& inc_vec = inc_y->get_vector();
 
     // Assuming vars, y, and results are row-major
 
@@ -155,8 +154,8 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
         auto arg = args[i];
         auto df_darg = results[i];
         auto df_darg_it = df_darg->get_vector().begin();
-        std::vector<typename ET::type>& vec = arg->get_vector();
-        for (size_t j = 0; j < vec.size(); i++)
+        auto& vec = arg->get_vector();
+        for (size_t j = 0; j < vec.size(); j++)
         {
             auto old_val = vec[j];
             vec[j] += delta;
@@ -247,7 +246,7 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
     TensorViewPtrs bprops_tv;
     bprops_tv.insert(bprops_tv.begin(), bprops.begin(), bprops.end());
 
-    auto c_vec = c_arg->get_vector();
+    auto& c_vec = c_arg->get_vector();
     for (size_t i = 0; i < c_vec.size(); i++)
     {
         c_vec[i] = 1;
@@ -255,9 +254,8 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
         c_vec[i] = 0;
         for (size_t j = 0; j < results.size(); j++)
         {
-            auto bprop_vec = bprops[j]->get_vector();
-            result_pos[j] =
-                results[j]->get_vector().insert(result_pos[j], bprop_vec.begin(), bprop_vec.end());
+            auto& bprop_vec = bprops[j]->get_vector();
+            result_pos[j] = std::copy(bprop_vec.begin(), bprop_vec.end(), result_pos[j]);
         }
     }
 

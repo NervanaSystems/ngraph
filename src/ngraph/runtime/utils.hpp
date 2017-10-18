@@ -90,6 +90,7 @@ namespace ngraph
                                                                 double rtol,
                                                                 double atol);
 
+        /// @brief Contains the information in a Function, but can be used to construct derived functions such as derivatives.
         class FunctionSpec
         {
         public:
@@ -125,6 +126,9 @@ namespace ngraph
             std::vector<std::shared_ptr<op::Parameter>> m_parameters;
         };
 
+        /// @brief Returns a FunctionSpec for the backprop derivative of its argument.
+        /// @param f is f(X_i...)
+        /// @returns f'(c, X_i...) -> tuple of tensors in same order as in X_i
         std::shared_ptr<ngraph::runtime::FunctionSpec>
             derivative(const std::shared_ptr<ngraph::runtime::FunctionSpec>& f);
 

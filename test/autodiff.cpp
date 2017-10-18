@@ -91,7 +91,7 @@ TEST(backwards, multiply)
 
     auto f_num = make_graph();
     auto results_num =
-        runtime::numeric_derivative<element::Float32>(manager, backend, f_num, {x0, x1}, .01f);
+        runtime::numeric_derivative<element::Float32>(manager, backend, f_num, {x0, x1}, .001f);
     auto f_sym = make_graph();
     auto results_sym =
         runtime::backwards_derivative<element::Float32>(manager, backend, f_sym, {x0, x1});
@@ -99,7 +99,7 @@ TEST(backwards, multiply)
     {
         auto result_num = results_num[i];
         auto result_sym = results_sym[i];
-        bool ac  = all_close(result_num, result_sym);
+        bool ac = all_close(result_num, result_sym, .01f, .01f);
         EXPECT_TRUE(ac);
     }
 }
