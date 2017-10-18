@@ -4,38 +4,20 @@
 #include "graph_rewrite.hpp"
 #include "ngraph/pattern/matcher.hpp"
 
-/*
-bool ngraph::pass::GraphRewrite::run_on_call_graph(std::list<Node*>& nodes)
-{
-    //until @bob implements 
-};
-*/
-
 bool ngraph::pass::GraphRewrite::run_on_call_graph(std::list<std::shared_ptr<Node>>& nodes) 
 {
     bool rewritten = false;
     for (auto node : nodes)
     {
         //NGRAPH_DEBUG << "Processing " << node << std::endl;
-        
-        /*
-        if (marked_for_replacement.find(node) != marked_for_replacement.end())
-        {
-            NGRAPH_INFO << "Skipping " << node << std::endl;
-            continue;
-        }
-        */
-
         for (auto matcher : m_matchers)
         {
             NGRAPH_DEBUG << "Running matcher " << matcher << " on " << node << " , " << node->description() << std::endl;
-            //matcher->reset();
             if (matcher->match(node))
             {
                 NGRAPH_DEBUG << "Matcher " << matcher << " matched " << node << " , " << node->description() << std::endl;
                 rewritten = true;
                 matcher->process_match();
-                //pair.second(matcher, node, *this);
             }
         }
     }
@@ -60,12 +42,8 @@ void ngraph::pass::GraphRewrite::replace_node(std::shared_ptr<Node> target, std:
         args.insert(it, replacement);
         const_cast<std::multiset<Node*> &> (replacement->users()).insert(user); 
     }
-
-    //marked_for_replacement.insert(target); //to make sure graph traversal skips over nodes marked for replacement
-
     const_cast<std::multiset<Node*> &>(target->users()).clear();
 
     //TODO: [nikolayk] recursively walk target and update users() 
     //nodes w/ empty users sets should be DSE'ed.
-
 }
