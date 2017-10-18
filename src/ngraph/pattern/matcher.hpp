@@ -37,7 +37,6 @@ namespace ngraph
         {
         public:
             Matcher(const std::shared_ptr<Node> pattern_node = nullptr, gr_callback_fn callback = nullptr)
-                //: m_is_valid(false)
                 : m_pattern_node(pattern_node)
                 , m_match_root(nullptr)
                 , m_callback(callback)
@@ -45,7 +44,7 @@ namespace ngraph
             {
             }
             virtual ~Matcher() {}
-            /// Called whern the pattern node matches a graph node.
+            // Called when the pattern node matches a graph node.
             virtual void on_match_class(const std::shared_ptr<Node>& pattern_node,
                                         const std::shared_ptr<Node>& graph_node,
                                         bool is_match);
@@ -76,12 +75,11 @@ namespace ngraph
             friend op::Label; //TODO: refine to match_class
         private:
             void match_arguments(const Nodes& pattern_args, const Nodes& args);
-            //bool m_is_valid;
             std::shared_ptr<Node> m_match_root;
-            //size_t m_depth;
             std::shared_ptr<Node> m_pattern_node;
             gr_callback_fn m_callback;
             size_t m_depth;
         };
     }
 }
+

@@ -88,7 +88,7 @@ namespace ngraph
                     NGRAPH_DEBUG << pad(2 * m_depth) << "Running a permutation for graph_node " << graph_node->description() << " , " << graph_node << std::endl;
                     reset_pattern_nodes(pattern_node);
                     m_match_root =
-                        old_match_root; //previous permutation wasn't a match; reset m_is_match back to true
+                        old_match_root; //previous permutation wasn't a match; reset m_match_root
                     match_arguments(pattern_args, args);
                     if (this->is_match())
                     {
