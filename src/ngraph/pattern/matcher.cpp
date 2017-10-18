@@ -27,10 +27,10 @@ namespace ngraph
                                                                       //and keep track of all pattern nodes
         {
             auto label = std::dynamic_pointer_cast<::ngraph::pattern::op::Label>(node);
-            //NGRAPH_DEBUG << "reset_pattern_nodes : node = " << node->description() << " , " << node << std::endl;
+            NGRAPH_DEBUG << "reset_pattern_nodes : node = " << node->description() << " , " << node << std::endl;
             if (label)
             {
-                //NGRAPH_DEBUG << "reset_pattern_nodes : label = " << node->description() << " , " << node << std::endl;
+                NGRAPH_DEBUG << "reset_pattern_nodes : label = " << node->description() << " , " << node << std::endl;
                 label->reset();
             }
 
@@ -63,7 +63,7 @@ namespace ngraph
                << " " << (is_match ? " " : "NOT ") << "matched " << graph_node << " , " << graph_node->description();
             if (!is_match)
             {
-                reset_pattern_nodes(graph_node);
+                reset_pattern_nodes(pattern_node);
                 m_match_root.reset();
                 return;
             }
@@ -73,7 +73,7 @@ namespace ngraph
 
             if (args.size() != pattern_args.size())
             {
-                reset_pattern_nodes(graph_node);
+                reset_pattern_nodes(pattern_node);
                 m_match_root.reset();
                 return;
             }
@@ -86,7 +86,7 @@ namespace ngraph
                 do
                 {
                     NGRAPH_DEBUG << pad(2 * m_depth) << "Running a permutation for graph_node " << graph_node->description() << " , " << graph_node << std::endl;
-                    reset_pattern_nodes(graph_node);
+                    reset_pattern_nodes(pattern_node);
                     m_match_root =
                         old_match_root; //previous permutation wasn't a match; reset m_is_match back to true
                     match_arguments(pattern_args, args);
@@ -119,7 +119,6 @@ namespace ngraph
         bool Matcher::match(const std::shared_ptr<Node>& pattern_node,
                             const std::shared_ptr<Node>& graph_node)
         {
-            //reset();
             NGRAPH_DEBUG << "Starting match pattern = " << pattern_node << " , " << pattern_node->description()
                 << " , graph_node = " << graph_node << " , " << graph_node->description() << std::endl;
             reset_pattern_nodes(pattern_node);
@@ -128,14 +127,6 @@ namespace ngraph
             //NGRAPH_DEBUG << pad(2 * m_depth) << "is_match() " << is_match() << std::endl;
             return is_match();
         }
-
-
-        //void Matcher::reset()
-        //{
-        //    //TODO: clean up all pattern nodes
-        //    //m_is_valid = false;
-        //    m_match_root.reset();
-        //}
 
     }
 }
