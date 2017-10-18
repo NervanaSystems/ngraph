@@ -90,6 +90,44 @@ namespace ngraph
                                                                 double rtol,
                                                                 double atol);
 
+        class FunctionSpec
+        {
+        public:
+            FunctionSpec(const std::shared_ptr<Node>& result,
+                         const std::shared_ptr<const ValueType>& result_type,
+                         const std::vector<std::shared_ptr<op::Parameter>>& parameters)
+                : m_result(result)
+                , m_result_type(result_type)
+                , m_parameters(parameters)
+            {
+            }
+
+            FunctionSpec(const std::shared_ptr<Node>& result,
+                         const std::vector<std::shared_ptr<op::Parameter>>& parameters)
+                : m_result(result)
+                , m_result_type(result->get_value_type())
+                , m_parameters(parameters)
+            {
+            }
+
+            const std::shared_ptr<const ValueType> get_result_type() const { return m_result_type; }
+            std::shared_ptr<Node> get_result() { return m_result; }
+            const std::vector<std::shared_ptr<op::Parameter>> get_parameters() const
+            {
+                return m_parameters;
+            }
+
+            operator std::shared_ptr<Function>() const;
+
+        protected:
+            std::shared_ptr<Node> m_result;
+            std::shared_ptr<const ValueType> m_result_type;
+            std::vector<std::shared_ptr<op::Parameter>> m_parameters;
+        };
+
+        std::shared_ptr<ngraph::runtime::FunctionSpec>
+            derivative(const std::shared_ptr<ngraph::runtime::FunctionSpec>& f);
+
         /// @brief numeric approximation of the derivative
         /// @param f A function
         /// @param args Values for the arguments (the independent variables)
@@ -100,7 +138,7 @@ namespace ngraph
             numeric_derivative(
                 const std::shared_ptr<runtime::Manager>& manager,
                 const std::shared_ptr<runtime::Backend>& backend,
-                const std::shared_ptr<Function>& f,
+                const std::shared_ptr<FunctionSpec>& f,
                 const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>&
                     args,
                 typename ET::type delta);
@@ -110,7 +148,7 @@ namespace ngraph
             ngraph::runtime::numeric_derivative(
                 const std::shared_ptr<runtime::Manager>& manager,
                 const std::shared_ptr<runtime::Backend>& backend,
-                const std::shared_ptr<ngraph::Function>& f,
+                const std::shared_ptr<FunctionSpec>& f,
                 const std::vector<
                     std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float32>>>&
                     args,
@@ -121,10 +159,39 @@ namespace ngraph
             ngraph::runtime::numeric_derivative(
                 const std::shared_ptr<runtime::Manager>& manager,
                 const std::shared_ptr<runtime::Backend>& backend,
-                const std::shared_ptr<ngraph::Function>& f,
+                const std::shared_ptr<FunctionSpec>& f,
                 const std::vector<
                     std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float64>>>&
                     args,
                 element::Float64::type delta);
+
+        template <typename ET>
+        std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
+            backwards_derivative(
+                const std::shared_ptr<runtime::Manager>& manager,
+                const std::shared_ptr<runtime::Backend>& backend,
+                const std::shared_ptr<FunctionSpec>& f,
+                const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>&
+                    args);
+
+        extern template std::vector<
+            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>>>
+            ngraph::runtime::backwards_derivative<ngraph::element::Float32>(
+                const std::shared_ptr<runtime::Manager>& manager,
+                const std::shared_ptr<runtime::Backend>& backend,
+                const std::shared_ptr<FunctionSpec>& f,
+                const std::vector<
+                    std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float32>>>&
+                    args);
+
+        extern template std::vector<
+            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ngraph::element::Float64>>>
+            ngraph::runtime::backwards_derivative<ngraph::element::Float64>(
+                const std::shared_ptr<runtime::Manager>& manager,
+                const std::shared_ptr<runtime::Backend>& backend,
+                const std::shared_ptr<FunctionSpec>& f,
+                const std::vector<
+                    std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float64>>>&
+                    args);
     }
 }

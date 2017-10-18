@@ -17,6 +17,7 @@
 #include <cmath>
 
 #include "ngraph/function.hpp"
+#include "ngraph/ops/tuple.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/utils.hpp"
 
@@ -81,21 +82,44 @@ template bool ngraph::runtime::all_close<double>(const std::vector<double>& a,
                                                  double rtol,
                                                  double atol);
 
+ngraph::runtime::FunctionSpec::operator std::shared_ptr<Function>() const
+{
+    return std::make_shared<ngraph::Function>(m_result, m_result_type, m_parameters);
+}
+
+// Returns (dy/(dXs))(C, Xs)
+std::shared_ptr<ngraph::runtime::FunctionSpec>
+    ngraph::runtime::derivative(const std::shared_ptr<ngraph::runtime::FunctionSpec>& f)
+{
+    auto Y = f->get_result();
+    auto Xs = f->get_parameters();
+    auto Y_tv_type = std::dynamic_pointer_cast<const ngraph::TensorViewType>(Y->get_value_type());
+    auto C = std::make_shared<ngraph::op::Parameter>(Y_tv_type->get_element_type(),
+                                                     Y_tv_type->get_shape());
+    std::vector<std::shared_ptr<ngraph::Node>> dYdXs(Xs.size());
+    transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, Y](const std::shared_ptr<ngraph::Node>& X) {
+        return Y->backwards_derivative(X, C);
+    });
+    auto result = std::make_shared<ngraph::op::Tuple>(dYdXs);
+    std::vector<std::shared_ptr<ngraph::op::Parameter>> args;
+    args.push_back(C);
+    args.insert(args.end(), Xs.begin(), Xs.end());
+    return std::make_shared<ngraph::runtime::FunctionSpec>(result, result->get_value_type(), args);
+}
+
 template <typename ET>
 std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
     ngraph::runtime::numeric_derivative(
         const std::shared_ptr<runtime::Manager>& manager,
         const std::shared_ptr<runtime::Backend>& backend,
-        const std::shared_ptr<ngraph::Function>& f,
+        const std::shared_ptr<FunctionSpec>& f,
         const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>& args,
         typename ET::type delta)
 {
     auto y = f->get_result();
 
     Shape y_shape =
-        std::dynamic_pointer_cast<const ngraph::descriptor::TensorView>(y->get_value_type())
-            ->get_tensor_view_type()
-            ->get_shape();
+        std::dynamic_pointer_cast<const ngraph::TensorViewType>(y->get_value_type())->get_shape();
 
     // Check all the shapes
     std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>> results;
@@ -107,7 +131,7 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
         results.push_back(backend->make_parameterized_tensor_view<ET>(s));
     }
 
-    auto external = manager->compile(f);
+    auto external = manager->compile(*f);
     auto cf = backend->make_call_frame(external);
 
     // ref_y is the function evaluated at the args
@@ -155,7 +179,7 @@ template std::vector<
     ngraph::runtime::numeric_derivative(
         const std::shared_ptr<runtime::Manager>& manager,
         const std::shared_ptr<runtime::Backend>& backend,
-        const std::shared_ptr<ngraph::Function>& f,
+        const std::shared_ptr<FunctionSpec>& f,
         const std::vector<
             std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float32>>>& args,
         element::Float32::type delta);
@@ -165,7 +189,95 @@ template std::vector<
     ngraph::runtime::numeric_derivative(
         const std::shared_ptr<runtime::Manager>& manager,
         const std::shared_ptr<runtime::Backend>& backend,
-        const std::shared_ptr<ngraph::Function>& f,
+        const std::shared_ptr<FunctionSpec>& f,
         const std::vector<
             std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float64>>>& args,
         element::Float64::type delta);
+
+template <typename ET>
+std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
+    ngraph::runtime::backwards_derivative(
+        const std::shared_ptr<runtime::Manager>& manager,
+        const std::shared_ptr<runtime::Backend>& backend,
+        const std::shared_ptr<FunctionSpec>& f,
+        const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>& args)
+{
+    auto y = f->get_result();
+    Shape y_shape =
+        std::dynamic_pointer_cast<const ngraph::TensorViewType>(y->get_value_type())->get_shape();
+
+    auto c_param = std::make_shared<op::Parameter>(ET::element_type(), y_shape);
+    auto c_arg = backend->make_parameterized_tensor_view<ET>(y_shape);
+    auto params = f->get_parameters();
+
+    std::vector<std::shared_ptr<ngraph::Node>> deriv_nodes;
+    std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>> bprops;
+    std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>> results;
+    for (auto param : params)
+    {
+        Shape s = y_shape;
+        auto param_shape =
+            std::dynamic_pointer_cast<const ngraph::TensorViewType>(param->get_value_type())
+                ->get_shape();
+        s.insert(s.end(), param_shape.begin(), param_shape.end());
+        results.push_back(backend->make_parameterized_tensor_view<ET>(s));
+        bprops.push_back(backend->make_parameterized_tensor_view<ET>(param_shape));
+        deriv_nodes.push_back(y->backwards_derivative(param, c_param));
+    }
+
+    std::vector<std::shared_ptr<op::Parameter>> df_params = params;
+    df_params.push_back(c_param);
+    auto df_result = std::make_shared<op::Tuple>(deriv_nodes);
+    auto df = std::make_shared<ngraph::Function>(df_result, df_result->get_value_type(), df_params);
+
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+
+    // We compute the derivatives chunk by chunk
+    std::vector<typename std::vector<typename ET::type>::iterator> result_pos;
+    for (auto result : results)
+    {
+        result_pos.push_back(result->get_vector().begin());
+    }
+
+    ngraph::runtime::TensorViewPtrs args_tv;
+    args_tv.insert(args_tv.begin(), args.begin(), args.end());
+    args_tv.push_back(c_arg);
+
+    TensorViewPtrs bprops_tv;
+    bprops_tv.insert(bprops_tv.begin(), bprops.begin(), bprops.end());
+
+    auto c_vec = c_arg->get_vector();
+    for (size_t i = 0; i < c_vec.size(); i++)
+    {
+        c_vec[i] = 1;
+        cf->tensor_call(args_tv, bprops_tv);
+        c_vec[i] = 0;
+        for (size_t j = 0; j < results.size(); j++)
+        {
+            auto bprop_vec = bprops[j]->get_vector();
+            result_pos[j] =
+                results[j]->get_vector().insert(result_pos[j], bprop_vec.begin(), bprop_vec.end());
+        }
+    }
+
+    return results;
+}
+
+template std::vector<
+    std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>>>
+    ngraph::runtime::backwards_derivative<ngraph::element::Float32>(
+        const std::shared_ptr<runtime::Manager>& manager,
+        const std::shared_ptr<runtime::Backend>& backend,
+        const std::shared_ptr<FunctionSpec>& f,
+        const std::vector<
+            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float32>>>& args);
+
+template std::vector<
+    std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ngraph::element::Float64>>>
+    ngraph::runtime::backwards_derivative<ngraph::element::Float64>(
+        const std::shared_ptr<runtime::Manager>& manager,
+        const std::shared_ptr<runtime::Backend>& backend,
+        const std::shared_ptr<FunctionSpec>& f,
+        const std::vector<
+            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float64>>>& args);

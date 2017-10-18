@@ -46,39 +46,20 @@ TEST(backwards, add)
     ASSERT_EQ(DYDX1, C);
 }
 
-// Returns (dy/(dXs))(C, Xs)
-shared_ptr<Function> derivative(const std::shared_ptr<Node>& Y,
-                                const std::vector<std::shared_ptr<op::Parameter>> Xs)
-{
-    auto Y_tv_type = dynamic_pointer_cast<const TensorViewType>(Y->get_value_type());
-    auto C = make_shared<op::Parameter>(Y_tv_type->get_element_type(), Y_tv_type->get_shape());
-    std::vector<std::shared_ptr<Node>> dYdXs(Xs.size());
-    transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, Y](const std::shared_ptr<Node>& X) {
-        return Y->backwards_derivative(X, C);
-    });
-    auto result = make_shared<op::Tuple>(dYdXs);
-    std::vector<std::shared_ptr<op::Parameter>> args;
-    args.push_back(C);
-    args.insert(args.end(), Xs.begin(), Xs.end());
-    return make_shared<Function>(result, result->get_value_type(), args);
-}
-
 TEST(backwards, multiply)
 {
     auto shape = Shape{2, 3};
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return std::make_tuple(X0 * X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<ngraph::runtime::FunctionSpec>(
+            X0 * X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    auto val_and_vars = make_graph();
-    auto Y = std::get<0>(val_and_vars);
-    auto vars = std::get<1>(val_and_vars);
-    auto f = derivative(Y, vars);
 
     auto manager = runtime::Manager::get("NGVM");
-    auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
+
+    auto external = manager->compile(*derivative(make_graph()));
     auto cf = backend->make_call_frame(external);
 
     auto x0 = backend->make_parameterized_tensor_view<element::Float32>(
@@ -106,5 +87,19 @@ TEST(backwards, multiply)
         dx1_correct[i] = x0->get_vector()[i];
         ASSERT_EQ(dx0->get_vector(), dx0_correct);
         ASSERT_EQ(dx1->get_vector(), dx1_correct);
+    }
+
+    auto f_num = make_graph();
+    auto results_num =
+        runtime::numeric_derivative<element::Float32>(manager, backend, f_num, {x0, x1}, .01f);
+    auto f_sym = make_graph();
+    auto results_sym =
+        runtime::backwards_derivative<element::Float32>(manager, backend, f_sym, {x0, x1});
+    for (size_t i = 0; i < results_num.size(); ++i)
+    {
+        auto result_num = results_num[i];
+        auto result_sym = results_sym[i];
+        bool ac  = all_close(result_num, result_sym);
+        EXPECT_TRUE(ac);
     }
 }
