@@ -19,6 +19,7 @@
 #include <unordered_set>
 
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/broadcast.hpp"

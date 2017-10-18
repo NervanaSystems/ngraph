@@ -20,7 +20,7 @@ using namespace ngraph;
 
 atomic<size_t> Node::m_next_instance_id(0);
 
-Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<ValueType> value_type)
+Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<const ValueType> value_type)
     : m_arguments(arguments)
     , m_value_type(value_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
@@ -38,7 +38,7 @@ Node::Node()
 {
 }
 
-Node::Node(std::shared_ptr<ValueType> value_type)
+Node::Node(std::shared_ptr<const ValueType> value_type)
     : Node({}, value_type)
 {
 }
@@ -159,8 +159,8 @@ void Node::set_name(const string& name)
     }
 }
 
-std::shared_ptr<Node> Node::backwards_derivative(const std::shared_ptr<Node>& x,
-                                                 const std::shared_ptr<Node>& c)
+std::shared_ptr<Node> Node::backprop_node(const std::shared_ptr<Node>& x,
+                                          const std::shared_ptr<Node>& c)
 {
     auto adjoints_it = m_adjoint_map.find(c.get());
     if (adjoints_it == m_adjoint_map.end())

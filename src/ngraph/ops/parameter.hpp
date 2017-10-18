@@ -42,7 +42,7 @@ namespace ngraph
             }
 
         public:
-            Parameter(const std::shared_ptr<ValueType>& value_type = nullptr);
+            Parameter(const std::shared_ptr<const ValueType>& value_type = nullptr);
             Parameter(const ngraph::element::Type& element_type, const Shape& shape);
 
             std::string description() const override { return "Parameter"; }

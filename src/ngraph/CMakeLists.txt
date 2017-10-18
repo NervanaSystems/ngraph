@@ -13,6 +13,9 @@
 
 set (SRC
     autodiff/adjoints.cpp
+    autodiff/backprop_derivative.cpp
+    autodiff/backprop_function.cpp
+    autodiff/numeric_derivative.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
     descriptor/layout/tensor_view_layout.cpp
@@ -67,6 +70,7 @@ set (SRC
     runtime/tensor_view.cpp
     runtime/tuple.cpp
     runtime/utils.cpp
+    test/all_close.cpp
     shape.cpp
     types/element_type.cpp
     types/type.cpp

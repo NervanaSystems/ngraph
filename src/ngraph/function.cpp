@@ -33,12 +33,6 @@ Function::Function(const std::shared_ptr<Node>& result,
     , m_ordered_ops_valid(false)
     , m_instance_id(m_next_instance_id.fetch_add(1))
 {
-    size_t i = 0;
-    for (auto parameter : parameters)
-    {
-        parameter->assign_function(this, i++);
-    }
-
     traverse_nodes(result, [&](shared_ptr<Node> node) { m_ops.push_back(node); });
 }
 

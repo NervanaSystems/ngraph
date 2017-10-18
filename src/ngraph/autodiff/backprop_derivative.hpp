@@ -15,9 +15,9 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
 
 #include "ngraph/runtime/parameterized_tensor_view.hpp"
+#include "ngraph/types/element_type.hpp"
 
 namespace ngraph
 {
@@ -32,34 +32,6 @@ namespace ngraph
 
     namespace autodiff
     {
-        class Adjoints
-        {
-        public:
-            /// @brief (dy/dx)(c) for all x used to compute y
-            ///
-            /// @param y The dependent value
-            /// @param c An expression for where to evaluate the derivatives
-            Adjoints(const std::shared_ptr<Node>& y, const std::shared_ptr<Node>& c);
-
-            Adjoints(const Adjoints& adjoints) = default;
-            Adjoints& operator=(const Adjoints& adjoints) = default;
-            Adjoints() = default;
-
-            /// @brief (dy/dx)(c)
-            ///
-            /// @param x The node whose adjoint is desired.
-            std::shared_ptr<Node> get(const std::shared_ptr<Node>& x);
-
-            /// @brief Add a backprop contribution to x's adjoint
-            ///
-            /// @param x The adjoint node
-            /// @param delta A backprop contribution
-            void add_delta(const std::shared_ptr<Node>& x, const std::shared_ptr<Node>& delta);
-
-        protected:
-            std::unordered_map<Node*, std::shared_ptr<Node>> m_adjoint_map;
-        };
-
         /// @brief Returns a FunctionSpec for the backprop derivative of its argument.
         /// @param f is f(X_i...)
         /// @returns f'(X_i..., c) where f'(x_i, ..., c)_j is backprop for X_j

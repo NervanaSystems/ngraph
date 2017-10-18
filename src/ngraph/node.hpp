@@ -43,9 +43,9 @@ namespace ngraph
         friend class autodiff::Adjoints;
 
     protected:
-        Node(const Nodes& arguments, std::shared_ptr<ValueType> value_type = nullptr);
+        Node(const Nodes& arguments, std::shared_ptr<const ValueType> value_type = nullptr);
         Node();
-        Node(std::shared_ptr<ValueType> value_type);
+        Node(std::shared_ptr<const ValueType> value_type);
 
         virtual ~Node();
 
@@ -114,8 +114,8 @@ namespace ngraph
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
-        std::shared_ptr<Node> backwards_derivative(const std::shared_ptr<Node>& x,
-                                                   const std::shared_ptr<Node>& c);
+        std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
+                                            const std::shared_ptr<Node>& c);
 
     protected:
         Nodes m_arguments;

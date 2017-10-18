@@ -19,7 +19,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/runtime/utils.hpp"
+#include "ngraph/test/all_close.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -183,13 +183,13 @@ TEST(util, all_close)
     auto b = backend->make_parameterized_tensor_view<element::Float32>(
         runtime::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}));
 
-    EXPECT_TRUE(ngraph::runtime::all_close(a, b));
+    EXPECT_TRUE(ngraph::test::all_close(a, b));
 
     auto c = backend->make_parameterized_tensor_view<element::Float32>(
         runtime::NDArray<float, 2>({{1.1f, 2, 3}, {3, 4, 5}}));
-    EXPECT_FALSE(ngraph::runtime::all_close(c, a, 0, .05f));
-    EXPECT_TRUE(ngraph::runtime::all_close(c, a, 0, .11f));
+    EXPECT_FALSE(ngraph::test::all_close(c, a, 0, .05f));
+    EXPECT_TRUE(ngraph::test::all_close(c, a, 0, .11f));
 
-    EXPECT_FALSE(ngraph::runtime::all_close(c, a, .05f, 0));
-    EXPECT_TRUE(ngraph::runtime::all_close(c, a, .11f, 0));
+    EXPECT_FALSE(ngraph::test::all_close(c, a, .05f, 0));
+    EXPECT_TRUE(ngraph::test::all_close(c, a, .11f, 0));
 }
