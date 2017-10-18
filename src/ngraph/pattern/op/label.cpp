@@ -38,7 +38,6 @@ void ngraph::pattern::op::Label::match_class(ngraph::pattern::Matcher& matcher, 
     }
     else 
     {
-        //matcher.reset_pattern_nodes(graph_node);
         reset();
         matcher.m_match_root.reset();
         NGRAPH_DEBUG << "MATCHER IS MATCH : " << matcher.is_match() << std::endl;
