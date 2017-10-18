@@ -105,7 +105,7 @@ namespace ngraph
         void Matcher::process_match(::ngraph::pattern::gr_callback_fn callback)
         {
             gr_callback_fn cb = m_callback;
-            if (!callback)
+            if (callback)
             {
                 cb = callback;
             }
