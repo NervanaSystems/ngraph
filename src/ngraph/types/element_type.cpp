@@ -46,7 +46,7 @@ bool ngraph::element::Type::operator==(const element::Type& other) const
 
 size_t ngraph::element::Type::size() const
 {
-    return std::ceil((float)m_bitwidth / 8.0);
+    return std::ceil(static_cast<float>(m_bitwidth) / 8.0f);
 }
 
 std::ostream& ngraph::element::operator<<(std::ostream& out, const ngraph::element::Type& obj)

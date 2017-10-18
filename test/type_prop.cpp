@@ -1041,3 +1041,574 @@ TEST(type_prop, function_call_deduce)
     auto r_p_r_vt = r_p_r->get_value_type();
     ASSERT_EQ(*r_p_r_vt, TensorViewType(element::Float32::element_type(), shape));
 }
+
+TEST(type_prop, reshape_deduce_s2v)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{}, Shape{1});
+    r->propagate_types();
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{1}));
+}
+
+TEST(type_prop, reshape_deduce_s2m)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{}, Shape{1, 1});
+    r->propagate_types();
+    ASSERT_EQ(*(r->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{1, 1}));
+}
+
+TEST(type_prop, reshape_deduce_s2t)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{}, Shape{1, 1, 1});
+    r->propagate_types();
+    ASSERT_EQ(*(r->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{1, 1, 1}));
+}
+
+TEST(type_prop, reshape_deduce_v2s)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{1}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{0}, Shape{});
+    r->propagate_types();
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
+}
+
+TEST(type_prop, reshape_deduce_m2s)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{1, 1}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{0, 1}, Shape{});
+    r->propagate_types();
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
+}
+
+TEST(type_prop, reshape_deduce_t2s)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{1, 1, 1}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{0, 1, 2}, Shape{});
+    r->propagate_types();
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
+}
+
+TEST(type_prop, reshape_deduce_m2v_01)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{0, 1}, Shape{12});
+    r->propagate_types();
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{12}));
+}
+
+TEST(type_prop, reshape_deduce_m2v_10)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 0}, Shape{12});
+    r->propagate_types();
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{12}));
+}
+
+TEST(type_prop, reshape_deduce_t2v_012)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{0, 1, 2}, Shape{60});
+    r->propagate_types();
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{60}));
+}
+
+TEST(type_prop, reshape_deduce_t2v_120)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0}, Shape{60});
+    r->propagate_types();
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{60}));
+}
+
+TEST(type_prop, reshape_deduce_correct_t2v_120)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0}, Shape{60});
+    r->set_value_type(make_shared<TensorViewType>(element::Float32::element_type(), Shape{60}));
+    r->propagate_types();
+    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{60}));
+}
+
+TEST(type_prop, reshape_deduce_not_enough_axes)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 0}, Shape{60});
+    try
+    {
+        r->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Not enough axes not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Input axis order for reshape is not a permutation of argument's axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reshape_deduce_too_many_axes)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0, 3}, Shape{60});
+    try
+    {
+        r->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Too many axes not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Input axis order for reshape is not a permutation of argument's axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reshape_deduce_duplicate_axes)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 1, 0}, Shape{60});
+    try
+    {
+        r->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Too many axes not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Input axis order for reshape is not a permutation of argument's axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reshape_deduce_wrong_output_shape)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
+    auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0}, Shape{3, 3, 3});
+    try
+    {
+        r->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Too many axes not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Product of output shape dimensions does not match "
+                              "product of argument shape dimensions for reshape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, slice_deduce_vector)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{2}, Coordinate{5});
+    sl->propagate_types();
+    ASSERT_EQ(*(sl->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{3}));
+}
+
+TEST(type_prop, slice_deduce_matrix)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7});
+    sl->propagate_types();
+    ASSERT_EQ(*(sl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{3, 6}));
+}
+
+TEST(type_prop, slice_deduce_matrix_strided)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7}, Shape{3, 2});
+    sl->propagate_types();
+    ASSERT_EQ(*(sl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{1, 3}));
+}
+
+TEST(type_prop, slice_deduce_matrix_strided_uneven)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7}, Shape{3, 4});
+    sl->propagate_types();
+    ASSERT_EQ(*(sl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{1, 2}));
+}
+
+TEST(type_prop, slice_deduce_vector_edge)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{6});
+    sl->propagate_types();
+    ASSERT_EQ(*(sl->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{6}));
+}
+
+TEST(type_prop, slice_deduce_matrix_edge)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{6, 8});
+    sl->propagate_types();
+    ASSERT_EQ(*(sl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{6, 8}));
+}
+
+TEST(type_prop, slice_deduce_matrix_zero_cols)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{6, 0});
+    sl->propagate_types();
+    ASSERT_EQ(*(sl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{6, 0}));
+}
+
+TEST(type_prop, slice_deduce_matrix_zero_zero)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{0, 0});
+    sl->propagate_types();
+    ASSERT_EQ(*(sl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{0, 0}));
+}
+
+TEST(type_prop, slice_deduce_vector_invalid_step)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{7}, Shape{1, 2});
+    try
+    {
+        sl->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid slice step not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Number of step axes provided for slice does not match number of input axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, slice_deduce_vector_edge_upper_oob)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{7});
+    try
+    {
+        sl->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Upper bound out of range not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Upper bound for slice is out of range"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, slice_deduce_matrix_edge_upper_oob)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{6, 9});
+    try
+    {
+        sl->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Upper bound out of range not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Upper bound for slice is out of range"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, slice_deduce_vector_lower_above_upper)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{3}, Coordinate{2});
+    try
+    {
+        sl->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Lower bound above upper not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Lower bound for slice is greater than upper bound"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, slice_deduce_matrix_lower_above_upper)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{0, 5}, Coordinate{6, 4});
+    try
+    {
+        sl->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Lower bound above upper not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Lower bound for slice is greater than upper bound"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, slice_deduce_matrix_lower_missing)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{5, 5});
+    try
+    {
+        sl->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Missing lower bound coordinate not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Number of lower bounds provided for slice does not match number of input axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, slice_deduce_matrix_upper_missing)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{5});
+    try
+    {
+        sl->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Missing upper bound coordinate not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Number of upper bounds provided for slice does not match number of input axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, slice_deduce_matrix_lower_extra)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{0, 0, 0}, Coordinate{5, 5});
+    try
+    {
+        sl->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Extra lower bound coordinate not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Number of lower bounds provided for slice does not match number of input axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, slice_deduce_matrix_upper_extra)
+{
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{5, 5, 5});
+    try
+    {
+        sl->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Extra upper bound coordinate not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Number of upper bounds provided for slice does not match number of input axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scalar_constant_deduce_float32)
+{
+    auto c = make_shared<op::Constant>(element::Float32::element_type(), Shape{}, "208");
+    c->propagate_types();
+    ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
+}
+
+TEST(type_prop, scalar_constant_deduce_bool)
+{
+    auto c = make_shared<op::Constant>(element::Bool::element_type(), Shape{}, "1");
+    c->propagate_types();
+    ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Bool::element_type(), Shape{}));
+}
+
+TEST(type_prop, tensor_constant_deduce_float32)
+{
+    auto c = make_shared<op::Constant>(element::Float32::element_type(),
+                                       Shape{2, 2},
+                                       std::vector<std::string>{"208", "208", "208", "208"});
+    c->propagate_types();
+    ASSERT_EQ(*(c->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{2, 2}));
+}
+
+TEST(type_prop, tensor_constant_deduce_bool)
+{
+    auto c = make_shared<op::Constant>(
+        element::Bool::element_type(), Shape{2, 2}, std::vector<std::string>{"1", "1", "1", "1"});
+    c->propagate_types();
+    ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Bool::element_type(), Shape{2, 2}));
+}
+
+TEST(type_prop, tensor_constant_bad_parse)
+{
+    auto c = make_shared<op::Constant>(element::Bool::element_type(),
+                                       Shape{2, 2},
+                                       std::vector<std::string>{"1", "grunk", "1", "1"});
+    try
+    {
+        c->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Bad literal parse not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Could not parse literal"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, tensor_constant_bad_parse_float_for_int)
+{
+    auto c = make_shared<op::Constant>(element::Int32::element_type(),
+                                       Shape{2, 2},
+                                       std::vector<std::string>{"1", "2.7", "1", "1"});
+    try
+    {
+        c->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Bad literal parse not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Could not parse literal"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, tensor_constant_bad_count)
+{
+    auto c = make_shared<op::Constant>(
+        element::Bool::element_type(), Shape{2, 2}, std::vector<std::string>{"1", "1", "1"});
+    try
+    {
+        c->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect number of literals not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Constant does not have the expected number of literals"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}

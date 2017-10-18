@@ -31,7 +31,7 @@ class ngraph::pass::DumpSorted : public ModulePass
 public:
     DumpSorted(const std::string& output_file);
 
-    virtual bool run_on_module(std::vector<Function*>&) override;
+    virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
 
 private:
     const std::string m_output_file;

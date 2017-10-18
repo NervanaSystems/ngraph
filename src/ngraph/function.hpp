@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <initializer_list>
 #include <list>
 #include <memory>
@@ -46,11 +47,11 @@ namespace ngraph
         const std::shared_ptr<ValueType> get_result_type() const { return m_result_type; }
         std::string get_name() const;
         void set_name(const std::string& name);
-        std::list<Node*>& get_ops();
-        const std::list<Node*>& get_ops() const;
-        std::list<Node*>& get_ordered_ops();
-        const std::list<Node*>& get_ordered_ops() const;
-        void set_ordered_ops(const std::list<Node*>&);
+        std::list<std::shared_ptr<Node>>& get_ops();
+        const std::list<std::shared_ptr<Node>>& get_ops() const;
+        std::list<std::shared_ptr<Node>>& get_ordered_ops();
+        const std::list<std::shared_ptr<Node>>& get_ordered_ops() const;
+        void set_ordered_ops(const std::list<std::shared_ptr<Node>>&);
         void set_ordered_ops_valid() { m_ordered_ops_valid = true; }
         void clear_ordered_ops_valid() { m_ordered_ops_valid = false; }
         friend std::ostream& operator<<(std::ostream&, const Function&);
@@ -61,14 +62,14 @@ namespace ngraph
         std::string m_name;
         std::shared_ptr<ValueType> m_result_type;
         bool m_ordered_ops_valid;
-        std::list<Node*> m_ordered_ops;
-        std::list<Node*> m_ops;
+        std::list<std::shared_ptr<Node>> m_ordered_ops;
+        std::list<std::shared_ptr<Node>> m_ops;
 
     private:
         Function(const Function&) = delete;
         Function(const Function&&) = delete;
 
-        static size_t m_next_instance_id;
+        static std::atomic<size_t> m_next_instance_id;
         size_t m_instance_id;
     };
 }

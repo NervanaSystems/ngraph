@@ -28,18 +28,18 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::descriptor;
 
-bool pass::Liveness::run_on_call_graph(list<Node*>& ops)
+bool pass::Liveness::run_on_call_graph(list<shared_ptr<Node>>& ops)
 {
     unordered_set<Tensor*> currently_live;
 
     for (auto it = ops.rbegin(); it != ops.rend(); it++)
     {
-        Node* node = *it;
+        shared_ptr<Node> node = *it;
         node->liveness_live_list.clear();
         node->liveness_new_list.clear();
         node->liveness_free_list.clear();
         unordered_set<Tensor*> input_tensor_decls;
-        for (auto input_decl : node->get_inputs())
+        for (Input& input_decl : node->get_inputs())
         {
             Tensor& tensor = input_decl.get_tensor();
             if (is_temporary(tensor))
@@ -49,7 +49,7 @@ bool pass::Liveness::run_on_call_graph(list<Node*>& ops)
         }
 
         unordered_set<Tensor*> output_tensor_decls;
-        for (auto output_decl : node->get_outputs())
+        for (Output& output_decl : node->get_outputs())
         {
             Tensor& tensor = output_decl.get_tensor();
             if (is_temporary(tensor))
@@ -91,7 +91,7 @@ bool pass::Liveness::run_on_call_graph(list<Node*>& ops)
     // Add outputs to live_list and remove from free_list
     unordered_set<Tensor*> outputs;
     unordered_set<Tensor*> seen;
-    for (Node* node : ops)
+    for (shared_ptr<Node> node : ops)
     {
         for (Tensor* tensor : node->liveness_live_list)
         {

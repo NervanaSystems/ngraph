@@ -21,14 +21,39 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief %Function call operation.
+        ///
+        /// ## Parameters
+        ///
+        /// |            | Description                |
+        /// | ---------- | -------------------------- |
+        /// | `function` | The function to be called. |
+        ///
+        /// ## Inputs
+        ///
+        /// |        | Type                                                                                                                                                                       | Description                          |
+        /// | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+        /// | `args` | \f$T_1,\dots,T_n\f$ where \f$n\f$ matches the number of arguments expected by `function` and \f$T_i\f$ matches the type expected for the \f$i\f$th argument of `function`. | The arguments for the function call. |
+        ///
+        /// ## Output
+        ///
+        /// | Type      | Description                                              |
+        /// | --------- | -------------------------------------------------------- |
+        /// | \f$T_R\f$ | The tensor returned by `function` when called on `args`. |
+        ///
+        /// ## Implementation Status
+        ///
+        /// | Backend | Status             |
+        /// | ------- | ------------------ |
+        /// | NGVM    | Fully implemented. |
         class FunctionCall : public Builtin
         {
         public:
+            /// \brief Constructs a function call operation.
             ///
-            /// @param function The function to be called
-            /// @param args The function arguments
-            ///
-            FunctionCall(const std::shared_ptr<Function>& function,
+            /// \param function The function to be called.
+            /// \param args The arguments for the function call.
+            FunctionCall(std::shared_ptr<Function> function,
                          const std::vector<std::shared_ptr<Node>>& args)
                 : Builtin(args)
                 , m_function(function)
@@ -38,6 +63,7 @@ namespace ngraph
             virtual std::string description() const override { return "FunctionCall"; }
             virtual void propagate_types() override;
 
+            /// \return The function to be called.
             std::shared_ptr<Function> get_function() const { return m_function; }
         protected:
             std::shared_ptr<Function> m_function;

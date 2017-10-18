@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-size_t Function::m_next_instance_id = 0;
+atomic<size_t> Function::m_next_instance_id(0);
 
 Function::Function(const std::shared_ptr<Node>& result,
                    const std::shared_ptr<ValueType>& result_type,
@@ -31,7 +31,7 @@ Function::Function(const std::shared_ptr<Node>& result,
     , m_name(name)
     , m_result_type(result_type)
     , m_ordered_ops_valid(false)
-    , m_instance_id(m_next_instance_id++)
+    , m_instance_id(m_next_instance_id.fetch_add(1))
 {
     size_t i = 0;
     for (auto parameter : parameters)
@@ -39,26 +39,26 @@ Function::Function(const std::shared_ptr<Node>& result,
         parameter->assign_function(this, i++);
     }
 
-    traverse_nodes(result, [&](Node* node) { m_ops.push_back(node); });
+    traverse_nodes(result, [&](shared_ptr<Node> node) { m_ops.push_back(node); });
 }
 
-void Function::set_ordered_ops(const std::list<Node*>& ordered_ops)
+void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)
 {
     m_ordered_ops = ordered_ops;
     m_ordered_ops_valid = true;
 }
 
-std::list<Node*>& Function::get_ops()
+std::list<shared_ptr<Node>>& Function::get_ops()
 {
     return m_ops;
 }
 
-const std::list<Node*>& Function::get_ops() const
+const std::list<shared_ptr<Node>>& Function::get_ops() const
 {
     return m_ops;
 }
 
-std::list<Node*>& Function::get_ordered_ops()
+std::list<shared_ptr<Node>>& Function::get_ordered_ops()
 {
     if (!m_ordered_ops_valid)
     {
@@ -67,7 +67,7 @@ std::list<Node*>& Function::get_ordered_ops()
     return m_ordered_ops;
 }
 
-const std::list<Node*>& Function::get_ordered_ops() const
+const std::list<shared_ptr<Node>>& Function::get_ordered_ops() const
 {
     if (!m_ordered_ops_valid)
     {

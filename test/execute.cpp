@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <algorithm>
 #include "gtest/gtest.h"
 
 #include <cmath>
@@ -996,7 +997,9 @@ TEST(execute, subtract)
 TEST(execute, scalar_constant)
 {
     auto shape = Shape{};
-    auto A = make_shared<op::ScalarConstant<element::Float32>>(-3.0f);
+    auto t = ngraph::runtime::make_tensor<element::Float32>(shape);
+    (*t) = std::vector<float>{-3.0f};
+    auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
 
@@ -1015,8 +1018,9 @@ TEST(execute, scalar_constant)
 TEST(execute, tensor_constant)
 {
     auto shape = Shape{2, 2, 2};
-    auto A = make_shared<op::TensorConstant<element::Float32>>(shape);
-    A->get_value()->get_vector() = {1, 2, 3, 4, 5, 6, 7, 8};
+    auto t = ngraph::runtime::make_tensor<element::Float32>(shape);
+    (*t) = std::vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
+    auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
 
@@ -1035,8 +1039,9 @@ TEST(execute, tensor_constant)
 TEST(execute, tensor_constant_with_op)
 {
     auto shape = Shape{2, 2, 2};
-    auto A = make_shared<op::TensorConstant<element::Float32>>(shape);
-    A->get_value()->get_vector() = {-1, 2, 3, -4, 5, -6, -7, 8};
+    auto t = ngraph::runtime::make_tensor<element::Float32>(shape);
+    (*t) = std::vector<float>{-1, 2, 3, -4, 5, -6, -7, 8};
+    auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Abs>(A), rt, op::Parameters{});
 
@@ -1619,4 +1624,878 @@ TEST(execute, reduce_matrix_to_scalar_zero_by_zero)
     // input tensors, so let's do this too.
     ASSERT_EQ((vector<float>{}), a->get_vector());
     ASSERT_EQ((vector<float>{99}), b->get_vector());
+}
+
+TEST(execute, reshape_t2v_012)
+{
+    auto shape_a = Shape{2, 2, 3};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{12};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}), result->get_vector());
+}
+
+TEST(execute, reshape_t2s_012)
+{
+    auto shape_a = Shape{1, 1, 1};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{6};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{6}), result->get_vector());
+}
+
+TEST(execute, reshape_t2s_120)
+{
+    auto shape_a = Shape{1, 1, 1};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Reshape>(A, AxisVector{1, 2, 0}, shape_r);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{6};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{6}), result->get_vector());
+}
+
+TEST(execute, reshape_s2t)
+{
+    auto shape_a = Shape{};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{1, 1, 1, 1, 1, 1};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Reshape>(A, AxisVector{}, shape_r);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{42};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{42}), result->get_vector());
+}
+
+TEST(execute, reshape_v2m_col)
+{
+    auto shape_a = Shape{3};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{3, 1};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector());
+}
+
+TEST(execute, reshape_v2m_row)
+{
+    auto shape_a = Shape{3};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{1, 3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector());
+}
+
+TEST(execute, reshape_v2t_middle)
+{
+    auto shape_a = Shape{3};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{1, 3, 1};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector());
+}
+
+TEST(execute, reshape_m2m_same)
+{
+    auto shape_a = Shape{3, 3};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{3, 3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Reshape>(A, AxisVector{0, 1}, shape_r);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), result->get_vector());
+}
+
+TEST(execute, reshape_m2m_transpose)
+{
+    auto shape_a = Shape{3, 3};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{3, 3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{1, 4, 7, 2, 5, 8, 3, 6, 9}), result->get_vector());
+}
+
+TEST(execute, reshape_m2m_dim_change_transpose)
+{
+    auto shape_a = Shape{3, 2};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{2, 3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4, 5, 6};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), result->get_vector());
+}
+
+TEST(execute, sin)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Sin>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    float pi = acosf(-1);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{pi / 2, 0.0f, -0.0f, pi / 6, -pi, pi};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return sinf(x); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, cos)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Cos>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    float pi = acosf(-1);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{pi / 2, 0.0f, -0.0f, pi / 3, -pi, pi};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return cosf(x); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, tan)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Tan>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    float pi = acosf(-1);
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{pi / 4, 0.0f, -0.0f, 7 * pi / 4, 3 * pi / 4, 5 * pi / 4};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return tanf(x); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, asin)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Asin>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return asinf(x); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, acos)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Acos>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return acosf(x); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, atan)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Atan>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return atanf(x); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, sinh)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Sinh>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 5.0f, -5.0f};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return sinhf(x); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, cosh)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Cosh>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 5.0f, -5.0f};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return coshf(x); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, tanh)
+{
+    auto shape = Shape{6};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Tanh>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
+    *a = input;
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    std::transform(
+        input.begin(), input.end(), input.begin(), [](float x) -> float { return tanhf(x); });
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(input, result->get_vector());
+}
+
+TEST(execute, exp)
+{
+    auto shape = Shape{8};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Exp>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    *a = vector<float>{-4, -3, -2, -1, 0, 1, 2, 3};
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ(
+        (vector<float>{expf(-4), expf(-3), expf(-2), expf(-1), expf(0), expf(1), expf(2), expf(3)}),
+        result->get_vector());
+}
+
+TEST(execute, slice_scalar)
+{
+    auto shape_a = Shape{};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{}, Coordinate{});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{312};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{312}), result->get_vector());
+}
+
+TEST(execute, slice_matrix)
+{
+    auto shape_a = Shape{4, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{2, 3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{0, 1}, Coordinate{3, 3});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{2, 3, 6, 7, 10, 11}), result->get_vector());
+}
+
+TEST(execute, slice_vector)
+{
+    auto shape_a = Shape{16};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{12};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{2}, Coordinate{14});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), result->get_vector());
+}
+
+TEST(execute, scalar_constant_float32)
+{
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto r = make_shared<op::Constant>(element::Float32::element_type(), Shape{}, "4.8");
+    auto f = make_shared<Function>(r, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = ngraph::runtime::make_tensor<element::Float32>(Shape{});
+
+    (*cf)({}, {result});
+    ASSERT_EQ(vector<float>{std::strtof("4.8", NULL)}, result->get_vector());
+}
+
+TEST(execute, scalar_constant_int64)
+{
+    auto rt = make_shared<TensorViewType>(element::Int64::element_type(), Shape{});
+    auto r = make_shared<op::Constant>(element::Int64::element_type(), Shape{}, "2112");
+    auto f = make_shared<Function>(r, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = ngraph::runtime::make_tensor<element::Int64>(Shape{});
+
+    (*cf)({}, {result});
+    ASSERT_EQ(vector<element::Int64::type>{std::strtol("2112", NULL, 10)}, result->get_vector());
+}
+
+TEST(execute, tensor_constant_float32)
+{
+    auto shape = Shape{2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto r = make_shared<op::Constant>(element::Float32::element_type(),
+                                       shape,
+                                       std::vector<std::string>{"4.8", "4.7", "-5.3", "0"});
+    auto f = make_shared<Function>(r, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<float>{std::strtof("4.8", NULL),
+                             std::strtof("4.7", NULL),
+                             std::strtof("-5.3", NULL),
+                             std::strtof("0", NULL)}),
+              result->get_vector());
+}
+
+TEST(execute, tensor_constant_int64)
+{
+    auto shape = Shape{2, 2};
+    auto rt = make_shared<TensorViewType>(element::Int64::element_type(), shape);
+    auto r = make_shared<op::Constant>(element::Int64::element_type(),
+                                       shape,
+                                       std::vector<std::string>{"2112", "1848", "1776", "1964"});
+    auto f = make_shared<Function>(r, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = ngraph::runtime::make_tensor<element::Int64>(shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<element::Int64::type>{std::strtol("2112", NULL, 10),
+                                            std::strtol("1848", NULL, 10),
+                                            std::strtol("1776", NULL, 10),
+                                            std::strtol("1964", NULL, 10)}),
+              result->get_vector());
+}
+
+// Trivial case with no summed axes.
+TEST(execute, sum_trivial)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 2, 3, 4};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{1, 2, 3, 4}), result->get_vector());
+}
+
+TEST(execute, sum_to_scalar)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
+    *a = vector<float>{1, 2, 3, 4};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(Shape{});
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{10}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{1, 2, 3, 4}), a->get_vector());
+}
+
+TEST(execute, sum_matrix_columns)
+{
+    auto shape_a = Shape{3, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4, 5, 6};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{9, 12}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), a->get_vector());
+}
+
+TEST(execute, sum_matrix_rows)
+{
+    auto shape_a = Shape{3, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{1, 2, 3, 4, 5, 6};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{3, 7, 11}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), a->get_vector());
+}
+
+TEST(execute, sum_matrix_rows_zero)
+{
+    auto shape_a = Shape{3, 0};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{0, 0, 0}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{}), a->get_vector());
+}
+
+TEST(execute, sum_matrix_cols_zero)
+{
+    // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
+    auto shape_a = Shape{0, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{0, 0}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{}), a->get_vector());
+}
+
+TEST(execute, sum_vector_zero)
+{
+    auto shape_a = Shape{0};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{0}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{}), a->get_vector());
+}
+
+TEST(execute, sum_matrix_to_scalar_zero_by_zero)
+{
+    auto shape_a = Shape{0, 0};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
+    *a = vector<float>{};
+    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{0}), result->get_vector());
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    ASSERT_EQ((vector<float>{}), a->get_vector());
+}
+
+TEST(execute, sign)
+{
+    auto shape = Shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Sign>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    *a = vector<float>{1, -2, 0, -4.8f, 4.8f, -0.0};
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), result->get_vector());
 }

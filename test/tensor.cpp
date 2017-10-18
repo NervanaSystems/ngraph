@@ -49,7 +49,7 @@ TEST(tensor, size)
 
         pass_manager.run_passes(f0);
 
-        auto outputs = arg0->get_outputs();
+        auto& outputs = arg0->get_outputs();
         ASSERT_EQ(1, outputs.size());
         Tensor& output = outputs[0].get_tensor();
         EXPECT_EQ(2 * 3 * 4, output.size());
@@ -63,7 +63,7 @@ TEST(tensor, size)
 
         pass_manager.run_passes(f0);
 
-        auto outputs = arg0->get_outputs();
+        auto& outputs = arg0->get_outputs();
         ASSERT_EQ(1, outputs.size());
         Tensor& output = outputs[0].get_tensor();
         EXPECT_EQ(1 * 4, output.size());
@@ -77,7 +77,7 @@ TEST(tensor, size)
 
         pass_manager.run_passes(f0);
 
-        auto outputs = arg0->get_outputs();
+        auto& outputs = arg0->get_outputs();
         ASSERT_EQ(1, outputs.size());
         Tensor& output = outputs[0].get_tensor();
         EXPECT_EQ(1 * 4, output.size());
