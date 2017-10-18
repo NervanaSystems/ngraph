@@ -53,6 +53,7 @@
 #include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/cpu/call_frame.hpp"
+#include "ngraph/runtime/cpu/emitter.hpp"
 #include "ngraph/runtime/cpu/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
 
@@ -61,6 +62,13 @@ using namespace ngraph::runtime::cpu;
 
 using ngraph::descriptor::layout::DenseTensorViewLayout;
 
+#define TI(x) type_index(typeid(x))
+
+static const OpMap dispatch{{TI(ngraph::op::Add), &Emitter::EmitAdd},
+                            {TI(ngraph::op::Dot), &Emitter::EmitDot}};
+
+#undef TI
+
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                    bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
@@ -68,7 +76,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 {
 }
 
-void ExternalFunction::compile()
+void ExternalFunction::compile(FunctionMap& function_map)
 {
     if (m_is_compiled)
     {
@@ -199,10 +207,13 @@ void ExternalFunction::compile()
 
 shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
 {
+    FunctionMap function_map;
+
     if (!m_is_compiled)
     {
-        compile();
+        compile(function_map);
     }
+
     std::vector<std::shared_ptr<ngraph::runtime::TensorView>> temps;
     for (auto tv : m_temp_views)
     {
@@ -216,6 +227,4 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
     }
     return make_shared<ngraph::runtime::cpu::CallFrame>(
         m_n_inputs, m_n_outputs, temps);
-
-    //return shared_ptr<ngraph::runtime::CallFrame>();
 }

@@ -31,25 +31,28 @@ namespace ngraph
         namespace cpu
         {
             class Instruction;
+            class ExternalFunction;
+            class Emitter;
+
+            using FunctionMap = std::unordered_map<std::shared_ptr<Function>,
+                                                   std::shared_ptr<ExternalFunction>>;
+
+            using OpFunction = std::function<void(const Emitter*,
+                                                  const ngraph::Node*,
+                                                  ExternalFunction*,
+                                                  FunctionMap&,
+                                                  const std::vector<TensorViewInfo>& inputs,
+                                                  const std::vector<TensorViewInfo>& outputs)>;
+
+            using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
             class ExternalFunction : public ngraph::runtime::ExternalFunction
             {
-                using FunctionMap = std::unordered_map<std::shared_ptr<Function>,
-                                                       std::shared_ptr<ExternalFunction>>;
-
-                using OpFunction = std::function<void(const ngraph::Node*,
-                                                      ExternalFunction*,
-                                                      FunctionMap&,
-                                                      const std::vector<TensorViewInfo>& inputs,
-                                                      const std::vector<TensorViewInfo>& outputs)>;
-                using OpMap = std::unordered_map<std::type_index, OpFunction>;
-
             public:
                 ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                  bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
             protected:
-                void compile();
                 void compile(FunctionMap& function_map);
 
                 size_t m_n_inputs;

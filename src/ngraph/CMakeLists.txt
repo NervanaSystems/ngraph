@@ -95,6 +95,7 @@ if(LLVM_INCLUDE_DIR)
         runtime/cpu/call_frame.cpp
         runtime/cpu/cpu_manager.cpp
         runtime/cpu/cpu_backend.cpp
+        runtime/cpu/emitter.cpp
         runtime/cpu/external_function.cpp
         )
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
