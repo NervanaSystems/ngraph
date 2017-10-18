@@ -49,7 +49,7 @@ endif()
 
 if(LLVM_INCLUDE_DIR)
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
-    set(SRC ${SRC} codegen.cpp)
+    set(SRC ${SRC} codegen.cpp cpu.cpp)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")

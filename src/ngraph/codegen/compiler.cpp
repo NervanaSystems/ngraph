@@ -61,7 +61,7 @@ static std::string GetExecutablePath(const char* Argv0)
 {
     // This just needs to be some symbol in the binary; C++ doesn't
     // allow taking the address of ::main however.
-    void* MainAddr = (void*)(intptr_t)GetExecutablePath;
+    void* MainAddr = reinterpret_cast<void*>(GetExecutablePath);
     return llvm::sys::fs::getMainExecutable(Argv0, MainAddr);
 }
 
@@ -111,7 +111,7 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     if (Clang->getHeaderSearchOpts().UseBuiltinIncludes &&
         Clang->getHeaderSearchOpts().ResourceDir.empty())
     {
-        void* MainAddr = (void*)(intptr_t)GetExecutablePath;
+        void* MainAddr = reinterpret_cast<void*>(GetExecutablePath);
         auto path = CompilerInvocation::GetResourcesPath(args[0], MainAddr);
         Clang->getHeaderSearchOpts().ResourceDir = path;
     }
@@ -131,6 +131,12 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     // Debian-like + GCC 5 libstdc++
     HSO.AddPath("/usr/include/x86_64-linux-gnu/c++/5", clang::frontend::System, false, false);
     HSO.AddPath("/usr/include/c++/5", clang::frontend::System, false, false);
+    // TODO: Hack in path to eigen headers for now
+    HSO.AddPath("/localdisk/menonjai/build/external/eigen/include/eigen3",
+                clang::frontend::System,
+                false,
+                false);
+    HSO.AddPath("/home/menonjai/ngraph-cpp/src", clang::frontend::System, false, false);
 
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);

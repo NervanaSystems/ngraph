@@ -65,7 +65,7 @@ private:
     template <typename signature>
     std::function<signature> f_cast(void* f)
     {
-        return static_cast<signature*>((signature*)f);
+        return static_cast<signature*>(reinterpret_cast<signature*>(f));
     }
 
     // class method_resolver : public llvm::RTDyldMemoryManager
