@@ -33,6 +33,7 @@ namespace ngraph
             class Instruction;
             class ExternalFunction;
             class Emitter;
+            class CallFrame;
 
             using FunctionMap = std::unordered_map<std::shared_ptr<Function>,
                                                    std::shared_ptr<ExternalFunction>>;
@@ -45,6 +46,8 @@ namespace ngraph
                                                   const std::vector<TensorViewInfo>& outputs)>;
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
+
+            using EntryPoint = std::function<void(ngraph::runtime::cpu::CallFrame*, ngraph::runtime::TensorViewPtrs&)>;
 
             class ExternalFunction : public ngraph::runtime::ExternalFunction
             {

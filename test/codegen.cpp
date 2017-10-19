@@ -27,7 +27,7 @@ TEST(codegen, simple_return)
     constexpr auto name = "test.cpp";
     constexpr auto source = R"(extern "C" int test() { return 2+5; })";
 
-    nervana::cpu::execution_state estate;
+    ngraph::codegen::execution_state estate;
     auto module = estate.compile(source, name);
     ASSERT_NE(nullptr, module);
 
@@ -47,7 +47,7 @@ TEST(codegen, pass_args)
     constexpr auto name = "test.cpp";
     constexpr auto source = R"(extern "C" int test(int a, int b) { return a+b; })";
 
-    nervana::cpu::execution_state estate;
+    ngraph::codegen::execution_state estate;
     auto module = estate.compile(source, name);
     ASSERT_NE(nullptr, module);
 
@@ -74,7 +74,7 @@ TEST(codegen, include)
         }
     )";
 
-    nervana::cpu::execution_state estate;
+    ngraph::codegen::execution_state estate;
     auto module = estate.compile(source, name);
     ASSERT_NE(nullptr, module);
 

@@ -17,6 +17,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <string>
 
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/descriptor/input.hpp"
@@ -64,8 +65,10 @@ using ngraph::descriptor::layout::DenseTensorViewLayout;
 
 #define TI(x) type_index(typeid(x))
 
-static const OpMap dispatch{{TI(ngraph::op::Add), &Emitter::EmitAdd},
-                            {TI(ngraph::op::Dot), &Emitter::EmitDot}};
+static const OpMap dispatcher{{TI(ngraph::op::Add), &Emitter::EmitAdd},
+                             {TI(ngraph::op::Dot), &Emitter::EmitDot},
+                             {TI(ngraph::op::Multiply), &Emitter::EmitMultiply},
+                             {TI(ngraph::op::Parameter), &Emitter::EmitNop}};
 
 #undef TI
 
@@ -146,10 +149,59 @@ void ExternalFunction::compile(FunctionMap& function_map)
     }
 
     // Now we build the TU
+    Emitter emitter;
+    auto TU = emitter.GetTU();
+    TU += R"(
+#include <vector>
+#include <memory>
+
+#include <Eigen/Dense>
+
+#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/cpu/call_frame.hpp"
+
+void *__dso_handle = 0;
+
+extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame, 
+                             ngraph::runtime::TensorViewPtrs& tensor_views)
+{
+)";
+
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
-        
+        auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
+                         // with shared pointers, which is fine here but clang doesn't like it.)
+        auto handler = dispatcher.find(type_index(typeid(n)));
+        if (handler == dispatcher.end())
+        {
+            throw ngraph_error("Unhandled op during code generation : " + node->description());
+        }
+        std::vector<TensorViewInfo> in;
+        for (const descriptor::Input& input : node->get_inputs())
+        {
+            const descriptor::Output& output = input.get_output();
+            auto tv = output.get_tensor_view();
+            in.push_back({tensor_index.at(tv), tv});
+        }
+        std::vector<TensorViewInfo> out;
+        for (const descriptor::Output& output : node->get_outputs())
+        {
+            auto tv = output.get_tensor_view();
+            out.push_back({tensor_index.at(tv), tv});
+        }
+        handler->second(&emitter, node.get(), this, function_map, in, out);
     }
+
+    // End TU
+    TU += "}\n";
+
+    ngraph::codegen::execution_state estate;
+    auto llvm_module = estate.compile(TU, "ExternalFunction");
+    assert(llvm_module);
+    estate.add_module(llvm_module);
+    estate.finalize();
+    //auto llvm_func = estate.find_function
 
     m_is_compiled = true;
     if (m_release_function)

@@ -46,7 +46,7 @@
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 
-#include "compiler.hpp"
+#include "ngraph/codegen/compiler.hpp"
 
 // TODO: Fix leaks
 
@@ -55,7 +55,7 @@ using namespace llvm;
 using namespace llvm::opt;
 using namespace std;
 
-using namespace nervana::cpu;
+using namespace ngraph::codegen;
 
 static std::string GetExecutablePath(const char* Argv0)
 {
@@ -122,6 +122,7 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     // But that's a private header and isn't part of the public libclang API
     // Instead of re-implementing all of that functionality in a custom toolchain
     // just hardcode the paths relevant to frequently used build/test machines for now
+    HSO.AddPath("/localdisk/menonjai/build/third-party/ext_llvm-prefix/src/ext_llvm/lib/clang/5.0.0/include", clang::frontend::System, false, false);
     HSO.AddPath("/usr/include/x86_64-linux-gnu", clang::frontend::System, false, false);
     HSO.AddPath("/usr/include", clang::frontend::System, false, false);
     // Add C++ standard library headers
@@ -137,6 +138,16 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
                 false,
                 false);
     HSO.AddPath("/home/menonjai/ngraph-cpp/src", clang::frontend::System, false, false);
+
+    // Language options
+    auto LO = Clang->getInvocation().getLangOpts();
+    LO->CPlusPlus = 1;
+    LO->CPlusPlus11 = 1;
+    LO->Bool = 1;
+    LO->Exceptions = 1;
+    LO->CXXExceptions = 1;
+    LO->WChar = 1;
+    LO->RTTI = 1;
 
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);

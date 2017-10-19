@@ -15,6 +15,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
@@ -28,8 +29,18 @@ namespace ngraph
         {
             class Emitter
             {
+            protected:
+                std::string TU;
+
             public:
-                Emitter() { }
+                Emitter() : TU("") { }
+                std::string& GetTU() { return TU; }
+                
+                void EmitNop(const ngraph::Node*,
+                             ExternalFunction*,
+                             FunctionMap&,
+                             const std::vector<TensorViewInfo>& inputs,
+                             const std::vector<TensorViewInfo>& outputs) const;
 
                 void EmitAdd(const ngraph::Node*,
                              ExternalFunction*,
@@ -42,6 +53,12 @@ namespace ngraph
                              FunctionMap&,
                              const std::vector<TensorViewInfo>& inputs,
                              const std::vector<TensorViewInfo>& outputs) const;
+
+                void EmitMultiply(const ngraph::Node*,
+                                  ExternalFunction*,
+                                  FunctionMap&,
+                                  const std::vector<TensorViewInfo>& inputs,
+                                  const std::vector<TensorViewInfo>& outputs) const;
 
             };
         }

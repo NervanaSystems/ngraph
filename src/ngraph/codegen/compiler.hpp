@@ -22,23 +22,23 @@
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/Option/Arg.h>
 
-namespace nervana
+namespace ngraph
 {
-    namespace cpu
+    namespace codegen
     {
         class module;
         class execution_state;
     }
 }
 
-class nervana::cpu::module
+class ngraph::codegen::module
 {
 public:
 private:
     std::unique_ptr<llvm::Module> m_module;
 };
 
-class nervana::cpu::execution_state : public llvm::SectionMemoryManager
+class ngraph::codegen::execution_state : public llvm::SectionMemoryManager
 {
 public:
     execution_state();

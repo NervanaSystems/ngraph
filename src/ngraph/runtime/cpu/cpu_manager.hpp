@@ -33,7 +33,7 @@ namespace ngraph
             class CPUManager : public Manager
             {
             protected:
-                nervana::cpu::execution_state exec_state;
+                ngraph::codegen::execution_state exec_state;
             public:
                 virtual std::shared_ptr<Backend> allocate_backend() override;
 
