@@ -29,13 +29,7 @@ namespace ngraph
         ///
         class Parameter : public Node
         {
-            friend class ngraph::Function;
-
         protected:
-            // Called by the Function constructor to associate this parameter with the function.
-            // It is an error to try to associate a parameter with more than one function.
-            void assign_function(Function* function, size_t index);
-
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override
             {
@@ -47,10 +41,6 @@ namespace ngraph
 
             std::string description() const override { return "Parameter"; }
             virtual void propagate_types() override;
-
-        protected:
-            Function* m_function;
-            size_t m_index;
         };
     }
 }

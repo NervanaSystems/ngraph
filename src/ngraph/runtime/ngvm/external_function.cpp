@@ -1042,6 +1042,11 @@ void ExternalFunction::compile(FunctionMap& function_map)
     // First come the function inputs
     for (auto param : m_function->get_parameters())
     {
+        // Work-around until topological sort includes unnused parameters
+        if (!param->m_assign_tensors_is_done)
+        {
+            param->assign_tensors();
+        }
         for (const descriptor::Output& output : param->get_outputs())
         {
             auto tv = output.get_tensor_view();

@@ -21,8 +21,6 @@ using namespace ngraph::op;
 
 Parameter::Parameter(const std::shared_ptr<const ValueType>& value_type)
     : Node(value_type)
-    , m_function(nullptr)
-    , m_index(0)
 {
 }
 

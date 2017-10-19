@@ -40,11 +40,11 @@ namespace ngraph
                  const std::string& name = "");
 
         std::shared_ptr<Node> get_result() { return m_result; }
-        const std::vector<std::shared_ptr<op::Parameter>> get_parameters() const
+        const std::vector<std::shared_ptr<op::Parameter>>& get_parameters() const
         {
             return m_parameters;
         }
-        const std::shared_ptr<const ValueType> get_result_type() const { return m_result_type; }
+        std::shared_ptr<const ValueType> get_result_type() const { return m_result_type; }
         std::string get_name() const;
         void set_name(const std::string& name);
         std::list<std::shared_ptr<Node>>& get_ops();

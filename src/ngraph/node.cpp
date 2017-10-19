@@ -109,6 +109,8 @@ void Node::assign_tensors()
         }
         argno++;
     }
+    // Work-around until topological sort includes unnused parameters
+    m_assign_tensors_is_done = true;
 }
 
 bool Node::is_parameter() const

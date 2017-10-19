@@ -39,7 +39,15 @@ void CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs)
 {
+    if (inputs.size() != m_n_inputs)
+    {
+        throw ngraph_error("Incorrect number of inputs");
+    }
     copy(inputs.begin(), inputs.end(), m_tensor_views.begin());
+    if (outputs.size() != m_n_outputs)
+    {
+        throw ngraph_error("Incorrect number of outputs");
+    }
     copy(outputs.begin(), outputs.end(), m_tensor_views.begin() + m_n_inputs);
     m_next_pc = m_initial_pc;
     m_return = false;
