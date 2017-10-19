@@ -29,7 +29,7 @@ namespace ngraph
                 bool is_binded() { return (bool)m_binded; };
                 std::shared_ptr<Node> get_binded_node() { return m_binded; }
 
-                virtual std::string description() const
+                virtual std::string description() override const
                 {
                     return "Label";
                 }
