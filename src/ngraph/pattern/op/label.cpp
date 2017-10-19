@@ -14,29 +14,32 @@
 
 #include "label.hpp"
 
-void ngraph::pattern::op::Label::match_class(ngraph::pattern::Matcher& matcher, std::shared_ptr<Node> graph_node)
+void ngraph::pattern::op::Label::match_class(ngraph::pattern::Matcher& matcher,
+                                             std::shared_ptr<Node> graph_node)
 {
     bool is_match = true;
     if (is_binded())
     {
         if (get_binded_node() != graph_node)
         {
-            NGRAPH_DEBUG << "get_binded_node " << get_binded_node()->description() << " , " << get_binded_node()
-                << " NOT match " << graph_node->description() << " , " << graph_node << std::endl;
+            NGRAPH_DEBUG << "get_binded_node " << get_binded_node()->description() << " , "
+                         << get_binded_node() << " NOT match " << graph_node->description() << " , "
+                         << graph_node << std::endl;
             is_match = false;
         }
     }
-    else 
+    else
     {
         is_match = !m_predicate || m_predicate(graph_node);
     }
 
-    if (is_match) 
+    if (is_match)
     {
-        NGRAPH_DEBUG << "Binding get_binded_node " << graph_node->description() << " , " << graph_node << " , " << graph_node->get_name() << std::endl;
+        NGRAPH_DEBUG << "Binding get_binded_node " << graph_node->description() << " , "
+                     << graph_node << " , " << graph_node->get_name() << std::endl;
         m_binded = graph_node;
     }
-    else 
+    else
     {
         reset();
         matcher.m_match_root.reset();

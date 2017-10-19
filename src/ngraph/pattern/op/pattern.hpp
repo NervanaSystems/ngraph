@@ -17,8 +17,8 @@
 #include <functional>
 
 #include "ngraph/node.hpp"
-#include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
 namespace ngraph
 {
@@ -31,12 +31,14 @@ namespace ngraph
             class Pattern : public Node
             {
             public:
-                Pattern() : Pattern(nullptr) {};
+                Pattern()
+                    : Pattern(nullptr){};
 
                 Pattern(Predicate pred)
                     : Node()
                     , m_predicate(pred)
-                {}
+                {
+                }
 
                 virtual std::string description() const
                 {

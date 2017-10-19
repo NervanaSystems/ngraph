@@ -27,7 +27,8 @@ namespace ngraph
             class Any : public Pattern
             {
             public:
-                Any(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr) : Pattern(predicate)
+                Any(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
+                    : Pattern(predicate)
                 {
                     m_arguments.push_back(arg);
                     const_cast<std::multiset<Node*>&>(arg->users()).insert(this);
@@ -36,23 +37,18 @@ namespace ngraph
                 virtual void match_class(pattern::Matcher& matcher,
                                          std::shared_ptr<Node> graph_node) override
                 {
-                    if (!m_predicate || m_predicate(graph_node)) 
+                    if (!m_predicate || m_predicate(graph_node))
                     {
                         matcher.on_match_class(shared_from_this(), graph_node, true);
                     }
-                    else 
+                    else
                     {
                         assert(this->get_arguments().size() == 1);
                         matcher.on_match_class(this->get_arguments().at(0), graph_node, true);
                     }
-                    
                 }
 
-                virtual std::string description() const override
-                {
-                    return "Any";
-                }
-
+                virtual std::string description() const override { return "Any"; }
             };
         }
     }

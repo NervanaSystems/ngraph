@@ -14,27 +14,30 @@
 
 #include "matcher.hpp"
 #include <algorithm>
-#include "ngraph/ngraph.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/ngraph.hpp"
 #include "ngraph/pattern/op/label.hpp"
 
 namespace ngraph
 {
     namespace pattern
     {
-        void Matcher::reset_pattern_nodes(std::shared_ptr<Node> node) //TODO: [nikolayk] this doesn't have to be recursive
-                                                                      //even better we should walk the entire pattern subgraph once 
-                                                                      //and keep track of all pattern nodes
+        void Matcher::reset_pattern_nodes(
+            std::shared_ptr<Node> node) //TODO: [nikolayk] this doesn't have to be recursive
+        //even better we should walk the entire pattern subgraph once
+        //and keep track of all pattern nodes
         {
             auto label = std::dynamic_pointer_cast<::ngraph::pattern::op::Label>(node);
-            NGRAPH_DEBUG << "reset_pattern_nodes : node = " << node->description() << " , " << node << std::endl;
+            NGRAPH_DEBUG << "reset_pattern_nodes : node = " << node->description() << " , " << node
+                         << std::endl;
             if (label)
             {
-                NGRAPH_DEBUG << "reset_pattern_nodes : label = " << node->description() << " , " << node << std::endl;
+                NGRAPH_DEBUG << "reset_pattern_nodes : label = " << node->description() << " , "
+                             << node << std::endl;
                 label->reset();
             }
 
-            for (auto arg : node->get_arguments()) 
+            for (auto arg : node->get_arguments())
             {
                 reset_pattern_nodes(arg);
             }
@@ -59,8 +62,10 @@ namespace ngraph
                                      const std::shared_ptr<ngraph::Node>& graph_node,
                                      bool is_match)
         {
-            NGRAPH_DEBUG << pad(2*m_depth) << "[MATCHER] " << "pattern = " << pattern_node << " , " << pattern_node->description()
-               << " " << (is_match ? " " : "NOT ") << "matched " << graph_node << " , " << graph_node->description();
+            NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] "
+                         << "pattern = " << pattern_node << " , " << pattern_node->description()
+                         << " " << (is_match ? " " : "NOT ") << "matched " << graph_node << " , "
+                         << graph_node->description();
             if (!is_match)
             {
                 reset_pattern_nodes(pattern_node);
@@ -78,14 +83,16 @@ namespace ngraph
                 return;
             }
 
-            
             if (graph_node->is_commutative())
             {
                 auto old_match_root = m_match_root;
-                std::sort(begin(pattern_args), end(pattern_args)); //TODO: [nikolayk] we don't really have to use lexicographically-based perms, heap's algo should be faster 
+                std::sort(
+                    begin(pattern_args),
+                    end(pattern_args)); //TODO: [nikolayk] we don't really have to use lexicographically-based perms, heap's algo should be faster
                 do
                 {
-                    NGRAPH_DEBUG << pad(2 * m_depth) << "Running a permutation for graph_node " << graph_node->description() << " , " << graph_node << std::endl;
+                    NGRAPH_DEBUG << pad(2 * m_depth) << "Running a permutation for graph_node "
+                                 << graph_node->description() << " , " << graph_node << std::endl;
                     reset_pattern_nodes(pattern_node);
                     m_match_root =
                         old_match_root; //previous permutation wasn't a match; reset m_match_root
@@ -115,18 +122,17 @@ namespace ngraph
             cb(*this);
         }
 
-
         bool Matcher::match(const std::shared_ptr<Node>& pattern_node,
                             const std::shared_ptr<Node>& graph_node)
         {
-            NGRAPH_DEBUG << "Starting match pattern = " << pattern_node << " , " << pattern_node->description()
-                << " , graph_node = " << graph_node << " , " << graph_node->description() << std::endl;
+            NGRAPH_DEBUG << "Starting match pattern = " << pattern_node << " , "
+                         << pattern_node->description() << " , graph_node = " << graph_node << " , "
+                         << graph_node->description() << std::endl;
             reset_pattern_nodes(pattern_node);
             m_match_root = graph_node;
             pattern_node->match_class(*this, graph_node);
             //NGRAPH_DEBUG << pad(2 * m_depth) << "is_match() " << is_match() << std::endl;
             return is_match();
         }
-
     }
 }
