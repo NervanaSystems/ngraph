@@ -11,7 +11,4 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get clean autoclean && \
     apt-get autoremove -y
 
-# Add chown_files script to avoid 
-ADD contrib/docker/chown_files.sh /tmp/chown_files.sh
-
-WORKDIR /root/ngraph-cpp-test
+WORKDIR /home

@@ -117,6 +117,7 @@ namespace ngraph
                 return std::make_shared<runtime::ParameterizedTensorView<TraitedType<T>>>(shape);
             }
 
+            /// Parses a string containing a literal of the underlying type.
             static T read(const std::string& s)
             {
                 T result;
@@ -134,6 +135,7 @@ namespace ngraph
                 return result;
             }
 
+            /// Parses a list of strings containing literals of the underlying type.
             static std::vector<T> read(const std::vector<std::string>& ss)
             {
                 std::vector<T> result;

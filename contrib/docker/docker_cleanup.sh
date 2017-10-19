@@ -7,7 +7,7 @@ echo
 
 # clean up old docker containers
 echo "Removing Exited docker containers..." 
-docker ps -a | grep Exited | cut -f 1 -d ' ' | xargs docker rm -f ${1}
+docker ps -a | grep Exited | cut -f 1 -d ' ' | xargs docker rm -f "${1}"
 echo
 
 #list docker images for ngraph
@@ -17,4 +17,4 @@ echo
 
 # clean up docker images no longer in use
 echo "Removing docker images for ngraph..." 
-docker images -qa ngraph_* | xargs docker rmi -f ${1}
+docker images -qa ngraph_* | xargs docker rmi -f "${1}"
