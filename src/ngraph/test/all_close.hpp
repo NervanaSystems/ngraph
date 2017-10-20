@@ -38,18 +38,18 @@ namespace ngraph
             typename ET::type atol);
 
         extern template bool all_close<element::Float32>(
-            const std::vector<std::shared_ptr<
-                runtime::ParameterizedTensorView<element::Float32>>>& as,
-            const std::vector<std::shared_ptr<
-                runtime::ParameterizedTensorView<element::Float32>>>& bs,
+            const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<element::Float32>>>&
+                as,
+            const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<element::Float32>>>&
+                bs,
             element::Float32::type rtol,
             element::Float32::type atol);
 
         extern template bool all_close<element::Float64>(
-            const std::vector<std::shared_ptr<
-                runtime::ParameterizedTensorView<element::Float64>>>& as,
-            const std::vector<std::shared_ptr<
-                runtime::ParameterizedTensorView<element::Float64>>>& bs,
+            const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<element::Float64>>>&
+                as,
+            const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<element::Float64>>>&
+                bs,
             element::Float64::type rtol,
             element::Float64::type atol);
 
