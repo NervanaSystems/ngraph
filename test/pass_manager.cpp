@@ -24,6 +24,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
+#include "ngraph/util.hpp"
 #include "test_tools.hpp"
 
 using namespace ngraph;
@@ -38,7 +39,8 @@ TEST(pass_manager, add)
     pass_manager.register_pass<pass::AssignTensors>();
 
     auto graph = make_test_graph();
-    size_t node_count = get_node_count(graph->get_result());
+    size_t node_count = 0;
+    traverse_nodes(graph, [&](shared_ptr<Node> node) { node_count++; });
     pass_manager.run_passes(graph);
     auto sorted = graph->get_ordered_ops();
     EXPECT_EQ(node_count, sorted.size());
