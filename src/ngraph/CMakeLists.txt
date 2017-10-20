@@ -35,16 +35,21 @@ set (SRC
     ops/concatenate.cpp
     ops/constant.cpp
     ops/convert.cpp
+    ops/divide.cpp
     ops/dot.cpp
+    ops/exp.cpp
     ops/function_call.cpp
     ops/get_tuple_element.cpp
+    ops/log.cpp
     ops/multiply.cpp
+    ops/negative.cpp
     ops/op.cpp
     ops/parameter.cpp
     ops/reduce.cpp
     ops/reshape.cpp
     ops/select.cpp
     ops/slice.cpp
+    ops/subtract.cpp
     ops/sum.cpp
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
