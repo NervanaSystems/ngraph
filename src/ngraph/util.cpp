@@ -172,30 +172,7 @@ void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<N
     }
 }
 
-void ngraph::traverse_nodes(std::shared_ptr<ngraph::Node> p,
-                            std::function<void(shared_ptr<Node>)> f)
-{
-    std::unordered_set<shared_ptr<Node>> instances_seen;
-    deque<shared_ptr<Node>> stack;
-    stack.push_front(p);
-
-    while (stack.size() > 0)
-    {
-        shared_ptr<Node> n = stack.front();
-        if (instances_seen.find(n) == instances_seen.end())
-        {
-            instances_seen.insert(n);
-            f(n);
-        }
-        stack.pop_front();
-        for (auto arg : n->get_arguments())
-        {
-            stack.push_front(arg);
-        }
-    }
-}
-
-void ngraph::free_nodes(shared_ptr<Node> p)
+void ngraph::free_nodes(shared_ptr<Function> p)
 {
     std::deque<Node*> sorted_list;
 

@@ -136,7 +136,7 @@ TEST(benchmark, topological_sort)
     NGRAPH_INFO << "node count " << node_count;
 
     timer.start();
-    ngraph::free_nodes(f0->get_result());
+    ngraph::free_nodes(f0);
     timer.stop();
     NGRAPH_INFO << "delete nodes took " << timer.get_milliseconds() << "ms";
 }
