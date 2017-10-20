@@ -1053,20 +1053,38 @@ void ExternalFunction::compile(FunctionMap& function_map)
         for (const descriptor::Output& output : param->get_outputs())
         {
             auto tv = output.get_tensor_view();
-            size_t index = tensor_index.size();
+            size_t index = m_frame_size++;
             tensor_index[tv] = index;
         }
     }
-    m_n_inputs = tensor_index.size();
+    m_n_inputs = m_frame_size;
 
-    // Next are the function outputs
     for (const descriptor::Output& output : m_function->get_result()->get_outputs())
     {
         auto tv = output.get_tensor_view();
-        size_t index = tensor_index.size();
-        tensor_index[tv] = index;
+        size_t index = m_frame_size++;
+        auto prev_index_it = tensor_index.find(tv);
+        if (prev_index_it != tensor_index.end())
+        {
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(tv->get_value_type());
+            assert(nullptr != result_tensor_type);
+            auto& result_element_type = result_tensor_type->get_element_type();
+            auto ef = this;
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "Copy has unhandled element type",
+                                         eigen::CopyInstruction,
+                                         prev_index_it->second,
+                                         index);
+        }
+        else
+        {
+            tensor_index[tv] = index;
+        }
     }
-    m_n_outputs = tensor_index.size() - m_n_inputs;
+    m_n_outputs = m_frame_size - m_n_inputs;
+    vector<shared_ptr<Instruction>> input_output_copies;
+    swap(*m_instructions, input_output_copies);
 
     // All remaining tensor views
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
@@ -1076,7 +1094,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
             auto tv = output.get_tensor_view();
             if (0 == tensor_index.count(tv))
             {
-                size_t index = tensor_index.size();
+                size_t index = m_frame_size++;
                 tensor_index[tv] = index;
                 m_temp_views.push_back(tv);
             }
@@ -1109,6 +1127,8 @@ void ExternalFunction::compile(FunctionMap& function_map)
         }
         handler_it->second(node.get(), this, function_map, in, out);
     }
+    m_instructions->insert(
+        m_instructions->end(), input_output_copies.begin(), input_output_copies.end());
     m_instructions->push_back(make_shared<eigen::ReturnInstruction>());
     m_is_compiled = true;
     if (m_release_function)
@@ -1141,5 +1161,5 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame(Functio
 #undef M
     }
     return make_shared<ngraph::runtime::ngvm::CallFrame>(
-        m_n_inputs, m_n_outputs, temps, 0, m_instructions);
+        m_n_inputs, m_n_outputs, m_frame_size, temps, 0, m_instructions);
 }

@@ -20,6 +20,43 @@
 #include "ngraph/test/all_close.hpp"
 
 template <typename ET>
+bool ngraph::test::all_close(
+    const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>& as,
+    const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>& bs,
+    typename ET::type rtol,
+    typename ET::type atol)
+{
+    if (as.size() != bs.size())
+    {
+        return false;
+    }
+    for (size_t i = 0; i < as.size(); ++i)
+    {
+        if (!all_close(as[i], bs[i], rtol, atol))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+template bool ngraph::test::all_close<ngraph::element::Float32>(
+    const std::vector<
+        std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>>>& as,
+    const std::vector<
+        std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>>>& bs,
+    ngraph::element::Float32::type rtol,
+    ngraph::element::Float32::type atol);
+
+template bool ngraph::test::all_close<ngraph::element::Float64>(
+    const std::vector<
+        std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ngraph::element::Float64>>>& as,
+    const std::vector<
+        std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ngraph::element::Float64>>>& bs,
+    ngraph::element::Float64::type rtol,
+    ngraph::element::Float64::type atol);
+
+template <typename ET>
 bool ngraph::test::all_close(const std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>& a,
                              const std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>& b,
                              typename ET::type rtol,

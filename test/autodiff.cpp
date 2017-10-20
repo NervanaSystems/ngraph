@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <tuple>
 
@@ -28,9 +29,37 @@
 using namespace std;
 using namespace ngraph;
 
+template <typename ET>
+bool autodiff_numeric_compare(
+    const std::shared_ptr<runtime::Manager>& manager,
+    const std::shared_ptr<runtime::Backend>& backend,
+    std::function<std::shared_ptr<Function>()> make_graph,
+    const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>>& args,
+    typename ET::type rtol,
+    typename ET::type atol)
+{
+    auto results_num =
+        autodiff::numeric_derivative<element::Float32>(manager, backend, make_graph(), args, .001f);
+    auto results_sym =
+        autodiff::backprop_derivative<element::Float32>(manager, backend, make_graph(), args);
+    return test::all_close(results_num, results_sym, .01f, .01f);
+}
+
 TEST(backwards, parameter)
 {
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
     auto shape = Shape{2, 3};
+    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto make_graph = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(X0, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0});
+    };
+    EXPECT_TRUE(
+        autodiff_numeric_compare<element::Float32>(manager, backend, make_graph, {x0}, .01f, .01f));
+
     auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto Y = X0;
     auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -59,13 +88,7 @@ TEST(backwards, add)
         manager, backend, make_graph(), {x0, x1}, .001f);
     auto results_sym =
         autodiff::backprop_derivative<element::Float32>(manager, backend, make_graph(), {x0, x1});
-    for (size_t i = 0; i < results_num.size(); ++i)
-    {
-        auto result_num = results_num[i];
-        auto result_sym = results_sym[i];
-        bool ac = test::all_close(result_num, result_sym, .01f, .01f);
-        EXPECT_TRUE(ac);
-    }
+    EXPECT_TRUE(test::all_close(results_num, results_sym, .01f, .01f));
 }
 
 TEST(backwards, multiply)
@@ -84,16 +107,6 @@ TEST(backwards, multiply)
         return make_shared<Function>(
             X0 * X1, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-
-    auto results_num = autodiff::numeric_derivative<element::Float32>(
-        manager, backend, make_graph(), {x0, x1}, .001f);
-    auto results_sym =
-        autodiff::backprop_derivative<element::Float32>(manager, backend, make_graph(), {x0, x1});
-    for (size_t i = 0; i < results_num.size(); ++i)
-    {
-        auto result_num = results_num[i];
-        auto result_sym = results_sym[i];
-        bool ac = test::all_close(result_num, result_sym, .01f, .01f);
-        EXPECT_TRUE(ac);
-    }
+    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+        manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }

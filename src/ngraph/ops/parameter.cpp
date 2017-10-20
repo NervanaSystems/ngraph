@@ -32,3 +32,7 @@ Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& sha
 void Parameter::propagate_types()
 {
 }
+
+void Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+{
+}

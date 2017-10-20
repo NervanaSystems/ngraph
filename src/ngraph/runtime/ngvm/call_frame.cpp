@@ -22,13 +22,15 @@ using namespace ngraph::runtime::ngvm;
 
 CallFrame::CallFrame(size_t n_inputs,
                      size_t n_outputs,
+                     size_t frame_size,
                      const TensorViewPtrs& temps,
                      size_t initial_pc,
                      const shared_ptr<vector<shared_ptr<Instruction>>>& instructions)
 
     : m_n_inputs(n_inputs)
     , m_n_outputs(n_outputs)
-    , m_tensor_views(n_inputs + n_outputs + temps.size())
+    , m_frame_size(frame_size)
+    , m_tensor_views(m_frame_size)
     , m_initial_pc(initial_pc)
     , m_instructions(instructions)
 {

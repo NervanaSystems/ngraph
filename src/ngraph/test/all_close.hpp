@@ -15,6 +15,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "ngraph/runtime/parameterized_tensor_view.hpp"
 #include "ngraph/types/element_type.hpp"
@@ -23,6 +24,35 @@ namespace ngraph
 {
     namespace test
     {
+        /// @brief Same as numpy.allclose
+        /// @param as First tensors to compare
+        /// @param bs Second tensors to compare
+        /// @param rtol Relative tolerance
+        /// @param atol Absolute tolerance
+        /// Returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
+        template <typename ET>
+        bool all_close(
+            const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>& as,
+            const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>& bs,
+            typename ET::type rtol,
+            typename ET::type atol);
+
+        extern template bool ngraph::test::all_close<ngraph::element::Float32>(
+            const std::vector<std::shared_ptr<
+                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>>>& as,
+            const std::vector<std::shared_ptr<
+                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>>>& bs,
+            ngraph::element::Float32::type rtol,
+            ngraph::element::Float32::type atol);
+
+        extern template bool ngraph::test::all_close<ngraph::element::Float64>(
+            const std::vector<std::shared_ptr<
+                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float64>>>& as,
+            const std::vector<std::shared_ptr<
+                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float64>>>& bs,
+            ngraph::element::Float64::type rtol,
+            ngraph::element::Float64::type atol);
+
         /// @brief Same as numpy.allclose
         /// @param a First tensor to compare
         /// @param b Second tensor to compare

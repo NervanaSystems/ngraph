@@ -49,9 +49,7 @@ namespace ngraph
         {
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override
-            {
-            }
+                                           const std::shared_ptr<Node>& delta) override;
 
         public:
             /// \brief Constructions a parameter node.

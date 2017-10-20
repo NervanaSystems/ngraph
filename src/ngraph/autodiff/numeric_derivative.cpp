@@ -37,13 +37,16 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
     Shape y_shape =
         std::dynamic_pointer_cast<const TensorViewType>(y->get_value_type())->get_shape();
 
+    auto params = f->get_parameters();
+
     // Results for each derivative, shape Y|X_i
     std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>> results;
-    for (size_t i = 0; i < args.size(); i++)
+    for (auto param : params)
     {
         Shape s = y_shape;
-        auto arg_shape = args[i]->get_shape();
-        s.insert(s.end(), arg_shape.begin(), arg_shape.end());
+        auto param_shape =
+            std::dynamic_pointer_cast<const TensorViewType>(param->get_value_type())->get_shape();
+        s.insert(s.end(), param_shape.begin(), param_shape.end());
         results.push_back(backend->make_parameterized_tensor_view<ET>(s));
     }
 

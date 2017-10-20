@@ -38,6 +38,7 @@ namespace ngraph
                 CallFrame(
                     size_t n_inputs,
                     size_t n_outputs,
+                    size_t frame_size,
                     const TensorViewPtrs& temps,
                     size_t initial_pc,
                     const std::shared_ptr<std::vector<std::shared_ptr<Instruction>>>& instructions);
@@ -69,6 +70,7 @@ namespace ngraph
             protected:
                 size_t m_n_inputs;
                 size_t m_n_outputs;
+                size_t m_frame_size;
                 TensorViewPtrs m_tensor_views;
                 size_t m_initial_pc;
                 std::shared_ptr<std::vector<std::shared_ptr<Instruction>>> m_instructions;
