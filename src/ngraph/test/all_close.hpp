@@ -37,21 +37,21 @@ namespace ngraph
             typename ET::type rtol,
             typename ET::type atol);
 
-        extern template bool ngraph::test::all_close<ngraph::element::Float32>(
+        extern template bool all_close<element::Float32>(
             const std::vector<std::shared_ptr<
-                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>>>& as,
+                runtime::ParameterizedTensorView<element::Float32>>>& as,
             const std::vector<std::shared_ptr<
-                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>>>& bs,
-            ngraph::element::Float32::type rtol,
-            ngraph::element::Float32::type atol);
+                runtime::ParameterizedTensorView<element::Float32>>>& bs,
+            element::Float32::type rtol,
+            element::Float32::type atol);
 
-        extern template bool ngraph::test::all_close<ngraph::element::Float64>(
+        extern template bool all_close<element::Float64>(
             const std::vector<std::shared_ptr<
-                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float64>>>& as,
+                runtime::ParameterizedTensorView<element::Float64>>>& as,
             const std::vector<std::shared_ptr<
-                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float64>>>& bs,
-            ngraph::element::Float64::type rtol,
-            ngraph::element::Float64::type atol);
+                runtime::ParameterizedTensorView<element::Float64>>>& bs,
+            element::Float64::type rtol,
+            element::Float64::type atol);
 
         /// @brief Same as numpy.allclose
         /// @param a First tensor to compare

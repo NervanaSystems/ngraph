@@ -27,6 +27,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "ngraph/shape.hpp"
+
 namespace ngraph
 {
     namespace runtime
