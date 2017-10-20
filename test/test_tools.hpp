@@ -25,4 +25,3 @@ namespace ngraph
 
 bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
-size_t get_node_count(std::shared_ptr<ngraph::Node> n);

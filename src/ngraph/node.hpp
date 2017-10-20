@@ -116,7 +116,6 @@ namespace ngraph
 
         std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
                                             const std::shared_ptr<Node>& c);
-        bool m_assign_tensors_is_done{false};
 
     protected:
         Nodes m_arguments;
