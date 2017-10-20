@@ -79,9 +79,30 @@ shared_ptr<Function> make_test_graph()
     return f0;
 }
 
-size_t get_node_count(std::shared_ptr<Node> n)
+size_t get_node_count(std::shared_ptr<Node> node)
 {
     size_t node_count = 0;
-    traverse_nodes(n, [&](shared_ptr<Node> node) { node_count++; });
+
+    unordered_set<shared_ptr<Node>> instances_seen;
+    deque<shared_ptr<Node>> stack;
+
+    stack.push_back(node);
+
+    while (stack.size() > 0)
+    {
+        shared_ptr<Node> n = stack.front();
+        if (instances_seen.find(n) == instances_seen.end())
+        {
+            instances_seen.insert(n);
+            stack.push_back(n);
+            node_count++;
+        }
+        stack.pop_front();
+        for (auto arg : n->get_arguments())
+        {
+            stack.push_front(arg);
+        }
+    }
+
     return node_count;
 }

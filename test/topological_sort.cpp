@@ -75,7 +75,8 @@ TEST(topological_sort, basic)
     pass_manager.run_passes(f0);
     auto sorted_list = f0->get_ordered_ops();
 
-    size_t node_count = get_node_count(r0);
+    size_t node_count = 0;
+    traverse_nodes(f0, [&](shared_ptr<Node>) { node_count++; });
 
     EXPECT_EQ(node_count, sorted_list.size());
     EXPECT_TRUE(validate_list(sorted_list));
@@ -130,12 +131,12 @@ TEST(benchmark, topological_sort)
     NGRAPH_INFO << "topological sort took " << timer.get_milliseconds() << "ms";
 
     size_t node_count = 0;
-    traverse_nodes(result, [&](shared_ptr<Node> node) { node_count++; });
+    traverse_nodes(f0, [&](shared_ptr<Node> node) { node_count++; });
 
     NGRAPH_INFO << "node count " << node_count;
 
     timer.start();
-    ngraph::free_nodes(result);
+    ngraph::free_nodes(f0->get_result());
     timer.stop();
     NGRAPH_INFO << "delete nodes took " << timer.get_milliseconds() << "ms";
 }
