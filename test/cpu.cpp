@@ -293,8 +293,7 @@ TEST(cpu, concat_matrix_colwise)
               result->get_vector());
 }
 
-/*
-TEST(execute, concat_matrix_rowwise)
+TEST(cpu, concat_matrix_rowwise)
 {
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -307,7 +306,7 @@ TEST(execute, concat_matrix_rowwise)
     auto f = make_shared<Function>(
         make_shared<op::Concat>(Nodes{A, B, C}, 0), rt, op::Parameters{A, B, C});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -326,7 +325,7 @@ TEST(execute, concat_matrix_rowwise)
               result->get_vector());
 }
 
-TEST(execute, concat_matrix_int64)
+TEST(cpu, concat_matrix_int64)
 {
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Int64::element_type(), shape_a);
@@ -339,7 +338,7 @@ TEST(execute, concat_matrix_int64)
     auto f = make_shared<Function>(
         make_shared<op::Concat>(Nodes{A, B, C}, 0), rt, op::Parameters{A, B, C});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -358,7 +357,7 @@ TEST(execute, concat_matrix_int64)
               result->get_vector());
 }
 
-TEST(execute, concat_vector)
+TEST(cpu, concat_vector)
 {
     auto shape_a = Shape{4};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -371,7 +370,7 @@ TEST(execute, concat_vector)
     auto f = make_shared<Function>(
         make_shared<op::Concat>(Nodes{A, B, C}, 0), rt, op::Parameters{A, B, C});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -389,6 +388,7 @@ TEST(execute, concat_vector)
     ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), result->get_vector());
 }
 
+/*
 TEST(execute, divide)
 {
     auto manager = runtime::Manager::get("NGVM");

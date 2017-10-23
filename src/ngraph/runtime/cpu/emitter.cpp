@@ -195,7 +195,7 @@ void Emitter::EMITTER_DECL(EmitConcat)
                   to_string(inputs[i].get_tensor_view_layout()->get_shape().at(0)) + ") << "
                   "EigenVector<" + element_type_names[TI(result_element_type)] + ">(call_frame->"
                   "get_tensor_view_data<" + element_type_names[TI(result_element_type)] + ">(" +
-                  to_string(outputs[0].get_index()) + "), "
+                  to_string(inputs[i].get_index()) + "), "
                   EIGEN_VECTOR_FORMAT(inputs[i].get_layout<DenseTensorViewLayout>()->get_size()) ");\n";
             concat_pos += inputs[i].get_tensor_view_layout()->get_shape().at(0);
         }
@@ -204,15 +204,6 @@ void Emitter::EMITTER_DECL(EmitConcat)
     }
     else if (result_shape.size() == 2)
     {
-        /*
-        PUSH_POLYMORPHIC_INSTRUCTION(
-            result_element_type,
-            "Concat has unhandled element type",
-            eigen::ConcatMatrixInstruction,
-            in,
-            (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis(),
-            out[0]);
-        */
         auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
         auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
 
