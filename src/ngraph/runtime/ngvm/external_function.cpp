@@ -24,11 +24,16 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/abs.hpp"
+#include "ngraph/ops/acos.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/asin.hpp"
+#include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
+#include "ngraph/ops/cos.hpp"
+#include "ngraph/ops/cosh.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/equal.hpp"
@@ -47,15 +52,24 @@
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
+#include "ngraph/ops/sign.hpp"
+#include "ngraph/ops/sin.hpp"
+#include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/subtract.hpp"
+#include "ngraph/ops/sum.hpp"
+#include "ngraph/ops/tan.hpp"
+#include "ngraph/ops/tanh.hpp"
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/ngvm/eigen/abs.hpp"
+#include "ngraph/runtime/ngvm/eigen/acos.hpp"
 #include "ngraph/runtime/ngvm/eigen/add.hpp"
+#include "ngraph/runtime/ngvm/eigen/asin.hpp"
+#include "ngraph/runtime/ngvm/eigen/atan.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_scalar.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_vector_colwise.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_vector_rowwise.hpp"
@@ -65,6 +79,8 @@
 #include "ngraph/runtime/ngvm/eigen/constant.hpp"
 #include "ngraph/runtime/ngvm/eigen/convert.hpp"
 #include "ngraph/runtime/ngvm/eigen/copy.hpp"
+#include "ngraph/runtime/ngvm/eigen/cos.hpp"
+#include "ngraph/runtime/ngvm/eigen/cosh.hpp"
 #include "ngraph/runtime/ngvm/eigen/divide.hpp"
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
 #include "ngraph/runtime/ngvm/eigen/equal.hpp"
@@ -88,7 +104,15 @@
 #include "ngraph/runtime/ngvm/eigen/return.hpp"
 #include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/eigen/select.hpp"
+#include "ngraph/runtime/ngvm/eigen/sign.hpp"
+#include "ngraph/runtime/ngvm/eigen/sin.hpp"
+#include "ngraph/runtime/ngvm/eigen/sinh.hpp"
 #include "ngraph/runtime/ngvm/eigen/subtract.hpp"
+#include "ngraph/runtime/ngvm/eigen/sum_matrix_columns.hpp"
+#include "ngraph/runtime/ngvm/eigen/sum_matrix_rows.hpp"
+#include "ngraph/runtime/ngvm/eigen/sum_to_scalar.hpp"
+#include "ngraph/runtime/ngvm/eigen/tan.hpp"
+#include "ngraph/runtime/ngvm/eigen/tanh.hpp"
 #include "ngraph/runtime/ngvm/eigen/vector_slice.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
@@ -297,15 +321,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 #define REGISTER_CONSTANT_INSTRUCTIONS(T)                                                          \
     {                                                                                              \
         REGISTER_INSTRUCTION(                                                                      \
-            op::ScalarConstant<T>,                                                                 \
-            eigen::ConstantInstruction<T>,                                                         \
-            std::vector<T::type>{dynamic_cast<const op::ScalarConstant<T>*>(n)->get_value()},      \
-            out[0]);                                                                               \
-        REGISTER_INSTRUCTION(                                                                      \
-            op::TensorConstant<T>,                                                                 \
+            op::ParameterizedConstant<T>,                                                          \
             eigen::ConstantInstruction<T>,                                                         \
             std::vector<T::type>{                                                                  \
-                dynamic_cast<const op::TensorConstant<T>*>(n)->get_value()->get_vector()},         \
+                dynamic_cast<const op::ParameterizedConstant<T>*>(n)->get_value()->get_vector()},  \
             out[0]);                                                                               \
     }
 
@@ -328,9 +347,19 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
     static OpMap op_map;
     if (!initialized)
     {
+        REGISTER_NUMERIC_UNOP(op::Acos, eigen::AcosInstruction);
+        REGISTER_NUMERIC_UNOP(op::Asin, eigen::AsinInstruction);
+        REGISTER_NUMERIC_UNOP(op::Atan, eigen::AtanInstruction);
+        REGISTER_NUMERIC_UNOP(op::Cos, eigen::CosInstruction);
+        REGISTER_NUMERIC_UNOP(op::Cosh, eigen::CoshInstruction);
         REGISTER_NUMERIC_UNOP(op::Exp, eigen::ExpInstruction);
         REGISTER_NUMERIC_UNOP(op::Log, eigen::LogInstruction);
         REGISTER_NUMERIC_UNOP(op::Negative, eigen::NegateInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sign, eigen::SignInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sin, eigen::SinInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sinh, eigen::SinhInstruction);
+        REGISTER_NUMERIC_UNOP(op::Tan, eigen::TanInstruction);
+        REGISTER_NUMERIC_UNOP(op::Tanh, eigen::TanhInstruction);
 
         REGISTER_SIGNED_NUMERIC_UNOP(op::Abs, eigen::AbsInstruction);
 
@@ -343,6 +372,23 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_NUMERIC_BINOP(op::Maximum, eigen::MaximumInstruction);
         REGISTER_NUMERIC_BINOP(op::Multiply, eigen::MultiplyInstruction);
         REGISTER_NUMERIC_BINOP(op::Subtract, eigen::SubtractInstruction);
+
+        REGISTER_TO_OP_MAP(op::Constant)
+        {
+            auto c = static_cast<const op::Constant*>(n);
+            auto c_tensor_type = dynamic_pointer_cast<const TensorViewType>(c->get_value_type());
+            assert(nullptr != c_tensor_type);
+            auto& c_element_type = c_tensor_type->get_element_type();
+            auto c_value_strings = c->get_value_strings();
+
+#define M_REGISTER_POLYMORPHIC_CONSTANT(ET)                                                        \
+    ef->get_instructions()->push_back(                                                             \
+        make_shared<eigen::ConstantInstruction<ET>>(ET::read(c_value_strings), out[0]));
+
+            DO_ON_ELEMENT_TYPE(c_element_type,
+                               "Constant has unhandled element type",
+                               M_REGISTER_POLYMORPHIC_CONSTANT);
+        };
 
         REGISTER_POLYMORPHIC_BINOP(op::Equal, eigen::EqualInstruction);
         REGISTER_POLYMORPHIC_BINOP(op::NotEqual, eigen::NotEqualInstruction);
@@ -785,6 +831,65 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
         };
 
+        REGISTER_TO_OP_MAP(op::Sum)
+        {
+            auto s = static_cast<const op::Sum*>(n);
+            auto s_tensor_view_type =
+                dynamic_pointer_cast<const TensorViewType>(s->get_value_type());
+            assert(nullptr != s_tensor_view_type);
+            auto& s_element_type = s_tensor_view_type->get_element_type();
+            auto s_shape = s_tensor_view_type->get_shape();
+
+            auto arg = s->get_arguments().at(0);
+            auto arg_type = arg->get_value_type();
+            auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
+            assert(nullptr != arg_tensor_view_type);
+            auto arg_shape = arg_tensor_view_type->get_shape();
+            auto arg_rank = arg_shape.size();
+
+            auto& reduction_axes = s->get_reduction_axes();
+
+            // Trivial case: no reduction axes.
+            if (reduction_axes.size() == 0)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
+                                             "Sum has unhandled element type",
+                                             runtime::ngvm::eigen::CopyInstruction,
+                                             in.at(0).get_index(),
+                                             out.at(0).get_index());
+            }
+            // Full reduction? Then sum to scalar.
+            else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
+                     (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
+                                             "Sum has unhandled element type",
+                                             runtime::ngvm::eigen::SumToScalarInstruction,
+                                             in[0],
+                                             out[0]);
+            }
+            else if (arg_rank == 2 && reduction_axes == AxisSet{1})
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
+                                             "Sum has unhandled element type",
+                                             runtime::ngvm::eigen::SumMatrixRowsInstruction,
+                                             in[0],
+                                             out[0]);
+            }
+            else if (arg_rank == 2 && reduction_axes == AxisSet{0})
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
+                                             "Sum has unhandled element type",
+                                             runtime::ngvm::eigen::SumMatrixColumnsInstruction,
+                                             in[0],
+                                             out[0]);
+            }
+            else
+            {
+                throw ngraph_error("Sum: only vectors and matrices are currently supported");
+            }
+        };
+
         REGISTER_TO_OP_MAP(op::Reshape)
         {
             auto reshape = static_cast<const op::Reshape*>(n);
@@ -922,7 +1027,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
     // Turn this into a pass
     // Assign layouts
     // For now, just make everyone row-major.
-    for (const Node* node : m_function->get_ordered_ops())
+    for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
         for (const descriptor::Output& output : node->get_outputs())
         {
@@ -943,30 +1048,48 @@ void ExternalFunction::compile(FunctionMap& function_map)
         for (const descriptor::Output& output : param->get_outputs())
         {
             auto tv = output.get_tensor_view();
-            size_t index = tensor_index.size();
+            size_t index = m_frame_size++;
             tensor_index[tv] = index;
         }
     }
-    m_n_inputs = tensor_index.size();
+    m_n_inputs = m_frame_size;
 
-    // Next are the function outputs
     for (const descriptor::Output& output : m_function->get_result()->get_outputs())
     {
         auto tv = output.get_tensor_view();
-        size_t index = tensor_index.size();
-        tensor_index[tv] = index;
+        size_t index = m_frame_size++;
+        auto prev_index_it = tensor_index.find(tv);
+        if (prev_index_it != tensor_index.end())
+        {
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(tv->get_value_type());
+            assert(nullptr != result_tensor_type);
+            auto& result_element_type = result_tensor_type->get_element_type();
+            auto ef = this;
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "Copy has unhandled element type",
+                                         eigen::CopyInstruction,
+                                         prev_index_it->second,
+                                         index);
+        }
+        else
+        {
+            tensor_index[tv] = index;
+        }
     }
-    m_n_outputs = tensor_index.size() - m_n_inputs;
+    m_n_outputs = m_frame_size - m_n_inputs;
+    vector<shared_ptr<Instruction>> input_output_copies;
+    swap(*m_instructions, input_output_copies);
 
     // All remaining tensor views
-    for (const Node* node : m_function->get_ordered_ops())
+    for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
         for (const descriptor::Output& output : node->get_outputs())
         {
             auto tv = output.get_tensor_view();
             if (0 == tensor_index.count(tv))
             {
-                size_t index = tensor_index.size();
+                size_t index = m_frame_size++;
                 tensor_index[tv] = index;
                 m_temp_views.push_back(tv);
             }
@@ -975,9 +1098,11 @@ void ExternalFunction::compile(FunctionMap& function_map)
 
     // Now we build the eigen-VM instructions
     auto op_map = get_op_map();
-    for (const Node* node : m_function->get_ordered_ops())
+    for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
-        auto handler_it = op_map.find(type_index(typeid(*node)));
+        auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
+                         // with shared pointers, which is fine here but clang doesn't like it.)
+        auto handler_it = op_map.find(type_index(typeid(n)));
         if (handler_it == op_map.end())
         {
             throw ngraph_error("Unhandled op during code generation");
@@ -995,8 +1120,10 @@ void ExternalFunction::compile(FunctionMap& function_map)
             auto tv = output.get_tensor_view();
             out.push_back({tensor_index.at(tv), tv});
         }
-        handler_it->second(node, this, function_map, in, out);
+        handler_it->second(node.get(), this, function_map, in, out);
     }
+    m_instructions->insert(
+        m_instructions->end(), input_output_copies.begin(), input_output_copies.end());
     m_instructions->push_back(make_shared<eigen::ReturnInstruction>());
     m_is_compiled = true;
     if (m_release_function)
@@ -1029,5 +1156,5 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame(Functio
 #undef M
     }
     return make_shared<ngraph::runtime::ngvm::CallFrame>(
-        m_n_inputs, m_n_outputs, temps, 0, m_instructions);
+        m_n_inputs, m_n_outputs, m_frame_size, temps, 0, m_instructions);
 }

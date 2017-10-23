@@ -20,14 +20,41 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Elementwise addition operation.
+        ///
+        /// ## Inputs
+        ///
+        /// |        | Type                              | Description                                            |
+        /// | ------ | --------------------------------- | ------------------------------------------------------ |
+        /// | `arg0` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type.        |
+        /// | `arg1` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of the same shape and element type as `arg0`. |
+        ///
+        /// ## Output
+        ///
+        /// | Type                   | Description                                                                                                    |
+        /// | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
+        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg0}[i_1,\dots,i_n] + \texttt{arg1}[i_1,\dots,i_n]\f$ |
+        ///
+        /// ## Implementation Status
+        ///
+        /// | Backend | Status             |
+        /// | ------- | ------------------ |
+        /// | NGVM    | Fully implemented. |
         class Add : public BinaryElementwiseArithmetic
         {
         public:
+            /// \brief Constructs an addition operation.
+            ///
+            /// \param arg0 Node that produces the first input tensor.
+            /// \param arg1 Node that produces the second input tensor.
             Add(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
                 : BinaryElementwiseArithmetic(arg0, arg1)
             {
             }
             virtual std::string description() const override { return "Add"; }
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
         };
     }
 

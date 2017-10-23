@@ -23,7 +23,7 @@ using namespace ngraph;
 
 // This function traverses the list of ops and verifies that each op's dependencies (its inputs)
 // is located earlier in the list. That is enough to be valid
-bool validate_list(const list<Node*>& nodes)
+bool validate_list(const list<shared_ptr<Node>>& nodes)
 {
     bool rc = true;
     for (auto it = nodes.rbegin(); it != nodes.rend(); it++)
@@ -39,7 +39,7 @@ bool validate_list(const list<Node*>& nodes)
         for (; tmp != nodes.rend(); tmp++)
         {
             auto dep_tmp = *tmp;
-            auto found = find(dependencies.begin(), dependencies.end(), dep_tmp);
+            auto found = find(dependencies.begin(), dependencies.end(), dep_tmp.get());
             if (found != dependencies.end())
             {
                 dependencies.erase(found);
@@ -77,11 +77,4 @@ shared_ptr<Function> make_test_graph()
         make_shared<Function>(r0, rt, op::Parameters{arg_0, arg_1, arg_2, arg_3, arg_4, arg_5});
 
     return f0;
-}
-
-size_t get_node_count(std::shared_ptr<Node> n)
-{
-    size_t node_count = 0;
-    traverse_nodes(n, [&](const Node* node) { node_count++; });
-    return node_count;
 }

@@ -24,22 +24,22 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::pass;
 
-bool CollectFunctions::run_on_function(ngraph::Function* func)
+bool CollectFunctions::run_on_function(shared_ptr<ngraph::Function> func)
 {
-    set<Function*> functions;
-    deque<Function*> stack;
+    set<shared_ptr<ngraph::Function>> functions;
+    deque<shared_ptr<ngraph::Function>> stack;
     stack.push_back(func);
 
     while (stack.empty() == false)
     {
-        Function* f = stack.front();
+        shared_ptr<ngraph::Function> f = stack.front();
         stack.pop_front();
         functions.insert(f);
-        traverse_nodes(f->get_result(), [&](Node* node) {
-            op::FunctionCall* fc = dynamic_cast<op::FunctionCall*>(node);
+        traverse_nodes(f, [&](shared_ptr<Node> node) {
+            shared_ptr<op::FunctionCall> fc = dynamic_pointer_cast<op::FunctionCall>(node);
             if (fc)
             {
-                stack.push_back(fc->get_function().get());
+                stack.push_back(fc->get_function());
             }
         });
     }

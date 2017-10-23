@@ -23,15 +23,15 @@
 using namespace ngraph;
 using namespace std;
 
-bool pass::VisualizeTree::run_on_module(vector<ngraph::Function*>& functions)
+bool pass::VisualizeTree::run_on_module(vector<shared_ptr<ngraph::Function>>& functions)
 {
-    for (Function* f : functions)
+    for (shared_ptr<Function> f : functions)
     {
         // map<size_t, list<node_ptr>> dependent_nodes;
-        traverse_nodes(f->get_result(), [&](Node* node) {
+        traverse_nodes(f, [&](shared_ptr<Node> node) {
             for (auto arg : node->get_arguments())
             {
-                m_ss << add_attributes(arg.get());
+                m_ss << add_attributes(arg);
                 m_ss << add_attributes(node);
                 m_ss << "    " << arg->get_name() << " -> " << node->get_name();
                 m_ss << ";\n";
@@ -49,7 +49,7 @@ pass::VisualizeTree::VisualizeTree(const string& file_name)
 {
 }
 
-std::string pass::VisualizeTree::add_attributes(const Node* node)
+std::string pass::VisualizeTree::add_attributes(shared_ptr<Node> node)
 {
     string rc;
     if (!contains(m_nodes_with_attributes, node))
@@ -60,7 +60,7 @@ std::string pass::VisualizeTree::add_attributes(const Node* node)
     return rc;
 }
 
-std::string pass::VisualizeTree::get_attributes(const Node* node)
+std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
 {
     stringstream ss;
     if (node->is_parameter())

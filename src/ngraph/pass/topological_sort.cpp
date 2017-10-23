@@ -25,24 +25,26 @@
 using namespace ngraph;
 using namespace std;
 
-bool ngraph::pass::TopologicalSort::run_on_function(ngraph::Function* func)
+bool ngraph::pass::TopologicalSort::run_on_function(shared_ptr<ngraph::Function> func)
 {
-    list<Node*> result_list;
+    list<shared_ptr<Node>> result_list;
     deque<Node*> independent_nodes;
-    unordered_map<Node*, size_t> node_depencency_count;
+    unordered_map<const Node*, size_t> node_depencency_count;
+    unordered_map<Node*, shared_ptr<Node>> node_map;
 
-    traverse_nodes(func->get_result(), [&](Node* node) {
-        node_depencency_count[node] = node->get_arguments().size();
+    traverse_nodes(func, [&](shared_ptr<Node> node) {
+        node_map[node.get()] = node;
+        node_depencency_count[node.get()] = node->get_arguments().size();
         if (node->get_arguments().size() == 0)
         {
-            independent_nodes.push_back(node);
+            independent_nodes.push_back(node.get());
         }
     });
 
     while (independent_nodes.size() > 0)
     {
         auto independent_node = independent_nodes.front();
-        result_list.push_back(independent_node);
+        result_list.push_back(node_map[independent_node]);
         independent_nodes.pop_front();
 
         for (auto user : independent_node->users())

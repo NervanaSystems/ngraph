@@ -12,6 +12,10 @@
 # limitations under the License.
 
 set (SRC
+    autodiff/adjoints.cpp
+    autodiff/backprop_derivative.cpp
+    autodiff/backprop_function.cpp
+    autodiff/numeric_derivative.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
     descriptor/layout/tensor_view_layout.cpp
@@ -23,6 +27,7 @@ set (SRC
     function.cpp
     log.cpp
     node.cpp
+    ops/add.cpp
     ops/binary_elementwise_arithmetic.cpp
     ops/binary_elementwise_builtin.cpp
     ops/binary_elementwise_comparison.cpp
@@ -30,15 +35,22 @@ set (SRC
     ops/concatenate.cpp
     ops/constant.cpp
     ops/convert.cpp
+    ops/divide.cpp
     ops/dot.cpp
+    ops/exp.cpp
     ops/function_call.cpp
     ops/get_tuple_element.cpp
+    ops/log.cpp
+    ops/multiply.cpp
+    ops/negative.cpp
     ops/op.cpp
     ops/parameter.cpp
     ops/reduce.cpp
     ops/reshape.cpp
     ops/select.cpp
     ops/slice.cpp
+    ops/subtract.cpp
+    ops/sum.cpp
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise_builtin.cpp
@@ -63,6 +75,7 @@ set (SRC
     runtime/tensor_view.cpp
     runtime/tuple.cpp
     runtime/utils.cpp
+    test/all_close.cpp
     shape.cpp
     types/element_type.cpp
     types/type.cpp

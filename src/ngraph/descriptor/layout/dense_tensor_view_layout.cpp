@@ -44,3 +44,21 @@ size_t DenseTensorViewLayout::get_index_offset(const std::vector<size_t>& indice
     }
     return result;
 }
+
+bool DenseTensorViewLayout::operator==(const TensorViewLayout& other) const
+{
+    const DenseTensorViewLayout* p_other = dynamic_cast<const DenseTensorViewLayout*>(&other);
+    if (nullptr == p_other)
+        return false;
+
+    if (get_element_type() != p_other->get_element_type())
+        return false;
+
+    if (m_strides != p_other->m_strides)
+        return false;
+
+    if (m_offset != p_other->m_offset)
+        return false;
+
+    return true;
+}

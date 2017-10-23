@@ -21,9 +21,13 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/collect_functions.hpp"
+#include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/util.hpp"
 #include "test_tools.hpp"
 
@@ -71,7 +75,8 @@ TEST(topological_sort, basic)
     pass_manager.run_passes(f0);
     auto sorted_list = f0->get_ordered_ops();
 
-    size_t node_count = get_node_count(r0);
+    size_t node_count = 0;
+    traverse_nodes(f0, [&](shared_ptr<Node>) { node_count++; });
 
     EXPECT_EQ(node_count, sorted_list.size());
     EXPECT_TRUE(validate_list(sorted_list));
@@ -126,15 +131,16 @@ TEST(benchmark, topological_sort)
     NGRAPH_INFO << "topological sort took " << timer.get_milliseconds() << "ms";
 
     size_t node_count = 0;
-    traverse_nodes(result, [&](const Node* node) { node_count++; });
+    traverse_nodes(f0, [&](shared_ptr<Node> node) { node_count++; });
 
     NGRAPH_INFO << "node count " << node_count;
 
     timer.start();
-    ngraph::free_nodes(result);
+    ngraph::free_nodes(f0);
     timer.stop();
     NGRAPH_INFO << "delete nodes took " << timer.get_milliseconds() << "ms";
 }
+
 TEST(topological_sort, collect_functions)
 {
     // First create "f(A,B,C) = (A+B)*C".
@@ -174,7 +180,7 @@ TEST(topological_sort, collect_functions)
     set<string> expected = {"f", "g", "h"};
     auto functions = pass_manager.get_state().get_functions();
     vector<string> fnames;
-    for (Function* func : functions)
+    for (shared_ptr<Function> func : functions)
     {
         fnames.push_back(func->get_name());
     }
@@ -182,4 +188,27 @@ TEST(topological_sort, collect_functions)
     EXPECT_TRUE(contains(fnames, "f"));
     EXPECT_TRUE(contains(fnames, "g"));
     EXPECT_TRUE(contains(fnames, "h"));
+}
+
+TEST(topological_sort, unused_function_arg)
+{
+    // Create a function with an unused argument
+    // B is unused in the function but must be in the graph
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt_f = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto result = A + C + C;
+    auto f = make_shared<Function>(result, rt_f, op::Parameters{A, B, C}, "f");
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::TopologicalSort>();
+    pass_manager.register_pass<pass::PropagateTypes>();
+    pass_manager.register_pass<pass::AssignTensors>();
+    // pass_manager.register_pass<pass::DumpSorted>("sorted.txt");
+    pass_manager.run_passes(f);
+    list<shared_ptr<Node>> ops = f->get_ordered_ops();
+
+    EXPECT_EQ(5, ops.size());
 }

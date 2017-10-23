@@ -20,18 +20,54 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Concatenation operation.
+        ///
+        /// Given an axis index \f$a\f$ and a rank \f$r \geq 1\f$ where \f$0 \leq a \lt r\f$, and one or more \f$r\f$-tensors
+        /// with the same element type whose shapes are the same except possibly at axis \f$a\f$, the tensors are
+        /// concatenated along axis \f$a\f$.
+        ///
+        /// For example:
+        ///   1. Concatenating matrices on axis 0 (the row axis) stacks the matrices from top to bottom.
+        ///      The number of rows in the resulting matrix is the sum of the number of rows for each
+        ///      input matrix.
+        ///   2. Concatenating matrices on axis 1 (the column axis) concatenates them from left to right.
+        ///      The number of columns in the resulting matrix is the sum of the number of columns for each
+        ///      input matrix.
+        ///   3. Concatenating 3-tensors on axis 2 (the depth axis) stacks them from front to back.
+        ///      The depth of the resulting tensor is the sum of the total depth for each input tensor.
+        ///
+        /// The resulting tensor will have the same rank as the input tensors.
+        ///
+        /// ## Parameters
+        ///
+        /// |                      | Description                                                    |
+        /// | -------------------- | -------------------------------------------------------------- |
+        /// | `concatenation_axis` | The axis \f$a\f$ along which to concatenate the input tensors. |
+        ///
+        /// ## Inputs
+        ///
+        /// |                 | Type                                                          | Description                                                                                                              |
+        /// | --------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+        /// | `args`[\f$i\f$] | \f$E[d_1,\dots,d_{a-1},d^i_a,d_{a+1},\dots,d_n]~(n \geq 1)\f$ | One or more input tensors, all of which have the same element type, and the same shape, except possibly at axis \f$a\f$. |
+        ///
+        /// ## Output
+        ///
+        /// | Type                                                         | Description                                                                                     |
+        /// | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+        /// | \f$E[d_1,\dots,d_{a-1},\Sigma_i(d^i_a),d_{a+1},\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T\f$ is the concatenation of the input tensors along axis \f$a\f$. |
+        ///
+        /// ## Implementation Status
+        ///
+        /// | Backend | Status                                |
+        /// | ------- | ------------------------------------- |
+        /// | NGVM    | Implemented for vectors and matrices. |
         class Concat : public Builtin
         {
         public:
-            /// Concatenates one or more tensors.
+            /// \brief Constructs a concatenation operation.
             ///
-            /// All tensors must have the same rank, and the sizes of the axes must match
-            /// everywhere except at the concatenation axis. The size of the concatenation
-            /// axis on the output is the sum of its size on all inputs; the size of other
-            /// axes is unchanged from the input tensors.
-            ///
-            /// Example: n0 has shape {2,4,2}, and n1 has shape {2,5,2}. Then the output of
-            ///          Concat(Nodes{n0,n1},1) will have shape {2,9,2}.
+            /// \param args               The nodes producing the input tensors.
+            /// \param concatenation_axis The axis along which to concatenate the input tensors.
             Concat(const Nodes& args, size_t concatenation_axis)
                 : Builtin(args)
                 , m_concatenation_axis(concatenation_axis)
@@ -41,6 +77,7 @@ namespace ngraph
             virtual std::string description() const override { return "Concatenate"; }
             virtual void propagate_types() override;
 
+            /// \return The concatenation axis.
             size_t get_concatenation_axis() const { return m_concatenation_axis; }
         protected:
             const size_t m_concatenation_axis;

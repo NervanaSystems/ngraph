@@ -19,10 +19,8 @@
 using namespace std;
 using namespace ngraph::op;
 
-Parameter::Parameter(const std::shared_ptr<ValueType>& value_type)
+Parameter::Parameter(const std::shared_ptr<const ValueType>& value_type)
     : Node(value_type)
-    , m_function(nullptr)
-    , m_index(0)
 {
 }
 
@@ -31,16 +29,10 @@ Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& sha
 {
 }
 
-void Parameter::assign_function(Function* function, size_t index)
+void Parameter::propagate_types()
 {
-    if (nullptr != m_function)
-    {
-        throw ngraph_error("Re-assigning function to a parameter.");
-    }
-    m_function = function;
-    m_index = index;
 }
 
-void Parameter::propagate_types()
+void Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {
 }

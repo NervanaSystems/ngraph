@@ -18,6 +18,7 @@
 #include <map>
 #include <unordered_set>
 
+#include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/util.hpp"
@@ -137,15 +138,27 @@ size_t ngraph::hash_combine(const std::vector<size_t>& list)
     return seed;
 }
 
-void ngraph::traverse_nodes(const std::shared_ptr<ngraph::Node>& p, std::function<void(Node*)> f)
+void ngraph::traverse_nodes(std::shared_ptr<ngraph::Function> p,
+                            std::function<void(shared_ptr<Node>)> f)
 {
-    std::unordered_set<Node*> instances_seen;
-    deque<Node*> stack;
-    stack.push_front(p.get());
+    traverse_nodes(p.get(), f);
+}
+
+void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<Node>)> f)
+
+{
+    std::unordered_set<shared_ptr<Node>> instances_seen;
+    deque<shared_ptr<Node>> stack;
+
+    stack.push_front(p->get_result());
+    for (auto param : p->get_parameters())
+    {
+        stack.push_front(param);
+    }
 
     while (stack.size() > 0)
     {
-        Node* n = stack.front();
+        shared_ptr<Node> n = stack.front();
         if (instances_seen.find(n) == instances_seen.end())
         {
             instances_seen.insert(n);
@@ -154,16 +167,16 @@ void ngraph::traverse_nodes(const std::shared_ptr<ngraph::Node>& p, std::functio
         stack.pop_front();
         for (auto arg : n->get_arguments())
         {
-            stack.push_front(arg.get());
+            stack.push_front(arg);
         }
     }
 }
 
-void ngraph::free_nodes(shared_ptr<Node> p)
+void ngraph::free_nodes(shared_ptr<Function> p)
 {
     std::deque<Node*> sorted_list;
 
-    traverse_nodes(p, [&](Node* n) { sorted_list.push_front(n); });
+    traverse_nodes(p, [&](shared_ptr<Node> n) { sorted_list.push_front(n.get()); });
 
     for (Node* n : sorted_list)
     {

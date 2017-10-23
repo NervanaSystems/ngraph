@@ -24,11 +24,18 @@ namespace ngraph
 {
     namespace op
     {
-        // Defines methods to all constant scalars
-        class ScalarConstantBase : public Node
+        /// \brief Abstract base class for constants.
+        ///
+        /// There are two subclasses: ParameterizedConstant and Constant. ParameterizedConstant allows constant values to be supplied via vectors of the corresponding C++ type;
+        /// however, the ParameterizedConstant subclass can only be used when type information is available at C++ compile-time. In cases where types are not known until
+        /// C++ runtime, the Constant subclass must be used instead.
+        class ConstantBase : public Node
         {
         protected:
-            ScalarConstantBase(const std::shared_ptr<TensorViewType>& type)
+            /// \brief Constructs a constant base-type node.
+            ///
+            /// \param type The TensorViewType for the constant.
+            ConstantBase(const std::shared_ptr<TensorViewType>& type)
                 : Node({}, type)
             {
             }
@@ -36,24 +43,52 @@ namespace ngraph
             virtual void propagate_types() override;
         };
 
-        // Implement a constant scalar for each element type.
-        // The static make method takes a
+        /// \brief Class for constants whose element types are known at C++ compile-time.
+        ///
+        /// \tparam T The ngraph::element::Type of the tensor's elements.
+        ///
+        /// This class can be used when the type of the tensor constant is known at C++ compile-time. For other cases, Constant must be used.
+        ///
+        /// ## Parameters
+        ///
+        /// |         | Description                                                                          |
+        /// | ------- | ------------------------------------------------------------------------------------ |
+        /// | `shape` | The ngraph::Shape of the tensor constant.                                            |
+        /// | `value` | The ngraph::runtime::ParameterizedTensorView containing data fo the tensor constant. |
+        ///
+        /// ## Output
+        ///
+        /// | Type                   | Description                                                           |
+        /// | ---------------------- | --------------------------------------------------------------------- |
+        /// | \f$E[d_1,\dots,d_n]\f$ | A constant tensor with the specified element type, shape, and values. |
+        ///
+        /// ## Implementation Status
+        ///
+        /// | Backend | Status             |
+        /// | ------- | ------------------ |
+        /// | NGVM    | Fully implemented. |
         template <typename T>
-        class ScalarConstant : public ScalarConstantBase
+        class ParameterizedConstant : public ConstantBase
         {
         public:
-            // The ngraph element type
+            /// \brief The ngraph element type
             using element_type = T;
-            // The C++ type that holds the element type
+            /// \brief The C++ type that holds the element type
             using type = typename T::type;
 
-            ScalarConstant(typename T::type value)
-                : ScalarConstantBase(std::make_shared<TensorViewType>(T::element_type(), Shape{}))
+            /// \brief Constructs a parameterized tensor constant.
+            ///
+            /// \param shape The shape of the tensor constant.
+            /// \param value The value of the tensor constant.
+            ParameterizedConstant(
+                const Shape& shape,
+                typename std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>>& value)
+                : ConstantBase(std::make_shared<TensorViewType>(T::element_type(), shape))
                 , m_value(value)
             {
             }
 
-            virtual std::string description() const override { return "ScalarConstant"; }
+            virtual std::string description() const override { return "ParameterizedConstant"; }
             virtual std::string get_node_id() const override
             {
                 std::stringstream ss;
@@ -61,55 +96,7 @@ namespace ngraph
                 return ss.str();
             }
 
-            type get_value() const { return m_value; }
-        protected:
-            typename T::type m_value;
-        };
-
-        using Float32ScalarConstant = ScalarConstant<element::Float32>;
-        using Int8ScalarConstant = ScalarConstant<element::Int8>;
-        using Int32ScalarConstant = ScalarConstant<element::Int32>;
-        using Int64ScalarConstant = ScalarConstant<element::Int64>;
-        using UInt8ScalarConstant = ScalarConstant<element::UInt8>;
-        using UInt32ScalarConstant = ScalarConstant<element::UInt32>;
-        using UInt64ScalarConstant = ScalarConstant<element::UInt64>;
-
-        // Defines methods to all constant tensors
-        class TensorConstantBase : public Node
-        {
-        protected:
-            TensorConstantBase(const std::shared_ptr<TensorViewType>& type)
-                : Node({}, type)
-            {
-            }
-
-            virtual void propagate_types() override;
-        };
-
-        // Implement a constant tensor for each element type.
-        template <typename T>
-        class TensorConstant : public TensorConstantBase
-        {
-        public:
-            // The ngraph element type
-            using element_type = T;
-            // The C++ type that holds the element type
-            using type = typename T::type;
-
-            TensorConstant(const Shape& shape)
-                : TensorConstantBase(std::make_shared<TensorViewType>(T::element_type(), shape))
-                , m_value(ngraph::runtime::make_tensor<T>(shape))
-            {
-            }
-
-            virtual std::string description() const override { return "TensorConstant"; }
-            virtual std::string get_node_id() const override
-            {
-                std::stringstream ss;
-                ss << description() << "_" /* << node_id() */;
-                return ss.str();
-            }
-
+            /// \return The value of the tensor constant.
             typename std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>> get_value() const
             {
                 return m_value;
@@ -119,12 +106,85 @@ namespace ngraph
             std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>> m_value;
         };
 
-        using Float32TensorConstant = TensorConstant<element::Float32>;
-        using Int8TensorConstant = TensorConstant<element::Int8>;
-        using Int32TensorConstant = TensorConstant<element::Int32>;
-        using Int64TensorConstant = TensorConstant<element::Int64>;
-        using UInt8TensorConstant = TensorConstant<element::UInt8>;
-        using UInt32TensorConstant = TensorConstant<element::UInt32>;
-        using UInt64TensorConstant = TensorConstant<element::UInt64>;
+        /// \brief A 32-bit floating-point tensor constant.
+        using Float32Constant = ParameterizedConstant<element::Float32>;
+        /// \brief An 8-bit signed integer tensor constant.
+        using Int8Constant = ParameterizedConstant<element::Int8>;
+        /// \brief A 32-bit signed integer tensor constant.
+        using Int32Constant = ParameterizedConstant<element::Int32>;
+        /// \brief A 64-bit signed integer tensor constant.
+        using Int64Constant = ParameterizedConstant<element::Int64>;
+        /// \brief An 8-bit unsigned integer tensor constant.
+        using UInt8Constant = ParameterizedConstant<element::UInt8>;
+        /// \brief A 16-bit unsigned integer tensor constant.
+        using UInt32Constant = ParameterizedConstant<element::UInt32>;
+        /// \brief A 64-bit unsigned integer tensor constant.
+        using UInt64Constant = ParameterizedConstant<element::UInt64>;
+
+        /// \brief Class for constants whose element types may not be known until graph construction time.
+        ///
+        /// This class must be used when the type of the tensor constant is unknown at C++ compile-time. For other cases, ParameterizedConstant should be used.
+        ///
+        /// ## Parameters
+        ///
+        /// |                 | Description                                                                                                                                                                    |
+        /// | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+        /// | `et`            | The ngraph::element::Type of the tensor constant.                                                                                                                              |
+        /// | `shape`         | The ngraph::Shape of the tensor constant.                                                                                                                                      |
+        /// | `value_strings` | A list of strings containing literals for initialization of the tensor constant. These strings are parsed with the appropriate instance of ngraph::element::TraitedType::read. |
+        ///
+        /// ## Output
+        ///
+        /// | Type                   | Description                                                           |
+        /// | ---------------------- | --------------------------------------------------------------------- |
+        /// | \f$E[d_1,\dots,d_n]\f$ | A constant tensor with the specified element type, shape, and values. |
+        ///
+        /// ## Implementation Status
+        ///
+        /// | Backend | Status             |
+        /// | ------- | ------------------ |
+        /// | NGVM    | Fully implemented. |
+        class Constant : public ConstantBase
+        {
+        public:
+            /// \brief Constructs a tensor constant.
+            ///
+            /// \param et The element type of the tensor constant.
+            /// \param shape The shape of the tensor constant.
+            /// \param value_strings A list of literals for initializing the tensor constant. There must be one literal for each element of the tensor; i.e., `value_strings.size()` must equal `ngraph::shape_size(shape)`.
+            Constant(const element::Type& et,
+                     const Shape& shape,
+                     const std::vector<std::string>& value_strings)
+                : ConstantBase(std::make_shared<TensorViewType>(et, shape))
+                , m_value_strings(value_strings)
+            {
+            }
+
+            /// \brief Constructs a tensor constant with the same initialization value copied across the tensor.
+            ///
+            /// \param et The element type of the tensor constant.
+            /// \param shape The shape of the tensor constant.
+            /// \param value_string A literal for initializing each tensor constant.
+            Constant(const element::Type& et, const Shape& shape, const std::string& value_string)
+                : ConstantBase(std::make_shared<TensorViewType>(et, shape))
+                , m_value_strings(ngraph::shape_size(shape), value_string)
+            {
+            }
+
+            virtual std::string description() const override { return "Constant"; }
+            virtual std::string get_node_id() const override
+            {
+                std::stringstream ss;
+                ss << description() << "_" /* << node_id() */;
+                return ss.str();
+            }
+
+            /// \return The initialization literals for the tensor constant.
+            const std::vector<std::string>& get_value_strings() const { return m_value_strings; }
+            virtual void propagate_types() override;
+
+        protected:
+            const std::vector<std::string> m_value_strings;
+        };
     }
 }
