@@ -202,9 +202,8 @@ TEST(cpu, abc_tuple_int64)
     ASSERT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector());
 }
 
-/*
 // Multiple retrive values
-TEST(execute, tuple_result)
+TEST(cpu, tuple_result)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -219,7 +218,7 @@ TEST(execute, tuple_result)
     auto f = make_shared<Function>(
         make_shared<op::Tuple>(Nodes{A_add_B, A_add_B_mul_C}), rt, op::Parameters{A, B, C});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -241,6 +240,7 @@ TEST(execute, tuple_result)
     ASSERT_EQ((vector<float>{54, 80, 110, 144}), r1->get_vector());
 }
 
+/*
 TEST(execute, abs)
 {
     auto shape = Shape{2, 2};
