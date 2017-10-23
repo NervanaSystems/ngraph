@@ -60,6 +60,18 @@ namespace ngraph
                                   const std::vector<TensorViewInfo>& inputs,
                                   const std::vector<TensorViewInfo>& outputs);
 
+                void EmitGetTupleElement(const ngraph::Node*,
+                                         ExternalFunction*,
+                                         FunctionMap&,
+                                         const std::vector<TensorViewInfo>& inputs,
+                                         const std::vector<TensorViewInfo>& outputs);
+
+                void EmitTuple(const ngraph::Node*,
+                               ExternalFunction*,
+                               FunctionMap&,
+                               const std::vector<TensorViewInfo>& inputs,
+                               const std::vector<TensorViewInfo>& outputs);
+
             };
         }
     }

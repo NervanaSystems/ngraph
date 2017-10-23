@@ -20,6 +20,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
 #include "ngraph/runtime/cpu/external_function.hpp"
 #include "ngraph/runtime/cpu/emitter.hpp"
@@ -43,7 +44,7 @@ static unordered_map<type_index, string> element_type_names = {{TI(ngraph::eleme
 
 
 #define EIGEN_VECTOR_FORMAT(x) "{" + to_string(x) + "}"
-#define EIGEN_MATRIX_FORMAT(x)
+//#define EIGEN_MATRIX_FORMAT(x)
 
 void Emitter::EmitNop(const ngraph::Node* n,
                       ExternalFunction* ef,
@@ -106,4 +107,44 @@ void Emitter::EmitMultiply(const ngraph::Node* n,
           "        EigenArray1d<" + element_type_names[TI(et)] + ">(arg1, "
                    EIGEN_VECTOR_FORMAT(inputs[1].get_layout<DenseTensorViewLayout>()->get_size()) ");\n"
           "    }\n";
+}
+
+void Emitter::EmitGetTupleElement(const ngraph::Node* n,
+                                  ExternalFunction* ef,
+                                  FunctionMap& function_map,
+                                  const std::vector<TensorViewInfo>& inputs,
+                                  const std::vector<TensorViewInfo>& outputs)
+{
+    auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
+    auto result_tensor_type =
+        dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+    assert(result_tensor_type);
+    auto& result_element_type = result_tensor_type->get_element_type();
+
+    TU += "    {\n"
+          "        call_frame->get_parameterized_tensor_view<" + element_type_names[TI(result_element_type)] + ">(" +
+                   to_string(outputs.at(0).get_index()) + ")->get_vector() =\n"
+          "        call_frame->get_parameterized_tensor_view<" + element_type_names[TI(result_element_type)] + ">(" +
+                   to_string(inputs.at(get_tuple_element->get_n()).get_index()) + ")->get_vector();\n"
+          "    }\n";
+}
+
+void Emitter::EmitTuple(const ngraph::Node* n,
+                        ExternalFunction* ef,
+                        FunctionMap& function_map,
+                        const std::vector<TensorViewInfo>& inputs,
+                        const std::vector<TensorViewInfo>& outputs)
+{
+    assert(inputs.size() == outputs.size());
+
+    TU += "    {\n";
+    for (size_t i = 0; i < inputs.size(); ++i)
+    {
+        auto& et = inputs.at(i).get_tensor_view_layout()->get_element_type();
+        TU +=  "        call_frame->get_parameterized_tensor_view<" + element_type_names[TI(et)] + ">(" +
+                        to_string(outputs.at(i).get_index()) + ")->get_vector() =\n"
+               "        call_frame->get_parameterized_tensor_view<" + element_type_names[TI(et)] + ">(" +
+                        to_string(inputs.at(i).get_index()) + ")->get_vector();\n";
+    }
+    TU += "    }\n";
 }

@@ -81,7 +81,6 @@ TEST(cpu, abc)
     ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector());
 }
 
-/*
 TEST(cpu, abc_int64)
 {
     auto shape = Shape{2, 2};
@@ -91,7 +90,7 @@ TEST(cpu, abc_int64)
     auto rt = make_shared<TensorViewType>(element::Int64::element_type(), shape);
     auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -116,7 +115,7 @@ TEST(cpu, abc_int64)
 }
 
 // Same as abc, but using tuples for input and output
-TEST(execute, abc_tuple)
+TEST(cpu, abc_tuple)
 {
     auto shape = Shape{2, 2};
 
@@ -131,7 +130,7 @@ TEST(execute, abc_tuple)
     auto f = make_shared<Function>(
         make_shared<op::Tuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -160,7 +159,7 @@ TEST(execute, abc_tuple)
 }
 
 // Same as abc, but using tuples for input and output
-TEST(execute, abc_tuple_int64)
+TEST(cpu, abc_tuple_int64)
 {
     auto shape = Shape{2, 2};
 
@@ -175,7 +174,7 @@ TEST(execute, abc_tuple_int64)
     auto f = make_shared<Function>(
         make_shared<op::Tuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -203,6 +202,7 @@ TEST(execute, abc_tuple_int64)
     ASSERT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector());
 }
 
+/*
 // Multiple retrive values
 TEST(execute, tuple_result)
 {

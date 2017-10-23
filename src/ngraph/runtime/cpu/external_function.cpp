@@ -67,9 +67,12 @@ using ngraph::descriptor::layout::DenseTensorViewLayout;
 #define TI(x) type_index(typeid(x))
 
 static const OpMap dispatcher{{TI(ngraph::op::Add), &Emitter::EmitAdd},
-                             {TI(ngraph::op::Dot), &Emitter::EmitDot},
-                             {TI(ngraph::op::Multiply), &Emitter::EmitMultiply},
-                             {TI(ngraph::op::Parameter), &Emitter::EmitNop}};
+                              {TI(ngraph::op::Dot), &Emitter::EmitDot},
+                              {TI(ngraph::op::Multiply), &Emitter::EmitMultiply},
+                              {TI(ngraph::op::Parameter), &Emitter::EmitNop},
+                              {TI(ngraph::op::GetTupleElement), &Emitter::EmitGetTupleElement},
+                              {TI(ngraph::op::Tuple), &Emitter::EmitTuple}
+                             };
 
 #undef TI
 
