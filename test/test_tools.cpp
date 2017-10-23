@@ -78,10 +78,3 @@ shared_ptr<Function> make_test_graph()
 
     return f0;
 }
-
-size_t get_node_count(std::shared_ptr<Node> n)
-{
-    size_t node_count = 0;
-    traverse_nodes(n, [&](shared_ptr<Node> node) { node_count++; });
-    return node_count;
-}

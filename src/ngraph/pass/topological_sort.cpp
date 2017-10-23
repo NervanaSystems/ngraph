@@ -32,7 +32,7 @@ bool ngraph::pass::TopologicalSort::run_on_function(shared_ptr<ngraph::Function>
     unordered_map<const Node*, size_t> node_depencency_count;
     unordered_map<Node*, shared_ptr<Node>> node_map;
 
-    traverse_nodes(func->get_result(), [&](shared_ptr<Node> node) {
+    traverse_nodes(func, [&](shared_ptr<Node> node) {
         node_map[node.get()] = node;
         node_depencency_count[node.get()] = node->get_arguments().size();
         if (node->get_arguments().size() == 0)

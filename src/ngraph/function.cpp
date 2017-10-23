@@ -39,7 +39,7 @@ Function::Function(const std::shared_ptr<Node>& result,
         parameter->assign_function(this, i++);
     }
 
-    traverse_nodes(result, [&](shared_ptr<Node> node) { m_ops.push_back(node); });
+    traverse_nodes(this, [&](shared_ptr<Node> node) { m_ops.push_back(node); });
 }
 
 void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)
