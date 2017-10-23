@@ -15,13 +15,17 @@
 #pragma once
 
 #include <atomic>
+#include <memory>
 #include <set>
 #include <string>
+#include <typeindex>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include <iostream>
 
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/common.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
@@ -35,19 +39,20 @@ namespace ngraph
     /// view or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
-    protected:
-        Node(const Nodes& arguments, std::shared_ptr<ValueType> value_type = nullptr);
-        Node()
-            : Node({}, nullptr)
-        {
-        }
+        // So Adjoints can call generate_adjoints
+        friend class autodiff::Adjoints;
 
-        Node(std::shared_ptr<ValueType> value_type)
-            : Node({}, value_type)
-        {
-        }
+    protected:
+        Node(const Nodes& arguments, std::shared_ptr<const ValueType> value_type = nullptr);
+        Node();
+        Node(std::shared_ptr<const ValueType> value_type);
 
         virtual ~Node();
+
+        virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                       const std::shared_ptr<Node>& delta)
+        {
+        }
 
     public:
         /// The class name, must not contain spaces
@@ -73,11 +78,11 @@ namespace ngraph
         bool is_same_op_type(const std::shared_ptr<Node>& node) const
         {
             Node* n = node.get();
-            return typeid(*this) == typeid(*n);
+            return std::type_index(typeid(*this)) == std::type_index(typeid(*n));
         }
 
-        std::shared_ptr<const ValueType> get_value_type() { return m_value_type; }
-        const std::shared_ptr<const ValueType> get_value_type() const { return m_value_type; }
+        std::shared_ptr<const ValueType> get_value_type();
+        const std::shared_ptr<const ValueType> get_value_type() const;
         void set_value_type(const element::Type& element_type, const Shape& shape)
         {
             m_value_type = std::make_shared<TensorViewType>(element_type, shape);
@@ -109,6 +114,9 @@ namespace ngraph
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
+        std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
+                                            const std::shared_ptr<Node>& c);
+
     protected:
         Nodes m_arguments;
         std::shared_ptr<const ValueType> m_value_type;
@@ -119,5 +127,6 @@ namespace ngraph
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         bool m_is_output;
+        std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
     };
 }

@@ -22,13 +22,15 @@ using namespace ngraph::runtime::ngvm;
 
 CallFrame::CallFrame(size_t n_inputs,
                      size_t n_outputs,
+                     size_t frame_size,
                      const TensorViewPtrs& temps,
                      size_t initial_pc,
                      const shared_ptr<vector<shared_ptr<Instruction>>>& instructions)
 
     : m_n_inputs(n_inputs)
     , m_n_outputs(n_outputs)
-    , m_tensor_views(n_inputs + n_outputs + temps.size())
+    , m_frame_size(frame_size)
+    , m_tensor_views(m_frame_size)
     , m_initial_pc(initial_pc)
     , m_instructions(instructions)
 {
@@ -39,7 +41,15 @@ void CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs)
 {
+    if (inputs.size() != m_n_inputs)
+    {
+        throw ngraph_error("Incorrect number of inputs");
+    }
     copy(inputs.begin(), inputs.end(), m_tensor_views.begin());
+    if (outputs.size() != m_n_outputs)
+    {
+        throw ngraph_error("Incorrect number of outputs");
+    }
     copy(outputs.begin(), outputs.end(), m_tensor_views.begin() + m_n_inputs);
     m_next_pc = m_initial_pc;
     m_return = false;

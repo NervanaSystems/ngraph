@@ -53,8 +53,11 @@ namespace ngraph
             }
 
             virtual std::string description() const override { return "Multiply"; }
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
         };
-    }
+    };
 
     inline std::shared_ptr<ngraph::Node> operator*(const std::shared_ptr<ngraph::Node> arg0,
                                                    const std::shared_ptr<ngraph::Node> arg1)

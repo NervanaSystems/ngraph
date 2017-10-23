@@ -47,18 +47,15 @@ namespace ngraph
         /// | NGVM    | Fully implemented. |
         class Parameter : public Node
         {
-            friend class ngraph::Function;
-
         protected:
-            // Called by the Function constructor to associate this parameter with the function.
-            // It is an error to try to associate a parameter with more than one function.
-            void assign_function(Function* function, size_t index);
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
 
         public:
             /// \brief Constructions a parameter node.
             ///
             /// \param value_type The type of the parameter.
-            Parameter(const std::shared_ptr<ValueType>& value_type = nullptr);
+            Parameter(const std::shared_ptr<const ValueType>& value_type = nullptr);
             /// \brief Constructions a tensor view-typed parameter node.
             ///
             /// \param element_type The element type of the parameter.
@@ -67,10 +64,6 @@ namespace ngraph
 
             std::string description() const override { return "Parameter"; }
             virtual void propagate_types() override;
-
-        protected:
-            Function* m_function;
-            size_t m_index;
         };
     }
 }

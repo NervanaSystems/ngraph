@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
@@ -19,7 +20,7 @@ using namespace ngraph;
 
 atomic<size_t> Node::m_next_instance_id(0);
 
-Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<ValueType> value_type)
+Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<const ValueType> value_type)
     : m_arguments(arguments)
     , m_value_type(value_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
@@ -30,6 +31,16 @@ Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<ValueType>
     {
         node->m_users.insert(this);
     }
+}
+
+Node::Node()
+    : Node({}, nullptr)
+{
+}
+
+Node::Node(std::shared_ptr<const ValueType> value_type)
+    : Node({}, value_type)
+{
 }
 
 Node::~Node()
@@ -49,6 +60,24 @@ void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
             throw ngraph_error("Setting value type to a different ValueType");
         }
     }
+}
+
+std::shared_ptr<const ValueType> Node::get_value_type()
+{
+    if (nullptr == m_value_type)
+    {
+        propagate_types();
+    }
+    return m_value_type;
+}
+
+const std::shared_ptr<const ValueType> Node::get_value_type() const
+{
+    if (nullptr == m_value_type)
+    {
+        const_cast<Node*>(this)->propagate_types();
+    }
+    return m_value_type;
 }
 
 void Node::assign_tensors()
@@ -128,6 +157,18 @@ void Node::set_name(const string& name)
     {
         throw ngraph_error("Node name may be set exactly once");
     }
+}
+
+std::shared_ptr<Node> Node::backprop_node(const std::shared_ptr<Node>& x,
+                                          const std::shared_ptr<Node>& c)
+{
+    auto adjoints_it = m_adjoint_map.find(c.get());
+    if (adjoints_it == m_adjoint_map.end())
+    {
+        adjoints_it =
+            m_adjoint_map.insert({c.get(), autodiff::Adjoints(shared_from_this(), c)}).first;
+    }
+    return adjoints_it->second.get(x);
 }
 
 namespace ngraph

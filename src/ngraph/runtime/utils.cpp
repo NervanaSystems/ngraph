@@ -12,6 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+
+#include "ngraph/function.hpp"
+#include "ngraph/ops/tuple.hpp"
+#include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/utils.hpp"
 
 std::shared_ptr<ngraph::runtime::Tuple> ngraph::runtime::make_tuple(

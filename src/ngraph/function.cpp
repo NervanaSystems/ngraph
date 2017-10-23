@@ -23,7 +23,7 @@ using namespace ngraph;
 atomic<size_t> Function::m_next_instance_id(0);
 
 Function::Function(const std::shared_ptr<Node>& result,
-                   const std::shared_ptr<ValueType>& result_type,
+                   const std::shared_ptr<const ValueType>& result_type,
                    const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                    const std::string& name)
     : m_result(result)
@@ -33,12 +33,6 @@ Function::Function(const std::shared_ptr<Node>& result,
     , m_ordered_ops_valid(false)
     , m_instance_id(m_next_instance_id.fetch_add(1))
 {
-    size_t i = 0;
-    for (auto parameter : parameters)
-    {
-        parameter->assign_function(this, i++);
-    }
-
     traverse_nodes(this, [&](shared_ptr<Node> node) { m_ops.push_back(node); });
 }
 
