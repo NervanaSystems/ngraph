@@ -26,6 +26,7 @@
 namespace ngraph
 {
     class Node;
+    class Function;
     class stopwatch;
     extern std::map<std::string, stopwatch*> stopwatch_statistics;
 
@@ -195,8 +196,9 @@ namespace ngraph
         return a * b;
     }
 
-    void traverse_nodes(const std::shared_ptr<Node>& p,
-                        std::function<void(std::shared_ptr<Node>)> f);
+    void traverse_nodes(Function* p, std::function<void(std::shared_ptr<Node>)> f);
 
-    void free_nodes(std::shared_ptr<Node>);
+    void traverse_nodes(std::shared_ptr<Function> p, std::function<void(std::shared_ptr<Node>)> f);
+
+    void free_nodes(std::shared_ptr<Function>);
 } // end namespace ngraph

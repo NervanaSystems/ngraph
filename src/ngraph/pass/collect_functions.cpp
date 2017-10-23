@@ -35,7 +35,7 @@ bool CollectFunctions::run_on_function(shared_ptr<ngraph::Function> func)
         shared_ptr<ngraph::Function> f = stack.front();
         stack.pop_front();
         functions.insert(f);
-        traverse_nodes(f->get_result(), [&](shared_ptr<Node> node) {
+        traverse_nodes(f, [&](shared_ptr<Node> node) {
             shared_ptr<op::FunctionCall> fc = dynamic_pointer_cast<op::FunctionCall>(node);
             if (fc)
             {
