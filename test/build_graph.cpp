@@ -71,10 +71,6 @@ TEST(build_graph, node_comparison)
 
     auto parg = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     auto pattern_dot = make_shared<op::Dot>(parg, parg);
-    ASSERT_TRUE(pattern_dot->is_same_op_type(dot));
-    // TODO This passes because typeid is not behaving as documented.
-    // Need to figure out what's wrong.
-    ASSERT_FALSE(pattern_dot->is_same_op_type(add));
 }
 
 TEST(build_graph, literal)

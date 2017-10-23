@@ -52,6 +52,7 @@ namespace ngraph
             {
             }
             virtual std::string description() const override { return "Add"; }
+            virtual bool is_commutative() override { return true; };
         };
     }
 

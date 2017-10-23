@@ -15,6 +15,7 @@
 #include <sstream>
 
 #include "ngraph/ops/parameter.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
 using namespace std;
 using namespace ngraph::op;
@@ -29,6 +30,12 @@ Parameter::Parameter(const std::shared_ptr<ValueType>& value_type)
 Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& shape)
     : Parameter(make_shared<TensorViewType>(element_type, shape))
 {
+}
+
+void Parameter::match_class(pattern::Matcher& matcher, std::shared_ptr<Node> graph_node)
+{
+    matcher.on_match_class(
+        shared_from_this(), graph_node, this == dynamic_cast<Parameter*>(graph_node.get()));
 }
 
 void Parameter::assign_function(Function* function, size_t index)

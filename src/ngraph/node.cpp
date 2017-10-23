@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <memory>
+#include <typeindex>
+#include <typeinfo>
+
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -128,6 +133,13 @@ void Node::set_name(const string& name)
     {
         throw ngraph_error("Node name may be set exactly once");
     }
+}
+
+void Node::match_class(ngraph::pattern::Matcher& matcher, std::shared_ptr<Node> graph_node)
+{
+    matcher.on_match_class(shared_from_this(),
+                           graph_node,
+                           type_index(typeid(*this)) == type_index(typeid(*&*graph_node)));
 }
 
 namespace ngraph

@@ -68,6 +68,9 @@ namespace ngraph
             std::string description() const override { return "Parameter"; }
             virtual void propagate_types() override;
 
+            virtual void match_class(pattern::Matcher& matcher,
+                                     std::shared_ptr<Node> graph_node) override;
+
         protected:
             Function* m_function;
             size_t m_index;

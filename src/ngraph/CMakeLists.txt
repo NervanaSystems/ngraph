@@ -46,6 +46,7 @@ set (SRC
     pass/assign_tensors.cpp
     pass/collect_functions.cpp
     pass/dump_sorted.cpp
+    pass/graph_rewrite.cpp
     pass/liveness.cpp
     pass/manager.cpp
     pass/manager_state.cpp
@@ -55,6 +56,8 @@ set (SRC
     pass/propagate_types.cpp
     pass/topological_sort.cpp
     pass/visualize_tree.cpp
+    pattern/matcher.cpp
+	pattern/op/label.cpp
     runtime/backend.cpp
     runtime/manager.cpp
     runtime/ngvm/call_frame.cpp

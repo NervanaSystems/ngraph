@@ -100,6 +100,7 @@ nervana::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const
     case LOG_TYPE::_LOG_TYPE_ERROR: _stream << "[ERR ] "; break;
     case LOG_TYPE::_LOG_TYPE_WARNING: _stream << "[WARN] "; break;
     case LOG_TYPE::_LOG_TYPE_INFO: _stream << "[INFO] "; break;
+    case LOG_TYPE::_LOG_TYPE_DEBUG: _stream << "[DEBUG] "; break;
     }
 
     std::time_t tt = chrono::system_clock::to_time_t(chrono::system_clock::now());

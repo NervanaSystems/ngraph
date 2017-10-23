@@ -58,6 +58,7 @@ namespace nervana
         _LOG_TYPE_ERROR,
         _LOG_TYPE_WARNING,
         _LOG_TYPE_INFO,
+        _LOG_TYPE_DEBUG,
     };
 
     class log_helper
@@ -102,6 +103,12 @@ namespace nervana
         .stream()
 #define NGRAPH_INFO                                                                                \
     nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_INFO,                                         \
+                        nervana::get_file_name(__FILE__),                                          \
+                        __LINE__,                                                                  \
+                        __PRETTY_FUNCTION__)                                                       \
+        .stream()
+#define NGRAPH_DEBUG                                                                               \
+    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_DEBUG,                                        \
                         nervana::get_file_name(__FILE__),                                          \
                         __LINE__,                                                                  \
                         __PRETTY_FUNCTION__)                                                       \
