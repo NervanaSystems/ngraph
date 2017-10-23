@@ -388,10 +388,9 @@ TEST(cpu, concat_vector)
     ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), result->get_vector());
 }
 
-/*
-TEST(execute, divide)
+TEST(cpu, divide)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto backend = manager->allocate_backend();
 
     auto shape = Shape{2, 2};
@@ -419,6 +418,7 @@ TEST(execute, divide)
     ASSERT_EQ((vector<float>{2, 2, 2, 2}), result->get_vector());
 }
 
+/*
 TEST(execute, equal)
 {
     auto shape = Shape{2, 2, 2};

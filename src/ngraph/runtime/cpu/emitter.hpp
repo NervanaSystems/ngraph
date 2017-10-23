@@ -51,6 +51,7 @@ namespace ngraph
                 void EMITTER_DECL(EmitTuple);
                 void EMITTER_DECL(EmitAbs);
                 void EMITTER_DECL(EmitConcat);
+                void EMITTER_DECL(EmitDivide);
 
             };
         }
