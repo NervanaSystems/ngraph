@@ -261,8 +261,7 @@ TEST(cpu, abs)
     ASSERT_EQ((vector<float>{1, 2, 0, 4.8f}), result->get_vector());
 }
 
-/*
-TEST(execute, concat_matrix_colwise)
+TEST(cpu, concat_matrix_colwise)
 {
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -275,7 +274,7 @@ TEST(execute, concat_matrix_colwise)
     auto f = make_shared<Function>(
         make_shared<op::Concat>(Nodes{A, B, C}, 1), rt, op::Parameters{A, B, C});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -294,6 +293,7 @@ TEST(execute, concat_matrix_colwise)
               result->get_vector());
 }
 
+/*
 TEST(execute, concat_matrix_rowwise)
 {
     auto shape_a = Shape{2, 2};

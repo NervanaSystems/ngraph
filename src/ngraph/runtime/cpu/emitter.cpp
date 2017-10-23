@@ -20,6 +20,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
 #include "ngraph/runtime/cpu/external_function.hpp"
@@ -44,22 +45,43 @@ static unordered_map<type_index, string> element_type_names = {{TI(ngraph::eleme
 
 
 #define EIGEN_VECTOR_FORMAT(x) "{" + to_string(x) + "}"
-//#define EIGEN_MATRIX_FORMAT(x)
 
-void Emitter::EmitNop(const ngraph::Node* n,
-                      ExternalFunction* ef,
-                      FunctionMap& function_map,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+static std::string EIGEN_MATRIX_FORMAT(const ngraph::Shape& shape,
+                                       const ngraph::Strides& strides)
 {
-
+    std::string I;
+    for (size_t i = 0; i < shape.size(); i++)
+    {
+        if (!i)
+        {
+            I += "{" + to_string(shape[i]);
+        }
+        else
+        {
+            I += ", " + to_string(shape[i]);
+        }
+    }
+    I += "}, ";
+    for (size_t i = 0; i < strides.size(); i++)
+    {
+        if (!i)
+        {
+            I += "{" + to_string(strides[i]);
+        }
+        else
+        {
+            I += ", " + to_string(strides[i]);
+        }
+    }
+    I += "}";
+    return I;
 }
 
-void Emitter::EmitAdd(const ngraph::Node* n,
-                      ExternalFunction* ef,
-                      FunctionMap& function_map,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+void Emitter::EMITTER_DECL(EmitNop)
+{
+}
+
+void Emitter::EMITTER_DECL(EmitAdd)
 {
     const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(
                                        n->get_arguments().at(0)->get_value_type()))
@@ -78,19 +100,11 @@ void Emitter::EmitAdd(const ngraph::Node* n,
           "    }\n";
 }
 
-void Emitter::EmitDot(const ngraph::Node* n,
-                      ExternalFunction* ef,
-                      FunctionMap& function_map,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+void Emitter::EMITTER_DECL(EmitDot)
 {
 }
 
-void Emitter::EmitMultiply(const ngraph::Node* n,
-                           ExternalFunction* ef,
-                           FunctionMap& function_map,
-                           const std::vector<TensorViewInfo>& inputs,
-                           const std::vector<TensorViewInfo>& outputs)
+void Emitter::EMITTER_DECL(EmitMultiply)
 {
     const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(
                                        n->get_arguments().at(0)->get_value_type()))
@@ -109,11 +123,7 @@ void Emitter::EmitMultiply(const ngraph::Node* n,
           "    }\n";
 }
 
-void Emitter::EmitGetTupleElement(const ngraph::Node* n,
-                                  ExternalFunction* ef,
-                                  FunctionMap& function_map,
-                                  const std::vector<TensorViewInfo>& inputs,
-                                  const std::vector<TensorViewInfo>& outputs)
+void Emitter::EMITTER_DECL(EmitGetTupleElement)
 {
     auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
     auto result_tensor_type =
@@ -129,11 +139,7 @@ void Emitter::EmitGetTupleElement(const ngraph::Node* n,
           "    }\n";
 }
 
-void Emitter::EmitTuple(const ngraph::Node* n,
-                        ExternalFunction* ef,
-                        FunctionMap& function_map,
-                        const std::vector<TensorViewInfo>& inputs,
-                        const std::vector<TensorViewInfo>& outputs)
+void Emitter::EMITTER_DECL(EmitTuple)
 {
     assert(inputs.size() == outputs.size());
 
@@ -149,11 +155,7 @@ void Emitter::EmitTuple(const ngraph::Node* n,
     TU += "    }\n";
 }
 
-void Emitter::EmitAbs(const ngraph::Node* n,
-                      ExternalFunction* ef,
-                      FunctionMap& function_map,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+void Emitter::EMITTER_DECL(EmitAbs)
 {
     const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(
                                    n->get_arguments().at(0)->get_value_type()))
@@ -167,4 +169,76 @@ void Emitter::EmitAbs(const ngraph::Node* n,
           "        Eigen::abs(EigenArray1d<" + element_type_names[TI(et)] + ">(arg0, "
                    EIGEN_VECTOR_FORMAT(inputs[0].get_layout<DenseTensorViewLayout>()->get_size()) "));\n"
           "    }\n";
+}
+
+void Emitter::EMITTER_DECL(EmitConcat)
+{
+    auto result_tensor_type =
+        dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+    assert(result_tensor_type);
+
+    auto result_shape = result_tensor_type->get_shape();
+    auto& result_element_type = result_tensor_type->get_element_type();
+
+    if (result_shape.size() == 1)
+    {
+        TU += "    {\n"
+              "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
+                                   ">(" + to_string(outputs[0].get_index()) + ");\n"
+              "        EigenVector<" + element_type_names[TI(result_element_type)] + "> out_vector(out, "
+                       EIGEN_VECTOR_FORMAT(outputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ");\n";
+
+        size_t concat_pos = 0;
+        for (size_t i = 0; i < inputs.size(); i++)
+        {
+            TU += "        out_vector.segment(" + to_string(concat_pos) + ", " +
+                  to_string(inputs[i].get_tensor_view_layout()->get_shape().at(0)) + ") << "
+                  "EigenVector<" + element_type_names[TI(result_element_type)] + ">(call_frame->"
+                  "get_tensor_view_data<" + element_type_names[TI(result_element_type)] + ">(" +
+                  to_string(outputs[0].get_index()) + "), "
+                  EIGEN_VECTOR_FORMAT(inputs[i].get_layout<DenseTensorViewLayout>()->get_size()) ");\n";
+            concat_pos += inputs[i].get_tensor_view_layout()->get_shape().at(0);
+        }
+
+        TU += "    }\n";
+    }
+    else if (result_shape.size() == 2)
+    {
+        /*
+        PUSH_POLYMORPHIC_INSTRUCTION(
+            result_element_type,
+            "Concat has unhandled element type",
+            eigen::ConcatMatrixInstruction,
+            in,
+            (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis(),
+            out[0]);
+        */
+        auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
+        auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+
+        TU += "    {\n"
+              "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
+                                   ">(" + to_string(outputs[0].get_index()) + ");\n"
+              "        EigenMatrix<" + element_type_names[TI(result_element_type)] + "> out_matrix(out, {" +
+                       EIGEN_MATRIX_FORMAT(out_layout->get_shape(), out_layout->get_strides()) + "});\n";
+
+        size_t concat_pos[2]{0, 0};
+        for (size_t i = 0; i < inputs.size(); i++)
+        {
+            auto arg_layout = inputs[i].get_layout<DenseTensorViewLayout>();
+            auto& arg_shape = inputs[i].get_tensor_view_layout()->get_shape();
+
+            TU += "        out_matrix.block(" + to_string(concat_pos[0]) + ", " +
+                  to_string(concat_pos[1]) + ", " + to_string(arg_shape.at(0)) + ", " +
+                  to_string(arg_shape.at(1)) + ") << "
+                  "EigenMatrix<" + element_type_names[TI(result_element_type)] + ">(call_frame->"
+                  "get_tensor_view_data<" + element_type_names[TI(result_element_type)] + ">(" +
+                  to_string(inputs[i].get_index()) + "), {" +
+                  EIGEN_MATRIX_FORMAT(arg_layout->get_shape(), arg_layout->get_strides()) + "});\n";
+
+            concat_pos[axis] += arg_shape.at(axis);
+        }
+
+        TU += "    }\n";
+    }
 }

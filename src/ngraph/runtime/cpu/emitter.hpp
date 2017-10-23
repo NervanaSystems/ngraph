@@ -21,6 +21,13 @@
 #include "ngraph/runtime/tensor_view_info.hpp"
 #include "ngraph/runtime/cpu/external_function.hpp"
 
+#define EMITTER_DECL(E) E(const ngraph::Node* n,                     \
+                          ExternalFunction* ef,                      \
+                          FunctionMap& function_map,                 \
+                          const std::vector<TensorViewInfo>& inputs, \
+                          const std::vector<TensorViewInfo>& outputs)
+
+
 namespace ngraph
 {
     namespace runtime
@@ -35,48 +42,15 @@ namespace ngraph
             public:
                 Emitter() : TU("") { }
                 std::string& GetTU() { return TU; }
-                
-                void EmitNop(const ngraph::Node*,
-                             ExternalFunction*,
-                             FunctionMap&,
-                             const std::vector<TensorViewInfo>& inputs,
-                             const std::vector<TensorViewInfo>& outputs);
 
-                void EmitAdd(const ngraph::Node*,
-                             ExternalFunction*,
-                             FunctionMap&,
-                             const std::vector<TensorViewInfo>& inputs,
-                             const std::vector<TensorViewInfo>& outputs);
-
-                void EmitDot(const ngraph::Node*,
-                             ExternalFunction*,
-                             FunctionMap&,
-                             const std::vector<TensorViewInfo>& inputs,
-                             const std::vector<TensorViewInfo>& outputs);
-
-                void EmitMultiply(const ngraph::Node*,
-                                  ExternalFunction*,
-                                  FunctionMap&,
-                                  const std::vector<TensorViewInfo>& inputs,
-                                  const std::vector<TensorViewInfo>& outputs);
-
-                void EmitGetTupleElement(const ngraph::Node*,
-                                         ExternalFunction*,
-                                         FunctionMap&,
-                                         const std::vector<TensorViewInfo>& inputs,
-                                         const std::vector<TensorViewInfo>& outputs);
-
-                void EmitTuple(const ngraph::Node*,
-                               ExternalFunction*,
-                               FunctionMap&,
-                               const std::vector<TensorViewInfo>& inputs,
-                               const std::vector<TensorViewInfo>& outputs);
-
-                void EmitAbs(const ngraph::Node*,
-                             ExternalFunction*,
-                             FunctionMap&,
-                             const std::vector<TensorViewInfo>& inputs,
-                             const std::vector<TensorViewInfo>& outputs);
+                void EMITTER_DECL(EmitNop);
+                void EMITTER_DECL(EmitAdd);
+                void EMITTER_DECL(EmitDot);
+                void EMITTER_DECL(EmitMultiply);
+                void EMITTER_DECL(EmitGetTupleElement);
+                void EMITTER_DECL(EmitTuple);
+                void EMITTER_DECL(EmitAbs);
+                void EMITTER_DECL(EmitConcat);
 
             };
         }

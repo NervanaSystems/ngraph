@@ -85,6 +85,13 @@ namespace ngraph
 
                     class M
                     {
+                        M(const std::shared_ptr<ngraph::descriptor::layout::DenseTensorViewLayout>&
+                              layout)
+                            : M(layout->get_shape(), layout->get_strides())
+                        {
+                        }
+
+                    public:
                         M(const Shape& shape, const Strides& strides)
                             : l0(shape.at(0))
                             , l1(shape.at(1))
@@ -93,13 +100,6 @@ namespace ngraph
                         {
                         }
 
-                        M(const std::shared_ptr<ngraph::descriptor::layout::DenseTensorViewLayout>&
-                              layout)
-                            : M(layout->get_shape(), layout->get_strides())
-                        {
-                        }
-
-                    public:
                         M(const TensorViewInfo& tensor_view_info)
                             : M(tensor_view_info.get_layout<
                                   ngraph::descriptor::layout::DenseTensorViewLayout>())

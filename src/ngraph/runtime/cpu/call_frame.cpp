@@ -40,7 +40,7 @@ void CallFrame::tensor_call(
     copy(inputs.begin(), inputs.end(), m_tensor_views.begin());
     copy(outputs.begin(), outputs.end(), m_tensor_views.begin() + m_n_inputs);
 
-    // TODO: Execute!
+    // Invoke compiled computation
     m_compiled_function(this, m_tensor_views);
 
     // Don't hold onto inputs/outputs

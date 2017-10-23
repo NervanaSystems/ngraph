@@ -72,7 +72,8 @@ static const OpMap dispatcher{{TI(ngraph::op::Add), &Emitter::EmitAdd},
                               {TI(ngraph::op::Parameter), &Emitter::EmitNop},
                               {TI(ngraph::op::GetTupleElement), &Emitter::EmitGetTupleElement},
                               {TI(ngraph::op::Tuple), &Emitter::EmitTuple},
-                              {TI(ngraph::op::Abs), &Emitter::EmitAbs}
+                              {TI(ngraph::op::Abs), &Emitter::EmitAbs},
+                              {TI(ngraph::op::Concat), &Emitter::EmitConcat}
                              };
 
 #undef TI
