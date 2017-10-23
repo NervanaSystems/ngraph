@@ -72,6 +72,12 @@ namespace ngraph
                                const std::vector<TensorViewInfo>& inputs,
                                const std::vector<TensorViewInfo>& outputs);
 
+                void EmitAbs(const ngraph::Node*,
+                             ExternalFunction*,
+                             FunctionMap&,
+                             const std::vector<TensorViewInfo>& inputs,
+                             const std::vector<TensorViewInfo>& outputs);
+
             };
         }
     }

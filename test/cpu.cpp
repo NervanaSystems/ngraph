@@ -240,15 +240,14 @@ TEST(cpu, tuple_result)
     ASSERT_EQ((vector<float>{54, 80, 110, 144}), r1->get_vector());
 }
 
-/*
-TEST(execute, abs)
+TEST(cpu, abs)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Abs>(A), result_type, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -262,6 +261,7 @@ TEST(execute, abs)
     ASSERT_EQ((vector<float>{1, 2, 0, 4.8f}), result->get_vector());
 }
 
+/*
 TEST(execute, concat_matrix_colwise)
 {
     auto shape_a = Shape{2, 2};
