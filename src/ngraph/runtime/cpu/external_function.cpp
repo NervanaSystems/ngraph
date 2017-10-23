@@ -18,6 +18,7 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <string>
+#include <fstream>
 
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/descriptor/input.hpp"
@@ -76,6 +77,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
                                    bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
     , m_instructions(make_shared<std::vector<std::shared_ptr<Instruction>>>())
+    , compiled_function(nullptr)
 {
 }
 
@@ -150,7 +152,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
 
     // Now we build the TU
     Emitter emitter;
-    auto TU = emitter.GetTU();
+    auto& TU = emitter.GetTU();
     TU += R"(
 #include <vector>
 #include <memory>
@@ -158,10 +160,15 @@ void ExternalFunction::compile(FunctionMap& function_map)
 #include <Eigen/Dense>
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor_view_info.hpp"
 #include "ngraph/runtime/cpu/call_frame.hpp"
+#include "ngraph/runtime/cpu/eigen_utils.hpp"
 
 void *__dso_handle = 0;
+
+using namespace ngraph::element;
+using namespace ngraph::runtime;
+using namespace ngraph::runtime::cpu::eigen;
 
 extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame, 
                              ngraph::runtime::TensorViewPtrs& tensor_views)
@@ -196,12 +203,19 @@ extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
     // End TU
     TU += "}\n";
 
+    // TODO: Cleanup and make this a utility function
+    ofstream out("__ngcpu_codegen.cpp");
+    out << TU;
+    out.close();
+
     ngraph::codegen::execution_state estate;
-    auto llvm_module = estate.compile(TU, "ExternalFunction");
+    auto llvm_module = estate.compile(TU, "__ngcpu_codegen.cpp");
     assert(llvm_module);
     estate.add_module(llvm_module);
     estate.finalize();
-    //auto llvm_func = estate.find_function
+    compiled_function = estate.find_function<void(ngraph::runtime::cpu::CallFrame*,
+                                                  ngraph::runtime::TensorViewPtrs&)>("__entrypoint");
+    assert(compiled_function);
 
     m_is_compiled = true;
     if (m_release_function)
@@ -278,5 +292,5 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
 #undef M
     }
     return make_shared<ngraph::runtime::cpu::CallFrame>(
-        m_n_inputs, m_n_outputs, temps);
+        compiled_function, m_n_inputs, m_n_outputs, temps);
 }

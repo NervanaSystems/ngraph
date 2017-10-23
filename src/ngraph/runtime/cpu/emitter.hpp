@@ -40,25 +40,25 @@ namespace ngraph
                              ExternalFunction*,
                              FunctionMap&,
                              const std::vector<TensorViewInfo>& inputs,
-                             const std::vector<TensorViewInfo>& outputs) const;
+                             const std::vector<TensorViewInfo>& outputs);
 
                 void EmitAdd(const ngraph::Node*,
                              ExternalFunction*,
                              FunctionMap&,
                              const std::vector<TensorViewInfo>& inputs,
-                             const std::vector<TensorViewInfo>& outputs) const;
+                             const std::vector<TensorViewInfo>& outputs);
 
                 void EmitDot(const ngraph::Node*,
                              ExternalFunction*,
                              FunctionMap&,
                              const std::vector<TensorViewInfo>& inputs,
-                             const std::vector<TensorViewInfo>& outputs) const;
+                             const std::vector<TensorViewInfo>& outputs);
 
                 void EmitMultiply(const ngraph::Node*,
                                   ExternalFunction*,
                                   FunctionMap&,
                                   const std::vector<TensorViewInfo>& inputs,
-                                  const std::vector<TensorViewInfo>& outputs) const;
+                                  const std::vector<TensorViewInfo>& outputs);
 
             };
         }

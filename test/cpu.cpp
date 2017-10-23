@@ -21,6 +21,33 @@
 using namespace std;
 using namespace ngraph;
 
+TEST(cpu, ab)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(A + B, rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    *a = vector<float>{1, 2, 3, 4};
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    *b = vector<float>{5, 6, 7, 8};
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{6, 8, 10, 12}), result->get_vector());
+
+    (*cf)({b, a}, {result});
+    ASSERT_EQ((vector<float>{6, 8, 10, 12}), result->get_vector());
+}
+
 TEST(cpu, abc)
 {
     auto shape = Shape{2, 2};
@@ -55,7 +82,7 @@ TEST(cpu, abc)
 }
 
 /*
-TEST(execute, abc_int64)
+TEST(cpu, abc_int64)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Int64::element_type(), shape);

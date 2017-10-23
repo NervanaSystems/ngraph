@@ -20,13 +20,15 @@
 using namespace std;
 using namespace ngraph::runtime::cpu;
 
-CallFrame::CallFrame(size_t n_inputs,
+CallFrame::CallFrame(EntryPoint compiled_function,
+                     size_t n_inputs,
                      size_t n_outputs,
                      const TensorViewPtrs& temps)
 
     : m_n_inputs(n_inputs)
     , m_n_outputs(n_outputs)
     , m_tensor_views(n_inputs + n_outputs + temps.size())
+    , m_compiled_function(compiled_function)
 {
     copy(temps.begin(), temps.end(), m_tensor_views.begin() + m_n_inputs + m_n_outputs);
 }
@@ -39,6 +41,7 @@ void CallFrame::tensor_call(
     copy(outputs.begin(), outputs.end(), m_tensor_views.begin() + m_n_inputs);
 
     // TODO: Execute!
+    m_compiled_function(this, m_tensor_views);
 
     // Don't hold onto inputs/outputs
     fill_n(m_tensor_views.begin(), m_n_inputs + m_n_outputs, nullptr);

@@ -149,6 +149,10 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     LO->WChar = 1;
     LO->RTTI = 1;
 
+    // CodeGen options
+    auto& CGO = Clang->getInvocation().getCodeGenOpts();
+    CGO.setDebugInfo(codegenoptions::FullDebugInfo);
+
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
     unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);

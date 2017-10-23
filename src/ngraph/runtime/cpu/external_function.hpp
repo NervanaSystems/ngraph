@@ -18,6 +18,7 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <functional>
 
 #include "ngraph/function.hpp"
 #include "ngraph/codegen/compiler.hpp"
@@ -38,7 +39,7 @@ namespace ngraph
             using FunctionMap = std::unordered_map<std::shared_ptr<Function>,
                                                    std::shared_ptr<ExternalFunction>>;
 
-            using OpFunction = std::function<void(const Emitter*,
+            using OpFunction = std::function<void(Emitter*,
                                                   const ngraph::Node*,
                                                   ExternalFunction*,
                                                   FunctionMap&,
@@ -62,6 +63,7 @@ namespace ngraph
                 size_t m_n_outputs;
                 std::shared_ptr<std::vector<std::shared_ptr<Instruction>>> m_instructions;
                 ngraph::descriptor::TensorViewPtrs m_temp_views;
+                EntryPoint compiled_function;
             };
         }
     }
