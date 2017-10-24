@@ -12,27 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <sstream>
+#include "ngraph/ops/log.hpp"
+#include "ngraph/ops/divide.hpp"
 
-#include "ngraph/ops/parameter.hpp"
-
-using namespace std;
-using namespace ngraph::op;
-
-Parameter::Parameter(const std::shared_ptr<const ValueType>& value_type)
-    : Node(value_type)
+void ngraph::op::Log::generate_adjoints(autodiff::Adjoints& adjoints,
+                                        const std::shared_ptr<Node>& delta)
 {
-}
+    auto x = m_arguments[0];
 
-Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& shape)
-    : Parameter(make_shared<TensorViewType>(element_type, shape))
-{
-}
-
-void Parameter::propagate_types()
-{
-}
-
-void Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
-{
+    adjoints.add_delta(x, delta / x);
 }

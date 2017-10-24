@@ -22,6 +22,7 @@ include_directories(
     )
 
 set (SRC
+    autodiff.cpp
     build_graph.cpp
     eigen.cpp
     element_type.cpp

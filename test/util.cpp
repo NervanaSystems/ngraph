@@ -18,6 +18,8 @@
 
 #include "gtest/gtest.h"
 
+#include "ngraph/ngraph.hpp"
+#include "ngraph/test/all_close.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -168,4 +170,26 @@ TEST(util, reduce)
         size_t actual = ngraph::reduce(x.begin(), x.end(), ngraph::mul<size_t>);
         EXPECT_EQ(actual, 720);
     }
+}
+
+TEST(util, all_close)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(
+        runtime::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}));
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(
+        runtime::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}));
+
+    EXPECT_TRUE(ngraph::test::all_close(a, b));
+
+    auto c = backend->make_parameterized_tensor_view<element::Float32>(
+        runtime::NDArray<float, 2>({{1.1f, 2, 3}, {3, 4, 5}}));
+    EXPECT_FALSE(ngraph::test::all_close(c, a, 0, .05f));
+    EXPECT_TRUE(ngraph::test::all_close(c, a, 0, .11f));
+
+    EXPECT_FALSE(ngraph::test::all_close(c, a, .05f, 0));
+    EXPECT_TRUE(ngraph::test::all_close(c, a, .11f, 0));
 }

@@ -13,6 +13,7 @@
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=return-type")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=inconsistent-missing-override")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic-errors")
 
  # whitelist errors here
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Weverything")

@@ -38,3 +38,9 @@ const ngraph::Shape& TensorView::get_shape() const
 {
     return m_descriptor->get_tensor_view_type()->get_shape();
 }
+
+std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout>
+    TensorView::get_tensor_view_layout() const
+{
+    return m_descriptor->get_tensor_view_layout();
+}
