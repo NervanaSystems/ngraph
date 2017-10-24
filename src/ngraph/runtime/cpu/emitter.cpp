@@ -122,7 +122,7 @@ void Emitter::EMITTER_DECL(EmitDot)
         auto& first = (arg0_shape.empty() ? inputs[0] : inputs[1]);
         auto& second = (arg0_shape.empty() ? inputs[1] : inputs[0]);
 
-        TU += "    {\n";
+        TU += "    {\n"
               "        auto arg1 = call_frame->get_tensor_view_data<" + element_type_names[TI(arg0_element_type)] +
                        ">(" + to_string(second.get_index()) + ");\n"
               "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(arg0_element_type)] +
