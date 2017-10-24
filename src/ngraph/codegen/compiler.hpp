@@ -44,6 +44,9 @@ public:
     execution_state();
     ~execution_state();
 
+    void enable_pch() { pch_enabled = true; }
+    void disable_pch() { pch_enabled = false; }
+
     std::unique_ptr<llvm::Module> compile(const std::string& source, const std::string& name = "");
 
     bool add_module(std::unique_ptr<llvm::Module>&);
@@ -61,6 +64,7 @@ public:
 private:
     llvm::ExecutionEngine* m_execution_engine;
     std::string jit_error;
+    bool pch_enabled;
 
     template <typename signature>
     std::function<signature> f_cast(void* f)

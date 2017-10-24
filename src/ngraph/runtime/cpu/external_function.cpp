@@ -59,6 +59,10 @@
 #include "ngraph/runtime/cpu/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
 
+// TODO: Decide if we want to ship this or
+// just enable it for developer build-test cycles
+#define NGCPU_PCH
+
 using namespace std;
 using namespace ngraph::runtime::cpu;
 
@@ -176,7 +180,7 @@ using namespace ngraph::element;
 using namespace ngraph::runtime;
 using namespace ngraph::runtime::cpu::eigen;
 
-extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame, 
+extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
                              ngraph::runtime::TensorViewPtrs& tensor_views)
 {
 )";
@@ -215,6 +219,11 @@ extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
     out.close();
 
     ngraph::codegen::execution_state estate;
+
+#if defined(NGCPU_PCH)
+    estate.enable_pch();
+#endif
+
     auto llvm_module = estate.compile(TU, "__ngcpu_codegen.cpp");
     assert(llvm_module);
     estate.add_module(llvm_module);

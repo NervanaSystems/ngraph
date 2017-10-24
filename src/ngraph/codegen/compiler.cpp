@@ -67,6 +67,7 @@ static std::string GetExecutablePath(const char* Argv0)
 
 execution_state::execution_state()
     : m_execution_engine{nullptr}
+    , pch_enabled(false)
 {
 }
 
@@ -151,7 +152,16 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
 
     // CodeGen options
     auto& CGO = Clang->getInvocation().getCodeGenOpts();
+    // TODO: Debuginfo inclusion should be predicated
     CGO.setDebugInfo(codegenoptions::FullDebugInfo);
+
+    if (pch_enabled)
+    {
+        // Preprocessor options
+        auto& PPO = Clang->getInvocation().getPreprocessorOpts();
+        PPO.ImplicitPCHInclude = "ngcpu.pch";
+        PPO.DisablePCHValidation = 1;
+    }
 
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
