@@ -87,7 +87,6 @@ static const OpMap dispatcher{{TI(ngraph::op::Add), &Emitter::EmitAdd},
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                    bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
-    , m_instructions(make_shared<std::vector<std::shared_ptr<Instruction>>>())
     , compiled_function(nullptr)
 {
 }

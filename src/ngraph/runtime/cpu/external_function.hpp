@@ -31,7 +31,6 @@ namespace ngraph
     {
         namespace cpu
         {
-            class Instruction;
             class ExternalFunction;
             class Emitter;
             class CallFrame;
@@ -61,7 +60,6 @@ namespace ngraph
 
                 size_t m_n_inputs;
                 size_t m_n_outputs;
-                std::shared_ptr<std::vector<std::shared_ptr<Instruction>>> m_instructions;
                 ngraph::descriptor::TensorViewPtrs m_temp_views;
                 EntryPoint compiled_function;
             };

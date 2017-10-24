@@ -30,7 +30,6 @@ namespace ngraph
 
         namespace cpu
         {
-            class Instruction;
             class CallFrame;
             using EntryPoint = std::function<void(ngraph::runtime::cpu::CallFrame*, ngraph::runtime::TensorViewPtrs&)>;
 
