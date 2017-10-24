@@ -876,15 +876,14 @@ TEST(cpu, lesseq)
     ASSERT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), result->get_vector());
 }
 
-/*
-TEST(execute, log)
+TEST(cpu, log)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Log>(A), rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -903,7 +902,7 @@ TEST(execute, log)
     ASSERT_EQ(loga, result->get_vector());
 }
 
-TEST(execute, maximum)
+TEST(cpu, maximum)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -911,7 +910,7 @@ TEST(execute, maximum)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), rt, op::Parameters{A, B});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -927,14 +926,14 @@ TEST(execute, maximum)
     ASSERT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), result->get_vector());
 }
 
-TEST(execute, negative)
+TEST(cpu, negative)
 {
     auto shape = Shape{2, 3};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Negative>(A), rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -948,6 +947,7 @@ TEST(execute, negative)
     ASSERT_EQ((vector<float>{-1, 2, 0, 4.8f, -8.6f, 8.6f}), result->get_vector());
 }
 
+/*
 TEST(execute, notequal)
 {
     auto shape = Shape{2, 2, 2};
