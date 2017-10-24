@@ -947,8 +947,7 @@ TEST(cpu, negative)
     ASSERT_EQ((vector<float>{-1, 2, 0, 4.8f, -8.6f, 8.6f}), result->get_vector());
 }
 
-/*
-TEST(execute, notequal)
+TEST(cpu, notequal)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -956,7 +955,7 @@ TEST(execute, notequal)
     auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::NotEqual>(A, B), rt, op::Parameters{A, B});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -972,6 +971,7 @@ TEST(execute, notequal)
     ASSERT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), result->get_vector());
 }
 
+/*
 TEST(execute, select)
 {
     auto shape = Shape{2, 2, 2};
