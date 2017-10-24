@@ -55,6 +55,8 @@ namespace ngraph
                 void EMITTER_DECL(EmitEqual);
                 void EMITTER_DECL(EmitGreater);
                 void EMITTER_DECL(EmitGreaterEq);
+                void EMITTER_DECL(EmitLess);
+                void EMITTER_DECL(EmitLessEq);
 
             };
         }
