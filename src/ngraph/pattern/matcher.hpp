@@ -15,7 +15,7 @@
 #pragma once
 
 #include <memory.h>
-#include "ngraph/ngraph.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
@@ -73,12 +73,17 @@ namespace ngraph
             void reset_pattern_nodes(std::shared_ptr<Node> node);
 
             friend op::Label; //TODO: refine to match_class
+
+        protected:
+            void virtual match_class(const std::shared_ptr<Node>& pattern_node,
+                                     const std::shared_ptr<Node>& graph_node);
+
         private:
             void match_arguments(const Nodes& pattern_args, const Nodes& args);
-			void match_class(const std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node);
-
-			void match_pattern(const std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node);
-			void match_any(const std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node);
+            void match_pattern(const std::shared_ptr<Node>& pattern_node,
+                               const std::shared_ptr<Node>& graph_node);
+            void match_any(const std::shared_ptr<Node>& pattern_node,
+                           const std::shared_ptr<Node>& graph_node);
             std::shared_ptr<Node> m_match_root;
             std::shared_ptr<Node> m_pattern_node;
             gr_callback_fn m_callback;
@@ -86,5 +91,3 @@ namespace ngraph
         };
     }
 }
-
-

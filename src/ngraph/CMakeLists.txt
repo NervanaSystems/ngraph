@@ -67,7 +67,6 @@ set (SRC
     pass/topological_sort.cpp
     pass/visualize_tree.cpp
     pattern/matcher.cpp
-	pattern/op/label.cpp
     runtime/backend.cpp
     runtime/manager.cpp
     runtime/ngvm/call_frame.cpp

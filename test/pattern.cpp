@@ -31,6 +31,29 @@
 using namespace ngraph;
 using namespace std;
 
+//this is for more nuanced testing
+class TestMatcher : public pattern::Matcher
+{
+    using pattern::Matcher::Matcher;
+    void virtual match_class(const std::shared_ptr<Node>& pattern_node,
+                             const std::shared_ptr<Node>& graph_node) override
+    {
+        static const auto parameter_type = std::type_index(typeid(::ngraph::op::Parameter));
+        const auto pattern_type = std::type_index(typeid(*&*pattern_node));
+
+        if (pattern_type == parameter_type)
+        {
+            on_match_class(pattern_node,
+                           graph_node,
+                           pattern_node.get() ==
+                               dynamic_cast<::ngraph::op::Parameter*>(graph_node.get()));
+            return;
+        }
+
+        this->pattern::Matcher::match_class(pattern_node, graph_node);
+    }
+};
+
 static std::shared_ptr<Node> construct_constant_node(int n)
 {
     auto shape = Shape{1};
@@ -49,25 +72,24 @@ public:
         auto pattern = std::make_shared<pattern::op::Label>();
         auto iconst1 = construct_constant_node(1);
 
-        NGRAPH_DEBUG << "IN TestGraphRewrite" << std::endl;
+        NGRAPH_DEBUG << "IN TestGraphRewrite";
 
         ngraph::pattern::gr_callback_fn callback = [pattern](pattern::Matcher& m) {
-            NGRAPH_DEBUG << "IN CALLBACK" << std::endl;
+            NGRAPH_DEBUG << "IN CALLBACK";
             assert(m.match_root()->get_arguments().size() == 2);
 
             size_t const_node_index =
-                m.match_root()->get_arguments().at(0) == pattern->get_binded_node();
+                m.match_root()->get_arguments().at(0) == pattern->get_bound_node();
             auto const_node = dynamic_pointer_cast<op::ParameterizedConstant<element::Int32>>(
                 m.match_root()->get_arguments().at(const_node_index));
             auto second_node = m.match_root()->get_arguments().at(const_node_index);
-            NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node
-                         << std::endl;
-            NGRAPH_DEBUG << "pattern " << pattern->get_binded_node()->description() << " , "
-                         << pattern->get_binded_node() << std::endl;
+            NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node;
+            NGRAPH_DEBUG << "pattern " << pattern->get_bound_node()->description() << " , "
+                         << pattern->get_bound_node();
             assert(const_node);
 
             auto pattern_value_type = dynamic_pointer_cast<const TensorViewType>(
-                pattern->get_binded_node()->get_value_type());
+                pattern->get_bound_node()->get_value_type());
             auto const_node_value_type =
                 dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
             assert(pattern_value_type && const_node);
@@ -76,7 +98,7 @@ public:
                     const_node_value_type->get_element_type() ||
                 pattern_value_type->get_shape() != const_node_value_type->get_shape())
             {
-                NGRAPH_DEBUG << "TYPE/SHAPE" << std::endl;
+                NGRAPH_DEBUG << "TYPE/SHAPE";
                 return;
             }
 
@@ -86,15 +108,15 @@ public:
 
             if (!all_ones)
             {
-                NGRAPH_DEBUG << "ALL_ONES" << std::endl;
+                NGRAPH_DEBUG << "ALL_ONES";
                 return;
             }
 
-            NGRAPH_DEBUG << "BEFORE REPLACE" << std::endl;
-            ngraph::pass::GraphRewrite::replace_node(m.match_root(), pattern->get_binded_node());
+            NGRAPH_DEBUG << "BEFORE REPLACE";
+            ngraph::pass::GraphRewrite::replace_node(m.match_root(), pattern->get_bound_node());
         };
 
-        auto m = make_shared<pattern::Matcher>(pattern * iconst1, callback);
+        auto m = make_shared<TestMatcher>(pattern * iconst1, callback);
         this->add_matcher(m);
     }
 
@@ -105,25 +127,24 @@ public:
         auto pattern = std::make_shared<pattern::op::Label>();
         auto iconst0 = construct_constant_node(0);
 
-        NGRAPH_DEBUG << "IN TestGraphRewrite" << std::endl;
+        NGRAPH_DEBUG << "IN TestGraphRewrite";
 
         ngraph::pattern::gr_callback_fn callback = [pattern](pattern::Matcher& m) {
-            NGRAPH_DEBUG << "IN CALLBACK" << std::endl;
+            NGRAPH_DEBUG << "IN CALLBACK";
             assert(m.match_root()->get_arguments().size() == 2);
 
             size_t const_node_index =
-                m.match_root()->get_arguments().at(0) == pattern->get_binded_node();
+                m.match_root()->get_arguments().at(0) == pattern->get_bound_node();
             auto const_node = dynamic_pointer_cast<op::ParameterizedConstant<element::Int32>>(
                 m.match_root()->get_arguments().at(const_node_index));
             auto second_node = m.match_root()->get_arguments().at(const_node_index);
-            NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node
-                         << std::endl;
-            NGRAPH_DEBUG << "pattern " << pattern->get_binded_node()->description() << " , "
-                         << pattern->get_binded_node() << std::endl;
+            NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node;
+            NGRAPH_DEBUG << "pattern " << pattern->get_bound_node()->description() << " , "
+                         << pattern->get_bound_node();
             assert(const_node);
 
             auto pattern_value_type = dynamic_pointer_cast<const TensorViewType>(
-                pattern->get_binded_node()->get_value_type());
+                pattern->get_bound_node()->get_value_type());
             auto const_node_value_type =
                 dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
             assert(pattern_value_type && const_node);
@@ -132,7 +153,7 @@ public:
                     const_node_value_type->get_element_type() ||
                 pattern_value_type->get_shape() != const_node_value_type->get_shape())
             {
-                NGRAPH_DEBUG << "TYPE/SHAPE" << std::endl;
+                NGRAPH_DEBUG << "TYPE/SHAPE";
                 return;
             }
 
@@ -142,15 +163,15 @@ public:
 
             if (!all_zeros)
             {
-                NGRAPH_DEBUG << "ALL_ZEROS" << std::endl;
+                NGRAPH_DEBUG << "ALL_ZEROS";
                 return;
             }
 
-            NGRAPH_DEBUG << "BEFORE REPLACE" << std::endl;
-            ngraph::pass::GraphRewrite::replace_node(m.match_root(), pattern->get_binded_node());
+            NGRAPH_DEBUG << "BEFORE REPLACE";
+            ngraph::pass::GraphRewrite::replace_node(m.match_root(), pattern->get_bound_node());
         };
 
-        auto m = make_shared<pattern::Matcher>(pattern + iconst0, callback);
+        auto m = make_shared<TestMatcher>(pattern + iconst0, callback);
         this->add_matcher(m);
     }
 
@@ -172,7 +193,7 @@ static void run_passes(pass::Manager& pass_manager,
     pass_manager.run_passes(func);
 }
 
-TEST(graph_rewrite, basic)
+TEST(pattern, graph_rewrite)
 {
     auto shape = Shape{1};
     pass::Manager pass_manager;
@@ -228,12 +249,12 @@ TEST(graph_rewrite, basic)
     }
 }
 
-TEST(pattern, op_op)
+TEST(pattern, matcher)
 {
     auto shape = Shape{1};
 
     auto a = make_shared<op::Parameter>(element::Int32::element_type(), shape);
-    pattern::Matcher n(nullptr);
+    TestMatcher n(nullptr);
     ASSERT_TRUE(n.match(a, a));
 
     auto abs = make_shared<op::Abs>(a);
@@ -246,7 +267,7 @@ TEST(pattern, op_op)
 
     auto pattern = std::make_shared<pattern::op::Label>();
     ASSERT_TRUE(n.match(pattern, a));
-    ASSERT_EQ(pattern->get_binded_node(), a);
+    ASSERT_EQ(pattern->get_bound_node(), a);
 
     auto pattern_false =
         std::make_shared<pattern::op::Label>([](std::shared_ptr<Node> n) { return false; });
@@ -258,14 +279,14 @@ TEST(pattern, op_op)
     ASSERT_TRUE(n.match(any + b, abs + b));
 
     ASSERT_TRUE(n.match(pattern + b, abs + b));
-    ASSERT_EQ(pattern->get_binded_node(), abs);
+    ASSERT_EQ(pattern->get_bound_node(), abs);
 
     ASSERT_TRUE(n.match(b + pattern, abs + b));
-    ASSERT_EQ(pattern->get_binded_node(), abs);
+    ASSERT_EQ(pattern->get_bound_node(), abs);
 
     auto c = make_shared<op::Parameter>(element::Int32::element_type(), shape);
     ASSERT_TRUE(n.match(c * (b + pattern), c * (abs + b)));
-    ASSERT_EQ(pattern->get_binded_node(), abs);
+    ASSERT_EQ(pattern->get_bound_node(), abs);
 
     ASSERT_TRUE(n.match(c * (any + b), c * (abs + b)));     //nested any
     ASSERT_TRUE(n.match(c * (any + b), (b + abs) * c));     //permutations w/ any
@@ -279,7 +300,7 @@ TEST(pattern, op_op)
     auto iconst1_0 = make_shared<op::ParameterizedConstant<element::Int32>>(shape, t);
     auto iconst1_1 = make_shared<op::ParameterizedConstant<element::Int32>>(shape, t);
     ASSERT_TRUE(n.match(pattern * iconst1_0, a * iconst1_1)); //different iconst
-    ASSERT_EQ(pattern->get_binded_node(), a);
+    ASSERT_EQ(pattern->get_bound_node(), a);
 
     auto fconst1_0 = make_shared<op::ParameterizedConstant<element::Float32>>(shape, f);
     ASSERT_FALSE(n.match(pattern * fconst1_0, a * iconst1_1)); //different iconst
