@@ -467,14 +467,13 @@ TEST(cpu, dot_0_0)
     ASSERT_EQ((vector<float>{0}), result->get_vector());
 }
 
-/*
-TEST(execute, dot_matrix_2x0_0x2)
+TEST(cpu, dot_matrix_2x0_0x2)
 {
     auto shape_a = Shape{2, 0};
     auto shape_b = Shape{0, 2};
     auto shape_r = Shape{2, 2};
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto backend = manager->allocate_backend();
 
     auto make_external = [&]() {
@@ -500,7 +499,7 @@ TEST(execute, dot_matrix_2x0_0x2)
     ASSERT_EQ((vector<float>{0, 0, 0, 0}), result->get_vector());
 }
 
-TEST(execute, dot_matrix_0x2_2x0)
+TEST(cpu, dot_matrix_0x2_2x0)
 {
     auto shape_a = Shape{0, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -510,7 +509,7 @@ TEST(execute, dot_matrix_0x2_2x0)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -526,7 +525,7 @@ TEST(execute, dot_matrix_0x2_2x0)
     ASSERT_EQ((vector<float>{}), result->get_vector());
 }
 
-TEST(execute, dot_matrix_3x2_2x0)
+TEST(cpu, dot_matrix_3x2_2x0)
 {
     auto shape_a = Shape{3, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -536,7 +535,7 @@ TEST(execute, dot_matrix_3x2_2x0)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -552,6 +551,7 @@ TEST(execute, dot_matrix_3x2_2x0)
     ASSERT_EQ((vector<float>{}), result->get_vector());
 }
 
+/*
 TEST(execute, dot_scalar_0x2)
 {
     auto shape_a = Shape{};
