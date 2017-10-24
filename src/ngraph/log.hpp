@@ -64,12 +64,19 @@ namespace nervana
     class log_helper
     {
     public:
-        log_helper(LOG_TYPE, const char* file, int line, const char* func);
+        log_helper(LOG_TYPE, const char* file, int line, const char* func, bool ds = false);
         ~log_helper();
-
         std::ostream& stream() { return _stream; }
-    private:
+    protected:
         std::stringstream _stream;
+        bool dummy_stream; //overridden by null_log_helper to discard the output
+    };
+
+    class null_log_helper : public log_helper
+    {
+    public:
+        null_log_helper(LOG_TYPE type, const char* file, int line, const char* func)
+            : log_helper(type, file, line, func, true){};
     };
 
     class logger
@@ -107,10 +114,17 @@ namespace nervana
                         __LINE__,                                                                  \
                         __PRETTY_FUNCTION__)                                                       \
         .stream()
+
+#ifdef ENABLE_DEBUG_TRACE //set this as a preprocessor option (i.e. -D ENABLE_DEBUG_TRACE)
+#define LOGGER_TYPE nervana::log_helper
+#else
+#define LOGGER_TYPE nervana::null_log_helper
+#endif
+
 #define NGRAPH_DEBUG                                                                               \
-    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_DEBUG,                                        \
-                        nervana::get_file_name(__FILE__),                                          \
-                        __LINE__,                                                                  \
-                        __PRETTY_FUNCTION__)                                                       \
+    LOGGER_TYPE(nervana::LOG_TYPE::_LOG_TYPE_DEBUG,                                                \
+                nervana::get_file_name(__FILE__),                                                  \
+                __LINE__,                                                                          \
+                __PRETTY_FUNCTION__)                                                               \
         .stream()
 }

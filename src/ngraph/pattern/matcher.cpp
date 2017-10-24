@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <typeindex>
-#include <typeinfo>
 #include "matcher.hpp"
 #include <algorithm>
+#include <typeindex>
+#include <typeinfo>
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pattern/op/label.hpp"
-#include "ngraph/pattern/op/any.hpp"
 #include "ngraph/ops/parameter.hpp"
+#include "ngraph/pattern/op/any.hpp"
+#include "ngraph/pattern/op/label.hpp"
 
 namespace ngraph
 {
@@ -32,12 +32,11 @@ namespace ngraph
         //and keep track of all pattern nodes
         {
             auto label = std::dynamic_pointer_cast<::ngraph::pattern::op::Label>(node);
-            NGRAPH_DEBUG << "reset_pattern_nodes : node = " << node->description() << " , " << node
-                         << std::endl;
+            NGRAPH_DEBUG << "reset_pattern_nodes : node = " << node->description() << " , " << node;
             if (label)
             {
                 NGRAPH_DEBUG << "reset_pattern_nodes : label = " << node->description() << " , "
-                             << node << std::endl;
+                             << node;
                 label->reset();
             }
 
@@ -47,94 +46,89 @@ namespace ngraph
             }
         }
 
-		
-		void Matcher::match_pattern(const std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node) 
-		{
-			auto label = std::dynamic_pointer_cast<op::Label>(pattern_node);
-			bool is_match = true;
-			if (label->is_binded())
-			{
-				if (label->get_binded_node() != graph_node)
-				{
-					NGRAPH_DEBUG << "get_binded_node " << label->get_binded_node()->description() << " , "
-						<< label->get_binded_node() << " NOT match " << graph_node->description() << " , "
-						<< graph_node << std::endl;
-					is_match = false;
-				}
-			}
-			else
-			{
-				auto predicate = label->get_predicate();
-				is_match = !predicate || predicate(graph_node);
-			}
+        void Matcher::match_pattern(const std::shared_ptr<Node>& pattern_node,
+                                    const std::shared_ptr<Node>& graph_node)
+        {
+            auto label = std::dynamic_pointer_cast<op::Label>(pattern_node);
+            bool is_match = true;
+            if (label->is_bound())
+            {
+                if (label->get_bound_node() != graph_node)
+                {
+                    NGRAPH_DEBUG << "get_bound_node " << label->get_bound_node()->description()
+                                 << " , " << label->get_bound_node() << " NOT match "
+                                 << graph_node->description() << " , " << graph_node;
+                    is_match = false;
+                }
+            }
+            else
+            {
+                auto predicate = label->get_predicate();
+                is_match = !predicate || predicate(graph_node);
+            }
 
-			if (is_match)
-			{
-				NGRAPH_DEBUG << "Binding get_binded_node " << graph_node->description() << " , "
-					<< graph_node << " , " << graph_node->get_name() << std::endl;
-				label->bind(graph_node);
-			}
-			else
-			{
-				reset();
-				m_match_root.reset();
-				NGRAPH_DEBUG << "MATCHER IS MATCH : " << is_match() << std::endl;
-			}
-		}
+            if (is_match)
+            {
+                NGRAPH_DEBUG << "Binding get_bound_node " << graph_node->description() << " , "
+                             << graph_node << " , " << graph_node->get_name();
+                label->bind(graph_node);
+            }
+            else
+            {
+                reset();
+                m_match_root.reset();
+                NGRAPH_DEBUG << "MATCHER IS MATCH : " << this->is_match();
+            }
+        }
 
-		void Matcher::match_any(const std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node) 
-		{
-			auto any = std::dynamic_pointer_cast<op::Any>(pattern_node);
-			auto predicate = any->get_predicate();
+        void Matcher::match_any(const std::shared_ptr<Node>& pattern_node,
+                                const std::shared_ptr<Node>& graph_node)
+        {
+            auto any = std::dynamic_pointer_cast<op::Any>(pattern_node);
+            auto predicate = any->get_predicate();
 
-			if (!predicate || any->get_predicate()(graph_node))
-			{
-				on_match_class(pattern_node, graph_node, true);
-			}
-			else
-			{
-				assert(pattern_node->get_arguments().size() == 1);
-				on_match_class(pattern_node->get_arguments().at(0), graph_node, true);
-			}
-		}
+            if (!predicate || any->get_predicate()(graph_node))
+            {
+                on_match_class(pattern_node, graph_node, true);
+            }
+            else
+            {
+                assert(pattern_node->get_arguments().size() == 1);
+                on_match_class(pattern_node->get_arguments().at(0), graph_node, true);
+            }
+        }
 
-		void Matcher::match_class(const std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node)
-		{
-			static const auto label_type = std::type_index(typeid(op::Label));
-			static const auto any_type = std::type_index(typeid(op::Any));
-			static const auto parameter_type = std::type_index(typeid(::ngraph::op::Parameter));
+        void Matcher::match_class(const std::shared_ptr<Node>& pattern_node,
+                                  const std::shared_ptr<Node>& graph_node)
+        {
+            static const auto label_type = std::type_index(typeid(op::Label));
+            static const auto any_type = std::type_index(typeid(op::Any));
 
-			const auto pattern_type = std::type_index(typeid(*&*pattern_node));
-			if (pattern_type == label_type)
-			{
-				match_pattern(pattern_node, graph_node);
-				return;
-			}
+            const auto pattern_type = std::type_index(typeid(*&*pattern_node));
+            if (pattern_type == label_type)
+            {
+                match_pattern(pattern_node, graph_node);
+                return;
+            }
 
-			if (pattern_type == any_type) //matches PatternSkipOp semantics
-			{
-				match_any(pattern_node, graph_node);
-				return;
-			}
+            if (pattern_type == any_type) //matches PatternSkipOp semantics
+            {
+                match_any(pattern_node, graph_node);
+                return;
+            }
 
-			if  (pattern_type == parameter_type)
-			{
-				on_match_class(pattern_node, graph_node, pattern_node.get() == dynamic_cast<::ngraph::op::Parameter*>(graph_node.get()));
-				return;
-			}
-
-			on_match_class(pattern_node,
-				graph_node,
-				std::type_index(typeid(*&*pattern_node)) == std::type_index(typeid(*&*graph_node)));
-		}
-		
+            on_match_class(pattern_node,
+                           graph_node,
+                           std::type_index(typeid(*&*pattern_node)) ==
+                               std::type_index(typeid(*&*graph_node)));
+        }
 
         void Matcher::match_arguments(const Nodes& pattern_args, const Nodes& args)
         {
             m_depth++;
             for (size_t i = 0; i < args.size(); i++)
             {
-				match_class(pattern_args.at(i), args.at(i));
+                match_class(pattern_args.at(i), args.at(i));
                 if (!is_match())
                 {
                     m_depth--;
@@ -178,7 +172,7 @@ namespace ngraph
                 do
                 {
                     NGRAPH_DEBUG << pad(2 * m_depth) << "Running a permutation for graph_node "
-                                 << graph_node->description() << " , " << graph_node << std::endl;
+                                 << graph_node->description() << " , " << graph_node;
                     reset_pattern_nodes(pattern_node);
                     m_match_root =
                         old_match_root; //previous permutation wasn't a match; reset m_match_root
@@ -213,11 +207,11 @@ namespace ngraph
         {
             NGRAPH_DEBUG << "Starting match pattern = " << pattern_node << " , "
                          << pattern_node->description() << " , graph_node = " << graph_node << " , "
-                         << graph_node->description() << std::endl;
+                         << graph_node->description();
             reset_pattern_nodes(pattern_node);
             m_match_root = graph_node;
             match_class(pattern_node, graph_node);
-            //NGRAPH_DEBUG << pad(2 * m_depth) << "is_match() " << is_match() << std::endl;
+            //NGRAPH_DEBUG << pad(2 * m_depth) << "is_match() " << is_match();
             return is_match();
         }
     }

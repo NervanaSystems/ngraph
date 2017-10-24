@@ -9,15 +9,15 @@ bool ngraph::pass::GraphRewrite::run_on_call_graph(std::list<std::shared_ptr<Nod
     bool rewritten = false;
     for (auto node : nodes)
     {
-        //NGRAPH_DEBUG << "Processing " << node << std::endl;
+        //NGRAPH_DEBUG << "Processing " << node;
         for (auto matcher : m_matchers)
         {
             NGRAPH_DEBUG << "Running matcher " << matcher << " on " << node << " , "
-                         << node->description() << std::endl;
+                         << node->description();
             if (matcher->match(node))
             {
                 NGRAPH_DEBUG << "Matcher " << matcher << " matched " << node << " , "
-                             << node->description() << std::endl;
+                             << node->description();
                 rewritten = true;
                 matcher->process_match();
             }
@@ -29,17 +29,16 @@ bool ngraph::pass::GraphRewrite::run_on_call_graph(std::list<std::shared_ptr<Nod
 void ngraph::pass::GraphRewrite::replace_node(std::shared_ptr<Node> target,
                                               std::shared_ptr<Node> replacement)
 {
-    NGRAPH_INFO << "Replacing target = " << target << " , " << target->description() << " , "
-                << "replacement = " << replacement << " , " << replacement->description()
-                << std::endl;
+    NGRAPH_DEBUG << "Replacing target = " << target << " , " << target->description() << " , "
+                 << "replacement = " << replacement << " , " << replacement->description();
 
-    NGRAPH_DEBUG << "user = " << replacement << " , " << replacement->description() << std::endl;
+    NGRAPH_DEBUG << "user = " << replacement << " , " << replacement->description();
     for (auto user : target->users())
     {
         auto& args = const_cast<ngraph::Nodes&>(user->get_arguments());
         auto it = std::find(begin(args), end(args), target);
         assert(it != end(args));
-        //NGRAPH_DEBUG << "Replaced " << *it << " w/ " << replacement << " in args of " << user << " , args = " << &args << std::endl;
+        //NGRAPH_DEBUG << "Replaced " << *it << " w/ " << replacement << " in args of " << user << " , args = " << &args;
         it = args.erase(it);
         args.insert(it, replacement);
         const_cast<std::multiset<Node*>&>(replacement->users()).insert(user);

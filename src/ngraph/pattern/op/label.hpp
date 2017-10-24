@@ -1,3 +1,6 @@
+// ----------------------------------------------------------------------------
+// Copyright 2017 Nervana Systems Inc.
+// Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
@@ -25,14 +28,13 @@ namespace ngraph
             {
                 using Pattern::Pattern; // inherit c-tors
             public:
-                virtual void match_class(pattern::Matcher& matcher,
-                                         std::shared_ptr<Node> graph_node) override;
-                bool is_binded() { return (bool)m_binded; };
-                std::shared_ptr<Node> get_binded_node() { return m_binded; }
+                bool is_bound() { return (bool)m_bound; };
+                std::shared_ptr<Node> get_bound_node() { return m_bound; }
                 virtual std::string description() const override { return "Label"; }
-                void reset() { m_binded.reset(); }
+                void reset() { m_bound.reset(); }
+                void bind(std::shared_ptr<Node> n) { m_bound = n; }
             private:
-                std::shared_ptr<Node> m_binded;
+                std::shared_ptr<Node> m_bound;
             };
         }
     }
