@@ -779,8 +779,7 @@ TEST(cpu, dot_matrix_vector_int64)
     ASSERT_EQ((vector<element::Int64::type>{190, 486, 782, 1078}), result->get_vector());
 }
 
-/*
-TEST(execute, greater)
+TEST(cpu, greater)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -788,7 +787,7 @@ TEST(execute, greater)
     auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Greater>(A, B), rt, op::Parameters{A, B});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -804,7 +803,8 @@ TEST(execute, greater)
     ASSERT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), result->get_vector());
 }
 
-TEST(execute, greatereq)
+
+TEST(cpu, greatereq)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -812,7 +812,7 @@ TEST(execute, greatereq)
     auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::GreaterEq>(A, B), rt, op::Parameters{A, B});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -828,6 +828,7 @@ TEST(execute, greatereq)
     ASSERT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), result->get_vector());
 }
 
+/*
 TEST(execute, less)
 {
     auto shape = Shape{2, 2, 2};

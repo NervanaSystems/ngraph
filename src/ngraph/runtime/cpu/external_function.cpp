@@ -79,7 +79,9 @@ static const OpMap dispatcher{{TI(ngraph::op::Add), &Emitter::EmitAdd},
                               {TI(ngraph::op::Abs), &Emitter::EmitAbs},
                               {TI(ngraph::op::Concat), &Emitter::EmitConcat},
                               {TI(ngraph::op::Divide), &Emitter::EmitDivide},
-                              {TI(ngraph::op::Equal), &Emitter::EmitEqual}
+                              {TI(ngraph::op::Equal), &Emitter::EmitEqual},
+                              {TI(ngraph::op::Greater), &Emitter::EmitGreater},
+                              {TI(ngraph::op::GreaterEq), &Emitter::EmitGreaterEq}
                              };
 
 #undef TI
