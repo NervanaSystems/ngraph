@@ -68,18 +68,12 @@ static std::string GetExecutablePath(const char* Argv0)
 execution_state::execution_state()
     : m_execution_engine{nullptr}
     , pch_enabled(false)
+    , debuginfo_enabled(false)
 {
 }
 
 execution_state::~execution_state()
 {
-    // /// Take the LLVM context used by this action.
-    // llvm::LLVMContext *takeLLVMContext();
-
-    // if (m_execution_engine)
-    // {
-    //     m_execution_engine->runStaticConstructorsDestructors(true);
-    // }
 }
 
 std::unique_ptr<llvm::Module> execution_state::compile(const string& source, const string& name)
@@ -146,10 +140,12 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     LO->WChar = 1;
     LO->RTTI = 1;
 
-    // CodeGen options
-    auto& CGO = Clang->getInvocation().getCodeGenOpts();
-    // TODO: Debuginfo inclusion should be predicated
-    CGO.setDebugInfo(codegenoptions::FullDebugInfo);
+    if (debuginfo_enabled)
+    {
+        // CodeGen options
+        auto& CGO = Clang->getInvocation().getCodeGenOpts();
+        CGO.setDebugInfo(codegenoptions::FullDebugInfo);
+    }
 
     if (pch_enabled)
     {
@@ -165,8 +161,6 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     Clang->getInvocation().getPreprocessorOpts().addRemappedFile(name, buffer.get());
 
     // Create and execute action
-    // CodeGenAction *compilerAction = new EmitLLVMOnlyAction();
-    // CodeGenAction* compilerAction = new EmitAssemblyAction();
     CodeGenAction* compilerAction = new EmitCodeGenOnlyAction();
     Clang->ExecuteAction(*compilerAction);
 
@@ -181,13 +175,10 @@ bool execution_state::add_module(std::unique_ptr<llvm::Module>& module)
     {
         if (!m_execution_engine)
         {
-            // auto mm = unique_ptr<RTDyldMemoryManager>(new method_resolver(this));
             m_execution_engine = llvm::EngineBuilder(move(module))
                                      .setEngineKind(llvm::EngineKind::JIT)
                                      .setOptLevel(llvm::CodeGenOpt::Aggressive)
                                      .setErrorStr(&jit_error)
-                                     // .setUseMCJIT(true)
-                                     // .setMCJITMemoryManager(std::move(mm))
                                      .create();
 
             if (!m_execution_engine)
