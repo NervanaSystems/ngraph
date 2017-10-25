@@ -20,6 +20,7 @@
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
@@ -770,4 +771,48 @@ void Emitter::EMITTER_DECL(EmitParameterizedConstantUInt64)
     }
 
     TU += "};\n    }\n";
+}
+
+void Emitter::EMITTER_DECL(EmitBroadcast)
+{
+    auto broadcast = static_cast<const op::Broadcast*>(n);
+
+    auto arg_tensor_type =
+        dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type());
+    assert(arg_tensor_type);
+
+    auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+    assert(result_tensor_type);
+
+    auto arg_shape = arg_tensor_type->get_shape();
+    auto result_shape = result_tensor_type->get_shape();
+    auto& result_element_type = result_tensor_type->get_element_type();
+
+    if (broadcast->get_broadcast_axes().empty())
+    {
+        TU +=
+            "    {\n"
+            "        call_frame->get_parameterized_tensor_view<" +
+            element_type_names[TI(result_element_type)] + ">(" + to_string(outputs[0].get_index()) +
+            ")->get_vector() =\n"
+            "        call_frame->get_parameterized_tensor_view<" +
+            element_type_names[TI(result_element_type)] + ">(" + to_string(inputs[0].get_index()) +
+            ")->get_vector();\n"
+            "    }\n";
+    }
+    else if (arg_shape.size() == 0)
+    {
+        TU += "    {\n"
+              "        auto arg0 = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] + ">(" + to_string(inputs[0].get_index()) + ");\n"
+              "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] + ">(" + to_string(outputs[0].get_index()) + ");\n"
+              "        EigenArray1d<" + element_type_names[TI(result_element_type)] + ">(out, "
+                       EIGEN_VECTOR_FORMAT(outputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ") =\n"
+              "        EigenArray1d<" + element_type_names[TI(result_element_type)] + ">(arg0, "
+                       EIGEN_VECTOR_FORMAT(inputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ")(0, 0);\n"
+              "    }\n";
+    }
+    else
+    {
+        throw ngraph_error("Broadcast not implemented for given inputs");
+    }
 }

@@ -62,6 +62,7 @@
 // TODO: Decide if we want to ship this or
 // just enable it for developer build-test cycles
 //#define NGCPU_PCH
+//#define NGCPU_DEBUGINFO
 
 using namespace std;
 using namespace ngraph::runtime::cpu;
@@ -107,7 +108,7 @@ static const OpMap dispatcher{
      &Emitter::EmitParameterizedConstantUInt32},
     {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt64>),
      &Emitter::EmitParameterizedConstantUInt64},
-
+    {TI(ngraph::op::Broadcast), &Emitter::EmitBroadcast},
 };
 
 #undef TI
@@ -250,6 +251,10 @@ extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
 
 #if defined(NGCPU_PCH)
     estate.enable_pch();
+#endif
+
+#if defined(NGCPU_DEBUGINFO)
+    estate.enable_debuginfo();
 #endif
 
     auto llvm_module = estate.compile(TU, "__ngcpu_codegen.cpp");
