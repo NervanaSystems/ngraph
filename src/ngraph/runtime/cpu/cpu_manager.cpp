@@ -14,9 +14,9 @@
 
 #include <memory>
 
-#include "ngraph/runtime/cpu/external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_manager.hpp"
+#include "ngraph/runtime/cpu/external_function.hpp"
 
 using namespace ngraph::runtime::cpu;
 

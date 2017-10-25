@@ -803,7 +803,6 @@ TEST(cpu, greater)
     ASSERT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), result->get_vector());
 }
 
-
 TEST(cpu, greatereq)
 {
     auto shape = Shape{2, 2, 2};

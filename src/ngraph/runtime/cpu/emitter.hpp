@@ -14,19 +14,19 @@
 
 #pragma once
 
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
 #include "ngraph/runtime/cpu/external_function.hpp"
+#include "ngraph/runtime/tensor_view_info.hpp"
 
-#define EMITTER_DECL(E) E(const ngraph::Node* n,                     \
-                          ExternalFunction* ef,                      \
-                          FunctionMap& function_map,                 \
-                          const std::vector<TensorViewInfo>& inputs, \
-                          const std::vector<TensorViewInfo>& outputs)
-
+#define EMITTER_DECL(E)                                                                            \
+    E(const ngraph::Node* n,                                                                       \
+      ExternalFunction* ef,                                                                        \
+      FunctionMap& function_map,                                                                   \
+      const std::vector<TensorViewInfo>& inputs,                                                   \
+      const std::vector<TensorViewInfo>& outputs)
 
 namespace ngraph
 {
@@ -40,9 +40,11 @@ namespace ngraph
                 std::string TU;
 
             public:
-                Emitter() : TU("") { }
+                Emitter()
+                    : TU("")
+                {
+                }
                 std::string& GetTU() { return TU; }
-
                 void EMITTER_DECL(EmitNop);
                 void EMITTER_DECL(EmitAdd);
                 void EMITTER_DECL(EmitDot);
@@ -71,7 +73,6 @@ namespace ngraph
                 void EMITTER_DECL(EmitParameterizedConstantUInt8);
                 void EMITTER_DECL(EmitParameterizedConstantUInt32);
                 void EMITTER_DECL(EmitParameterizedConstantUInt64);
-
             };
         }
     }

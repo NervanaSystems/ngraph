@@ -16,8 +16,8 @@
 
 #include <memory>
 
-#include "ngraph/runtime/manager.hpp"
 #include "ngraph/codegen/compiler.hpp"
+#include "ngraph/runtime/manager.hpp"
 
 namespace ngraph
 {
@@ -34,6 +34,7 @@ namespace ngraph
             {
             protected:
                 ngraph::codegen::execution_state exec_state;
+
             public:
                 virtual std::shared_ptr<Backend> allocate_backend() override;
 

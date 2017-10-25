@@ -46,10 +46,8 @@ public:
 
     void enable_pch() { pch_enabled = true; }
     void disable_pch() { pch_enabled = false; }
-
     void enable_debuginfo() { debuginfo_enabled = true; }
     void disable_debuginfo() { debuginfo_enabled = false; }
-
     std::unique_ptr<llvm::Module> compile(const std::string& source, const std::string& name = "");
 
     bool add_module(std::unique_ptr<llvm::Module>&);

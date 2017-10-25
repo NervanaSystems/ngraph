@@ -14,14 +14,14 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
-#include <functional>
 
-#include "ngraph/function.hpp"
 #include "ngraph/codegen/compiler.hpp"
+#include "ngraph/function.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
 
@@ -35,8 +35,8 @@ namespace ngraph
             class Emitter;
             class CallFrame;
 
-            using FunctionMap = std::unordered_map<std::shared_ptr<Function>,
-                                                   std::shared_ptr<ExternalFunction>>;
+            using FunctionMap =
+                std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<ExternalFunction>>;
 
             using OpFunction = std::function<void(Emitter*,
                                                   const ngraph::Node*,
@@ -47,7 +47,8 @@ namespace ngraph
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
-            using EntryPoint = std::function<void(ngraph::runtime::cpu::CallFrame*, ngraph::runtime::TensorViewPtrs&)>;
+            using EntryPoint = std::function<void(ngraph::runtime::cpu::CallFrame*,
+                                                  ngraph::runtime::TensorViewPtrs&)>;
 
             class ExternalFunction : public ngraph::runtime::ExternalFunction
             {
@@ -55,6 +56,7 @@ namespace ngraph
                 ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                  bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
+
             protected:
                 void compile(FunctionMap& function_map);
 

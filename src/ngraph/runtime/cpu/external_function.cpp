@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <fstream>
 #include <memory>
+#include <string>
 #include <tuple>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
-#include <string>
-#include <fstream>
 
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/descriptor/input.hpp"
@@ -70,36 +70,45 @@ using ngraph::descriptor::layout::DenseTensorViewLayout;
 
 #define TI(x) type_index(typeid(x))
 
-static const OpMap dispatcher{{TI(ngraph::op::Add), &Emitter::EmitAdd},
-                              {TI(ngraph::op::Dot), &Emitter::EmitDot},
-                              {TI(ngraph::op::Multiply), &Emitter::EmitMultiply},
-                              {TI(ngraph::op::Parameter), &Emitter::EmitNop},
-                              {TI(ngraph::op::GetTupleElement), &Emitter::EmitGetTupleElement},
-                              {TI(ngraph::op::Tuple), &Emitter::EmitTuple},
-                              {TI(ngraph::op::Abs), &Emitter::EmitAbs},
-                              {TI(ngraph::op::Concat), &Emitter::EmitConcat},
-                              {TI(ngraph::op::Divide), &Emitter::EmitDivide},
-                              {TI(ngraph::op::Equal), &Emitter::EmitEqual},
-                              {TI(ngraph::op::Greater), &Emitter::EmitGreater},
-                              {TI(ngraph::op::GreaterEq), &Emitter::EmitGreaterEq},
-                              {TI(ngraph::op::Less), &Emitter::EmitLess},
-                              {TI(ngraph::op::LessEq), &Emitter::EmitLessEq},
-                              {TI(ngraph::op::Log), &Emitter::EmitLog},
-                              {TI(ngraph::op::Maximum), &Emitter::EmitMaximum},
-                              {TI(ngraph::op::Negative), &Emitter::EmitNegative},
-                              {TI(ngraph::op::NotEqual), &Emitter::EmitNotEqual},
-                              {TI(ngraph::op::Select), &Emitter::EmitSelect},
-                              {TI(ngraph::op::Subtract), &Emitter::EmitSubtract},
-                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::Bool>), &Emitter::EmitParameterizedConstantBool},
-                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::Float32>), &Emitter::EmitParameterizedConstantFloat32},
-                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int8>), &Emitter::EmitParameterizedConstantInt8},
-                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int32>), &Emitter::EmitParameterizedConstantInt32},
-                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int64>), &Emitter::EmitParameterizedConstantInt64},
-                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt8>), &Emitter::EmitParameterizedConstantUInt8},
-                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt32>), &Emitter::EmitParameterizedConstantUInt32},
-                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt64>), &Emitter::EmitParameterizedConstantUInt64},
+static const OpMap dispatcher{
+    {TI(ngraph::op::Add), &Emitter::EmitAdd},
+    {TI(ngraph::op::Dot), &Emitter::EmitDot},
+    {TI(ngraph::op::Multiply), &Emitter::EmitMultiply},
+    {TI(ngraph::op::Parameter), &Emitter::EmitNop},
+    {TI(ngraph::op::GetTupleElement), &Emitter::EmitGetTupleElement},
+    {TI(ngraph::op::Tuple), &Emitter::EmitTuple},
+    {TI(ngraph::op::Abs), &Emitter::EmitAbs},
+    {TI(ngraph::op::Concat), &Emitter::EmitConcat},
+    {TI(ngraph::op::Divide), &Emitter::EmitDivide},
+    {TI(ngraph::op::Equal), &Emitter::EmitEqual},
+    {TI(ngraph::op::Greater), &Emitter::EmitGreater},
+    {TI(ngraph::op::GreaterEq), &Emitter::EmitGreaterEq},
+    {TI(ngraph::op::Less), &Emitter::EmitLess},
+    {TI(ngraph::op::LessEq), &Emitter::EmitLessEq},
+    {TI(ngraph::op::Log), &Emitter::EmitLog},
+    {TI(ngraph::op::Maximum), &Emitter::EmitMaximum},
+    {TI(ngraph::op::Negative), &Emitter::EmitNegative},
+    {TI(ngraph::op::NotEqual), &Emitter::EmitNotEqual},
+    {TI(ngraph::op::Select), &Emitter::EmitSelect},
+    {TI(ngraph::op::Subtract), &Emitter::EmitSubtract},
+    {TI(ngraph::op::ParameterizedConstant<ngraph::element::Bool>),
+     &Emitter::EmitParameterizedConstantBool},
+    {TI(ngraph::op::ParameterizedConstant<ngraph::element::Float32>),
+     &Emitter::EmitParameterizedConstantFloat32},
+    {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int8>),
+     &Emitter::EmitParameterizedConstantInt8},
+    {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int32>),
+     &Emitter::EmitParameterizedConstantInt32},
+    {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int64>),
+     &Emitter::EmitParameterizedConstantInt64},
+    {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt8>),
+     &Emitter::EmitParameterizedConstantUInt8},
+    {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt32>),
+     &Emitter::EmitParameterizedConstantUInt32},
+    {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt64>),
+     &Emitter::EmitParameterizedConstantUInt64},
 
-                             };
+};
 
 #undef TI
 
@@ -183,15 +192,15 @@ void ExternalFunction::compile(FunctionMap& function_map)
     Emitter emitter;
     auto& TU = emitter.GetTU();
     TU += R"(
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include <Eigen/Dense>
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
 #include "ngraph/runtime/cpu/call_frame.hpp"
 #include "ngraph/runtime/cpu/eigen_utils.hpp"
+#include "ngraph/runtime/tensor_view_info.hpp"
 
 void *__dso_handle = 0;
 
@@ -247,8 +256,8 @@ extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
     assert(llvm_module);
     estate.add_module(llvm_module);
     estate.finalize();
-    compiled_function = estate.find_function<void(ngraph::runtime::cpu::CallFrame*,
-                                                  ngraph::runtime::TensorViewPtrs&)>("__entrypoint");
+    compiled_function = estate.find_function<void(
+        ngraph::runtime::cpu::CallFrame*, ngraph::runtime::TensorViewPtrs&)>("__entrypoint");
     assert(compiled_function);
 
     m_is_compiled = true;

@@ -14,9 +14,9 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <vector>
-#include <functional>
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/call_frame.hpp"
@@ -31,17 +31,17 @@ namespace ngraph
         namespace cpu
         {
             class CallFrame;
-            using EntryPoint = std::function<void(ngraph::runtime::cpu::CallFrame*, ngraph::runtime::TensorViewPtrs&)>;
+            using EntryPoint = std::function<void(ngraph::runtime::cpu::CallFrame*,
+                                                  ngraph::runtime::TensorViewPtrs&)>;
 
             // Compile and execute graphs
             class CallFrame : public ngraph::runtime::CallFrame
             {
             public:
-                CallFrame(
-                    EntryPoint compiled_function,
-                    size_t n_inputs,
-                    size_t n_outputs,
-                    const TensorViewPtrs& temps);
+                CallFrame(EntryPoint compiled_function,
+                          size_t n_inputs,
+                          size_t n_outputs,
+                          const TensorViewPtrs& temps);
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
