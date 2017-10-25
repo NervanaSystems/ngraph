@@ -61,6 +61,8 @@ namespace ngraph
                 void EMITTER_DECL(EmitMaximum);
                 void EMITTER_DECL(EmitNegative);
                 void EMITTER_DECL(EmitNotEqual);
+                void EMITTER_DECL(EmitSelect);
+                void EMITTER_DECL(EmitSubtract);
 
             };
         }

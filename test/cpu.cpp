@@ -971,8 +971,7 @@ TEST(cpu, notequal)
     ASSERT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), result->get_vector());
 }
 
-/*
-TEST(execute, select)
+TEST(cpu, select)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Bool::element_type(), shape);
@@ -981,7 +980,7 @@ TEST(execute, select)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Select>(A, B, C), rt, op::Parameters{A, B, C});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -999,7 +998,7 @@ TEST(execute, select)
     ASSERT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), result->get_vector());
 }
 
-TEST(execute, subtract)
+TEST(cpu, subtract)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -1007,7 +1006,7 @@ TEST(execute, subtract)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Subtract>(A, B), rt, op::Parameters{A, B});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1023,6 +1022,7 @@ TEST(execute, subtract)
     ASSERT_EQ((vector<float>{1, 2, 4, 8}), result->get_vector());
 }
 
+/*
 TEST(execute, scalar_constant)
 {
     auto shape = Shape{};
