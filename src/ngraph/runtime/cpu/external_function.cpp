@@ -59,11 +59,6 @@
 #include "ngraph/runtime/cpu/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
 
-// TODO: Decide if we want to ship this or
-// just enable it for developer build-test cycles
-//#define NGCPU_PCH
-//#define NGCPU_DEBUGINFO
-
 using namespace std;
 using namespace ngraph::runtime::cpu;
 
@@ -249,11 +244,11 @@ extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
 
     ngraph::codegen::execution_state estate;
 
-#if defined(NGCPU_PCH)
+#if NGCPU_PCH
     estate.enable_pch();
 #endif
 
-#if defined(NGCPU_DEBUGINFO)
+#if NGCPU_DEBUGINFO
     estate.enable_debuginfo();
 #endif
 
