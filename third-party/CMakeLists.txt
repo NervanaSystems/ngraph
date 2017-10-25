@@ -14,3 +14,4 @@
 include( ../cmake/external_gtest.cmake )
 include( ../cmake/external_eigen.cmake )
 include( ../cmake/external_mkldnn.cmake )
+include( ../cmake/external_llvm.cmake )

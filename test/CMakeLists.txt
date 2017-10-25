@@ -48,6 +48,11 @@ if(MKLDNN_INCLUDE_DIR)
     set(SRC ${SRC} mkldnn.cpp)
 endif()
 
+if(LLVM_INCLUDE_DIR)
+    include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
+    set(SRC ${SRC} codegen.cpp)
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
 
