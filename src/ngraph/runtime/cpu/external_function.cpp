@@ -61,7 +61,7 @@
 
 // TODO: Decide if we want to ship this or
 // just enable it for developer build-test cycles
-#define NGCPU_PCH
+//#define NGCPU_PCH
 
 using namespace std;
 using namespace ngraph::runtime::cpu;

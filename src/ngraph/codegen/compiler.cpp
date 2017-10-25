@@ -123,7 +123,7 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     // But that's a private header and isn't part of the public libclang API
     // Instead of re-implementing all of that functionality in a custom toolchain
     // just hardcode the paths relevant to frequently used build/test machines for now
-    HSO.AddPath("/localdisk/menonjai/build/third-party/ext_llvm-prefix/src/ext_llvm/lib/clang/5.0.0/include", clang::frontend::System, false, false);
+    HSO.AddPath(CLANG_BUILTIN_HEADERS_PATH, clang::frontend::System, false, false);
     HSO.AddPath("/usr/include/x86_64-linux-gnu", clang::frontend::System, false, false);
     HSO.AddPath("/usr/include", clang::frontend::System, false, false);
     // Add C++ standard library headers
@@ -133,12 +133,8 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     // Debian-like + GCC 5 libstdc++
     HSO.AddPath("/usr/include/x86_64-linux-gnu/c++/5", clang::frontend::System, false, false);
     HSO.AddPath("/usr/include/c++/5", clang::frontend::System, false, false);
-    // TODO: Hack in path to eigen headers for now
-    HSO.AddPath("/localdisk/menonjai/build/external/eigen/include/eigen3",
-                clang::frontend::System,
-                false,
-                false);
-    HSO.AddPath("/home/menonjai/ngraph-cpp/src", clang::frontend::System, false, false);
+    HSO.AddPath(EIGEN_HEADERS_PATH, clang::frontend::System, false, false);
+    HSO.AddPath(NGRAPH_HEADERS_PATH, clang::frontend::System, false, false);
 
     // Language options
     auto LO = Clang->getInvocation().getLangOpts();

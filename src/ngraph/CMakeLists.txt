@@ -101,7 +101,8 @@ include_directories(
 if(LLVM_INCLUDE_DIR)
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
     link_directories(${LLVM_LIB_DIR})
-    # Add sources for the LLVM-based code generator
+    # Add sources for the CPU backend
+    # and all its dependencies
     set(SRC ${SRC}
         codegen/compiler.cpp
         runtime/cpu/call_frame.cpp
@@ -110,7 +111,10 @@ if(LLVM_INCLUDE_DIR)
         runtime/cpu/emitter.cpp
         runtime/cpu/external_function.cpp
         )
+    # LLVM binary builds are typically built without RTTI
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
+    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS
+      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\"")
 endif()
 
 add_library(ngraph SHARED ${SRC})
