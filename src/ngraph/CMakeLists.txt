@@ -56,6 +56,7 @@ set (SRC
     ops/unary_elementwise_builtin.cpp
     pass/assign_tensors.cpp
     pass/collect_functions.cpp
+    pass/dead_store_elimination.cpp
     pass/dump_sorted.cpp
     pass/liveness.cpp
     pass/manager.cpp
