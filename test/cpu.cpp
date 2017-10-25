@@ -1022,8 +1022,7 @@ TEST(cpu, subtract)
     ASSERT_EQ((vector<float>{1, 2, 4, 8}), result->get_vector());
 }
 
-/*
-TEST(execute, scalar_constant)
+TEST(cpu, scalar_constant)
 {
     auto shape = Shape{};
     auto t = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -1032,7 +1031,7 @@ TEST(execute, scalar_constant)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1044,7 +1043,7 @@ TEST(execute, scalar_constant)
     ASSERT_EQ((vector<float>{-3.0f}), result->get_vector());
 }
 
-TEST(execute, tensor_constant)
+TEST(cpu, tensor_constant)
 {
     auto shape = Shape{2, 2, 2};
     auto t = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -1053,7 +1052,7 @@ TEST(execute, tensor_constant)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1065,7 +1064,7 @@ TEST(execute, tensor_constant)
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
 }
 
-TEST(execute, tensor_constant_with_op)
+TEST(cpu, tensor_constant_with_op)
 {
     auto shape = Shape{2, 2, 2};
     auto t = ngraph::runtime::make_tensor<element::Float32>(shape);
@@ -1074,7 +1073,7 @@ TEST(execute, tensor_constant_with_op)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Abs>(A), rt, op::Parameters{});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1086,6 +1085,7 @@ TEST(execute, tensor_constant_with_op)
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
 }
 
+/*
 TEST(execute, function_call)
 {
     // First create "f(A,B,C) = (A+B)*C".

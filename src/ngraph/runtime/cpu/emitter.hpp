@@ -63,6 +63,14 @@ namespace ngraph
                 void EMITTER_DECL(EmitNotEqual);
                 void EMITTER_DECL(EmitSelect);
                 void EMITTER_DECL(EmitSubtract);
+                void EMITTER_DECL(EmitParameterizedConstantBool);
+                void EMITTER_DECL(EmitParameterizedConstantFloat32);
+                void EMITTER_DECL(EmitParameterizedConstantInt8);
+                void EMITTER_DECL(EmitParameterizedConstantInt32);
+                void EMITTER_DECL(EmitParameterizedConstantInt64);
+                void EMITTER_DECL(EmitParameterizedConstantUInt8);
+                void EMITTER_DECL(EmitParameterizedConstantUInt32);
+                void EMITTER_DECL(EmitParameterizedConstantUInt64);
 
             };
         }

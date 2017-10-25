@@ -21,6 +21,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
 #include "ngraph/runtime/cpu/external_function.hpp"
@@ -550,4 +551,163 @@ void Emitter::EMITTER_DECL(EmitSubtract)
           "        EigenArray1d<" + element_type_names[TI(et)] + ">(arg1, "
                    EIGEN_VECTOR_FORMAT(inputs[1].get_layout<DenseTensorViewLayout>()->get_size()) ");\n"
           "    }\n";
+}
+
+void Emitter::EMITTER_DECL(EmitParameterizedConstantBool)
+{
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Bool>*>(n)->get_value()->get_vector();
+
+    TU += "    {\n"
+          "        call_frame->get_parameterized_tensor_view<" + element_type_names[TI(ngraph::element::Bool)] +
+          ">(" + to_string(outputs[0].get_index()) + ")->get_vector() = std::vector<" + element_type_names[TI(ngraph::element::Bool)] +
+          "::type>{";
+
+    for (size_t i = 0; i < value.size(); i++)
+    {
+        if (i)
+            TU += ", ";
+        if (value[i])
+        {
+            TU += "true";
+        }
+        else
+        {
+            TU += "false";
+        }
+    }
+
+    TU += "};\n    }\n";
+}
+
+void Emitter::EMITTER_DECL(EmitParameterizedConstantFloat32)
+{
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Float32>*>(n)->get_value()->get_vector();
+
+    TU += "    {\n"
+          "        call_frame->get_parameterized_tensor_view<" + element_type_names[TI(ngraph::element::Float32)] +
+          ">(" + to_string(outputs[0].get_index()) + ")->get_vector() = std::vector<" + element_type_names[TI(ngraph::element::Float32)] +
+          "::type>{";
+
+    for (size_t i = 0; i < value.size(); i++)
+    {
+        if (i)
+            TU += ", ";
+        TU += to_string(value[i]) + "f";
+    }
+
+    TU += "};\n    }\n";
+}
+
+void Emitter::EMITTER_DECL(EmitParameterizedConstantInt8)
+{
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int8>*>(n)->get_value()->get_vector();
+
+    TU += "    {\n"
+          "        call_frame->get_parameterized_tensor_view<" + element_type_names[TI(ngraph::element::Int8)] +
+          ">(" + to_string(outputs[0].get_index()) + ")->get_vector() = std::vector<" + element_type_names[TI(ngraph::element::Int8)] +
+          "::type>{";
+
+    for (size_t i = 0; i < value.size(); i++)
+    {
+        if (i)
+            TU += ", ";
+        TU += to_string(value[i]);
+    }
+
+    TU += "};\n    }\n";
+}
+
+void Emitter::EMITTER_DECL(EmitParameterizedConstantInt32)
+{
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int32>*>(n)->get_value()->get_vector();
+
+    TU += "    {\n"
+          "        call_frame->get_parameterized_tensor_view<" + element_type_names[TI(ngraph::element::Int32)] +
+          ">(" + to_string(outputs[0].get_index()) + ")->get_vector() = std::vector<" + element_type_names[TI(ngraph::element::Int32)] +
+          "::type>{";
+
+    for (size_t i = 0; i < value.size(); i++)
+    {
+        if (i)
+            TU += ", ";
+        TU += to_string(value[i]);
+    }
+
+    TU += "};\n    }\n";
+}
+
+void Emitter::EMITTER_DECL(EmitParameterizedConstantInt64)
+{
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int64>*>(n)->get_value()->get_vector();
+
+    TU += "    {\n"
+          "        call_frame->get_parameterized_tensor_view<" + element_type_names[TI(ngraph::element::Int64)] +
+          ">(" + to_string(outputs[0].get_index()) + ")->get_vector() = std::vector<" + element_type_names[TI(ngraph::element::Int64)] +
+          "::type>{";
+
+    for (size_t i = 0; i < value.size(); i++)
+    {
+        if (i)
+            TU += ", ";
+        TU += to_string(value[i]);
+    }
+
+    TU += "};\n    }\n";
+}
+
+void Emitter::EMITTER_DECL(EmitParameterizedConstantUInt8)
+{
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt8>*>(n)->get_value()->get_vector();
+
+    TU += "    {\n"
+          "        call_frame->get_parameterized_tensor_view<" + element_type_names[TI(ngraph::element::UInt8)] +
+          ">(" + to_string(outputs[0].get_index()) + ")->get_vector() = std::vector<" + element_type_names[TI(ngraph::element::UInt8)] +
+          "::type>{";
+
+    for (size_t i = 0; i < value.size(); i++)
+    {
+        if (i)
+            TU += ", ";
+        TU += to_string(value[i]);
+    }
+
+    TU += "};\n    }\n";
+}
+
+void Emitter::EMITTER_DECL(EmitParameterizedConstantUInt32)
+{
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt32>*>(n)->get_value()->get_vector();
+
+    TU += "    {\n"
+          "        call_frame->get_parameterized_tensor_view<" + element_type_names[TI(ngraph::element::UInt32)] +
+          ">(" + to_string(outputs[0].get_index()) + ")->get_vector() = std::vector<" + element_type_names[TI(ngraph::element::UInt32)] +
+          "::type>{";
+
+    for (size_t i = 0; i < value.size(); i++)
+    {
+        if (i)
+            TU += ", ";
+        TU += to_string(value[i]);
+    }
+
+    TU += "};\n    }\n";
+}
+
+void Emitter::EMITTER_DECL(EmitParameterizedConstantUInt64)
+{
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt64>*>(n)->get_value()->get_vector();
+
+    TU += "    {\n"
+          "        call_frame->get_parameterized_tensor_view<" + element_type_names[TI(ngraph::element::UInt64)] +
+          ">(" + to_string(outputs[0].get_index()) + ")->get_vector() = std::vector<" + element_type_names[TI(ngraph::element::UInt64)] +
+          "::type>{";
+
+    for (size_t i = 0; i < value.size(); i++)
+    {
+        if (i)
+            TU += ", ";
+        TU += to_string(value[i]);
+    }
+
+    TU += "};\n    }\n";
 }

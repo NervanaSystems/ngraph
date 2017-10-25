@@ -89,7 +89,15 @@ static const OpMap dispatcher{{TI(ngraph::op::Add), &Emitter::EmitAdd},
                               {TI(ngraph::op::Negative), &Emitter::EmitNegative},
                               {TI(ngraph::op::NotEqual), &Emitter::EmitNotEqual},
                               {TI(ngraph::op::Select), &Emitter::EmitSelect},
-                              {TI(ngraph::op::Subtract), &Emitter::EmitSubtract}
+                              {TI(ngraph::op::Subtract), &Emitter::EmitSubtract},
+                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::Bool>), &Emitter::EmitParameterizedConstantBool},
+                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::Float32>), &Emitter::EmitParameterizedConstantFloat32},
+                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int8>), &Emitter::EmitParameterizedConstantInt8},
+                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int32>), &Emitter::EmitParameterizedConstantInt32},
+                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int64>), &Emitter::EmitParameterizedConstantInt64},
+                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt8>), &Emitter::EmitParameterizedConstantUInt8},
+                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt32>), &Emitter::EmitParameterizedConstantUInt32},
+                              {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt64>), &Emitter::EmitParameterizedConstantUInt64},
 
                              };
 
