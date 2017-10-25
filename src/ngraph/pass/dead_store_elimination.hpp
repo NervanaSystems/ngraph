@@ -21,15 +21,15 @@
 
 namespace ngraph
 {
-	namespace pass
-	{
-		class DeadStoreElimination;
-	}
+    namespace pass
+    {
+        class DeadStoreElimination;
+    }
 }
 
 class ngraph::pass::DeadStoreElimination : public FunctionPass
 {
 public:
-	DeadStoreElimination() {}
-	bool run_on_function(std::shared_ptr<ngraph::Function>) override;
+    DeadStoreElimination() {}
+    bool run_on_function(std::shared_ptr<ngraph::Function>) override;
 };
