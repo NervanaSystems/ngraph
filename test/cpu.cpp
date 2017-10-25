@@ -1221,8 +1221,7 @@ TEST(cpu, broadcast_trivial)
     ASSERT_EQ((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), result->get_vector());
 }
 
-/*
-TEST(execute, broadcast_vector_colwise)
+TEST(cpu, broadcast_vector_colwise)
 {
     auto shape_a = Shape{3};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -1231,7 +1230,7 @@ TEST(execute, broadcast_vector_colwise)
     auto f = make_shared<Function>(
         make_shared<op::Broadcast>(A, shape_r, AxisSet{1}), rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1245,7 +1244,7 @@ TEST(execute, broadcast_vector_colwise)
     ASSERT_EQ((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), result->get_vector());
 }
 
-TEST(execute, broadcast_vector_rowwise)
+TEST(cpu, broadcast_vector_rowwise)
 {
     auto shape_a = Shape{4};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -1254,7 +1253,7 @@ TEST(execute, broadcast_vector_rowwise)
     auto f = make_shared<Function>(
         make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1268,7 +1267,7 @@ TEST(execute, broadcast_vector_rowwise)
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), result->get_vector());
 }
 
-TEST(execute, broadcast_vector_rowwise_int64)
+TEST(cpu, broadcast_vector_rowwise_int64)
 {
     auto shape_a = Shape{4};
     auto A = make_shared<op::Parameter>(element::Int64::element_type(), shape_a);
@@ -1277,7 +1276,7 @@ TEST(execute, broadcast_vector_rowwise_int64)
     auto f = make_shared<Function>(
         make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1292,6 +1291,7 @@ TEST(execute, broadcast_vector_rowwise_int64)
               result->get_vector());
 }
 
+/*
 TEST(execute, convert_int32_float32)
 {
     auto shape = Shape{2, 2};

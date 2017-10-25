@@ -204,7 +204,7 @@ void Emitter::EMITTER_DECL(EmitDot)
     }
     else
     {
-        throw ngraph_error("Dot product for given tensors unimplemented");
+        throw ngraph_error("Dot product not implemented for given inputs");
     }
 }
 
@@ -810,6 +810,45 @@ void Emitter::EMITTER_DECL(EmitBroadcast)
               "        EigenArray1d<" + element_type_names[TI(result_element_type)] + ">(arg0, "
                        EIGEN_VECTOR_FORMAT(inputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ")(0, 0);\n"
               "    }\n";
+    }
+    else if (arg_shape.size() == 1 && result_shape.size() == 2)
+    {
+        if (broadcast->get_broadcast_axes() == AxisSet{1})
+        {
+            auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
+
+            TU += "    {\n"
+                  "        auto arg0 = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
+                           ">(" + to_string(inputs[0].get_index()) + ");\n"
+                  "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
+                           ">(" + to_string(outputs[0].get_index()) + ");\n"
+                  "        EigenMatrix<" + element_type_names[TI(result_element_type)] + ">(out, " +
+                           EIGEN_MATRIX_FORMAT(out_layout->get_shape(), out_layout->get_strides()) + ").colwise() =\n"
+                  "        EigenVector<" + element_type_names[TI(result_element_type)] + ">(arg0, "
+                           EIGEN_VECTOR_FORMAT(inputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ");\n"
+                  "    }\n";
+        }
+        else if (broadcast->get_broadcast_axes() == AxisSet{0})
+        {
+            auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
+
+            TU += "    {\n"
+                  "        auto arg0 = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
+                           ">(" + to_string(inputs[0].get_index()) + ");\n"
+                  "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
+                           ">(" + to_string(outputs[0].get_index()) + ");\n"
+                  "        EigenMatrix<" + element_type_names[TI(result_element_type)] + ">(out, " +
+                           EIGEN_MATRIX_FORMAT(out_layout->get_shape(), out_layout->get_strides()) + ").rowwise() =\n"
+                  "        EigenVector<" + element_type_names[TI(result_element_type)] + ">(arg0, "
+                           EIGEN_VECTOR_FORMAT(inputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ").transpose();\n"
+                  "    }\n";
+        }
+        else
+        {
+            throw ngraph_error(
+                "Internal error: axis set for vector-matrix broadcast is neither {0} nor "
+                "{1}");
+        }
     }
     else
     {
