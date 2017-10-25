@@ -1291,8 +1291,7 @@ TEST(cpu, broadcast_vector_rowwise_int64)
               result->get_vector());
 }
 
-/*
-TEST(execute, convert_int32_float32)
+TEST(cpu, convert_int32_float32)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Int32::element_type(), shape);
@@ -1300,7 +1299,7 @@ TEST(execute, convert_int32_float32)
     auto f = make_shared<Function>(
         make_shared<op::Convert>(A, element::Float32::element_type()), rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1314,7 +1313,7 @@ TEST(execute, convert_int32_float32)
     ASSERT_EQ((vector<element::Float32::type>{1, 2, 3, 4}), result->get_vector());
 }
 
-TEST(execute, convert_int32_bool)
+TEST(cpu, convert_int32_bool)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Int32::element_type(), shape);
@@ -1322,7 +1321,7 @@ TEST(execute, convert_int32_bool)
     auto f = make_shared<Function>(
         make_shared<op::Convert>(A, element::Bool::element_type()), rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1336,7 +1335,7 @@ TEST(execute, convert_int32_bool)
     ASSERT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector());
 }
 
-TEST(execute, convert_float32_bool)
+TEST(cpu, convert_float32_bool)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -1344,7 +1343,7 @@ TEST(execute, convert_float32_bool)
     auto f = make_shared<Function>(
         make_shared<op::Convert>(A, element::Bool::element_type()), rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1358,6 +1357,7 @@ TEST(execute, convert_float32_bool)
     ASSERT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector());
 }
 
+/*
 // Trivial case with no reduction axes.
 TEST(execute, reduce_trivial)
 {

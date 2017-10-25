@@ -855,3 +855,30 @@ void Emitter::EMITTER_DECL(EmitBroadcast)
         throw ngraph_error("Broadcast not implemented for given inputs");
     }
 }
+
+void Emitter::EMITTER_DECL(EmitConvert)
+{
+    auto arg = n->get_arguments().at(0);
+
+    auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(arg->get_value_type());
+    assert(arg_tensor_type);
+
+    auto& arg_element_type = arg_tensor_type->get_element_type();
+
+    auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+    assert(result_tensor_type);
+
+    auto& result_element_type = result_tensor_type->get_element_type();
+
+    TU += "    {\n"
+          "        auto arg0 = call_frame->get_tensor_view_data<" + element_type_names[TI(arg_element_type)] +
+                               ">(" + to_string(inputs[0].get_index()) + ");\n"
+          "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
+                               ">(" + to_string(outputs[0].get_index()) + ");\n"
+          "        EigenArray1d<" + element_type_names[TI(result_element_type)] + ">(out, "
+                       EIGEN_VECTOR_FORMAT(outputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ") =\n"
+          "        EigenArray1d<" + element_type_names[TI(arg_element_type)] + ">(arg0, "
+                       EIGEN_VECTOR_FORMAT(inputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ")\n"
+          ".template cast<typename " + element_type_names[TI(result_element_type)] + "::type>();\n"
+          "    }\n";
+}
