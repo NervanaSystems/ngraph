@@ -1,0 +1,9 @@
+# Required to build the main components of NGraph-C++
+build-essential
+cmake
+git
+
+# Required to build the documentation of NGraph-C++
+doxygen
+sphinx-build
+
