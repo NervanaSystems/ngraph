@@ -153,6 +153,7 @@ install(DIRECTORY
     ${EIGEN_INCLUDE_DIR}/
     DESTINATION "${CMAKE_INSTALL_INCLUDE}"
 )
+if (NOT APPLE)
 install(DIRECTORY
     ${MKLDNN_INCLUDE_DIR}/
     DESTINATION "${CMAKE_INSTALL_INCLUDE}"
@@ -161,5 +162,6 @@ install(DIRECTORY
     ${MKLDNN_LIB_DIR}/
     DESTINATION "${CMAKE_INSTALL_LIB}"
 )
+endif()
 
 add_dependencies(ngraph eigen)
