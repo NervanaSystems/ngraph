@@ -13,12 +13,53 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/runtime/manager.hpp"
+#include <dlfcn.h>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 using namespace ngraph::runtime;
 
+bool Manager::load_plugins(const std::string& runtime_plugin_libs)
+{
+    std::istringstream ss(runtime_plugin_libs);
+    std::string plugin_lib_path;
+
+    while (std::getline(ss, plugin_lib_path, ':'))
+    {
+        if (plugin_lib_path.size() > 0)
+        {
+            void* lib_handle = dlopen(plugin_lib_path.c_str(), RTLD_NOW);
+            if (!lib_handle)
+            {
+                std::cerr << "Cannot open library: " << plugin_lib_path << ", " << dlerror()
+                          << std::endl;
+                return false;
+            }
+            else
+            {
+                std::cerr << "Loaded runtime at " << lib_handle << std::endl;
+            }
+        }
+    }
+    return true;
+}
+
 Manager::FactoryMap& Manager::get_factory_map()
 {
+    // Stores Manager Factories
     static FactoryMap factory_map;
+
+    // Try to load runtime plugins
+    if (!Manager::m_is_factory_map_initialized)
+    {
+        if (!Manager::load_plugins(RUNTIME_PLUGIN_LIBS))
+        {
+            std::cerr << "Failed to load at least one of the following libraries: "
+                      << RUNTIME_PLUGIN_LIBS << std::endl;
+        }
+        Manager::m_is_factory_map_initialized = true;
+    }
     return factory_map;
 }
 
@@ -32,3 +73,5 @@ Manager::Factory Manager::register_factory(std::string name, Factory factory)
     get_factory_map()[name] = factory;
     return factory;
 }
+
+bool Manager::m_is_factory_map_initialized = false;

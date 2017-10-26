@@ -46,13 +46,19 @@ namespace ngraph
                 compile(const std::shared_ptr<ngraph::Function>& fun) = 0;
 
             using Factory = std::function<std::shared_ptr<Manager>(const std::string&)>;
-            using FactoryMap = std::map<std::string, Factory>;
-
-            static FactoryMap& get_factory_map();
 
             static std::shared_ptr<Manager> get(const std::string& name);
 
             static Factory register_factory(std::string name, Factory factory);
+
+        private:
+            static bool load_plugins(const std::string& runtime_plugin_libs);
+
+            static bool m_is_factory_map_initialized;
+
+            using FactoryMap = std::map<std::string, Factory>;
+
+            static FactoryMap& get_factory_map();
         };
     }
 }
