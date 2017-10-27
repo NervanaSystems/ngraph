@@ -195,9 +195,10 @@ void ExternalFunction::compile(FunctionMap& function_map)
 #include <Eigen/Dense>
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
-#include "ngraph/runtime/cpu/call_frame.hpp"
-#include "ngraph/runtime/cpu/eigen_utils.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
+#include "ngraph/runtime/cpu/call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_kernels.hpp"
+#include "ngraph/runtime/cpu/eigen_utils.hpp"
 
 void *__dso_handle = 0;
 

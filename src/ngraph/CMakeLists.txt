@@ -98,16 +98,17 @@ include_directories(
     "${EIGEN_INCLUDE_DIR}"
     )
 
-if(LLVM_INCLUDE_DIR)
-    include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
-    link_directories(${LLVM_LIB_DIR})
+if(LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
+    include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${MKLDNN_INCLUDE_DIR})
+    link_directories(${LLVM_LIB_DIR} ${MKLDNN_LIB_DIR})
     # Add sources for the CPU backend
     # and all its dependencies
     set(SRC ${SRC}
         codegen/compiler.cpp
         runtime/cpu/call_frame.cpp
-        runtime/cpu/cpu_manager.cpp
         runtime/cpu/cpu_backend.cpp
+        runtime/cpu/cpu_manager.cpp
+        runtime/cpu/cpu_kernels.cpp
         runtime/cpu/emitter.cpp
         runtime/cpu/external_function.cpp
         )
@@ -132,8 +133,10 @@ if (APPLE)
     set_property(TARGET ngraph PROPERTY PREFIX "lib")
     set_property(TARGET ngraph PROPERTY OUTPUT_NAME "ngraph.so")
     set_property(TARGET ngraph PROPERTY SUFFIX "")
-else()
-    include_directories("${MKLDNN_INCLUDE_DIR}")
+endif()
+
+if(MKLDNN_LIB_DIR)
+    target_link_libraries(ngraph LINK_PRIVATE mkldnn)
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -193,4 +196,8 @@ add_dependencies(ngraph eigen)
 
 if(NOT LLVM_PACKAGED AND LLVM_INCLUDE_DIR)
     add_dependencies(ngraph ext_llvm)
+endif()
+
+if(MKLDNN_INCLUDE_DIR)
+    add_dependencies(ngraph ext_mkldnn)
 endif()

@@ -17,6 +17,7 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/node.hpp"
@@ -177,30 +178,53 @@ void Emitter::EMITTER_DECL(EmitDot)
         auto arg1_layout = inputs[1].get_layout<DenseTensorViewLayout>();
         auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
 
-        TU +=
-            "    {\n"
-            "        auto arg0 = call_frame->get_tensor_view_data<" +
-            element_type_names[TI(arg0_element_type)] + ">(" + to_string(inputs[0].get_index()) +
-            ");\n"
-            "        auto arg1 = call_frame->get_tensor_view_data<" +
-            element_type_names[TI(arg0_element_type)] + ">(" + to_string(inputs[1].get_index()) +
-            ");\n"
-            "        auto out  = call_frame->get_tensor_view_data<" +
-            element_type_names[TI(arg0_element_type)] + ">(" + to_string(outputs[0].get_index()) +
-            ");\n"
-            "        EigenMatrix<" +
-            element_type_names[TI(arg0_element_type)] + ">(out, " +
-            EIGEN_MATRIX_FORMAT(out_layout->get_shape(), out_layout->get_strides()) +
-            ") = \n"
-            "        EigenMatrix<" +
-            element_type_names[TI(arg0_element_type)] + ">(arg0, " +
-            EIGEN_MATRIX_FORMAT(arg0_layout->get_shape(), arg0_layout->get_strides()) +
-            ") * "
-            "EigenMatrix<" +
-            element_type_names[TI(arg0_element_type)] + ">(arg1, " +
-            EIGEN_MATRIX_FORMAT(arg1_layout->get_shape(), arg1_layout->get_strides()) +
-            ");\n"
-            "    }\n";
+        // Emit an MKL SGEMM call if possible
+        if (arg0_element_type == ngraph::element::Float32::element_type())
+        {
+            TU +=
+                "    {\n"
+                "        auto arg0 = call_frame->get_tensor_view_data<" +
+                element_type_names[TI(arg0_element_type)] + ">(" + to_string(inputs[0].get_index()) +
+                ");\n"
+                "        auto arg1 = call_frame->get_tensor_view_data<" +
+                element_type_names[TI(arg0_element_type)] + ">(" + to_string(inputs[1].get_index()) +
+                ");\n"
+                "        auto out  = call_frame->get_tensor_view_data<" +
+                element_type_names[TI(arg0_element_type)] + ">(" + to_string(outputs[0].get_index()) +
+                ");\n"
+                "        cblas::cblas_sgemm(cblas::Layout::RowMajor, cblas::Transpose::None, cblas::Transpose::None, " +
+                to_string(arg0_shape[0]) + ", " + to_string(arg1_shape[1]) + ", " + to_string(arg0_shape[1]) + ",\n"
+                "        1.0f, arg0, " + to_string(max(1UL, arg0_shape[1])) + ", arg1, " + to_string(max(1UL, arg1_shape[1])) + ", 0.0f,\n"
+                "        out, " + to_string(max(1UL, arg1_shape[1])) + ");\n"
+                "    }\n";
+        }
+        else
+        {
+            TU +=
+                "    {\n"
+                "        auto arg0 = call_frame->get_tensor_view_data<" +
+                element_type_names[TI(arg0_element_type)] + ">(" + to_string(inputs[0].get_index()) +
+                ");\n"
+                "        auto arg1 = call_frame->get_tensor_view_data<" +
+                element_type_names[TI(arg0_element_type)] + ">(" + to_string(inputs[1].get_index()) +
+                ");\n"
+                "        auto out  = call_frame->get_tensor_view_data<" +
+                element_type_names[TI(arg0_element_type)] + ">(" + to_string(outputs[0].get_index()) +
+                ");\n"
+                "        EigenMatrix<" +
+                element_type_names[TI(arg0_element_type)] + ">(out, " +
+                EIGEN_MATRIX_FORMAT(out_layout->get_shape(), out_layout->get_strides()) +
+                ") = \n"
+                "        EigenMatrix<" +
+                element_type_names[TI(arg0_element_type)] + ">(arg0, " +
+                EIGEN_MATRIX_FORMAT(arg0_layout->get_shape(), arg0_layout->get_strides()) +
+                ") * "
+                "EigenMatrix<" +
+                element_type_names[TI(arg0_element_type)] + ">(arg1, " +
+                EIGEN_MATRIX_FORMAT(arg1_layout->get_shape(), arg1_layout->get_strides()) +
+                ");\n"
+                "    }\n";
+        }
     }
     else
     {
