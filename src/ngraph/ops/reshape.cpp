@@ -78,3 +78,42 @@ void Reshape::propagate_types()
     set_value_type_checked(
         make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), m_output_shape));
 }
+
+void ngraph::op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const std::shared_ptr<Node>& delta)
+{
+    auto x = m_arguments[0];
+    auto x_type = x->get_value_type();
+    auto x_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(x_type);
+    if (nullptr == x_type)
+    {
+        throw ngraph_error("Argument to reshape is not a tensor view");
+    }
+    auto x_shape = x_tensor_view_type->get_shape();
+    auto x_rank = x_shape.size();
+    Shape permuted_x_shape(x_rank);
+    AxisVector x_input_order(x_rank);
+    bool is_permuted = false;
+    for (size_t i = 0; i < x_rank; ++i)
+    {
+        size_t permuted_i = m_input_order[i];
+        if (i != permuted_i)
+        {
+            is_permuted = true;
+        }
+        permuted_x_shape[i] = x_shape[permuted_i];
+        x_input_order[permuted_i] = i;
+    }
+    AxisVector input_order(m_output_shape.size());
+    for (size_t i = 0; i < m_output_shape.size(); i++)
+    {
+        input_order[i] = i;
+    }
+    auto reshape = make_shared<op::Reshape>(delta, input_order, permuted_x_shape);
+    if (is_permuted)
+    {
+        reshape = make_shared<op::Reshape>(reshape, x_input_order, x_shape);
+    }
+
+    adjoints.add_delta(x, reshape);
+}

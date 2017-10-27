@@ -14,8 +14,9 @@
 
 #include <memory>
 
+#include "ngraph/except.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/types/type.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -62,6 +63,11 @@ void TupleType::collect_tensor_views(
     {
         elt->collect_tensor_views(views);
     }
+}
+
+const Shape& TupleType::get_shape() const
+{
+    throw ngraph_error("get_shape() called on Tuple");
 }
 
 std::ostream& ngraph::operator<<(std::ostream& out, const ValueType& obj)
