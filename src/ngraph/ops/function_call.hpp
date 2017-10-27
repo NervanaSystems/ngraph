@@ -60,6 +60,12 @@ namespace ngraph
             {
             }
 
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                return std::make_shared<FunctionCall>(m_function, new_args);
+            }
+
             virtual std::string description() const override { return "FunctionCall"; }
             virtual void propagate_types() override;
 
