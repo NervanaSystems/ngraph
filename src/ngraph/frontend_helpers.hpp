@@ -18,9 +18,9 @@
 
 namespace ngraph
 {
-	namespace op
-	{
-		extern std::shared_ptr<Node> construct_mean(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
-	}
+    namespace op
+    {
+        extern std::shared_ptr<Node> construct_mean(const std::shared_ptr<Node>& arg,
+                                                    const AxisSet& reduction_axes);
+    }
 }
-
