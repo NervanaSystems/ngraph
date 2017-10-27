@@ -24,6 +24,7 @@ set (SRC
     descriptor/tensor.cpp
     descriptor/tensor_view.cpp
     descriptor/tuple.cpp
+    frontend_helpers.cpp
     function.cpp
     log.cpp
     node.cpp
