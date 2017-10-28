@@ -17,6 +17,7 @@
 #include <iomanip>
 #include <map>
 #include <unordered_set>
+#include <stack>
 
 #include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
@@ -136,6 +137,37 @@ size_t ngraph::hash_combine(const std::vector<size_t>& list)
         seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
     return seed;
+}
+
+void ngraph::traverse_postorder(std::shared_ptr<Node> n,
+	std::function<void(shared_ptr<Node>)> process_node,
+	std::function<bool(shared_ptr<Node>)> process_children)
+{
+	std::stack<shared_ptr<Node>> stack;
+	stack.push(n);
+
+	std::unordered_set<shared_ptr<Node>> visited;
+
+	while (!stack.empty()) 
+	{
+		auto current = stack.top();
+		if (visited.count(current)) 
+		{
+			process_node(current);
+			stack.pop();
+		}
+		else 
+		{
+			visited.insert(current);
+			if (process_children(current))
+			{
+				for (auto arg : current->get_arguments())
+				{
+					stack.push(arg);
+				}
+			}
+		}
+	}
 }
 
 void ngraph::traverse_nodes(std::shared_ptr<ngraph::Function> p,
