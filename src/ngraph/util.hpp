@@ -22,6 +22,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace ngraph
 {
@@ -200,7 +201,7 @@ namespace ngraph
 
 
 	void traverse_postorder(std::shared_ptr<Node> n, std::function<void(shared_ptr<Node>)> f, std::function<void(shared_ptr<Node>)> process_node,
-		std::function<bool(shared_ptr<Node>)> process_children = [](shared_ptr<Node>) {return true; });
+		std::function<bool(shared_ptr<Node>)> process_children);
     void traverse_nodes(std::shared_ptr<Function> p, std::function<void(std::shared_ptr<Node>)> f);
 
     void free_nodes(std::shared_ptr<Function>);
