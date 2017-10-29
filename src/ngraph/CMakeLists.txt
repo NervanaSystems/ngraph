@@ -42,6 +42,7 @@ set (SRC
     ops/get_tuple_element.cpp
     ops/log.cpp
     ops/macro.cpp
+    ops/macroops/mean.cpp
     ops/maximum.cpp
     ops/minimum.cpp
     ops/multiply.cpp
