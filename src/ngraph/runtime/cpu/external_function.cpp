@@ -246,11 +246,11 @@ extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
     ngraph::codegen::execution_state estate;
 
 #if NGCPU_PCH
-    estate.enable_pch();
+    estate.set_precompiled_headers_enabled(true);
 #endif
 
 #if NGCPU_DEBUGINFO
-    estate.enable_debuginfo();
+    estate.set_debuginfo_enabled(true);
 #endif
 
     auto llvm_module = estate.compile(TU, "__ngcpu_codegen.cpp");

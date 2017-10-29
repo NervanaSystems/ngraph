@@ -67,7 +67,7 @@ static std::string GetExecutablePath(const char* Argv0)
 
 execution_state::execution_state()
     : m_execution_engine{nullptr}
-    , pch_enabled(false)
+    , precompiled_headers_enabled(false)
     , debuginfo_enabled(false)
 {
 }
@@ -147,7 +147,7 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
         CGO.setDebugInfo(codegenoptions::FullDebugInfo);
     }
 
-    if (pch_enabled)
+    if (precompiled_headers_enabled)
     {
         // Preprocessor options
         auto& PPO = Clang->getInvocation().getPreprocessorOpts();
