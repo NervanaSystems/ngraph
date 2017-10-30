@@ -26,7 +26,6 @@ set (SRC
     build_graph.cpp
     eigen.cpp
     element_type.cpp
-    execute.cpp
     input_output_assign.cpp
     main.cpp
     op.cpp
@@ -42,6 +41,12 @@ set (SRC
     uuid.cpp
 )
 
+set(BACKEND_NAME "NGVM")
+configure_file(backend_test.in.cpp backend_test_NGVM.cpp)
+set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_NGVM.cpp)
+
+message(STATUS "SRC set to '${SRC}'")
+
 if(MKLDNN_INCLUDE_DIR)
     include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})
     link_directories(${MKLDNN_LIB_DIR})
@@ -50,7 +55,9 @@ endif()
 
 if(LLVM_INCLUDE_DIR)
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
-    set(SRC ${SRC} codegen.cpp cpu.cpp)
+    set(BACKEND_NAME "CPU")
+    configure_file(backend_test.in.cpp backend_test_CPU.cpp)
+    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_CPU.cpp)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
