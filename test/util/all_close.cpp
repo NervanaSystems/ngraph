@@ -16,8 +16,8 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/except.hpp"
 #include "all_close.hpp"
+#include "ngraph/except.hpp"
 
 template <typename ET>
 bool ngraph::test::all_close(
