@@ -922,6 +922,30 @@ TEST(execute, maximum)
     ASSERT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), result->get_vector());
 }
 
+TEST(execute, minimum)
+{
+    auto shape = Shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Minimum>(A, B), rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{1, 2, -8, 8, -.5, 0, 1, 1}), result->get_vector());
+}
+
 TEST(execute, negative)
 {
     auto shape = Shape{2, 3};

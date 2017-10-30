@@ -117,6 +117,8 @@ namespace ngraph
         std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
                                             const std::shared_ptr<Node>& c);
 
+        /// Returns the shape if this node has tensor type, othetwise error.
+        const Shape& get_shape() const { return m_value_type->get_shape(); }
     protected:
         Nodes m_arguments;
         std::shared_ptr<const ValueType> m_value_type;

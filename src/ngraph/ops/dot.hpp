@@ -116,6 +116,10 @@ namespace ngraph
 
             virtual std::string description() const override { return "Dot"; }
             virtual void propagate_types() override;
+
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
         };
     }
 }

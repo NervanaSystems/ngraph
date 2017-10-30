@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/ops/broadcast.hpp"
+#include "ngraph/ops/sum.hpp"
 
 using namespace std;
 using namespace ngraph::op;
@@ -45,4 +46,12 @@ void Broadcast::propagate_types()
     }
     set_value_type_checked(
         make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), m_shape));
+}
+
+void ngraph::op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints,
+                                              const std::shared_ptr<Node>& delta)
+{
+    auto x = m_arguments[0];
+
+    adjoints.add_delta(x, make_shared<op::Sum>(delta, m_broadcast_axes));
 }
