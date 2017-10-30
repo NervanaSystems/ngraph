@@ -22,10 +22,8 @@ include_directories(
     )
 
 set (SRC
-    autodiff.cpp
     build_graph.cpp
     eigen.cpp
-    element_type.cpp
     execute.cpp
     input_output_assign.cpp
     main.cpp
@@ -35,9 +33,11 @@ set (SRC
     pass_memory_layout.cpp
     shape.cpp
     tensor.cpp
-    test_tools.cpp
     topological_sort.cpp
     type_prop.cpp
+    util/all_close.cpp
+    util/autodiff.cpp
+    util/test_tools.cpp
     util.cpp
     uuid.cpp
 )
