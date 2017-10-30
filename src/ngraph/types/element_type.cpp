@@ -41,7 +41,7 @@ const std::string& ngraph::element::Type::c_type_string() const
 bool ngraph::element::Type::operator==(const element::Type& other) const
 {
     return m_bitwidth == other.m_bitwidth && m_is_float == other.m_is_float &&
-           m_is_signed == other.m_is_signed;
+           m_is_signed == other.m_is_signed && m_cname == other.m_cname;
 }
 
 size_t ngraph::element::Type::size() const

@@ -365,10 +365,6 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_NUMERIC_BINOP(op::Add, eigen::AddInstruction);
         REGISTER_NUMERIC_BINOP(op::Divide, eigen::DivideInstruction);
-        REGISTER_NUMERIC_BINOP(op::Greater, eigen::GreaterThanInstruction);
-        REGISTER_NUMERIC_BINOP(op::GreaterEq, eigen::GreaterEqInstruction);
-        REGISTER_NUMERIC_BINOP(op::Less, eigen::LessThanInstruction);
-        REGISTER_NUMERIC_BINOP(op::LessEq, eigen::LessEqInstruction);
         REGISTER_NUMERIC_BINOP(op::Maximum, eigen::MaximumInstruction);
         REGISTER_NUMERIC_BINOP(op::Multiply, eigen::MultiplyInstruction);
         REGISTER_NUMERIC_BINOP(op::Subtract, eigen::SubtractInstruction);
@@ -392,6 +388,10 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_POLYMORPHIC_BINOP(op::Equal, eigen::EqualInstruction);
         REGISTER_POLYMORPHIC_BINOP(op::NotEqual, eigen::NotEqualInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::Greater, eigen::GreaterThanInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::GreaterEq, eigen::GreaterEqInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::Less, eigen::LessThanInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::LessEq, eigen::LessEqInstruction);
 
         REGISTER_POLYMORPHIC_TERNOP(op::Select, eigen::SelectInstruction);
 
