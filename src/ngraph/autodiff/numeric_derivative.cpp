@@ -72,8 +72,7 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
     for (size_t i = 0; i < args.size(); ++i)
     {
         auto arg = args[i];
-        auto df_darg = results[i];
-        auto df_darg_it = df_darg->get_vector().begin();
+        auto& res = results[i]->get_vector();
         auto& vec = arg->get_vector();
         for (size_t j = 0; j < vec.size(); j++)
         {
@@ -81,13 +80,14 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
             vec[j] += delta;
             cf->tensor_call(args_tv, {inc_y});
             vec[j] = old_val;
-            df_darg_it = std::transform(inc_vec.begin(),
-                                        inc_vec.end(),
-                                        ref_vec.begin(),
-                                        df_darg_it,
-                                        [inv_delta](typename ET::type y1, typename ET::type y0) {
-                                            return inv_delta * (y1 - y0);
-                                        });
+            size_t res_k = j;
+            for (size_t k = 0; k < inc_vec.size(); k++)
+            {
+                auto y1 = inc_vec[k];
+                auto y0 = ref_vec[k];
+                res[res_k] = inv_delta * (y1 - y0);
+                res_k += vec.size();
+            }
         }
     }
     return results;

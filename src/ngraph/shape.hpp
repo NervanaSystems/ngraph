@@ -27,4 +27,7 @@ namespace ngraph
 
     /// Row-major strides for a shape
     Strides row_major_strides(const Shape& shape);
+
+    inline bool is_scalar(const Shape& shape) { return 0 == shape.size(); }
+    inline bool is_vector(const Shape& shape) { return 1 == shape.size(); }
 }

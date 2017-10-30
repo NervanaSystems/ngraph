@@ -44,10 +44,11 @@ public:
     execution_state();
     ~execution_state();
 
-    void enable_pch() { pch_enabled = true; }
-    void disable_pch() { pch_enabled = false; }
-    void enable_debuginfo() { debuginfo_enabled = true; }
-    void disable_debuginfo() { debuginfo_enabled = false; }
+    void set_precompiled_headers_enabled(bool state) { precompiled_headers_enabled = state; }
+    bool is_precompiled_headers_enabled() { return precompiled_headers_enabled; }
+    void set_debuginfo_enabled(bool state) { debuginfo_enabled = state; }
+    bool is_debuginfo_enabled() { return debuginfo_enabled; }
+
     std::unique_ptr<llvm::Module> compile(const std::string& source, const std::string& name = "");
 
     bool add_module(std::unique_ptr<llvm::Module>&);
@@ -65,7 +66,7 @@ public:
 private:
     llvm::ExecutionEngine* m_execution_engine;
     std::string jit_error;
-    bool pch_enabled;
+    bool precompiled_headers_enabled;
     bool debuginfo_enabled;
 
     template <typename signature>

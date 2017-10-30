@@ -14,7 +14,7 @@
 
 #include <algorithm>
 
-#include "ngraph/runtime/cpu/call_frame.hpp"
+#include "call_frame.hpp"
 
 using namespace std;
 using namespace ngraph::runtime::cpu;
