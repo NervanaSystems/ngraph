@@ -139,6 +139,9 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     LO->CXXExceptions = 1;
     LO->WChar = 1;
     LO->RTTI = 1;
+    // Enable OpenMP for Eigen
+    LO->OpenMP = 1;
+    LO->OpenMPUseTLS = 1;
 
     if (debuginfo_enabled)
     {
@@ -154,6 +157,15 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
         PPO.ImplicitPCHInclude = "ngcpu.pch";
         PPO.DisablePCHValidation = 1;
     }
+
+    // Enable various target features
+    // Most of these are for Eigen
+    auto &TO = Clang->getInvocation().getTargetOpts();
+    TO.FeaturesAsWritten.emplace_back("+sse4.1");
+    TO.FeaturesAsWritten.emplace_back("+sse4.2");
+    TO.FeaturesAsWritten.emplace_back("+avx");
+    TO.FeaturesAsWritten.emplace_back("+avx2");
+    TO.FeaturesAsWritten.emplace_back("+fma");
 
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
