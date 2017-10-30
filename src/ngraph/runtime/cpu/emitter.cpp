@@ -906,3 +906,28 @@ void Emitter::EMITTER_DECL(EmitConvert)
           ".template cast<typename " + element_type_names[TI(result_element_type)] + "::type>();\n"
           "    }\n";
 }
+
+void Emitter::EMITTER_DECL(EmitConstant)
+{
+    auto c = static_cast<const op::Constant*>(n);
+    auto c_tensor_type = dynamic_pointer_cast<const TensorViewType>(c->get_value_type());
+    assert(c_tensor_type);
+    auto& c_element_type = c_tensor_type->get_element_type();
+    auto c_value_strings = c->get_value_strings();
+
+    TU +=
+        "    {\n"
+        "        call_frame->get_parameterized_tensor_view<" +
+        element_type_names[TI(c_element_type)] + ">(" + to_string(outputs[0].get_index()) +
+        ")->get_vector() = std::vector<" + element_type_names[TI(c_element_type)] +
+        "::type>{";
+
+    for (size_t i = 0; i < c_value_strings.size(); i++)
+    {
+        if (i)
+            TU += ", ";
+        TU += c_value_strings[i];
+    }
+
+    TU += "};\n    }\n";
+}

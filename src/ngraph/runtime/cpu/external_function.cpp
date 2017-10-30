@@ -105,6 +105,7 @@ static const OpMap dispatcher{
      &Emitter::EmitParameterizedConstantUInt64},
     {TI(ngraph::op::Broadcast), &Emitter::EmitBroadcast},
     {TI(ngraph::op::Convert), &Emitter::EmitConvert},
+    {TI(ngraph::op::Constant), &Emitter::EmitConstant},
 };
 
 #undef TI

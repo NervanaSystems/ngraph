@@ -2218,14 +2218,15 @@ TEST(execute, slice_vector)
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), result->get_vector());
 }
+*/
 
-TEST(execute, scalar_constant_float32)
+TEST(cpu, scalar_constant_float32)
 {
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto r = make_shared<op::Constant>(element::Float32::element_type(), Shape{}, "4.8");
     auto f = make_shared<Function>(r, rt, op::Parameters{});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -2237,13 +2238,13 @@ TEST(execute, scalar_constant_float32)
     ASSERT_EQ(vector<float>{std::strtof("4.8", NULL)}, result->get_vector());
 }
 
-TEST(execute, scalar_constant_int64)
+TEST(cpu, scalar_constant_int64)
 {
     auto rt = make_shared<TensorViewType>(element::Int64::element_type(), Shape{});
     auto r = make_shared<op::Constant>(element::Int64::element_type(), Shape{}, "2112");
     auto f = make_shared<Function>(r, rt, op::Parameters{});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -2255,7 +2256,7 @@ TEST(execute, scalar_constant_int64)
     ASSERT_EQ(vector<element::Int64::type>{std::strtol("2112", NULL, 10)}, result->get_vector());
 }
 
-TEST(execute, tensor_constant_float32)
+TEST(cpu, tensor_constant_float32)
 {
     auto shape = Shape{2, 2};
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
@@ -2264,7 +2265,7 @@ TEST(execute, tensor_constant_float32)
                                        std::vector<std::string>{"4.8", "4.7", "-5.3", "0"});
     auto f = make_shared<Function>(r, rt, op::Parameters{});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -2280,7 +2281,7 @@ TEST(execute, tensor_constant_float32)
               result->get_vector());
 }
 
-TEST(execute, tensor_constant_int64)
+TEST(cpu, tensor_constant_int64)
 {
     auto shape = Shape{2, 2};
     auto rt = make_shared<TensorViewType>(element::Int64::element_type(), shape);
@@ -2289,7 +2290,7 @@ TEST(execute, tensor_constant_int64)
                                        std::vector<std::string>{"2112", "1848", "1776", "1964"});
     auto f = make_shared<Function>(r, rt, op::Parameters{});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -2305,6 +2306,7 @@ TEST(execute, tensor_constant_int64)
               result->get_vector());
 }
 
+/*
 // Trivial case with no summed axes.
 TEST(execute, sum_trivial)
 {

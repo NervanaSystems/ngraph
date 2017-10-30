@@ -75,6 +75,7 @@ namespace ngraph
                 void EMITTER_DECL(EmitParameterizedConstantUInt64);
                 void EMITTER_DECL(EmitBroadcast);
                 void EMITTER_DECL(EmitConvert);
+                void EMITTER_DECL(EmitConstant);
             };
         }
     }
