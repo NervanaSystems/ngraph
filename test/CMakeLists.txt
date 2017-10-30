@@ -57,6 +57,7 @@ endif()
 
 if(LLVM_INCLUDE_DIR)
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
+    set(SRC ${SRC} codegen.cpp)
     set(BACKEND_NAMES ${BACKEND_NAMES} "CPU")
 endif()
 
