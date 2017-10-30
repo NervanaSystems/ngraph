@@ -41,11 +41,13 @@ set (SRC
     uuid.cpp
 )
 
-set(BACKEND_NAME "NGVM")
-configure_file(backend_test.in.cpp backend_test_NGVM.cpp)
-set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_NGVM.cpp)
-
-message(STATUS "SRC set to '${SRC}'")
+#================================================================================================
+# To auto generate a suite of unit tests for a backend add a line like this
+# set(BACKEND_NAMES ${BACKEND_NAMES} "BACKEND_NAME_GOES_HERE")
+# and replace BACKEND_NAME_GOES_HERE with your backend name.
+# The code for the unit test suite is in test/backend_test.in.cpp
+#================================================================================================
+set(BACKEND_NAMES ${BACKEND_NAMES} "NGVM")
 
 if(MKLDNN_INCLUDE_DIR)
     include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})
@@ -55,10 +57,14 @@ endif()
 
 if(LLVM_INCLUDE_DIR)
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
-    set(BACKEND_NAME "CPU")
-    configure_file(backend_test.in.cpp backend_test_CPU.cpp)
-    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_CPU.cpp)
+    set(BACKEND_NAMES ${BACKEND_NAMES} "CPU")
 endif()
+
+foreach(BACKEND_NAME ${BACKEND_NAMES})
+    configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
+    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp)
+    message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
+endforeach()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
