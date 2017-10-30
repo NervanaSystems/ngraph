@@ -23,8 +23,8 @@
 #include "ngraph/autodiff/backprop_function.hpp"
 #include "ngraph/autodiff/numeric_derivative.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/test/all_close.hpp"
-#include "ngraph/test/random.hpp"
+#include "all_close.hpp"
+#include "random.hpp"
 
 using namespace std;
 using namespace ngraph;

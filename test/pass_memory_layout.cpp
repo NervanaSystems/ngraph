@@ -29,7 +29,7 @@
 #include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
-#include "test_tools.hpp"
+#include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
