@@ -46,6 +46,7 @@
 #include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
 #include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not_equal.hpp"
@@ -95,6 +96,7 @@
 #include "ngraph/runtime/ngvm/eigen/matrix_transpose.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_vector_product.hpp"
 #include "ngraph/runtime/ngvm/eigen/maximum.hpp"
+#include "ngraph/runtime/ngvm/eigen/minimum.hpp"
 #include "ngraph/runtime/ngvm/eigen/multiply.hpp"
 #include "ngraph/runtime/ngvm/eigen/negate.hpp"
 #include "ngraph/runtime/ngvm/eigen/not_equal.hpp"
@@ -370,6 +372,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_NUMERIC_BINOP(op::Less, eigen::LessThanInstruction);
         REGISTER_NUMERIC_BINOP(op::LessEq, eigen::LessEqInstruction);
         REGISTER_NUMERIC_BINOP(op::Maximum, eigen::MaximumInstruction);
+        REGISTER_NUMERIC_BINOP(op::Minimum, eigen::MinimumInstruction);
         REGISTER_NUMERIC_BINOP(op::Multiply, eigen::MultiplyInstruction);
         REGISTER_NUMERIC_BINOP(op::Subtract, eigen::SubtractInstruction);
 

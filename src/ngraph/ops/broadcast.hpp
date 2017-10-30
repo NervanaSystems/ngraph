@@ -80,6 +80,10 @@ namespace ngraph
             /// \return An set containing the indices of the broadcast axes (0-based).
             const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
         protected:
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
+
             Shape m_shape;
             AxisSet m_broadcast_axes;
         };

@@ -41,6 +41,8 @@ set (SRC
     ops/function_call.cpp
     ops/get_tuple_element.cpp
     ops/log.cpp
+    ops/maximum.cpp
+    ops/minimum.cpp
     ops/multiply.cpp
     ops/negative.cpp
     ops/op.cpp
@@ -180,6 +182,7 @@ install(DIRECTORY
     ${EIGEN_INCLUDE_DIR}/
     DESTINATION "${CMAKE_INSTALL_INCLUDE}"
 )
+if (NOT APPLE)
 install(DIRECTORY
     ${MKLDNN_INCLUDE_DIR}/
     DESTINATION "${CMAKE_INSTALL_INCLUDE}"
@@ -188,6 +191,7 @@ install(DIRECTORY
     ${MKLDNN_LIB_DIR}/
     DESTINATION "${CMAKE_INSTALL_LIB}"
 )
+endif()
 
 add_dependencies(ngraph eigen)
 
