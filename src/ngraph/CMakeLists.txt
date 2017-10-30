@@ -77,7 +77,6 @@ set (SRC
     runtime/tensor_view.cpp
     runtime/tuple.cpp
     runtime/utils.cpp
-    test/all_close.cpp
     shape.cpp
     types/element_type.cpp
     types/type.cpp
