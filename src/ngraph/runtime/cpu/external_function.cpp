@@ -47,6 +47,7 @@
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/tuple.hpp"
@@ -106,6 +107,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Broadcast), &Emitter::EmitBroadcast},
     {TI(ngraph::op::Convert), &Emitter::EmitConvert},
     {TI(ngraph::op::Constant), &Emitter::EmitConstant},
+    {TI(ngraph::op::Reshape), &Emitter::EmitReshape},
 };
 
 #undef TI

@@ -1655,8 +1655,9 @@ TEST(execute, reduce_matrix_to_scalar_zero_by_zero)
     ASSERT_EQ((vector<float>{}), a->get_vector());
     ASSERT_EQ((vector<float>{99}), b->get_vector());
 }
+*/
 
-TEST(execute, reshape_t2v_012)
+TEST(cpu, reshape_t2v_012)
 {
     auto shape_a = Shape{2, 2, 3};
     auto A = make_shared<op::Parameter>(
@@ -1666,7 +1667,7 @@ TEST(execute, reshape_t2v_012)
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
     auto f = make_shared<Function>(r, rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1680,7 +1681,7 @@ TEST(execute, reshape_t2v_012)
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}), result->get_vector());
 }
 
-TEST(execute, reshape_t2s_012)
+TEST(cpu, reshape_t2s_012)
 {
     auto shape_a = Shape{1, 1, 1};
     auto A = make_shared<op::Parameter>(
@@ -1690,7 +1691,7 @@ TEST(execute, reshape_t2s_012)
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
     auto f = make_shared<Function>(r, rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1704,7 +1705,7 @@ TEST(execute, reshape_t2s_012)
     ASSERT_EQ((vector<float>{6}), result->get_vector());
 }
 
-TEST(execute, reshape_t2s_120)
+TEST(cpu, reshape_t2s_120)
 {
     auto shape_a = Shape{1, 1, 1};
     auto A = make_shared<op::Parameter>(
@@ -1714,7 +1715,7 @@ TEST(execute, reshape_t2s_120)
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 2, 0}, shape_r);
     auto f = make_shared<Function>(r, rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1728,7 +1729,7 @@ TEST(execute, reshape_t2s_120)
     ASSERT_EQ((vector<float>{6}), result->get_vector());
 }
 
-TEST(execute, reshape_s2t)
+TEST(cpu, reshape_s2t)
 {
     auto shape_a = Shape{};
     auto A = make_shared<op::Parameter>(
@@ -1738,7 +1739,7 @@ TEST(execute, reshape_s2t)
     auto r = make_shared<op::Reshape>(A, AxisVector{}, shape_r);
     auto f = make_shared<Function>(r, rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1752,7 +1753,7 @@ TEST(execute, reshape_s2t)
     ASSERT_EQ((vector<float>{42}), result->get_vector());
 }
 
-TEST(execute, reshape_v2m_col)
+TEST(cpu, reshape_v2m_col)
 {
     auto shape_a = Shape{3};
     auto A = make_shared<op::Parameter>(
@@ -1762,7 +1763,7 @@ TEST(execute, reshape_v2m_col)
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
     auto f = make_shared<Function>(r, rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1776,7 +1777,7 @@ TEST(execute, reshape_v2m_col)
     ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector());
 }
 
-TEST(execute, reshape_v2m_row)
+TEST(cpu, reshape_v2m_row)
 {
     auto shape_a = Shape{3};
     auto A = make_shared<op::Parameter>(
@@ -1786,7 +1787,7 @@ TEST(execute, reshape_v2m_row)
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
     auto f = make_shared<Function>(r, rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1800,7 +1801,7 @@ TEST(execute, reshape_v2m_row)
     ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector());
 }
 
-TEST(execute, reshape_v2t_middle)
+TEST(cpu, reshape_v2t_middle)
 {
     auto shape_a = Shape{3};
     auto A = make_shared<op::Parameter>(
@@ -1810,7 +1811,7 @@ TEST(execute, reshape_v2t_middle)
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
     auto f = make_shared<Function>(r, rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1824,7 +1825,7 @@ TEST(execute, reshape_v2t_middle)
     ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector());
 }
 
-TEST(execute, reshape_m2m_same)
+TEST(cpu, reshape_m2m_same)
 {
     auto shape_a = Shape{3, 3};
     auto A = make_shared<op::Parameter>(
@@ -1834,7 +1835,7 @@ TEST(execute, reshape_m2m_same)
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1}, shape_r);
     auto f = make_shared<Function>(r, rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1848,7 +1849,7 @@ TEST(execute, reshape_m2m_same)
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), result->get_vector());
 }
 
-TEST(execute, reshape_m2m_transpose)
+TEST(cpu, reshape_m2m_transpose)
 {
     auto shape_a = Shape{3, 3};
     auto A = make_shared<op::Parameter>(
@@ -1858,7 +1859,7 @@ TEST(execute, reshape_m2m_transpose)
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
     auto f = make_shared<Function>(r, rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1872,7 +1873,7 @@ TEST(execute, reshape_m2m_transpose)
     ASSERT_EQ((vector<float>{1, 4, 7, 2, 5, 8, 3, 6, 9}), result->get_vector());
 }
 
-TEST(execute, reshape_m2m_dim_change_transpose)
+TEST(cpu, reshape_m2m_dim_change_transpose)
 {
     auto shape_a = Shape{3, 2};
     auto A = make_shared<op::Parameter>(
@@ -1882,7 +1883,7 @@ TEST(execute, reshape_m2m_dim_change_transpose)
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
     auto f = make_shared<Function>(r, rt, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1896,6 +1897,7 @@ TEST(execute, reshape_m2m_dim_change_transpose)
     ASSERT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), result->get_vector());
 }
 
+/*
 TEST(execute, sin)
 {
     auto shape = Shape{6};

@@ -25,6 +25,7 @@
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/reshape.hpp"
 #include "ngraph/runtime/cpu/emitter.hpp"
 #include "ngraph/runtime/cpu/external_function.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
@@ -930,4 +931,69 @@ void Emitter::EMITTER_DECL(EmitConstant)
     }
 
     TU += "};\n    }\n";
+}
+
+void Emitter::EMITTER_DECL(EmitReshape)
+{
+    auto reshape = static_cast<const op::Reshape*>(n);
+
+    auto arg_type = reshape->get_arguments().at(0)->get_value_type();
+    auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
+    assert(arg_tensor_view_type);
+    auto arg_shape = arg_tensor_view_type->get_shape();
+    auto arg_rank = arg_shape.size();
+
+    auto result_type = reshape->get_value_type();
+    auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
+    assert(result_tensor_view_type);
+    auto result_shape = result_tensor_view_type->get_shape();
+    auto& result_element_type = result_tensor_view_type->get_element_type();
+
+    auto input_order = reshape->get_input_order();
+
+    bool same_layout = std::is_sorted(input_order.begin(), input_order.end());
+
+    size_t result_shape_product = 1;
+    for (auto i : result_shape)
+    {
+        result_shape_product *= i;
+    }
+
+    // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor, we can just copy.
+    if (same_layout || result_shape_product < 2)
+    {
+        TU +=
+            "    {\n"
+            "        call_frame->get_parameterized_tensor_view<" +
+            element_type_names[TI(result_element_type)] + ">(" + to_string(outputs.at(0).get_index()) +
+            ")->get_vector() =\n"
+            "        call_frame->get_parameterized_tensor_view<" +
+            element_type_names[TI(result_element_type)] + ">(" +
+            to_string(inputs.at(0).get_index()) +
+            ")->get_vector();\n"
+            "    }\n";
+    }
+    // If there *is* a layout change in the 2D case, we transpose the input.
+    else if (arg_rank == 2)
+    {
+        auto arg0_layout = inputs[0].get_layout<DenseTensorViewLayout>();
+        auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
+
+        TU += "    {\n"
+            "        auto arg0 = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
+            ">(" + to_string(inputs[0].get_index()) + ");\n"
+            "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
+            ">(" + to_string(outputs[0].get_index()) + ");\n"
+            "        EigenMatrix<" + element_type_names[TI(result_element_type)] + ">(out, " +
+            EIGEN_MATRIX_FORMAT(out_layout->get_shape(), out_layout->get_strides()) + ") =\n"
+            "        EigenMatrix<" + element_type_names[TI(result_element_type)] + ">(arg0, " +
+            EIGEN_MATRIX_FORMAT(arg0_layout->get_shape(), arg0_layout->get_strides()) + ").transpose();\n"
+            "    }\n";
+    }
+    // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
+    else
+    {
+        throw ngraph_error(
+            "Axis permutation in reshape is not implemented yet for tensors with rank>2");
+    }
 }
