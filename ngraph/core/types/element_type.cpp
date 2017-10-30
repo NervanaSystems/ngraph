@@ -1,5 +1,5 @@
 #include <pybind11/pybind11.h>
-#include "ngraph/types/element_type.hpp"
+#include "ngraph_dist/include/ngraph/types/element_type.hpp"
 
 namespace py = pybind11;
 
