@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
         clang-3.9 clang-format-3.9 \
         git \
         wget patch diffutils zlib1g-dev libtinfo-dev \
-        doxygen sphinx-doc
+        doxygen python-sphinx
 
 RUN apt-get clean autoclean && \
     apt-get autoremove -y
