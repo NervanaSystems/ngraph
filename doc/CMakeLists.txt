@@ -1,14 +1,34 @@
-find_package(Doxygen)
+# Copyright 2017 Nervana Systems Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-if (DOXYGEN_FOUND)
-    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
-    set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
-    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-    add_custom_target(doc
-        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Generating documentation with Doxygen"
-        VERBATIM )
-else (DOXYGEN_FOUND)
-    message("Doxygen not found, cannot build documentation")
-endif (DOXYGEN_FOUND)
+add_custom_target( docs
+    COMMENT "Build all of the documentation types selected during CMake configuration."
+    )
+
+set(DOCS_TARGET_IS_EMPTY TRUE)
+
+add_subdirectory( doxygen )
+add_subdirectory( sphinx )
+
+if (DOCS_TARGET_IS_EMPTY)
+    add_custom_target( docs-is-noop-error
+        COMMAND echo
+        COMMAND echo "The 'docs' target does nothing because every kind of doc was disabled during configuration"
+        COMMAND echo
+        COMMAND false
+        VERBATIM
+        )
+
+    add_dependencies( docs docs-is-noop-error )
+endif()
+
