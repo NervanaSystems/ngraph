@@ -45,6 +45,24 @@ bool autodiff_numeric_compare(
     return test::all_close(results_num, results_sym, .01f, .01f);
 }
 
+TEST(backwards, abs)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    auto shape = Shape{2, 3};
+    auto x = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(
+            make_shared<op::Abs>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+        manager, backend, make_graph, {x}, .0f, .0f));
+}
+
 TEST(backwards, add)
 {
     auto manager = runtime::Manager::get("NGVM");

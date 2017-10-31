@@ -27,6 +27,7 @@ set (SRC
     function.cpp
     log.cpp
     node.cpp
+    ops/abs.cpp
     ops/add.cpp
     ops/binary_elementwise_arithmetic.cpp
     ops/binary_elementwise_builtin.cpp
