@@ -526,7 +526,7 @@ void Emitter::EMITTER_DECL(EmitMaximum)
           "        EigenArray1d<" + element_type_names[TI(et)] + ">(out, "
                    EIGEN_VECTOR_FORMAT(outputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ") =\n"
           "        EigenArray1d<" + element_type_names[TI(et)] + ">(arg0, "
-                   EIGEN_VECTOR_FORMAT(inputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ").max("
+                   EIGEN_VECTOR_FORMAT(inputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ").max(\n"
           "        EigenArray1d<" + element_type_names[TI(et)] + ">(arg1, "
                    EIGEN_VECTOR_FORMAT(inputs[1].get_layout<DenseTensorViewLayout>()->get_size()) "));\n"
           "    }\n";
