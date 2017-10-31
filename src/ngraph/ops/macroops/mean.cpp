@@ -13,39 +13,44 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/ops/macroops/mean.hpp"
-#include "ngraph/function.hpp"
 #include <algorithm>
 #include <numeric>
-#include "ngraph/ops/sum.hpp"
+#include <string>
+#include "ngraph/function.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/divide.hpp"
+#include "ngraph/ops/sum.hpp"
 #include "ngraph/util.hpp"
-#include <string>
 
 using namespace ngraph::op;
 
 std::shared_ptr<::ngraph::Node> Mean::lower()
 {
-	auto arg = m_arguments.at(0);
+    auto arg = m_arguments.at(0);
 
-	auto st = get_shape_et(m_arguments.at(0));
-	size_t num_dims = st.shape.size();
+    auto st = get_shape_et(m_arguments.at(0));
+    size_t num_dims = st.shape.size();
 
-	if (std::any_of(begin(m_reduction_axes), end(m_reduction_axes), [num_dims](size_t axis) {return axis >= num_dims; }))
-	{
-		throw ngraph_error("Reduction axis for mean is out of bounds");
-	}
+    if (std::any_of(begin(m_reduction_axes), end(m_reduction_axes), [num_dims](size_t axis) {
+            return axis >= num_dims;
+        }))
+    {
+        throw ngraph_error("Reduction axis for mean is out of bounds");
+    }
 
-	auto sum = std::make_shared <Sum>(arg, m_reduction_axes);
-	assert(sum->get_value_type());
-	auto sum_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(sum->get_value_type());
-	assert(sum_tensor_view_type);
+    auto sum = std::make_shared<Sum>(arg, m_reduction_axes);
+    assert(sum->get_value_type());
+    auto sum_tensor_view_type =
+        std::dynamic_pointer_cast<const TensorViewType>(sum->get_value_type());
+    assert(sum_tensor_view_type);
 
-	size_t n = std::accumulate(begin(m_reduction_axes), end(m_reduction_axes), static_cast<size_t>(1u),
-		[](size_t a, size_t b) {
-		return a * b;
-	});
+    size_t n = std::accumulate(begin(m_reduction_axes),
+                               end(m_reduction_axes),
+                               static_cast<size_t>(1u),
+                               [](size_t a, size_t b) { return a * b; });
 
-	auto constant = std::make_shared<Constant>(sum_tensor_view_type->get_element_type(), sum_tensor_view_type->get_shape(), std::to_string(n));
-	return sum / constant;
+    auto constant = std::make_shared<Constant>(sum_tensor_view_type->get_element_type(),
+                                               sum_tensor_view_type->get_shape(),
+                                               std::to_string(n));
+    return sum / constant;
 }

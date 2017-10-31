@@ -14,26 +14,27 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
 #include "ngraph/ops/macro.hpp"
+#include "ngraph/ops/op.hpp"
 
 namespace ngraph
 {
-	namespace op
-	{
-		class Mean : public MacroNode
-		{
-		public:
-			Mean(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-				: MacroNode({ arg })
-				, m_reduction_axes(reduction_axes)
-			{
-			}
+    namespace op
+    {
+        class Mean : public MacroNode
+        {
+        public:
+            Mean(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
+                : MacroNode({arg})
+                , m_reduction_axes(reduction_axes)
+            {
+            }
 
-			virtual std::shared_ptr<Node> lower() override;
-			const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
-		protected:
-			AxisSet m_reduction_axes;
-		};
-	}
+            virtual std::shared_ptr<Node> lower() override;
+            const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
+            virtual std::string description() const override { return "Mean"; }
+        protected:
+            AxisSet m_reduction_axes;
+        };
+    }
 }

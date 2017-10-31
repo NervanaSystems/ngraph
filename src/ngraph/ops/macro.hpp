@@ -18,18 +18,18 @@
 
 namespace ngraph
 {
-	namespace op
-	{
-		class MacroNode : public ::ngraph::Node
-		{
-		public:
-			using Node::Node;
-			void propagate_types() final;
-			virtual std::shared_ptr<Node> lower() = 0;
-			std::shared_ptr<Node> get_lowered_node();
+    namespace op
+    {
+        class MacroNode : public ::ngraph::Node
+        {
+        public:
+            using Node::Node;
+            virtual void propagate_types() override;
+            virtual std::shared_ptr<Node> lower() = 0;
+            std::shared_ptr<Node> get_lowered_node();
 
-		protected:
-			std::shared_ptr<Node> m_lowered_node; //nullptr
-		};
-	}
+        protected:
+            std::shared_ptr<Node> m_lowered_node; //nullptr
+        };
+    }
 }

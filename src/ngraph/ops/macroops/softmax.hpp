@@ -14,26 +14,27 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
 #include "ngraph/ops/macro.hpp"
+#include "ngraph/ops/op.hpp"
 
 namespace ngraph
 {
-	namespace op
-	{
-		class SoftMax : public MacroNode
-		{
-		public:
-			SoftMax(const std::shared_ptr<Node>& arg, size_t reduction_axis)
-				: MacroNode({ arg })
-				, m_reduction_axis(reduction_axis)
-			{
-			}
+    namespace op
+    {
+        class SoftMax : public MacroNode
+        {
+        public:
+            SoftMax(const std::shared_ptr<Node>& arg, size_t reduction_axis)
+                : MacroNode({arg})
+                , m_reduction_axis(reduction_axis)
+            {
+            }
 
-			virtual std::shared_ptr<Node> lower() override;
-			size_t get_reduction_axis() const { return m_reduction_axis; }
-		protected:
-			size_t m_reduction_axis;
-		};
-	}
+            virtual std::shared_ptr<Node> lower() override;
+            size_t get_reduction_axis() const { return m_reduction_axis; }
+            virtual std::string description() const override { return "SoftMax"; }
+        protected:
+            size_t m_reduction_axis;
+        };
+    }
 }

@@ -16,14 +16,14 @@
 #include <forward_list>
 #include <iomanip>
 #include <map>
-#include <unordered_set>
 #include <stack>
+#include <unordered_set>
 
+#include "ngraph/except.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/except.hpp"
 
 using namespace std;
 
@@ -140,34 +140,35 @@ size_t ngraph::hash_combine(const std::vector<size_t>& list)
     return seed;
 }
 
-void ngraph::traverse_postorder(std::shared_ptr<Node> n, std::function<void(std::shared_ptr<Node>)> process_node,
-	std::function<bool(std::shared_ptr<Node>)> process_children)
+void ngraph::traverse_postorder(std::shared_ptr<Node> n,
+                                std::function<void(std::shared_ptr<Node>)> process_node,
+                                std::function<bool(std::shared_ptr<Node>)> process_children)
 {
-	stack<shared_ptr<Node>> stack;
-	stack.push(n);
+    stack<shared_ptr<Node>> stack;
+    stack.push(n);
 
-	unordered_set<shared_ptr<Node>> visited;
+    unordered_set<shared_ptr<Node>> visited;
 
-	while (!stack.empty()) 
-	{
-		auto current = stack.top();
-		if (visited.count(current)) 
-		{
-			process_node(current);
-			stack.pop();
-		}
-		else 
-		{
-			visited.insert(current);
-			if (process_children(current))
-			{
-				for (auto arg : current->get_arguments())
-				{
-					stack.push(arg);
-				}
-			}
-		}
-	}
+    while (!stack.empty())
+    {
+        auto current = stack.top();
+        if (visited.count(current))
+        {
+            process_node(current);
+            stack.pop();
+        }
+        else
+        {
+            visited.insert(current);
+            if (process_children(current))
+            {
+                for (auto arg : current->get_arguments())
+                {
+                    stack.push(arg);
+                }
+            }
+        }
+    }
 }
 
 void ngraph::traverse_nodes(std::shared_ptr<ngraph::Function> p,
@@ -216,20 +217,20 @@ void ngraph::free_nodes(shared_ptr<Function> p)
     }
 }
 
-ngraph::ShapeTuple get_shape_et(std::shared_ptr<ngraph::Node> n)
+ngraph::ShapeTuple ngraph::get_shape_et(std::shared_ptr<ngraph::Node> n)
 {
-	auto arg_type = n->get_value_type();
-	if (nullptr == arg_type)
-	{
-		throw ngraph::ngraph_error("Argument to sum is missing type.");
-	}
-	auto arg_tensor_view_type = dynamic_pointer_cast<const ngraph::TensorViewType>(arg_type);
-	if (nullptr == arg_tensor_view_type)
-	{
-		throw ngraph::ngraph_error("Argument to sum is not a tensor view");
-	}
+    auto arg_type = n->get_value_type();
+    if (nullptr == arg_type)
+    {
+        throw ngraph::ngraph_error("Argument to sum is missing type.");
+    }
+    auto arg_tensor_view_type = dynamic_pointer_cast<const ngraph::TensorViewType>(arg_type);
+    if (nullptr == arg_tensor_view_type)
+    {
+        throw ngraph::ngraph_error("Argument to sum is not a tensor view");
+    }
 
-	auto& arg_element_type = arg_tensor_view_type->get_element_type();
-	auto arg_shape = arg_tensor_view_type->get_shape();
-	return ngraph::ShapeTuple{ arg_shape, arg_element_type };
+    auto& arg_element_type = arg_tensor_view_type->get_element_type();
+    auto arg_shape = arg_tensor_view_type->get_shape();
+    return ngraph::ShapeTuple{arg_shape, arg_element_type};
 }

@@ -13,34 +13,34 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/ops/macroops/softmax.hpp"
-#include "ngraph/ops/exp.hpp"
-#include "ngraph/function.hpp"
 #include <algorithm>
 #include <numeric>
-#include "ngraph/ops/sum.hpp"
-#include "ngraph/ops/maximum.hpp"
+#include <string>
+#include "ngraph/function.hpp"
+#include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/divide.hpp"
-#include "ngraph/ops/broadcast.hpp"
+#include "ngraph/ops/exp.hpp"
+#include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/sum.hpp"
 #include "ngraph/util.hpp"
-#include <string>
 
 using namespace ngraph::op;
 
-
 std::shared_ptr<::ngraph::Node> SoftMax::lower()
 {
-	if (m_arguments.size() != 1) 
-	{
-		throw ngraph_error("Wrong number of arguments");
-	}
+    if (m_arguments.size() != 1)
+    {
+        throw ngraph_error("Wrong number of arguments");
+    }
 
-	auto arg = m_arguments.at(0);
-	auto st = get_shape_et(m_arguments.at(0));
+    auto arg = m_arguments.at(0);
+    auto st = get_shape_et(m_arguments.at(0));
 
-	//TODO: [nikolayk] implement a numerically stable-flavour w/ max
-	auto exp = std::make_shared<op::Exp>(arg);
-	auto sum = std::make_shared<Sum>(exp, AxisSet({m_reduction_axis}));
-	std::shared_ptr<Node> broadcasted_sum = std::make_shared<Broadcast>(sum, st.shape, AxisSet({ m_reduction_axis }));
-	return exp / broadcasted_sum;
+    //TODO: [nikolayk] implement a numerically stable-flavour w/ max
+    auto exp = std::make_shared<op::Exp>(arg);
+    auto sum = std::make_shared<Sum>(exp, AxisSet({m_reduction_axis}));
+    std::shared_ptr<Node> broadcasted_sum =
+        std::make_shared<Broadcast>(sum, st.shape, AxisSet({m_reduction_axis}));
+    return exp / broadcasted_sum;
 }

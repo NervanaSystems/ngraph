@@ -14,21 +14,23 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
 #include "ngraph/ops/macro.hpp"
+#include "ngraph/ops/op.hpp"
 
 namespace ngraph
 {
-	namespace op
-	{
-		class CrossEntropy : public MacroNode
-		{
-		public:
-			CrossEntropy(const std::shared_ptr<Node>& predictions, const std::shared_ptr<Node>& answers)
-				: MacroNode({ predictions,  answers })
-			{
-			}
-			virtual std::shared_ptr<Node> lower() override;
-		};
-	}
+    namespace op
+    {
+        class CrossEntropy : public MacroNode
+        {
+        public:
+            CrossEntropy(const std::shared_ptr<Node>& predictions,
+                         const std::shared_ptr<Node>& answers)
+                : MacroNode({predictions, answers})
+            {
+            }
+            virtual std::shared_ptr<Node> lower() override;
+            virtual std::string description() const override { return "CrossEntropy"; }
+        };
+    }
 }

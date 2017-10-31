@@ -26,7 +26,7 @@ void Sum::propagate_types()
         throw ngraph_error("Wrong number of arguments.");
     }
 
-	auto st = get_shape_et(m_arguments.at(0));
+    auto st = get_shape_et(m_arguments.at(0));
     if (st.type == element::Bool::element_type())
     {
         throw ngraph_error("Argument for sum must have numeric element type");
@@ -50,6 +50,5 @@ void Sum::propagate_types()
         }
     }
 
-    set_value_type_checked(
-        make_shared<TensorViewType>(st.type, result_shape));
+    set_value_type_checked(make_shared<TensorViewType>(st.type, result_shape));
 }

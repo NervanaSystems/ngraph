@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
 #include <numeric>
+#include "ngraph/ops/op.hpp"
 
 namespace ngraph
 {
@@ -79,13 +79,12 @@ namespace ngraph
             {
             }
 
-			static AxisVector get_default_order(size_t size);
+            static AxisVector get_default_order(size_t size);
 
-			Reshape(const std::shared_ptr<Node>& arg,
-				const Shape& output_shape)
-				: Reshape (arg, get_default_order(output_shape.size()), output_shape)
-			{
-			}
+            Reshape(const std::shared_ptr<Node>& arg, const Shape& output_shape)
+                : Reshape(arg, get_default_order(output_shape.size()), output_shape)
+            {
+            }
 
             virtual std::string description() const override { return "Reshape"; }
             virtual void propagate_types() override;
