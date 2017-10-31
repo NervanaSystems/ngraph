@@ -19,8 +19,8 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/test/all_close.hpp"
 #include "ngraph/util.hpp"
+#include "util/all_close.hpp"
 
 using namespace std;
 using namespace ngraph;
