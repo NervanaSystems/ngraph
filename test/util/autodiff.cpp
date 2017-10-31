@@ -516,9 +516,9 @@ TEST(backwards, tan)
 
     // Stay away from the asymptotes.
     auto slop = 0.01f;
-
     test::Uniform<element::Float32> rng_r(-pi / 2 + slop, pi / 2 - slop);
     test::Uniform<element::Float32> rng_l(pi / 2 + slop, (3 * pi) / 2 - slop);
+
     auto shape = Shape{2, 3};
 
     auto make_graph = [shape]() {
