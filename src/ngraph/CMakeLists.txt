@@ -43,6 +43,8 @@ set (SRC
     ops/log.cpp
     ops/macro.cpp
     ops/macroops/mean.cpp
+    ops/macroops/softmax.cpp
+    ops/macroops/cross_entropy.cpp
     ops/maximum.cpp
     ops/minimum.cpp
     ops/multiply.cpp

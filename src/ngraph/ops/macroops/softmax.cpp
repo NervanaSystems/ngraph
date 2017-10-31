@@ -12,44 +12,35 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ops/sum.hpp"
+#include "ngraph/ops/macroops/softmax.hpp"
+#include "ngraph/ops/exp.hpp"
 #include "ngraph/function.hpp"
+#include <algorithm>
+#include <numeric>
+#include "ngraph/ops/sum.hpp"
+#include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/divide.hpp"
+#include "ngraph/ops/broadcast.hpp"
 #include "ngraph/util.hpp"
+#include <string>
 
-using namespace std;
 using namespace ngraph::op;
 
-void Sum::propagate_types()
+
+std::shared_ptr<::ngraph::Node> SoftMax::lower()
 {
-    if (m_arguments.size() != 1)
-    {
-        throw ngraph_error("Wrong number of arguments.");
-    }
+	if (m_arguments.size() != 1) 
+	{
+		throw ngraph_error("Wrong number of arguments");
+	}
 
+	auto arg = m_arguments.at(0);
 	auto st = get_shape_et(m_arguments.at(0));
-    if (st.type == element::Bool::element_type())
-    {
-        throw ngraph_error("Argument for sum must have numeric element type");
-    }
 
-    for (auto axis : m_reduction_axes)
-    {
-        if (axis >= st.shape.size())
-        {
-            throw ngraph_error("Reduction axis for sum is out of bounds");
-        }
-    }
-
-    Shape result_shape;
-
-    for (size_t i = 0; i < st.shape.size(); i++)
-    {
-        if (m_reduction_axes.count(i) == 0)
-        {
-            result_shape.push_back(st.shape.at(i));
-        }
-    }
-
-    set_value_type_checked(
-        make_shared<TensorViewType>(st.type, result_shape));
+	//TODO: [nikolayk] implement a numerically stable-flavour w/ max
+	auto exp = std::make_shared<op::Exp>(arg);
+	auto sum = std::make_shared<Sum>(exp, AxisSet({m_reduction_axis}));
+	std::shared_ptr<Node> broadcasted_sum = std::make_shared<Broadcast>(sum, st.shape, AxisSet({ m_reduction_axis }));
+	return exp / broadcasted_sum;
 }

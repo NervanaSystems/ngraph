@@ -19,6 +19,7 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/divide.hpp"
+#include "ngraph/util.hpp"
 #include <string>
 
 using namespace ngraph::op;
@@ -26,20 +27,10 @@ using namespace ngraph::op;
 std::shared_ptr<::ngraph::Node> Mean::lower()
 {
 	auto arg = m_arguments.at(0);
-	auto arg_type = arg->get_value_type();
-	if (nullptr == arg_type)
-	{
-		throw ngraph_error("Argument to mean is missing type.");
-	}
 
-	auto arg_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(arg_type);
-	if (nullptr == arg_tensor_view_type)
-	{
-		throw ngraph_error("Argument to mean is not a tensor view");
-	}
+	auto st = get_shape_et(m_arguments.at(0));
+	size_t num_dims = st.shape.size();
 
-	auto arg_shape = arg_tensor_view_type->get_shape();
-	size_t num_dims = arg_shape.size();
 	if (std::any_of(begin(m_reduction_axes), end(m_reduction_axes), [num_dims](size_t axis) {return axis >= num_dims; }))
 	{
 		throw ngraph_error("Reduction axis for mean is out of bounds");

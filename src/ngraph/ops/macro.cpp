@@ -10,12 +10,14 @@ std::shared_ptr<ngraph::Node> MacroNode::get_lowered_node()
 	{
 		m_lowered_node = lower();
 	}
+
+	return m_lowered_node;
 }
 
 void MacroNode::propagate_types() 
 {
 	auto ln = get_lowered_node();
-	return ln->propagate_types();
+	ln->propagate_types();
 	set_value_type_checked(ln->get_value_type());
 }
 

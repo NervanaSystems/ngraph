@@ -23,6 +23,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/except.hpp"
 
 using namespace std;
 
@@ -139,14 +140,13 @@ size_t ngraph::hash_combine(const std::vector<size_t>& list)
     return seed;
 }
 
-void ngraph::traverse_postorder(std::shared_ptr<Node> n,
-	std::function<void(shared_ptr<Node>)> process_node,
-	std::function<bool(shared_ptr<Node>)> process_children)
+void ngraph::traverse_postorder(std::shared_ptr<Node> n, std::function<void(std::shared_ptr<Node>)> process_node,
+	std::function<bool(std::shared_ptr<Node>)> process_children)
 {
-	std::stack<shared_ptr<Node>> stack;
+	stack<shared_ptr<Node>> stack;
 	stack.push(n);
 
-	std::unordered_set<shared_ptr<Node>> visited;
+	unordered_set<shared_ptr<Node>> visited;
 
 	while (!stack.empty()) 
 	{
@@ -214,4 +214,22 @@ void ngraph::free_nodes(shared_ptr<Function> p)
     {
         n->clear_arguments();
     }
+}
+
+ngraph::ShapeTuple get_shape_et(std::shared_ptr<ngraph::Node> n)
+{
+	auto arg_type = n->get_value_type();
+	if (nullptr == arg_type)
+	{
+		throw ngraph::ngraph_error("Argument to sum is missing type.");
+	}
+	auto arg_tensor_view_type = dynamic_pointer_cast<const ngraph::TensorViewType>(arg_type);
+	if (nullptr == arg_tensor_view_type)
+	{
+		throw ngraph::ngraph_error("Argument to sum is not a tensor view");
+	}
+
+	auto& arg_element_type = arg_tensor_view_type->get_element_type();
+	auto arg_shape = arg_tensor_view_type->get_shape();
+	return ngraph::ShapeTuple{ arg_shape, arg_element_type };
 }
