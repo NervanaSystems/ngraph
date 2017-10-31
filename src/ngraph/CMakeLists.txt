@@ -52,6 +52,7 @@ set (SRC
     ops/reduce.cpp
     ops/reshape.cpp
     ops/select.cpp
+    ops/sin.cpp
     ops/slice.cpp
     ops/subtract.cpp
     ops/sum.cpp
