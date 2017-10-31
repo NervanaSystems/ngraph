@@ -507,6 +507,42 @@ TEST(backwards, subtract)
         manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
+TEST(backwards, tan)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    auto pi = 3.14159f;
+
+    // Stay away from the asymptotes.
+    auto slop = 0.01f;
+
+    test::Uniform<element::Float32> rng_r(-pi / 2 + slop, pi / 2 - slop);
+    test::Uniform<element::Float32> rng_l(pi / 2 + slop, (3 * pi) / 2 - slop);
+    auto shape = Shape{2, 3};
+
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(
+            make_shared<op::Abs>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+
+    for (auto i = 0; i < 100; i++)
+    {
+        auto x_r =
+            rng_r.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x_r}, .01f, .01f));
+
+        auto x_l =
+            rng_l.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x_l}, .01f, .01f));
+    }
+}
+
 TEST(backwards, abc)
 {
     auto manager = runtime::Manager::get("NGVM");

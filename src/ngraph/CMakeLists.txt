@@ -56,6 +56,7 @@ set (SRC
     ops/slice.cpp
     ops/subtract.cpp
     ops/sum.cpp
+    ops/tan.cpp
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise_builtin.cpp

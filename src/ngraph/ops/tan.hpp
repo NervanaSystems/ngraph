@@ -51,6 +51,9 @@ namespace ngraph
             }
 
             virtual std::string description() const override { return "Tan"; }
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
         };
     }
 }
