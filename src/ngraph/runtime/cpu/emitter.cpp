@@ -979,16 +979,35 @@ void Emitter::EMITTER_DECL(EmitReshape)
         auto arg0_layout = inputs[0].get_layout<DenseTensorViewLayout>();
         auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
 
-        TU += "    {\n"
-            "        auto arg0 = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
-            ">(" + to_string(inputs[0].get_index()) + ");\n"
-            "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
-            ">(" + to_string(outputs[0].get_index()) + ");\n"
-            "        EigenMatrix<" + element_type_names[TI(result_element_type)] + ">(out, " +
-            EIGEN_MATRIX_FORMAT(out_layout->get_shape(), out_layout->get_strides()) + ") =\n"
-            "        EigenMatrix<" + element_type_names[TI(result_element_type)] + ">(arg0, " +
-            EIGEN_MATRIX_FORMAT(arg0_layout->get_shape(), arg0_layout->get_strides()) + ").transpose();\n"
-            "    }\n";
+        // Emit an MKL transpose call if possible
+        if (result_element_type == ngraph::element::Float32::element_type())
+        {
+            TU +=
+                "    {\n"
+                "        auto arg0 = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
+                ">(" + to_string(inputs[0].get_index()) + ");\n"
+                "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
+                ">(" + to_string(outputs[0].get_index()) + ");\n"
+                "        mkl::MKL_Somatcopy('R', 'T', " + to_string(arg_shape[0]) + ",\n"
+                "                          " + to_string(arg_shape[1]) + ", 1.0f,\n"
+                "                           arg0, " + to_string(arg_shape[1]) + ",\n"
+                "                           out, " + to_string(arg_shape[0]) + ");\n"
+                "    }\n";
+        }
+        else
+        {
+            TU +=
+                "    {\n"
+                "        auto arg0 = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
+                ">(" + to_string(inputs[0].get_index()) + ");\n"
+                "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
+                ">(" + to_string(outputs[0].get_index()) + ");\n"
+                "        EigenMatrix<" + element_type_names[TI(result_element_type)] + ">(out, " +
+                EIGEN_MATRIX_FORMAT(out_layout->get_shape(), out_layout->get_strides()) + ") =\n"
+                "        EigenMatrix<" + element_type_names[TI(result_element_type)] + ">(arg0, " +
+                EIGEN_MATRIX_FORMAT(arg0_layout->get_shape(), arg0_layout->get_strides()) + ").transpose();\n"
+                "    }\n";
+        }
     }
     // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
     else

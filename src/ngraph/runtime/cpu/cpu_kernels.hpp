@@ -86,3 +86,15 @@ namespace cblas
                      const ngraph::element::Int64::type ldc);
     }
 }
+
+namespace mkl
+{
+    extern "C" {
+    void MKL_Somatcopy(char ordering,
+                       char trans,
+                       size_t rows, size_t cols,
+                       const ngraph::element::Float32::type alpha,
+                       const ngraph::element::Float32::type* A, size_t lda,
+                       ngraph::element::Float32::type* B, size_t ldb);
+    }
+}

@@ -143,10 +143,17 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     LO->OpenMP = 1;
     LO->OpenMPUseTLS = 1;
 
+    // CodeGen options
+    auto& CGO = Clang->getInvocation().getCodeGenOpts();
+    CGO.OptimizationLevel = 3;
+    CGO.RelocationModel = "static";
+    CGO.ThreadModel = "posix";
+    CGO.OmitLeafFramePointer = 1;
+    CGO.VectorizeLoop = 1;
+    CGO.VectorizeSLP = 1;
+
     if (debuginfo_enabled)
     {
-        // CodeGen options
-        auto& CGO = Clang->getInvocation().getCodeGenOpts();
         CGO.setDebugInfo(codegenoptions::FullDebugInfo);
     }
 
@@ -161,6 +168,8 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     // Enable various target features
     // Most of these are for Eigen
     auto &TO = Clang->getInvocation().getTargetOpts();
+    // TODO: This needs to be configurable and selected carefully
+    TO.CPU = "broadwell";
     TO.FeaturesAsWritten.emplace_back("+sse4.1");
     TO.FeaturesAsWritten.emplace_back("+sse4.2");
     TO.FeaturesAsWritten.emplace_back("+avx");
