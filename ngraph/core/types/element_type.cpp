@@ -8,3 +8,11 @@ PYBIND11_MODULE(element_type, m) {
 	py::class_<ngraph::element::Type>(m, "Type")
 		.def("hash", &ngraph::element::Type::hash);
 }
+
+PYBIND11_MODULE(element_type_traitedtype, m1) {
+        py::class_<ngraph::element::TraitedType<float>,ngraph::element::Type>(m1, "TraitedType")
+                .def("TraitedType", &ngraph::element::TraitedType<float>::element_type);
+}
+
+
+
