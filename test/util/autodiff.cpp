@@ -50,6 +50,8 @@ TEST(backwards, abs)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
+    // The numeric derivative and the symbolic one may disagree around 0, so we will dance around
+    // that point by skipping (-0.01,0.01).
     test::Uniform<element::Float32> rng_neg(-1.0f, 0.01f);
     test::Uniform<element::Float32> rng_pos(0.01f, 1.0f);
     auto shape = Shape{2, 3};
@@ -132,6 +134,28 @@ TEST(backwards, broadcast1)
     };
     EXPECT_TRUE(
         autodiff_numeric_compare<element::Float32>(manager, backend, make_graph, {x0}, .01f, .01f));
+}
+
+TEST(backwards, cos)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<element::Float32> rng(-10.0f, 10.0f);
+    auto shape = Shape{2, 3};
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(
+            make_shared<op::Cos>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+
+    for (auto i = 0; i < 100; i++)
+    {
+        auto x = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x}, .01f, .01f));
+    }
 }
 
 TEST(backwards, divide)
