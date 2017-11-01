@@ -42,7 +42,8 @@ namespace ngraph
             const std::shared_ptr<runtime::Manager>& manager,
             const std::shared_ptr<runtime::Backend>& backend,
             const std::shared_ptr<Function>& f,
-            const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>>& args);
+            const std::vector<std::shared_ptr<runtime::TensorView>>& args,
+            const std::vector<std::shared_ptr<op::Parameter>>& indep_params);
 
         extern template std::vector<
             std::shared_ptr<runtime::ParameterizedTensorView<ngraph::element::Float32>>>
@@ -51,7 +52,8 @@ namespace ngraph
                 const std::shared_ptr<runtime::Backend>& backend,
                 const std::shared_ptr<Function>& f,
                 const std::vector<
-                    std::shared_ptr<runtime::ParameterizedTensorView<element::Float32>>>& args);
+                    std::shared_ptr<runtime::TensorView>>& args,
+            const std::vector<std::shared_ptr<op::Parameter>>& indep_params);
 
         extern template std::vector<
             std::shared_ptr<runtime::ParameterizedTensorView<ngraph::element::Float64>>>
@@ -60,6 +62,7 @@ namespace ngraph
                 const std::shared_ptr<runtime::Backend>& backend,
                 const std::shared_ptr<Function>& f,
                 const std::vector<
-                    std::shared_ptr<runtime::ParameterizedTensorView<element::Float64>>>& args);
+                    std::shared_ptr<runtime::TensorView>>& args,
+            const std::vector<std::shared_ptr<op::Parameter>>& indep_params);
     }
 }

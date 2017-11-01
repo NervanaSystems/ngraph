@@ -49,6 +49,7 @@
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
+#include "ngraph/ops/not.hpp"
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reshape.hpp"
@@ -99,6 +100,7 @@
 #include "ngraph/runtime/ngvm/eigen/minimum.hpp"
 #include "ngraph/runtime/ngvm/eigen/multiply.hpp"
 #include "ngraph/runtime/ngvm/eigen/negate.hpp"
+#include "ngraph/runtime/ngvm/eigen/not.hpp"
 #include "ngraph/runtime/ngvm/eigen/not_equal.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_rows.hpp"
@@ -277,6 +279,22 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
                            instr_class);                                                           \
     }
 
+#define REGISTER_LOGICAL_UNOP(op_class, instr_class)                                               \
+    REGISTER_TO_OP_MAP(op_class)                                                                   \
+    {                                                                                              \
+        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
+                                       n->get_arguments().at(0)->get_value_type()))                \
+                                      ->get_element_type();                                        \
+        if (element::Bool::element_type() == et)                                                   \
+        {                                                                                          \
+            ef->get_instructions()->push_back(make_shared<instr_class>(in[0],out[0]));             \
+        }                                                                                          \
+        else                                                                                       \
+        {                                                                                          \
+            throw ngraph_error("Internal error: logical unop has unhandled element type");         \
+        }                                                                                          \
+    }
+
 #define M_REGISTER_NUMERIC_BINOP(T, instr_class)                                                   \
     ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], in[1], out[0]));
 #define REGISTER_NUMERIC_BINOP(op_class, instr_class)                                              \
@@ -406,6 +424,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt8);
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt32);
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt64);
+
+        REGISTER_LOGICAL_UNOP(op::Not, eigen::NotInstruction);
 
         REGISTER_TO_OP_MAP(op::Broadcast)
         {

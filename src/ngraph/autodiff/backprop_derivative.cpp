@@ -32,7 +32,8 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
         const std::shared_ptr<runtime::Manager>& manager,
         const std::shared_ptr<runtime::Backend>& backend,
         const std::shared_ptr<Function>& f,
-        const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>>& args)
+        const std::vector<std::shared_ptr<runtime::TensorView>>& args,
+        const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
 {
     auto y = f->get_result();
     Shape y_shape =
@@ -45,7 +46,8 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
     std::vector<std::shared_ptr<Node>> deriv_nodes;
     std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>> bprops;
     std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>> results;
-    for (auto param : params)
+
+    for (auto param : indep_params)
     {
         Shape s = y_shape;
         auto param_shape =
@@ -101,7 +103,8 @@ template std::vector<
         const std::shared_ptr<runtime::Backend>& backend,
         const std::shared_ptr<Function>& f,
         const std::vector<
-            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float32>>>& args);
+            std::shared_ptr<ngraph::runtime::TensorView>>& args,
+        const std::vector<std::shared_ptr<op::Parameter>>& indep_params);
 
 template std::vector<
     std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ngraph::element::Float64>>>
@@ -110,4 +113,5 @@ template std::vector<
         const std::shared_ptr<runtime::Backend>& backend,
         const std::shared_ptr<Function>& f,
         const std::vector<
-            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float64>>>& args);
+            std::shared_ptr<ngraph::runtime::TensorView>>& args,
+        const std::vector<std::shared_ptr<op::Parameter>>& indep_params);

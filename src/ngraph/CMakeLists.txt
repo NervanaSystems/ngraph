@@ -47,6 +47,7 @@ set (SRC
     ops/minimum.cpp
     ops/multiply.cpp
     ops/negative.cpp
+    ops/not.cpp
     ops/op.cpp
     ops/parameter.cpp
     ops/reduce.cpp
