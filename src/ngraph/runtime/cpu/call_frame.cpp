@@ -20,30 +20,30 @@ using namespace std;
 using namespace ngraph::runtime::cpu;
 
 CallFrame::CallFrame(EntryPoint compiled_function,
-                     size_t n_inputs,
                      size_t n_outputs,
+                     size_t n_inputs,
                      const TensorViewPtrs& temps)
 
-    : m_n_inputs(n_inputs)
-    , m_n_outputs(n_outputs)
+    : m_n_outputs(n_outputs)
+    , m_n_inputs(n_inputs)
     , m_tensor_views(n_inputs + n_outputs + temps.size())
     , m_compiled_function(compiled_function)
 {
-    copy(temps.begin(), temps.end(), m_tensor_views.begin() + m_n_inputs + m_n_outputs);
+    copy(temps.begin(), temps.end(), m_tensor_views.begin() + m_n_outputs + m_n_inputs);
 }
 
 void CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs)
 {
-    copy(inputs.begin(), inputs.end(), m_tensor_views.begin());
-    copy(outputs.begin(), outputs.end(), m_tensor_views.begin() + m_n_inputs);
+    copy(outputs.begin(), outputs.end(), m_tensor_views.begin());
+    copy(inputs.begin(), inputs.end(), m_tensor_views.begin() + m_n_outputs);
 
     // Invoke compiled computation
     m_compiled_function(this, m_tensor_views);
 
     // Don't hold onto inputs/outputs
-    fill_n(m_tensor_views.begin(), m_n_inputs + m_n_outputs, nullptr);
+    fill_n(m_tensor_views.begin(), m_n_outputs + m_n_inputs, nullptr);
 }
 
 void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,

@@ -149,7 +149,17 @@ void ExternalFunction::compile(FunctionMap& function_map)
 
     // Determine tensor requirements for the call frame
     unordered_map<shared_ptr<ngraph::descriptor::TensorView>, size_t> tensor_index;
-    // First come the function inputs
+
+    // First come the function outputs
+    for (const descriptor::Output& output : m_function->get_result()->get_outputs())
+    {
+        auto tv = output.get_tensor_view();
+        size_t index = tensor_index.size();
+        tensor_index[tv] = index;
+    }
+    m_n_outputs = tensor_index.size();
+
+    // Next are the function inputs
     for (auto param : m_function->get_parameters())
     {
         for (const descriptor::Output& output : param->get_outputs())
@@ -159,16 +169,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
             tensor_index[tv] = index;
         }
     }
-    m_n_inputs = tensor_index.size();
-
-    // Next are the function outputs
-    for (const descriptor::Output& output : m_function->get_result()->get_outputs())
-    {
-        auto tv = output.get_tensor_view();
-        size_t index = tensor_index.size();
-        tensor_index[tv] = index;
-    }
-    m_n_outputs = tensor_index.size() - m_n_inputs;
+    m_n_inputs = tensor_index.size() - m_n_outputs;
 
     // All remaining tensor views
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
@@ -336,5 +337,5 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
 #undef M
     }
     return make_shared<ngraph::runtime::cpu::CallFrame>(
-        compiled_function, m_n_inputs, m_n_outputs, temps);
+        compiled_function, m_n_outputs, m_n_inputs, temps);
 }
