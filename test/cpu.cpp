@@ -1084,8 +1084,7 @@ TEST(cpu, tensor_constant_with_op)
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
 }
 
-/*
-TEST(execute, function_call)
+TEST(cpu, function_call)
 {
     // First create "f(A,B,C) = (A+B)*C".
     auto shape = Shape{2, 2};
@@ -1106,7 +1105,7 @@ TEST(execute, function_call)
                                    op::Parameters{X, Y, Z});
 
     // Now call g on some test vectors.
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(g);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -1128,7 +1127,6 @@ TEST(execute, function_call)
     (*cf)({x, z, y}, {result});
     ASSERT_EQ((vector<float>{100, 144, 196, 256}), result->get_vector());
 }
-*/
 
 TEST(cpu, broadcast_scalar_vector)
 {

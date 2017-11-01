@@ -24,11 +24,13 @@
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/runtime/tensor_view_info.hpp"
+#include "ngraph/runtime/cpu/call_frame.hpp"
 #include "ngraph/runtime/cpu/emitter.hpp"
 #include "ngraph/runtime/cpu/external_function.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
 
 using namespace std;
 using namespace ngraph::runtime::cpu;
@@ -1015,4 +1017,48 @@ void Emitter::EMITTER_DECL(EmitReshape)
         throw ngraph_error(
             "Axis permutation in reshape is not implemented yet for tensors with rank>2");
     }
+}
+
+void Emitter::EMITTER_DECL(EmitFunctionCall)
+{
+    auto function_call = static_cast<const op::FunctionCall*>(n);
+    auto function = function_call->get_function();
+
+    std::shared_ptr<ExternalFunction> external;
+
+    try
+    {
+        external = function_map.at(function);
+    }
+    catch (const std::out_of_range)
+    {
+        external = make_shared<ExternalFunction>(function);
+        function_map.insert({function, external});
+    }
+
+    std::shared_ptr<CallFrame> cf = std::dynamic_pointer_cast<CallFrame>(
+        external->make_call_frame());
+
+    ef->get_callees().emplace_back(cf);
+
+    TU +=
+        "    {\n"
+        "        auto cf = callees.at(" + to_string(ef->get_callees().size() - 1) + ");\n"
+        "        std::vector<std::shared_ptr<ngraph::runtime::Value>> inputs;\n"
+        "        std::vector<std::shared_ptr<ngraph::runtime::Value>> outputs;\n";
+
+    for (const auto &in : inputs)
+    {
+        TU +=
+            "        inputs.emplace_back(call_frame->get_tensor_view(" + to_string(in.get_index()) + "));\n";
+    }
+    for (const auto &out : outputs)
+    {
+        TU +=
+            "        outputs.emplace_back(call_frame->get_tensor_view(" + to_string(out.get_index()) + "));\n";
+    }
+
+    TU +=
+        "        (*cf)(inputs, outputs);\n"
+        "    }\n";
 }

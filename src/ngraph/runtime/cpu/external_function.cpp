@@ -108,6 +108,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Convert), &Emitter::EmitConvert},
     {TI(ngraph::op::Constant), &Emitter::EmitConstant},
     {TI(ngraph::op::Reshape), &Emitter::EmitReshape},
+    {TI(ngraph::op::FunctionCall), &Emitter::EmitFunctionCall},
 };
 
 #undef TI
@@ -203,14 +204,15 @@ void ExternalFunction::compile(FunctionMap& function_map)
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/eigen_utils.hpp"
 
-void *__dso_handle = 0;
-
 using namespace ngraph::element;
 using namespace ngraph::runtime;
 using namespace ngraph::runtime::cpu::eigen;
 
+void *__dso_handle = 0;
+
 extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
-                             ngraph::runtime::TensorViewPtrs& tensor_views)
+                             ngraph::runtime::TensorViewPtrs& tensor_views,
+                             const std::vector<std::shared_ptr<ngraph::runtime::cpu::CallFrame>>& callees)
 {
 )";
 
@@ -262,7 +264,9 @@ extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
     estate.add_module(llvm_module);
     estate.finalize();
     compiled_function = estate.find_function<void(
-        ngraph::runtime::cpu::CallFrame*, ngraph::runtime::TensorViewPtrs&)>("__entrypoint");
+                            ngraph::runtime::cpu::CallFrame*,
+                            ngraph::runtime::TensorViewPtrs&,
+                            const std::vector<std::shared_ptr<CallFrame>>&)>("__entrypoint");
     assert(compiled_function);
 
     m_is_compiled = true;
@@ -340,5 +344,5 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
 #undef M
     }
     return make_shared<ngraph::runtime::cpu::CallFrame>(
-        compiled_function, m_n_inputs, m_n_outputs, temps);
+        compiled_function, m_n_inputs, m_n_outputs, temps, callees);
 }

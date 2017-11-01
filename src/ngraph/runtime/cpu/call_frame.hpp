@@ -31,8 +31,10 @@ namespace ngraph
         namespace cpu
         {
             class CallFrame;
+
             using EntryPoint = std::function<void(ngraph::runtime::cpu::CallFrame*,
-                                                  ngraph::runtime::TensorViewPtrs&)>;
+                                                  ngraph::runtime::TensorViewPtrs&,
+                                                  const std::vector<std::shared_ptr<CallFrame>>&)>;
 
             // Compile and execute graphs
             class CallFrame : public ngraph::runtime::CallFrame
@@ -41,7 +43,8 @@ namespace ngraph
                 CallFrame(EntryPoint compiled_function,
                           size_t n_inputs,
                           size_t n_outputs,
-                          const TensorViewPtrs& temps);
+                          const TensorViewPtrs& temps,
+                          const std::vector<std::shared_ptr<CallFrame>>& callees);
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
@@ -73,6 +76,7 @@ namespace ngraph
                 TensorViewPtrs m_tensor_views;
                 bool m_return;
                 EntryPoint m_compiled_function;
+                std::vector<std::shared_ptr<CallFrame>> m_callees;
             };
         }
     }
