@@ -536,7 +536,6 @@ TEST(backwards, select)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Bool> rng_cond(0, 1);
     test::Uniform<element::Float32> rng(-10.0f, 10.0f);
     auto shape = Shape{2, 3};
     auto make_graph = [shape]() {
@@ -549,7 +548,8 @@ TEST(backwards, select)
 
     for (auto i = 0; i < 100; i++)
     {
-        auto x0 = rng_cond.initialize(backend->make_parameterized_tensor_view<element::Bool>(shape));
+        auto x0 = backend->make_parameterized_tensor_view<element::Bool>(shape);
+        *x0 = vector<char>{0, 1, 0, 1, 0, 1};
         auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
         auto x2 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
 
