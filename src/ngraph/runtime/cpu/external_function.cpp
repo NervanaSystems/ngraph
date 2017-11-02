@@ -189,6 +189,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
+#include "ngraph/runtime/utils.hpp"
 #include "ngraph/runtime/cpu/call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/eigen_utils.hpp"
