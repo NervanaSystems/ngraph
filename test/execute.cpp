@@ -234,6 +234,27 @@ TEST(execute, abs)
     ASSERT_EQ((vector<float>{1, 2, 0, 4.8f}), result->get_vector());
 }
 
+TEST(execute, ceiling)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Ceiling>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    *a = vector<float>{-2.5f, -2.0f, 0.3f, 4.8f};
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{-2.0f, -2.0f, 1.0f, 5.0f}), result->get_vector());
+}
+
 TEST(execute, concat_matrix_colwise)
 {
     auto shape_a = Shape{2, 2};
@@ -413,6 +434,27 @@ TEST(execute, equal)
 
     (*cf)({a, b}, {result});
     ASSERT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), result->get_vector());
+}
+
+TEST(execute, floor)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Floor>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    *a = vector<float>{-2.5f, -2.0f, 0.3f, 4.8f};
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+
+    (*cf)({a}, {result});
+    ASSERT_EQ((vector<float>{-3.0f, -2.0f, 0.0f, 4.0f}), result->get_vector());
 }
 
 TEST(execute, dot_0_0)

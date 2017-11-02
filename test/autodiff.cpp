@@ -53,7 +53,7 @@ bool autodiff_numeric_compare(
     auto results_sym =
         autodiff::backprop_derivative<ET>(manager, backend, g, args_as_tv, g->get_parameters());
 
-    return test::all_close(results_num, results_sym, .01f, .01f);
+    return test::all_close(results_num, results_sym, rtol, atol);
 }
 
 template <typename ET>
@@ -107,46 +107,8 @@ bool autodiff_numeric_compare_selective(
     auto results_sym =
         autodiff::backprop_derivative<ET>(manager, backend, g, args_as_tv, g_indep_params);
 
-    return test::all_close(results_num, results_sym, .01f, .01f);
+    return test::all_close(results_num, results_sym, rtol, atol);
 }
-
-/*
-template <typename ET>
-void autodiff_backwards_try(
-    const std::shared_ptr<runtime::Manager>& manager,
-    const std::shared_ptr<runtime::Backend>& backend,
-    std::function<std::shared_ptr<Function>()> make_graph,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& args,
-    typename ET::type rtol,
-    typename ET::type atol,
-    const std::vector<bool>& indep_param_mask)
-{
-    std::vector<std::shared_ptr<runtime::TensorView>> args_as_tv;
-
-    for (auto arg : args)
-    {
-        args_as_tv.push_back(static_pointer_cast<runtime::TensorView>(arg));
-    }
-
-    std::vector<std::shared_ptr<op::Parameter>> indep_params;
-    auto f = make_graph();
-
-    size_t i = 0;
-
-    for (auto b : indep_param_mask)
-    {
-        if (b)
-        {
-            indep_params.push_back(f->get_parameters().at(i));
-        }
-        i++;
-    }
-
-    auto results_sym =
-        autodiff::backprop_derivative<ET>(manager, backend, f, args_as_tv, indep_params);
-    return;
-}
-*/
 
 TEST(backwards, abs)
 {
@@ -257,6 +219,46 @@ TEST(backwards, broadcast1)
     };
     EXPECT_TRUE(
         autodiff_numeric_compare<element::Float32>(manager, backend, make_graph, {x0}, .01f, .01f));
+}
+
+TEST(backwards, ceiling)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    // The numeric derivative and the symbolic one may disagree near integers, so we will dance around
+    // them.
+    test::Uniform<element::Float32> rng_minusone(-0.95f, -0.05f);
+    test::Uniform<element::Float32> rng_plusone(0.05f, 0.95f);
+    test::Uniform<element::Float32> rng_plustwo(1.05f, 1.95f);
+    auto shape = Shape{2, 3};
+
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(
+            make_shared<op::Ceiling>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+
+    for (auto i = 0; i < 100; i++)
+    {
+        auto x_minusone =
+            rng_minusone.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x_minusone}, .01f, .01f));
+
+        auto x_plusone =
+            rng_plusone.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x_plusone}, .01f, .01f));
+
+        auto x_plustwo =
+            rng_plustwo.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x_plustwo}, .01f, .01f));
+    }
 }
 
 TEST(backwards, cos)
@@ -456,6 +458,46 @@ TEST(backwards, exp)
         autodiff_numeric_compare<element::Float32>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
+TEST(backwards, floor)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    // The numeric derivative and the symbolic one may disagree near integers, so we will dance around
+    // them.
+    test::Uniform<element::Float32> rng_minusone(-0.95f, -0.05f);
+    test::Uniform<element::Float32> rng_plusone(0.05f, 0.95f);
+    test::Uniform<element::Float32> rng_plustwo(1.05f, 1.95f);
+    auto shape = Shape{2, 3};
+
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(
+            make_shared<op::Floor>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+
+    for (auto i = 0; i < 100; i++)
+    {
+        auto x_minusone =
+            rng_minusone.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x_minusone}, .01f, .01f));
+
+        auto x_plusone =
+            rng_plusone.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x_plusone}, .01f, .01f));
+
+        auto x_plustwo =
+            rng_plustwo.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x_plustwo}, .01f, .01f));
+    }
+}
+
 TEST(backwards, log)
 {
     auto manager = runtime::Manager::get("NGVM");
@@ -642,6 +684,39 @@ TEST(backwards, select_nested)
     }
 }
 
+TEST(backwards, sign)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    // The numeric derivative and the symbolic one may disagree around 0, so we will dance around
+    // that point by skipping (-0.01,0.01).
+    test::Uniform<element::Float32> rng_neg(-1.0f, 0.01f);
+    test::Uniform<element::Float32> rng_pos(0.01f, 1.0f);
+    auto shape = Shape{2, 3};
+
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(
+            make_shared<op::Sign>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+
+    for (auto i = 0; i < 100; i++)
+    {
+        auto x_neg =
+            rng_neg.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x_neg}, .01f, .01f));
+
+        auto x_pos =
+            rng_pos.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x_pos}, .01f, .01f));
+    }
+}
+
 TEST(backwards, sin)
 {
     auto manager = runtime::Manager::get("NGVM");
@@ -691,8 +766,8 @@ TEST(backwards, tan)
 
     auto pi = 3.14159f;
 
-    // Stay away from the asymptotes.
-    auto slop = 0.01f;
+    // Stay away from the asymptotes at 6 and 12 o'clock.
+    auto slop = 0.1f;
     test::Uniform<element::Float32> rng_r(-pi / 2 + slop, pi / 2 - slop);
     test::Uniform<element::Float32> rng_l(pi / 2 + slop, (3 * pi) / 2 - slop);
 
@@ -701,7 +776,7 @@ TEST(backwards, tan)
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         return make_shared<Function>(
-            make_shared<op::Abs>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+            make_shared<op::Tan>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)

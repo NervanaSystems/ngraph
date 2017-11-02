@@ -29,6 +29,7 @@
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/broadcast.hpp"
+#include "ngraph/ops/ceiling.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
@@ -38,6 +39,7 @@
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/equal.hpp"
 #include "ngraph/ops/exp.hpp"
+#include "ngraph/ops/floor.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
@@ -76,6 +78,7 @@
 #include "ngraph/runtime/ngvm/eigen/broadcast_vector_colwise.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_vector_rowwise.hpp"
 #include "ngraph/runtime/ngvm/eigen/call.hpp"
+#include "ngraph/runtime/ngvm/eigen/ceiling.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_vector.hpp"
 #include "ngraph/runtime/ngvm/eigen/constant.hpp"
@@ -87,6 +90,7 @@
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
 #include "ngraph/runtime/ngvm/eigen/equal.hpp"
 #include "ngraph/runtime/ngvm/eigen/exp.hpp"
+#include "ngraph/runtime/ngvm/eigen/floor.hpp"
 #include "ngraph/runtime/ngvm/eigen/greater_eq.hpp"
 #include "ngraph/runtime/ngvm/eigen/greater_than.hpp"
 #include "ngraph/runtime/ngvm/eigen/less_eq.hpp"
@@ -370,9 +374,11 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_NUMERIC_UNOP(op::Acos, eigen::AcosInstruction);
         REGISTER_NUMERIC_UNOP(op::Asin, eigen::AsinInstruction);
         REGISTER_NUMERIC_UNOP(op::Atan, eigen::AtanInstruction);
+        REGISTER_NUMERIC_UNOP(op::Ceiling, eigen::CeilingInstruction);
         REGISTER_NUMERIC_UNOP(op::Cos, eigen::CosInstruction);
         REGISTER_NUMERIC_UNOP(op::Cosh, eigen::CoshInstruction);
         REGISTER_NUMERIC_UNOP(op::Exp, eigen::ExpInstruction);
+        REGISTER_NUMERIC_UNOP(op::Floor, eigen::FloorInstruction);
         REGISTER_NUMERIC_UNOP(op::Log, eigen::LogInstruction);
         REGISTER_NUMERIC_UNOP(op::Negative, eigen::NegateInstruction);
         REGISTER_NUMERIC_UNOP(op::Sign, eigen::SignInstruction);

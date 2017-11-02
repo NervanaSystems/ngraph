@@ -66,6 +66,8 @@ namespace ngraph
             virtual std::string description() const override { return "Convert"; }
         protected:
             const ngraph::element::Type& m_element_type;
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
         };
     }
 }

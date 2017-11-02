@@ -14,21 +14,22 @@
 
 #include <memory>
 
-#include "ngraph/ops/convert.hpp"
+#include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/sign.hpp"
 
 using namespace std;
 using namespace ngraph;
 using namespace ngraph::op;
 
-const element::Type& Convert::propagate_element_types(const element::Type& arg_element_type) const
-{
-    return m_element_type;
-}
-
-void ngraph::op::Convert::generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const std::shared_ptr<Node>& delta)
+void Sign::generate_adjoints(autodiff::Adjoints& adjoints,
+                             const std::shared_ptr<Node>& delta)
 {
     auto x = m_arguments[0];
 
-    adjoints.add_delta(x, std::make_shared<op::Convert>(delta,m_element_type));
+    auto x_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(x->get_value_type());
+    auto& x_element_type = x_tensor_view_type->get_element_type();
+    auto x_shape = x_tensor_view_type->get_shape();
+    auto x_zero = std::make_shared<op::Constant>(x_element_type, x_shape, "0");
+
+    adjoints.add_delta(x, x_zero);
 }
