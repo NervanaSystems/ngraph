@@ -48,7 +48,6 @@ public:
     bool is_precompiled_headers_enabled() { return precompiled_headers_enabled; }
     void set_debuginfo_enabled(bool state) { debuginfo_enabled = state; }
     bool is_debuginfo_enabled() { return debuginfo_enabled; }
-
     std::unique_ptr<llvm::Module> compile(const std::string& source, const std::string& name = "");
 
     bool add_module(std::unique_ptr<llvm::Module>&);

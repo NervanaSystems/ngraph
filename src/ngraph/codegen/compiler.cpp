@@ -160,7 +160,7 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
 
     // Enable various target features
     // Most of these are for Eigen
-    auto &TO = Clang->getInvocation().getTargetOpts();
+    auto& TO = Clang->getInvocation().getTargetOpts();
     TO.FeaturesAsWritten.emplace_back("+sse4.1");
     TO.FeaturesAsWritten.emplace_back("+sse4.2");
     TO.FeaturesAsWritten.emplace_back("+avx");
