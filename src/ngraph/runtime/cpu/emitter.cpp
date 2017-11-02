@@ -534,6 +534,25 @@ void Emitter::EMITTER_DECL(EmitMaximum)
           "    }\n";
 }
 
+void Emitter::EMITTER_DECL(EmitMinimum)
+{
+    const element::Type& et =
+        (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
+            ->get_element_type();
+
+    TU += "    {\n"
+          "        auto arg0 = call_frame->get_tensor_view_data<" + element_type_names[TI(et)] + ">(" + to_string(inputs[0].get_index()) + ");\n"
+          "        auto arg1 = call_frame->get_tensor_view_data<" + element_type_names[TI(et)] + ">(" + to_string(inputs[1].get_index()) + ");\n"
+          "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(et)] + ">(" + to_string(outputs[0].get_index()) + ");\n"
+          "        EigenArray1d<" + element_type_names[TI(et)] + ">(out, "
+                   EIGEN_VECTOR_FORMAT(outputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ") =\n"
+          "        EigenArray1d<" + element_type_names[TI(et)] + ">(arg0, "
+                   EIGEN_VECTOR_FORMAT(inputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ").min(\n"
+          "        EigenArray1d<" + element_type_names[TI(et)] + ">(arg1, "
+                   EIGEN_VECTOR_FORMAT(inputs[1].get_layout<DenseTensorViewLayout>()->get_size()) "));\n"
+          "    }\n";
+}
+
 void Emitter::EMITTER_DECL(EmitNegative)
 {
     const element::Type& et =

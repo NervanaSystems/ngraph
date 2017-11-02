@@ -43,6 +43,7 @@
 #include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
 #include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not_equal.hpp"
@@ -84,6 +85,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::LessEq), &Emitter::EmitLessEq},
     {TI(ngraph::op::Log), &Emitter::EmitLog},
     {TI(ngraph::op::Maximum), &Emitter::EmitMaximum},
+    {TI(ngraph::op::Minimum), &Emitter::EmitMinimum},
     {TI(ngraph::op::Negative), &Emitter::EmitNegative},
     {TI(ngraph::op::NotEqual), &Emitter::EmitNotEqual},
     {TI(ngraph::op::Select), &Emitter::EmitSelect},
