@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/divide.hpp"
-#include "ngraph/ops/sqrt.hpp"
 
 void ngraph::op::Sqrt::generate_adjoints(autodiff::Adjoints& adjoints,
                                          const std::shared_ptr<Node>& delta)

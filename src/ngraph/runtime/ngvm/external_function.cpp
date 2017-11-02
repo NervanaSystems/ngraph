@@ -44,7 +44,6 @@
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
 #include "ngraph/ops/greater_eq.hpp"
-#include "ngraph/ops/inv.hpp"
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
@@ -95,7 +94,6 @@
 #include "ngraph/runtime/ngvm/eigen/floor.hpp"
 #include "ngraph/runtime/ngvm/eigen/greater_eq.hpp"
 #include "ngraph/runtime/ngvm/eigen/greater_than.hpp"
-#include "ngraph/runtime/ngvm/eigen/inv.hpp"
 #include "ngraph/runtime/ngvm/eigen/less_eq.hpp"
 #include "ngraph/runtime/ngvm/eigen/less_than.hpp"
 #include "ngraph/runtime/ngvm/eigen/log.hpp"
@@ -295,7 +293,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
                                       ->get_element_type();                                        \
         if (element::Bool::element_type() == et)                                                   \
         {                                                                                          \
-            ef->get_instructions()->push_back(make_shared<instr_class>(in[0],out[0]));             \
+            ef->get_instructions()->push_back(make_shared<instr_class>(in[0], out[0]));            \
         }                                                                                          \
         else                                                                                       \
         {                                                                                          \
@@ -383,7 +381,6 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_NUMERIC_UNOP(op::Cosh, eigen::CoshInstruction);
         REGISTER_NUMERIC_UNOP(op::Exp, eigen::ExpInstruction);
         REGISTER_NUMERIC_UNOP(op::Floor, eigen::FloorInstruction);
-        REGISTER_NUMERIC_UNOP(op::Inv, eigen::InvInstruction);
         REGISTER_NUMERIC_UNOP(op::Log, eigen::LogInstruction);
         REGISTER_NUMERIC_UNOP(op::Negative, eigen::NegateInstruction);
         REGISTER_NUMERIC_UNOP(op::Sign, eigen::SignInstruction);

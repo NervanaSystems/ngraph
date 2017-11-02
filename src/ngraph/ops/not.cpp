@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ops/op.hpp"
 #include "ngraph/ops/not.hpp"
+#include "ngraph/ops/op.hpp"
 
 using namespace ngraph;
 using namespace ngraph::op;
 
-const element::Type&
-    Not::propagate_element_types(const element::Type& arg_element_type) const
+const element::Type& Not::propagate_element_types(const element::Type& arg_element_type) const
 {
     if (arg_element_type != element::Bool::element_type())
     {

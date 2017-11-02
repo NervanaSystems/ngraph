@@ -28,12 +28,11 @@ using namespace ngraph;
 
 template <typename ET>
 std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
-    autodiff::backprop_derivative(
-        const std::shared_ptr<runtime::Manager>& manager,
-        const std::shared_ptr<runtime::Backend>& backend,
-        const std::shared_ptr<Function>& f,
-        const std::vector<std::shared_ptr<runtime::TensorView>>& args,
-        const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
+    autodiff::backprop_derivative(const std::shared_ptr<runtime::Manager>& manager,
+                                  const std::shared_ptr<runtime::Backend>& backend,
+                                  const std::shared_ptr<Function>& f,
+                                  const std::vector<std::shared_ptr<runtime::TensorView>>& args,
+                                  const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
 {
     auto y = f->get_result();
     Shape y_shape =
@@ -102,8 +101,7 @@ template std::vector<
         const std::shared_ptr<runtime::Manager>& manager,
         const std::shared_ptr<runtime::Backend>& backend,
         const std::shared_ptr<Function>& f,
-        const std::vector<
-            std::shared_ptr<ngraph::runtime::TensorView>>& args,
+        const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& args,
         const std::vector<std::shared_ptr<op::Parameter>>& indep_params);
 
 template std::vector<
@@ -112,6 +110,5 @@ template std::vector<
         const std::shared_ptr<runtime::Manager>& manager,
         const std::shared_ptr<runtime::Backend>& backend,
         const std::shared_ptr<Function>& f,
-        const std::vector<
-            std::shared_ptr<ngraph::runtime::TensorView>>& args,
+        const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& args,
         const std::vector<std::shared_ptr<op::Parameter>>& indep_params);

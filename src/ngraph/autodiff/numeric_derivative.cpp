@@ -25,13 +25,12 @@ using namespace ngraph;
 
 template <typename ET>
 std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
-    autodiff::numeric_derivative(
-        const std::shared_ptr<runtime::Manager>& manager,
-        const std::shared_ptr<runtime::Backend>& backend,
-        const std::shared_ptr<Function>& f,
-        const std::vector<std::shared_ptr<runtime::TensorView>>& args,
-        typename ET::type delta,
-        const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
+    autodiff::numeric_derivative(const std::shared_ptr<runtime::Manager>& manager,
+                                 const std::shared_ptr<runtime::Backend>& backend,
+                                 const std::shared_ptr<Function>& f,
+                                 const std::vector<std::shared_ptr<runtime::TensorView>>& args,
+                                 typename ET::type delta,
+                                 const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
 {
     auto y = f->get_result();
 
@@ -77,7 +76,8 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
     {
         if (std::find(indep_params.begin(), indep_params.end(), params[i]) != indep_params.end())
         {
-            auto arg = std::dynamic_pointer_cast<ngraph::runtime::ParameterizedTensorView<ET>>(args[i]);
+            auto arg =
+                std::dynamic_pointer_cast<ngraph::runtime::ParameterizedTensorView<ET>>(args[i]);
             auto& res = results[pos]->get_vector();
             auto& vec = arg->get_vector();
             for (size_t j = 0; j < vec.size(); j++)
@@ -102,21 +102,17 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
 }
 
 template std::vector<std::shared_ptr<runtime::ParameterizedTensorView<element::Float32>>>
-    autodiff::numeric_derivative(
-        const std::shared_ptr<runtime::Manager>& manager,
-        const std::shared_ptr<runtime::Backend>& backend,
-        const std::shared_ptr<Function>& f,
-        const std::vector<std::shared_ptr<runtime::TensorView>>&
-            args,
-        element::Float32::type delta,
-        const std::vector<std::shared_ptr<op::Parameter>>& indep_params);
+    autodiff::numeric_derivative(const std::shared_ptr<runtime::Manager>& manager,
+                                 const std::shared_ptr<runtime::Backend>& backend,
+                                 const std::shared_ptr<Function>& f,
+                                 const std::vector<std::shared_ptr<runtime::TensorView>>& args,
+                                 element::Float32::type delta,
+                                 const std::vector<std::shared_ptr<op::Parameter>>& indep_params);
 
 template std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float64>>>
-    autodiff::numeric_derivative(
-        const std::shared_ptr<runtime::Manager>& manager,
-        const std::shared_ptr<runtime::Backend>& backend,
-        const std::shared_ptr<Function>& f,
-        const std::vector<std::shared_ptr<runtime::TensorView>>&
-            args,
-        element::Float64::type delta,
-        const std::vector<std::shared_ptr<op::Parameter>>& indep_params);
+    autodiff::numeric_derivative(const std::shared_ptr<runtime::Manager>& manager,
+                                 const std::shared_ptr<runtime::Backend>& backend,
+                                 const std::shared_ptr<Function>& f,
+                                 const std::vector<std::shared_ptr<runtime::TensorView>>& args,
+                                 element::Float64::type delta,
+                                 const std::vector<std::shared_ptr<op::Parameter>>& indep_params);

@@ -30,5 +30,5 @@ void ngraph::op::Convert::generate_adjoints(autodiff::Adjoints& adjoints,
 {
     auto x = m_arguments[0];
 
-    adjoints.add_delta(x, std::make_shared<op::Convert>(delta,m_element_type));
+    adjoints.add_delta(x, std::make_shared<op::Convert>(delta, m_element_type));
 }

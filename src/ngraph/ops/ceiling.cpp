@@ -14,15 +14,14 @@
 
 #include <memory>
 
-#include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/ceiling.hpp"
+#include "ngraph/ops/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
 using namespace ngraph::op;
 
-void Ceiling::generate_adjoints(autodiff::Adjoints& adjoints,
-                                const std::shared_ptr<Node>& delta)
+void Ceiling::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {
     auto x = m_arguments[0];
 

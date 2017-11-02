@@ -2610,24 +2610,3 @@ TEST(execute, sqrt)
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{4, 2, 9, 10, 100, 0}), result->get_vector());
 }
-
-TEST(execute, inv)
-{
-    auto shape = Shape{2, 3};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f = make_shared<Function>(make_shared<op::Inv>(A), result_type, op::Parameters{A});
-
-    auto manager = runtime::Manager::get("NGVM");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1.0f, 2.0f, 3.0f, 1/2.0f, 1/3.0f, 1/4.0f};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
-
-    (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1.0f, 1/2.0f, 1/3.0f, 2.0f, 3.0f, 4.0f}), result->get_vector());
-}

@@ -46,8 +46,8 @@ bool autodiff_numeric_compare(
     }
 
     auto f = make_graph();
-    auto results_num =
-        autodiff::numeric_derivative<ET>(manager, backend, f, args_as_tv, .001f, f->get_parameters());
+    auto results_num = autodiff::numeric_derivative<ET>(
+        manager, backend, f, args_as_tv, .001f, f->get_parameters());
 
     auto g = make_graph();
     auto results_sym =
@@ -241,20 +241,20 @@ TEST(backwards, ceiling)
 
     for (auto i = 0; i < 100; i++)
     {
-        auto x_minusone =
-            rng_minusone.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+        auto x_minusone = rng_minusone.initialize(
+            backend->make_parameterized_tensor_view<element::Float32>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
             manager, backend, make_graph, {x_minusone}, .01f, .01f));
 
-        auto x_plusone =
-            rng_plusone.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+        auto x_plusone = rng_plusone.initialize(
+            backend->make_parameterized_tensor_view<element::Float32>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
             manager, backend, make_graph, {x_plusone}, .01f, .01f));
 
-        auto x_plustwo =
-            rng_plustwo.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+        auto x_plustwo = rng_plustwo.initialize(
+            backend->make_parameterized_tensor_view<element::Float32>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
             manager, backend, make_graph, {x_plustwo}, .01f, .01f));
@@ -500,55 +500,23 @@ TEST(backwards, floor)
 
     for (auto i = 0; i < 100; i++)
     {
-        auto x_minusone =
-            rng_minusone.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+        auto x_minusone = rng_minusone.initialize(
+            backend->make_parameterized_tensor_view<element::Float32>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
             manager, backend, make_graph, {x_minusone}, .01f, .01f));
 
-        auto x_plusone =
-            rng_plusone.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+        auto x_plusone = rng_plusone.initialize(
+            backend->make_parameterized_tensor_view<element::Float32>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
             manager, backend, make_graph, {x_plusone}, .01f, .01f));
 
-        auto x_plustwo =
-            rng_plustwo.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+        auto x_plustwo = rng_plustwo.initialize(
+            backend->make_parameterized_tensor_view<element::Float32>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
             manager, backend, make_graph, {x_plustwo}, .01f, .01f));
-    }
-}
-
-TEST(backwards, inv)
-{
-    auto manager = runtime::Manager::get("NGVM");
-    auto backend = manager->allocate_backend();
-
-    // The derivative has an asumptote near zero so we'll stay away from that.
-    test::Uniform<element::Float32> rng_neg(-5.0f, -0.1f);
-    test::Uniform<element::Float32> rng_pos(0.1f, 5.0f);
-    auto shape = Shape{2, 3};
-
-    auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Inv>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
-    };
-
-    for (auto i = 0; i < 100; i++)
-    {
-        auto x_neg =
-            rng_neg.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-
-        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-            manager, backend, make_graph, {x_neg}, .01f, .01f));
-
-        auto x_pos =
-            rng_pos.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-
-        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-            manager, backend, make_graph, {x_pos}, .01f, .01f));
     }
 }
 
@@ -695,8 +663,9 @@ TEST(backwards, select)
         auto X0 = make_shared<op::Parameter>(element::Bool::element_type(), shape);
         auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         auto X2 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Select>(X0,X1,X2), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0,X1,X2});
+        return make_shared<Function>(make_shared<op::Select>(X0, X1, X2),
+                                     nullptr,
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
     for (auto i = 0; i < 100; i++)
@@ -707,7 +676,13 @@ TEST(backwards, select)
         auto x2 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare_selective<element::Float32>(
-            manager, backend, make_graph, {x0, x1, x2}, .01f, .01f, std::vector<bool>{false,true,true}));
+            manager,
+            backend,
+            make_graph,
+            {x0, x1, x2},
+            .01f,
+            .01f,
+            std::vector<bool>{false, true, true}));
     }
 }
 
@@ -722,8 +697,9 @@ TEST(backwards, select_nested)
         auto X0 = make_shared<op::Parameter>(element::Bool::element_type(), shape);
         auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         auto X2 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Select>(X0,X1+X2,X2-X1), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0,X1,X2});
+        return make_shared<Function>(make_shared<op::Select>(X0, X1 + X2, X2 - X1),
+                                     nullptr,
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
     for (auto i = 0; i < 100; i++)
@@ -734,7 +710,13 @@ TEST(backwards, select_nested)
         auto x2 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare_selective<element::Float32>(
-            manager, backend, make_graph, {x0, x1, x2}, .01f, .01f, std::vector<bool>{false,true,true}));
+            manager,
+            backend,
+            make_graph,
+            {x0, x1, x2},
+            .01f,
+            .01f,
+            std::vector<bool>{false, true, true}));
     }
 }
 

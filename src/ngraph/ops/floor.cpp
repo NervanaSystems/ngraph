@@ -21,8 +21,7 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::op;
 
-void Floor::generate_adjoints(autodiff::Adjoints& adjoints,
-                              const std::shared_ptr<Node>& delta)
+void Floor::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {
     auto x = m_arguments[0];
 

@@ -66,8 +66,9 @@ void ngraph::op::Select::generate_adjoints(autodiff::Adjoints& adjoints,
     auto x = m_arguments[1];
     auto y = m_arguments[2];
 
-    auto p_as_float = std::make_shared<op::Convert>(p,element::Float32::element_type());
-    auto not_p_as_float = std::make_shared<op::Convert>(std::make_shared<op::Not>(p),element::Float32::element_type());
+    auto p_as_float = std::make_shared<op::Convert>(p, element::Float32::element_type());
+    auto not_p_as_float = std::make_shared<op::Convert>(std::make_shared<op::Not>(p),
+                                                        element::Float32::element_type());
 
     auto p_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(p->get_value_type());
     auto& p_element_type = p_tensor_view_type->get_element_type();

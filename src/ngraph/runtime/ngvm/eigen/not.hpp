@@ -30,8 +30,7 @@ namespace ngraph
                 class NotInstruction : public Instruction
                 {
                 public:
-                    NotInstruction(TensorViewInfo arg,
-                                   TensorViewInfo out)
+                    NotInstruction(TensorViewInfo arg, TensorViewInfo out)
                         : m_arg(arg)
                         , m_out(out)
                     {
@@ -43,7 +42,9 @@ namespace ngraph
                         // matrix to a real bool, negate that, then cast that
                         // back to our storage representation (ultimately char).
                         EigenArray1d<element::Bool>(call_frame, m_out) =
-                            (!(EigenArray1d<element::Bool>(call_frame, m_arg).template cast<bool>())).template cast<element::Bool::type>();
+                            (!(EigenArray1d<element::Bool>(call_frame, m_arg)
+                                   .template cast<bool>()))
+                                .template cast<element::Bool::type>();
                     }
 
                 protected:

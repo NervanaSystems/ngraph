@@ -17,7 +17,7 @@
 #include "ngraph/ops/sinh.hpp"
 
 void ngraph::op::Cosh::generate_adjoints(autodiff::Adjoints& adjoints,
-                                        const std::shared_ptr<Node>& delta)
+                                         const std::shared_ptr<Node>& delta)
 {
     auto x = m_arguments[0];
 
