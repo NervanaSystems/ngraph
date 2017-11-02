@@ -38,6 +38,7 @@ set (SRC
     ops/constant.cpp
     ops/convert.cpp
     ops/cos.cpp
+    ops/cosh.cpp
     ops/divide.cpp
     ops/dot.cpp
     ops/exp.cpp
@@ -58,11 +59,13 @@ set (SRC
     ops/select.cpp
     ops/sign.cpp
     ops/sin.cpp
+    ops/sinh.cpp
     ops/slice.cpp
     ops/sqrt.cpp
     ops/subtract.cpp
     ops/sum.cpp
     ops/tan.cpp
+    ops/tanh.cpp
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise_builtin.cpp
