@@ -79,7 +79,7 @@ TEST(backwards, add_nested)
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         return make_shared<Function>(
-            (X0+X1) + (X1+X0), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+            (X0 + X1) + (X1 + X0), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
         manager, backend, make_graph, {x0, x1}, .01f, .01f));
