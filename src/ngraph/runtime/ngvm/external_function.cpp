@@ -44,6 +44,7 @@
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
 #include "ngraph/ops/greater_eq.hpp"
+#include "ngraph/ops/inv.hpp"
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
@@ -60,6 +61,7 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
@@ -93,6 +95,7 @@
 #include "ngraph/runtime/ngvm/eigen/floor.hpp"
 #include "ngraph/runtime/ngvm/eigen/greater_eq.hpp"
 #include "ngraph/runtime/ngvm/eigen/greater_than.hpp"
+#include "ngraph/runtime/ngvm/eigen/inv.hpp"
 #include "ngraph/runtime/ngvm/eigen/less_eq.hpp"
 #include "ngraph/runtime/ngvm/eigen/less_than.hpp"
 #include "ngraph/runtime/ngvm/eigen/log.hpp"
@@ -115,6 +118,7 @@
 #include "ngraph/runtime/ngvm/eigen/sign.hpp"
 #include "ngraph/runtime/ngvm/eigen/sin.hpp"
 #include "ngraph/runtime/ngvm/eigen/sinh.hpp"
+#include "ngraph/runtime/ngvm/eigen/sqrt.hpp"
 #include "ngraph/runtime/ngvm/eigen/subtract.hpp"
 #include "ngraph/runtime/ngvm/eigen/sum_matrix_columns.hpp"
 #include "ngraph/runtime/ngvm/eigen/sum_matrix_rows.hpp"
@@ -379,11 +383,13 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_NUMERIC_UNOP(op::Cosh, eigen::CoshInstruction);
         REGISTER_NUMERIC_UNOP(op::Exp, eigen::ExpInstruction);
         REGISTER_NUMERIC_UNOP(op::Floor, eigen::FloorInstruction);
+        REGISTER_NUMERIC_UNOP(op::Inv, eigen::InvInstruction);
         REGISTER_NUMERIC_UNOP(op::Log, eigen::LogInstruction);
         REGISTER_NUMERIC_UNOP(op::Negative, eigen::NegateInstruction);
         REGISTER_NUMERIC_UNOP(op::Sign, eigen::SignInstruction);
         REGISTER_NUMERIC_UNOP(op::Sin, eigen::SinInstruction);
         REGISTER_NUMERIC_UNOP(op::Sinh, eigen::SinhInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sqrt, eigen::SqrtInstruction);
         REGISTER_NUMERIC_UNOP(op::Tan, eigen::TanInstruction);
         REGISTER_NUMERIC_UNOP(op::Tanh, eigen::TanhInstruction);
 

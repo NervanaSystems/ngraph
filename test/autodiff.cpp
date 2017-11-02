@@ -498,6 +498,38 @@ TEST(backwards, floor)
     }
 }
 
+TEST(backwards, inv)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    // The derivative has an asumptote near zero so we'll stay away from that.
+    test::Uniform<element::Float32> rng_neg(-5.0f, -0.1f);
+    test::Uniform<element::Float32> rng_pos(0.1f, 5.0f);
+    auto shape = Shape{2, 3};
+
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(
+            make_shared<op::Inv>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+
+    for (auto i = 0; i < 100; i++)
+    {
+        auto x_neg =
+            rng_neg.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x_neg}, .01f, .01f));
+
+        auto x_pos =
+            rng_pos.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x_pos}, .01f, .01f));
+    }
+}
+
 TEST(backwards, log)
 {
     auto manager = runtime::Manager::get("NGVM");
@@ -728,6 +760,29 @@ TEST(backwards, sin)
         auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         return make_shared<Function>(
             make_shared<op::Sin>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+
+    for (auto i = 0; i < 100; i++)
+    {
+        auto x = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+            manager, backend, make_graph, {x}, .01f, .01f));
+    }
+}
+
+TEST(backwards, sqrt)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    // Deriv has an asymptote at 0 so we'll stay away from there.
+    test::Uniform<element::Float32> rng(0.1f, 10.0f);
+    auto shape = Shape{2, 3};
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(
+            make_shared<op::Sqrt>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)
