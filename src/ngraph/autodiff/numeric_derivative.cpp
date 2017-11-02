@@ -29,8 +29,9 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
         const std::shared_ptr<runtime::Manager>& manager,
         const std::shared_ptr<runtime::Backend>& backend,
         const std::shared_ptr<Function>& f,
-        const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>>& args,
-        typename ET::type delta)
+        const std::vector<std::shared_ptr<runtime::TensorView>>& args,
+        typename ET::type delta,
+        const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
 {
     auto y = f->get_result();
 
@@ -41,7 +42,7 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
 
     // Results for each derivative, shape Y|X_i
     std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>> results;
-    for (auto param : params)
+    for (auto param : indep_params)
     {
         Shape s = y_shape;
         auto param_shape =
@@ -69,25 +70,32 @@ std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
     // Assuming vars, y, and results are row-major
 
     typename ET::type inv_delta = 1 / delta;
+
+    size_t pos = 0;
+
     for (size_t i = 0; i < args.size(); ++i)
     {
-        auto arg = args[i];
-        auto& res = results[i]->get_vector();
-        auto& vec = arg->get_vector();
-        for (size_t j = 0; j < vec.size(); j++)
+        if (std::find(indep_params.begin(), indep_params.end(), params[i]) != indep_params.end())
         {
-            auto old_val = vec[j];
-            vec[j] += delta;
-            cf->tensor_call(args_tv, {inc_y});
-            vec[j] = old_val;
-            size_t res_k = j;
-            for (size_t k = 0; k < inc_vec.size(); k++)
+            auto arg = std::dynamic_pointer_cast<ngraph::runtime::ParameterizedTensorView<ET>>(args[i]);
+            auto& res = results[pos]->get_vector();
+            auto& vec = arg->get_vector();
+            for (size_t j = 0; j < vec.size(); j++)
             {
-                auto y1 = inc_vec[k];
-                auto y0 = ref_vec[k];
-                res[res_k] = inv_delta * (y1 - y0);
-                res_k += vec.size();
+                auto old_val = vec[j];
+                vec[j] += delta;
+                cf->tensor_call(args_tv, {inc_y});
+                vec[j] = old_val;
+                size_t res_k = j;
+                for (size_t k = 0; k < inc_vec.size(); k++)
+                {
+                    auto y1 = inc_vec[k];
+                    auto y0 = ref_vec[k];
+                    res[res_k] = inv_delta * (y1 - y0);
+                    res_k += vec.size();
+                }
             }
+            pos++;
         }
     }
     return results;
@@ -98,15 +106,17 @@ template std::vector<std::shared_ptr<runtime::ParameterizedTensorView<element::F
         const std::shared_ptr<runtime::Manager>& manager,
         const std::shared_ptr<runtime::Backend>& backend,
         const std::shared_ptr<Function>& f,
-        const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<element::Float32>>>&
+        const std::vector<std::shared_ptr<runtime::TensorView>>&
             args,
-        element::Float32::type delta);
+        element::Float32::type delta,
+        const std::vector<std::shared_ptr<op::Parameter>>& indep_params);
 
 template std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<element::Float64>>>
     autodiff::numeric_derivative(
         const std::shared_ptr<runtime::Manager>& manager,
         const std::shared_ptr<runtime::Backend>& backend,
         const std::shared_ptr<Function>& f,
-        const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<element::Float64>>>&
+        const std::vector<std::shared_ptr<runtime::TensorView>>&
             args,
-        element::Float64::type delta);
+        element::Float64::type delta,
+        const std::vector<std::shared_ptr<op::Parameter>>& indep_params);

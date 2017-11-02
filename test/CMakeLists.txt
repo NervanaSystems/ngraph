@@ -22,6 +22,7 @@ include_directories(
     )
 
 set (SRC
+    autodiff.cpp
     build_graph.cpp
     eigen.cpp
     execute.cpp
@@ -36,7 +37,6 @@ set (SRC
     topological_sort.cpp
     type_prop.cpp
     util/all_close.cpp
-    util/autodiff.cpp
     util/test_tools.cpp
     util.cpp
     uuid.cpp
