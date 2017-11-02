@@ -41,8 +41,8 @@ namespace ngraph
             {
             public:
                 CallFrame(EntryPoint compiled_function,
-                          size_t n_inputs,
                           size_t n_outputs,
+                          size_t n_inputs,
                           const TensorViewPtrs& temps,
                           const std::vector<std::shared_ptr<CallFrame>>& callees);
 
@@ -71,8 +71,8 @@ namespace ngraph
                 }
 
             protected:
-                size_t m_n_inputs;
                 size_t m_n_outputs;
+                size_t m_n_inputs;
                 TensorViewPtrs m_tensor_views;
                 bool m_return;
                 EntryPoint m_compiled_function;
