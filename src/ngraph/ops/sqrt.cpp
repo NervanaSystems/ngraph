@@ -13,14 +13,13 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/ops/add.hpp"
-#include "ngraph/ops/multiply.hpp"
+#include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/sqrt.hpp"
-#include "ngraph/ops/inv.hpp"
 
 void ngraph::op::Sqrt::generate_adjoints(autodiff::Adjoints& adjoints,
                                          const std::shared_ptr<Node>& delta)
 {
     auto x = m_arguments[0];
 
-    adjoints.add_delta(x, delta * std::make_shared<op::Inv>(shared_from_this() + shared_from_this()));
+    adjoints.add_delta(x, delta / (shared_from_this() + shared_from_this()));
 }
