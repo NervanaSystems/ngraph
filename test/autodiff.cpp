@@ -19,12 +19,12 @@
 
 #include "gtest/gtest.h"
 
-#include "all_close.hpp"
 #include "ngraph/autodiff/backprop_derivative.hpp"
 #include "ngraph/autodiff/backprop_function.hpp"
 #include "ngraph/autodiff/numeric_derivative.hpp"
 #include "ngraph/ngraph.hpp"
-#include "random.hpp"
+#include "util/all_close.hpp"
+#include "util/random.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -60,6 +60,26 @@ TEST(backwards, add)
         auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         return make_shared<Function>(
             X0 + X1, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+}
+
+TEST(backwards, add_nested)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    auto shape = Shape{2, 3};
+    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+
+    auto make_graph = [shape]() {
+        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(
+            (X0 + X1) + (X1 + X0), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
         manager, backend, make_graph, {x0, x1}, .01f, .01f));
