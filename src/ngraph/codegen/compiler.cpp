@@ -131,6 +131,8 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     HSO.AddPath(NGRAPH_HEADERS_PATH, clang::frontend::System, false, false);
 
     // Language options
+    // These are the C++ features needed to compile ngraph headers
+    // and any dependencies like Eigen
     auto LO = Clang->getInvocation().getLangOpts();
     LO->CPlusPlus = 1;
     LO->CPlusPlus11 = 1;
