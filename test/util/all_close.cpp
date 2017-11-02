@@ -90,16 +90,14 @@ template <typename T>
 bool ngraph::test::all_close(const std::vector<T>& a, const std::vector<T>& b, T rtol, T atol)
 {
     assert(a.size() == b.size());
-    bool retval = true;
     for (size_t i = 0; i < a.size(); ++i)
     {
         if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]))
         {
-            std::cout << "a[" << i << "] = " << a[i] << ", b[" << i << "] = " << b[i] << std::endl;
-            retval = false;
+            return false;
         }
     }
-    return retval;
+    return true;
 }
 
 template bool ngraph::test::all_close<float>(const std::vector<float>& a,
