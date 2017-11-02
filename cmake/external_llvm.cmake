@@ -13,8 +13,8 @@
 
 include(ExternalProject)
 
-if((NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") AND
-    (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows"))
+if(NGRAPH_CPU_ENABLE AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") AND
+                         (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows"))
     message(STATUS "Fetching LLVM from llvm.org")
     set(LLVM_RELEASE_URL http://releases.llvm.org/5.0.0/clang+llvm-5.0.0-linux-x86_64-ubuntu16.04.tar.xz)
     set(LLVM_SHA1_HASH 9cb81c92aa4d3f9707a9b8413c4d24b8dee90c59)
