@@ -17,10 +17,15 @@ if((NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") AND
     (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows"))
     message(STATUS "Fetching LLVM from llvm.org")
     set(LLVM_RELEASE_URL http://releases.llvm.org/5.0.0/clang+llvm-5.0.0-linux-x86_64-ubuntu16.04.tar.xz)
+    set(LLVM_SHA1_HASH 9cb81c92aa4d3f9707a9b8413c4d24b8dee90c59)
 
     # Override default LLVM binaries
     if(PREBUILT_LLVM)
+        if(NOT DEFINED PREBUILT_LLVM_HASH)
+            message(FATAL_ERROR "SHA1 hash of prebuilt llvm tarball not provided in PREBUILT_LLVM_HASH.")
+        endif()
         set(LLVM_RELEASE_URL ${PREBUILT_LLVM})
+        set(LLVM_SHA1_HASH ${PREBUILT_LLVM_HASH})
     endif()
 
     # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
@@ -28,6 +33,7 @@ if((NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") AND
         ExternalProject_Add(
             ext_llvm
             URL ${LLVM_RELEASE_URL}
+            URL_HASH SHA1=${LLVM_SHA1_HASH}
             CONFIGURE_COMMAND ""
             BUILD_COMMAND ""
             INSTALL_COMMAND ""
@@ -37,6 +43,7 @@ if((NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") AND
         ExternalProject_Add(
             ext_llvm
             URL ${LLVM_RELEASE_URL}
+            URL_HASH SHA1=${LLVM_SHA1_HASH}
             CONFIGURE_COMMAND ""
             BUILD_COMMAND ""
             INSTALL_COMMAND ""
