@@ -117,7 +117,7 @@ TEST(backwards, abs)
 
     // The numeric derivative and the symbolic one may disagree around 0, so we will dance around
     // that point by skipping (-0.01,0.01).
-    test::Uniform<element::Float32> rng_neg(-1.0f, 0.01f);
+    test::Uniform<element::Float32> rng_neg(-1.0f, -0.01f);
     test::Uniform<element::Float32> rng_pos(0.01f, 1.0f);
     auto shape = Shape{2, 3};
 
@@ -691,7 +691,7 @@ TEST(backwards, sign)
 
     // The numeric derivative and the symbolic one may disagree around 0, so we will dance around
     // that point by skipping (-0.01,0.01).
-    test::Uniform<element::Float32> rng_neg(-1.0f, 0.01f);
+    test::Uniform<element::Float32> rng_neg(-1.0f, -0.01f);
     test::Uniform<element::Float32> rng_pos(0.01f, 1.0f);
     auto shape = Shape{2, 3};
 
