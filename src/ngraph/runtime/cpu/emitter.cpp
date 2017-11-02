@@ -1217,11 +1217,16 @@ void Emitter::EMITTER_DECL(EmitReduce)
     {
         if (reductee_shape.at(1) == 0)
         {
-            // PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
-            //                              "Reduce has unhandled element type",
-            //                              runtime::ngvm::eigen::BroadcastScalarInstruction,
-            //                              in[1],
-            //                              out[0]);
+            TU += "    {\n"
+                "        auto arg1 = call_frame->get_tensor_view_data<" + element_type_names[TI(f_result_element_type)] +
+                ">(" + to_string(inputs[1].get_index()) + ");\n"
+                "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(f_result_element_type)] +
+                ">(" + to_string(outputs[0].get_index()) + ");\n"
+                "        EigenArray1d<" + element_type_names[TI(f_result_element_type)] + ">(out, "
+                EIGEN_VECTOR_FORMAT(outputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ") =\n"
+                "        EigenArray1d<" + element_type_names[TI(f_result_element_type)] + ">(arg1, "
+                EIGEN_VECTOR_FORMAT(inputs[1].get_layout<DenseTensorViewLayout>()->get_size()) ")(0, 0);\n"
+                "    }\n";
         }
         else
         {
