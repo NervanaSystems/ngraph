@@ -52,6 +52,7 @@
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/tuple.hpp"
+#include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/propagate_types.hpp"
@@ -130,29 +131,13 @@ void ExternalFunction::compile(FunctionMap& function_map)
         return;
     }
 
-    // This will be replaced with the pass manager
-    // Get the ordered list of ops in execution order
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.register_pass<pass::PropagateTypes>();
     pass_manager.register_pass<pass::AssignTensors>();
-    pass_manager.run_passes(m_function);
-
-    // Turn this into a pass
-    // Assign layouts
     // For now, just make everyone row-major.
-    for (shared_ptr<Node> node : m_function->get_ordered_ops())
-    {
-        for (const descriptor::Output& output : node->get_outputs())
-        {
-            auto tv = output.get_tensor_view();
-            if (nullptr == tv->get_tensor_view_layout())
-            {
-                auto layout = std::make_shared<DenseTensorViewLayout>(*tv);
-                tv->set_tensor_view_layout(layout);
-            }
-        }
-    }
+    pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
+    pass_manager.run_passes(m_function);
 
     // Determine tensor requirements for the call frame
     unordered_map<shared_ptr<ngraph::descriptor::TensorView>, size_t> tensor_index;

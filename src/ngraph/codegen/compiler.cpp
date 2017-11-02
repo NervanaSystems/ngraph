@@ -131,6 +131,8 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     HSO.AddPath(NGRAPH_HEADERS_PATH, clang::frontend::System, false, false);
 
     // Language options
+    // These are the C++ features needed to compile ngraph headers
+    // and any dependencies like Eigen
     auto LO = Clang->getInvocation().getLangOpts();
     LO->CPlusPlus = 1;
     LO->CPlusPlus11 = 1;
@@ -167,7 +169,7 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
 
     // Enable various target features
     // Most of these are for Eigen
-    auto &TO = Clang->getInvocation().getTargetOpts();
+    auto& TO = Clang->getInvocation().getTargetOpts();
     // TODO: This needs to be configurable and selected carefully
     TO.CPU = "broadwell";
     TO.FeaturesAsWritten.emplace_back("+sse4.1");

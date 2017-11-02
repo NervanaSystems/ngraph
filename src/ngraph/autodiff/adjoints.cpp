@@ -160,6 +160,6 @@ void autodiff::Adjoints::add_delta(const std::shared_ptr<Node>& x,
     }
     else
     {
-        m_adjoint_map.insert({x.get(), std::make_shared<op::Add>(adjoint_it->second, delta)});
+        adjoint_it->second = std::make_shared<op::Add>(adjoint_it->second, delta);
     }
 }

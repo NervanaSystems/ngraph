@@ -114,13 +114,15 @@ if(LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
         runtime/cpu/external_function.cpp
         )
     # LLVM binary builds are typically built without RTTI
+    # The built-in headers are in a version-specific directory
+    # This must be kept in sync with the LLVM + Clang version in use
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS
       "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\"")
-    set(CPU_ENABLE_PCH 0 CACHE STRING "Enable pre-compiled headers in the CPU backend")
-    set(CPU_ENABLE_DEBUGINFO 0 CACHE STRING "Enable debuginfo in the CPU backend")
+    set(NGRAPH_CPU_PCH_ENABLE 0 CACHE STRING "Enable pre-compiled headers in the CPU backend")
+    set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
     set_source_files_properties(runtime/cpu/external_function.cpp PROPERTIES COMPILE_DEFINITIONS
-      "NGCPU_PCH=${CPU_ENABLE_PCH};NGCPU_DEBUGINFO=${CPU_ENABLE_DEBUGINFO}")
+      "NGCPU_PCH=${NGRAPH_CPU_PCH_ENABLE};NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE}")
 endif()
 
 add_library(ngraph SHARED ${SRC})
