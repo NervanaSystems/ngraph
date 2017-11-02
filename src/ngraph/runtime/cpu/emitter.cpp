@@ -1083,6 +1083,12 @@ void Emitter::EMITTER_DECL(EmitFunctionCall)
         "    }\n";
 }
 
+// TODO: This and other ops include comments/notes that
+// we don't want to just copy-paste here. Figure out a better way
+// or just point to ngvm/external_function.cpp with a note that
+// the compiled version of these ops is intended to have semantics identical
+// to what's seen there (for now atleast)
+
 void Emitter::EMITTER_DECL(EmitReduce)
 {
     auto reduce = static_cast<const op::Reduce*>(n);
@@ -1133,6 +1139,97 @@ void Emitter::EMITTER_DECL(EmitReduce)
             to_string(inputs.at(0).get_index()) +
             ")->get_vector();\n"
             "    }\n";
+    }
+    // Behavior for zero-size axes bears some explanation here. XLA's reduce
+    // operator provides an "base" element (usually, but not necessarily,
+    // an identity element) that it apparently *may* choose to insert anywhere
+    // in the reduction any number of times. For example, given:
+    //
+    //   reduce{{1,2,3},b,+)
+    //
+    // any of the following are valid reductions (I think!):
+    //
+    //   b+(b+1+2)+3
+    //   b+(1+(2+3))
+    //   (1+2)+3 (I think!)
+    //
+    // etc. Here we will choose never to instantiate the base element, which
+    // works well with Eigen's default behavior for non-zero-length axes. The
+    // exceptional case is when we reduce on a zero-length axis. In this case,
+    // Eigen's default behavior is to put a zero in the output,  which is not
+    // what we want, so we detect that case here and override with a copy
+    // instruction (for reduce-to-scalar) or a broadcast (for reduce-to-vector)
+    // from the base element.
+    //
+    // What I'm actually not sure about is whether the identity element is
+    // required to appear at least once. If so, this will need to be reworked,
+    // assuming we actually want to mimic XLA's semantics that closely, which
+    // we may not.
+    else if ((reductee_shape.size() == 1 && reduction_axes == AxisSet{0}) ||
+             (reductee_shape.size() == 2 && reduction_axes == AxisSet{0, 1}))
+    {
+        if (reductee_shape.at(0) == 0 ||
+            (reductee_shape.size() == 2 && reductee_shape.at(1) == 0))
+        {
+            // PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
+            //                              "Reduce has unhandled element type",
+            //                              runtime::ngvm::eigen::CopyInstruction,
+            //                              in.at(1).get_index(),
+            //                              out.at(0).get_index());
+        }
+        else
+        {
+            // PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
+            //                              "Reduce has unhandled element type",
+            //                              runtime::ngvm::eigen::ReduceToScalarInstruction,
+            //                              external,
+            //                              in[0],
+            //                              in[1],
+            //                              out[0]);
+        }
+    }
+    else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{1})
+    {
+        if (reductee_shape.at(1) == 0)
+        {
+            // PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
+            //                              "Reduce has unhandled element type",
+            //                              runtime::ngvm::eigen::BroadcastScalarInstruction,
+            //                              in[1],
+            //                              out[0]);
+        }
+        else
+        {
+            // PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
+            //                              "Reduce has unhandled element type",
+            //                              runtime::ngvm::eigen::ReduceMatrixRowsInstruction,
+            //                              external,
+            //                              in[0],
+            //                              in[1],
+            //                              out[0]);
+        }
+    }
+    else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{0})
+    {
+        if (reductee_shape.at(0) == 0)
+        {
+            // PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
+            //                              "Reduce has unhandled element type",
+            //                              runtime::ngvm::eigen::BroadcastScalarInstruction,
+            //                              in[1],
+            //                              out[0]);
+        }
+        else
+        {
+            // PUSH_POLYMORPHIC_INSTRUCTION(
+            //     f_result_element_type,
+            //     "Reduce has unhandled element type",
+            //     runtime::ngvm::eigen::ReduceMatrixColumnsInstruction,
+            //     external,
+            //     in[0],
+            //     in[1],
+            //     out[0]);
+        }
     }
     else
     {
