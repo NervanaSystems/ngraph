@@ -45,6 +45,7 @@
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
+#include "ngraph/ops/macro.hpp"
 #include "ngraph/ops/maximum.hpp"
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
@@ -118,6 +119,7 @@
 #include "ngraph/runtime/ngvm/eigen/vector_slice.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph::runtime::ngvm;
@@ -1108,7 +1110,23 @@ void ExternalFunction::compile(FunctionMap& function_map)
         auto handler_it = op_map.find(type_index(typeid(n)));
         if (handler_it == op_map.end())
         {
-            throw ngraph_error("Unhandled op during code generation");
+            auto mn = std::dynamic_pointer_cast<::ngraph::op::MacroNode>(node);
+            if (!mn)
+            {
+                throw ngraph_error("Unhandled op during code generation");
+            }
+
+            auto assign_tensors_process_children = [node](shared_ptr<Node> a) {
+                auto args = node->get_arguments();
+                return std::find(begin(args), end(args), a) ==
+                       end(args); //if a is an argument to node it was already assigned tensors
+            };
+
+            auto assign_tensors_process = [node](shared_ptr<Node> a) { a->assign_tensors(); };
+
+            auto ln = mn->get_lowered_node();
+            traverse_postorder(ln, assign_tensors_process, assign_tensors_process_children);
+            node = ln;
         }
         std::vector<TensorViewInfo> in;
         for (const descriptor::Input& input : node->get_inputs())

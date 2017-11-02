@@ -13,12 +13,19 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/ops/reshape.hpp"
-#include "ngraph/function.hpp"
-
 #include <algorithm>
+#include <numeric>
+#include "ngraph/function.hpp"
 
 using namespace std;
 using namespace ngraph::op;
+
+ngraph::AxisVector Reshape::get_default_order(size_t size)
+{
+    AxisVector iorder(size);
+    std::iota(iorder.begin(), iorder.end(), 0);
+    return iorder;
+};
 
 void Reshape::propagate_types()
 {

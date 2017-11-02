@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <numeric>
 #include "ngraph/ops/op.hpp"
 
 namespace ngraph
@@ -75,6 +76,13 @@ namespace ngraph
                 : Builtin({arg})
                 , m_input_order(input_order)
                 , m_output_shape(output_shape)
+            {
+            }
+
+            static AxisVector get_default_order(size_t size);
+
+            Reshape(const std::shared_ptr<Node>& arg, const Shape& output_shape)
+                : Reshape(arg, get_default_order(output_shape.size()), output_shape)
             {
             }
 

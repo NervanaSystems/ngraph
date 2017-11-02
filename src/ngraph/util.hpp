@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -198,7 +199,21 @@ namespace ngraph
 
     void traverse_nodes(Function* p, std::function<void(std::shared_ptr<Node>)> f);
 
+    void traverse_postorder(std::shared_ptr<Node> n,
+                            std::function<void(std::shared_ptr<Node>)> process_node,
+                            std::function<bool(std::shared_ptr<Node>)> process_children);
     void traverse_nodes(std::shared_ptr<Function> p, std::function<void(std::shared_ptr<Node>)> f);
 
     void free_nodes(std::shared_ptr<Function>);
+
+    //TODO: [nikolayk] create a specialized tuple class
+
+    struct ShapeTuple
+    {
+    public:
+        const Shape shape;
+        const element::Type& type;
+    };
+
+    ShapeTuple get_shape_et(std::shared_ptr<Node> n);
 } // end namespace ngraph
