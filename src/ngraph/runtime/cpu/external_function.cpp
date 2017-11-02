@@ -111,6 +111,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Constant), &Emitter::EmitConstant},
     {TI(ngraph::op::Reshape), &Emitter::EmitReshape},
     {TI(ngraph::op::FunctionCall), &Emitter::EmitFunctionCall},
+    {TI(ngraph::op::Reduce), &Emitter::EmitReduce},
 };
 
 #undef TI

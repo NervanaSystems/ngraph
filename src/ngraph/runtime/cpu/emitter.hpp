@@ -79,6 +79,7 @@ namespace ngraph
                 void EMITTER_DECL(EmitConstant);
                 void EMITTER_DECL(EmitReshape);
                 void EMITTER_DECL(EmitFunctionCall);
+                void EMITTER_DECL(EmitReduce);
             };
         }
     }
