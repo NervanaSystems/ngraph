@@ -27,11 +27,16 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/abs.hpp"
+#include "ngraph/ops/acos.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/asin.hpp"
+#include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
+#include "ngraph/ops/cos.hpp"
+#include "ngraph/ops/cosh.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/equal.hpp"
@@ -52,9 +57,13 @@
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/sign.hpp"
+#include "ngraph/ops/sin.hpp"
+#include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
+#include "ngraph/ops/tan.hpp"
+#include "ngraph/ops/tanh.hpp"
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/assign_tensors.hpp"
@@ -121,6 +130,15 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Slice), &Emitter::EmitSlice},
     {TI(ngraph::op::Sum), &Emitter::EmitSum},
     {TI(ngraph::op::Exp), &Emitter::EmitExp},
+    {TI(ngraph::op::Sin), &Emitter::EmitSin},
+    {TI(ngraph::op::Sinh), &Emitter::EmitSinh},
+    {TI(ngraph::op::Cos), &Emitter::EmitCos},
+    {TI(ngraph::op::Cosh), &Emitter::EmitCosh},
+    {TI(ngraph::op::Tan), &Emitter::EmitTan},
+    {TI(ngraph::op::Tanh), &Emitter::EmitTanh},
+    {TI(ngraph::op::Asin), &Emitter::EmitAsin},
+    {TI(ngraph::op::Acos), &Emitter::EmitAcos},
+    {TI(ngraph::op::Atan), &Emitter::EmitAtan},
 };
 
 #undef TI

@@ -84,6 +84,15 @@ namespace ngraph
                 void EMITTER_DECL(EmitSlice);
                 void EMITTER_DECL(EmitSum);
                 void EMITTER_DECL(EmitExp);
+                void EMITTER_DECL(EmitSin);
+                void EMITTER_DECL(EmitSinh);
+                void EMITTER_DECL(EmitCos);
+                void EMITTER_DECL(EmitCosh);
+                void EMITTER_DECL(EmitTan);
+                void EMITTER_DECL(EmitTanh);
+                void EMITTER_DECL(EmitAsin);
+                void EMITTER_DECL(EmitAcos);
+                void EMITTER_DECL(EmitAtan);
             };
         }
     }
