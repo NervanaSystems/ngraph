@@ -50,6 +50,7 @@
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
+#include "ngraph/ops/sign.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/assign_layout.hpp"
@@ -113,6 +114,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Reshape), &Emitter::EmitReshape},
     {TI(ngraph::op::FunctionCall), &Emitter::EmitFunctionCall},
     {TI(ngraph::op::Reduce), &Emitter::EmitReduce},
+    {TI(ngraph::op::Sign), &Emitter::EmitSign},
 };
 
 #undef TI

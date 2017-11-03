@@ -80,6 +80,7 @@ namespace ngraph
                 void EMITTER_DECL(EmitReshape);
                 void EMITTER_DECL(EmitFunctionCall);
                 void EMITTER_DECL(EmitReduce);
+                void EMITTER_DECL(EmitSign);
             };
         }
     }
