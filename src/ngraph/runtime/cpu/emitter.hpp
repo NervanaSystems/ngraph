@@ -83,6 +83,7 @@ namespace ngraph
                 void EMITTER_DECL(EmitSign);
                 void EMITTER_DECL(EmitSlice);
                 void EMITTER_DECL(EmitSum);
+                void EMITTER_DECL(EmitExp);
             };
         }
     }

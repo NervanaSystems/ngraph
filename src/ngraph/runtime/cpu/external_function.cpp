@@ -35,6 +35,7 @@
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/equal.hpp"
+#include "ngraph/ops/exp.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
@@ -119,6 +120,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Sign), &Emitter::EmitSign},
     {TI(ngraph::op::Slice), &Emitter::EmitSlice},
     {TI(ngraph::op::Sum), &Emitter::EmitSum},
+    {TI(ngraph::op::Exp), &Emitter::EmitExp},
 };
 
 #undef TI
