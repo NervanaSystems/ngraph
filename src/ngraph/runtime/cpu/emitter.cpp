@@ -28,6 +28,7 @@
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/slice.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
 #include "ngraph/runtime/cpu/call_frame.hpp"
 #include "ngraph/runtime/cpu/emitter.hpp"
@@ -1325,4 +1326,88 @@ void Emitter::EMITTER_DECL(EmitSign)
           "        EigenArray1d<" + element_type_names[TI(et)] + ">(arg0, "
                    EIGEN_VECTOR_FORMAT(inputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ").sign();\n"
           "    }\n";
+}
+
+void Emitter::EMITTER_DECL(EmitSlice)
+{
+    auto slice = static_cast<const op::Slice*>(n);
+
+    for (auto d : slice->get_step())
+    {
+        if (1 != d)
+        {
+            throw ngraph_error("Slice does not support non-unit step yet");
+        }
+    }
+
+    auto arg_type = slice->get_arguments().at(0)->get_value_type();
+    auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
+    assert(arg_tensor_view_type);
+    auto arg_shape = arg_tensor_view_type->get_shape();
+    auto arg_rank = arg_shape.size();
+    auto& arg_element_type = arg_tensor_view_type->get_element_type();
+
+    auto& lower_bounds = slice->get_lower_bounds();
+    auto& upper_bounds = slice->get_upper_bounds();
+
+    // Scalar slice is necessarily just a copy.
+    if (arg_rank == 0)
+    {
+        TU +=
+            "    {\n"
+            "        call_frame->get_parameterized_tensor_view<" +
+            element_type_names[TI(arg_element_type)] + ">(" +
+            to_string(outputs.at(0).get_index()) +
+            ")->get_vector() =\n"
+            "        call_frame->get_parameterized_tensor_view<" +
+            element_type_names[TI(arg_element_type)] + ">(" +
+            to_string(inputs.at(0).get_index()) +
+            ")->get_vector();\n"
+            "    }\n";
+    }
+    else if (arg_rank == 1)
+    {
+        TU +=
+            "    {\n"
+            "        auto arg0 = call_frame->get_tensor_view_data<" + element_type_names[TI(arg_element_type)] +
+            ">(" + to_string(inputs[0].get_index()) + ");\n"
+            "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(arg_element_type)] +
+            ">(" + to_string(outputs[0].get_index()) + ");\n"
+            "        EigenVector<" + element_type_names[TI(arg_element_type)] +
+            ">(out, " EIGEN_VECTOR_FORMAT(outputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ") =\n"
+            "        EigenVector<" + element_type_names[TI(arg_element_type)] +
+            ">(arg0, " EIGEN_VECTOR_FORMAT(inputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ").segment(\n"
+            "        " + to_string(lower_bounds[0]) + ", " + to_string(upper_bounds[0] - lower_bounds[0]) + ");\n"
+            "    }\n";
+    }
+    else if (arg_rank == 2)
+    {
+        auto arg0_layout = inputs[0].get_layout<DenseTensorViewLayout>();
+        auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
+
+        TU +=
+            "    {\n"
+            "        auto arg0 = call_frame->get_tensor_view_data<" +
+            element_type_names[TI(arg_element_type)] + ">(" + to_string(inputs[0].get_index()) +
+            ");\n"
+            "        auto out  = call_frame->get_tensor_view_data<" +
+            element_type_names[TI(arg_element_type)] + ">(" + to_string(outputs[0].get_index()) +
+            ");\n"
+            "        EigenMatrix<" +
+            element_type_names[TI(arg_element_type)] + ">(out, " +
+            EIGEN_MATRIX_FORMAT(out_layout->get_shape(), out_layout->get_strides()) +
+            ") = \n"
+            "        EigenMatrix<" +
+            element_type_names[TI(arg_element_type)] + ">(arg0, " +
+            EIGEN_MATRIX_FORMAT(arg0_layout->get_shape(), arg0_layout->get_strides()) +
+            ").block(" + to_string(lower_bounds[0]) + ", " + to_string(lower_bounds[1]) + ",\n"
+            "        " + to_string(upper_bounds[0] - lower_bounds[0]) + ",\n"
+            "        " + to_string(upper_bounds[1] - lower_bounds[1])+ ");\n"
+            "    }\n";
+    }
+    // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
+    else
+    {
+        throw ngraph_error("Slice is not implemented yet for tensors with rank>2 in VM");
+    }
 }
