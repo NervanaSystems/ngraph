@@ -99,8 +99,37 @@ include_directories(
     "${EIGEN_INCLUDE_DIR}"
     )
 
+if(LLVM_INCLUDE_DIR)
+    include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
+    link_directories(${LLVM_LIB_DIR})
+    # Add sources for the CPU backend
+    # and all its dependencies
+    set(SRC ${SRC}
+        codegen/compiler.cpp
+        runtime/cpu/call_frame.cpp
+        runtime/cpu/cpu_manager.cpp
+        runtime/cpu/cpu_backend.cpp
+        runtime/cpu/emitter.cpp
+        runtime/cpu/external_function.cpp
+        )
+    # LLVM binary builds are typically built without RTTI
+    # The built-in headers are in a version-specific directory
+    # This must be kept in sync with the LLVM + Clang version in use
+    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
+    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS
+      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\"")
+    set(NGRAPH_CPU_PCH_ENABLE 0 CACHE STRING "Enable pre-compiled headers in the CPU backend")
+    set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
+    set_source_files_properties(runtime/cpu/external_function.cpp PROPERTIES COMPILE_DEFINITIONS
+      "NGCPU_PCH=${NGRAPH_CPU_PCH_ENABLE};NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE}")
+endif()
+
 add_library(ngraph SHARED ${SRC})
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
+
+if(LLVM_LINK_LIBS)
+    target_link_libraries(ngraph LINK_PRIVATE ${LLVM_LINK_LIBS})
+endif()
 
 if (APPLE)
     set_property(TARGET ngraph PROPERTY PREFIX "lib")
@@ -146,3 +175,7 @@ install(DIRECTORY
 endif()
 
 add_dependencies(ngraph eigen)
+
+if(NOT LLVM_PACKAGED AND LLVM_INCLUDE_DIR)
+    add_dependencies(ngraph ext_llvm)
+endif()
