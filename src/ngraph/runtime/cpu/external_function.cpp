@@ -53,6 +53,7 @@
 #include "ngraph/ops/sign.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/subtract.hpp"
+#include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/assign_tensors.hpp"
@@ -117,6 +118,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Reduce), &Emitter::EmitReduce},
     {TI(ngraph::op::Sign), &Emitter::EmitSign},
     {TI(ngraph::op::Slice), &Emitter::EmitSlice},
+    {TI(ngraph::op::Sum), &Emitter::EmitSum},
 };
 
 #undef TI
