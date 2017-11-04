@@ -157,13 +157,26 @@ namespace ngraph
                 // ET element type
                 // RANK tensor rank
                 template <typename ET, size_t RANK>
-                class EigenTensor
-                    : Eigen::TensorMap<Eigen::Tensor<typename ET::type, RANK, Eigen::RowMajor>>
+                class EigenTensor : public Eigen::TensorMap<
+                                        Eigen::Tensor<typename ET::type, RANK, Eigen::RowMajor>>
                 {
+                    using base =
+                        Eigen::TensorMap<Eigen::Tensor<typename ET::type, RANK, Eigen::RowMajor>>;
+
+                private:
+                    typename base::Dimensions convert_shape(const Shape& shape)
+                    {
+                        typename base::Dimensions dims;
+                        for (size_t i = 0; i < shape.size(); i++)
+                        {
+                            dims[i] = shape[i];
+                        }
+                        return dims;
+                    }
+
                 public:
                     EigenTensor(typename ET::type* t, const Shape& shape)
-                        : Eigen::TensorMap<Eigen::Tensor<typename ET::type, RANK, Eigen::RowMajor>>(
-                              shape)
+                        : base(t, convert_shape(shape))
                     {
                         assert(shape.size() == RANK);
                     }
@@ -190,6 +203,11 @@ namespace ngraph
                         this->base::operator=(other);
                         return *this;
                     }
+
+                    // I do not know why, but it seems that when we try to do things like add two
+                    // `ngraph::...::EigenTensor`s together without casting it back to the base
+                    // class, Eigen's templates fall down and go boom. [-Adam P]
+                    base& as_base() { return *this; }
                 };
 
                 template <typename ET, typename FMT = fmt::V>

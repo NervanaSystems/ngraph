@@ -626,6 +626,32 @@ TEST(${BACKEND_NAME}, dot2d)
     ASSERT_EQ((vector<float>{19, 22, 43, 50}), result->get_vector());
 }
 
+TEST(${BACKEND_NAME}, dot3d)
+{
+    auto shape = Shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto shape_r = Shape{2, 2, 2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
+    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    *b = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
+    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{7, 10, 19, 22, 15, 22, 43, 50, 23, 34, 67, 78, 31, 46, 91, 106}),
+              result->get_vector());
+}
+
 TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
 {
     auto shape_a = Shape{};

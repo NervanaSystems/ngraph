@@ -115,6 +115,7 @@
 #include "ngraph/runtime/ngvm/eigen/sum_to_scalar.hpp"
 #include "ngraph/runtime/ngvm/eigen/tan.hpp"
 #include "ngraph/runtime/ngvm/eigen/tanh.hpp"
+#include "ngraph/runtime/ngvm/eigen/tensor_contraction.hpp"
 #include "ngraph/runtime/ngvm/eigen/vector_slice.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
@@ -338,6 +339,15 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
     DO_ON_ELEMENT_TYPE(et, err_msg, PUSH_INSTRUCTION, instr, __VA_ARGS__)
 #define PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(et, err_msg, instr, ...)                              \
     DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_INSTRUCTION, instr, __VA_ARGS__)
+
+// Begin temporary(?) hack.
+#define PUSH_RANKED_INSTRUCTION(T, RANK, instr, ...)                                               \
+    {                                                                                              \
+        ef->get_instructions()->push_back(make_shared<instr<T, RANK>>(__VA_ARGS__));               \
+    }
+#define PUSH_NUMERIC_POLYMORPHIC_RANKED_INSTRUCTION(et, err_msg, instr, RANK, ...)                 \
+    DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_RANKED_INSTRUCTION, RANK, instr, __VA_ARGS__)
+// End temporary(?) hack.
 
 // Turn off complaint suppression (see above)
 #pragma clang diagnostic pop
@@ -630,6 +640,22 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                                      out[0]);
             }
 
+            // Otherwise we've got to pull out the big guns: use the Eigen tensor API. Lazy right now so let's just do it for
+            // the 3D-3D case.
+            else if (arg0_shape.size() == 3 && arg1_shape.size() == 3)
+            {
+                PUSH_NUMERIC_POLYMORPHIC_RANKED_INSTRUCTION(arg0_element_type,
+                                                            "Dot has unhandled element type",
+                                                            eigen::TensorContractionInstruction,
+                                                            3,
+                                                            in[0],
+                                                            in[1],
+                                                            2,
+                                                            1,
+                                                            out[0]);
+            }
+
+            // Otherwise we've got to pull out the big guns: use the Eigen tensor API.
             else
             {
                 throw ngraph_error("Dot product for tensors with rank>2 not implemented yet.");
