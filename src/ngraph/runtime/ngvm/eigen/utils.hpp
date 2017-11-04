@@ -17,8 +17,10 @@
 #include <memory>
 
 #include <Eigen/Dense>
+#include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
 
@@ -56,6 +58,9 @@ namespace ngraph
 
                 template <typename ET>
                 using EigenVectorBase = Eigen::Map<DynamicVector<ET>, 0, VectorStrides>;
+
+                template <typename ET, size_t RANK>
+                using EigenBase = Eigen::Tensor<typename ET::type, RANK, Eigen::RowMajor>;
 
                 namespace fmt
                 {
@@ -143,6 +148,44 @@ namespace ngraph
 
                     template <typename U>
                     EigenWrapper& operator=(const U& other)
+                    {
+                        this->base::operator=(other);
+                        return *this;
+                    }
+                };
+
+                // ET element type
+                // RANK tensor rank
+                template <typename ET, size_t RANK>
+                class EigenTensor
+                    : Eigen::TensorMap<Eigen::Tensor<typename ET::type, RANK, Eigen::RowMajor>>
+                {
+                public:
+                    EigenTensor(typename ET::type* t, const Shape& shape)
+                        : Eigen::TensorMap<Eigen::Tensor<typename ET::type, RANK, Eigen::RowMajor>>(
+                              shape)
+                    {
+                        assert(shape.size() == RANK);
+                    }
+
+                    EigenTensor(
+                        typename ET::type* t,
+                        const std::shared_ptr<ngraph::descriptor::layout::DenseTensorViewLayout>&
+                            layout)
+                        : EigenTensor(t, layout->get_shape())
+                    {
+                    }
+
+                    EigenTensor(CallFrame& call_frame, const TensorViewInfo& tensor_view_info)
+                        : EigenTensor(
+                              call_frame.get_tensor_view_data<ET>(tensor_view_info.get_index()),
+                              tensor_view_info.get_layout<descriptor::layout::TensorViewLayout>()
+                                  ->get_shape())
+                    {
+                    }
+
+                    template <typename U>
+                    EigenTensor& operator=(const U& other)
                     {
                         this->base::operator=(other);
                         return *this;
