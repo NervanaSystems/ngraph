@@ -164,7 +164,7 @@ namespace ngraph
                         Eigen::TensorMap<Eigen::Tensor<typename ET::type, RANK, Eigen::RowMajor>>;
 
                 private:
-                    typename base::Dimensions convert_shape(const Shape& shape)
+                    static typename base::Dimensions convert_shape(const Shape& shape)
                     {
                         typename base::Dimensions dims;
                         for (size_t i = 0; i < shape.size(); i++)
