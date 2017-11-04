@@ -655,7 +655,6 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                                             out[0]);
             }
 
-            // Otherwise we've got to pull out the big guns: use the Eigen tensor API.
             else
             {
                 throw ngraph_error("Dot product for tensors with rank>2 not implemented yet.");
