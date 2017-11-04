@@ -150,6 +150,7 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     CGO.OptimizationLevel = 3;
     CGO.RelocationModel = "static";
     CGO.ThreadModel = "posix";
+    CGO.FloatABI = "hard";
     CGO.OmitLeafFramePointer = 1;
     CGO.VectorizeLoop = 1;
     CGO.VectorizeSLP = 1;
@@ -172,6 +173,10 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     auto& TO = Clang->getInvocation().getTargetOpts();
     // TODO: This needs to be configurable and selected carefully
     TO.CPU = "broadwell";
+    TO.FeaturesAsWritten.emplace_back("+sse");
+    TO.FeaturesAsWritten.emplace_back("+sse2");
+    TO.FeaturesAsWritten.emplace_back("+sse3");
+    TO.FeaturesAsWritten.emplace_back("+ssse3");
     TO.FeaturesAsWritten.emplace_back("+sse4.1");
     TO.FeaturesAsWritten.emplace_back("+sse4.2");
     TO.FeaturesAsWritten.emplace_back("+avx");
