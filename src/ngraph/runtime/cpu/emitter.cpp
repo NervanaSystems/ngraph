@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/node.hpp"
@@ -30,10 +30,10 @@
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
 #include "ngraph/runtime/cpu/call_frame.hpp"
 #include "ngraph/runtime/cpu/emitter.hpp"
 #include "ngraph/runtime/cpu/external_function.hpp"
+#include "ngraph/runtime/tensor_view_info.hpp"
 
 using namespace std;
 using namespace ngraph::runtime::cpu;
@@ -185,6 +185,7 @@ void Emitter::EMITTER_DECL(EmitDot)
         auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
 
         // Emit an MKL SGEMM call if possible
+        // clang-format off
         if (arg0_element_type == ngraph::element::Float32::element_type())
         {
             TU +=
@@ -204,18 +205,22 @@ void Emitter::EMITTER_DECL(EmitDot)
                 "        out, " + to_string(max(1UL, arg1_shape[1])) + ");\n"
                 "    }\n";
         }
+        // clang-format on
         else
         {
             TU +=
                 "    {\n"
                 "        auto arg0 = call_frame->get_tensor_view_data<" +
-                element_type_names[TI(arg0_element_type)] + ">(" + to_string(inputs[0].get_index()) +
+                element_type_names[TI(arg0_element_type)] + ">(" +
+                to_string(inputs[0].get_index()) +
                 ");\n"
                 "        auto arg1 = call_frame->get_tensor_view_data<" +
-                element_type_names[TI(arg0_element_type)] + ">(" + to_string(inputs[1].get_index()) +
+                element_type_names[TI(arg0_element_type)] + ">(" +
+                to_string(inputs[1].get_index()) +
                 ");\n"
                 "        auto out  = call_frame->get_tensor_view_data<" +
-                element_type_names[TI(arg0_element_type)] + ">(" + to_string(outputs[0].get_index()) +
+                element_type_names[TI(arg0_element_type)] + ">(" +
+                to_string(outputs[0].get_index()) +
                 ");\n"
                 "        EigenMatrix<" +
                 element_type_names[TI(arg0_element_type)] + ">(out, " +
@@ -944,8 +949,7 @@ void Emitter::EMITTER_DECL(EmitConstant)
         "    {\n"
         "        call_frame->get_parameterized_tensor_view<" +
         element_type_names[TI(c_element_type)] + ">(" + to_string(outputs[0].get_index()) +
-        ")->get_vector() = std::vector<" + element_type_names[TI(c_element_type)] +
-        "::type>{";
+        ")->get_vector() = std::vector<" + element_type_names[TI(c_element_type)] + "::type>{";
 
     for (size_t i = 0; i < c_value_strings.size(); i++)
     {
@@ -989,7 +993,8 @@ void Emitter::EMITTER_DECL(EmitReshape)
         TU +=
             "    {\n"
             "        call_frame->get_parameterized_tensor_view<" +
-            element_type_names[TI(result_element_type)] + ">(" + to_string(outputs.at(0).get_index()) +
+            element_type_names[TI(result_element_type)] + ">(" +
+            to_string(outputs.at(0).get_index()) +
             ")->get_vector() =\n"
             "        call_frame->get_parameterized_tensor_view<" +
             element_type_names[TI(result_element_type)] + ">(" +
@@ -1004,6 +1009,7 @@ void Emitter::EMITTER_DECL(EmitReshape)
         auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
 
         // Emit an MKL transpose call if possible
+        // clang-format off
         if (result_element_type == ngraph::element::Float32::element_type())
         {
             TU +=
@@ -1018,18 +1024,27 @@ void Emitter::EMITTER_DECL(EmitReshape)
                 "                           out, " + to_string(arg_shape[0]) + ");\n"
                 "    }\n";
         }
+        // clang-format on
         else
         {
             TU +=
                 "    {\n"
-                "        auto arg0 = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
-                ">(" + to_string(inputs[0].get_index()) + ");\n"
-                "        auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(result_element_type)] +
-                ">(" + to_string(outputs[0].get_index()) + ");\n"
-                "        EigenMatrix<" + element_type_names[TI(result_element_type)] + ">(out, " +
-                EIGEN_MATRIX_FORMAT(out_layout->get_shape(), out_layout->get_strides()) + ") =\n"
-                "        EigenMatrix<" + element_type_names[TI(result_element_type)] + ">(arg0, " +
-                EIGEN_MATRIX_FORMAT(arg0_layout->get_shape(), arg0_layout->get_strides()) + ").transpose();\n"
+                "        auto arg0 = call_frame->get_tensor_view_data<" +
+                element_type_names[TI(result_element_type)] + ">(" +
+                to_string(inputs[0].get_index()) +
+                ");\n"
+                "        auto out  = call_frame->get_tensor_view_data<" +
+                element_type_names[TI(result_element_type)] + ">(" +
+                to_string(outputs[0].get_index()) +
+                ");\n"
+                "        EigenMatrix<" +
+                element_type_names[TI(result_element_type)] + ">(out, " +
+                EIGEN_MATRIX_FORMAT(out_layout->get_shape(), out_layout->get_strides()) +
+                ") =\n"
+                "        EigenMatrix<" +
+                element_type_names[TI(result_element_type)] + ">(arg0, " +
+                EIGEN_MATRIX_FORMAT(arg0_layout->get_shape(), arg0_layout->get_strides()) +
+                ").transpose();\n"
                 "    }\n";
         }
     }
@@ -1058,26 +1073,28 @@ void Emitter::EMITTER_DECL(EmitFunctionCall)
         function_map.insert({function, external});
     }
 
-    std::shared_ptr<CallFrame> cf = std::dynamic_pointer_cast<CallFrame>(
-        external->make_call_frame());
+    std::shared_ptr<CallFrame> cf =
+        std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());
 
     ef->get_callees().emplace_back(cf);
 
     TU +=
         "    {\n"
-        "        auto cf = callees.at(" + to_string(ef->get_callees().size() - 1) + ");\n"
+        "        auto cf = callees.at(" +
+        to_string(ef->get_callees().size() - 1) +
+        ");\n"
         "        std::vector<std::shared_ptr<ngraph::runtime::Value>> inputs;\n"
         "        std::vector<std::shared_ptr<ngraph::runtime::Value>> outputs;\n";
 
-    for (const auto &in : inputs)
+    for (const auto& in : inputs)
     {
-        TU +=
-            "        inputs.emplace_back(call_frame->get_tensor_view(" + to_string(in.get_index()) + "));\n";
+        TU += "        inputs.emplace_back(call_frame->get_tensor_view(" +
+              to_string(in.get_index()) + "));\n";
     }
-    for (const auto &out : outputs)
+    for (const auto& out : outputs)
     {
-        TU +=
-            "        outputs.emplace_back(call_frame->get_tensor_view(" + to_string(out.get_index()) + "));\n";
+        TU += "        outputs.emplace_back(call_frame->get_tensor_view(" +
+              to_string(out.get_index()) + "));\n";
     }
 
     TU +=
@@ -1109,14 +1126,12 @@ void Emitter::EMITTER_DECL(EmitReduce)
     }
 
     auto reductee_type = reduce->get_arguments().at(0)->get_value_type();
-    auto reductee_tensor_view_type =
-        dynamic_pointer_cast<const TensorViewType>(reductee_type);
+    auto reductee_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(reductee_type);
     assert(reductee_tensor_view_type);
     auto reductee_shape = reductee_tensor_view_type->get_shape();
 
     auto f_result_type = reduction_function->get_result_type();
-    auto f_result_tensor_view_type =
-        dynamic_pointer_cast<const TensorViewType>(f_result_type);
+    auto f_result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(f_result_type);
     assert(f_result_tensor_view_type);
     auto& f_result_element_type = f_result_tensor_view_type->get_element_type();
 
@@ -1172,8 +1187,7 @@ void Emitter::EMITTER_DECL(EmitReduce)
     else if ((reductee_shape.size() == 1 && reduction_axes == AxisSet{0}) ||
              (reductee_shape.size() == 2 && reduction_axes == AxisSet{0, 1}))
     {
-        if (reductee_shape.at(0) == 0 ||
-            (reductee_shape.size() == 2 && reductee_shape.at(1) == 0))
+        if (reductee_shape.at(0) == 0 || (reductee_shape.size() == 2 && reductee_shape.at(1) == 0))
         {
             TU +=
                 "    {\n"
@@ -1189,8 +1203,8 @@ void Emitter::EMITTER_DECL(EmitReduce)
         }
         else
         {
-            std::shared_ptr<CallFrame> cf = std::dynamic_pointer_cast<CallFrame>(
-                external->make_call_frame());
+            std::shared_ptr<CallFrame> cf =
+                std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());
             ef->get_callees().emplace_back(cf);
 
             TU +=
@@ -1234,8 +1248,8 @@ void Emitter::EMITTER_DECL(EmitReduce)
         }
         else
         {
-            std::shared_ptr<CallFrame> cf = std::dynamic_pointer_cast<CallFrame>(
-                external->make_call_frame());
+            std::shared_ptr<CallFrame> cf =
+                std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());
             ef->get_callees().emplace_back(cf);
 
             TU +=
@@ -1279,8 +1293,8 @@ void Emitter::EMITTER_DECL(EmitReduce)
         }
         else
         {
-            std::shared_ptr<CallFrame> cf = std::dynamic_pointer_cast<CallFrame>(
-                external->make_call_frame());
+            std::shared_ptr<CallFrame> cf =
+                std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());
             ef->get_callees().emplace_back(cf);
 
             TU +=
@@ -1317,7 +1331,7 @@ void Emitter::EMITTER_DECL(EmitSign)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
-        ->get_element_type();
+            ->get_element_type();
 
     TU += "    {\n"
           "        auto arg0 = call_frame->get_tensor_view_data<" + element_type_names[TI(et)] + ">(" + to_string(inputs[0].get_index()) + ");\n"
@@ -1357,12 +1371,10 @@ void Emitter::EMITTER_DECL(EmitSlice)
         TU +=
             "    {\n"
             "        call_frame->get_parameterized_tensor_view<" +
-            element_type_names[TI(arg_element_type)] + ">(" +
-            to_string(outputs.at(0).get_index()) +
+            element_type_names[TI(arg_element_type)] + ">(" + to_string(outputs.at(0).get_index()) +
             ")->get_vector() =\n"
             "        call_frame->get_parameterized_tensor_view<" +
-            element_type_names[TI(arg_element_type)] + ">(" +
-            to_string(inputs.at(0).get_index()) +
+            element_type_names[TI(arg_element_type)] + ">(" + to_string(inputs.at(0).get_index()) +
             ")->get_vector();\n"
             "    }\n";
     }
@@ -1400,24 +1412,28 @@ void Emitter::EMITTER_DECL(EmitSlice)
             ") = \n"
             "        EigenMatrix<" +
             element_type_names[TI(arg_element_type)] + ">(arg0, " +
-            EIGEN_MATRIX_FORMAT(arg0_layout->get_shape(), arg0_layout->get_strides()) +
-            ").block(" + to_string(lower_bounds[0]) + ", " + to_string(lower_bounds[1]) + ",\n"
-            "        " + to_string(upper_bounds[0] - lower_bounds[0]) + ",\n"
-            "        " + to_string(upper_bounds[1] - lower_bounds[1])+ ");\n"
+            EIGEN_MATRIX_FORMAT(arg0_layout->get_shape(), arg0_layout->get_strides()) + ").block(" +
+            to_string(lower_bounds[0]) + ", " + to_string(lower_bounds[1]) +
+            ",\n"
+            "        " +
+            to_string(upper_bounds[0] - lower_bounds[0]) +
+            ",\n"
+            "        " +
+            to_string(upper_bounds[1] - lower_bounds[1]) +
+            ");\n"
             "    }\n";
     }
     // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
     else
     {
-        throw ngraph_error("Slice is not implemented yet for tensors with rank>2 in VM");
+        throw ngraph_error("Slice is not implemented yet for tensors with rank>2");
     }
 }
 
 void Emitter::EMITTER_DECL(EmitSum)
 {
     auto s = static_cast<const op::Sum*>(n);
-    auto s_tensor_view_type =
-        dynamic_pointer_cast<const TensorViewType>(s->get_value_type());
+    auto s_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(s->get_value_type());
     assert(s_tensor_view_type);
     auto& s_element_type = s_tensor_view_type->get_element_type();
     auto s_shape = s_tensor_view_type->get_shape();
@@ -1437,12 +1453,10 @@ void Emitter::EMITTER_DECL(EmitSum)
         TU +=
             "    {\n"
             "        call_frame->get_parameterized_tensor_view<" +
-            element_type_names[TI(s_element_type)] + ">(" +
-            to_string(outputs.at(0).get_index()) +
+            element_type_names[TI(s_element_type)] + ">(" + to_string(outputs.at(0).get_index()) +
             ")->get_vector() =\n"
             "        call_frame->get_parameterized_tensor_view<" +
-            element_type_names[TI(s_element_type)] + ">(" +
-            to_string(inputs.at(0).get_index()) +
+            element_type_names[TI(s_element_type)] + ">(" + to_string(inputs.at(0).get_index()) +
             ")->get_vector();\n"
             "    }\n";
     }
@@ -1504,7 +1518,7 @@ void Emitter::EMITTER_DECL(EmitExp)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
-        ->get_element_type();
+            ->get_element_type();
 
     TU +=
         "    {\n"
@@ -1523,7 +1537,7 @@ void Emitter::EMITTER_DECL(EmitSin)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
-        ->get_element_type();
+            ->get_element_type();
 
     TU +=
         "    {\n"
@@ -1542,7 +1556,7 @@ void Emitter::EMITTER_DECL(EmitSinh)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
-        ->get_element_type();
+            ->get_element_type();
 
     TU +=
         "    {\n"
@@ -1561,7 +1575,7 @@ void Emitter::EMITTER_DECL(EmitCos)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
-        ->get_element_type();
+            ->get_element_type();
 
     TU +=
         "    {\n"
@@ -1580,7 +1594,7 @@ void Emitter::EMITTER_DECL(EmitCosh)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
-        ->get_element_type();
+            ->get_element_type();
 
     TU +=
         "    {\n"
@@ -1599,7 +1613,7 @@ void Emitter::EMITTER_DECL(EmitTan)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
-        ->get_element_type();
+            ->get_element_type();
 
     TU +=
         "    {\n"
@@ -1618,7 +1632,7 @@ void Emitter::EMITTER_DECL(EmitTanh)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
-        ->get_element_type();
+            ->get_element_type();
 
     // Eigen's generic_fast_tanh_float<float> is currently miscompiled by Clang/LLVM
     // so we fall-back to std::tanh
@@ -1626,12 +1640,15 @@ void Emitter::EMITTER_DECL(EmitTanh)
     // by models
     TU +=
         "    {\n"
-        "        auto& arg0 = call_frame->get_parameterized_tensor_view<" + element_type_names[TI(et)] + ">(" +
-        to_string(inputs[0].get_index()) + ")->get_vector();\n"
-        "        auto& out  = call_frame->get_parameterized_tensor_view<" + element_type_names[TI(et)] + ">(" +
-        to_string(outputs[0].get_index()) + ")->get_vector();\n"
-        "        std::transform(arg0.begin(), arg0.end(), out.begin(), [](" + element_type_names[TI(et)] +
-        "::type x) -> " + element_type_names[TI(et)] + "::type { return std::tanh(x); });\n"
+        "        auto& arg0 = call_frame->get_parameterized_tensor_view<" +
+        element_type_names[TI(et)] + ">(" + to_string(inputs[0].get_index()) +
+        ")->get_vector();\n"
+        "        auto& out  = call_frame->get_parameterized_tensor_view<" +
+        element_type_names[TI(et)] + ">(" + to_string(outputs[0].get_index()) +
+        ")->get_vector();\n"
+        "        std::transform(arg0.begin(), arg0.end(), out.begin(), [](" +
+        element_type_names[TI(et)] + "::type x) -> " + element_type_names[TI(et)] +
+        "::type { return std::tanh(x); });\n"
         "    }\n";
 }
 
@@ -1639,7 +1656,7 @@ void Emitter::EMITTER_DECL(EmitAsin)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
-        ->get_element_type();
+            ->get_element_type();
 
     TU +=
         "    {\n"
@@ -1658,7 +1675,7 @@ void Emitter::EMITTER_DECL(EmitAcos)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
-        ->get_element_type();
+            ->get_element_type();
 
     TU +=
         "    {\n"
@@ -1677,7 +1694,7 @@ void Emitter::EMITTER_DECL(EmitAtan)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
-        ->get_element_type();
+            ->get_element_type();
 
     TU +=
         "    {\n"

@@ -20,8 +20,8 @@
 #include <typeinfo>
 #include <unordered_map>
 
-#include "ngraph/function.hpp"
 #include "ngraph/codegen/compiler.hpp"
+#include "ngraph/function.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
 
@@ -47,9 +47,10 @@ namespace ngraph
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
-            using EntryPoint = std::function<void(ngraph::runtime::cpu::CallFrame*,
-                                                  ngraph::runtime::TensorViewPtrs&,
-                                                  const std::vector<std::shared_ptr<ngraph::runtime::cpu::CallFrame>>&)>;
+            using EntryPoint = std::function<void(
+                ngraph::runtime::cpu::CallFrame*,
+                ngraph::runtime::TensorViewPtrs&,
+                const std::vector<std::shared_ptr<ngraph::runtime::cpu::CallFrame>>&)>;
 
             class ExternalFunction : public ngraph::runtime::ExternalFunction
             {
@@ -57,8 +58,7 @@ namespace ngraph
                 ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                  bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
-                std::vector<std::shared_ptr<CallFrame>> &get_callees() { return callees; }
-
+                std::vector<std::shared_ptr<CallFrame>>& get_callees() { return callees; }
             protected:
                 void compile(FunctionMap& function_map);
 
