@@ -100,8 +100,11 @@ include_directories(
     )
 
 if(LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
+    find_package(ZLIB REQUIRED)
+
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${MKLDNN_INCLUDE_DIR})
     link_directories(${LLVM_LIB_DIR} ${MKLDNN_LIB_DIR})
+
     # Add sources for the CPU backend
     # and all its dependencies
     set(SRC ${SRC}
