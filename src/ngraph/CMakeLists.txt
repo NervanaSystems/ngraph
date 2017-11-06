@@ -99,7 +99,8 @@ include_directories(
     "${EIGEN_INCLUDE_DIR}"
     )
 
-if(LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
+if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
+    MKLDNN_INCLUDE_DIR)
     find_package(ZLIB REQUIRED)
 
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${MKLDNN_INCLUDE_DIR})
@@ -131,7 +132,7 @@ endif()
 add_library(ngraph SHARED ${SRC})
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
-if(LLVM_LINK_LIBS)
+if(NGRAPH_CPU_ENABLE AND LLVM_LINK_LIBS)
     target_link_libraries(ngraph LINK_PRIVATE ${LLVM_LINK_LIBS})
 endif()
 
@@ -141,7 +142,7 @@ if (APPLE)
     set_property(TARGET ngraph PROPERTY SUFFIX "")
 endif()
 
-if(MKLDNN_LIB_DIR)
+if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
     target_link_libraries(ngraph LINK_PRIVATE mkldnn)
 endif()
 
@@ -182,10 +183,10 @@ endif()
 
 add_dependencies(ngraph eigen)
 
-if(NOT LLVM_PACKAGED AND LLVM_INCLUDE_DIR)
+if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
     add_dependencies(ngraph ext_llvm)
 endif()
 
-if(MKLDNN_INCLUDE_DIR)
+if(NGRAPH_CPU_ENABLE AND MKLDNN_INCLUDE_DIR)
     add_dependencies(ngraph ext_mkldnn)
 endif()
