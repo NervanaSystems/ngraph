@@ -52,6 +52,14 @@ namespace ngraph
             {
             }
 
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 2)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Subtract>(new_args.at(0), new_args.at(1));
+            }
+
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
 

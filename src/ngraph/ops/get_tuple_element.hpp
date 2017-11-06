@@ -60,6 +60,14 @@ namespace ngraph
             {
             }
 
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 1)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<GetTupleElement>(new_args.at(0), m_n);
+            }
+
             virtual void propagate_types() override;
             virtual std::string description() const override { return "GetTupleElement"; }
             /// \return The index of the tuple element to get.
