@@ -23,6 +23,7 @@ include_directories(
 
 set (SRC
     autodiff.cpp
+    copy.cpp
     build_graph.cpp
     eigen.cpp
     input_output_assign.cpp

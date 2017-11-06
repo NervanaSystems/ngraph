@@ -82,10 +82,18 @@ namespace ngraph
             /// \param value The value of the tensor constant.
             ParameterizedConstant(
                 const Shape& shape,
-                typename std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>>& value)
+                const typename std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>>& value)
                 : ConstantBase(std::make_shared<TensorViewType>(T::element_type(), shape))
                 , m_value(value)
             {
+            }
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 0)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<ParameterizedConstant<T>>(get_shape(), m_value);
             }
 
             virtual std::string description() const override { return "ParameterizedConstant"; }
@@ -103,7 +111,7 @@ namespace ngraph
             }
 
         protected:
-            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>> m_value;
+            const std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>> m_value;
         };
 
         /// \brief A 32-bit floating-point tensor constant.
@@ -169,6 +177,14 @@ namespace ngraph
                 : ConstantBase(std::make_shared<TensorViewType>(et, shape))
                 , m_value_strings(ngraph::shape_size(shape), value_string)
             {
+            }
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 0)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Constant>(get_element_type(), get_shape(), m_value_strings);
             }
 
             virtual std::string description() const override { return "Constant"; }

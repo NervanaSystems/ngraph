@@ -55,6 +55,15 @@ namespace ngraph
                 : Builtin(Nodes{arg0, arg1, arg2})
             {
             }
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 3)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Select>(new_args.at(0), new_args.at(1), new_args.at(2));
+            }
+
             virtual std::string description() const override { return "Select"; }
             virtual void propagate_types() override;
         };

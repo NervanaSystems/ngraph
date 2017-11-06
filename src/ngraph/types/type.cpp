@@ -70,6 +70,11 @@ const Shape& TupleType::get_shape() const
     throw ngraph_error("get_shape() called on Tuple");
 }
 
+const element::Type& TupleType::get_element_type() const
+{
+    throw ngraph_error("get_element_type() called on Tuple");
+}
+
 std::ostream& ngraph::operator<<(std::ostream& out, const ValueType& obj)
 {
     out << "ValueType()";

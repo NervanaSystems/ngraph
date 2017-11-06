@@ -61,8 +61,17 @@ namespace ngraph
             {
             }
 
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 1)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Convert>(new_args.at(0), m_element_type);
+            }
+
             virtual const element::Type&
                 propagate_element_types(const element::Type& arg_element_type) const override;
+            const element::Type& get_convert_element_type() const { return m_element_type; }
             virtual std::string description() const override { return "Convert"; }
         protected:
             const ngraph::element::Type& m_element_type;
