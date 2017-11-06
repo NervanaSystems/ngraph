@@ -29,7 +29,7 @@ namespace ngraph
         {
             namespace eigen
             {
-                template <typename ET, size_t RANK>
+                template <typename ET, size_t RANK0, size_t RANK1>
                 class TensorContractionInstruction : public Instruction
                 {
                 public:
@@ -50,10 +50,10 @@ namespace ngraph
                     {
                         std::array<Eigen::IndexPair<size_t>, 1> axis_pairs{
                             {Eigen::IndexPair<size_t>(m_arg0_axis, m_arg1_axis)}};
-                        EigenTensor<ET, RANK + RANK - 2>(call_frame, m_out).as_base() =
-                            EigenTensor<ET, RANK>(call_frame, m_arg0)
+                        EigenTensor<ET, RANK0 + RANK1 - 2>(call_frame, m_out).as_base() =
+                            EigenTensor<ET, RANK0>(call_frame, m_arg0)
                                 .as_base()
-                                .contract(EigenTensor<ET, RANK>(call_frame, m_arg1).as_base(),
+                                .contract(EigenTensor<ET, RANK1>(call_frame, m_arg1).as_base(),
                                           axis_pairs);
                     }
 

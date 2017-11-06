@@ -341,12 +341,66 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
     DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_INSTRUCTION, instr, __VA_ARGS__)
 
 // Begin temporary(?) hack.
-#define PUSH_RANKED_INSTRUCTION(T, RANK, instr, ...)                                               \
+#define PUSH_DUAL_RANKED_INSTRUCTION(T, RANK0, RANK1, instr, ...)                                  \
     {                                                                                              \
-        ef->get_instructions()->push_back(make_shared<instr<T, RANK>>(__VA_ARGS__));               \
+        ef->get_instructions()->push_back(make_shared<instr<T, RANK0, RANK1>>(__VA_ARGS__));       \
     }
-#define PUSH_NUMERIC_POLYMORPHIC_RANKED_INSTRUCTION(et, err_msg, instr, RANK, ...)                 \
-    DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_RANKED_INSTRUCTION, RANK, instr, __VA_ARGS__)
+#define PUSH_NUMERIC_POLYMORPHIC_DUAL_RANKED_INSTRUCTION_2_TO_5_INNER(                             \
+    et, rank1, err_msg, instr, RANK0, ...)                                                         \
+    {                                                                                              \
+        if (rank1 == 2)                                                                            \
+        {                                                                                          \
+            DO_ON_NUMERIC_TYPE(                                                                    \
+                et, err_msg, PUSH_DUAL_RANKED_INSTRUCTION, RANK0, 2, instr, __VA_ARGS__);          \
+        }                                                                                          \
+        else if (rank1 == 3)                                                                       \
+        {                                                                                          \
+            DO_ON_NUMERIC_TYPE(                                                                    \
+                et, err_msg, PUSH_DUAL_RANKED_INSTRUCTION, RANK0, 3, instr, __VA_ARGS__);          \
+        }                                                                                          \
+        else if (rank1 == 4)                                                                       \
+        {                                                                                          \
+            DO_ON_NUMERIC_TYPE(                                                                    \
+                et, err_msg, PUSH_DUAL_RANKED_INSTRUCTION, RANK0, 4, instr, __VA_ARGS__);          \
+        }                                                                                          \
+        else if (rank1 == 5)                                                                       \
+        {                                                                                          \
+            DO_ON_NUMERIC_TYPE(                                                                    \
+                et, err_msg, PUSH_DUAL_RANKED_INSTRUCTION, RANK0, 5, instr, __VA_ARGS__);          \
+        }                                                                                          \
+        else                                                                                       \
+        {                                                                                          \
+            throw ngraph_error("Tensor rank > 5 not supported");                                   \
+        }                                                                                          \
+    }
+#define PUSH_NUMERIC_POLYMORPHIC_DUAL_RANKED_INSTRUCTION_2_TO_5(                                   \
+    et, rank0, rank1, err_msg, instr, ...)                                                         \
+    {                                                                                              \
+        if (rank0 == 2)                                                                            \
+        {                                                                                          \
+            PUSH_NUMERIC_POLYMORPHIC_DUAL_RANKED_INSTRUCTION_2_TO_5_INNER(                         \
+                et, rank1, err_msg, instr, 2, __VA_ARGS__);                                        \
+        }                                                                                          \
+        else if (rank0 == 3)                                                                       \
+        {                                                                                          \
+            PUSH_NUMERIC_POLYMORPHIC_DUAL_RANKED_INSTRUCTION_2_TO_5_INNER(                         \
+                et, rank1, err_msg, instr, 3, __VA_ARGS__);                                        \
+        }                                                                                          \
+        else if (rank0 == 4)                                                                       \
+        {                                                                                          \
+            PUSH_NUMERIC_POLYMORPHIC_DUAL_RANKED_INSTRUCTION_2_TO_5_INNER(                         \
+                et, rank1, err_msg, instr, 4, __VA_ARGS__);                                        \
+        }                                                                                          \
+        else if (rank0 == 5)                                                                       \
+        {                                                                                          \
+            PUSH_NUMERIC_POLYMORPHIC_DUAL_RANKED_INSTRUCTION_2_TO_5_INNER(                         \
+                et, rank1, err_msg, instr, 5, __VA_ARGS__);                                        \
+        }                                                                                          \
+        else                                                                                       \
+        {                                                                                          \
+            throw ngraph_error("Tensor rank > 5 not supported");                                   \
+        }                                                                                          \
+    }
 // End temporary(?) hack.
 
 // Turn off complaint suppression (see above)
@@ -640,24 +694,21 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                                      out[0]);
             }
 
-            // Otherwise we've got to pull out the big guns: use the Eigen tensor API. Lazy right now so let's just do it for
-            // the 3D-3D case.
-            else if (arg0_shape.size() == 3 && arg1_shape.size() == 3)
-            {
-                PUSH_NUMERIC_POLYMORPHIC_RANKED_INSTRUCTION(arg0_element_type,
-                                                            "Dot has unhandled element type",
-                                                            eigen::TensorContractionInstruction,
-                                                            3,
-                                                            in[0],
-                                                            in[1],
-                                                            2,
-                                                            1,
-                                                            out[0]);
-            }
-
+            // Otherwise we've got to pull out the big guns: use the Eigen tensor API.
             else
             {
-                throw ngraph_error("Dot product for tensors with rank>2 not implemented yet.");
+                // This macro is a monstrosity. I am sorry. -Adam P
+                PUSH_NUMERIC_POLYMORPHIC_DUAL_RANKED_INSTRUCTION_2_TO_5(
+                    arg0_element_type,
+                    arg0_shape.size(),
+                    arg1_shape.size(),
+                    "Dot has unhandled element type",
+                    eigen::TensorContractionInstruction,
+                    in[0],
+                    in[1],
+                    arg0_shape.size() - 1,
+                    arg1_shape.size() - 2,
+                    out[0]);
             }
         };
 
