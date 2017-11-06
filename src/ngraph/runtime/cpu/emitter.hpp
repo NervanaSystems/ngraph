@@ -21,11 +21,11 @@
 #include "ngraph/runtime/cpu/external_function.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
 
-#define EMITTER_DECL(E)                                                 \
-    E(const ngraph::Node* n,                                            \
-      ExternalFunction* ef,                                             \
-      FunctionMap& function_map,                                        \
-      const std::vector<TensorViewInfo>& inputs,                        \
+#define EMITTER_DECL(E)                                                                            \
+    E(const ngraph::Node* n,                                                                       \
+      ExternalFunction* ef,                                                                        \
+      FunctionMap& function_map,                                                                   \
+      const std::vector<TensorViewInfo>& inputs,                                                   \
       const std::vector<TensorViewInfo>& outputs)
 
 namespace ngraph
