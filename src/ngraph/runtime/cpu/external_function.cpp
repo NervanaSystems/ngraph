@@ -225,7 +225,6 @@ using namespace ngraph::element;
 using namespace ngraph::runtime;
 using namespace ngraph::runtime::cpu::eigen;
 
-void *__dso_handle = 0;
 
 extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
                              ngraph::runtime::TensorViewPtrs& tensor_views,

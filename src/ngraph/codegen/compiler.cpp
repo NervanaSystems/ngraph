@@ -154,6 +154,7 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
     CGO.OmitLeafFramePointer = 1;
     CGO.VectorizeLoop = 1;
     CGO.VectorizeSLP = 1;
+    CGO.CXAAtExit = 0;
 
     if (debuginfo_enabled)
     {
