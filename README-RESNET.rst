@@ -29,7 +29,7 @@ Installation
 ============
 
 Follow the instructions in the installation documentation
-`here <https://ngraph.nervanasys.com/docs/latest/installation.html/>`_.
+`here <https://ngraph.nervanasys.com/docs/latest/installation.html>`_.
 
 After you complete the prerequisites and install the base Intel Nervana graph package as explained in the installation documentation, you will need to install some additional packages to run
 Intel Nervana graph on various compute platforms.
@@ -39,11 +39,12 @@ CPU/Intel® architecture transformer
 
 To run Intel Nervana graph on a CPU backend, you need to install Intel Nervana graph with Intel® Math Kernel Library for Deep Neural Networks (Intel® MKL-DNN) support:
 
-  1. Download Intel® MKL-DNN from [here](https://github.com/01org/mkl-dnn).
-  2. Follow the installation instructions in the README.md to install MKL-DNN. 
+  1. Download Intel® MKL-DNN from `here <https://github.com/01org/mkl-dnn>`_.
+  2. Follow the installation instructions in the `README.md <https://github.com/01org/mkl-dnn/blob/master/README.md>`_ to install MKL-DNN. 
   3. Set the environment variable `MKLDNN_ROOT` to point to the location where you installed Intel MKL-DNN.
-  4. Follow the rest of the steps to install Nervana Graph::
-
+  
+  ::
+  
     export MKLDNN_ROOT=/path/to/mkldnn/root
 
 GPU transformer
@@ -134,9 +135,11 @@ For imagenet, update ``manifest_root`` to the location of your imagenet dataset 
 Usage
 -----
 
-Use the following command to run training on Intel Nervana graph::
+Use the following command to run training on Intel Nervana Graph::
 
-  python train_resnet.py -b <cpu,gpu> --size <20,56> -t 64000 -z <64,128>
+  python examples/resnet/train_resnet.py -b <cpu,gpu> --size <20,56> -t 64000 -z <64,128>
+  
+Intel Nervana Graph uses the `CIFAR10` dataset by default. If you would like to train using a different dataset, like the ``i1k`` dataset, provide the location of the dataset as ``BASE_DATA_DIR= </path/to/load/file>`` , and then add the ``--dataset: <name of data set>`` argument to the command above. 
 
 Citation
 --------
