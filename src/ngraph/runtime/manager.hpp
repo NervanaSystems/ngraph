@@ -49,10 +49,10 @@ namespace ngraph
 
             static std::shared_ptr<Manager> get(const std::string& name);
 
-            static Factory register_factory(std::string name, Factory factory);
+            static Factory register_factory(const std::string& name, Factory factory);
 
         private:
-            static bool load_plugins(const std::string& runtime_plugin_libs);
+            static void load_plugins(const std::string& runtime_plugin_libs);
 
             static bool m_is_factory_map_initialized;
 

@@ -12,20 +12,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/runtime/manager.hpp"
 #include <dlfcn.h>
 #include <iostream>
 #include <sstream>
 #include <string>
 
+#include "ngraph/runtime/manager.hpp"
+#include "ngraph/util.hpp"
+
 using namespace ngraph::runtime;
 
-bool Manager::load_plugins(const std::string& runtime_plugin_libs)
-{
-    std::istringstream ss(runtime_plugin_libs);
-    std::string plugin_lib_path;
+bool Manager::m_is_factory_map_initialized = false;
 
-    while (std::getline(ss, plugin_lib_path, ':'))
+void Manager::load_plugins(const std::string& runtime_plugin_libs)
+{
+    std::vector<std::string> plugin_lib_paths = ngraph::split(runtime_plugin_libs, ':', false);
+
+    for (auto plugin_lib_path : plugin_lib_paths)
     {
         if (plugin_lib_path.size() > 0)
         {
@@ -34,7 +37,6 @@ bool Manager::load_plugins(const std::string& runtime_plugin_libs)
             {
                 std::cerr << "Cannot open library: " << plugin_lib_path << ", " << dlerror()
                           << std::endl;
-                return false;
             }
             else
             {
@@ -42,7 +44,6 @@ bool Manager::load_plugins(const std::string& runtime_plugin_libs)
             }
         }
     }
-    return true;
 }
 
 Manager::FactoryMap& Manager::get_factory_map()
@@ -53,11 +54,7 @@ Manager::FactoryMap& Manager::get_factory_map()
     // Try to load runtime plugins
     if (!Manager::m_is_factory_map_initialized)
     {
-        if (!Manager::load_plugins(RUNTIME_PLUGIN_LIBS))
-        {
-            std::cerr << "Failed to load at least one of the following libraries: "
-                      << RUNTIME_PLUGIN_LIBS << std::endl;
-        }
+        Manager::load_plugins(RUNTIME_PLUGIN_LIBS);
         Manager::m_is_factory_map_initialized = true;
     }
     return factory_map;
@@ -68,10 +65,8 @@ std::shared_ptr<Manager> Manager::get(const std::string& name)
     return get_factory_map().at(name)(name);
 }
 
-Manager::Factory Manager::register_factory(std::string name, Factory factory)
+Manager::Factory Manager::register_factory(const std::string& name, Factory factory)
 {
     get_factory_map()[name] = factory;
     return factory;
 }
-
-bool Manager::m_is_factory_map_initialized = false;

@@ -135,7 +135,7 @@ add_library(ngraph SHARED ${SRC})
 # plugin is specified at compile time but the corresponding library could not be resolved at run-
 # time, an error will be generated.
 # E.g. assume compiling with Argon and Xpu, then -DRUNTIME_PLUGIN_LIBS="libargon.so:libxpu.so".
-if (RUNTIME_PLUGIN_LIBS)
+if (DEFINED RUNTIME_PLUGIN_LIBS)
     target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS=${RUNTIME_PLUGIN_LIBS})
 else()
     target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS="")
@@ -143,13 +143,15 @@ endif()
 
 # This is used to ensure that libngraph.so and libargon.so are in the same directory for dlopen.
 # Effective at build time. Does not affect `make install` logics.
-if (COMMON_LIBRARY_OUTPUT_DIRECTORY)
+if (DEFINED COMMON_LIBRARY_OUTPUT_DIRECTORY)
     set_target_properties(ngraph PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${COMMON_LIBRARY_OUTPUT_DIRECTORY})
-    message(STATUS "LIBRARY_OUTPUT_DIRECTORY set to: ${COMMON_LIBRARY_OUTPUT_DIRECTORY}")
 else()
-    message(STATUS "LIBRARY_OUTPUT_DIRECTORY not set, will use the defualt value")
+    set_target_properties(ngraph PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endif()
+message(STATUS "LIBRARY_OUTPUT_DIRECTORY set to: ${COMMON_LIBRARY_OUTPUT_DIRECTORY}")
+
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
