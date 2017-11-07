@@ -1612,3 +1612,212 @@ TEST(type_prop, tensor_constant_bad_count)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, convolution_deduce)
+{
+    auto shape_0 = Shape{64,3,224,224};
+    auto param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
+    auto shape_1 = Shape{128,3,3,3};
+    auto param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
+    auto conv = make_shared<op::Convolution>(param_0, param_1);
+    conv->propagate_types();
+    ASSERT_EQ(*(conv->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{64,128,222,222}));
+}
+
+TEST(type_prop, convolution_deduce_non_numeric)
+{
+    auto shape_0 = Shape{64,3,224,224};
+    auto param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Bool::element_type(), shape_0));
+    auto shape_1 = Shape{128,3,3,3};
+    auto param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Bool::element_type(), shape_1));
+    auto conv = make_shared<op::Convolution>(param_0, param_1);
+    try
+    {
+        conv->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Non-numeric element type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Arguments for convolution must have numeric element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, convolution_deduce_element_type_mismatch)
+{
+    auto shape_0 = Shape{64,3,224,224};
+    auto param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
+    auto shape_1 = Shape{128,3,3,3};
+    auto param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Int32::element_type(), shape_1));
+    auto conv = make_shared<op::Convolution>(param_0, param_1);
+    try
+    {
+        conv->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Element type mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Arguments must have the same element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, convolution_deduce_rank_mismatch)
+{
+    auto shape_0 = Shape{64,3,224,224,224};
+    auto param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
+    auto shape_1 = Shape{128,3,3,3};
+    auto param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
+    auto conv = make_shared<op::Convolution>(param_0, param_1);
+    try
+    {
+        conv->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Rank mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Arguments must have the same rank"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, convolution_deduce_rank_too_small)
+{
+    auto shape_0 = Shape{64};
+    auto param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
+    auto shape_1 = Shape{128};
+    auto param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
+    auto conv = make_shared<op::Convolution>(param_0, param_1);
+    try
+    {
+        conv->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Rank too small not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution arguments must have rank>=2"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, convolution_deduce_input_channel_mismatch)
+{
+    auto shape_0 = Shape{64,3,224,224};
+    auto param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
+    auto shape_1 = Shape{128,4,3,3};
+    auto param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
+    auto conv = make_shared<op::Convolution>(param_0, param_1);
+    try
+    {
+        conv->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Input channel count mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Number of input channels for convolution arguments does not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, convolution_deduce_kernel_zero)
+{
+    auto shape_0 = Shape{64,3,224,224};
+    auto param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
+    auto shape_1 = Shape{128,3,3,0};
+    auto param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
+    auto conv = make_shared<op::Convolution>(param_0, param_1);
+    try
+    {
+        conv->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Zero-size convolution kernel dimension not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution kernel must have size greater than 0 at each dimension"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, convolution_deduce_kernel_too_big)
+{
+    auto shape_0 = Shape{64,3,224,224};
+    auto param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
+    auto shape_1 = Shape{128,3,3,225};
+    auto param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
+    auto conv = make_shared<op::Convolution>(param_0, param_1);
+    try
+    {
+        conv->propagate_types();
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Convolution kernel too big not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution kernel must be no larger than the image at each dimension"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, convolution_deduce_kernel_just_fits)
+{
+    auto shape_0 = Shape{64,3,224,224};
+    auto param_0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
+    auto shape_1 = Shape{128,3,224,224};
+    auto param_1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
+    auto conv = make_shared<op::Convolution>(param_0, param_1);
+    conv->propagate_types();
+    ASSERT_EQ(*(conv->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{64,128,1,1}));
+}
+

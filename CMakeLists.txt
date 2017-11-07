@@ -36,7 +36,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         message(FATAL_ERROR "Clang version must be at least ${CLANG_MIN_VERSION}!")
     endif()
 else()
-    message(WARNING "You are using an unsupported compiler! Compilation has only been tested with Clang ( ${CLANG_MIN_VERSION} and up) and GCC ( ${GCC_MIN_VERSION} and up). ")
+    message(WARNING "You are using an unsupported compiler ${CMAKE_CXX_COMPILER_ID}! Compilation has only been tested with Clang ( ${CLANG_MIN_VERSION} and up) and GCC ( ${GCC_MIN_VERSION} and up). ")
 endif()
 
 # These variables are undocumented but useful.

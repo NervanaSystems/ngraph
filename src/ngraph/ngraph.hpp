@@ -58,6 +58,7 @@
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
+#include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/cos.hpp"
 #include "ngraph/ops/cosh.hpp"
 #include "ngraph/ops/divide.hpp"

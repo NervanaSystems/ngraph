@@ -35,6 +35,7 @@ set (SRC
     ops/concatenate.cpp
     ops/constant.cpp
     ops/convert.cpp
+    ops/convolution.cpp
     ops/divide.cpp
     ops/dot.cpp
     ops/exp.cpp
