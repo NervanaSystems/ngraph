@@ -104,6 +104,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     # Add sources for the CPU backend
     # and all its dependencies
     set(SRC ${SRC}
+        codegen/code_writer.cpp
         codegen/compiler.cpp
         runtime/cpu/call_frame.cpp
         runtime/cpu/cpu_backend.cpp
