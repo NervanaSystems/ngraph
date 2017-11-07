@@ -17,12 +17,15 @@
 #include <sstream>
 #include <string>
 
+#include "ngraph/except.hpp"
 #include "ngraph/runtime/manager.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph::runtime;
 
 bool Manager::m_is_factory_map_initialized = false;
+std::shared_ptr<std::vector<void*>> Manager::m_plugin_lib_handles =
+    std::make_shared<std::vector<void*>>(std::vector<void*>());
 
 void Manager::load_plugins(const std::string& runtime_plugin_libs)
 {
@@ -33,17 +36,26 @@ void Manager::load_plugins(const std::string& runtime_plugin_libs)
         if (plugin_lib_path.size() > 0)
         {
             void* lib_handle = dlopen(plugin_lib_path.c_str(), RTLD_NOW);
-            if (!lib_handle)
+            if (lib_handle)
             {
-                std::cerr << "Cannot open library: " << plugin_lib_path << ", " << dlerror()
-                          << std::endl;
+                Manager::m_plugin_lib_handles->push_back(lib_handle);
             }
             else
             {
-                std::cerr << "Loaded runtime at " << lib_handle << std::endl;
+                throw ngraph_error("Cannot open library " + plugin_lib_path);
             }
         }
     }
+}
+
+// TODO: Should call this function after plugin is not needed anymore.
+void Manager::close_plugins()
+{
+    for (auto lib_handle : *Manager::m_plugin_lib_handles)
+    {
+        dlclose(lib_handle);
+    }
+    Manager::m_plugin_lib_handles->clear();
 }
 
 Manager::FactoryMap& Manager::get_factory_map()
