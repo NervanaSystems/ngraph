@@ -61,6 +61,7 @@ namespace ngraph
                 void EMITTER_DECL(EmitLessEq);
                 void EMITTER_DECL(EmitLog);
                 void EMITTER_DECL(EmitMaximum);
+                void EMITTER_DECL(EmitMinimum);
                 void EMITTER_DECL(EmitNegative);
                 void EMITTER_DECL(EmitNotEqual);
                 void EMITTER_DECL(EmitSelect);
@@ -75,6 +76,23 @@ namespace ngraph
                 void EMITTER_DECL(EmitParameterizedConstantUInt64);
                 void EMITTER_DECL(EmitBroadcast);
                 void EMITTER_DECL(EmitConvert);
+                void EMITTER_DECL(EmitConstant);
+                void EMITTER_DECL(EmitReshape);
+                void EMITTER_DECL(EmitFunctionCall);
+                void EMITTER_DECL(EmitReduce);
+                void EMITTER_DECL(EmitSign);
+                void EMITTER_DECL(EmitSlice);
+                void EMITTER_DECL(EmitSum);
+                void EMITTER_DECL(EmitExp);
+                void EMITTER_DECL(EmitSin);
+                void EMITTER_DECL(EmitSinh);
+                void EMITTER_DECL(EmitCos);
+                void EMITTER_DECL(EmitCosh);
+                void EMITTER_DECL(EmitTan);
+                void EMITTER_DECL(EmitTanh);
+                void EMITTER_DECL(EmitAsin);
+                void EMITTER_DECL(EmitAcos);
+                void EMITTER_DECL(EmitAtan);
             };
         }
     }
