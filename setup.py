@@ -24,7 +24,7 @@ class get_pybind_include(object):
 
 ext_modules = [
     Extension(
-        'ngraph.core.types.element_type_temp',
+        'ngraph.core.types.TraitedType',
         #'ngraph.core.wrapper.ops.add',
         ['ngraph/core/types/element_type_temp.cpp'],
        # ['ngraph/core/wrapper/ops/add.cpp'],

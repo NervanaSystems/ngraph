@@ -1,8 +1,10 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <string>
 #include "ngraph/types/element_type.hpp"
 
 namespace py = pybind11;
-namespace ngraph { 
+namespace ngraph {
 namespace element {
 namespace {
 
@@ -13,20 +15,25 @@ static void declareTraitedType(py::module & mod, std::string const & suffix) {
 
     PyClass cls(mod, ("TraitedType" + suffix).c_str());
 
-//    cls.def(py::init<>());
-    cls.def("elementtype", &Class::element_type);
+    cls.def(py::init<>());
+    cls.def_static("element_type", &Class::element_type,
+                   py::return_value_policy::reference);
+    cls.def_static("read", (T (*) (const std::string&)) &Class::read);
+    cls.def_static("read", (std::vector<T> (*) (const std::vector<std::string>&)) &Class::read);
+    cls.def("make_primary_tensor_view", &Class::make_primary_tensor_view);
 }
 
 }
 
-PYBIND11_PLUGIN(traitedType) {
+PYBIND11_PLUGIN(TraitedType) {
 
     py::module mod1("clsType");
     py::class_<Type, std::shared_ptr<Type>> clsType(mod1, "clsType");
-    py::module mod("traitedType");
+    py::module mod("TraitedType");
 
     declareTraitedType<float>(mod, "F");
-    //declareTraitedType<double>(mod, "D");
+    declareTraitedType<double>(mod, "D");
+    declareTraitedType<int>(mod, "I");
 
     return mod.ptr();
 }
