@@ -68,7 +68,9 @@
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/assign_tensors.hpp"
+#include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/cpu/call_frame.hpp"
@@ -183,6 +185,8 @@ void ExternalFunction::compile(FunctionMap& function_map)
     pass_manager.register_pass<pass::AssignTensors>();
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
+    pass_manager.register_pass<pass::Liveness>();
+    pass_manager.register_pass<pass::MemoryLayout>();
     pass_manager.run_passes(m_function);
 
     // Determine tensor requirements for the call frame
@@ -245,12 +249,39 @@ using namespace ngraph::element;
 using namespace ngraph::runtime;
 using namespace ngraph::runtime::cpu::eigen;
 
+extern "C" void allocate_aligned_buffer(size_t size, size_t alignment, char** allocated, char** aligned_ptr);
+extern "C" void free_aligned_buffer(void* allocated);
+
 
 extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
                              ngraph::runtime::TensorViewPtrs& tensor_views,
                              const std::vector<std::shared_ptr<ngraph::runtime::cpu::CallFrame>>& callees)
 {
 )";
+
+    TU.indent++;
+    TU << "// Allocate the memory pool\n";
+    size_t temp_pool_size = pass_manager.get_state().get_temporary_pool_size();
+    TU << "char* allocated_buffer_pool;\n";
+    TU << "char* aligned_buffer_pool;\n";
+    TU << "allocate_aligned_buffer(" << temp_pool_size << ", 64"
+       << ", &allocated_buffer_pool, &aligned_buffer_pool);\n";
+    TU << "\n";
+
+    TU << "// Define tensors\n";
+    // for (shared_ptr<Node> node : m_function->get_ordered_ops())
+    // {
+    //     NGRAPH_INFO << *node;
+    //     for (descriptor::Tensor* tensor : node->liveness_new_list)
+    //     {
+    //         NGRAPH_INFO << *tensor;
+    //     }
+    // }
+    TU << "\n";
+
+    TU << "// Define tensor views\n";
+    TU << "\n";
+    TU.indent--;
 
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
