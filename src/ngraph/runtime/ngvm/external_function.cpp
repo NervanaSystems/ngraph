@@ -354,7 +354,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
             DO_ON_NUMERIC_TYPE(                                                                    \
                 et, err_msg, PUSH_RANKED_INSTRUCTION, 0, instr, __VA_ARGS__);          \
         }                                                                                          \
-        else if (rank == 2)                                                                            \
+        else if (rank == 1)                                                                            \
         {                                                                                          \
             DO_ON_NUMERIC_TYPE(                                                                    \
                 et, err_msg, PUSH_RANKED_INSTRUCTION, 1, instr, __VA_ARGS__);          \
