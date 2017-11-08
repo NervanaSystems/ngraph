@@ -16,10 +16,10 @@
 #include <cassert>
 #include <cmath>
 
-#include "ngraph/autodiff/numeric_derivative.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/runtime/call_frame.hpp"
+#include "numeric_derivative.hpp"
 
 using namespace ngraph;
 
