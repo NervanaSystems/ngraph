@@ -68,11 +68,6 @@ namespace ngraph
         /// Propagate types and check arguments for consistency
         virtual void propagate_types() = 0;
 
-        /// Treating this node as a pattern, process node.
-        /// @param matcher Callback for reporting match
-        /// @param node The node to check against this pattern.
-        virtual void match_class(pattern::Matcher& matcher, std::shared_ptr<Node> node);
-
         /// Assign Input and Output vectors
         // This might later need to be virtual.
         void assign_tensors();

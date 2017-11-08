@@ -34,20 +34,6 @@ namespace ngraph
                     const_cast<std::multiset<Node*>&>(arg->users()).insert(this);
                 }
 
-                virtual void match_class(pattern::Matcher& matcher,
-                                         std::shared_ptr<Node> graph_node) override
-                {
-                    if (!m_predicate || m_predicate(graph_node))
-                    {
-                        matcher.on_match_class(shared_from_this(), graph_node, true);
-                    }
-                    else
-                    {
-                        assert(this->get_arguments().size() == 1);
-                        matcher.on_match_class(this->get_arguments().at(0), graph_node, true);
-                    }
-                }
-
                 virtual std::string description() const override { return "Any"; }
             };
         }

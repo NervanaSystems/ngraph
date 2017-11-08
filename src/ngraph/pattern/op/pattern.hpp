@@ -40,12 +40,25 @@ namespace ngraph
                 {
                 }
 
-                virtual std::string description() const
+                virtual std::shared_ptr<Node> copy_with_new_args(
+                    const std::vector<std::shared_ptr<Node>>& new_args) const override
+                {
+                    if (new_args.size() != 0)
+                        throw ngraph_error("Incorrect number of new arguments");
+                    return std::make_shared<Pattern>(this->get_predicate());
+                }
+
+                virtual std::string description() const override
                 {
                     return "Pattern";
                 } //@TODO [nikolayk] edit description to print out if the pattern is binded and if so the binded node
-                virtual void propagate_types() {}
-                std::function<bool(std::shared_ptr<Node>)> get_predicate() { return m_predicate; }
+
+                virtual void propagate_types() override {}
+                std::function<bool(std::shared_ptr<Node>)> get_predicate() const
+                {
+                    return m_predicate;
+                }
+
             protected:
                 std::function<bool(std::shared_ptr<Node>)> m_predicate;
             };
