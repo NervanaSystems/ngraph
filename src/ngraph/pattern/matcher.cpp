@@ -26,6 +26,18 @@ namespace ngraph
 {
     namespace pattern
     {
+        static std::vector<std::shared_ptr<Node>> get_arguments(std::shared_ptr<Node> n)
+        {
+            std::unordered_set<std::shared_ptr<Node>> arguments;
+            for (const auto& input : n->get_inputs())
+            {
+                arguments.insert(input.get_output().get_node());
+            }
+
+            return std::vector<std::shared_ptr<Node>>(
+                begin(arguments), end(arguments)); //vector is needed for generating permutations
+        }
+
         void Matcher::reset_pattern_nodes(
             std::shared_ptr<Node> node) //TODO: [nikolayk] this doesn't have to be recursive
         //even better we should walk the entire pattern subgraph once
@@ -40,7 +52,7 @@ namespace ngraph
                 label->reset();
             }
 
-            for (auto arg : node->get_arguments())
+            for (auto arg : get_arguments(node))
             {
                 reset_pattern_nodes(arg);
             }
@@ -93,8 +105,9 @@ namespace ngraph
             }
             else
             {
-                assert(pattern_node->get_arguments().size() == 1);
-                on_match_class(pattern_node->get_arguments().at(0), graph_node, true);
+                auto args = get_arguments(pattern_node);
+                assert(args.size() == 1);
+                on_match_class(args.at(0), graph_node, true);
             }
         }
 
@@ -153,8 +166,8 @@ namespace ngraph
                 return;
             }
 
-            auto args = graph_node->get_arguments();
-            auto pattern_args = pattern_node->get_arguments();
+            auto args = get_arguments(graph_node);
+            auto pattern_args = get_arguments(pattern_node);
 
             if (args.size() != pattern_args.size())
             {
