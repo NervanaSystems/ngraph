@@ -14,24 +14,44 @@
 
 #include "ngraph/ops/constant.hpp"
 
-using namespace ngraph::op;
+using namespace ngraph;
 
-void ConstantBase::propagate_types()
+namespace
 {
+    template <typename ET>
+    void check_value_strings(const std::vector<std::string>& value_strings)
+    {
+        auto result = ET::read(value_strings);
+    }
 }
 
-template <typename ET>
-void check_value_strings(const std::vector<std::string>& value_strings)
+op::Constant::Constant(const element::Type& et,
+                       const Shape& shape,
+                       const std::vector<std::string>& value_strings)
+    : ConstantBase(std::make_shared<TensorViewType>(et, shape))
+    , m_value_strings(value_strings)
 {
-    auto result = ET::read(value_strings);
+    check_args();
 }
 
-void Constant::propagate_types()
+/// \brief Constructs a tensor constant with the same initialization value copied across the tensor.
+///
+/// \param et The element type of the tensor constant.
+/// \param shape The shape of the tensor constant.
+/// \param value_string A literal for initializing each tensor constant.
+op::Constant::Constant(const element::Type& et, const Shape& shape, const std::string& value_string)
+    : ConstantBase(std::make_shared<TensorViewType>(et, shape))
+    , m_value_strings(ngraph::shape_size(shape), value_string)
+{
+    check_args();
+}
+
+void op::Constant::check_args()
 {
     // No actual type propagation is done here; however, we check the number of value strings and
     // also call check_value_strings just to make sure the result will be parseable at compile
     // time. (It will throw an exception if not.)
-    auto tvt = std::dynamic_pointer_cast<const TensorViewType>(get_value_type());
+    auto tvt = std::dynamic_pointer_cast<const TensorViewType>(m_value_type);
     if (nullptr == tvt)
     {
         throw ngraph_error("Constant does not have tensor view type");

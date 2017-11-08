@@ -87,7 +87,7 @@ namespace ngraph
         /// | ------- | ----------------------------------------------------- |
         /// | NGVM    | Fully implemented for scalars, vectors, and matrices. |
 
-        class Reduce : public Builtin
+        class Reduce : public TensorViewArgs
         {
         public:
             /// \brief Constructs a reduction operation.
@@ -99,12 +99,7 @@ namespace ngraph
             Reduce(const std::shared_ptr<Node>& arg_reductee,
                    const std::shared_ptr<Node>& arg_init,
                    const std::shared_ptr<Function>& reduction_function,
-                   const AxisSet& reduction_axes)
-                : Builtin({arg_reductee, arg_init})
-                , m_reduction_function(reduction_function)
-                , m_reduction_axes(reduction_axes)
-            {
-            }
+                   const AxisSet& reduction_axes);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
@@ -116,8 +111,6 @@ namespace ngraph
             }
 
             virtual std::string description() const override { return "Reduce"; }
-            virtual void propagate_types() override;
-
             /// \return The function to use for reduction.
             std::shared_ptr<Function> get_reduction_function() const
             {

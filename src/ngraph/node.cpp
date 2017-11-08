@@ -27,9 +27,19 @@ Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<const Valu
     , m_is_output(false)
 {
     // Add this node as a user of each argument.
-    for (auto node : m_arguments)
+    size_t i = 0;
+    size_t argno = 0;
+    for (auto arg : m_arguments)
     {
-        node->m_users.insert(this);
+        arg->assign_tensors();
+        arg->m_users.insert(this);
+        size_t arg_index = 0;
+        for (descriptor::Output& output : arg->get_outputs())
+        {
+            m_inputs.emplace_back(this, i, argno, arg_index++, output);
+            i++;
+        }
+        argno++;
     }
 }
 
@@ -45,6 +55,14 @@ Node::Node(std::shared_ptr<const ValueType> value_type)
 
 Node::~Node()
 {
+}
+
+void Node::assert_value_type(const shared_ptr<const ValueType>& value_type) const
+{
+    if (*m_value_type != *value_type)
+    {
+        throw ngraph_error("Setting value type to a different ValueType");
+    }
 }
 
 void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
@@ -64,26 +82,49 @@ void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
 
 std::shared_ptr<const ValueType> Node::get_value_type()
 {
-    if (nullptr == m_value_type)
+    if (!m_outputs_valid)
     {
-        propagate_types();
+        assign_tensors();
     }
     return m_value_type;
 }
 
 const std::shared_ptr<const ValueType> Node::get_value_type() const
 {
-    if (nullptr == m_value_type)
+    if (!m_outputs_valid)
     {
-        const_cast<Node*>(this)->propagate_types();
+        const_cast<Node*>(this)->assign_tensors();
     }
     return m_value_type;
 }
 
+std::deque<descriptor::Output>& Node::get_outputs()
+{
+    if (!m_outputs_valid)
+    {
+        assign_tensors();
+    }
+
+    return m_outputs;
+}
+
+const std::deque<descriptor::Output>& Node::get_outputs() const
+{
+    if (!m_outputs_valid)
+    {
+        const_cast<Node*>(this)->assign_tensors();
+    }
+    return m_outputs;
+}
+
 void Node::assign_tensors()
 {
+    if (m_outputs_valid)
+    {
+        return;
+    }
     vector<std::shared_ptr<const TensorViewType>> tensor_view_types;
-    get_value_type()->collect_tensor_views(tensor_view_types);
+    m_value_type->collect_tensor_views(tensor_view_types);
     std::shared_ptr<Node> shared_this = shared_from_this();
     size_t i = 0;
     for (auto tvt : tensor_view_types)
@@ -96,19 +137,7 @@ void Node::assign_tensors()
         m_outputs.emplace_back(shared_this, i, tensor_view_descriptor);
         i++;
     }
-
-    i = 0;
-    size_t argno = 0;
-    for (auto arg : get_arguments())
-    {
-        size_t arg_index = 0;
-        for (descriptor::Output& output : arg->get_outputs())
-        {
-            m_inputs.emplace_back(shared_this, i, argno, arg_index++, output);
-            i++;
-        }
-        argno++;
-    }
+    m_outputs_valid = true;
 }
 
 bool Node::is_parameter() const

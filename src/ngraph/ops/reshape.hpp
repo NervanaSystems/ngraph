@@ -59,7 +59,7 @@ namespace ngraph
         /// | Backend | Status                                                                                                                                                                            |
         /// | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | NGVM    | Fully implemented for scalars, vectors, and matrices. Implemented for other shapes only when there is no reordering of the input axes, i.e. `input_order` is \f$(0,\dots,n-1)\f$. |
-        class Reshape : public Builtin
+        class Reshape : public TensorViewArgs
         {
         public:
             /// \brief Constructs a reshape operation.
@@ -71,12 +71,7 @@ namespace ngraph
             ///        be of the form \f$(b_0,\dots,b_{j-1})\f$ where \f$\Pi(a_i) = \Pi(b_i)\f$.
             Reshape(const std::shared_ptr<Node>& arg,
                     const AxisVector& input_order,
-                    const Shape& output_shape)
-                : Builtin({arg})
-                , m_input_order(input_order)
-                , m_output_shape(output_shape)
-            {
-            }
+                    const Shape& output_shape);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
@@ -87,8 +82,6 @@ namespace ngraph
             }
 
             virtual std::string description() const override { return "Reshape"; }
-            virtual void propagate_types() override;
-
             /// \return The order in which to iterate over input axes.
             const AxisVector& get_input_order() const { return m_input_order; }
             /// \return The shape of the output tensor.

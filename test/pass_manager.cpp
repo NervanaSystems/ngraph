@@ -20,9 +20,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/util.hpp"
 #include "util/test_tools.hpp"
@@ -35,8 +33,6 @@ TEST(pass_manager, add)
     pass::Manager pass_manager;
 
     pass_manager.register_pass<pass::TopologicalSort>();
-    pass_manager.register_pass<pass::PropagateTypes>();
-    pass_manager.register_pass<pass::AssignTensors>();
 
     auto graph = make_test_graph();
     size_t node_count = 0;

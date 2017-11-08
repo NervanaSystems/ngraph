@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 
 #include "ngraph/node.hpp"
@@ -25,19 +26,14 @@ namespace ngraph
     // TODO: These class definitions are to be moved into separate files in the op directory
     namespace op
     {
-        /// \brief Abstract base class for built-in (primitive) operations.
-        class Builtin : public Node
+        /// \brief Abstract base class for ops on tensors views.
+        class TensorViewArgs : public Node
         {
-        public:
-            virtual std::string description() const override { return "Builtin"; }
         protected:
-            /// \brief Constructs a builtin operation.
+            /// \brief Constructs an operation on tensor view arguments.
             ///
             /// \param args The nodes producing this node's input tensors.
-            Builtin(const std::vector<std::shared_ptr<Node>>& args)
-                : Node(args)
-            {
-            }
+            TensorViewArgs(const std::vector<std::shared_ptr<Node>>& args);
         };
 
         /// \brief Abstract base class for elementwise unary operations, i.e., operations where the same
@@ -50,38 +46,22 @@ namespace ngraph
         ///
         /// |       | Type                              | Description                                                                                                                                   |
         /// | ----- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | `arg` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape. Subclasses may impose restrictions on the element type \f$E\f$ (see UnaryElementwiseBuiltin::propagate_element_types). |
+        /// | `arg` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape. Subclasses may impose restrictions on the element type \f$E\f$. |
         ///
         /// ## Output
         ///
         /// | Type                    | Description                                                                                                                                                                                                                                                            |
         /// | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | \f$E'[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg}[i_1,\dots,i_n])\f$. This will always have the same shape as the input tensor, but subclasses must determine the element type \f$E'\f$ (see UnaryElementwiseBuiltin::propagate_element_types). |
-        class UnaryElementwiseBuiltin : public Builtin
+        /// | \f$E'[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg}[i_1,\dots,i_n])\f$. This will always have the same shape as the input tensor, but subclasses must determine the element type \f$E'\f$. |
+        class UnaryElementwise : public TensorViewArgs
         {
         protected:
-            /// \brief Constructs a unary elementwise builtin operation.
+            /// \brief Constructs a unary elementwise tensor operation.
             ///
             /// \param arg Node that produces the input tensor.
-            UnaryElementwiseBuiltin(const std::shared_ptr<Node>& arg)
-                : Builtin(Nodes{arg})
-            {
-            }
-
-            /// \brief Propagate element type from input to output.
-            ///
-            /// Subclasses must override this method to both:
-            ///
-            /// 1. Verify that `arg_element_type` is valid, throwing an ngraph_error message if it is not.
-            /// 2. Infer and return the element type for the return tensor.
-            ///
-            /// \param arg_element_type The element type of the input tensor.
-            /// \return The inferred element type for the output tensor.
-            virtual const element::Type&
-                propagate_element_types(const element::Type& arg_element_type) const = 0;
-
-        public:
-            virtual void propagate_types() override;
+            UnaryElementwise(
+                std::function<const element::Type&(const element::Type&)> element_type_function,
+                const std::shared_ptr<Node>& arg);
         };
 
         /// \brief Abstract base class for elementwise unary arithmetic operations, i.e., operations where the same
@@ -101,26 +81,13 @@ namespace ngraph
         /// | Type                   | Description                                                                                                                                                             |
         /// | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg}[i_1,\dots,i_n])\f$. This will always have the same shape and element type as the input tensor. |
-        class UnaryElementwiseArithmetic : public UnaryElementwiseBuiltin
+        class UnaryElementwiseArithmetic : public UnaryElementwise
         {
         protected:
-            /// \brief Constructs a unary elementwise builtin arithmetic operation.
+            /// \brief Constructs a unary elementwise arithmetic operation.
             ///
             /// \param arg Node that produces the input tensor.
-            UnaryElementwiseArithmetic(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseBuiltin({arg})
-            {
-            }
-
-            /// \brief Propagate element type from input to output.
-            ///
-            /// If the input type is numeric, returns the input type.
-            /// If the input type is not numeric, throws ngraph_error.
-            ///
-            /// \param arg_element_type The element type of the input tensor.
-            /// \return The inferred element type (same as arg_element_type).
-            virtual const element::Type&
-                propagate_element_types(const element::Type& arg_element_type) const final override;
+            UnaryElementwiseArithmetic(const std::shared_ptr<Node>& arg);
         };
 
         /// \brief Abstract base class for elementwise binary operations, i.e., operations where the same
@@ -134,43 +101,26 @@ namespace ngraph
         ///
         /// |        | Type                                | Description                                                                                                                                                     |
         /// | ------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | `arg0` | \f$E_0[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape. Subclasses may impose restrictions on the element type \f$E_0\f$ (see BinaryElementwiseBuiltin::propagate_element_types).                |
-        /// | `arg1` | \f$E_1[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of the same shape as `arg0`. Subclasses may impose restrictions on the element type \f$E_1\f$ (see BinaryElementwiseBuiltin::propagate_element_types). |
+        /// | `arg0` | \f$E_0[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape. Subclasses may impose restrictions on the element type \f$E_0\f$.                |
+        /// | `arg1` | \f$E_1[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of the same shape as `arg0`. Subclasses may impose restrictions on the element type \f$E_1\f$. |
         ///
         /// ## Output
         ///
         /// | Type                     | Description                                                                                                                                                                                                                                                                                             |
         /// | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | \f$E_2[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape as the input tensors, but subclasses must determine the element type \f$E_2\f$ (see BinaryElementwiseBuiltin::propagate_element_types). |
-        class BinaryElementwiseBuiltin : public Builtin
+        /// | \f$E_2[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape as the input tensors, but subclasses must determine the element type \f$E_2\f$. |
+        class BinaryElementwise : public TensorViewArgs
         {
         protected:
-            /// \brief Constructs a biary elementwise builtin operation.
+            /// \brief Constructs a biary elementwise operation.
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
-            BinaryElementwiseBuiltin(const std::shared_ptr<Node>& arg0,
-                                     const std::shared_ptr<Node>& arg1)
-                : Builtin(Nodes{arg0, arg1})
-            {
-            }
-
-            /// \brief Propagate element type from inputs to output.
-            ///
-            /// Subclasses must override this method to:
-            ///
-            /// 1. Verify that `arg0_element_type` and `arg1_element_type` are valid, throwing an ngraph_error message if not; and
-            /// 2. Infer and return the element type for the return tensor.
-            ///
-            /// \param arg0_element_type The element type of the first input tensor.
-            /// \param arg1_element_type The element type of the second input tensor.
-            /// \return The inferred element type for the output tensor.
-            virtual const element::Type&
-                propagate_element_types(const element::Type& arg0_element_type,
-                                        const element::Type& arg1_element_type) const = 0;
-
-        public:
-            virtual void propagate_types() override;
+            BinaryElementwise(
+                std::function<const element::Type&(const element::Type&, const element::Type&)>
+                    element_type_function,
+                const std::shared_ptr<Node>& arg0,
+                const std::shared_ptr<Node>& arg1);
         };
 
         /// \brief Abstract base class for elementwise binary comparison operations, i.e., operations where the same
@@ -192,36 +142,15 @@ namespace ngraph
         /// | Type                               | Description                                                                                                                                                                                                        |
         /// | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
         /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape as the input tensors, and the element type `bool`. |
-        class BinaryElementwiseComparison : public BinaryElementwiseBuiltin
+        class BinaryElementwiseComparison : public BinaryElementwise
         {
         public:
-            /// \brief Constructs a biary elementwise builtin comparison operation.
+            /// \brief Constructs a binary elementwise comparison operation.
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
             BinaryElementwiseComparison(const std::shared_ptr<Node>& arg0,
-                                        const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
-            {
-            }
-
-            virtual std::string description() const override
-            {
-                return "BinaryElementwiseComparison";
-            }
-
-            /// \brief Propagate element type from inputs to output.
-            ///
-            /// If the input types are the same, returns
-            /// element::Bool::element_type(). If the input types are not the
-            /// same, throws ngraph_error.
-            ///
-            /// \param arg0_element_type The element type of the first input tensor.
-            /// \param arg1_element_type The element type of the second input tensor.
-            /// \return The inferred element type for the output tensor, which is always element::Bool::element_type().
-            virtual const element::Type&
-                propagate_element_types(const element::Type& arg0_element_type,
-                                        const element::Type& arg1_element_type) const override;
+                                        const std::shared_ptr<Node>& arg1);
         };
 
         /// \brief Abstract base class for elementwise binary arithmetic operations, i.e., operations where the same
@@ -243,36 +172,15 @@ namespace ngraph
         /// | Type                   | Description                                                                                                                                                                                            |
         /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape and element type as the input tensors. |
-        class BinaryElementwiseArithmetic : public BinaryElementwiseBuiltin
+        class BinaryElementwiseArithmetic : public BinaryElementwise
         {
         public:
-            /// \brief Constructs a binary elementwise builtin arithmetic operation.
+            /// \brief Constructs a binary elementwise arithmetic operation.
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
             BinaryElementwiseArithmetic(const std::shared_ptr<Node>& arg0,
-                                        const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseBuiltin(arg0, arg1)
-            {
-            }
-
-            virtual std::string description() const override
-            {
-                return "BinaryElementwiseArithmetic";
-            }
-
-            /// \brief Propagate element type from inputs to output.
-            ///
-            /// If the input types are the same type, and that type is numeric,
-            /// returns the input type. If the input types are not the same or
-            /// are not numeric, throws ngraph_error.
-            ///
-            /// \param arg0_element_type The element type of the first input tensor.
-            /// \param arg1_element_type The element type of the second input tensor.
-            /// \return The inferred element type for the output tensor, which is always the same as that of the input tensors.
-            virtual const element::Type& propagate_element_types(
-                const element::Type& arg0_element_type,
-                const element::Type& arg1_element_type) const final override;
+                                        const std::shared_ptr<Node>& arg1);
         };
     }
 }

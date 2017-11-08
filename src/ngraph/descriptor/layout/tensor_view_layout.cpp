@@ -15,6 +15,7 @@
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/types/element_type.hpp"
+#include "ngraph/types/type.hpp"
 
 using namespace ngraph::descriptor::layout;
 

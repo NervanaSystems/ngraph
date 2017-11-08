@@ -15,6 +15,7 @@
 #pragma once
 
 #include <atomic>
+#include <deque>
 #include <memory>
 #include <set>
 #include <string>
@@ -54,18 +55,15 @@ namespace ngraph
         {
         }
 
+        /// Assign Input and Output vectors
+        // This might later need to be virtual.
+        void assign_tensors();
+
     public:
         /// The class name, must not contain spaces
         virtual std::string description() const = 0;
         std::string get_name() const;
         void set_name(const std::string& name);
-
-        /// Propagate types and check arguments for consistency
-        virtual void propagate_types() = 0;
-
-        /// Assign Input and Output vectors
-        // This might later need to be virtual.
-        void assign_tensors();
 
         const Nodes& get_arguments() const { return m_arguments; }
         void clear_arguments() { m_arguments.clear(); }
@@ -83,14 +81,10 @@ namespace ngraph
 
         std::shared_ptr<const ValueType> get_value_type();
         const std::shared_ptr<const ValueType> get_value_type() const;
-        void set_value_type(const element::Type& element_type, const Shape& shape)
+        void assert_value_type(const std::shared_ptr<const ValueType>& value_type) const;
+        void assert_value_type(const element::Type& element_type, const Shape& shape) const
         {
-            m_value_type = std::make_shared<TensorViewType>(element_type, shape);
-        }
-
-        void set_value_type(const std::shared_ptr<const ValueType>& value_type)
-        {
-            m_value_type = value_type;
+            assert_value_type(std::make_shared<TensorViewType>(element_type, shape));
         }
 
         // Set the value type if it has not already been set; otherwise, ensure that
@@ -108,8 +102,8 @@ namespace ngraph
 
         std::deque<descriptor::Input>& get_inputs() { return m_inputs; }
         const std::deque<descriptor::Input>& get_inputs() const { return m_inputs; }
-        std::deque<descriptor::Output>& get_outputs() { return m_outputs; }
-        const std::deque<descriptor::Output>& get_outputs() const { return m_outputs; }
+        std::deque<descriptor::Output>& get_outputs();
+        const std::deque<descriptor::Output>& get_outputs() const;
         std::unordered_set<descriptor::Tensor*> liveness_live_list;
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
@@ -132,6 +126,7 @@ namespace ngraph
         static std::atomic<size_t> m_next_instance_id;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
+        bool m_outputs_valid{false};
         bool m_is_output;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
     };

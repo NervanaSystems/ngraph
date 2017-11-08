@@ -16,26 +16,13 @@
 #include "ngraph/function.hpp"
 
 using namespace std;
-using namespace ngraph::op;
+using namespace ngraph;
 
-void Sum::propagate_types()
+op::Sum::Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
+    : TensorViewArgs({arg})
+    , m_reduction_axes(reduction_axes)
 {
-    if (m_arguments.size() != 1)
-    {
-        throw ngraph_error("Wrong number of arguments.");
-    }
-
-    auto arg_type = m_arguments.at(0)->get_value_type();
-    if (nullptr == arg_type)
-    {
-        throw ngraph_error("Argument to sum is missing type.");
-    }
-    auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
-    if (nullptr == arg_tensor_view_type)
-    {
-        throw ngraph_error("Argument to sum is not a tensor view");
-    }
-
+    auto arg_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
     auto& arg_element_type = arg_tensor_view_type->get_element_type();
     if (arg_element_type == element::Bool::element_type())
     {

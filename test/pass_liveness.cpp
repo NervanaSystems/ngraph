@@ -21,12 +21,10 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 
@@ -44,8 +42,6 @@ TEST(pass, liveness)
 
     pass_manager.register_pass<pass::VisualizeTree>(image);
     pass_manager.register_pass<pass::TopologicalSort>();
-    pass_manager.register_pass<pass::PropagateTypes>();
-    pass_manager.register_pass<pass::AssignTensors>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::DumpSorted>(dump_file);
 
