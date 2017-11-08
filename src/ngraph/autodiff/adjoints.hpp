@@ -17,8 +17,6 @@
 #include <memory>
 #include <unordered_map>
 
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
-
 namespace ngraph
 {
     class Node;
