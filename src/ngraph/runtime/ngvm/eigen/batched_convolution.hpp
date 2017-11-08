@@ -27,7 +27,7 @@ namespace ngraph
         {
             namespace eigen
             {
-                template <typename ET,size_t IMG_DIMENSIONS>
+                template <typename ET, size_t IMG_DIMENSIONS>
                 class BatchedConvolutionInstruction : public Instruction
                 {
                 public:
@@ -48,28 +48,28 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        auto imgs_in = EigenTensor<ET, IMG_DIMENSIONS+2>(call_frame, m_arg0);
-                        auto kernels = EigenTensor<ET, IMG_DIMENSIONS+2>(call_frame, m_arg1);
-                        auto imgs_out = EigenTensor<ET, IMG_DIMENSIONS+2>(call_frame, m_out);
+                        auto imgs_in = EigenTensor<ET, IMG_DIMENSIONS + 2>(call_frame, m_arg0);
+                        auto kernels = EigenTensor<ET, IMG_DIMENSIONS + 2>(call_frame, m_arg1);
+                        auto imgs_out = EigenTensor<ET, IMG_DIMENSIONS + 2>(call_frame, m_out);
 
                         for (size_t img_idx = 0; img_idx < m_n_imgs; img_idx++)
                         {
-                            auto img_in = imgs_in.chip(img_idx,0);
-                            auto img_out = imgs_out.chip(img_idx,0);
+                            auto img_in = imgs_in.chip(img_idx, 0);
+                            auto img_out = imgs_out.chip(img_idx, 0);
 
                             for (size_t co = 0; co < m_n_output_channels; co++)
                             {
-                                auto kernel = kernels.chip(co,0);
+                                auto kernel = kernels.chip(co, 0);
 
                                 // We convolve on all dimensions including the input channels, hence the +1.
-                                auto conv_dims = Eigen::array<ptrdiff_t, IMG_DIMENSIONS+1>();
+                                auto conv_dims = Eigen::array<ptrdiff_t, IMG_DIMENSIONS + 1>();
 
-                                for(size_t i = 0; i < IMG_DIMENSIONS+1; i++)
+                                for (size_t i = 0; i < IMG_DIMENSIONS + 1; i++)
                                 {
                                     conv_dims[i] = ptrdiff_t(i);
                                 }
 
-                                img_out.chip(co,0) = img_in.convolve(kernel,conv_dims).chip(0,0);
+                                img_out.chip(co, 0) = img_in.convolve(kernel, conv_dims).chip(0, 0);
                             }
                         }
                     }

@@ -343,47 +343,41 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
     DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_INSTRUCTION, instr, __VA_ARGS__)
 
 // Begin temporary(?) hacks.
-#define PUSH_RANKED_INSTRUCTION(T, RANK, instr, ...)                                  \
+#define PUSH_RANKED_INSTRUCTION(T, RANK, instr, ...)                                               \
     {                                                                                              \
-        ef->get_instructions()->push_back(make_shared<instr<T, RANK>>(__VA_ARGS__));       \
+        ef->get_instructions()->push_back(make_shared<instr<T, RANK>>(__VA_ARGS__));               \
     }
 #define PUSH_NUMERIC_POLYMORPHIC_RANKED_INSTRUCTION(et, rank, err_msg, instr, ...)                 \
     {                                                                                              \
-        if (rank == 0)                                                                            \
+        if (rank == 0)                                                                             \
         {                                                                                          \
-            DO_ON_NUMERIC_TYPE(                                                                    \
-                et, err_msg, PUSH_RANKED_INSTRUCTION, 0, instr, __VA_ARGS__);          \
+            DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_RANKED_INSTRUCTION, 0, instr, __VA_ARGS__);       \
         }                                                                                          \
-        else if (rank == 1)                                                                            \
+        else if (rank == 1)                                                                        \
         {                                                                                          \
-            DO_ON_NUMERIC_TYPE(                                                                    \
-                et, err_msg, PUSH_RANKED_INSTRUCTION, 1, instr, __VA_ARGS__);          \
+            DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_RANKED_INSTRUCTION, 1, instr, __VA_ARGS__);       \
         }                                                                                          \
-        else if (rank == 2)                                                                            \
+        else if (rank == 2)                                                                        \
         {                                                                                          \
-            DO_ON_NUMERIC_TYPE(                                                                    \
-                et, err_msg, PUSH_RANKED_INSTRUCTION, 2, instr, __VA_ARGS__);          \
+            DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_RANKED_INSTRUCTION, 2, instr, __VA_ARGS__);       \
         }                                                                                          \
-        else if (rank == 3)                                                                       \
+        else if (rank == 3)                                                                        \
         {                                                                                          \
-            DO_ON_NUMERIC_TYPE(                                                                    \
-                et, err_msg, PUSH_RANKED_INSTRUCTION, 3, instr, __VA_ARGS__);          \
+            DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_RANKED_INSTRUCTION, 3, instr, __VA_ARGS__);       \
         }                                                                                          \
-        else if (rank == 4)                                                                       \
+        else if (rank == 4)                                                                        \
         {                                                                                          \
-            DO_ON_NUMERIC_TYPE(                                                                    \
-                et, err_msg, PUSH_RANKED_INSTRUCTION, 4, instr, __VA_ARGS__);          \
+            DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_RANKED_INSTRUCTION, 4, instr, __VA_ARGS__);       \
         }                                                                                          \
-        else if (rank == 5)                                                                       \
+        else if (rank == 5)                                                                        \
         {                                                                                          \
-            DO_ON_NUMERIC_TYPE(                                                                    \
-                et, err_msg, PUSH_RANKED_INSTRUCTION, 5, instr, __VA_ARGS__);          \
+            DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_RANKED_INSTRUCTION, 5, instr, __VA_ARGS__);       \
         }                                                                                          \
         else                                                                                       \
         {                                                                                          \
             throw ngraph_error("Tensor rank > 5 not supported");                                   \
         }                                                                                          \
-    }    
+    }
 
 #define PUSH_DUAL_RANKED_INSTRUCTION(T, RANK0, RANK1, instr, ...)                                  \
     {                                                                                              \
@@ -1143,16 +1137,17 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto kernel_shape = kernel_tensor_view_type->get_shape();
             auto kernel_rank = kernel_shape.size();
 
-            PUSH_NUMERIC_POLYMORPHIC_RANKED_INSTRUCTION(kernel_et,
-                                                        kernel_rank-2,
-                                                        "Convolution has unhandled element type",
-                                                        runtime::ngvm::eigen::BatchedConvolutionInstruction,
-                                                        in[0],
-                                                        in[1],
-                                                        out[0],
-                                                        imgs_shape[0],
-                                                        kernel_shape[1],
-                                                        kernel_shape[0]);
+            PUSH_NUMERIC_POLYMORPHIC_RANKED_INSTRUCTION(
+                kernel_et,
+                kernel_rank - 2,
+                "Convolution has unhandled element type",
+                runtime::ngvm::eigen::BatchedConvolutionInstruction,
+                in[0],
+                in[1],
+                out[0],
+                imgs_shape[0],
+                kernel_shape[1],
+                kernel_shape[0]);
         };
 
         initialized = true;

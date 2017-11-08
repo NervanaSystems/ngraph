@@ -2652,13 +2652,14 @@ TEST(${BACKEND_NAME}, sign)
 
 TEST(${BACKEND_NAME}, convolution)
 {
-    auto shape_a = Shape{1,1,3,5};
+    auto shape_a = Shape{1, 1, 3, 5};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
-    auto shape_b = Shape{2,1,2,2};
+    auto shape_b = Shape{2, 1, 2, 2};
     auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
-    auto shape_r = Shape{1,2,2,4};
+    auto shape_r = Shape{1, 2, 2, 4};
     auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
-    auto f = make_shared<Function>(make_shared<op::Convolution>(A,B), result_type, op::Parameters{A,B});
+    auto f = make_shared<Function>(
+        make_shared<op::Convolution>(A, B), result_type, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2667,11 +2668,12 @@ TEST(${BACKEND_NAME}, convolution)
 
     // Create some tensors for input/output
     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
-    *b = vector<float>{1,2,3,4,4,3,2,1};
+    *b = vector<float>{1, 2, 3, 4, 4, 3, 2, 1};
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
 
-    (*cf)({a,b}, {result});
-    ASSERT_EQ((vector<float>{51,61,71,81,101,111,121,131,29,39,49,59,79,89,99,109}), result->get_vector());
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{51, 61, 71, 81, 101, 111, 121, 131, 29, 39, 49, 59, 79, 89, 99, 109}),
+              result->get_vector());
 }
