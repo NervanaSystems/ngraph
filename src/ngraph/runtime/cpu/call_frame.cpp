@@ -37,11 +37,22 @@ void CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs)
 {
+    NGRAPH_INFO << "tensor_call";
+    for (shared_ptr<ngraph::runtime::TensorView> input : inputs)
+    {
+        NGRAPH_INFO << input->get_tensor_view_descriptor()->get_name();
+    }
+
+    for (shared_ptr<ngraph::runtime::TensorView> output : outputs)
+    {
+        NGRAPH_INFO << output->get_tensor_view_descriptor()->get_name();
+    }
+
     copy(outputs.begin(), outputs.end(), m_tensor_views.begin());
     copy(inputs.begin(), inputs.end(), m_tensor_views.begin() + m_n_outputs);
 
     // Invoke compiled computation
-    m_compiled_function(this, m_tensor_views, m_callees);
+    m_compiled_function(this, inputs, outputs, m_tensor_views, m_callees);
 
     // Don't hold onto inputs/outputs
     fill_n(m_tensor_views.begin(), m_n_outputs + m_n_inputs, nullptr);
@@ -51,15 +62,18 @@ void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Va
                            const std::vector<std::shared_ptr<ngraph::runtime::Value>>& results)
 {
     // TODO: Check types of args and result
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> inputs;
-    for (auto argument : arguments)
+    vector<shared_ptr<ngraph::runtime::TensorView>> inputs;
+    for (shared_ptr<ngraph::runtime::Value> argument : arguments)
     {
+        shared_ptr<runtime::TensorView> tv = dynamic_pointer_cast<runtime::TensorView>(argument);
+        NGRAPH_INFO << tv->get_tensor_view_descriptor()->get_name();
         argument->collect_tensor_views(inputs, argument);
     }
 
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> outputs;
-    for (auto result : results)
+    vector<shared_ptr<ngraph::runtime::TensorView>> outputs;
+    for (shared_ptr<ngraph::runtime::Value> result : results)
     {
+        // NGRAPH_INFO << result->get_tensor_view_descriptor()->get_name();
         result->collect_tensor_views(outputs, result);
     }
 

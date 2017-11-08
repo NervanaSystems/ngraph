@@ -163,12 +163,20 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Atan), &Emitter::EmitAtan},
 };
 
-#undef TI
+static unordered_map<type_index, string> element_type_names = {
+    {TI(ngraph::element::Bool), "Bool"},
+    {TI(ngraph::element::Float32), "Float32"},
+    {TI(ngraph::element::Int8), "Int8"},
+    {TI(ngraph::element::Int32), "Int32"},
+    {TI(ngraph::element::Int64), "Int64"},
+    {TI(ngraph::element::UInt8), "UInt8"},
+    {TI(ngraph::element::UInt32), "UInt32"},
+    {TI(ngraph::element::UInt64), "UInt64"}};
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                    bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
-    , compiled_function(nullptr)
+    , m_compiled_function(nullptr)
 {
 }
 
@@ -253,9 +261,12 @@ extern "C" void allocate_aligned_buffer(size_t size, size_t alignment, char** al
 extern "C" void free_aligned_buffer(void* allocated);
 
 
-extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
-                             ngraph::runtime::TensorViewPtrs& tensor_views,
-                             const std::vector<std::shared_ptr<ngraph::runtime::cpu::CallFrame>>& callees)
+extern "C" void __entrypoint(
+    ngraph::runtime::cpu::CallFrame* call_frame,
+    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
+    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs,
+    ngraph::runtime::TensorViewPtrs& tensor_views,
+    const std::vector<std::shared_ptr<ngraph::runtime::cpu::CallFrame>>& callees)
 {
 )";
 
@@ -268,18 +279,47 @@ extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
        << ", &allocated_buffer_pool, &aligned_buffer_pool);\n";
     TU << "\n";
 
-    TU << "// Define tensors\n";
-    // for (shared_ptr<Node> node : m_function->get_ordered_ops())
-    // {
-    //     NGRAPH_INFO << *node;
-    //     for (descriptor::Tensor* tensor : node->liveness_new_list)
-    //     {
-    //         NGRAPH_INFO << *tensor;
-    //     }
-    // }
+    TU << "// Define temporary tensors\n";
+    for (shared_ptr<Node> node : m_function->get_ordered_ops())
+    {
+        for (descriptor::Tensor* tensor : node->liveness_new_list)
+        {
+            TU << tensor->get_element_type() << "* " << tensor->get_name() << " = ("
+               << tensor->get_element_type() << "*)(aligned_buffer_pool + "
+               << tensor->get_pool_offset() << ");\n";
+        }
+    }
+    TU << "\n";
+
+    TU << "// Define outputs\n";
+    size_t tensor_ctr = 0;
+    for (const descriptor::Output& output : m_function->get_result()->get_outputs())
+    {
+        shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+        TU << "// " << tv->get_name() << "\n";
+        tensor_ctr++;
+    }
     TU << "\n";
 
     TU << "// Define tensor views\n";
+    TU << "\n";
+
+    TU << "// Define inputs\n";
+    size_t arg_index = 0;
+    for (shared_ptr<op::Parameter> param : m_function->get_parameters())
+    {
+        for (const descriptor::Output& output : param->get_outputs())
+        {
+            shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+            const element::Type& et = tv->get_tensor_view_type()->get_element_type();
+            string type = et.c_type_string();
+            string etype = element_type_names[TI(et)];
+            TU << type << "* arg" << arg_index << " = call_frame->get_tensor_view_data<" << etype
+               << ">(" << tensor_ctr << ");\n";
+            tensor_ctr++;
+            arg_index++;
+        }
+    }
     TU << "\n";
     TU.indent--;
 
@@ -331,11 +371,13 @@ extern "C" void __entrypoint(ngraph::runtime::cpu::CallFrame* call_frame,
     assert(llvm_module);
     estate.add_module(llvm_module);
     estate.finalize();
-    compiled_function =
-        estate.find_function<void(ngraph::runtime::cpu::CallFrame*,
-                                  ngraph::runtime::TensorViewPtrs&,
-                                  const std::vector<std::shared_ptr<CallFrame>>&)>("__entrypoint");
-    assert(compiled_function);
+    m_compiled_function = estate.find_function<void(
+        ngraph::runtime::cpu::CallFrame*,
+        const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
+        const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs,
+        ngraph::runtime::TensorViewPtrs&,
+        const std::vector<std::shared_ptr<CallFrame>>&)>("__entrypoint");
+    assert(m_compiled_function);
 
     m_is_compiled = true;
     if (m_release_function)
@@ -412,5 +454,5 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
 #undef M
     }
     return make_shared<ngraph::runtime::cpu::CallFrame>(
-        compiled_function, m_n_outputs, m_n_inputs, temps, callees);
+        m_compiled_function, m_n_outputs, m_n_inputs, temps, callees);
 }

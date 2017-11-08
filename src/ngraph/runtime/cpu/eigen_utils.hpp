@@ -37,25 +37,24 @@ namespace ngraph
                 using DynamicStrides = Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>;
                 using VectorStrides = Eigen::Stride<Eigen::Dynamic, 1>;
 
-                template <typename ET>
-                using DynamicArray =
-                    Eigen::Array<typename ET::type, Eigen::Dynamic, Eigen::Dynamic>;
+                template <typename T>
+                using DynamicArray = Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>;
 
-                template <typename ET>
-                using EigenArrayBase = Eigen::Map<DynamicArray<ET>, 0, DynamicStrides>;
+                template <typename T>
+                using EigenArrayBase = Eigen::Map<DynamicArray<T>, 0, DynamicStrides>;
 
-                template <typename ET>
-                using DynamicMatrix = Eigen::
-                    Matrix<typename ET::type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+                template <typename T>
+                using DynamicMatrix =
+                    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
-                template <typename ET>
-                using EigenMatrixBase = Eigen::Map<DynamicMatrix<ET>, 0, DynamicStrides>;
+                template <typename T>
+                using EigenMatrixBase = Eigen::Map<DynamicMatrix<T>, 0, DynamicStrides>;
 
-                template <typename ET>
-                using DynamicVector = Eigen::Matrix<typename ET::type, Eigen::Dynamic, 1>;
+                template <typename T>
+                using DynamicVector = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 
-                template <typename ET>
-                using EigenVectorBase = Eigen::Map<DynamicVector<ET>, 0, VectorStrides>;
+                template <typename T>
+                using EigenVectorBase = Eigen::Map<DynamicVector<T>, 0, VectorStrides>;
 
                 namespace fmt
                 {
@@ -155,16 +154,17 @@ namespace ngraph
                 };
 
                 template <typename ET, typename FMT = fmt::V>
-                using EigenArray1d = EigenWrapper<ET, FMT, EigenArrayBase<ET>>;
+                using EigenArray1d = EigenWrapper<ET, FMT, EigenArrayBase<typename ET::type>>;
 
                 template <typename ET, typename FMT = fmt::M>
-                using EigenArray2d = EigenWrapper<ET, FMT, EigenArrayBase<ET>>;
+                using EigenArray2d = EigenWrapper<ET, FMT, EigenArrayBase<typename ET::type>>;
 
                 template <typename ET, typename FMT = fmt::M>
-                using EigenMatrix = EigenWrapper<ET, FMT, EigenMatrixBase<ET>>;
+                using EigenMatrix = EigenWrapper<ET, FMT, EigenMatrixBase<typename ET::type>>;
 
                 template <typename ET, typename FMT = fmt::V>
-                using EigenVector = EigenWrapper<ET, FMT, EigenVectorBase<ET>, VectorStrides>;
+                using EigenVector =
+                    EigenWrapper<ET, FMT, EigenVectorBase<typename ET::type>, VectorStrides>;
             }
         }
     }
