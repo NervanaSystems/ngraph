@@ -74,6 +74,7 @@ check_cpu: build_ngraph_cpp_cpu
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
+            --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD/unit-test-results.xml" \
             --env RUN_UID="$(shell id -u)" \
             --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD; cmake -DCMAKE_CXX_COMPILER=clang++-3.9 -DCMAKE_C_COMPILER=clang-3.9 -DNGRAPH_BUILD_DOXYGEN_DOCS=ON -DNGRAPH_BUILD_SPHINX_DOCS=ON .. 2>&1 | tee cmake.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make.log ; env VERBOSE=1 make check 2>&1 | tee make_check.log" \
             "ngraph_cpp_cpu:${BUILD_VERSION}" \
