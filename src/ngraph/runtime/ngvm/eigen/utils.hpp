@@ -175,10 +175,10 @@ namespace ngraph
                     }
 
                 public:
-                    EigenTensor(typename ET::type* t, const Shape& shape)
-                        : base(t, convert_shape(shape))
+                    EigenTensor(typename ET::type* t, const Shape& zuh_shape)
+                        : base(t, convert_shape(zuh_shape))
                     {
-                        assert(shape.size() == RANK);
+                        assert(zuh_shape.size() == RANK);
                     }
 
                     EigenTensor(
