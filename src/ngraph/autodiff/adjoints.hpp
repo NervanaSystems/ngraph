@@ -64,30 +64,5 @@ namespace ngraph
         /// @param f is f(X_i...)
         /// @returns f'(X_i..., c) where f'(x_i, ..., c)_j is backprop for X_j
         std::shared_ptr<Function> backprop_function(const std::shared_ptr<Function>& f);
-
-        template <typename ET>
-        std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>> backprop_derivative(
-            const std::shared_ptr<runtime::Manager>& manager,
-            const std::shared_ptr<runtime::Backend>& backend,
-            const std::shared_ptr<Function>& f,
-            const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>>& args);
-
-        extern template std::vector<
-            std::shared_ptr<runtime::ParameterizedTensorView<ngraph::element::Float32>>>
-            backprop_derivative<ngraph::element::Float32>(
-                const std::shared_ptr<runtime::Manager>& manager,
-                const std::shared_ptr<runtime::Backend>& backend,
-                const std::shared_ptr<Function>& f,
-                const std::vector<
-                    std::shared_ptr<runtime::ParameterizedTensorView<element::Float32>>>& args);
-
-        extern template std::vector<
-            std::shared_ptr<runtime::ParameterizedTensorView<ngraph::element::Float64>>>
-            backprop_derivative<ngraph::element::Float64>(
-                const std::shared_ptr<runtime::Manager>& manager,
-                const std::shared_ptr<runtime::Backend>& backend,
-                const std::shared_ptr<Function>& f,
-                const std::vector<
-                    std::shared_ptr<runtime::ParameterizedTensorView<element::Float64>>>& args);
     }
 }
