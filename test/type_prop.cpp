@@ -1615,23 +1615,24 @@ TEST(type_prop, tensor_constant_bad_count)
 
 TEST(type_prop, convolution_deduce)
 {
-    auto shape_0 = Shape{64,3,224,224};
+    auto shape_0 = Shape{64, 3, 224, 224};
     auto param_0 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
-    auto shape_1 = Shape{128,3,3,3};
+    auto shape_1 = Shape{128, 3, 3, 3};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
     auto conv = make_shared<op::Convolution>(param_0, param_1);
     conv->propagate_types();
-    ASSERT_EQ(*(conv->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{64,128,222,222}));
+    ASSERT_EQ(*(conv->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{64, 128, 222, 222}));
 }
 
 TEST(type_prop, convolution_deduce_non_numeric)
 {
-    auto shape_0 = Shape{64,3,224,224};
+    auto shape_0 = Shape{64, 3, 224, 224};
     auto param_0 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Bool::element_type(), shape_0));
-    auto shape_1 = Shape{128,3,3,3};
+    auto shape_1 = Shape{128, 3, 3, 3};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Bool::element_type(), shape_1));
     auto conv = make_shared<op::Convolution>(param_0, param_1);
@@ -1654,10 +1655,10 @@ TEST(type_prop, convolution_deduce_non_numeric)
 
 TEST(type_prop, convolution_deduce_element_type_mismatch)
 {
-    auto shape_0 = Shape{64,3,224,224};
+    auto shape_0 = Shape{64, 3, 224, 224};
     auto param_0 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
-    auto shape_1 = Shape{128,3,3,3};
+    auto shape_1 = Shape{128, 3, 3, 3};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Int32::element_type(), shape_1));
     auto conv = make_shared<op::Convolution>(param_0, param_1);
@@ -1669,8 +1670,7 @@ TEST(type_prop, convolution_deduce_element_type_mismatch)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Arguments must have the same element type"));
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same element type"));
     }
     catch (...)
     {
@@ -1680,10 +1680,10 @@ TEST(type_prop, convolution_deduce_element_type_mismatch)
 
 TEST(type_prop, convolution_deduce_rank_mismatch)
 {
-    auto shape_0 = Shape{64,3,224,224,224};
+    auto shape_0 = Shape{64, 3, 224, 224, 224};
     auto param_0 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
-    auto shape_1 = Shape{128,3,3,3};
+    auto shape_1 = Shape{128, 3, 3, 3};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
     auto conv = make_shared<op::Convolution>(param_0, param_1);
@@ -1695,8 +1695,7 @@ TEST(type_prop, convolution_deduce_rank_mismatch)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Arguments must have the same rank"));
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same rank"));
     }
     catch (...)
     {
@@ -1721,8 +1720,7 @@ TEST(type_prop, convolution_deduce_rank_too_small)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution arguments must have rank>=2"));
+        EXPECT_EQ(error.what(), std::string("Convolution arguments must have rank>=2"));
     }
     catch (...)
     {
@@ -1732,10 +1730,10 @@ TEST(type_prop, convolution_deduce_rank_too_small)
 
 TEST(type_prop, convolution_deduce_input_channel_mismatch)
 {
-    auto shape_0 = Shape{64,3,224,224};
+    auto shape_0 = Shape{64, 3, 224, 224};
     auto param_0 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
-    auto shape_1 = Shape{128,4,3,3};
+    auto shape_1 = Shape{128, 4, 3, 3};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
     auto conv = make_shared<op::Convolution>(param_0, param_1);
@@ -1758,10 +1756,10 @@ TEST(type_prop, convolution_deduce_input_channel_mismatch)
 
 TEST(type_prop, convolution_deduce_kernel_zero)
 {
-    auto shape_0 = Shape{64,3,224,224};
+    auto shape_0 = Shape{64, 3, 224, 224};
     auto param_0 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
-    auto shape_1 = Shape{128,3,3,0};
+    auto shape_1 = Shape{128, 3, 3, 0};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
     auto conv = make_shared<op::Convolution>(param_0, param_1);
@@ -1773,8 +1771,9 @@ TEST(type_prop, convolution_deduce_kernel_zero)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution kernel must have size greater than 0 at each dimension"));
+        EXPECT_EQ(
+            error.what(),
+            std::string("Convolution kernel must have size greater than 0 at each dimension"));
     }
     catch (...)
     {
@@ -1784,10 +1783,10 @@ TEST(type_prop, convolution_deduce_kernel_zero)
 
 TEST(type_prop, convolution_deduce_kernel_too_big)
 {
-    auto shape_0 = Shape{64,3,224,224};
+    auto shape_0 = Shape{64, 3, 224, 224};
     auto param_0 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
-    auto shape_1 = Shape{128,3,3,225};
+    auto shape_1 = Shape{128, 3, 3, 225};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
     auto conv = make_shared<op::Convolution>(param_0, param_1);
@@ -1799,8 +1798,9 @@ TEST(type_prop, convolution_deduce_kernel_too_big)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Convolution kernel must be no larger than the image at each dimension"));
+        EXPECT_EQ(
+            error.what(),
+            std::string("Convolution kernel must be no larger than the image at each dimension"));
     }
     catch (...)
     {
@@ -1810,14 +1810,14 @@ TEST(type_prop, convolution_deduce_kernel_too_big)
 
 TEST(type_prop, convolution_deduce_kernel_just_fits)
 {
-    auto shape_0 = Shape{64,3,224,224};
+    auto shape_0 = Shape{64, 3, 224, 224};
     auto param_0 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_0));
-    auto shape_1 = Shape{128,3,224,224};
+    auto shape_1 = Shape{128, 3, 224, 224};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
     auto conv = make_shared<op::Convolution>(param_0, param_1);
     conv->propagate_types();
-    ASSERT_EQ(*(conv->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{64,128,1,1}));
+    ASSERT_EQ(*(conv->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{64, 128, 1, 1}));
 }
-

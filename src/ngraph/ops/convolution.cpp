@@ -40,8 +40,8 @@ void Convolution::propagate_types()
     auto& arg0_element_type = arg0_tensor_type->get_element_type();
     auto& arg1_element_type = arg1_tensor_type->get_element_type();
 
-    if (arg0_element_type == element::Bool::element_type()
-    ||  arg1_element_type == element::Bool::element_type())
+    if (arg0_element_type == element::Bool::element_type() ||
+        arg1_element_type == element::Bool::element_type())
     {
         throw ngraph_error("Arguments for convolution must have numeric element type");
     }
@@ -77,17 +77,18 @@ void Convolution::propagate_types()
     {
         if (arg1_shape[i] == 0)
         {
-            throw ngraph_error("Convolution kernel must have size greater than 0 at each dimension");
+            throw ngraph_error(
+                "Convolution kernel must have size greater than 0 at each dimension");
         }
 
         if (arg1_shape[i] > arg0_shape[i])
         {
-            throw ngraph_error("Convolution kernel must be no larger than the image at each dimension");
+            throw ngraph_error(
+                "Convolution kernel must be no larger than the image at each dimension");
         }
 
         out_shape.push_back(arg0_shape[i] - (arg1_shape[i] - 1));
     }
 
-    set_value_type_checked(
-        make_shared<TensorViewType>(arg0_element_type, out_shape));
+    set_value_type_checked(make_shared<TensorViewType>(arg0_element_type, out_shape));
 }
