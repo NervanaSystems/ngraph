@@ -26,9 +26,14 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::descriptor;
 
+pass::MemoryLayout::MemoryLayout(size_t alignment)
+    : m_alignment(alignment)
+{
+}
+
 bool pass::MemoryLayout::run_on_call_graph(std::list<std::shared_ptr<Node>>& node_list)
 {
-    MemoryManager mm;
+    MemoryManager mm(m_alignment);
     for (shared_ptr<Node> node : node_list)
     {
         for (Tensor* tensor : node->liveness_new_list)
