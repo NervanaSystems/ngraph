@@ -93,9 +93,7 @@ void nervana::logger::log_item(const string& s)
     queue_condition.notify_one();
 }
 
-nervana::log_helper::log_helper(
-    LOG_TYPE type, const char* file, int line, const char* func, bool ds)
-    : dummy_stream(ds)
+nervana::log_helper::log_helper(LOG_TYPE type, const char* file, int line, const char* func)
 {
     switch (type)
     {
@@ -121,9 +119,6 @@ nervana::log_helper::log_helper(
 
 nervana::log_helper::~log_helper()
 {
-    if (!dummy_stream)
-    {
-        cout << _stream.str() << endl;
-        // logger::log_item(_stream.str());
-    }
+    cout << _stream.str() << endl;
+    // logger::log_item(_stream.str());
 }
