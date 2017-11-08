@@ -13,9 +13,6 @@
 
 set (SRC
     autodiff/adjoints.cpp
-    autodiff/backprop_derivative.cpp
-    autodiff/backprop_function.cpp
-    autodiff/numeric_derivative.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
     descriptor/layout/tensor_view_layout.cpp

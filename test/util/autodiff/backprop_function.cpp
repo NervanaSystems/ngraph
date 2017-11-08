@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "backprop_function.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
