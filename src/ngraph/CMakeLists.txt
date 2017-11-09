@@ -90,6 +90,13 @@ if(USE_CUDA)
           "Please select a correct compiler version\n"
           )
       endif()
+    find_package(CUDNN 5 QUIET)
+    if(NOT CUDNN_FOUND)
+       message(WARNING
+          "If cuDNN is installed, try setting -DCUDNN_ROOT_DIR"
+          "Not compiling with CUDA. Suppress this warning with -DUSE_CUDA=OFF")
+          set(USE_CUDA OFF)
+    endif()
   else()
     message(WARNING "Not compiling with CUDA. Suppress this warning with -DUSE_CUDA=OFF")
     set(USE_CUDA OFF)
