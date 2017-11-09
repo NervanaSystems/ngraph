@@ -79,6 +79,23 @@ set (SRC
     util.cpp
     )
 
+if(USE_CUDA)
+  find_package(CUDA 8 REQUIRED)
+  if(CUDA_FOUND)
+    if (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND
+          NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 6.0 AND
+          CUDA_HOST_COMPILER STREQUAL CMAKE_C_COMPILER)
+        message(FATAL_ERROR
+          "CUDA 8.0 is not compatible with GCC version >= 6.\n"
+          "Please select a correct compiler version\n"
+          )
+      endif()
+  else()
+    message(WARNING "Not compiling with CUDA. Suppress this warning with -DUSE_CUDA=OFF")
+    set(USE_CUDA OFF)
+  endif()
+endif()
+
 # find_program (GRAPHVIZ dot)
 # message (STATUS "graphviz '${GRAPHVIZ}'")
 find_package(Graphviz)
