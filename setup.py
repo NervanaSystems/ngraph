@@ -63,7 +63,26 @@ ext_modules = [
         ],
         language='c++'
     ),
-
+    Extension(
+        'ngraph.core.types.clsManager',
+       ['ngraph/core/types/manager.cpp'],
+        include_dirs=[
+            # Path to pybind11 headers
+            get_pybind_include(),
+            get_pybind_include(user=True)
+        ],
+        language='c++'
+    ),
+    Extension(
+        'ngraph.core.types.clsBackend',
+       ['ngraph/core/types/backend.cpp'],
+        include_dirs=[
+            # Path to pybind11 headers
+            get_pybind_include(),
+            get_pybind_include(user=True)
+        ],
+        language='c++'
+    ),
 ]
 
 
