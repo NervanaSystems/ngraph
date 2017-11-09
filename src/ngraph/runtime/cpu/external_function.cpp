@@ -194,7 +194,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
-    pass_manager.register_pass<pass::MemoryLayout>();
+    pass_manager.register_pass<pass::MemoryLayout>(64);
     pass_manager.run_passes(m_function);
 
     // Determine tensor requirements for the call frame
