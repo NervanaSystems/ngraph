@@ -62,7 +62,6 @@ void* CallFrame::get_input_data(size_t index)
     shared_ptr<const runtime::ParameterizedTensorView<element::Float32>> ptv =
         dynamic_pointer_cast<const runtime::ParameterizedTensorView<element::Float32>>(p);
     const void* p1 = ptv->get_vector().data();
-    NGRAPH_INFO << "get_input_data " << hex << (size_t)p1;
     return const_cast<void*>(p1);
 }
 
@@ -71,6 +70,5 @@ void* CallFrame::get_output_data(size_t index)
     shared_ptr<runtime::TensorView> p = m_outputs->at(index);
     shared_ptr<runtime::ParameterizedTensorView<element::Float32>> ptv =
         dynamic_pointer_cast<runtime::ParameterizedTensorView<element::Float32>>(p);
-    NGRAPH_INFO << "get_output_data " << hex << (size_t)ptv->get_vector().data();
     return ptv->get_vector().data();
 }

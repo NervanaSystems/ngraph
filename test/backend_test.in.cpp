@@ -43,10 +43,6 @@ TEST(${BACKEND_NAME}, abc)
     auto c = backend->make_parameterized_tensor_view<element::Float32>(
         runtime::NDArray<float, 2>({{9, 10}, {11, 12}}));
     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    NGRAPH_INFO << "a " << hex << (size_t)a->get_vector().data();
-    NGRAPH_INFO << "b " << hex << (size_t)b->get_vector().data();
-    NGRAPH_INFO << "c " << hex << (size_t)c->get_vector().data();
-    NGRAPH_INFO << "output " << hex << (size_t)result->get_vector().data();
 
     (*cf)({a, b, c}, {result});
     ASSERT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
