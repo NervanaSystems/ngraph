@@ -173,6 +173,11 @@ TEST(copy, convert)
     ASSERT_TRUE(et == node_cast->get_convert_element_type());
 }
 
+TEST(copy, convolution)
+{
+    ASSERT_TRUE(check_binary<op::Convolution>());
+}
+
 TEST(copy, cos)
 {
     ASSERT_TRUE(check_unary<op::Cos>());
