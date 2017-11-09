@@ -28,16 +28,16 @@ preview release!
 Installation
 ============
 
-Follow the instructions in the installation documentation
+Install the base packages for the CPU backend by following the instructions in the installation documentation
 `here <https://ngraph.nervanasys.com/docs/latest/installation.html>`_.
 
 After you complete the prerequisites and install the base Intel Nervana graph package as explained in the installation documentation, you will need to install some additional packages to run
-Intel Nervana graph on various compute platforms.
+Intel Nervana Graph at optimal performance on various compute platforms.
 
 CPU/Intel® architecture transformer
 ---------------------------------------
 
-To run Intel Nervana graph on a CPU backend, you need to install Intel Nervana graph with Intel® Math Kernel Library for Deep Neural Networks (Intel® MKL-DNN) support:
+To run Intel Nervana graph with optimal performance on a CPU backend, you need to install Intel Nervana graph with Intel® Math Kernel Library for Deep Neural Networks (Intel® MKL-DNN) support:
 
   1. Download Intel® MKL-DNN from `here <https://github.com/01org/mkl-dnn>`_.
   2. Follow the installation instructions in the `README.md <https://github.com/01org/mkl-dnn/blob/master/README.md>`_ to install MKL-DNN. 
@@ -60,18 +60,14 @@ To run Intel Nervana graph on a GPU backend, you need to install CUDA* and then 
 
 Virtual environment activation
 ==================================
-We recommend installing Intel Nervana graph inside a virtual environment. Make sure that you have installed all prerequisites in the installation documentation
+
+The virtual environemt for Intel Nervana Graph is created when you install the prerequisites described in the installation documentation
 `here <https://ngraph.nervanasys.com/docs/latest/installation.html>`_.
 
-To create and activate a Python 3 virtualenv, run the following commands::
+To activate a Python virtualenv, run the following command::
   
-  python3 -m venv .venv
   . .venv/bin/activate
 
-If you would like to create and activate a Python 2.7 virtualenv instead::
-
-  virtualenv -p python2.7 .venv
-  . .venv/bin/activate
 
 Build Intel Nervana graph
 =========================
@@ -122,9 +118,9 @@ This example demonstrates training a deep residual network as first described in
 Files
 -----
 
-- *data.py*: Loads CIFAR10 or imagenet dataset and creates aeon objects.
-- *resnet.py*: Defines object for Residual network.
-- *train_resnet.py*: Trains the resnet depending on dataset and size choosen.
+- *data.py*: Implements dataloader for CIFAR10 and imagenet dataset.
+- *resnet.py*: Defines model for Residual network.
+- *train_resnet.py*: Processes command line arguments, like the choice of dataset and number of layers, and trains the Resnet model.
 
 Dataset
 -------
