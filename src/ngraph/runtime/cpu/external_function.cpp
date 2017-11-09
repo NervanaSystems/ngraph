@@ -261,8 +261,14 @@ using namespace ngraph::element;
 using namespace ngraph::runtime;
 using namespace ngraph::runtime::cpu::eigen;
 
-extern "C" void allocate_aligned_buffer(size_t size, size_t alignment, char** allocated, char** aligned_ptr);
+extern "C" void allocate_aligned_buffer(
+    size_t size,
+    size_t alignment,
+    char** allocated,
+    char** aligned_ptr);
+
 extern "C" void free_aligned_buffer(void* allocated);
+
 )";
 
     TU << "extern \"C\" void " << function_name << "(\n";
@@ -301,8 +307,8 @@ extern "C" void free_aligned_buffer(void* allocated);
             shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
             const element::Type& et = tv->get_tensor_view_type()->get_element_type();
             string type = et.c_type_string();
-            TU << type << "* " << tv->get_tensor().get_name() << " = call_frame->get_input_data<"
-               << type << ">(" << arg_index << ");\n";
+            TU << "" << type << "* " << tv->get_tensor().get_name() << " = static_cast<" << type
+               << "*>(call_frame->get_input_data(" << arg_index << "));\n";
             arg_index++;
         }
     }
@@ -315,15 +321,16 @@ extern "C" void free_aligned_buffer(void* allocated);
         shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
         const element::Type& et = tv->get_tensor_view_type()->get_element_type();
         string type = et.c_type_string();
-        TU << type << "* " << tv->get_tensor().get_name() << " = call_frame->get_output_data<"
-           << type << ">(" << output_index << ");\n";
+        TU << type << "* " << tv->get_tensor().get_name() << " = static_cast<" << type
+           << "*>(call_frame->get_output_data(" << output_index << "));\n";
         output_index++;
     }
     TU << "\n";
-    TU.indent--;
 
     TU << "// Define tensor views\n";
     TU << "\n";
+
+    TU.indent--;
 
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {

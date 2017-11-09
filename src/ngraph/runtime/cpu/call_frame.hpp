@@ -75,22 +75,16 @@ namespace ngraph
                 const std::vector<std::shared_ptr<ngraph::runtime::Value>>& get_inputs();
                 const std::vector<std::shared_ptr<ngraph::runtime::Value>>& get_outputs();
 
-                template <typename T>
-                T* get_input_data(size_t index)
-                {
-                    return static_cast<T>(123);
-                }
-
-                template <typename T>
-                T* get_output_data(size_t index)
-                {
-                    return static_cast<T>(456);
-                }
+                void* get_input_data(size_t index);
+                void* get_output_data(size_t index);
 
             protected:
                 bool m_return;
                 EntryPoint m_compiled_function;
                 std::vector<std::shared_ptr<CallFrame>> m_callees;
+
+                const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>* m_inputs;
+                const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>* m_outputs;
             };
         }
     }

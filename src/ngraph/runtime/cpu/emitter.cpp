@@ -237,16 +237,14 @@ void Emitter::EMITTER_DECL(EmitMultiply)
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
             ->get_element_type();
+    string type = et.c_type_string();
 
-    TU += "    {\n"
-          "        // auto arg0 = call_frame->get_tensor_view_data<" + element_type_names[TI(et)] + ">(" + to_string(inputs[0].get_index()) + ");\n"
-          "        // auto arg1 = call_frame->get_tensor_view_data<" + element_type_names[TI(et)] + ">(" + to_string(inputs[1].get_index()) + ");\n"
-          "        // auto out  = call_frame->get_tensor_view_data<" + element_type_names[TI(et)] + ">(" + to_string(outputs[0].get_index()) + ");\n"
-          "        EigenArray1d<" + element_type_names[TI(et)] + ">(out, "
+    TU += "    { // " + n->get_name() + "\n"
+          "        EigenArray1d<" + type + ">(" + outputs[0].get_tensor().get_name() + ", "
                    EIGEN_VECTOR_FORMAT(outputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ") =\n"
-          "        EigenArray1d<" + element_type_names[TI(et)] + ">(arg0, "
+          "            EigenArray1d<" + type + ">(" + inputs[0].get_tensor().get_name() + ", "
                    EIGEN_VECTOR_FORMAT(inputs[0].get_layout<DenseTensorViewLayout>()->get_size()) ") *\n"
-          "        EigenArray1d<" + element_type_names[TI(et)] + ">(arg1, "
+          "            EigenArray1d<" + type + ">(" + inputs[1].get_tensor().get_name() + ", "
                    EIGEN_VECTOR_FORMAT(inputs[1].get_layout<DenseTensorViewLayout>()->get_size()) ");\n"
           "    }\n";
 }

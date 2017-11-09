@@ -30,16 +30,8 @@ void CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs)
 {
-    // NGRAPH_INFO << "tensor_call";
-    // for (shared_ptr<ngraph::runtime::TensorView> input : inputs)
-    // {
-    //     NGRAPH_INFO << input->get_tensor_view_descriptor()->get_name();
-    // }
-
-    // for (shared_ptr<ngraph::runtime::TensorView> output : outputs)
-    // {
-    //     NGRAPH_INFO << output->get_tensor_view_descriptor()->get_name();
-    // }
+    m_inputs = &inputs;
+    m_outputs = &outputs;
 
     // Invoke compiled computation
     m_compiled_function(this, inputs, outputs);
@@ -62,4 +54,21 @@ void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Va
     }
 
     tensor_call(inputs, outputs);
+}
+
+void* CallFrame::get_input_data(size_t index)
+{
+    shared_ptr<runtime::TensorView> p = m_inputs->at(index);
+    shared_ptr<const runtime::ParameterizedTensorView<element::Float32>> ptv =
+        dynamic_pointer_cast<const runtime::ParameterizedTensorView<element::Float32>>(p);
+    const void* p1 = ptv->get_vector().data();
+    return const_cast<void*>(p1);
+}
+
+void* CallFrame::get_output_data(size_t index)
+{
+    shared_ptr<runtime::TensorView> p = m_inputs->at(index);
+    shared_ptr<runtime::ParameterizedTensorView<element::Float32>> ptv =
+        dynamic_pointer_cast<runtime::ParameterizedTensorView<element::Float32>>(p);
+    return ptv->get_vector().data();
 }
