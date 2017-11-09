@@ -138,13 +138,6 @@ namespace ngraph
                     {
                     }
 
-                    // EigenWrapper(CallFrame* call_frame, const TensorViewInfo& tensor_view_info)
-                    //     : EigenWrapper(
-                    //           call_frame->get_tensor_view_data<ET>(tensor_view_info.get_index()),
-                    //           FMT(tensor_view_info))
-                    // {
-                    // }
-
                     template <typename U>
                     EigenWrapper& operator=(const U& other)
                     {
