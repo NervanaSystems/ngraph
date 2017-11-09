@@ -24,8 +24,8 @@ class get_pybind_include(object):
 
 ext_modules = [
     Extension(
-        'ngraph.core.types.TraitedType',
-        ['ngraph/core/types/element_type_temp.cpp'],
+        'ngraph.core.types.clsTraitedType',
+        ['ngraph/core/types/element_type.cpp'],
         include_dirs=[
             # Path to pybind11 headers
             get_pybind_include(),
@@ -43,7 +43,29 @@ ext_modules = [
         ],
         language='c++'
     ),
+    Extension(
+        'ngraph.core.types.clsTensorViewType',
+       ['ngraph/core/types/valuetype.cpp'],
+        include_dirs=[
+            # Path to pybind11 headers
+            get_pybind_include(),
+            get_pybind_include(user=True)
+        ],
+        language='c++'
+    ),
+    Extension(
+        'ngraph.core.types.clsFunction',
+       ['ngraph/core/types/function.cpp'],
+        include_dirs=[
+            # Path to pybind11 headers
+            get_pybind_include(),
+            get_pybind_include(user=True)
+        ],
+        language='c++'
+    ),
+
 ]
+
 
 
 # As of Python 3.6, CCompiler has a `has_flag` method.

@@ -7,10 +7,10 @@ namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_PLUGIN(Parameter) {
+PYBIND11_PLUGIN(clsParameter) {
 
     py::module mod("clsParameter");
-    py::class_<Node, std::shared_ptr<Node>> clsNode(mod, "clsNode");
+//    py::class_<Node, std::shared_ptr<Node>> clsNode(mod, "clsNode");
 
     py::module::import("TraitedType");
     py::class_<Parameter, std::shared_ptr<Parameter>> clsParameter(mod, "clsParameter");
@@ -23,4 +23,3 @@ PYBIND11_PLUGIN(Parameter) {
 }
 
 }}  // ngraph
-
