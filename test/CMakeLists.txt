@@ -23,6 +23,7 @@ include_directories(
 
 set (SRC
     autodiff.cpp
+    copy.cpp
     build_graph.cpp
     eigen.cpp
     input_output_assign.cpp
@@ -36,6 +37,9 @@ set (SRC
     topological_sort.cpp
     type_prop.cpp
     util/all_close.cpp
+    util/autodiff/backprop_derivative.cpp
+    util/autodiff/backprop_function.cpp
+    util/autodiff/numeric_derivative.cpp
     util/test_tools.cpp
     util.cpp
     uuid.cpp

@@ -74,12 +74,20 @@ namespace ngraph
             {
             }
 
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 1)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Broadcast>(new_args.at(0), m_shape, m_broadcast_axes);
+            }
+
             virtual std::string description() const override { return "Broadcast"; }
             virtual void propagate_types() override;
 
             /// \return An set containing the indices of the broadcast axes (0-based).
             const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
-        protected:
+            const Shape& get_broadcast_shape() const { return m_shape; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;

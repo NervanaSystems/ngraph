@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "ngraph/ops/op.hpp"
 
 namespace ngraph
@@ -72,6 +74,12 @@ namespace ngraph
                 : Builtin(args)
                 , m_concatenation_axis(concatenation_axis)
             {
+            }
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                return std::make_shared<Concat>(new_args, m_concatenation_axis);
             }
 
             virtual std::string description() const override { return "Concatenate"; }
