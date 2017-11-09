@@ -20,42 +20,29 @@ using namespace std;
 using namespace ngraph::runtime::cpu;
 
 CallFrame::CallFrame(EntryPoint compiled_function,
-                     size_t n_outputs,
-                     size_t n_inputs,
-                     const TensorViewPtrs& temps,
                      const std::vector<std::shared_ptr<CallFrame>>& callees)
-    : m_n_outputs(n_outputs)
-    , m_n_inputs(n_inputs)
-    , m_tensor_views(n_outputs + n_inputs + temps.size())
-    , m_compiled_function(compiled_function)
+    : m_compiled_function(compiled_function)
     , m_callees(callees)
 {
-    copy(temps.begin(), temps.end(), m_tensor_views.begin() + m_n_outputs + m_n_inputs);
 }
 
 void CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs)
 {
-    NGRAPH_INFO << "tensor_call";
-    for (shared_ptr<ngraph::runtime::TensorView> input : inputs)
-    {
-        NGRAPH_INFO << input->get_tensor_view_descriptor()->get_name();
-    }
+    // NGRAPH_INFO << "tensor_call";
+    // for (shared_ptr<ngraph::runtime::TensorView> input : inputs)
+    // {
+    //     NGRAPH_INFO << input->get_tensor_view_descriptor()->get_name();
+    // }
 
-    for (shared_ptr<ngraph::runtime::TensorView> output : outputs)
-    {
-        NGRAPH_INFO << output->get_tensor_view_descriptor()->get_name();
-    }
-
-    copy(outputs.begin(), outputs.end(), m_tensor_views.begin());
-    copy(inputs.begin(), inputs.end(), m_tensor_views.begin() + m_n_outputs);
+    // for (shared_ptr<ngraph::runtime::TensorView> output : outputs)
+    // {
+    //     NGRAPH_INFO << output->get_tensor_view_descriptor()->get_name();
+    // }
 
     // Invoke compiled computation
-    m_compiled_function(this, inputs, outputs, m_tensor_views, m_callees);
-
-    // Don't hold onto inputs/outputs
-    fill_n(m_tensor_views.begin(), m_n_outputs + m_n_inputs, nullptr);
+    m_compiled_function(this, inputs, outputs);
 }
 
 void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,
@@ -65,15 +52,12 @@ void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Va
     vector<shared_ptr<ngraph::runtime::TensorView>> inputs;
     for (shared_ptr<ngraph::runtime::Value> argument : arguments)
     {
-        shared_ptr<runtime::TensorView> tv = dynamic_pointer_cast<runtime::TensorView>(argument);
-        NGRAPH_INFO << tv->get_tensor_view_descriptor()->get_name();
         argument->collect_tensor_views(inputs, argument);
     }
 
     vector<shared_ptr<ngraph::runtime::TensorView>> outputs;
     for (shared_ptr<ngraph::runtime::Value> result : results)
     {
-        // NGRAPH_INFO << result->get_tensor_view_descriptor()->get_name();
         result->collect_tensor_views(outputs, result);
     }
 

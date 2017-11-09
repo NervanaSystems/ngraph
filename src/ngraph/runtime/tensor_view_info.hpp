@@ -52,6 +52,11 @@ namespace ngraph
                 return m_tensor_view;
             }
 
+            const ngraph::descriptor::Tensor& get_tensor() const
+            {
+                return m_tensor_view->get_tensor();
+            }
+
         protected:
             size_t m_index;
             std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout> m_layout;
