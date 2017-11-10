@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/tensor_view.hpp"
 #include "ngraph/runtime/external_function.hpp"
 
 using namespace ngraph;
@@ -31,10 +32,6 @@ std::shared_ptr<ngraph::runtime::TensorView>
     runtime::cpu::CPUBackend::make_primary_tensor_view(const ngraph::element::Type& element_type,
                                                        const Shape& shape)
 {
-    size_t size = ngraph::shape_size(shape);
-    size_t tensor_size = size * element_type.size();
-    char* allocated;
-    char* alligned;
-    allocate_aligned_buffer(tensor_size, runtime::cpu::alignment, &allocated, &alligned);
-    m_tensor_buffer = shared_ptr<char>(new char[size], alligned);
+    auto rc = make_shared<runtime::cpu::CPUTensorView>(element_type, shape);
+    return dynamic_pointer_cast<runtime::TensorView>(rc);
 }

@@ -34,9 +34,6 @@ namespace ngraph
                 std::shared_ptr<ngraph::runtime::TensorView>
                     make_primary_tensor_view(const ngraph::element::Type& element_type,
                                              const Shape& shape) override;
-
-            private:
-                std::shared_ptr<char> m_tensor_buffer;
             };
         }
     }

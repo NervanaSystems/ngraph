@@ -15,7 +15,30 @@
 #include "tensor_view.hpp"
 
 using namespace ngraph;
+using namespace std;
 
-runtime::cpu::CPUTensorView(std::shared_ptr<char> tensor)
+runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
+                                           const Shape& shape)
 {
+    size_t size = ngraph::shape_size(shape);
+    size_t tensor_size = size * element_type.size();
+    char* allocated;
+    char* alligned;
+    allocate_aligned_buffer(tensor_size, runtime::cpu::alignment, &allocated, &alligned);
+    m_tensor_buffer = shared_ptr<char>(new char[size], alligned);
+}
+
+void* runtime::cpu::CPUTensorView::get_data_ptr()
+{
+    return m_tensor_buffer.get();
+}
+
+void runtime::cpu::CPUTensorView::write(const void* p, size_t tensor_offset, size_t n)
+{
+    NGRAPH_INFO << "write";
+}
+
+void runtime::cpu::CPUTensorView::read(void* p, size_t tensor_offset, size_t n) const
+{
+    NGRAPH_INFO << "read";
 }
