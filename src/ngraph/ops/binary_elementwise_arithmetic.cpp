@@ -16,20 +16,26 @@
 
 using namespace std;
 using namespace ngraph;
-using namespace ngraph::op;
 
-const element::Type& BinaryElementwiseArithmetic::propagate_element_types(
-    const element::Type& arg0_element_type, const element::Type& arg1_element_type) const
+op::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(const std::shared_ptr<Node>& arg0,
+                                                             const std::shared_ptr<Node>& arg1)
+    : BinaryElementwise(
+          [](const element::Type& arg0_element_type,
+             const element::Type& arg1_element_type) -> const element::Type& {
+              if (arg0_element_type != arg1_element_type)
+              {
+                  throw ngraph_error("Arguments must have the same tensor view element type");
+              }
+
+              if (arg0_element_type == element::Bool::element_type())
+              {
+                  throw ngraph_error(
+                      "Operands for arithmetic operators must have numeric element type");
+              }
+
+              return arg0_element_type;
+          },
+          arg0,
+          arg1)
 {
-    if (arg0_element_type != arg1_element_type)
-    {
-        throw ngraph_error("Arguments must have the same tensor view element type");
-    }
-
-    if (arg0_element_type == element::Bool::element_type())
-    {
-        throw ngraph_error("Operands for arithmetic operators must have numeric element type");
-    }
-
-    return arg0_element_type;
 }

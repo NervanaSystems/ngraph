@@ -109,7 +109,7 @@ TEST(build_graph, tensor)
     auto float_tensor_type =
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 3});
     ASSERT_EQ(*float0->get_value_type(), *float_tensor_type);
-    auto d = make_shared<op::Dot>(float0, float0);
+    auto d = make_shared<op::Add>(float0, float0);
     ASSERT_EQ(d->get_arguments().at(0), float0);
     ASSERT_EQ(d->get_arguments().at(1), float0);
 

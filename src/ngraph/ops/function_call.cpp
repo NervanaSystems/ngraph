@@ -16,9 +16,12 @@
 #include "ngraph/function.hpp"
 
 using namespace std;
-using namespace ngraph::op;
+using namespace ngraph;
 
-void FunctionCall::propagate_types()
+op::FunctionCall::FunctionCall(std::shared_ptr<Function> function,
+                               const std::vector<std::shared_ptr<Node>>& args)
+    : Node(args)
+    , m_function(function)
 {
     auto& function_params = m_function->get_parameters();
 

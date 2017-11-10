@@ -12,29 +12,22 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <sstream>
+#include <memory>
 
-#include "ngraph/ngraph.hpp"
-#include "ngraph/pass/propagate_types.hpp"
+#include "ngraph/ops/op.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-bool pass::PropagateTypes::run_on_call_graph(list<shared_ptr<Node>>& nodes)
+op::UnaryElementwise::UnaryElementwise(
+    std::function<const element::Type&(const element::Type&)> element_type_function,
+    const std::shared_ptr<Node>& arg)
+    : RequiresTensorViewArgs(Nodes{arg})
 {
-    for (shared_ptr<Node> node : nodes)
-    {
-        try
-        {
-            node->propagate_types();
-        }
-        catch (exception& e)
-        {
-            stringstream ss;
-            ss << "Error with node " << *node << ": ";
-            ss << e.what();
-            throw invalid_argument(ss.str());
-        }
-    }
-    return false;
+    auto arg_tensor_type = get_inputs().at(0).get_tensor_view_type();
+    const element::Type& result_element_type =
+        element_type_function(arg_tensor_type->get_element_type());
+
+    set_value_type_checked(
+        make_shared<TensorViewType>(result_element_type, arg_tensor_type->get_shape()));
 }

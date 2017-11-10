@@ -19,29 +19,22 @@
 
 using namespace std;
 using namespace ngraph;
-using namespace ngraph::op;
 
-void BinaryElementwiseBuiltin::propagate_types()
+op::BinaryElementwise::BinaryElementwise(
+    std::function<const element::Type&(const element::Type&, const element::Type&)>
+        element_type_function,
+    const std::shared_ptr<Node>& arg0,
+    const std::shared_ptr<Node>& arg1)
+    : RequiresTensorViewArgs(Nodes{arg0, arg1})
 {
-    if (m_arguments.size() != 2)
-    {
-        throw ngraph_error("Wrong number of arguments.");
-    }
-
-    auto arg0_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(0)->get_value_type());
-    auto arg1_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(1)->get_value_type());
-    if (nullptr == arg0_tensor_type || nullptr == arg1_tensor_type)
-    {
-        throw ngraph_error("Arguments must be tensor views");
-    }
+    auto arg0_tensor_type = get_inputs().at(0).get_tensor_view_type();
+    auto arg1_tensor_type = get_inputs().at(1).get_tensor_view_type();
     if (arg0_tensor_type->get_shape() != arg1_tensor_type->get_shape())
     {
         throw ngraph_error("Arguments must have the same tensor view shape");
     }
 
-    const element::Type& result_element_type = propagate_element_types(
+    const element::Type& result_element_type = element_type_function(
         arg0_tensor_type->get_element_type(), arg1_tensor_type->get_element_type());
 
     set_value_type_checked(

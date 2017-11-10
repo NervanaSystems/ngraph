@@ -39,8 +39,6 @@ namespace ngraph
                 : Node({}, type)
             {
             }
-
-            virtual void propagate_types() override;
         };
 
         /// \brief Class for constants whose element types are known at C++ compile-time.
@@ -162,22 +160,14 @@ namespace ngraph
             /// \param value_strings A list of literals for initializing the tensor constant. There must be one literal for each element of the tensor; i.e., `value_strings.size()` must equal `ngraph::shape_size(shape)`.
             Constant(const element::Type& et,
                      const Shape& shape,
-                     const std::vector<std::string>& value_strings)
-                : ConstantBase(std::make_shared<TensorViewType>(et, shape))
-                , m_value_strings(value_strings)
-            {
-            }
+                     const std::vector<std::string>& value_strings);
 
             /// \brief Constructs a tensor constant with the same initialization value copied across the tensor.
             ///
             /// \param et The element type of the tensor constant.
             /// \param shape The shape of the tensor constant.
             /// \param value_string A literal for initializing each tensor constant.
-            Constant(const element::Type& et, const Shape& shape, const std::string& value_string)
-                : ConstantBase(std::make_shared<TensorViewType>(et, shape))
-                , m_value_strings(ngraph::shape_size(shape), value_string)
-            {
-            }
+            Constant(const element::Type& et, const Shape& shape, const std::string& value_string);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
@@ -197,9 +187,9 @@ namespace ngraph
 
             /// \return The initialization literals for the tensor constant.
             const std::vector<std::string>& get_value_strings() const { return m_value_strings; }
-            virtual void propagate_types() override;
-
         protected:
+            void check_args();
+
             const std::vector<std::string> m_value_strings;
         };
     }

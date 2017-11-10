@@ -13,9 +13,24 @@
 // ----------------------------------------------------------------------------
 
 #include <algorithm>
+#include <memory>
 #include <sstream>
 
+#include "ngraph/except.hpp"
 #include "ngraph/ops/op.hpp"
+#include "ngraph/types/type.hpp"
 
 using namespace ngraph;
 using namespace std;
+
+op::RequiresTensorViewArgs::RequiresTensorViewArgs(const std::vector<std::shared_ptr<Node>>& args)
+    : Node(args)
+{
+    for (auto arg : args)
+    {
+        if (nullptr == std::dynamic_pointer_cast<const TensorViewType>(arg->get_value_type()))
+        {
+            throw ngraph_error("Arguments must be tensor views");
+        }
+    }
+}

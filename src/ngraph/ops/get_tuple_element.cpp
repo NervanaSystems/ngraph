@@ -17,15 +17,12 @@
 #include "ngraph/ops/get_tuple_element.hpp"
 
 using namespace std;
-using namespace ngraph::op;
+using namespace ngraph;
 
-void GetTupleElement::propagate_types()
+op::GetTupleElement::GetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
+    : Node({arg})
+    , m_n{n}
 {
-    if (m_arguments.size() != 1)
-    {
-        throw ngraph_error("Wrong number of arguments.");
-    }
-
     auto arg0_tuple_type =
         dynamic_pointer_cast<const TupleType>(m_arguments.at(0)->get_value_type());
     if (nullptr == arg0_tuple_type)

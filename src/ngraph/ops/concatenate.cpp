@@ -17,27 +17,18 @@
 #include "ngraph/ops/concatenate.hpp"
 
 using namespace std;
-using namespace ngraph::op;
+using namespace ngraph;
 
-void Concat::propagate_types()
+op::Concat::Concat(const Nodes& args, size_t concatenation_axis)
+    : RequiresTensorViewArgs(args)
+    , m_concatenation_axis(concatenation_axis)
 {
     if (m_arguments.size() < 1)
     {
         throw ngraph_error("At least one argument required");
     }
 
-    auto arg0_type = m_arguments.at(0)->get_value_type();
-    if (nullptr == arg0_type)
-    {
-        throw ngraph_error("Argument to concat is missing type.");
-    }
-
-    auto arg0_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg0_type);
-    if (nullptr == arg0_tensor_view_type)
-    {
-        throw ngraph_error("Argument to concat is not a tensor view");
-    }
-
+    auto arg0_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
     auto arg0_shape = arg0_tensor_view_type->get_shape();
     if (m_concatenation_axis >= arg0_shape.size())
     {
@@ -47,20 +38,9 @@ void Concat::propagate_types()
     size_t concatenation_axis_length = arg0_shape.at(m_concatenation_axis);
     auto& arg0_element_type = arg0_tensor_view_type->get_element_type();
 
-    for (auto i = 1; i < m_arguments.size(); i++)
+    for (auto i = 1; i < get_inputs().size(); i++)
     {
-        auto argi_type = m_arguments.at(i)->get_value_type();
-        if (nullptr == argi_type)
-        {
-            throw ngraph_error("Argument to concat is missing type.");
-        }
-
-        auto argi_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(argi_type);
-        if (nullptr == argi_tensor_view_type)
-        {
-            throw ngraph_error("Argument to concat is not a tensor view");
-        }
-
+        auto argi_tensor_view_type = get_inputs().at(i).get_tensor_view_type();
         auto argi_shape = argi_tensor_view_type->get_shape();
         if (argi_shape.size() != arg0_shape.size())
         {
@@ -85,7 +65,6 @@ void Concat::propagate_types()
             }
         }
     }
-
     vector<size_t> concatenated_shape = arg0_shape;
     concatenated_shape.at(m_concatenation_axis) = concatenation_axis_length;
 

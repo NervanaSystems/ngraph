@@ -71,7 +71,6 @@ namespace ngraph
             }
 
             std::string description() const override { return "Parameter"; }
-            virtual void propagate_types() override;
         };
     }
 }

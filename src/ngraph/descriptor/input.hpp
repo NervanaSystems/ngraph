@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/types/type.hpp"
 
 namespace ngraph
 {
@@ -37,26 +38,41 @@ namespace ngraph
             /// @param argno The position of the argument with this tensor
             /// @param arg_index The position of the tensor within the argument's tensors
             /// @param output The output that supplies a value for this input
-            Input(const std::shared_ptr<Node>& node,
-                  size_t index,
-                  size_t argno,
-                  size_t arg_index,
-                  Output& output);
+            Input(Node* node, size_t index, size_t argno, size_t arg_index, Output& output);
 
+            /// @return the node that this is an input of
             std::shared_ptr<Node> get_node();
+
+            /// @return the position of the node argument that uses this input
             size_t get_argno() const { return m_argno; }
+            /// @return the position within the node argument of this tensor
             size_t get_arg_index() const { return m_arg_index; }
+            /// @return the position within all supplied tensors of this input
             size_t get_index() const { return m_index; }
+            // @return the connected output
             const Output& get_output() const { return m_output; }
+            // @return the connected output
             Output& get_output() { return m_output; }
+            // @return the tensor of the connected output
             const Tensor& get_tensor() const;
+
+            // @return the tensor of the connected output
             Tensor& get_tensor();
 
+            /// @return the tensor view for the connected output
+            std::shared_ptr<const TensorView> get_tensor_view() const;
+
+            /// @return the tensor view for the connected output
+            std::shared_ptr<TensorView> get_tensor_view();
+
+            /// @return the tensor view type for the connected output
+            std::shared_ptr<const TensorViewType> get_tensor_view_type() const;
+
         protected:
-            std::weak_ptr<Node> m_node; // The node we are an input for
-            size_t m_index;             // Index into all input tensors
-            size_t m_argno;             // Arg number for this input
-            size_t m_arg_index;         // Index into arg's tensors
+            Node* m_node;       // The node we are an input for
+            size_t m_index;     // Index into all input tensors
+            size_t m_argno;     // Arg number for this input
+            size_t m_arg_index; // Index into arg's tensors
             Output& m_output;
 
         private:
