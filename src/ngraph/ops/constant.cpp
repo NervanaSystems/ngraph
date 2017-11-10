@@ -48,7 +48,7 @@ op::Constant::Constant(const element::Type& et, const Shape& shape, const std::s
 
 void op::Constant::check_args()
 {
-    // No actual type propagation is done here; however, we check the number of value strings and
+    // We check the number of value strings and
     // also call check_value_strings just to make sure the result will be parseable at compile
     // time. (It will throw an exception if not.)
     auto tvt = std::dynamic_pointer_cast<const TensorViewType>(m_value_type);

@@ -43,10 +43,6 @@ op::Slice::Slice(const std::shared_ptr<Node>& arg,
 void op::Slice::check_args()
 {
     auto arg_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
-    if (nullptr == arg_tensor_view_type)
-    {
-        throw ngraph_error("Argument to slice is not a tensor view");
-    }
     auto& arg_shape = arg_tensor_view_type->get_shape();
 
     if (m_lower_bounds.size() != arg_shape.size())

@@ -27,11 +27,6 @@ op::Reshape::Reshape(const std::shared_ptr<Node>& arg,
     , m_input_order(input_order)
     , m_output_shape(output_shape)
 {
-    auto arg_type = m_arguments.at(0)->get_value_type();
-    if (nullptr == arg_type)
-    {
-        throw ngraph_error("Argument to reshape is missing type.");
-    }
     auto arg_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
     auto arg_shape = arg_tensor_view_type->get_shape();
     auto arg_rank = arg_shape.size();
