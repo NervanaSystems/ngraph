@@ -272,8 +272,8 @@ extern "C" void free_aligned_buffer(void* allocated);
 
     TU << "extern \"C\" void " << function_name << "(\n";
     TU << "    ngraph::runtime::cpu::CallFrame * call_frame,\n";
-    TU << "    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,\n";
-    TU << "    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs)\n";
+    TU << "    const std::vector<void*>& inputs,\n";
+    TU << "    const std::vector<void*>& outputs)\n";
     TU << "{\n";
 
     TU.indent++;

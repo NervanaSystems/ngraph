@@ -15,10 +15,26 @@
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/external_function.hpp"
 
-using namespace ngraph::runtime::cpu;
+using namespace ngraph;
+using namespace std;
 
-std::shared_ptr<ngraph::runtime::CallFrame>
-    CPUBackend::make_call_frame(const std::shared_ptr<ExternalFunction>& external_function)
+extern "C" void
+    allocate_aligned_buffer(size_t size, size_t alignment, char** allocated, char** aligned_ptr);
+
+std::shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPUBackend::make_call_frame(
+    const std::shared_ptr<ExternalFunction>& external_function)
 {
     return external_function->make_call_frame();
+}
+
+std::shared_ptr<ngraph::runtime::TensorView>
+    runtime::cpu::CPUBackend::make_primary_tensor_view(const ngraph::element::Type& element_type,
+                                                       const Shape& shape)
+{
+    size_t size = ngraph::shape_size(shape);
+    size_t tensor_size = size * element_type.size();
+    char* allocated;
+    char* alligned;
+    allocate_aligned_buffer(tensor_size, runtime::cpu::alignment, &allocated, &alligned);
+    m_tensor_buffer = shared_ptr<char>(new char[size], alligned);
 }

@@ -14,30 +14,27 @@
 
 #pragma once
 
-#include "ngraph/runtime/backend.hpp"
+#include <memory>
 
-namespace ngraph
+#include "ngraph/runtime/tensor_view.hpp"
+
+namespace nervana
 {
     namespace runtime
     {
         namespace cpu
         {
-            static size_t alignment = 64;
-
-            class CPUBackend : public runtime::Backend
-            {
-            public:
-                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
-                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function)
-                    override;
-
-                std::shared_ptr<ngraph::runtime::TensorView>
-                    make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                             const Shape& shape) override;
-
-            private:
-                std::shared_ptr<char> m_tensor_buffer;
-            };
+            class CPUTensorView;
         }
     }
 }
+
+class nervana::runtime::cpu::CPUTensorView : ngraph::runtime::TensorView
+{
+public:
+    CPUTensorView(std::shared_ptr<char> tensor);
+
+    void* get_data_ptr();
+
+private:
+};

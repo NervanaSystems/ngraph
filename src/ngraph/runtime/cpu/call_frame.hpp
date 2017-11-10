@@ -32,10 +32,9 @@ namespace ngraph
         {
             class CallFrame;
 
-            using EntryPoint_t =
-                void(ngraph::runtime::cpu::CallFrame* call_frame,
-                     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
-                     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs);
+            using EntryPoint_t = void(ngraph::runtime::cpu::CallFrame* call_frame,
+                                      const std::vector<void*>& inputs,
+                                      const std::vector<void*>& outputs);
 
             using EntryPoint = std::function<EntryPoint_t>;
 
@@ -83,8 +82,8 @@ namespace ngraph
                 EntryPoint m_compiled_function;
                 std::vector<std::shared_ptr<CallFrame>> m_callees;
 
-                const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>* m_inputs;
-                const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>* m_outputs;
+                const std::vector<void*>* m_inputs;
+                const std::vector<void*>* m_outputs;
             };
         }
     }
