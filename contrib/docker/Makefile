@@ -79,6 +79,7 @@ check_cpu: build_ngraph_cpp_cpu
             --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD; cmake -DCMAKE_CXX_COMPILER=clang++-3.9 -DCMAKE_C_COMPILER=clang-3.9 -DNGRAPH_BUILD_DOXYGEN_DOCS=ON -DNGRAPH_BUILD_SPHINX_DOCS=ON .. 2>&1 | tee cmake.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make.log ; env VERBOSE=1 make check 2>&1 | tee make_check.log" \
             "ngraph_cpp_cpu:${BUILD_VERSION}" \
 	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+	exit 1
 
 shell: build_ngraph_cpp_cpu
 	# "make shell" runs an interactive shell in the docker image, for debugging
