@@ -102,17 +102,14 @@ namespace ngraph
         /// | Backend | Status                                         |
         /// | ------- | ---------------------------------------------- |
         /// | NGVM    | Implemented for `arg1` with rank of exactly 2. |
-        class Dot : public Builtin
+        class Dot : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a dot product operation.
             ///
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
-            Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
-            {
-            }
+            Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
@@ -123,8 +120,6 @@ namespace ngraph
             }
 
             virtual std::string description() const override { return "Dot"; }
-            virtual void propagate_types() override;
-
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;

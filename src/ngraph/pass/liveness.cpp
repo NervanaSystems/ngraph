@@ -20,7 +20,6 @@
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/util.hpp"
 

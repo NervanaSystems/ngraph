@@ -15,25 +15,34 @@
 #include "ngraph/ops/slice.hpp"
 
 using namespace std;
-using namespace ngraph::op;
+using namespace ngraph;
 
-void Slice::propagate_types()
+op::Slice::Slice(const std::shared_ptr<Node>& arg,
+                 const Coordinate& lower_bounds,
+                 const Coordinate& upper_bounds,
+                 const Shape& step)
+    : RequiresTensorViewArgs({arg})
+    , m_lower_bounds(lower_bounds)
+    , m_upper_bounds(upper_bounds)
+    , m_step(step)
 {
-    if (m_arguments.size() != 1)
-    {
-        throw ngraph_error("Wrong number of arguments.");
-    }
+    check_args();
+}
 
-    auto arg_type = m_arguments.at(0)->get_value_type();
-    if (nullptr == arg_type)
-    {
-        throw ngraph_error("Argument to slice is missing type.");
-    }
-    auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
-    if (nullptr == arg_tensor_view_type)
-    {
-        throw ngraph_error("Argument to slice is not a tensor view");
-    }
+op::Slice::Slice(const std::shared_ptr<Node>& arg,
+                 const Coordinate& lower_bounds,
+                 const Coordinate& upper_bounds)
+    : RequiresTensorViewArgs({arg})
+    , m_lower_bounds(lower_bounds)
+    , m_upper_bounds(upper_bounds)
+    , m_step(Shape(lower_bounds.size(), 1))
+{
+    check_args();
+}
+
+void op::Slice::check_args()
+{
+    auto arg_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
     auto& arg_shape = arg_tensor_view_type->get_shape();
 
     if (m_lower_bounds.size() != arg_shape.size())

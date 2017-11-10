@@ -26,8 +26,8 @@ set (SRC
     node.cpp
     ops/add.cpp
     ops/binary_elementwise_arithmetic.cpp
-    ops/binary_elementwise_builtin.cpp
     ops/binary_elementwise_comparison.cpp
+    ops/binary_elementwise.cpp
     ops/broadcast.cpp
     ops/concatenate.cpp
     ops/constant.cpp
@@ -52,8 +52,7 @@ set (SRC
     ops/sum.cpp
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
-    ops/unary_elementwise_builtin.cpp
-    pass/assign_tensors.cpp
+    ops/unary_elementwise.cpp
     pass/collect_functions.cpp
     pass/dump_sorted.cpp
     pass/liveness.cpp
@@ -62,7 +61,6 @@ set (SRC
     pass/memory_layout.cpp
     pass/memory_visualize.cpp
     pass/pass.cpp
-    pass/propagate_types.cpp
     pass/topological_sort.cpp
     pass/visualize_tree.cpp
     runtime/backend.cpp
