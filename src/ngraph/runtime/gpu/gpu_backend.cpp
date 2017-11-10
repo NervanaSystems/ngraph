@@ -12,32 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <sstream>
-#include <string>
-#include <vector>
-
-#include <gtest/gtest.h>
-
-#include <cuda.h>
-#include <cudnn.h>
-
-#include "ngraph/runtime/gpu/call_frame.hpp"
-#include "ngraph/runtime/gpu/backend.hpp"
-#include "ngraph/runtime/gpu/external_function.hpp"
-#include "ngraph/runtime/gpu/manager.hpp"
+#include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "ngraph/runtime/external_function.hpp"
 
 using namespace ngraph::runtime::gpu;
 
-TEST(cudnn, loadTest)
+std::shared_ptr<ngraph::runtime::CallFrame>
+    GPUBackend::make_call_frame(const std::shared_ptr<ExternalFunction>& external_function)
 {
-    auto cudnn_version = cudnnGetVersion();
-    EXPECT_FLOAT_EQ(cudnn_version, CUDNN_VERSION);
-}
-
-TEST(cudnn, loadBackend)
-{
-  auto gpu_call_frame = new GPUCallFrame();
-  auto gpu_backend = new GPUBackend();
-  auto gpu_external_function = new GPUExternalFunction();
-  auto gpu_manager = new GPUManager();
+    return external_function->make_call_frame();
 }
