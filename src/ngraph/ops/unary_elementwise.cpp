@@ -22,7 +22,7 @@ using namespace ngraph;
 op::UnaryElementwise::UnaryElementwise(
     std::function<const element::Type&(const element::Type&)> element_type_function,
     const std::shared_ptr<Node>& arg)
-    : TensorViewArgs(Nodes{arg})
+    : RequiresTensorViewArgs(Nodes{arg})
 {
     auto arg_tensor_type = get_inputs().at(0).get_tensor_view_type();
     const element::Type& result_element_type =

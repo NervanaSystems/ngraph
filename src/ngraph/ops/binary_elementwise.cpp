@@ -25,7 +25,7 @@ op::BinaryElementwise::BinaryElementwise(
         element_type_function,
     const std::shared_ptr<Node>& arg0,
     const std::shared_ptr<Node>& arg1)
-    : TensorViewArgs(Nodes{arg0, arg1})
+    : RequiresTensorViewArgs(Nodes{arg0, arg1})
 {
     auto arg0_tensor_type = get_inputs().at(0).get_tensor_view_type();
     auto arg1_tensor_type = get_inputs().at(1).get_tensor_view_type();

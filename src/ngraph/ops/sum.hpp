@@ -80,7 +80,7 @@ namespace ngraph
         /// | Backend | Status                                                |
         /// | ------- | ----------------------------------------------------- |
         /// | NGVM    | Fully implemented for scalars, vectors, and matrices. |
-        class Sum : public TensorViewArgs
+        class Sum : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a summation operation.

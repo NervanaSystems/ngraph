@@ -27,13 +27,13 @@ namespace ngraph
     namespace op
     {
         /// \brief Abstract base class for ops on tensors views.
-        class TensorViewArgs : public Node
+        class RequiresTensorViewArgs : public Node
         {
         protected:
             /// \brief Constructs an operation on tensor view arguments.
             ///
             /// \param args The nodes producing this node's input tensors.
-            TensorViewArgs(const std::vector<std::shared_ptr<Node>>& args);
+            RequiresTensorViewArgs(const std::vector<std::shared_ptr<Node>>& args);
         };
 
         /// \brief Abstract base class for elementwise unary operations, i.e., operations where the same
@@ -53,7 +53,7 @@ namespace ngraph
         /// | Type                    | Description                                                                                                                                                                                                                                                            |
         /// | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E'[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg}[i_1,\dots,i_n])\f$. This will always have the same shape as the input tensor, but subclasses must determine the element type \f$E'\f$. |
-        class UnaryElementwise : public TensorViewArgs
+        class UnaryElementwise : public RequiresTensorViewArgs
         {
         protected:
             /// \brief Constructs a unary elementwise tensor operation.
@@ -109,7 +109,7 @@ namespace ngraph
         /// | Type                     | Description                                                                                                                                                                                                                                                                                             |
         /// | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E_2[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape as the input tensors, but subclasses must determine the element type \f$E_2\f$. |
-        class BinaryElementwise : public TensorViewArgs
+        class BinaryElementwise : public RequiresTensorViewArgs
         {
         protected:
             /// \brief Constructs a biary elementwise operation.

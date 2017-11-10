@@ -21,7 +21,7 @@ op::Slice::Slice(const std::shared_ptr<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds,
                  const Shape& step)
-    : TensorViewArgs({arg})
+    : RequiresTensorViewArgs({arg})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_step(step)
@@ -32,7 +32,7 @@ op::Slice::Slice(const std::shared_ptr<Node>& arg,
 op::Slice::Slice(const std::shared_ptr<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds)
-    : TensorViewArgs({arg})
+    : RequiresTensorViewArgs({arg})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_step(Shape(lower_bounds.size(), 1))

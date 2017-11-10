@@ -63,7 +63,7 @@ namespace ngraph
         /// | Backend | Status                                |
         /// | ------- | ------------------------------------- |
         /// | NGVM    | Implemented for vectors and matrices. |
-        class Concat : public TensorViewArgs
+        class Concat : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a concatenation operation.

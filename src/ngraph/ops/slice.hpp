@@ -52,7 +52,7 @@ namespace ngraph
         /// | Backend | Status                                          |
         /// | ------- | ----------------------------------------------- |
         /// | NGVM    | Implemented for scalars, matrices, and vectors. |
-        class Slice : public TensorViewArgs
+        class Slice : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a tensor slice operation.

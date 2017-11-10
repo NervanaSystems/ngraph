@@ -56,7 +56,7 @@ namespace ngraph
         /// | ------- | ----------------------------------------------- |
         /// | NGVM    | Implemented for scalars, matrices, and vectors. |
 
-        class Broadcast : public TensorViewArgs
+        class Broadcast : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a conversion operation.

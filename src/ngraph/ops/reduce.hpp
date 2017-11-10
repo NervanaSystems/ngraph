@@ -87,7 +87,7 @@ namespace ngraph
         /// | ------- | ----------------------------------------------------- |
         /// | NGVM    | Fully implemented for scalars, vectors, and matrices. |
 
-        class Reduce : public TensorViewArgs
+        class Reduce : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a reduction operation.

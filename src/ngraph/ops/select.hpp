@@ -41,7 +41,7 @@ namespace ngraph
         /// | Backend | Status             |
         /// | ------- | ------------------ |
         /// | NGVM    | Fully implemented. |
-        class Select : public TensorViewArgs
+        class Select : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a selection operation.

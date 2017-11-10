@@ -82,10 +82,6 @@ void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
 
 std::shared_ptr<const ValueType> Node::get_value_type()
 {
-    if (!m_outputs_valid)
-    {
-        assign_tensors();
-    }
     return m_value_type;
 }
 

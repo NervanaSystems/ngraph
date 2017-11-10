@@ -102,7 +102,7 @@ namespace ngraph
         /// | Backend | Status                                         |
         /// | ------- | ---------------------------------------------- |
         /// | NGVM    | Implemented for `arg1` with rank of exactly 2. |
-        class Dot : public TensorViewArgs
+        class Dot : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a dot product operation.

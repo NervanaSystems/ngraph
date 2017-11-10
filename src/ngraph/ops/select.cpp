@@ -23,7 +23,7 @@ using namespace ngraph;
 op::Select::Select(const std::shared_ptr<Node>& arg0,
                    const std::shared_ptr<Node>& arg1,
                    const std::shared_ptr<Node>& arg2)
-    : TensorViewArgs(Nodes{arg0, arg1, arg2})
+    : RequiresTensorViewArgs(Nodes{arg0, arg1, arg2})
 {
     auto arg0_tensor_type = get_inputs().at(0).get_tensor_view_type();
     auto arg1_tensor_type = get_inputs().at(1).get_tensor_view_type();
