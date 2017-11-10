@@ -22,6 +22,7 @@
 
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/runtime/cpu/call_frame.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
 
@@ -47,11 +48,6 @@ namespace ngraph
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
-            using EntryPoint = std::function<void(
-                ngraph::runtime::cpu::CallFrame*,
-                ngraph::runtime::TensorViewPtrs&,
-                const std::vector<std::shared_ptr<ngraph::runtime::cpu::CallFrame>>&)>;
-
             class ExternalFunction : public ngraph::runtime::ExternalFunction
             {
             public:
@@ -65,7 +61,7 @@ namespace ngraph
                 size_t m_n_inputs;
                 size_t m_n_outputs;
                 ngraph::descriptor::TensorViewPtrs m_temp_views;
-                EntryPoint compiled_function;
+                EntryPoint m_compiled_function;
                 std::vector<std::shared_ptr<CallFrame>> callees;
             };
         }
