@@ -393,45 +393,49 @@ extern "C" void free_aligned_buffer(void* allocated);
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 
-#define DO_ON_ELEMENT_TYPE(et, err_msg, macro, ...)                                                \
-    {                                                                                              \
-        if (et == element::Bool::element_type())                                                   \
-        {                                                                                          \
-            macro(element::Bool, ##__VA_ARGS__);                                                   \
-        }                                                                                          \
-        else if (et == element::Float32::element_type())                                           \
-        {                                                                                          \
-            macro(element::Float32, ##__VA_ARGS__);                                                \
-        }                                                                                          \
-        else if (et == element::Int8::element_type())                                              \
-        {                                                                                          \
-            macro(element::Int8, ##__VA_ARGS__);                                                   \
-        }                                                                                          \
-        else if (et == element::Int32::element_type())                                             \
-        {                                                                                          \
-            macro(element::Int32, ##__VA_ARGS__);                                                  \
-        }                                                                                          \
-        else if (et == element::Int64::element_type())                                             \
-        {                                                                                          \
-            macro(element::Int64, ##__VA_ARGS__);                                                  \
-        }                                                                                          \
-        else if (et == element::UInt8::element_type())                                             \
-        {                                                                                          \
-            macro(element::UInt8, ##__VA_ARGS__);                                                  \
-        }                                                                                          \
-        else if (et == element::UInt32::element_type())                                            \
-        {                                                                                          \
-            macro(element::UInt32, ##__VA_ARGS__);                                                 \
-        }                                                                                          \
-        else if (et == element::UInt64::element_type())                                            \
-        {                                                                                          \
-            macro(element::UInt64, ##__VA_ARGS__);                                                 \
-        }                                                                                          \
-        else                                                                                       \
-        {                                                                                          \
-            throw ngraph_error(err_msg);                                                           \
-        }                                                                                          \
-    }
+// #define DO_ON_ELEMENT_TYPE(et, err_msg, macro, ...)                                                \
+//     {                                                                                              \
+//         if (et == element::Bool::element_type())                                                   \
+//         {                                                                                          \
+//             macro(element::Bool, ##__VA_ARGS__);                                                   \
+//         }                                                                                          \
+//         else if (et == element::Float32::element_type())                                           \
+//         {                                                                                          \
+//             macro(element::Float32, ##__VA_ARGS__);                                                \
+//         }                                                                                          \
+//         else if (et == element::Float64::element_type())                                           \
+//         {                                                                                          \
+//             macro(element::Float64, ##__VA_ARGS__);                                                \
+//         }                                                                                          \
+//         else if (et == element::Int8::element_type())                                              \
+//         {                                                                                          \
+//             macro(element::Int8, ##__VA_ARGS__);                                                   \
+//         }                                                                                          \
+//         else if (et == element::Int32::element_type())                                             \
+//         {                                                                                          \
+//             macro(element::Int32, ##__VA_ARGS__);                                                  \
+//         }                                                                                          \
+//         else if (et == element::Int64::element_type())                                             \
+//         {                                                                                          \
+//             macro(element::Int64, ##__VA_ARGS__);                                                  \
+//         }                                                                                          \
+//         else if (et == element::UInt8::element_type())                                             \
+//         {                                                                                          \
+//             macro(element::UInt8, ##__VA_ARGS__);                                                  \
+//         }                                                                                          \
+//         else if (et == element::UInt32::element_type())                                            \
+//         {                                                                                          \
+//             macro(element::UInt32, ##__VA_ARGS__);                                                 \
+//         }                                                                                          \
+//         else if (et == element::UInt64::element_type())                                            \
+//         {                                                                                          \
+//             macro(element::UInt64, ##__VA_ARGS__);                                                 \
+//         }                                                                                          \
+//         else                                                                                       \
+//         {                                                                                          \
+//             throw ngraph_error(err_msg);                                                           \
+//         }                                                                                          \
+//     }
 
 // Turn off complaint suppression (see above)
 #pragma clang diagnostic pop
@@ -445,16 +449,16 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
         compile(function_map);
     }
 
-    std::vector<std::shared_ptr<ngraph::runtime::TensorView>> temps;
-    for (auto tv : m_temp_views)
-    {
-        auto& et = tv->get_tensor_view_type()->get_element_type();
-        auto shape = tv->get_tensor_view_type()->get_shape();
+    //     std::vector<std::shared_ptr<ngraph::runtime::TensorView>> temps;
+    //     for (auto tv : m_temp_views)
+    //     {
+    //         auto& et = tv->get_tensor_view_type()->get_element_type();
+    //         auto shape = tv->get_tensor_view_type()->get_shape();
 
-#define M(T) temps.push_back(ngraph::runtime::make_tensor<T>(shape));
-        DO_ON_ELEMENT_TYPE(
-            et, "Internal error: tried to create temporary for unhandled element type", M);
-#undef M
-    }
+    // #define M(T) temps.push_back(ngraph::runtime::make_tensor<T>(shape));
+    //         DO_ON_ELEMENT_TYPE(
+    //             et, "Internal error: tried to create temporary for unhandled element type", M);
+    // #undef M
+    //     }
     return make_shared<ngraph::runtime::cpu::CallFrame>(m_compiled_function, callees);
 }
