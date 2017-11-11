@@ -20,9 +20,10 @@ using namespace std;
 using namespace ngraph;
 
 op::UnaryElementwise::UnaryElementwise(
+    const std::string& node_type,
     std::function<const element::Type&(const element::Type&)> element_type_function,
     const std::shared_ptr<Node>& arg)
-    : RequiresTensorViewArgs(Nodes{arg})
+    : RequiresTensorViewArgs(node_type, Nodes{arg})
 {
     auto arg_tensor_type = get_inputs().at(0).get_tensor_view_type();
     const element::Type& result_element_type =

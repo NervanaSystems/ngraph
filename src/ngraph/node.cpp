@@ -20,9 +20,9 @@ using namespace ngraph;
 
 atomic<size_t> Node::m_next_instance_id(0);
 
-Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<const ValueType> value_type)
-    : m_arguments(arguments)
-    , m_value_type(value_type)
+Node::Node(const std::string& node_type, const std::vector<shared_ptr<Node>>& arguments)
+    : m_node_type(node_type)
+    , m_arguments(arguments)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_is_output(false)
 {
@@ -31,7 +31,6 @@ Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<const Valu
     size_t argno = 0;
     for (auto arg : m_arguments)
     {
-        arg->assign_tensors();
         arg->m_users.insert(this);
         size_t arg_index = 0;
         for (descriptor::Output& output : arg->get_outputs())
@@ -41,16 +40,6 @@ Node::Node(const std::vector<shared_ptr<Node>>& arguments, shared_ptr<const Valu
         }
         argno++;
     }
-}
-
-Node::Node()
-    : Node({}, nullptr)
-{
-}
-
-Node::Node(std::shared_ptr<const ValueType> value_type)
-    : Node({}, value_type)
-{
 }
 
 Node::~Node()
@@ -69,7 +58,23 @@ void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
 {
     if (nullptr == m_value_type)
     {
-        m_value_type = value_type;
+        if (nullptr != value_type)
+        {
+            m_value_type = value_type;
+            vector<std::shared_ptr<const TensorViewType>> tensor_view_types;
+            m_value_type->collect_tensor_views(tensor_view_types);
+            size_t i = 0;
+            for (auto tvt : tensor_view_types)
+            {
+                auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
+                    tvt,
+                    ngraph::descriptor::Tensor::make_tensor_name(this, i),
+                    is_output(),
+                    is_parameter());
+                m_outputs.emplace_back(this, i, tensor_view_descriptor);
+                i++;
+            }
+        }
     }
     else
     {
@@ -87,53 +92,17 @@ std::shared_ptr<const ValueType> Node::get_value_type()
 
 const std::shared_ptr<const ValueType> Node::get_value_type() const
 {
-    if (!m_outputs_valid)
-    {
-        const_cast<Node*>(this)->assign_tensors();
-    }
     return m_value_type;
 }
 
 std::deque<descriptor::Output>& Node::get_outputs()
 {
-    if (!m_outputs_valid)
-    {
-        assign_tensors();
-    }
-
     return m_outputs;
 }
 
 const std::deque<descriptor::Output>& Node::get_outputs() const
 {
-    if (!m_outputs_valid)
-    {
-        const_cast<Node*>(this)->assign_tensors();
-    }
     return m_outputs;
-}
-
-void Node::assign_tensors()
-{
-    if (m_outputs_valid)
-    {
-        return;
-    }
-    vector<std::shared_ptr<const TensorViewType>> tensor_view_types;
-    m_value_type->collect_tensor_views(tensor_view_types);
-    std::shared_ptr<Node> shared_this = shared_from_this();
-    size_t i = 0;
-    for (auto tvt : tensor_view_types)
-    {
-        auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
-            tvt,
-            ngraph::descriptor::Tensor::make_tensor_name(this, i),
-            is_output(),
-            is_parameter());
-        m_outputs.emplace_back(shared_this, i, tensor_view_descriptor);
-        i++;
-    }
-    m_outputs_valid = true;
 }
 
 bool Node::is_parameter() const

@@ -52,8 +52,6 @@ namespace ngraph
             {
                 return std::make_shared<Tuple>(new_args);
             }
-
-            virtual std::string description() const override { return "Tuple"; }
         };
     }
 }

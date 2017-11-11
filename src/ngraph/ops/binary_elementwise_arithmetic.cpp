@@ -17,9 +17,11 @@
 using namespace std;
 using namespace ngraph;
 
-op::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(const std::shared_ptr<Node>& arg0,
+op::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(const std::string& node_type,
+                                                             const std::shared_ptr<Node>& arg0,
                                                              const std::shared_ptr<Node>& arg1)
     : BinaryElementwise(
+          node_type,
           [](const element::Type& arg0_element_type,
              const element::Type& arg1_element_type) -> const element::Type& {
               if (arg0_element_type != arg1_element_type)

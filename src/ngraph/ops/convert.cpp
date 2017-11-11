@@ -20,11 +20,11 @@ using namespace std;
 using namespace ngraph;
 
 op::Convert::Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type)
-    : UnaryElementwise(
-          [&](const ngraph::element::Type& ignored) -> const ngraph::element::Type& {
-              return element_type;
-          },
-          arg)
+    : UnaryElementwise("Convert",
+                       [&](const ngraph::element::Type& ignored) -> const ngraph::element::Type& {
+                           return element_type;
+                       },
+                       arg)
     , m_element_type(element_type)
 {
 }

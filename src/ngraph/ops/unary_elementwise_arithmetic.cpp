@@ -16,8 +16,10 @@
 
 using namespace ngraph;
 
-op::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::shared_ptr<Node>& arg)
+op::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
+                                                           const std::shared_ptr<Node>& arg)
     : UnaryElementwise(
+          node_type,
           [](const ngraph::element::Type& arg_element_type) -> const ngraph::element::Type& {
               if (arg_element_type == element::Bool::element_type())
               {

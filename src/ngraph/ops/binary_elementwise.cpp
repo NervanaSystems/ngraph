@@ -21,11 +21,12 @@ using namespace std;
 using namespace ngraph;
 
 op::BinaryElementwise::BinaryElementwise(
+    const std::string& node_type,
     std::function<const element::Type&(const element::Type&, const element::Type&)>
         element_type_function,
     const std::shared_ptr<Node>& arg0,
     const std::shared_ptr<Node>& arg1)
-    : RequiresTensorViewArgs(Nodes{arg0, arg1})
+    : RequiresTensorViewArgs(node_type, Nodes{arg0, arg1})
 {
     auto arg0_tensor_type = get_inputs().at(0).get_tensor_view_type();
     auto arg1_tensor_type = get_inputs().at(1).get_tensor_view_type();

@@ -64,7 +64,6 @@ namespace ngraph
                 return std::make_shared<GetTupleElement>(new_args.at(0), m_n);
             }
 
-            virtual std::string description() const override { return "GetTupleElement"; }
             /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }
         protected:

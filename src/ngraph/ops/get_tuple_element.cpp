@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::GetTupleElement::GetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
-    : Node({arg})
+    : Node("GetTupleElement", {arg})
     , m_n{n}
 {
     auto arg0_tuple_type =

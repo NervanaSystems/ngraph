@@ -35,9 +35,10 @@ namespace ngraph
             /// \brief Constructs a constant base-type node.
             ///
             /// \param type The TensorViewType for the constant.
-            ConstantBase(const std::shared_ptr<TensorViewType>& type)
-                : Node({}, type)
+            ConstantBase(const std::string& node_type, const std::shared_ptr<TensorViewType>& type)
+                : Node(node_type, {})
             {
+                set_value_type_checked(type);
             }
         };
 
@@ -81,7 +82,8 @@ namespace ngraph
             ParameterizedConstant(
                 const Shape& shape,
                 const typename std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>>& value)
-                : ConstantBase(std::make_shared<TensorViewType>(T::element_type(), shape))
+                : ConstantBase("ParameterizedConstant",
+                               std::make_shared<TensorViewType>(T::element_type(), shape))
                 , m_value(value)
             {
             }
@@ -92,14 +94,6 @@ namespace ngraph
                 if (new_args.size() != 0)
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<ParameterizedConstant<T>>(get_shape(), m_value);
-            }
-
-            virtual std::string description() const override { return "ParameterizedConstant"; }
-            virtual std::string get_node_id() const override
-            {
-                std::stringstream ss;
-                ss << description() << "_" /* << node_id() */;
-                return ss.str();
             }
 
             /// \return The value of the tensor constant.
@@ -175,14 +169,6 @@ namespace ngraph
                 if (new_args.size() != 0)
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<Constant>(get_element_type(), get_shape(), m_value_strings);
-            }
-
-            virtual std::string description() const override { return "Constant"; }
-            virtual std::string get_node_id() const override
-            {
-                std::stringstream ss;
-                ss << description() << "_" /* << node_id() */;
-                return ss.str();
             }
 
             /// \return The initialization literals for the tensor constant.

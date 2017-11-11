@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Concat::Concat(const Nodes& args, size_t concatenation_axis)
-    : RequiresTensorViewArgs(args)
+    : RequiresTensorViewArgs("Concat", args)
     , m_concatenation_axis(concatenation_axis)
 {
     if (m_arguments.size() < 1)
