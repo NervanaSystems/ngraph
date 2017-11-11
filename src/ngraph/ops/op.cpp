@@ -31,7 +31,8 @@ op::RequiresTensorViewArgs::RequiresTensorViewArgs(const std::string& node_type,
     {
         if (nullptr == std::dynamic_pointer_cast<const TensorViewType>(arg->get_value_type()))
         {
-            throw ngraph_error("Arguments must be tensor views");
+            throw ngraph_error("Arguments for node type \"" + node_type +
+                               "\" must be tensor views");
         }
     }
 }
