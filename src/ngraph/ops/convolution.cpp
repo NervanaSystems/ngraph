@@ -19,26 +19,15 @@
 
 using namespace std;
 using namespace ngraph;
-using namespace ngraph::op;
 
-void Convolution::propagate_types()
+op::Convolution::Convolution(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+    : RequiresTensorViewArgs("Convolution", {arg0, arg1})
 {
-    if (m_arguments.size() != 2)
-    {
-        throw ngraph_error("Wrong number of arguments.");
-    }
+    auto arg0_tensor_view_type = m_inputs.at(0).get_tensor_view_type();
+    auto arg1_tensor_view_type = m_inputs.at(1).get_tensor_view_type();
 
-    auto arg0_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(0)->get_value_type());
-    auto arg1_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(1)->get_value_type());
-    if (nullptr == arg0_tensor_type || nullptr == arg1_tensor_type)
-    {
-        throw ngraph_error("Arguments must be tensor views");
-    }
-
-    auto& arg0_element_type = arg0_tensor_type->get_element_type();
-    auto& arg1_element_type = arg1_tensor_type->get_element_type();
+    auto& arg0_element_type = arg0_tensor_view_type->get_element_type();
+    auto& arg1_element_type = arg1_tensor_view_type->get_element_type();
 
     if (arg0_element_type == element::Bool::element_type() ||
         arg1_element_type == element::Bool::element_type())
@@ -51,8 +40,8 @@ void Convolution::propagate_types()
         throw ngraph_error("Arguments must have the same element type");
     }
 
-    auto arg0_shape = arg0_tensor_type->get_shape();
-    auto arg1_shape = arg1_tensor_type->get_shape();
+    auto arg0_shape = arg0_tensor_view_type->get_shape();
+    auto arg1_shape = arg1_tensor_view_type->get_shape();
 
     if (arg0_shape.size() != arg1_shape.size())
     {

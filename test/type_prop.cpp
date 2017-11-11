@@ -1523,7 +1523,6 @@ TEST(type_prop, convolution_deduce)
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
     auto conv = make_shared<op::Convolution>(param_0, param_1);
-    conv->propagate_types();
     ASSERT_EQ(*(conv->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{64, 128, 222, 222}));
 }
@@ -1536,10 +1535,9 @@ TEST(type_prop, convolution_deduce_non_numeric)
     auto shape_1 = Shape{128, 3, 3, 3};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Bool::element_type(), shape_1));
-    auto conv = make_shared<op::Convolution>(param_0, param_1);
     try
     {
-        conv->propagate_types();
+        auto conv = make_shared<op::Convolution>(param_0, param_1);
         // Should have thrown, so fail if it didn't
         FAIL() << "Non-numeric element type not detected";
     }
@@ -1562,10 +1560,9 @@ TEST(type_prop, convolution_deduce_element_type_mismatch)
     auto shape_1 = Shape{128, 3, 3, 3};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Int32::element_type(), shape_1));
-    auto conv = make_shared<op::Convolution>(param_0, param_1);
     try
     {
-        conv->propagate_types();
+        auto conv = make_shared<op::Convolution>(param_0, param_1);
         // Should have thrown, so fail if it didn't
         FAIL() << "Element type mismatch not detected";
     }
@@ -1587,10 +1584,9 @@ TEST(type_prop, convolution_deduce_rank_mismatch)
     auto shape_1 = Shape{128, 3, 3, 3};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
-    auto conv = make_shared<op::Convolution>(param_0, param_1);
     try
     {
-        conv->propagate_types();
+        auto conv = make_shared<op::Convolution>(param_0, param_1);
         // Should have thrown, so fail if it didn't
         FAIL() << "Rank mismatch not detected";
     }
@@ -1612,10 +1608,9 @@ TEST(type_prop, convolution_deduce_rank_too_small)
     auto shape_1 = Shape{128};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
-    auto conv = make_shared<op::Convolution>(param_0, param_1);
     try
     {
-        conv->propagate_types();
+        auto conv = make_shared<op::Convolution>(param_0, param_1);
         // Should have thrown, so fail if it didn't
         FAIL() << "Rank too small not detected";
     }
@@ -1637,10 +1632,9 @@ TEST(type_prop, convolution_deduce_input_channel_mismatch)
     auto shape_1 = Shape{128, 4, 3, 3};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
-    auto conv = make_shared<op::Convolution>(param_0, param_1);
     try
     {
-        conv->propagate_types();
+        auto conv = make_shared<op::Convolution>(param_0, param_1);
         // Should have thrown, so fail if it didn't
         FAIL() << "Input channel count mismatch not detected";
     }
@@ -1663,10 +1657,9 @@ TEST(type_prop, convolution_deduce_kernel_zero)
     auto shape_1 = Shape{128, 3, 3, 0};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
-    auto conv = make_shared<op::Convolution>(param_0, param_1);
     try
     {
-        conv->propagate_types();
+        auto conv = make_shared<op::Convolution>(param_0, param_1);
         // Should have thrown, so fail if it didn't
         FAIL() << "Zero-size convolution kernel dimension not detected";
     }
@@ -1690,10 +1683,9 @@ TEST(type_prop, convolution_deduce_kernel_too_big)
     auto shape_1 = Shape{128, 3, 3, 225};
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
-    auto conv = make_shared<op::Convolution>(param_0, param_1);
     try
     {
-        conv->propagate_types();
+        auto conv = make_shared<op::Convolution>(param_0, param_1);
         // Should have thrown, so fail if it didn't
         FAIL() << "Convolution kernel too big not detected";
     }
@@ -1718,7 +1710,6 @@ TEST(type_prop, convolution_deduce_kernel_just_fits)
     auto param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_1));
     auto conv = make_shared<op::Convolution>(param_0, param_1);
-    conv->propagate_types();
     ASSERT_EQ(*(conv->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{64, 128, 1, 1}));
 }

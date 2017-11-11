@@ -46,20 +46,15 @@ namespace ngraph
         /// | ------- | ---------------- |
         /// | NGVM    | Not implemented. |
 
-        class Convolution : public Builtin
+        class Convolution : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a convolution operation.
             ///
             /// \param arg0           Node that produces the input tensor for the input images.
             /// \param arg1           Node that produces the input tensor for the convolution kernels.
-            Convolution(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : Builtin({arg0, arg1})
-            {
-            }
+            Convolution(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
 
-            virtual std::string description() const override { return "Convolution"; }
-            virtual void propagate_types() override;
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {

@@ -175,7 +175,20 @@ TEST(copy, convert)
 
 TEST(copy, convolution)
 {
-    ASSERT_TRUE(check_binary<op::Convolution>());
+    Shape shape_0{2, 2, 256, 256};
+    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), shape_0);
+    Shape shape_1{4, 2, 3, 3};
+    auto arg1 = make_shared<op::Parameter>(element::Float32::element_type(), shape_1);
+    std::vector<std::shared_ptr<Node>> new_args{
+        make_shared<op::Parameter>(element::Float32::element_type(), shape_0),
+        make_shared<op::Parameter>(element::Float32::element_type(), shape_1)};
+
+    auto node = make_shared<op::Convolution>(arg0, arg1);
+    auto new_node = node->copy_with_new_args(new_args);
+    auto node_cast = dynamic_pointer_cast<op::Convolution>(new_node);
+
+    ASSERT_TRUE(nullptr != new_node);
+    ASSERT_TRUE(new_args == new_node->get_arguments());
 }
 
 TEST(copy, cos)
