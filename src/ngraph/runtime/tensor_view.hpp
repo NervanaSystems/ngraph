@@ -89,6 +89,7 @@ namespace ngraph
                 {
                     std::vector<T> lhs(ndarray.get_vector().size());
                     NGRAPH_INFO << "size " << lhs.size();
+                    NGRAPH_INFO << ngraph::join(lhs);
                     read(lhs.data(), 0, ndarray.get_vector().size() * sizeof(T));
                     rc = (lhs == ndarray.get_vector());
                 }

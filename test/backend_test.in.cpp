@@ -62,11 +62,11 @@ TEST(${BACKEND_NAME}, abc)
     auto c_data = runtime::NDArray<float, 2>({{9, 10}, {11, 12}});
     NGRAPH_INFO;
 
-    a->write(a_data.data(), 0, a_data.get_vector().size());
+    a->write(a_data.data(), 0, a_data.get_vector().size() * sizeof(float));
     NGRAPH_INFO;
-    b->write(b_data.data(), 0, b_data.get_vector().size());
+    b->write(b_data.data(), 0, b_data.get_vector().size() * sizeof(float));
     NGRAPH_INFO;
-    c->write(c_data.data(), 0, c_data.get_vector().size());
+    c->write(c_data.data(), 0, c_data.get_vector().size() * sizeof(float));
     NGRAPH_INFO;
 
     (*cf)({a, b, c}, {result});
