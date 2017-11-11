@@ -12,20 +12,28 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <memory>
+
+#include "cpu_backend.hpp"
 #include "tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;
 
+extern "C" void
+    allocate_aligned_buffer(size_t size, size_t alignment, char** allocated, char** aligned_ptr);
+
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape)
 {
+    NGRAPH_INFO << "CPUTensorView";
     size_t size = ngraph::shape_size(shape);
     size_t tensor_size = size * element_type.size();
     char* allocated;
-    char* alligned;
-    allocate_aligned_buffer(tensor_size, runtime::cpu::alignment, &allocated, &alligned);
-    m_tensor_buffer = shared_ptr<char>(new char[size], alligned);
+    char* aligned;
+    allocate_aligned_buffer(tensor_size, runtime::cpu::alignment, &allocated, &aligned);
+    auto tmp = shared_ptr<char>(new char[size]);
+    m_tensor_buffer = shared_ptr<char>(tmp, aligned);
 }
 
 void* runtime::cpu::CPUTensorView::get_data_ptr()

@@ -442,6 +442,7 @@ extern "C" void free_aligned_buffer(void* allocated);
 
 shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
 {
+    NGRAPH_INFO;
     FunctionMap function_map;
 
     if (!m_is_compiled)
