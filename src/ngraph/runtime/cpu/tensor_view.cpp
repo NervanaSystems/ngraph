@@ -54,16 +54,8 @@ const char* runtime::cpu::CPUTensorView::get_data_ptr() const
 
 void runtime::cpu::CPUTensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
-    NGRAPH_INFO << "******************************************************************** " << n;
     char* target = get_data_ptr();
     memcpy(&target[tensor_offset], source, n);
-
-    const float* p1 = static_cast<const float*>(source);
-    const float* p2 = (const float*)(target);
-    for (int i = 0; i < n / 4; i++)
-    {
-        NGRAPH_INFO << "source " << p1[i] << ", target " << p2[i];
-    }
 }
 
 void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_t n) const

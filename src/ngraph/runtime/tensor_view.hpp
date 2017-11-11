@@ -80,16 +80,10 @@ namespace ngraph
             template <typename T>
             bool operator==(const NDArrayBase<T>& ndarray) const
             {
-                NGRAPH_INFO << "compare to NDArrayBase";
-                NGRAPH_INFO << "size " << ndarray.get_vector().size();
                 bool rc = false;
-                NGRAPH_INFO << "shape " << ngraph::join(get_shape());
-                NGRAPH_INFO << "shape " << ngraph::join(ndarray.get_shape());
                 if (get_shape() == ndarray.get_shape())
                 {
                     std::vector<T> lhs(ndarray.get_vector().size());
-                    NGRAPH_INFO << "size " << lhs.size();
-                    NGRAPH_INFO << ngraph::join(lhs);
                     read(lhs.data(), 0, ndarray.get_vector().size() * sizeof(T));
                     rc = (lhs == ndarray.get_vector());
                 }

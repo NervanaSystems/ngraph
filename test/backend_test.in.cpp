@@ -42,9 +42,7 @@ TEST(${BACKEND_NAME}, abc)
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
-    NGRAPH_INFO;
     auto cf = backend->make_call_frame(external);
-    NGRAPH_INFO;
 
     // Create some tensors for input/output
     shared_ptr<runtime::TensorView> a =
@@ -55,19 +53,14 @@ TEST(${BACKEND_NAME}, abc)
         backend->make_primary_tensor_view(f32::element_type(), shape);
     shared_ptr<runtime::TensorView> result =
         backend->make_primary_tensor_view(f32::element_type(), shape);
-    NGRAPH_INFO;
 
     auto a_data = runtime::NDArray<float, 2>({{1, 2}, {3, 4}});
     auto b_data = runtime::NDArray<float, 2>({{5, 6}, {7, 8}});
     auto c_data = runtime::NDArray<float, 2>({{9, 10}, {11, 12}});
-    NGRAPH_INFO;
 
     a->write(a_data.data(), 0, a_data.get_vector().size() * sizeof(float));
-    NGRAPH_INFO;
     b->write(b_data.data(), 0, b_data.get_vector().size() * sizeof(float));
-    NGRAPH_INFO;
     c->write(c_data.data(), 0, c_data.get_vector().size() * sizeof(float));
-    NGRAPH_INFO;
 
     (*cf)({a, b, c}, {result});
     ASSERT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));

@@ -25,17 +25,13 @@ extern "C" void
 std::shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPUBackend::make_call_frame(
     const std::shared_ptr<ExternalFunction>& external_function)
 {
-    NGRAPH_INFO;
-    auto rc = external_function->make_call_frame();
-    NGRAPH_INFO;
-    return rc;
+    return external_function->make_call_frame();
 }
 
 std::shared_ptr<ngraph::runtime::TensorView>
     runtime::cpu::CPUBackend::make_primary_tensor_view(const ngraph::element::Type& element_type,
                                                        const Shape& shape)
 {
-    NGRAPH_INFO;
     auto rc = make_shared<runtime::cpu::CPUTensorView>(element_type, shape);
     return dynamic_pointer_cast<runtime::TensorView>(rc);
 }

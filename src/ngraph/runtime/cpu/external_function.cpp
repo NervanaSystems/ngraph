@@ -385,22 +385,16 @@ extern "C" void free_aligned_buffer(void* allocated);
     {
         release_function();
     }
-    NGRAPH_INFO;
 }
 
 shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
 {
-    NGRAPH_INFO;
     FunctionMap function_map;
 
-    NGRAPH_INFO;
     if (!m_is_compiled)
     {
         compile(function_map);
     }
 
-    NGRAPH_INFO;
-    auto rc = make_shared<ngraph::runtime::cpu::CallFrame>(m_compiled_function, callees);
-    NGRAPH_INFO;
-    return rc;
+    return make_shared<ngraph::runtime::cpu::CallFrame>(m_compiled_function, callees);
 }
