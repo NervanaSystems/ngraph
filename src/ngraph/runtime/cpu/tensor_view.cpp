@@ -26,7 +26,6 @@ extern "C" void
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape)
 {
-    NGRAPH_INFO << "CPUTensorView";
     size_t size = ngraph::shape_size(shape);
     size_t tensor_size = size * element_type.size();
     char* allocated;
@@ -41,12 +40,14 @@ void* runtime::cpu::CPUTensorView::get_data_ptr()
     return m_tensor_buffer.get();
 }
 
-void runtime::cpu::CPUTensorView::write(const void* p, size_t tensor_offset, size_t n)
+void runtime::cpu::CPUTensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
-    NGRAPH_INFO << "write";
+    char* target = m_tensor_buffer.get();
+    memcpy(&target[tensor_offset], source, n);
 }
 
-void runtime::cpu::CPUTensorView::read(void* p, size_t tensor_offset, size_t n) const
+void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
-    NGRAPH_INFO << "read";
+    const char* source = m_tensor_buffer.get();
+    memcpy(target, &source[tensor_offset], n);
 }

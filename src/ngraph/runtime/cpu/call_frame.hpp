@@ -32,9 +32,7 @@ namespace ngraph
         {
             class CallFrame;
 
-            using EntryPoint_t = void(ngraph::runtime::cpu::CallFrame* call_frame,
-                                      const std::vector<void*>& inputs,
-                                      const std::vector<void*>& outputs);
+            using EntryPoint_t = void(ngraph::runtime::cpu::CallFrame* call_frame);
 
             using EntryPoint = std::function<EntryPoint_t>;
 
@@ -58,21 +56,8 @@ namespace ngraph
                                  const std::vector<std::shared_ptr<TensorView>>& outputs);
 
                 void set_return() { m_return = true; }
-                // std::shared_ptr<TensorView> get_tensor_view(size_t i) { return m_tensor_views[i]; }
-                // template <typename ET>
-                // ParameterizedTensorView<ET>* get_parameterized_tensor_view(size_t i)
-                // {
-                //     return m_tensor_views[i]->get_parameterized_tensor_view<ET>();
-                // }
-
-                // template <typename T>
-                // typename T* get_tensor_view_data(size_t i)
-                // {
-                //     return &get_parameterized_tensor_view<ET>(i)->get_vector()[0];
-                // }
-
-                const std::vector<std::shared_ptr<ngraph::runtime::Value>>& get_inputs();
-                const std::vector<std::shared_ptr<ngraph::runtime::Value>>& get_outputs();
+                // const std::vector<std::shared_ptr<ngraph::runtime::Value>>& get_inputs();
+                // const std::vector<std::shared_ptr<ngraph::runtime::Value>>& get_outputs();
 
                 void* get_input_data(size_t index);
                 void* get_output_data(size_t index);
@@ -82,8 +67,8 @@ namespace ngraph
                 EntryPoint m_compiled_function;
                 std::vector<std::shared_ptr<CallFrame>> m_callees;
 
-                const std::vector<void*>* m_inputs;
-                const std::vector<void*>* m_outputs;
+                std::vector<void*> m_inputs;
+                std::vector<void*> m_outputs;
             };
         }
     }

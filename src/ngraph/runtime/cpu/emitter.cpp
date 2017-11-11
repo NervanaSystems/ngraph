@@ -1045,6 +1045,7 @@ void Emitter::EMITTER_DECL(EmitReshape)
 
 void Emitter::EMITTER_DECL(EmitFunctionCall)
 {
+    NGRAPH_INFO;
     auto function_call = static_cast<const op::FunctionCall*>(n);
     auto function = function_call->get_function();
 
@@ -1060,6 +1061,7 @@ void Emitter::EMITTER_DECL(EmitFunctionCall)
         function_map.insert({function, external});
     }
 
+    NGRAPH_INFO;
     std::shared_ptr<CallFrame> cf =
         std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());
 
@@ -1097,6 +1099,7 @@ void Emitter::EMITTER_DECL(EmitFunctionCall)
 
 void Emitter::EMITTER_DECL(EmitReduce)
 {
+    NGRAPH_INFO;
     auto reduce = static_cast<const op::Reduce*>(n);
     auto reduction_function = reduce->get_reduction_function();
 

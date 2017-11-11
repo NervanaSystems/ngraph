@@ -18,8 +18,11 @@
 #include <vector>
 
 #include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/runtime/ndarray.hpp"
 #include "ngraph/runtime/value.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -74,6 +77,24 @@ namespace ngraph
             /// @param tensor_offset Offset into tensor storage to begin reading. Must be element-aligned.
             /// @param n Number of bytes to read, must be integral number of elements.
             virtual void read(void* p, size_t tensor_offset, size_t n) const = 0;
+
+            template <typename T>
+            bool operator==(const NDArrayBase<T>& ndarray) const
+            {
+                NGRAPH_INFO << "compare to NDArrayBase";
+                NGRAPH_INFO << "size " << ndarray.get_vector().size();
+                bool rc = false;
+                NGRAPH_INFO << "shape " << ngraph::join(get_shape());
+                NGRAPH_INFO << "shape " << ngraph::join(ndarray.get_shape());
+                if (get_shape() == ndarray.get_shape())
+                {
+                    std::vector<T> lhs(ndarray.get_vector().size());
+                    NGRAPH_INFO << "size " << lhs.size();
+                    read(lhs.data(), 0, ndarray.get_vector().size() * sizeof(T));
+                    rc = (lhs == ndarray.get_vector());
+                }
+                return rc;
+            }
 
         protected:
             std::shared_ptr<ngraph::descriptor::TensorView> m_descriptor;

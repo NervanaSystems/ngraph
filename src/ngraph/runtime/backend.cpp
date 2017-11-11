@@ -24,6 +24,7 @@ using namespace ngraph::runtime;
 std::shared_ptr<TensorView>
     Backend::make_primary_tensor_view(const ngraph::element::Type& element_type, const Shape& shape)
 {
+    NGRAPH_INFO;
     return element_type.make_primary_tensor_view(shape);
 }
 

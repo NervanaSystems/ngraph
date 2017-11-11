@@ -15,6 +15,7 @@
 #include <algorithm>
 
 #include "call_frame.hpp"
+#include "ngraph/runtime/cpu/tensor_view.hpp"
 
 using namespace std;
 using namespace ngraph::runtime::cpu;
@@ -24,29 +25,41 @@ CallFrame::CallFrame(EntryPoint compiled_function,
     : m_compiled_function(compiled_function)
     , m_callees(callees)
 {
+    NGRAPH_INFO;
 }
 
 void CallFrame::tensor_call(
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& inputs,
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& outputs)
+    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs,
+    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
 {
-    // process inputs
-    for (std::shared_ptr<ngraph::runtime::TensorView> tv : inputs)
+    NGRAPH_INFO;
+    m_inputs.clear();
+    m_outputs.clear();
+    for (size_t i = 0; i < input_tvs.size(); i++)
     {
+        NGRAPH_INFO;
+        shared_ptr<runtime::cpu::CPUTensorView> tv =
+            static_pointer_cast<runtime::cpu::CPUTensorView>(input_tvs[i]);
+        void* data = tv->get_data_ptr();
+        NGRAPH_INFO << data;
+        m_inputs.push_back(tv->get_data_ptr());
     }
-
-    // process outputs
-    for (std::shared_ptr<ngraph::runtime::TensorView> tv : outputs)
+    for (size_t i = 0; i < output_tvs.size(); i++)
     {
+        NGRAPH_INFO;
+        shared_ptr<runtime::cpu::CPUTensorView> tv =
+            static_pointer_cast<runtime::cpu::CPUTensorView>(output_tvs[i]);
+        m_outputs.push_back(tv->get_data_ptr());
     }
 
     // Invoke compiled computation
-    // m_compiled_function(this, inputs, outputs);
+    m_compiled_function(this);
 }
 
 void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,
                            const std::vector<std::shared_ptr<ngraph::runtime::Value>>& results)
 {
+    NGRAPH_INFO;
     // TODO: Check types of args and result
     vector<shared_ptr<ngraph::runtime::TensorView>> inputs;
     for (shared_ptr<ngraph::runtime::Value> argument : arguments)
@@ -65,21 +78,16 @@ void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Va
 
 void* CallFrame::get_input_data(size_t index)
 {
-    // shared_ptr<runtime::TensorView> p = m_inputs->at(index);
-    // shared_ptr<const runtime::ParameterizedTensorView<element::Float32>> ptv =
-    //     dynamic_pointer_cast<const runtime::ParameterizedTensorView<element::Float32>>(p);
-    // const void* p1 = ptv->get_vector().data();
-    // return const_cast<void*>(p1);
-    NGRAPH_INFO << "fix this";
-    return nullptr;
+    NGRAPH_INFO << "get_input_data " << index << ", vector size " << m_inputs.size();
+    void* rc = m_inputs.at(index);
+    NGRAPH_INFO << rc;
+    return rc;
 }
 
 void* CallFrame::get_output_data(size_t index)
 {
-    // shared_ptr<runtime::TensorView> p = m_outputs->at(index);
-    // shared_ptr<runtime::ParameterizedTensorView<element::Float32>> ptv =
-    //     dynamic_pointer_cast<runtime::ParameterizedTensorView<element::Float32>>(p);
-    // return ptv->get_vector().data();
-    NGRAPH_INFO << "fix this";
-    return nullptr;
+    NGRAPH_INFO << "get_output_data " << index << ", vector size " << m_outputs.size();
+    void* rc = m_outputs.at(index);
+    NGRAPH_INFO << rc;
+    return rc;
 }
