@@ -23,9 +23,10 @@ using namespace std;
 using namespace ngraph;
 
 template <typename T>
-bool operator==(const runtime::TensorView& tv, const runtime::NDArrayBase<T>& ndarray)
+static void initialize(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
 {
-    return false; //get_shape() == ndarray.get_shape() && get_vector() == ndarray.get_vector();
+    size_t data_size = data.size() * sizeof(T);
+    tv->write(data.data(), 0, data_size);
 }
 
 TEST(${BACKEND_NAME}, abc)
@@ -63,47 +64,47 @@ TEST(${BACKEND_NAME}, abc)
     c->write(c_data.data(), 0, c_data.get_vector().size() * sizeof(float));
 
     (*cf)({a, b, c}, {result});
-    ASSERT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
+    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
 
     (*cf)({b, a, c}, {result});
-    ASSERT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
+    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
 
     (*cf)({a, c, b}, {result});
-    ASSERT_EQ(*result, (runtime::NDArray<float, 2>({{50, 72}, {98, 128}})));
+    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{50, 72}, {98, 128}})));
 }
 
-// TEST(${BACKEND_NAME}, abc_int64)
-// {
-//     auto shape = Shape{2, 2};
-//     auto A = make_shared<op::Parameter>(element::Int64::element_type(), shape);
-//     auto B = make_shared<op::Parameter>(element::Int64::element_type(), shape);
-//     auto C = make_shared<op::Parameter>(element::Int64::element_type(), shape);
-//     auto rt = make_shared<TensorViewType>(element::Int64::element_type(), shape);
-//     auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
+TEST(${BACKEND_NAME}, abc_int64)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Int64::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Int64::element_type(), shape);
+    auto C = make_shared<op::Parameter>(element::Int64::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Int64::element_type(), shape);
+    auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
 
-//     auto manager = runtime::Manager::get("${BACKEND_NAME}");
-//     auto external = manager->compile(f);
-//     auto backend = manager->allocate_backend();
-//     auto cf = backend->make_call_frame(external);
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
-//     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Int64>(shape);
-//     *a = vector<element::Int64::type>{1, 2, 3, 4};
-//     auto b = backend->make_parameterized_tensor_view<element::Int64>(shape);
-//     *b = vector<element::Int64::type>{5, 6, 7, 8};
-//     auto c = backend->make_parameterized_tensor_view<element::Int64>(shape);
-//     *c = vector<element::Int64::type>{9, 10, 11, 12};
-//     auto result = backend->make_parameterized_tensor_view<element::Int64>(shape);
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
+    initialize(a, vector<element::Int64::type>{1, 2, 3, 4});
+    auto b = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
+    initialize(b, vector<element::Int64::type>{5, 6, 7, 8});
+    auto c = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
+    initialize(c, vector<element::Int64::type>{9, 10, 11, 12});
+    auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
 
-//     (*cf)({a, b, c}, {result});
-//     ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+    (*cf)({a, b, c}, {result});
+    EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector<int64_t>());
 
-//     (*cf)({b, a, c}, {result});
-//     ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+    (*cf)({b, a, c}, {result});
+    EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector<int64_t>());
 
-//     (*cf)({a, c, b}, {result});
-//     ASSERT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector());
-// }
+    (*cf)({a, c, b}, {result});
+    EXPECT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector<int64_t>());
+}
 
 // // Same as abc, but using tuples for input and output
 // TEST(${BACKEND_NAME}, abc_tuple)
@@ -127,16 +128,16 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, 2, 3, 4};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{5, 6, 7, 8};
-//     auto c = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *c = vector<float>{9, 10, 11, 12};
 //     auto abc = ngraph::runtime::make_tuple({a, b, c});
 //     auto bac = ngraph::runtime::make_tuple({b, a, c});
 //     auto acb = ngraph::runtime::make_tuple({a, c, b});
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     auto result_tuple = ngraph::runtime::make_tuple({result});
 
 //     (*cf)({abc}, {result_tuple});
@@ -171,11 +172,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Int64>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
 //     *a = vector<element::Int64::type>{1, 2, 3, 4};
-//     auto b = backend->make_parameterized_tensor_view<element::Int64>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
 //     *b = vector<element::Int64::type>{5, 6, 7, 8};
-//     auto c = backend->make_parameterized_tensor_view<element::Int64>(shape);
+//     auto c = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
 //     *c = vector<element::Int64::type>{9, 10, 11, 12};
 //     auto abc = ngraph::runtime::make_tuple({a, b, c});
 //     auto bac = ngraph::runtime::make_tuple({b, a, c});
@@ -214,15 +215,15 @@ TEST(${BACKEND_NAME}, abc)
 //     auto backend = manager->allocate_backend();
 //     auto cf = backend->make_call_frame(external);
 
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, 2, 3, 4};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{5, 6, 7, 8};
-//     auto c = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *c = vector<float>{9, 10, 11, 12};
 
-//     auto r0 = backend->make_parameterized_tensor_view<element::Float32>(shape);
-//     auto r1 = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto r0 = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+//     auto r1 = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     auto result_tuple = ngraph::runtime::make_tuple({r0, r1});
 
 //     (*cf)({a, b, c}, {result_tuple});
@@ -244,9 +245,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, -2, 0, -4.8f};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ((vector<float>{1, 2, 0, 4.8f}), result->get_vector());
@@ -271,13 +272,13 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{2, 4, 8, 16};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 //     *b = vector<float>{1, 2, 4, 8, 16, 32};
-//     auto c = backend->make_parameterized_tensor_view<element::Float32>(shape_c);
+//     auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape_c);
 //     *c = vector<float>{2, 3, 5, 7, 11, 13};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a, b, c}, {result});
 //     ASSERT_EQ((vector<float>{2, 4, 1, 2, 4, 2, 3, 5, 8, 16, 8, 16, 32, 7, 11, 13}),
@@ -303,13 +304,13 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{2, 4, 8, 16};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 //     *b = vector<float>{1, 2, 4, 8, 16, 32};
-//     auto c = backend->make_parameterized_tensor_view<element::Float32>(shape_c);
+//     auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape_c);
 //     *c = vector<float>{2, 3, 5, 7, 11, 13};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a, b, c}, {result});
 //     ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
@@ -335,13 +336,13 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Int64>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Int64::element_type(), shape_a);
 //     *a = vector<element::Int64::type>{2, 4, 8, 16};
-//     auto b = backend->make_parameterized_tensor_view<element::Int64>(shape_b);
+//     auto b = backend->make_primary_tensor_view(element::Int64::element_type(), shape_b);
 //     *b = vector<element::Int64::type>{1, 2, 4, 8, 16, 32};
-//     auto c = backend->make_parameterized_tensor_view<element::Int64>(shape_c);
+//     auto c = backend->make_primary_tensor_view(element::Int64::element_type(), shape_c);
 //     *c = vector<element::Int64::type>{2, 3, 5, 7, 11, 13};
-//     auto result = backend->make_parameterized_tensor_view<element::Int64>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape_r);
 
 //     (*cf)({a, b, c}, {result});
 //     ASSERT_EQ((vector<element::Int64::type>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
@@ -367,13 +368,13 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{2, 4, 8, 16};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 //     *b = vector<float>{1, 2, 4, 8, 16, 32};
-//     auto c = backend->make_parameterized_tensor_view<element::Float32>(shape_c);
+//     auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape_c);
 //     *c = vector<float>{18, 19};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a, b, c}, {result});
 //     ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), result->get_vector());
@@ -399,11 +400,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(make_external());
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{2, 4, 8, 16};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{1, 2, 4, 8};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{2, 2, 2, 2}), result->get_vector());
@@ -423,11 +424,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5};
-//     auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), result->get_vector());
@@ -448,11 +449,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{0}), result->get_vector());
@@ -480,11 +481,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(make_external());
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 //     *b = vector<float>{};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{0, 0, 0, 0}), result->get_vector());
@@ -506,11 +507,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 //     *b = vector<float>{};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{}), result->get_vector());
@@ -532,11 +533,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{1, 2, 3, 4, 5, 6};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 //     *b = vector<float>{};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{}), result->get_vector());
@@ -558,11 +559,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{1};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 //     *b = vector<float>{};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{}), result->get_vector());
@@ -584,11 +585,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 //     *b = vector<float>{};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{0, 0}), result->get_vector());
@@ -609,11 +610,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{2, 4, 8, 16};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{1, 2, 4, 8};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{170}), result->get_vector());
@@ -634,11 +635,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, 2, 3, 4};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{5, 6, 7, 8};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{19, 22, 43, 50}), result->get_vector());
@@ -659,11 +660,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{6};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 //     *b = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector());
@@ -684,11 +685,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 //     *b = vector<float>{6};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector());
@@ -708,11 +709,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{8};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{6};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{48}), result->get_vector());
@@ -734,11 +735,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 //     *b = vector<float>{17, 18, 19, 20};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{190, 486, 782, 1078}), result->get_vector());
@@ -760,11 +761,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Int64>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Int64::element_type(), shape_a);
 //     *a = vector<element::Int64::type>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-//     auto b = backend->make_parameterized_tensor_view<element::Int64>(shape_b);
+//     auto b = backend->make_primary_tensor_view(element::Int64::element_type(), shape_b);
 //     *b = vector<element::Int64::type>{17, 18, 19, 20};
-//     auto result = backend->make_parameterized_tensor_view<element::Int64>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape_r);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<element::Int64::type>{190, 486, 782, 1078}), result->get_vector());
@@ -784,11 +785,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
-//     auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), result->get_vector());
@@ -808,11 +809,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, 8, -8, 17, -0.5, 0, 2, 1};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5};
-//     auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), result->get_vector());
@@ -832,11 +833,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
-//     auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<char>{0, 0, 1, 0, 1, 0, 0, 1}), result->get_vector());
@@ -856,11 +857,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, 8, -8, 17, -0.5, 0, 2, 1};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5};
-//     auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), result->get_vector());
@@ -880,11 +881,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Bool>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 //     *a = vector<char>{1, 1, 1, 1, 1, 1, 1, 1};
-//     auto b = backend->make_parameterized_tensor_view<element::Bool>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 //     *b = vector<char>{0, 0, 0, 0, 0, 0, 0, 0};
-//     auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<char>{0, 0, 0, 0, 0, 0, 0, 0}), result->get_vector());
@@ -903,14 +904,14 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{expf(1), expf(2), expf(3), expf(4), expf(5), expf(6), expf(7), expf(8)};
 //     vector<float> loga;
 //     for (auto elt : a->get_vector())
 //     {
 //         loga.push_back(logf(elt));
 //     }
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ(loga, result->get_vector());
@@ -930,11 +931,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), result->get_vector());
@@ -954,11 +955,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{1, 2, -8, 8, -.5, 0, 1, 1}), result->get_vector());
@@ -977,9 +978,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, -2, 0, -4.8f, 8.6f, -8.6f};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ((vector<float>{-1, 2, 0, 4.8f, -8.6f, 8.6f}), result->get_vector());
@@ -999,11 +1000,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5};
-//     auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), result->get_vector());
@@ -1024,13 +1025,13 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Bool>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 //     *a = vector<char>{0, 1, 1, 0, 0, 1, 0, 1};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
-//     auto c = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *c = vector<float>{11, 12, 13, 14, 15, 16, 17, 18};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({a, b, c}, {result});
 //     ASSERT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), result->get_vector());
@@ -1050,11 +1051,11 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{2, 4, 8, 16};
-//     auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *b = vector<float>{1, 2, 4, 8};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({a, b}, {result});
 //     ASSERT_EQ((vector<float>{1, 2, 4, 8}), result->get_vector());
@@ -1075,7 +1076,7 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({}, {result});
 //     ASSERT_EQ((vector<float>{-3.0f}), result->get_vector());
@@ -1096,7 +1097,7 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({}, {result});
 //     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
@@ -1117,7 +1118,7 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({}, {result});
 //     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
@@ -1149,13 +1150,13 @@ TEST(${BACKEND_NAME}, abc)
 //     auto backend = manager->allocate_backend();
 //     auto cf = backend->make_call_frame(external);
 
-//     auto x = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto x = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *x = vector<float>{1, 2, 3, 4};
-//     auto y = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto y = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *y = vector<float>{5, 6, 7, 8};
-//     auto z = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto z = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *z = vector<float>{9, 10, 11, 12};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({x, y, z}, {result});
 //     ASSERT_EQ((vector<float>{108, 160, 220, 288}), result->get_vector());
@@ -1182,9 +1183,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{6};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector());
@@ -1205,9 +1206,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{6};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector());
@@ -1228,9 +1229,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{6};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), result->get_vector());
@@ -1250,9 +1251,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{2, 4, 6, 8, 16, 32, 64, 128};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), result->get_vector());
@@ -1273,9 +1274,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{1, 2, 3};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), result->get_vector());
@@ -1296,9 +1297,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 //     *a = vector<float>{1, 2, 3, 4};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), result->get_vector());
@@ -1319,9 +1320,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Int64>(shape_a);
+//     auto a = backend->make_primary_tensor_view(element::Int64::element_type(), shape_a);
 //     *a = vector<element::Int64::type>{1, 2, 3, 4};
-//     auto result = backend->make_parameterized_tensor_view<element::Int64>(shape_r);
+//     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape_r);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ((vector<element::Int64::type>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}),
@@ -1342,9 +1343,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Int32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape);
 //     *a = vector<element::Int32::type>{1, 2, 3, 4};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ((vector<element::Float32::type>{1, 2, 3, 4}), result->get_vector());
@@ -1364,9 +1365,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Int32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape);
 //     *a = vector<element::Int32::type>{1, 2, 3, 4};
-//     auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector());
@@ -1386,9 +1387,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<element::Float32::type>{1, 2, 3, 4};
-//     auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector());
@@ -1946,10 +1947,10 @@ TEST(${BACKEND_NAME}, abc)
 
 //     // Create some tensors for input/output
 //     float pi = acosf(-1);
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     vector<float> input{pi / 2, 0.0f, -0.0f, pi / 6, -pi, pi};
 //     *a = input;
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     std::transform(
 //         input.begin(), input.end(), input.begin(), [](float x) -> float { return sinf(x); });
@@ -1972,10 +1973,10 @@ TEST(${BACKEND_NAME}, abc)
 
 //     // Create some tensors for input/output
 //     float pi = acosf(-1);
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     vector<float> input{pi / 2, 0.0f, -0.0f, pi / 3, -pi, pi};
 //     *a = input;
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     std::transform(
 //         input.begin(), input.end(), input.begin(), [](float x) -> float { return cosf(x); });
@@ -1998,10 +1999,10 @@ TEST(${BACKEND_NAME}, abc)
 
 //     // Create some tensors for input/output
 //     float pi = acosf(-1);
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     vector<float> input{pi / 4, 0.0f, -0.0f, 7 * pi / 4, 3 * pi / 4, 5 * pi / 4};
 //     *a = input;
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     std::transform(
 //         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanf(x); });
@@ -2023,10 +2024,10 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
 //     *a = input;
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     std::transform(
 //         input.begin(), input.end(), input.begin(), [](float x) -> float { return asinf(x); });
@@ -2048,10 +2049,10 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
 //     *a = input;
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     std::transform(
 //         input.begin(), input.end(), input.begin(), [](float x) -> float { return acosf(x); });
@@ -2073,10 +2074,10 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
 //     *a = input;
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     std::transform(
 //         input.begin(), input.end(), input.begin(), [](float x) -> float { return atanf(x); });
@@ -2098,10 +2099,10 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 5.0f, -5.0f};
 //     *a = input;
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     std::transform(
 //         input.begin(), input.end(), input.begin(), [](float x) -> float { return sinhf(x); });
@@ -2123,10 +2124,10 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 5.0f, -5.0f};
 //     *a = input;
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     std::transform(
 //         input.begin(), input.end(), input.begin(), [](float x) -> float { return coshf(x); });
@@ -2148,10 +2149,10 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
 //     *a = input;
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     std::transform(
 //         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanhf(x); });
@@ -2173,9 +2174,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{-4, -3, -2, -1, 0, 1, 2, 3};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ(
@@ -2558,9 +2559,9 @@ TEST(${BACKEND_NAME}, abc)
 //     auto cf = backend->make_call_frame(external);
 
 //     // Create some tensors for input/output
-//     auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 //     *a = vector<float>{1, -2, 0, -4.8f, 4.8f, -0.0};
-//     auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+//     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
 //     (*cf)({a}, {result});
 //     ASSERT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), result->get_vector());

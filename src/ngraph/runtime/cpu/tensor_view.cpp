@@ -31,7 +31,6 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
 {
     m_descriptor->set_tensor_view_layout(
         std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
-    // m_vector.resize(m_descriptor->get_tensor_view_layout()->get_size());
 
     size_t tensor_size = m_descriptor->get_tensor_view_layout()->get_size();
     allocate_aligned_buffer(tensor_size, runtime::cpu::alignment, &m_allocated, &m_aligned);

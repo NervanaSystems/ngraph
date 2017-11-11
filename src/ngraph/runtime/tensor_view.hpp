@@ -77,6 +77,7 @@ namespace ngraph
             /// @param n Number of bytes to read, must be integral number of elements.
             virtual void read(void* p, size_t tensor_offset, size_t n) const = 0;
 
+            // This is for unit test only
             template <typename T>
             bool operator==(const NDArrayBase<T>& ndarray) const
             {
@@ -87,6 +88,15 @@ namespace ngraph
                     read(lhs.data(), 0, ndarray.get_vector().size() * sizeof(T));
                     rc = (lhs == ndarray.get_vector());
                 }
+                return rc;
+            }
+            template <typename T>
+            std::vector<T> get_vector()
+            {
+                size_t element_count = shape_size(get_shape());
+                size_t size = element_count * sizeof(T);
+                std::vector<T> rc(element_count);
+                read(rc.data(), 0, size);
                 return rc;
             }
 
