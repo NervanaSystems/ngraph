@@ -14,7 +14,7 @@ PYBIND11_PLUGIN(clsFunction) {
     py::module::import("clsTensorViewType");
     py::class_<Function, std::shared_ptr<Function>> clsFunction(mod, "clsFunction");
 
-    clsFunction.def(py::init<const std::shared_ptr<op::Parameter>&, const std::shared_ptr<const TensorViewType>&,
+    clsFunction.def(py::init<const std::shared_ptr<Node>&, const std::shared_ptr<const TensorViewType>&,
                              const std::vector<std::shared_ptr<op::Parameter>>&, const std::string&>());
     clsFunction.def("get_result_type", &Function::get_result_type);
 

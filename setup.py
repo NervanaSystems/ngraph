@@ -28,6 +28,7 @@ ext_modules = [
         ['ngraph/core/types/element_type.cpp'],
         include_dirs=[
             # Path to pybind11 headers
+            os.environ["PYBIND_HEADERS_PATH"],
             get_pybind_include(),
             get_pybind_include(user=True)
         ],
@@ -38,6 +39,7 @@ ext_modules = [
        ['ngraph/core/types/parameter.cpp'],
         include_dirs=[
             # Path to pybind11 headers
+            os.environ["PYBIND_HEADERS_PATH"],
             get_pybind_include(),
             get_pybind_include(user=True)
         ],
@@ -48,6 +50,7 @@ ext_modules = [
        ['ngraph/core/types/valuetype.cpp'],
         include_dirs=[
             # Path to pybind11 headers
+            os.environ["PYBIND_HEADERS_PATH"],
             get_pybind_include(),
             get_pybind_include(user=True)
         ],
@@ -58,6 +61,7 @@ ext_modules = [
        ['ngraph/core/types/function.cpp'],
         include_dirs=[
             # Path to pybind11 headers
+            os.environ["PYBIND_HEADERS_PATH"],
             get_pybind_include(),
             get_pybind_include(user=True)
         ],
@@ -68,6 +72,7 @@ ext_modules = [
        ['ngraph/core/types/manager.cpp'],
         include_dirs=[
             # Path to pybind11 headers
+            os.environ["PYBIND_HEADERS_PATH"],
             get_pybind_include(),
             get_pybind_include(user=True)
         ],
@@ -78,6 +83,7 @@ ext_modules = [
        ['ngraph/core/types/backend.cpp'],
         include_dirs=[
             # Path to pybind11 headers
+            os.environ["PYBIND_HEADERS_PATH"],
             get_pybind_include(),
             get_pybind_include(user=True)
         ],
