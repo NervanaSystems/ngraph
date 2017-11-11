@@ -46,7 +46,7 @@ namespace ngraph
             ///
             /// \param arg Node that produces the input tensor.
             Exp(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic("Equal", arg)
+                : UnaryElementwiseArithmetic("Exp", arg)
             {
             }
 
