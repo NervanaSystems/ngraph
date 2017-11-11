@@ -22,32 +22,47 @@ using namespace std;
 
 extern "C" void
     allocate_aligned_buffer(size_t size, size_t alignment, char** allocated, char** aligned_ptr);
+extern "C" void free_aligned_buffer(void* allocated);
 
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape)
+    : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
+          std::make_shared<ngraph::TensorViewType>(element_type, shape), "external", true, true))
 {
-    size_t size = ngraph::shape_size(shape);
-    size_t tensor_size = size * element_type.size();
-    char* allocated;
-    char* aligned;
-    allocate_aligned_buffer(tensor_size, runtime::cpu::alignment, &allocated, &aligned);
-    auto tmp = shared_ptr<char>(new char[size]);
-    m_tensor_buffer = shared_ptr<char>(tmp, aligned);
+    m_descriptor->set_tensor_view_layout(
+        std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
+    // m_vector.resize(m_descriptor->get_tensor_view_layout()->get_size());
+
+    size_t tensor_size = m_descriptor->get_tensor_view_layout()->get_size();
+    allocate_aligned_buffer(tensor_size, runtime::cpu::alignment, &m_allocated, &m_aligned);
 }
 
-void* runtime::cpu::CPUTensorView::get_data_ptr()
+runtime::cpu::CPUTensorView::~CPUTensorView()
 {
-    return m_tensor_buffer.get();
+    free_aligned_buffer(m_allocated);
+}
+
+char* runtime::cpu::CPUTensorView::get_data_ptr()
+{
+    return m_aligned;
+}
+
+const char* runtime::cpu::CPUTensorView::get_data_ptr() const
+{
+    return m_aligned;
 }
 
 void runtime::cpu::CPUTensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
-    char* target = m_tensor_buffer.get();
+    NGRAPH_INFO;
+    char* target = get_data_ptr();
+    NGRAPH_INFO;
     memcpy(&target[tensor_offset], source, n);
+    NGRAPH_INFO;
 }
 
 void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
-    const char* source = m_tensor_buffer.get();
+    const char* source = get_data_ptr();
     memcpy(target, &source[tensor_offset], n);
 }

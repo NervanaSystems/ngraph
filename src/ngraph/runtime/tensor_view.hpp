@@ -45,7 +45,6 @@ namespace ngraph
             }
 
         public:
-            TensorView() {}
             virtual ~TensorView() {}
             template <typename ET>
             ParameterizedTensorView<ET>* get_parameterized_tensor_view()

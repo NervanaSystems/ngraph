@@ -34,8 +34,10 @@ class ngraph::runtime::cpu::CPUTensorView : public ngraph::runtime::TensorView
 {
 public:
     CPUTensorView(const ngraph::element::Type& element_type, const Shape& shape);
+    virtual ~CPUTensorView();
 
-    void* get_data_ptr();
+    char* get_data_ptr();
+    const char* get_data_ptr() const;
 
     /// @brief Write bytes directly into the tensor
     /// @param p Pointer to source of data
@@ -50,5 +52,6 @@ public:
     void read(void* p, size_t tensor_offset, size_t n) const override;
 
 private:
-    std::shared_ptr<char> m_tensor_buffer;
+    char* m_allocated;
+    char* m_aligned;
 };
