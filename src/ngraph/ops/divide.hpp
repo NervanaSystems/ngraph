@@ -48,7 +48,7 @@ namespace ngraph
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
             Divide(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic(arg0, arg1)
+                : BinaryElementwiseArithmetic("Divide", arg0, arg1)
             {
             }
 
@@ -62,8 +62,6 @@ namespace ngraph
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
-
-            virtual std::string description() const override { return "Divide"; }
         };
     }
     inline std::shared_ptr<ngraph::Node> operator/(const std::shared_ptr<ngraph::Node> arg0,

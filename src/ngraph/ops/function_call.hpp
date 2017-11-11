@@ -14,8 +14,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
-#include "ngraph/pass/propagate_types.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
@@ -46,7 +45,7 @@ namespace ngraph
         /// | Backend | Status             |
         /// | ------- | ------------------ |
         /// | NGVM    | Fully implemented. |
-        class FunctionCall : public Builtin
+        class FunctionCall : public ngraph::Node
         {
         public:
             /// \brief Constructs a function call operation.
@@ -54,20 +53,13 @@ namespace ngraph
             /// \param function The function to be called.
             /// \param args The arguments for the function call.
             FunctionCall(std::shared_ptr<Function> function,
-                         const std::vector<std::shared_ptr<Node>>& args)
-                : Builtin(args)
-                , m_function(function)
-            {
-            }
+                         const std::vector<std::shared_ptr<Node>>& args);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 return std::make_shared<FunctionCall>(m_function, new_args);
             }
-
-            virtual std::string description() const override { return "FunctionCall"; }
-            virtual void propagate_types() override;
 
             /// \return The function to be called.
             std::shared_ptr<Function> get_function() const { return m_function; }

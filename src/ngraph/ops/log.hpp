@@ -46,7 +46,7 @@ namespace ngraph
             ///
             /// \param arg Node that produces the input tensor.
             Log(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic(arg)
+                : UnaryElementwiseArithmetic("Log", arg)
             {
             }
 
@@ -60,8 +60,6 @@ namespace ngraph
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
-
-            virtual std::string description() const override { return "Log"; }
         };
     }
 }

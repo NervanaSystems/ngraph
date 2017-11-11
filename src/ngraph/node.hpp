@@ -15,6 +15,7 @@
 #pragma once
 
 #include <atomic>
+#include <deque>
 #include <memory>
 #include <set>
 #include <string>
@@ -43,10 +44,7 @@ namespace ngraph
         friend class autodiff::Adjoints;
 
     protected:
-        Node(const Nodes& arguments, std::shared_ptr<const ValueType> value_type = nullptr);
-        Node();
-        Node(std::shared_ptr<const ValueType> value_type);
-
+        Node(const std::string& node_type, const Nodes& arguments);
         virtual ~Node();
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -56,21 +54,14 @@ namespace ngraph
 
     public:
         /// The class name, must not contain spaces
-        virtual std::string description() const = 0;
+        std::string description() const { return m_node_type; }
         std::string get_name() const;
         void set_name(const std::string& name);
-
-        /// Propagate types and check arguments for consistency
-        virtual void propagate_types() = 0;
-
-        /// Assign Input and Output vectors
-        // This might later need to be virtual.
-        void assign_tensors();
 
         const Nodes& get_arguments() const { return m_arguments; }
         void clear_arguments() { m_arguments.clear(); }
         const std::multiset<Node*>& users() const { return m_users; }
-        virtual std::string get_node_id() const;
+        std::string get_node_id() const;
 
         /// Return true if this has the same implementing class as node. This
         /// will be used by the pattern matcher when comparing a pattern
@@ -83,14 +74,10 @@ namespace ngraph
 
         std::shared_ptr<const ValueType> get_value_type();
         const std::shared_ptr<const ValueType> get_value_type() const;
-        void set_value_type(const element::Type& element_type, const Shape& shape)
+        void assert_value_type(const std::shared_ptr<const ValueType>& value_type) const;
+        void assert_value_type(const element::Type& element_type, const Shape& shape) const
         {
-            m_value_type = std::make_shared<TensorViewType>(element_type, shape);
-        }
-
-        void set_value_type(const std::shared_ptr<const ValueType>& value_type)
-        {
-            m_value_type = value_type;
+            assert_value_type(std::make_shared<TensorViewType>(element_type, shape));
         }
 
         // Set the value type if it has not already been set; otherwise, ensure that
@@ -108,8 +95,8 @@ namespace ngraph
 
         std::deque<descriptor::Input>& get_inputs() { return m_inputs; }
         const std::deque<descriptor::Input>& get_inputs() const { return m_inputs; }
-        std::deque<descriptor::Output>& get_outputs() { return m_outputs; }
-        const std::deque<descriptor::Output>& get_outputs() const { return m_outputs; }
+        std::deque<descriptor::Output>& get_outputs();
+        const std::deque<descriptor::Output>& get_outputs() const;
         std::unordered_set<descriptor::Tensor*> liveness_live_list;
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
@@ -124,6 +111,7 @@ namespace ngraph
             copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const = 0;
 
     protected:
+        std::string m_node_type;
         Nodes m_arguments;
         std::shared_ptr<const ValueType> m_value_type;
         std::multiset<Node*> m_users;

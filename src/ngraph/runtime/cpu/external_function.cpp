@@ -66,9 +66,7 @@
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/assign_layout.hpp"
-#include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/cpu/call_frame.hpp"
 #include "ngraph/runtime/cpu/emitter.hpp"
@@ -159,8 +157,6 @@ void ExternalFunction::compile(FunctionMap& function_map)
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
-    pass_manager.register_pass<pass::PropagateTypes>();
-    pass_manager.register_pass<pass::AssignTensors>();
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
     pass_manager.run_passes(m_function);

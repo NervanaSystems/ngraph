@@ -48,7 +48,7 @@ namespace ngraph
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
             LessEq(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseComparison(arg0, arg1)
+                : BinaryElementwiseComparison("LessEq", arg0, arg1)
             {
             }
 
@@ -59,8 +59,6 @@ namespace ngraph
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<LessEq>(new_args.at(0), new_args.at(1));
             }
-
-            virtual std::string description() const override { return "LessEq"; }
         };
     }
 }

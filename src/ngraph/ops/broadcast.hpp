@@ -56,7 +56,7 @@ namespace ngraph
         /// | ------- | ----------------------------------------------- |
         /// | NGVM    | Implemented for scalars, matrices, and vectors. |
 
-        class Broadcast : public Builtin
+        class Broadcast : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a conversion operation.
@@ -67,12 +67,7 @@ namespace ngraph
             ///                        remaining axes in shape must be the same as the shape of arg.
             Broadcast(const std::shared_ptr<Node>& arg,
                       const Shape& shape,
-                      const AxisSet& broadcast_axes)
-                : Builtin({arg})
-                , m_shape(shape)
-                , m_broadcast_axes(broadcast_axes)
-            {
-            }
+                      const AxisSet& broadcast_axes);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
@@ -81,9 +76,6 @@ namespace ngraph
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<Broadcast>(new_args.at(0), m_shape, m_broadcast_axes);
             }
-
-            virtual std::string description() const override { return "Broadcast"; }
-            virtual void propagate_types() override;
 
             /// \return An set containing the indices of the broadcast axes (0-based).
             const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }

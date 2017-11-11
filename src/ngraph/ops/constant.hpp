@@ -35,12 +35,11 @@ namespace ngraph
             /// \brief Constructs a constant base-type node.
             ///
             /// \param type The TensorViewType for the constant.
-            ConstantBase(const std::shared_ptr<TensorViewType>& type)
-                : Node({}, type)
+            ConstantBase(const std::string& node_type, const std::shared_ptr<TensorViewType>& type)
+                : Node(node_type, {})
             {
+                set_value_type_checked(type);
             }
-
-            virtual void propagate_types() override;
         };
 
         /// \brief Class for constants whose element types are known at C++ compile-time.
@@ -83,7 +82,8 @@ namespace ngraph
             ParameterizedConstant(
                 const Shape& shape,
                 const typename std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>>& value)
-                : ConstantBase(std::make_shared<TensorViewType>(T::element_type(), shape))
+                : ConstantBase("ParameterizedConstant",
+                               std::make_shared<TensorViewType>(T::element_type(), shape))
                 , m_value(value)
             {
             }
@@ -94,14 +94,6 @@ namespace ngraph
                 if (new_args.size() != 0)
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<ParameterizedConstant<T>>(get_shape(), m_value);
-            }
-
-            virtual std::string description() const override { return "ParameterizedConstant"; }
-            virtual std::string get_node_id() const override
-            {
-                std::stringstream ss;
-                ss << description() << "_" /* << node_id() */;
-                return ss.str();
             }
 
             /// \return The value of the tensor constant.
@@ -162,22 +154,14 @@ namespace ngraph
             /// \param value_strings A list of literals for initializing the tensor constant. There must be one literal for each element of the tensor; i.e., `value_strings.size()` must equal `ngraph::shape_size(shape)`.
             Constant(const element::Type& et,
                      const Shape& shape,
-                     const std::vector<std::string>& value_strings)
-                : ConstantBase(std::make_shared<TensorViewType>(et, shape))
-                , m_value_strings(value_strings)
-            {
-            }
+                     const std::vector<std::string>& value_strings);
 
             /// \brief Constructs a tensor constant with the same initialization value copied across the tensor.
             ///
             /// \param et The element type of the tensor constant.
             /// \param shape The shape of the tensor constant.
             /// \param value_string A literal for initializing each tensor constant.
-            Constant(const element::Type& et, const Shape& shape, const std::string& value_string)
-                : ConstantBase(std::make_shared<TensorViewType>(et, shape))
-                , m_value_strings(ngraph::shape_size(shape), value_string)
-            {
-            }
+            Constant(const element::Type& et, const Shape& shape, const std::string& value_string);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
@@ -187,19 +171,11 @@ namespace ngraph
                 return std::make_shared<Constant>(get_element_type(), get_shape(), m_value_strings);
             }
 
-            virtual std::string description() const override { return "Constant"; }
-            virtual std::string get_node_id() const override
-            {
-                std::stringstream ss;
-                ss << description() << "_" /* << node_id() */;
-                return ss.str();
-            }
-
             /// \return The initialization literals for the tensor constant.
             const std::vector<std::string>& get_value_strings() const { return m_value_strings; }
-            virtual void propagate_types() override;
-
         protected:
+            void check_args();
+
             const std::vector<std::string> m_value_strings;
         };
     }

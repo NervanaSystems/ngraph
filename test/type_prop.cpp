@@ -20,11 +20,6 @@
 using namespace std;
 using namespace ngraph;
 
-void test_binary_bad_arguments_tuple(const shared_ptr<Node>& node);
-void test_binary_bad_arguments_views(const shared_ptr<Node>& node);
-void test_binary_good_arguments(const shared_ptr<Node>& node);
-void test_binary(shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr<Node>& y));
-
 //
 // Tests for broadcast.
 //
@@ -33,7 +28,6 @@ TEST(type_prop, broadcast_deduce)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 4});
     auto bc = make_shared<op::Broadcast>(param, Shape{2, 3, 4}, AxisSet{1});
-    bc->propagate_types();
     auto bc_vt = bc->get_value_type();
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 3, 4}));
 }
@@ -43,9 +37,6 @@ TEST(type_prop, broadcast_deduce_correct)
     // Check deduced type against correctly specified type
     auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 4});
     auto bc = make_shared<op::Broadcast>(param, Shape{2, 3, 4}, AxisSet{1});
-    bc->set_value_type(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 3, 4}));
-    bc->propagate_types();
     auto bc_vt = bc->get_value_type();
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 3, 4}));
 }
@@ -54,12 +45,11 @@ TEST(type_prop, broadcast_deduce_incorrect)
 {
     // Check deduced type against incorrectly specified type
     auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 4});
-    auto bc = make_shared<op::Broadcast>(param, Shape{2, 4, 3}, AxisSet{1});
-    bc->set_value_type(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 3, 4}));
     try
     {
-        bc->propagate_types();
+        auto bc = make_shared<op::Broadcast>(param, Shape{2, 4, 3}, AxisSet{1});
+        bc->assert_value_type(element::Float32::element_type(), Shape{2, 3, 4});
+
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
@@ -75,18 +65,17 @@ TEST(type_prop, broadcast_deduce_incorrect)
 
 TEST(type_prop, broadcast_bad_arguments)
 {
-    // Check for bad arguments
-    auto param = make_shared<op::Parameter>(make_shared<TupleType>());
-    auto bc = make_shared<op::Broadcast>(param, Shape{2, 4, 3}, AxisSet{1});
     try
     {
-        bc->propagate_types();
+        // Check for bad arguments
+        auto param = make_shared<op::Parameter>(make_shared<TupleType>());
+        auto bc = make_shared<op::Broadcast>(param, Shape{2, 4, 3}, AxisSet{1});
         // Should have thrown, so fail if it didn't
         FAIL() << "Tuple argument to broadcast not detected.";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Argument to broadcast is not a tensor view"));
+        EXPECT_EQ(error.what(), std::string("Arguments must be tensor views"));
     }
     catch (...)
     {
@@ -101,7 +90,6 @@ TEST(type_prop, concat_deduce)
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 7, 4});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 2, 4});
     auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 1);
-    c->propagate_types();
     auto c_vt = c->get_value_type();
     ASSERT_EQ(*c_vt, TensorViewType(element::Float32::element_type(), Shape{2, 12, 4}));
 }
@@ -112,12 +100,10 @@ TEST(type_prop, concat_deduce_incorrect)
     auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 7, 4});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 2, 4});
-    auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 1);
-    c->set_value_type(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 14, 4}));
     try
     {
-        c->propagate_types();
+        auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 1);
+        c->assert_value_type(element::Float32::element_type(), Shape{2, 14, 4});
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
@@ -139,10 +125,9 @@ TEST(type_prop, concat_deduce_wrong_rank)
                                              Shape{
                                                  2, 2,
                                              });
-    auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 1);
     try
     {
-        c->propagate_types();
+        auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 1);
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
@@ -161,10 +146,9 @@ TEST(type_prop, concat_deduce_wrong_shape)
     auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 7, 4});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 2, 5});
-    auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 1);
     try
     {
-        c->propagate_types();
+        auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 1);
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
@@ -186,10 +170,9 @@ TEST(type_prop, concat_deduce_axis_oob)
     auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 7, 4});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 2, 5});
-    auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 3);
     try
     {
-        c->propagate_types();
+        auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 3);
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
@@ -210,7 +193,6 @@ TEST(type_prop, concat_deduce_axis_barely_in_bounds)
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 8});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 12});
     auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 2);
-    c->propagate_types();
     auto c_vt = c->get_value_type();
     ASSERT_EQ(*c_vt, TensorViewType(element::Float32::element_type(), Shape{2, 3, 24}));
 }
@@ -220,10 +202,9 @@ TEST(type_prop, concat_deduce_elem_type_mismatch)
     auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
     auto param1 = make_shared<op::Parameter>(element::Int32::element_type(), Shape{2, 7, 4});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 2, 4});
-    auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 1);
     try
     {
-        c->propagate_types();
+        auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 1);
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
@@ -242,7 +223,6 @@ TEST(type_prop, convert_deduce)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
     auto c = make_shared<op::Convert>(param, element::Int32::element_type());
-    c->propagate_types();
     auto c_vt = c->get_value_type();
     ASSERT_EQ(*c_vt, TensorViewType(element::Int32::element_type(), Shape{2, 3, 4}));
 }
@@ -252,8 +232,6 @@ TEST(type_prop, convert_deduce_correct)
     // Check deduced type against incorrectly specified type
     auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
     auto c = make_shared<op::Convert>(param, element::Int32::element_type());
-    c->set_value_type(make_shared<TensorViewType>(element::Int32::element_type(), Shape{2, 3, 4}));
-    c->propagate_types();
     auto c_vt = c->get_value_type();
     ASSERT_EQ(*c_vt, TensorViewType(element::Int32::element_type(), Shape{2, 3, 4}));
 }
@@ -262,11 +240,10 @@ TEST(type_prop, convert_deduce_incorrect)
 {
     // Check deduced type against incorrectly specified type
     auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
-    auto c = make_shared<op::Convert>(param, element::Int32::element_type());
-    c->set_value_type(make_shared<TensorViewType>(element::Int32::element_type(), Shape{2, 14, 4}));
     try
     {
-        c->propagate_types();
+        auto c = make_shared<op::Convert>(param, element::Int32::element_type());
+        c->assert_value_type(element::Int32::element_type(), Shape{2, 14, 4});
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
@@ -286,7 +263,6 @@ TEST(type_prop, dot_deduce_scalar_2d)
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4, 5});
     auto bc = make_shared<op::Dot>(param1, param2);
-    bc->propagate_types();
     auto bc_vt = bc->get_value_type();
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{4, 5}));
 }
@@ -297,7 +273,6 @@ TEST(type_prop, dot_deduce_2d_scalar)
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4, 5});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     auto bc = make_shared<op::Dot>(param1, param2);
-    bc->propagate_types();
     auto bc_vt = bc->get_value_type();
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{4, 5}));
 }
@@ -308,7 +283,6 @@ TEST(type_prop, dot_deduce_scalar_scalar)
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     auto bc = make_shared<op::Dot>(param1, param2);
-    bc->propagate_types();
     auto bc_vt = bc->get_value_type();
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{}));
 }
@@ -319,7 +293,6 @@ TEST(type_prop, dot_deduce_scalar_1d)
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6});
     auto bc = make_shared<op::Dot>(param1, param2);
-    bc->propagate_types();
     auto bc_vt = bc->get_value_type();
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{6}));
 }
@@ -330,7 +303,6 @@ TEST(type_prop, dot_deduce_1d)
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4});
     auto bc = make_shared<op::Dot>(param1, param2);
-    bc->propagate_types();
     auto bc_vt = bc->get_value_type();
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{}));
 }
@@ -341,7 +313,6 @@ TEST(type_prop, dot_deduce_2d)
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4, 2});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3});
     auto bc = make_shared<op::Dot>(param1, param2);
-    bc->propagate_types();
     auto bc_vt = bc->get_value_type();
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{4, 3}));
 }
@@ -352,7 +323,6 @@ TEST(type_prop, dot_deduce_different_rank)
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 8, 4, 2});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1, 2, 3});
     auto bc = make_shared<op::Dot>(param1, param2);
-    bc->propagate_types();
     auto bc_vt = bc->get_value_type();
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 8, 4, 1, 3}));
 }
@@ -363,9 +333,6 @@ TEST(type_prop, dot_deduce_different_rank_correct)
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 8, 4, 2});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1, 2, 3});
     auto bc = make_shared<op::Dot>(param1, param2);
-    bc->set_value_type(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 8, 4, 1, 3}));
-    bc->propagate_types();
     auto bc_vt = bc->get_value_type();
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 8, 4, 1, 3}));
 }
@@ -375,10 +342,9 @@ TEST(type_prop, dot_deduce_element_type_mismatch)
     // Type deduction fails due to element type mismatch
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4, 2});
     auto param2 = make_shared<op::Parameter>(element::Int32::element_type(), Shape{2, 5});
-    auto bc = make_shared<op::Dot>(param1, param2);
     try
     {
-        bc->propagate_types();
+        auto bc = make_shared<op::Dot>(param1, param2);
         // Should have thrown, so fail if it didn't
         FAIL() << "Element type mismatch not detected";
     }
@@ -397,10 +363,9 @@ TEST(type_prop, dot_deduce_reduction_axes_size_mismatch)
     // Type deduction fails due to reduction axes size mismatch
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4, 2});
     auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{3, 5});
-    auto bc = make_shared<op::Dot>(param1, param2);
     try
     {
-        bc->propagate_types();
+        auto bc = make_shared<op::Dot>(param1, param2);
         // Should have thrown, so fail if it didn't
         FAIL() << "Dot reduction axes size mismatch not detected";
     }
@@ -417,67 +382,6 @@ TEST(type_prop, dot_deduce_reduction_axes_size_mismatch)
 //
 // Tests for binary elementwise ops.
 //
-void test_binary_bad_arguments_tuple(const shared_ptr<Node>& node)
-{
-    try
-    {
-        node->propagate_types();
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Tuple argument not detected.";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Arguments must be tensor views"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-void test_binary_bad_arguments_view_shapes(const shared_ptr<Node>& node)
-{
-    try
-    {
-        node->propagate_types();
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Incompatible view arguments not detected.";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-void test_binary_bad_arguments_view_element_types(const shared_ptr<Node>& node)
-{
-    try
-    {
-        node->propagate_types();
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Incompatible view arguments not detected.";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(),
-                  std::string("Arguments must have the same tensor view element type"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-void test_binary_good_arguments(const shared_ptr<Node>& node)
-{
-    node->propagate_types();
-    EXPECT_EQ(*node->get_value_type(), *node->get_arguments()[0]->get_value_type());
-}
-
 void test_binary(shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr<Node>& y))
 {
     // Check for bad arguments
@@ -492,12 +396,75 @@ void test_binary(shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr
     auto tv0_4_2_param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{4, 2}));
 
-    test_binary_bad_arguments_tuple(f(tp0_param, tp1_param));
-    test_binary_bad_arguments_tuple(f(tp0_param, tv0_2_4_param_0));
-    test_binary_bad_arguments_tuple(f(tv0_2_4_param_0, tp0_param));
-    test_binary_bad_arguments_view_shapes(f(tv0_2_4_param_0, tv0_4_2_param));
-    test_binary_bad_arguments_view_element_types(f(tv0_2_4_param_0, tv0_2_4_param_2));
-    test_binary_good_arguments(f(tv0_2_4_param_0, tv0_2_4_param_1));
+    auto test_binary_bad_arguments_tuple = [&](const shared_ptr<Node>& x,
+                                               const shared_ptr<Node>& y) {
+        try
+        {
+            auto node = f(x, y);
+            //node->get_value_type();
+            // Should have thrown, so fail if it didn't
+            FAIL() << "Tuple argument not detected.";
+        }
+        catch (const ngraph_error& error)
+        {
+            EXPECT_EQ(error.what(), std::string("Arguments must be tensor views"));
+        }
+        catch (...)
+        {
+            FAIL() << "Deduced type check failed for unexpected reason";
+        }
+    };
+
+    test_binary_bad_arguments_tuple(tp0_param, tp1_param);
+    test_binary_bad_arguments_tuple(tp0_param, tv0_2_4_param_0);
+    test_binary_bad_arguments_tuple(tv0_2_4_param_0, tp0_param);
+    auto test_binary_bad_arguments_view_shapes = [&](const shared_ptr<Node>& x,
+                                                     const shared_ptr<Node>& y) {
+        try
+        {
+            auto node = f(x, y);
+            node->get_value_type();
+            // Should have thrown, so fail if it didn't
+            FAIL() << "Incompatible view arguments not detected.";
+        }
+        catch (const ngraph_error& error)
+        {
+            EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+        }
+        catch (...)
+        {
+            FAIL() << "Deduced type check failed for unexpected reason";
+        }
+    };
+    test_binary_bad_arguments_view_shapes(tv0_2_4_param_0, tv0_4_2_param);
+
+    auto test_binary_bad_arguments_view_element_types = [&](const shared_ptr<Node>& x,
+                                                            const shared_ptr<Node>& y) {
+        try
+        {
+            auto node = f(x, y);
+            node->get_value_type();
+            // Should have thrown, so fail if it didn't
+            FAIL() << "Incompatible view arguments not detected.";
+        }
+        catch (const ngraph_error& error)
+        {
+            EXPECT_EQ(error.what(),
+                      std::string("Arguments must have the same tensor view element type"));
+        }
+        catch (...)
+        {
+            FAIL() << "Deduced type check failed for unexpected reason";
+        }
+    };
+
+    test_binary_bad_arguments_view_element_types(tv0_2_4_param_0, tv0_2_4_param_2);
+
+    auto test_binary_good_arguments = [&](const shared_ptr<Node>& x, const shared_ptr<Node>& y) {
+        auto node = f(x, y);
+        EXPECT_EQ(*node->get_value_type(), *node->get_arguments()[0]->get_value_type());
+    };
+    test_binary_good_arguments(tv0_2_4_param_0, tv0_2_4_param_1);
 }
 
 TEST(type_prop, add_bad_arguments)
@@ -536,7 +503,6 @@ TEST(type_prop, comparison_good)
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
     auto eq = make_shared<op::Equal>(tv0_2_4_param_0, tv0_2_4_param_1);
     TensorViewType expected_type{element::Bool::element_type(), Shape{2, 4}};
-    eq->propagate_types();
     EXPECT_EQ(*eq->get_value_type(), expected_type);
 }
 
@@ -546,10 +512,9 @@ TEST(type_prop, binary_arithmetic_bad_argument_element_types)
         make_shared<TensorViewType>(element::Bool::element_type(), Shape{2, 4}));
     auto tv0_2_4_param_1 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Bool::element_type(), Shape{2, 4}));
-    auto bc = make_shared<op::Add>(tv0_2_4_param_0, tv0_2_4_param_1);
     try
     {
-        bc->propagate_types();
+        auto bc = make_shared<op::Add>(tv0_2_4_param_0, tv0_2_4_param_1);
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -568,10 +533,9 @@ TEST(type_prop, unary_arithmetic_bad_argument_element_types)
 {
     auto tv0_2_4_param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Bool::element_type(), Shape{2, 4}));
-    auto bc = make_shared<op::Negative>(tv0_2_4_param);
     try
     {
-        bc->propagate_types();
+        auto bc = make_shared<op::Negative>(tv0_2_4_param);
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -595,7 +559,6 @@ TEST(type_prop, select_deduce)
     auto tv0_2_4_param_2 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
     auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
-    bc->propagate_types();
     auto bc_vt = bc->get_value_type();
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 4}));
 }
@@ -609,8 +572,6 @@ TEST(type_prop, select_deduce_correct)
     auto tv0_2_4_param_2 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
     auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
-    bc->set_value_type(make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
-    bc->propagate_types();
     auto bc_vt = bc->get_value_type();
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 4}));
 }
@@ -623,10 +584,9 @@ TEST(type_prop, select_shape_mismatch_a)
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
     auto tv0_2_4_param_2 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
-    auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
     try
     {
-        bc->propagate_types();
+        auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -648,10 +608,9 @@ TEST(type_prop, select_shape_mismatch_b)
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 5}));
     auto tv0_2_4_param_2 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
-    auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
     try
     {
-        bc->propagate_types();
+        auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -673,10 +632,9 @@ TEST(type_prop, select_shape_mismatch_c)
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
     auto tv0_2_4_param_2 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 5}));
-    auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
     try
     {
-        bc->propagate_types();
+        auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -698,10 +656,9 @@ TEST(type_prop, select_elem_mismatch_a)
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
     auto tv0_2_4_param_2 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
-    auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
     try
     {
-        bc->propagate_types();
+        auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -725,10 +682,9 @@ TEST(type_prop, select_elem_mismatch_bc)
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
     auto tv0_2_4_param_2 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Int32::element_type(), Shape{2, 4}));
-    auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
     try
     {
-        bc->propagate_types();
+        auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -758,19 +714,15 @@ TEST(type_prop, reduce_deduce)
     auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
 
     auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
-    r0->propagate_types();
     ASSERT_EQ(*(r0->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{4}));
 
     auto r1 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{1});
-    r1->propagate_types();
     ASSERT_EQ(*(r1->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{2}));
 
     auto r01 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0, 1});
-    r01->propagate_types();
     ASSERT_EQ(*(r01->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
 
     auto r_none = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{});
-    r_none->propagate_types();
     ASSERT_EQ(*(r_none->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{2, 4}));
 }
@@ -790,8 +742,6 @@ TEST(type_prop, reduce_deduce_correct)
     auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
 
     auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
-    r0->set_value_type(make_shared<TensorViewType>(element::Float32::element_type(), Shape{4}));
-    r0->propagate_types();
     ASSERT_EQ(*(r0->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{4}));
 }
 
@@ -809,10 +759,9 @@ TEST(type_prop, reduce_nonscalar)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
 
-    auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
     try
     {
-        r0->propagate_types();
+        auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -840,10 +789,9 @@ TEST(type_prop, reduce_elem_type_mismatch)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
 
-    auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
     try
     {
-        r0->propagate_types();
+        auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -873,10 +821,9 @@ TEST(type_prop, reduce_function_return_type_mismatch)
     auto f = make_shared<Function>(
         make_shared<op::Equal>(f_param_0, f_param_1), rt, op::Parameters{f_param_0, f_param_1});
 
-    auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
     try
     {
-        r0->propagate_types();
+        auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -905,10 +852,9 @@ TEST(type_prop, reduce_function_arg0_type_mismatch)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f = make_shared<Function>(f_param_1, rt, op::Parameters{f_param_0, f_param_1});
 
-    auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
     try
     {
-        r0->propagate_types();
+        auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -936,10 +882,9 @@ TEST(type_prop, reduce_function_arg1_type_mismatch)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f = make_shared<Function>(f_param_0, rt, op::Parameters{f_param_0, f_param_1});
 
-    auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
     try
     {
-        r0->propagate_types();
+        auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -970,10 +915,9 @@ TEST(type_prop, reduce_function_arg_count_mismatch)
     auto f = make_shared<Function>(
         f_param_0 + f_param_1 + f_param_2, rt, op::Parameters{f_param_0, f_param_1, f_param_2});
 
-    auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
     try
     {
-        r0->propagate_types();
+        auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -1002,10 +946,9 @@ TEST(type_prop, reduce_axis_oob)
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
 
-    auto r = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0, 2, 1});
     try
     {
-        r->propagate_types();
+        auto r = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0, 2, 1});
         // Should have thrown, so fail if it didn't
         FAIL() << "Did not detect incorrect element types for arithmetic operator";
     }
@@ -1036,8 +979,6 @@ TEST(type_prop, function_call_deduce)
     auto r = make_shared<op::FunctionCall>(f, Nodes{X, Y, Z});
     auto r_p_r = r + r;
 
-    r->propagate_types();
-    r_p_r->propagate_types();
     auto r_p_r_vt = r_p_r->get_value_type();
     ASSERT_EQ(*r_p_r_vt, TensorViewType(element::Float32::element_type(), shape));
 }
@@ -1047,7 +988,6 @@ TEST(type_prop, reshape_deduce_s2v)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
     auto r = make_shared<op::Reshape>(param, AxisVector{}, Shape{1});
-    r->propagate_types();
     ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{1}));
 }
 
@@ -1056,7 +996,6 @@ TEST(type_prop, reshape_deduce_s2m)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
     auto r = make_shared<op::Reshape>(param, AxisVector{}, Shape{1, 1});
-    r->propagate_types();
     ASSERT_EQ(*(r->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{1, 1}));
 }
@@ -1066,7 +1005,6 @@ TEST(type_prop, reshape_deduce_s2t)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
     auto r = make_shared<op::Reshape>(param, AxisVector{}, Shape{1, 1, 1});
-    r->propagate_types();
     ASSERT_EQ(*(r->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{1, 1, 1}));
 }
@@ -1076,7 +1014,6 @@ TEST(type_prop, reshape_deduce_v2s)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{1}));
     auto r = make_shared<op::Reshape>(param, AxisVector{0}, Shape{});
-    r->propagate_types();
     ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
 }
 
@@ -1085,7 +1022,6 @@ TEST(type_prop, reshape_deduce_m2s)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{1, 1}));
     auto r = make_shared<op::Reshape>(param, AxisVector{0, 1}, Shape{});
-    r->propagate_types();
     ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
 }
 
@@ -1094,7 +1030,6 @@ TEST(type_prop, reshape_deduce_t2s)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{1, 1, 1}));
     auto r = make_shared<op::Reshape>(param, AxisVector{0, 1, 2}, Shape{});
-    r->propagate_types();
     ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
 }
 
@@ -1103,7 +1038,6 @@ TEST(type_prop, reshape_deduce_m2v_01)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4}));
     auto r = make_shared<op::Reshape>(param, AxisVector{0, 1}, Shape{12});
-    r->propagate_types();
     ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{12}));
 }
 
@@ -1112,7 +1046,6 @@ TEST(type_prop, reshape_deduce_m2v_10)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4}));
     auto r = make_shared<op::Reshape>(param, AxisVector{1, 0}, Shape{12});
-    r->propagate_types();
     ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{12}));
 }
 
@@ -1121,7 +1054,6 @@ TEST(type_prop, reshape_deduce_t2v_012)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
     auto r = make_shared<op::Reshape>(param, AxisVector{0, 1, 2}, Shape{60});
-    r->propagate_types();
     ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{60}));
 }
 
@@ -1130,7 +1062,6 @@ TEST(type_prop, reshape_deduce_t2v_120)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
     auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0}, Shape{60});
-    r->propagate_types();
     ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{60}));
 }
 
@@ -1139,8 +1070,6 @@ TEST(type_prop, reshape_deduce_correct_t2v_120)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
     auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0}, Shape{60});
-    r->set_value_type(make_shared<TensorViewType>(element::Float32::element_type(), Shape{60}));
-    r->propagate_types();
     ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{60}));
 }
 
@@ -1148,10 +1077,9 @@ TEST(type_prop, reshape_deduce_not_enough_axes)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
-    auto r = make_shared<op::Reshape>(param, AxisVector{1, 0}, Shape{60});
     try
     {
-        r->propagate_types();
+        auto r = make_shared<op::Reshape>(param, AxisVector{1, 0}, Shape{60});
         // Should have thrown, so fail if it didn't
         FAIL() << "Not enough axes not detected";
     }
@@ -1171,10 +1099,9 @@ TEST(type_prop, reshape_deduce_too_many_axes)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
-    auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0, 3}, Shape{60});
     try
     {
-        r->propagate_types();
+        auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0, 3}, Shape{60});
         // Should have thrown, so fail if it didn't
         FAIL() << "Too many axes not detected";
     }
@@ -1194,10 +1121,9 @@ TEST(type_prop, reshape_deduce_duplicate_axes)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
-    auto r = make_shared<op::Reshape>(param, AxisVector{1, 1, 0}, Shape{60});
     try
     {
-        r->propagate_types();
+        auto r = make_shared<op::Reshape>(param, AxisVector{1, 1, 0}, Shape{60});
         // Should have thrown, so fail if it didn't
         FAIL() << "Too many axes not detected";
     }
@@ -1217,10 +1143,9 @@ TEST(type_prop, reshape_deduce_wrong_output_shape)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
-    auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0}, Shape{3, 3, 3});
     try
     {
-        r->propagate_types();
+        auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0}, Shape{3, 3, 3});
         // Should have thrown, so fail if it didn't
         FAIL() << "Too many axes not detected";
     }
@@ -1241,7 +1166,6 @@ TEST(type_prop, slice_deduce_vector)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
     auto sl = make_shared<op::Slice>(param, Coordinate{2}, Coordinate{5});
-    sl->propagate_types();
     ASSERT_EQ(*(sl->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{3}));
 }
 
@@ -1250,7 +1174,6 @@ TEST(type_prop, slice_deduce_matrix)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
     auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7});
-    sl->propagate_types();
     ASSERT_EQ(*(sl->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{3, 6}));
 }
@@ -1260,7 +1183,6 @@ TEST(type_prop, slice_deduce_matrix_strided)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
     auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7}, Shape{3, 2});
-    sl->propagate_types();
     ASSERT_EQ(*(sl->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{1, 3}));
 }
@@ -1270,7 +1192,6 @@ TEST(type_prop, slice_deduce_matrix_strided_uneven)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
     auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7}, Shape{3, 4});
-    sl->propagate_types();
     ASSERT_EQ(*(sl->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{1, 2}));
 }
@@ -1280,7 +1201,6 @@ TEST(type_prop, slice_deduce_vector_edge)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
     auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{6});
-    sl->propagate_types();
     ASSERT_EQ(*(sl->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{6}));
 }
 
@@ -1289,7 +1209,6 @@ TEST(type_prop, slice_deduce_matrix_edge)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
     auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{6, 8});
-    sl->propagate_types();
     ASSERT_EQ(*(sl->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{6, 8}));
 }
@@ -1299,7 +1218,6 @@ TEST(type_prop, slice_deduce_matrix_zero_cols)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
     auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{6, 0});
-    sl->propagate_types();
     ASSERT_EQ(*(sl->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{6, 0}));
 }
@@ -1309,7 +1227,6 @@ TEST(type_prop, slice_deduce_matrix_zero_zero)
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
     auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{0, 0});
-    sl->propagate_types();
     ASSERT_EQ(*(sl->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{0, 0}));
 }
@@ -1318,10 +1235,9 @@ TEST(type_prop, slice_deduce_vector_invalid_step)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
-    auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{7}, Shape{1, 2});
     try
     {
-        sl->propagate_types();
+        auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{7}, Shape{1, 2});
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid slice step not detected";
     }
@@ -1342,10 +1258,9 @@ TEST(type_prop, slice_deduce_vector_edge_upper_oob)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
-    auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{7});
     try
     {
-        sl->propagate_types();
+        auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{7});
         // Should have thrown, so fail if it didn't
         FAIL() << "Upper bound out of range not detected";
     }
@@ -1363,10 +1278,9 @@ TEST(type_prop, slice_deduce_matrix_edge_upper_oob)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
-    auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{6, 9});
     try
     {
-        sl->propagate_types();
+        auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{6, 9});
         // Should have thrown, so fail if it didn't
         FAIL() << "Upper bound out of range not detected";
     }
@@ -1384,10 +1298,9 @@ TEST(type_prop, slice_deduce_vector_lower_above_upper)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
-    auto sl = make_shared<op::Slice>(param, Coordinate{3}, Coordinate{2});
     try
     {
-        sl->propagate_types();
+        auto sl = make_shared<op::Slice>(param, Coordinate{3}, Coordinate{2});
         // Should have thrown, so fail if it didn't
         FAIL() << "Lower bound above upper not detected";
     }
@@ -1405,10 +1318,9 @@ TEST(type_prop, slice_deduce_matrix_lower_above_upper)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
-    auto sl = make_shared<op::Slice>(param, Coordinate{0, 5}, Coordinate{6, 4});
     try
     {
-        sl->propagate_types();
+        auto sl = make_shared<op::Slice>(param, Coordinate{0, 5}, Coordinate{6, 4});
         // Should have thrown, so fail if it didn't
         FAIL() << "Lower bound above upper not detected";
     }
@@ -1426,10 +1338,9 @@ TEST(type_prop, slice_deduce_matrix_lower_missing)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
-    auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{5, 5});
     try
     {
-        sl->propagate_types();
+        auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{5, 5});
         // Should have thrown, so fail if it didn't
         FAIL() << "Missing lower bound coordinate not detected";
     }
@@ -1450,10 +1361,9 @@ TEST(type_prop, slice_deduce_matrix_upper_missing)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
-    auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{5});
     try
     {
-        sl->propagate_types();
+        auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{5});
         // Should have thrown, so fail if it didn't
         FAIL() << "Missing upper bound coordinate not detected";
     }
@@ -1474,10 +1384,9 @@ TEST(type_prop, slice_deduce_matrix_lower_extra)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
-    auto sl = make_shared<op::Slice>(param, Coordinate{0, 0, 0}, Coordinate{5, 5});
     try
     {
-        sl->propagate_types();
+        auto sl = make_shared<op::Slice>(param, Coordinate{0, 0, 0}, Coordinate{5, 5});
         // Should have thrown, so fail if it didn't
         FAIL() << "Extra lower bound coordinate not detected";
     }
@@ -1498,10 +1407,9 @@ TEST(type_prop, slice_deduce_matrix_upper_extra)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
-    auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{5, 5, 5});
     try
     {
-        sl->propagate_types();
+        auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{5, 5, 5});
         // Should have thrown, so fail if it didn't
         FAIL() << "Extra upper bound coordinate not detected";
     }
@@ -1521,14 +1429,12 @@ TEST(type_prop, slice_deduce_matrix_upper_extra)
 TEST(type_prop, scalar_constant_deduce_float32)
 {
     auto c = make_shared<op::Constant>(element::Float32::element_type(), Shape{}, "208");
-    c->propagate_types();
     ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
 }
 
 TEST(type_prop, scalar_constant_deduce_bool)
 {
     auto c = make_shared<op::Constant>(element::Bool::element_type(), Shape{}, "1");
-    c->propagate_types();
     ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Bool::element_type(), Shape{}));
 }
 
@@ -1537,7 +1443,6 @@ TEST(type_prop, tensor_constant_deduce_float32)
     auto c = make_shared<op::Constant>(element::Float32::element_type(),
                                        Shape{2, 2},
                                        std::vector<std::string>{"208", "208", "208", "208"});
-    c->propagate_types();
     ASSERT_EQ(*(c->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{2, 2}));
 }
@@ -1546,18 +1451,16 @@ TEST(type_prop, tensor_constant_deduce_bool)
 {
     auto c = make_shared<op::Constant>(
         element::Bool::element_type(), Shape{2, 2}, std::vector<std::string>{"1", "1", "1", "1"});
-    c->propagate_types();
     ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Bool::element_type(), Shape{2, 2}));
 }
 
 TEST(type_prop, tensor_constant_bad_parse)
 {
-    auto c = make_shared<op::Constant>(element::Bool::element_type(),
-                                       Shape{2, 2},
-                                       std::vector<std::string>{"1", "grunk", "1", "1"});
     try
     {
-        c->propagate_types();
+        auto c = make_shared<op::Constant>(element::Bool::element_type(),
+                                           Shape{2, 2},
+                                           std::vector<std::string>{"1", "grunk", "1", "1"});
         // Should have thrown, so fail if it didn't
         FAIL() << "Bad literal parse not detected";
     }
@@ -1573,12 +1476,11 @@ TEST(type_prop, tensor_constant_bad_parse)
 
 TEST(type_prop, tensor_constant_bad_parse_float_for_int)
 {
-    auto c = make_shared<op::Constant>(element::Int32::element_type(),
-                                       Shape{2, 2},
-                                       std::vector<std::string>{"1", "2.7", "1", "1"});
     try
     {
-        c->propagate_types();
+        auto c = make_shared<op::Constant>(element::Int32::element_type(),
+                                           Shape{2, 2},
+                                           std::vector<std::string>{"1", "2.7", "1", "1"});
         // Should have thrown, so fail if it didn't
         FAIL() << "Bad literal parse not detected";
     }
@@ -1594,11 +1496,10 @@ TEST(type_prop, tensor_constant_bad_parse_float_for_int)
 
 TEST(type_prop, tensor_constant_bad_count)
 {
-    auto c = make_shared<op::Constant>(
-        element::Bool::element_type(), Shape{2, 2}, std::vector<std::string>{"1", "1", "1"});
     try
     {
-        c->propagate_types();
+        auto c = make_shared<op::Constant>(
+            element::Bool::element_type(), Shape{2, 2}, std::vector<std::string>{"1", "1", "1"});
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect number of literals not detected";
     }

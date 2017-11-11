@@ -112,7 +112,7 @@ TEST(copy, concat)
     std::vector<std::shared_ptr<Node>> new_args{
         make_shared<op::Parameter>(element::Float32::element_type(), shape),
         make_shared<op::Parameter>(element::Float32::element_type(), shape)};
-    size_t axis = 1;
+    size_t axis = 0;
     auto node = make_shared<op::Concat>(Nodes{arg0, arg1}, axis);
     auto new_node = node->copy_with_new_args(new_args);
     auto node_cast = dynamic_pointer_cast<op::Concat>(new_node);
@@ -224,9 +224,11 @@ TEST(copy, FunctionCall)
 
     auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto arg1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto node = make_shared<op::FunctionCall>(f, Nodes{arg0, arg1});
+    auto arg2 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto node = make_shared<op::FunctionCall>(f, Nodes{arg0, arg1, arg2});
 
     std::vector<std::shared_ptr<Node>> new_args{
+        make_shared<op::Parameter>(element::Float32::element_type(), shape),
         make_shared<op::Parameter>(element::Float32::element_type(), shape),
         make_shared<op::Parameter>(element::Float32::element_type(), shape)};
     auto new_node = node->copy_with_new_args(new_args);

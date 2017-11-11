@@ -26,8 +26,8 @@ set (SRC
     node.cpp
     ops/add.cpp
     ops/binary_elementwise_arithmetic.cpp
-    ops/binary_elementwise_builtin.cpp
     ops/binary_elementwise_comparison.cpp
+    ops/binary_elementwise.cpp
     ops/broadcast.cpp
     ops/concatenate.cpp
     ops/constant.cpp
@@ -53,8 +53,7 @@ set (SRC
     ops/sum.cpp
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
-    ops/unary_elementwise_builtin.cpp
-    pass/assign_tensors.cpp
+    ops/unary_elementwise.cpp
     pass/collect_functions.cpp
     pass/dump_sorted.cpp
     pass/liveness.cpp
@@ -63,7 +62,6 @@ set (SRC
     pass/memory_layout.cpp
     pass/memory_visualize.cpp
     pass/pass.cpp
-    pass/propagate_types.cpp
     pass/topological_sort.cpp
     pass/visualize_tree.cpp
     runtime/backend.cpp
@@ -128,6 +126,29 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
 endif()
 
 add_library(ngraph SHARED ${SRC})
+
+# Colon separated string for specified runtime plugin loading, this is made explicit s.t. if a
+# plugin is specified at compile time but the corresponding library could not be resolved at run-
+# time, an error will be generated.
+# E.g. assume compiling with Argon and Xpu, then -DRUNTIME_PLUGIN_LIBS="libargon.so:libxpu.so".
+if (DEFINED RUNTIME_PLUGIN_LIBS)
+    target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS=${RUNTIME_PLUGIN_LIBS})
+else()
+    target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS="")
+endif()
+
+# This is used to ensure that libngraph.so and libargon.so are in the same directory for dlopen.
+# Effective at build time. Does not affect `make install` logics.
+if (DEFINED COMMON_LIBRARY_OUTPUT_DIRECTORY)
+    set_target_properties(ngraph PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${COMMON_LIBRARY_OUTPUT_DIRECTORY})
+else()
+    set_target_properties(ngraph PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+message(STATUS "LIBRARY_OUTPUT_DIRECTORY set to: ${COMMON_LIBRARY_OUTPUT_DIRECTORY}")
+
+
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
 if(NGRAPH_CPU_ENABLE AND LLVM_LINK_LIBS)
@@ -143,6 +164,7 @@ endif()
 if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
     target_link_libraries(ngraph LINK_PRIVATE mkldnn)
 endif()
+
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...

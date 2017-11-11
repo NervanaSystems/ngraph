@@ -25,8 +25,6 @@ TEST(input_output, param_tensor)
     // Params have no arguments, so we can check that the value becomes a tensor output
     auto tv_tp = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4});
     auto param = make_shared<op::Parameter>(tv_tp);
-    param->propagate_types();
-    param->assign_tensors();
 
     ASSERT_EQ(param->get_outputs().size(), 1);
     for (size_t i = 0; i < param->get_outputs().size(); i++)
@@ -46,8 +44,6 @@ TEST(input_output, param_tuple)
     auto tv_tp_1 = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4, 6});
     auto tp_tp = make_shared<TupleType>(ValueTypes{tv_tp_0, tv_tp_1});
     auto param = make_shared<op::Parameter>(tp_tp);
-    param->propagate_types();
-    param->assign_tensors();
 
     ASSERT_EQ(param->get_outputs().size(), 2);
     for (size_t i = 0; i < param->get_outputs().size(); i++)
@@ -74,19 +70,8 @@ TEST(input_output, simple_output)
     nodes.push_back(param_1);
     nodes.push_back(add);
 
-    // Type info
-    for (auto node : nodes)
-    {
-        node->propagate_types();
-    }
-
-    // Add inputs/outputs
-    for (auto node : nodes)
-    {
-        node->assign_tensors();
-    }
-
     // At this point, the add should have each input associated with the output of the appropriate parameter
+    ASSERT_EQ(1, add->get_outputs().size());
     auto& inputs = add->get_inputs();
     ASSERT_EQ(2, inputs.size());
     for (size_t i = 0; i < inputs.size(); i++)
