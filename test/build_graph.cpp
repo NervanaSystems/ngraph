@@ -121,69 +121,6 @@ TEST(build_graph, tensor)
     ASSERT_NE(*int32_0->get_value_type(), *float_tensor_type);
 }
 
-TEST(build_graph, set_value_type_checked)
-{
-    auto untyped_param = make_shared<op::Parameter>();
-    try
-    {
-        untyped_param->set_value_type_checked(
-            make_shared<TensorViewType>(element::Float32::element_type(), Shape{4, 4}));
-    }
-    catch (...)
-    {
-        FAIL() << "Setting value type for first time type failed.";
-    }
-    try
-    {
-        untyped_param->set_value_type_checked(
-            make_shared<TensorViewType>(element::Float32::element_type(), Shape{4, 4}));
-    }
-    catch (...)
-    {
-        FAIL() << "Setting value type to same type failed.";
-    }
-    try
-    {
-        untyped_param->set_value_type_checked(
-            make_shared<TensorViewType>(element::Float32::element_type(), Shape{4, 5}));
-        FAIL() << "Setting value type to a different shape did not fail.";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Setting value type to a different ValueType"));
-    }
-    catch (...)
-    {
-        FAIL() << "Setting value type to a different shape did not failed with incorrect error.";
-    }
-    try
-    {
-        untyped_param->set_value_type_checked(
-            make_shared<TensorViewType>(element::Int32::element_type(), Shape{4, 4}));
-        FAIL() << "Setting value type to a different element type did not fail.";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("Setting value type to a different ValueType"));
-    }
-    catch (...)
-    {
-        FAIL() << "Setting value type to a different element type did not failed with incorrect "
-                  "error.";
-    }
-
-    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{4, 4});
-    try
-    {
-        param->set_value_type_checked(
-            make_shared<TensorViewType>(element::Float32::element_type(), Shape{4, 4}));
-    }
-    catch (...)
-    {
-        FAIL() << "Setting value type to same type failed.";
-    }
-}
-
 // Check argument inverses
 TEST(build_graph, arg_inverse)
 {

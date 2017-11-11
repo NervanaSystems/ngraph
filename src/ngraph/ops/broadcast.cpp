@@ -21,7 +21,7 @@ using namespace ngraph;
 op::Broadcast::Broadcast(const std::shared_ptr<Node>& arg,
                          const Shape& shape,
                          const AxisSet& broadcast_axes)
-    : RequiresTensorViewArgs({arg})
+    : RequiresTensorViewArgs("Broadcast", {arg})
     , m_shape(shape)
     , m_broadcast_axes(broadcast_axes)
 {

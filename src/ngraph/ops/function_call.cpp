@@ -20,7 +20,7 @@ using namespace ngraph;
 
 op::FunctionCall::FunctionCall(std::shared_ptr<Function> function,
                                const std::vector<std::shared_ptr<Node>>& args)
-    : Node(args)
+    : Node("FunctionCall", args)
     , m_function(function)
 {
     auto& function_params = m_function->get_parameters();

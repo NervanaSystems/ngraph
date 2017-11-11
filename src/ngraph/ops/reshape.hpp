@@ -81,7 +81,6 @@ namespace ngraph
                 return std::make_shared<Reshape>(new_args.at(0), m_input_order, m_output_shape);
             }
 
-            virtual std::string description() const override { return "Reshape"; }
             /// \return The order in which to iterate over input axes.
             const AxisVector& get_input_order() const { return m_input_order; }
             /// \return The shape of the output tensor.

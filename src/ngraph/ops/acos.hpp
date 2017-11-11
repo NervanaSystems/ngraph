@@ -48,7 +48,7 @@ namespace ngraph
             ///
             /// \param arg Node that produces the input tensor.
             Acos(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic(arg)
+                : UnaryElementwiseArithmetic("Acos", arg)
             {
             }
 
@@ -59,8 +59,6 @@ namespace ngraph
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<Acos>(new_args.at(0));
             }
-
-            virtual std::string description() const override { return "Acos"; }
         };
     }
 }

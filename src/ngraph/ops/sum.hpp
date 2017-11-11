@@ -97,7 +97,6 @@ namespace ngraph
                 return std::make_shared<Sum>(new_args.at(0), m_reduction_axes);
             }
 
-            virtual std::string description() const override { return "Sum"; }
             /// \return The axis positions (0-based) to be eliminated through summation.
             const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
         protected:

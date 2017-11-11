@@ -50,7 +50,7 @@ namespace ngraph
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
             Add(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic(arg0, arg1)
+                : BinaryElementwiseArithmetic("Add", arg0, arg1)
             {
             }
 
@@ -62,7 +62,6 @@ namespace ngraph
                 return std::make_shared<Add>(new_args.at(0), new_args.at(1));
             }
 
-            virtual std::string description() const override { return "Add"; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;

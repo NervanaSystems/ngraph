@@ -19,7 +19,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Sum::Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-    : RequiresTensorViewArgs({arg})
+    : RequiresTensorViewArgs("Sum", {arg})
     , m_reduction_axes(reduction_axes)
 {
     auto arg_tensor_view_type = get_inputs().at(0).get_tensor_view_type();

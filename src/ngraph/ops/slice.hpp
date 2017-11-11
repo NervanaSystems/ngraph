@@ -85,7 +85,6 @@ namespace ngraph
                     new_args.at(0), m_lower_bounds, m_upper_bounds, m_step);
             }
 
-            virtual std::string description() const override { return "Slice"; }
             /// \return The inclusive lower-bound coordinates.
             const Coordinate& get_lower_bounds() const { return m_lower_bounds; }
             /// \return The exclusive upper-bound coordinates.

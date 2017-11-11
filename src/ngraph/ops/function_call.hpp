@@ -61,7 +61,6 @@ namespace ngraph
                 return std::make_shared<FunctionCall>(m_function, new_args);
             }
 
-            virtual std::string description() const override { return "FunctionCall"; }
             /// \return The function to be called.
             std::shared_ptr<Function> get_function() const { return m_function; }
         protected:

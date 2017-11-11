@@ -48,7 +48,7 @@ namespace ngraph
             ///
             /// \param arg Node that produces the input tensor.
             Asin(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic(arg)
+                : UnaryElementwiseArithmetic("Asin", arg)
             {
             }
 
@@ -59,8 +59,6 @@ namespace ngraph
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<Asin>(new_args.at(0));
             }
-
-            virtual std::string description() const override { return "Asin"; }
         };
     }
 }

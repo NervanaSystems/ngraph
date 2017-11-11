@@ -33,7 +33,8 @@ namespace ngraph
             /// \brief Constructs an operation on tensor view arguments.
             ///
             /// \param args The nodes producing this node's input tensors.
-            RequiresTensorViewArgs(const std::vector<std::shared_ptr<Node>>& args);
+            RequiresTensorViewArgs(const std::string& node_type,
+                                   const std::vector<std::shared_ptr<Node>>& args);
         };
 
         /// \brief Abstract base class for elementwise unary operations, i.e., operations where the same
@@ -60,6 +61,7 @@ namespace ngraph
             ///
             /// \param arg Node that produces the input tensor.
             UnaryElementwise(
+                const std::string& node_type,
                 std::function<const element::Type&(const element::Type&)> element_type_function,
                 const std::shared_ptr<Node>& arg);
         };
@@ -87,7 +89,8 @@ namespace ngraph
             /// \brief Constructs a unary elementwise arithmetic operation.
             ///
             /// \param arg Node that produces the input tensor.
-            UnaryElementwiseArithmetic(const std::shared_ptr<Node>& arg);
+            UnaryElementwiseArithmetic(const std::string& node_type,
+                                       const std::shared_ptr<Node>& arg);
         };
 
         /// \brief Abstract base class for elementwise binary operations, i.e., operations where the same
@@ -117,6 +120,7 @@ namespace ngraph
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
             BinaryElementwise(
+                const std::string& node_type,
                 std::function<const element::Type&(const element::Type&, const element::Type&)>
                     element_type_function,
                 const std::shared_ptr<Node>& arg0,
@@ -149,7 +153,8 @@ namespace ngraph
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
-            BinaryElementwiseComparison(const std::shared_ptr<Node>& arg0,
+            BinaryElementwiseComparison(const std::string& node_type,
+                                        const std::shared_ptr<Node>& arg0,
                                         const std::shared_ptr<Node>& arg1);
         };
 
@@ -179,7 +184,8 @@ namespace ngraph
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
-            BinaryElementwiseArithmetic(const std::shared_ptr<Node>& arg0,
+            BinaryElementwiseArithmetic(const std::string& node_type,
+                                        const std::shared_ptr<Node>& arg0,
                                         const std::shared_ptr<Node>& arg1);
         };
     }

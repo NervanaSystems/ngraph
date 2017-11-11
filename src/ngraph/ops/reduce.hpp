@@ -110,7 +110,6 @@ namespace ngraph
                     new_args.at(0), new_args.at(1), m_reduction_function, m_reduction_axes);
             }
 
-            virtual std::string description() const override { return "Reduce"; }
             /// \return The function to use for reduction.
             std::shared_ptr<Function> get_reduction_function() const
             {

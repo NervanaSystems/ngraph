@@ -78,7 +78,6 @@ namespace ngraph
                 return std::make_shared<Concat>(new_args, m_concatenation_axis);
             }
 
-            virtual std::string description() const override { return "Concat"; }
             /// \return The concatenation axis.
             size_t get_concatenation_axis() const { return m_concatenation_axis; }
         protected:

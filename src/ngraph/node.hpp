@@ -44,10 +44,7 @@ namespace ngraph
         friend class autodiff::Adjoints;
 
     protected:
-        Node(const Nodes& arguments, std::shared_ptr<const ValueType> value_type = nullptr);
-        Node();
-        Node(std::shared_ptr<const ValueType> value_type);
-
+        Node(const std::string& node_type, const Nodes& arguments);
         virtual ~Node();
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -55,20 +52,16 @@ namespace ngraph
         {
         }
 
-        /// Assign Input and Output vectors
-        // This might later need to be virtual.
-        void assign_tensors();
-
     public:
         /// The class name, must not contain spaces
-        virtual std::string description() const = 0;
+        std::string description() const { return m_node_type; }
         std::string get_name() const;
         void set_name(const std::string& name);
 
         const Nodes& get_arguments() const { return m_arguments; }
         void clear_arguments() { m_arguments.clear(); }
         const std::multiset<Node*>& users() const { return m_users; }
-        virtual std::string get_node_id() const;
+        std::string get_node_id() const;
 
         /// Return true if this has the same implementing class as node. This
         /// will be used by the pattern matcher when comparing a pattern
@@ -118,6 +111,7 @@ namespace ngraph
             copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const = 0;
 
     protected:
+        std::string m_node_type;
         Nodes m_arguments;
         std::shared_ptr<const ValueType> m_value_type;
         std::multiset<Node*> m_users;
@@ -126,7 +120,6 @@ namespace ngraph
         static std::atomic<size_t> m_next_instance_id;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
-        bool m_outputs_valid{false};
         bool m_is_output;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
     };

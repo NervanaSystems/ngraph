@@ -48,7 +48,7 @@ namespace ngraph
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
             Power(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic(arg0, arg1)
+                : BinaryElementwiseArithmetic("Power", arg0, arg1)
             {
             }
 
@@ -59,8 +59,6 @@ namespace ngraph
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<Power>(new_args.at(0), new_args.at(1));
             }
-
-            virtual std::string description() const override { return "Power"; }
         };
     }
 }

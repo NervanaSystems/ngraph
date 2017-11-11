@@ -28,7 +28,7 @@ namespace
 op::Constant::Constant(const element::Type& et,
                        const Shape& shape,
                        const std::vector<std::string>& value_strings)
-    : ConstantBase(std::make_shared<TensorViewType>(et, shape))
+    : ConstantBase("Constant", std::make_shared<TensorViewType>(et, shape))
     , m_value_strings(value_strings)
 {
     check_args();
@@ -40,7 +40,7 @@ op::Constant::Constant(const element::Type& et,
 /// \param shape The shape of the tensor constant.
 /// \param value_string A literal for initializing each tensor constant.
 op::Constant::Constant(const element::Type& et, const Shape& shape, const std::string& value_string)
-    : ConstantBase(std::make_shared<TensorViewType>(et, shape))
+    : ConstantBase("Constant", std::make_shared<TensorViewType>(et, shape))
     , m_value_strings(ngraph::shape_size(shape), value_string)
 {
     check_args();

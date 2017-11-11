@@ -21,7 +21,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Tuple::Tuple(const Nodes& args)
-    : Node(args)
+    : Node("Tuple", args)
 {
     vector<shared_ptr<const ValueType>> element_types;
     for (auto argument : m_arguments)
