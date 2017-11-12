@@ -374,7 +374,10 @@ extern "C" void free_aligned_buffer(void* allocated);
 #endif
 
     auto llvm_module = estate.compile(code, "__ngcpu_codegen.cpp");
-    assert(llvm_module);
+    if (llvm_module == nullptr)
+    {
+        throw runtime_error("function failed to compile");
+    }
     estate.add_module(llvm_module);
     estate.finalize();
     m_compiled_function = estate.find_function<EntryPoint_t>(function_name);

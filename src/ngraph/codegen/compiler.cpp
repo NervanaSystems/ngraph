@@ -193,14 +193,15 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
 
     // Create and execute action
     CodeGenAction* compilerAction = new EmitCodeGenOnlyAction();
-    if (Clang->ExecuteAction(*compilerAction) == false)
+    std::unique_ptr<llvm::Module> rc;
+    if (Clang->ExecuteAction(*compilerAction) == true)
     {
-        throw runtime_error("codegen compile failed");
+        rc = compilerAction->takeModule();
     }
 
     buffer.release();
 
-    return compilerAction->takeModule();
+    return rc;
 }
 
 bool execution_state::add_module(std::unique_ptr<llvm::Module>& module)
