@@ -85,7 +85,6 @@ TEST(${BACKEND_NAME}, abc_int64)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    NGRAPH_INFO;
     auto a = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
     copy_data(a, vector<element::Int64::type>{1, 2, 3, 4});
     auto b = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
@@ -94,15 +93,14 @@ TEST(${BACKEND_NAME}, abc_int64)
     copy_data(c, vector<element::Int64::type>{9, 10, 11, 12});
     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
 
-    // (*cf)({a, b, c}, {result});
-    // EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector<int64_t>());
+    (*cf)({a, b, c}, {result});
+    EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector<int64_t>());
 
-    // (*cf)({b, a, c}, {result});
-    // EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector<int64_t>());
+    (*cf)({b, a, c}, {result});
+    EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector<int64_t>());
 
-    // (*cf)({a, c, b}, {result});
-    // EXPECT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector<int64_t>());
-    NGRAPH_INFO;
+    (*cf)({a, c, b}, {result});
+    EXPECT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector<int64_t>());
 }
 
 // Same as abc, but using tuples for input and output
