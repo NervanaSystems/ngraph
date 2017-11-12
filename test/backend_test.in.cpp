@@ -1422,10 +1422,10 @@ TEST(${BACKEND_NAME}, reduce_trivial)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
-    auto b = runtime::make_tensor<element::Float32>(shape);
-    copy_data(b, vector<float>{0});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{0, 0, 0, 0});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a, b}, {result});

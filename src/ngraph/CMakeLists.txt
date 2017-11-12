@@ -21,6 +21,7 @@ set (SRC
     descriptor/tensor.cpp
     descriptor/tensor_view.cpp
     descriptor/tuple.cpp
+    file_util.cpp
     function.cpp
     log.cpp
     node.cpp
@@ -53,7 +54,6 @@ set (SRC
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise.cpp
-    pass/collect_functions.cpp
     pass/dump_sorted.cpp
     pass/liveness.cpp
     pass/manager.cpp

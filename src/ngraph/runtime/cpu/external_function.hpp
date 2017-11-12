@@ -42,7 +42,6 @@ namespace ngraph
             using OpFunction = std::function<void(Emitter*,
                                                   const ngraph::Node*,
                                                   ExternalFunction*,
-                                                  FunctionMap&,
                                                   const std::vector<TensorViewInfo>& inputs,
                                                   const std::vector<TensorViewInfo>& outputs)>;
 
@@ -54,15 +53,11 @@ namespace ngraph
                 ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                  bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
-                std::vector<std::shared_ptr<CallFrame>>& get_callees() { return callees; }
-            protected:
-                void compile(FunctionMap& function_map);
 
-                size_t m_n_inputs;
-                size_t m_n_outputs;
-                ngraph::descriptor::TensorViewPtrs m_temp_views;
+            protected:
+                void compile();
+
                 EntryPoint m_compiled_function;
-                std::vector<std::shared_ptr<CallFrame>> callees;
             };
         }
     }

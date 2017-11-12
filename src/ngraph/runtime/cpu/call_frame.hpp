@@ -32,7 +32,8 @@ namespace ngraph
         {
             class CallFrame;
 
-            using EntryPoint_t = void(ngraph::runtime::cpu::CallFrame* call_frame);
+            using EntryPoint_t = void(const std::vector<void*>& inputs,
+                                      const std::vector<void*>& outputs);
 
             using EntryPoint = std::function<EntryPoint_t>;
 
@@ -40,8 +41,7 @@ namespace ngraph
             class CallFrame : public ngraph::runtime::CallFrame
             {
             public:
-                CallFrame(EntryPoint compiled_function,
-                          const std::vector<std::shared_ptr<CallFrame>>& callees);
+                CallFrame(EntryPoint compiled_function);
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
@@ -56,19 +56,9 @@ namespace ngraph
                                  const std::vector<std::shared_ptr<TensorView>>& outputs);
 
                 void set_return() { m_return = true; }
-                // const std::vector<std::shared_ptr<ngraph::runtime::Value>>& get_inputs();
-                // const std::vector<std::shared_ptr<ngraph::runtime::Value>>& get_outputs();
-
-                void* get_input_data(size_t index);
-                void* get_output_data(size_t index);
-
             protected:
                 bool m_return;
                 EntryPoint m_compiled_function;
-                std::vector<std::shared_ptr<CallFrame>> m_callees;
-
-                std::vector<void*> m_inputs;
-                std::vector<void*> m_outputs;
             };
         }
     }

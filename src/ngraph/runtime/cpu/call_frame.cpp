@@ -20,10 +20,8 @@
 using namespace std;
 using namespace ngraph::runtime::cpu;
 
-CallFrame::CallFrame(EntryPoint compiled_function,
-                     const std::vector<std::shared_ptr<CallFrame>>& callees)
+CallFrame::CallFrame(EntryPoint compiled_function)
     : m_compiled_function(compiled_function)
-    , m_callees(callees)
 {
 }
 
@@ -31,23 +29,23 @@ void CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
 {
-    m_inputs.clear();
-    m_outputs.clear();
+    vector<void*> inputs;
+    vector<void*> outputs;
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
         shared_ptr<runtime::cpu::CPUTensorView> tv =
             static_pointer_cast<runtime::cpu::CPUTensorView>(input_tvs[i]);
-        m_inputs.push_back(tv->get_data_ptr());
+        inputs.push_back(tv->get_data_ptr());
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
         shared_ptr<runtime::cpu::CPUTensorView> tv =
             static_pointer_cast<runtime::cpu::CPUTensorView>(output_tvs[i]);
-        m_outputs.push_back(tv->get_data_ptr());
+        outputs.push_back(tv->get_data_ptr());
     }
 
     // Invoke compiled computation
-    m_compiled_function(this);
+    m_compiled_function(inputs, outputs);
 }
 
 void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,
@@ -67,16 +65,4 @@ void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Va
     }
 
     tensor_call(inputs, outputs);
-}
-
-void* CallFrame::get_input_data(size_t index)
-{
-    void* rc = m_inputs.at(index);
-    return rc;
-}
-
-void* CallFrame::get_output_data(size_t index)
-{
-    void* rc = m_outputs.at(index);
-    return rc;
 }

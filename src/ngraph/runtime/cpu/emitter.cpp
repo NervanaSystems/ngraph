@@ -935,48 +935,25 @@ void Emitter::EMITTER_DECL(EmitReshape)
 void Emitter::EMITTER_DECL(EmitFunctionCall)
 {
     auto function_call = static_cast<const op::FunctionCall*>(n);
-    auto function = function_call->get_function();
+    shared_ptr<Function> function = function_call->get_function();
 
-    std::shared_ptr<ExternalFunction> external;
-
-    try
+    TU << "{   // Call " << function->get_name() << "\n";
+    TU.indent++;
+    TU << "std::vector<void*> inputs;\n";
+    for (const TensorViewInfo& input : inputs)
     {
-        external = function_map.at(function);
+        TU << "inputs.push_back(" << input.get_tensor().get_name() << ");\n";
     }
-    catch (const std::out_of_range)
+    TU << "\n";
+    TU << "std::vector<void*> outputs;\n";
+    for (const TensorViewInfo& output : outputs)
     {
-        external = make_shared<ExternalFunction>(function);
-        function_map.insert({function, external});
+        TU << "outputs.push_back(" << output.get_tensor().get_name() << ");\n";
     }
-
-    std::shared_ptr<CallFrame> cf =
-        std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());
-
-    ef->get_callees().emplace_back(cf);
-
-    TU << "{   // " << n->get_name() << "\n";
-    TU +=
-        "    {\n"
-        "        auto cf = callees.at(" +
-        to_string(ef->get_callees().size() - 1) +
-        ");\n"
-        "        std::vector<std::shared_ptr<ngraph::runtime::Value>> inputs;\n"
-        "        std::vector<std::shared_ptr<ngraph::runtime::Value>> outputs;\n";
-
-    for (const auto& in : inputs)
-    {
-        TU += "        inputs.emplace_back(call_frame->get_tensor_view(" +
-              to_string(in.get_index()) + "));\n";
-    }
-    for (const auto& out : outputs)
-    {
-        TU += "        outputs.emplace_back(call_frame->get_tensor_view(" +
-              to_string(out.get_index()) + "));\n";
-    }
-
-    TU +=
-        "        (*cf)(inputs, outputs);\n"
-        "    }\n";
+    TU << "\n";
+    TU << function->get_name() << "(inputs, outputs);\n";
+    TU.indent--;
+    TU << "}\n";
 }
 
 // TODO: This and other ops include comments/notes that
@@ -990,17 +967,17 @@ void Emitter::EMITTER_DECL(EmitReduce)
     auto reduce = static_cast<const op::Reduce*>(n);
     auto reduction_function = reduce->get_reduction_function();
 
-    std::shared_ptr<ExternalFunction> external;
+    // std::shared_ptr<ExternalFunction> external;
 
-    try
-    {
-        external = function_map.at(reduction_function);
-    }
-    catch (const std::out_of_range)
-    {
-        external = make_shared<ExternalFunction>(reduction_function);
-        function_map.insert({reduction_function, external});
-    }
+    // try
+    // {
+    //     external = function_map.at(reduction_function);
+    // }
+    // catch (const std::out_of_range)
+    // {
+    //     external = make_shared<ExternalFunction>(reduction_function);
+    //     function_map.insert({reduction_function, external});
+    // }
 
     auto reductee_type = reduce->get_arguments().at(0)->get_value_type();
     auto reductee_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(reductee_type);
@@ -1026,14 +1003,6 @@ void Emitter::EMITTER_DECL(EmitReduce)
     {
         TU << "{   // " << n->get_name() << " 1\n";
         TU.indent++;
-
-        TU << "// call_frame->get_parameterized_tensor_view<"
-           << f_result_element_type.c_type_string() << ">(" << to_string(outputs.at(0).get_index())
-           << ")->get_vector() =\n"
-           << "//       call_frame->get_parameterized_tensor_view<"
-           << f_result_element_type.c_type_string() << ">(" << to_string(inputs.at(0).get_index())
-           << ")->get_vector();\n";
-
         TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", "
            << inputs[0].get_tensor().get_name() << ", "
            << outputs[0].get_tensor_view_layout()->get_size() *
@@ -1084,25 +1053,22 @@ void Emitter::EMITTER_DECL(EmitReduce)
         }
         else
         {
-            std::shared_ptr<CallFrame> cf =
-                std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());
-            ef->get_callees().emplace_back(cf);
-
             TU << "{   // " << n->get_name() << " 3\n";
             TU.indent++;
             string type = f_result_element_type.c_type_string();
-            TU << "using ET = " << f_result_element_type.c_type_string() << ";\n"
-               << "auto cf = callees.at(" << to_string(ef->get_callees().size() - 1) << ");\n"
-               << "auto f = [cf](" << type << " x, " << type << " y) -> " << type << " {\n"
-               << "    auto tx = ngraph::runtime::make_tensor<ET>(ngraph::Shape{});\n"
-               << "    *tx = std::vector<" << type << ">({x});\n"
-               << "    auto ty = ngraph::runtime::make_tensor<ET>(ngraph::Shape{});\n"
-               << "    *ty = std::vector<" << type << ">({y});\n"
-               << "    auto tr = ngraph::runtime::make_tensor<ET>(ngraph::Shape{});\n"
-               << "    (*cf)({tx, ty}, {tr});\n"
-               << "    return tr->get_vector()[0];\n"
-               << "};\n"
-               << "EigenArray1d<" << f_result_element_type.c_type_string() << ">("
+            TU << "auto f = [](" << type << " x, " << type << " y) -> " << type << " {\n";
+            TU.indent++;
+            TU << "std::vector<void*> inputs;\n";
+            TU << "inputs.push_back(&x);\n";
+            TU << "inputs.push_back(&y);\n\n";
+            TU << type << " result;\n";
+            TU << "std::vector<void*> outputs;\n";
+            TU << "outputs.push_back(&result);\n";
+            TU << reduction_function->get_name() << "(inputs, outputs);\n";
+            TU << "return result;\n";
+            TU.indent--;
+            TU << "};\n";
+            TU << "EigenArray1d<" << f_result_element_type.c_type_string() << ">("
                << outputs[0].get_tensor().get_name() << ", " << eigen_vector_format(outputs[0])
                << ") =\n"
                << "    EigenArray1d<" << f_result_element_type.c_type_string() << ">("
@@ -1129,26 +1095,26 @@ void Emitter::EMITTER_DECL(EmitReduce)
         }
         else
         {
-            std::shared_ptr<CallFrame> cf =
-                std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());
-            ef->get_callees().emplace_back(cf);
+            // std::shared_ptr<CallFrame> cf =
+            //     std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());
+            // ef->get_callees().emplace_back(cf);
 
             TU << "{   // " << n->get_name() << " 5\n";
             TU.indent++;
-            TU << "using ET = " << f_result_element_type.c_type_string() << ";\n"
-               << "        auto cf = callees.at(" << to_string(ef->get_callees().size() - 1)
-               << ");\n"
-               << "        auto f = [cf](typename ET::type x, typename ET::type y) -> typename "
-               << "ET::type {\n"
-               << "            auto tx = ngraph::runtime::make_tensor<ET>(ngraph::Shape{});\n"
-               << "            *tx = std::vector<typename ET::type>({x});\n"
-               << "            auto ty = ngraph::runtime::make_tensor<ET>(ngraph::Shape{});\n"
-               << "            *ty = std::vector<typename ET::type>({y});\n"
-               << "            auto tr = ngraph::runtime::make_tensor<ET>(ngraph::Shape{});\n"
-               << "            (*cf)({tx, ty}, {tr});\n"
-               << "            return tr->get_vector()[0];\n"
-               << "        };\n"
-               << "EigenVector<" << f_result_element_type.c_type_string() << ">("
+            string type = f_result_element_type.c_type_string();
+            TU << "auto f = [](" << type << " x, " << type << " y) -> " << type << " {\n";
+            TU.indent++;
+            TU << "std::vector<void*> inputs;\n";
+            TU << "inputs.push_back(&x);\n";
+            TU << "inputs.push_back(&y);\n\n";
+            TU << type << " result;\n";
+            TU << "std::vector<void*> outputs;\n";
+            TU << "outputs.push_back(&result);\n";
+            TU << reduction_function->get_name() << "(inputs, outputs);\n";
+            TU << "return result;\n";
+            TU.indent--;
+            TU << "};\n";
+            TU << "EigenVector<" << f_result_element_type.c_type_string() << ">("
                << outputs[0].get_tensor().get_name() << ", " << eigen_vector_format(outputs[0])
                << ") =\n"
                << "        EigenMatrix<" << f_result_element_type.c_type_string() << ">("
@@ -1176,29 +1142,25 @@ void Emitter::EMITTER_DECL(EmitReduce)
         }
         else
         {
-            std::shared_ptr<CallFrame> cf =
-                std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());
-            ef->get_callees().emplace_back(cf);
-
             TU << "{   // " << n->get_name() << " 7\n";
             TU.indent++;
-            TU << "        using ET = " << f_result_element_type.c_type_string() << ";\n"
-               << "        auto cf = callees.at(" << to_string(ef->get_callees().size() - 1)
-               << ");\n"
-               << "        auto f = [cf](typename ET::type x, typename ET::type y) -> typename "
-               << "ET::type {\n"
-               << "            auto tx = ngraph::runtime::make_tensor<ET>(ngraph::Shape{});\n"
-               << "            *tx = std::vector<typename ET::type>({x});\n"
-               << "            auto ty = ngraph::runtime::make_tensor<ET>(ngraph::Shape{});\n"
-               << "            *ty = std::vector<typename ET::type>({y});\n"
-               << "            auto tr = ngraph::runtime::make_tensor<ET>(ngraph::Shape{});\n"
-               << "            (*cf)({tx, ty}, {tr});\n"
-               << "            return tr->get_vector()[0];\n"
-               << "        };\n"
-               << "        EigenVector<" << f_result_element_type.c_type_string() << ">("
+            string type = f_result_element_type.c_type_string();
+            TU << "auto f = [](" << type << " x, " << type << " y) -> " << type << " {\n";
+            TU.indent++;
+            TU << "std::vector<void*> inputs;\n";
+            TU << "inputs.push_back(&x);\n";
+            TU << "inputs.push_back(&y);\n\n";
+            TU << type << " result;\n";
+            TU << "std::vector<void*> outputs;\n";
+            TU << "outputs.push_back(&result);\n";
+            TU << reduction_function->get_name() << "(inputs, outputs);\n";
+            TU << "return result;\n";
+            TU.indent--;
+            TU << "};\n";
+            TU << "EigenVector<" << f_result_element_type.c_type_string() << ">("
                << outputs[0].get_tensor().get_name() << ", " << eigen_vector_format(outputs[0])
                << ") =\n"
-               << "        EigenMatrix<" << f_result_element_type.c_type_string() << ">("
+               << "    EigenMatrix<" << f_result_element_type.c_type_string() << ">("
                << inputs[0].get_tensor().get_name() << ", "
                << eigen_matrix_format(arg0_layout->get_shape(), arg0_layout->get_strides())
                << ").colwise().redux(f);\n";
