@@ -277,10 +277,15 @@ void Emitter::EMITTER_DECL(EmitGetTupleElement)
 
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
-    TU << "call_frame->get_parameterized_tensor_view<" << type << ">(" << outputs.at(0).get_index()
+    TU << "// call_frame->get_parameterized_tensor_view<" << type << ">(" << outputs[0].get_index()
        << ")->get_vector() =\n"
-       << "   call_frame->get_parameterized_tensor_view<" << type << ">("
-       << inputs.at(get_tuple_element->get_n()).get_index() << ")->get_vector();\n";
+       << "//    call_frame->get_parameterized_tensor_view<" << type << ">("
+       << inputs[get_tuple_element->get_n()].get_index() << ")->get_vector();\n";
+    TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", "
+       << inputs[get_tuple_element->get_n()].get_tensor().get_name() << ", "
+       << outputs[0].get_tensor_view_layout()->get_size() *
+              outputs[0].get_tensor_view_layout()->get_element_type().size()
+       << ");\n";
     TU.indent--;
     TU << "}\n";
 }
@@ -290,18 +295,22 @@ void Emitter::EMITTER_DECL(EmitTuple)
     assert(inputs.size() == outputs.size());
 
     TU << "{   // " << n->get_name() << "\n";
-    TU += "    {\n";
+    TU.indent++;
     for (size_t i = 0; i < inputs.size(); ++i)
     {
         auto& et = inputs.at(i).get_tensor_view_layout()->get_element_type();
-        TU += "        call_frame->get_parameterized_tensor_view<" + et.c_type_string() + ">(" +
-              to_string(outputs.at(i).get_index()) +
-              ")->get_vector() =\n"
-              "        call_frame->get_parameterized_tensor_view<" +
-              et.c_type_string() + ">(" + to_string(inputs.at(i).get_index()) +
-              ")->get_vector();\n";
+        TU << "// call_frame->get_parameterized_tensor_view<" << et.c_type_string() << ">("
+           << outputs.at(i).get_index() << ")->get_vector() =\n"
+           << "//     call_frame->get_parameterized_tensor_view<" << et.c_type_string() << ">("
+           << inputs.at(i).get_index() << ")->get_vector();\n";
+        TU << "memcpy(" << outputs.at(i).get_tensor().get_name() << ", "
+           << inputs.at(i).get_tensor().get_name() << ", "
+           << outputs[i].get_tensor_view_layout()->get_size() *
+                  outputs[i].get_tensor_view_layout()->get_element_type().size()
+           << ");\n";
     }
-    TU += "    }\n";
+    TU.indent--;
+    TU += "}\n";
 }
 
 void Emitter::EMITTER_DECL(EmitAbs)
