@@ -32,33 +32,50 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     m_descriptor->set_tensor_view_layout(
         std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
 
-    size_t tensor_size = m_descriptor->get_tensor_view_layout()->get_size();
-    allocate_aligned_buffer(tensor_size, runtime::cpu::alignment, &m_allocated, &m_aligned);
+    m_buffer_size = m_descriptor->get_tensor_view_layout()->get_size() * element_type.size();
+    NGRAPH_INFO << m_buffer_size;
+    allocate_aligned_buffer(m_buffer_size, runtime::cpu::alignment, &m_allocated, &m_buffer);
 }
 
 runtime::cpu::CPUTensorView::~CPUTensorView()
 {
+    NGRAPH_INFO;
     free_aligned_buffer(m_allocated);
+    NGRAPH_INFO;
 }
 
 char* runtime::cpu::CPUTensorView::get_data_ptr()
 {
-    return m_aligned;
+    return m_buffer;
 }
 
 const char* runtime::cpu::CPUTensorView::get_data_ptr() const
 {
-    return m_aligned;
+    return m_buffer;
 }
 
 void runtime::cpu::CPUTensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
+    if (tensor_offset + n > m_buffer_size)
+    {
+        NGRAPH_INFO << m_buffer_size;
+        NGRAPH_INFO << n;
+        NGRAPH_INFO << tensor_offset;
+        throw out_of_range("write access past end of tensor");
+    }
     char* target = get_data_ptr();
     memcpy(&target[tensor_offset], source, n);
 }
 
 void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
+    if (tensor_offset + n > m_buffer_size)
+    {
+        NGRAPH_INFO << m_buffer_size;
+        NGRAPH_INFO << n;
+        NGRAPH_INFO << tensor_offset;
+        throw out_of_range("read access past end of tensor");
+    }
     const char* source = get_data_ptr();
     memcpy(target, &source[tensor_offset], n);
 }

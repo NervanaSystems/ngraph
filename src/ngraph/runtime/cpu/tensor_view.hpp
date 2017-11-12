@@ -53,5 +53,6 @@ public:
 
 private:
     char* m_allocated;
-    char* m_aligned;
+    char* m_buffer;
+    size_t m_buffer_size;
 };
