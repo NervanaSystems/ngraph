@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <iostream>
+
 #include <clang/CodeGen/ObjectFilePCHContainerOperations.h>
 #include <clang/Driver/DriverDiagnostic.h>
 #include <clang/Driver/Options.h>
@@ -191,7 +193,10 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
 
     // Create and execute action
     CodeGenAction* compilerAction = new EmitCodeGenOnlyAction();
-    Clang->ExecuteAction(*compilerAction);
+    if (Clang->ExecuteAction(*compilerAction) == false)
+    {
+        throw runtime_error("codegen compile failed");
+    }
 
     buffer.release();
 

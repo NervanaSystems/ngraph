@@ -327,8 +327,6 @@ extern "C" void free_aligned_buffer(void* allocated);
     TU << "// Define tensor views\n";
     TU << "\n";
 
-    TU.indent--;
-
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
         auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
@@ -353,6 +351,8 @@ extern "C" void free_aligned_buffer(void* allocated);
         }
         handler->second(&emitter, node.get(), this, function_map, in, out);
     }
+
+    TU.indent--;
 
     // End TU
     TU += "}\n";
