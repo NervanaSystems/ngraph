@@ -60,7 +60,6 @@ namespace ngraph
             std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>
                 make_parameterized_tensor_view(const Shape& shape)
             {
-                NGRAPH_INFO;
                 return std::dynamic_pointer_cast<ngraph::runtime::ParameterizedTensorView<ET>>(
                     make_primary_tensor_view(ET::element_type(), shape));
             }
@@ -69,7 +68,6 @@ namespace ngraph
             std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>
                 make_parameterized_tensor_view(const NDArrayBase<typename ET::type>& ndarray)
             {
-                NGRAPH_INFO;
                 auto result =
                     std::dynamic_pointer_cast<ngraph::runtime::ParameterizedTensorView<ET>>(
                         make_primary_tensor_view(ET::element_type(), ndarray.get_shape()));
