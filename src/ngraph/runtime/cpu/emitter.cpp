@@ -838,20 +838,14 @@ void Emitter::EMITTER_DECL(EmitConstant)
     auto c_value_strings = c->get_value_strings();
 
     TU << "{   // " << n->get_name() << "\n";
-    TU +=
-        "    {\n"
-        "        call_frame->get_parameterized_tensor_view<" +
-        c_element_type.c_type_string() + ">(" + to_string(outputs[0].get_index()) +
-        ")->get_vector() = std::vector<" + c_element_type.c_type_string() + "::type>{";
-
+    TU.indent++;
     for (size_t i = 0; i < c_value_strings.size(); i++)
     {
-        if (i)
-            TU += ", ";
-        TU += c_value_strings[i];
+        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<"
+           << c_element_type.c_type_string() << ">(" << c_value_strings[i] << ");\n";
     }
-
-    TU += "};\n    }\n";
+    TU.indent--;
+    TU << "}\n";
 }
 
 void Emitter::EMITTER_DECL(EmitReshape)
