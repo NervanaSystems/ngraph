@@ -792,34 +792,27 @@ void Emitter::EMITTER_DECL(EmitBroadcast)
     if (broadcast->get_broadcast_axes().empty())
     {
         TU << "{   // " << n->get_name() << "\n";
-        TU +=
-            "    {\n"
-            "        call_frame->get_parameterized_tensor_view<" +
-            result_element_type.c_type_string() + ">(" + to_string(outputs[0].get_index()) +
-            ")->get_vector() =\n"
-            "        call_frame->get_parameterized_tensor_view<" +
-            result_element_type.c_type_string() + ">(" + to_string(inputs[0].get_index()) +
-            ")->get_vector();\n"
-            "    }\n";
+        TU.indent++;
+        TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", "
+           << inputs[0].get_tensor().get_name() << ", "
+           << outputs[0].get_tensor_view_layout()->get_size() *
+                  outputs[0].get_tensor_view_layout()->get_element_type().size()
+           << ");\n";
+        TU.indent--;
+        TU << "}\n";
     }
     else if (arg_shape.size() == 0)
     {
         TU << "{   // " << n->get_name() << "\n";
-        TU +=
-            "    {\n"
-            "        auto arg0 = call_frame->get_tensor_view_data<" +
-            result_element_type.c_type_string() + ">(" + to_string(inputs[0].get_index()) +
-            ");\n"
-            "        auto out  = call_frame->get_tensor_view_data<" +
-            result_element_type.c_type_string() + ">(" + to_string(outputs[0].get_index()) +
-            ");\n"
-            "        EigenArray1d<" +
-            result_element_type.c_type_string() + ">(out, " + eigen_vector_format(outputs[0]) +
-            ") =\n"
-            "        EigenArray1d<" +
-            result_element_type.c_type_string() + ">(arg0, " + eigen_vector_format(inputs[0]) +
-            ")(0, 0);\n"
-            "    }\n";
+        TU.indent++;
+        TU << "EigenArray1d<" << result_element_type.c_type_string() << ">("
+           << outputs[0].get_tensor().get_name() << ", " << eigen_vector_format(outputs[0])
+           << ") =\n"
+           << "    EigenArray1d<" << result_element_type.c_type_string() << ">("
+           << inputs[0].get_tensor().get_name() << ", " << eigen_vector_format(inputs[0])
+           << ")(0, 0);\n";
+        TU.indent--;
+        TU << "}\n";
     }
     else if (arg_shape.size() == 1 && result_shape.size() == 2)
     {
@@ -828,44 +821,32 @@ void Emitter::EMITTER_DECL(EmitBroadcast)
             auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
 
             TU << "{   // " << n->get_name() << "\n";
-            TU +=
-                "    {\n"
-                "        auto arg0 = call_frame->get_tensor_view_data<" +
-                result_element_type.c_type_string() + ">(" + to_string(inputs[0].get_index()) +
-                ");\n"
-                "        auto out  = call_frame->get_tensor_view_data<" +
-                result_element_type.c_type_string() + ">(" + to_string(outputs[0].get_index()) +
-                ");\n"
-                "        EigenMatrix<" +
-                result_element_type.c_type_string() + ">(out, " +
-                eigen_matrix_format(out_layout->get_shape(), out_layout->get_strides()) +
-                ").colwise() =\n"
-                "        EigenVector<" +
-                result_element_type.c_type_string() + ">(arg0, " + eigen_vector_format(inputs[0]) +
-                ");\n"
-                "    }\n";
+            TU.indent++;
+            TU << "EigenMatrix<" << result_element_type.c_type_string() << ">("
+               << outputs[0].get_tensor().get_name() << ", "
+               << eigen_matrix_format(out_layout->get_shape(), out_layout->get_strides())
+               << ").colwise() =\n"
+               << "    EigenVector<" << result_element_type.c_type_string() << ">("
+               << inputs[0].get_tensor().get_name() << ", " << eigen_vector_format(inputs[0])
+               << ");\n";
+            TU.indent--;
+            TU << "}\n";
         }
         else if (broadcast->get_broadcast_axes() == AxisSet{0})
         {
             auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
 
             TU << "{   // " << n->get_name() << "\n";
-            TU +=
-                "    {\n"
-                "        auto arg0 = call_frame->get_tensor_view_data<" +
-                result_element_type.c_type_string() + ">(" + to_string(inputs[0].get_index()) +
-                ");\n"
-                "        auto out  = call_frame->get_tensor_view_data<" +
-                result_element_type.c_type_string() + ">(" + to_string(outputs[0].get_index()) +
-                ");\n"
-                "        EigenMatrix<" +
-                result_element_type.c_type_string() + ">(out, " +
-                eigen_matrix_format(out_layout->get_shape(), out_layout->get_strides()) +
-                ").rowwise() =\n"
-                "        EigenVector<" +
-                result_element_type.c_type_string() + ">(arg0, " + eigen_vector_format(inputs[0]) +
-                ").transpose();\n"
-                "    }\n";
+            TU.indent++;
+            TU << "EigenMatrix<" << result_element_type.c_type_string() << ">("
+               << outputs[0].get_tensor().get_name() << ", "
+               << eigen_matrix_format(out_layout->get_shape(), out_layout->get_strides())
+               << ").rowwise() =\n"
+               << "    EigenVector<" << result_element_type.c_type_string() << ">("
+               << inputs[0].get_tensor().get_name() << ", " << eigen_vector_format(inputs[0])
+               << ").transpose();\n";
+            TU.indent--;
+            TU << "}\n";
         }
         else
         {
