@@ -80,21 +80,22 @@ namespace ngraph
         /// | Backend | Status                                                |
         /// | ------- | ----------------------------------------------------- |
         /// | NGVM    | Fully implemented for scalars, vectors, and matrices. |
-        class Sum : public Builtin
+        class Sum : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a summation operation.
             ///
             /// \param arg The tensor view to be summed.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-                : Builtin({arg})
-                , m_reduction_axes(reduction_axes)
-            {
-            }
+            Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 
-            virtual std::string description() const override { return "Sum"; }
-            virtual void propagate_types() override;
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 1)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Sum>(new_args.at(0), m_reduction_axes);
+            }
 
             /// \return The axis positions (0-based) to be eliminated through summation.
             const AxisSet& get_reduction_axes() const { return m_reduction_axes; }

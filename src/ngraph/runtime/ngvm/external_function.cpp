@@ -66,9 +66,7 @@
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/ops/tuple.hpp"
-#include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/ngvm/eigen/abs.hpp"
 #include "ngraph/runtime/ngvm/eigen/acos.hpp"
@@ -1052,8 +1050,6 @@ void ExternalFunction::compile(FunctionMap& function_map)
     // Get the ordered list of ops in execution order
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
-    pass_manager.register_pass<pass::PropagateTypes>();
-    pass_manager.register_pass<pass::AssignTensors>();
     pass_manager.run_passes(m_function);
 
     // Turn this into a pass

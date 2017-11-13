@@ -16,6 +16,7 @@
 #include "ngraph/except.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
+#include "ngraph/types/type.hpp"
 
 using namespace ngraph::descriptor::layout;
 using ngraph::Shape;

@@ -55,15 +55,20 @@ namespace ngraph
             /// \brief Constructions a parameter node.
             ///
             /// \param value_type The type of the parameter.
-            Parameter(const std::shared_ptr<const ValueType>& value_type = nullptr);
+            Parameter(const std::shared_ptr<const ValueType>& value_type);
             /// \brief Constructions a tensor view-typed parameter node.
             ///
             /// \param element_type The element type of the parameter.
             /// \param shape The shape of the parameter.
             Parameter(const ngraph::element::Type& element_type, const Shape& shape);
 
-            std::string description() const override { return "Parameter"; }
-            virtual void propagate_types() override;
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 0)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Parameter>(get_value_type());
+            }
         };
     }
 }

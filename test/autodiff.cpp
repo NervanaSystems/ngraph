@@ -19,11 +19,11 @@
 
 #include "gtest/gtest.h"
 
-#include "ngraph/autodiff/backprop_derivative.hpp"
-#include "ngraph/autodiff/backprop_function.hpp"
-#include "ngraph/autodiff/numeric_derivative.hpp"
 #include "ngraph/ngraph.hpp"
 #include "util/all_close.hpp"
+#include "util/autodiff/backprop_derivative.hpp"
+#include "util/autodiff/backprop_function.hpp"
+#include "util/autodiff/numeric_derivative.hpp"
 #include "util/random.hpp"
 
 using namespace std;

@@ -15,7 +15,7 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/autodiff/backprop_derivative.hpp"
+#include "backprop_derivative.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/runtime/backend.hpp"

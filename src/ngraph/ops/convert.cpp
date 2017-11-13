@@ -18,11 +18,15 @@
 
 using namespace std;
 using namespace ngraph;
-using namespace ngraph::op;
 
-const element::Type& Convert::propagate_element_types(const element::Type& arg_element_type) const
+op::Convert::Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type)
+    : UnaryElementwise("Convert",
+                       [&](const ngraph::element::Type& ignored) -> const ngraph::element::Type& {
+                           return element_type;
+                       },
+                       arg)
+    , m_element_type(element_type)
 {
-    return m_element_type;
 }
 
 void ngraph::op::Convert::generate_adjoints(autodiff::Adjoints& adjoints,

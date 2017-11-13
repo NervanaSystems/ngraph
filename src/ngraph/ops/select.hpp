@@ -41,7 +41,7 @@ namespace ngraph
         /// | Backend | Status             |
         /// | ------- | ------------------ |
         /// | NGVM    | Fully implemented. |
-        class Select : public Builtin
+        class Select : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a selection operation.
@@ -51,12 +51,15 @@ namespace ngraph
             /// \param arg2 Node that produces the third input tensor.
             Select(const std::shared_ptr<Node>& arg0,
                    const std::shared_ptr<Node>& arg1,
-                   const std::shared_ptr<Node>& arg2)
-                : Builtin(Nodes{arg0, arg1, arg2})
+                   const std::shared_ptr<Node>& arg2);
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
+                if (new_args.size() != 3)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Select>(new_args.at(0), new_args.at(1), new_args.at(2));
             }
-            virtual std::string description() const override { return "Select"; }
-            virtual void propagate_types() override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,

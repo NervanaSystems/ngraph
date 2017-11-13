@@ -16,37 +16,19 @@
 #include "ngraph/function.hpp"
 
 using namespace std;
-using namespace ngraph::op;
+using namespace ngraph;
 
-void Reduce::propagate_types()
+op::Reduce::Reduce(const std::shared_ptr<Node>& arg_reductee,
+                   const std::shared_ptr<Node>& arg_init,
+                   const std::shared_ptr<Function>& reduction_function,
+                   const AxisSet& reduction_axes)
+    : RequiresTensorViewArgs("Reduce", {arg_reductee, arg_init})
+    , m_reduction_function(reduction_function)
+    , m_reduction_axes(reduction_axes)
 {
-    if (m_arguments.size() != 2)
-    {
-        throw ngraph_error("Wrong number of arguments.");
-    }
+    auto arg_reductee_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
 
-    auto arg_reductee_type = m_arguments.at(0)->get_value_type();
-    if (nullptr == arg_reductee_type)
-    {
-        throw ngraph_error("Argument to reduce is missing type.");
-    }
-    auto arg_reductee_tensor_view_type =
-        dynamic_pointer_cast<const TensorViewType>(arg_reductee_type);
-    if (nullptr == arg_reductee_tensor_view_type)
-    {
-        throw ngraph_error("Argument to reduce is not a tensor view");
-    }
-
-    auto arg_init_type = m_arguments.at(1)->get_value_type();
-    if (nullptr == arg_init_type)
-    {
-        throw ngraph_error("Argument for initial value is missing type.");
-    }
-    auto arg_init_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_init_type);
-    if (nullptr == arg_init_tensor_view_type)
-    {
-        throw ngraph_error("Argument for initial value is not a tensor view");
-    }
+    auto arg_init_tensor_view_type = get_inputs().at(1).get_tensor_view_type();
     if (arg_init_tensor_view_type->get_shape().size() != 0)
     {
         throw ngraph_error("Argument for initial value is not a scalar");
@@ -85,18 +67,18 @@ void Reduce::propagate_types()
         throw ngraph_error("Reduction function has wrong number of parameters (should be two)");
     }
 
-    if (*(f_params.at(0)->get_value_type()) != *(arg_init_type))
+    if (*(f_params.at(0)->get_value_type()) != *(arg_init->get_value_type()))
     {
         throw ngraph_error("Argument 0 of reduction function has wrong type");
     }
-    if (*(f_params.at(1)->get_value_type()) != *(arg_init_type))
+    if (*(f_params.at(1)->get_value_type()) != *(arg_init->get_value_type()))
     {
         throw ngraph_error("Argument 1 of reduction function has wrong type");
     }
 
     auto f_result_type = m_reduction_function->get_result_type();
 
-    if (*(f_result_type) != *(arg_init_type))
+    if (*(f_result_type) != *(arg_init->get_value_type()))
     {
         throw ngraph_error("Return type from reduction function does not match expected");
     }

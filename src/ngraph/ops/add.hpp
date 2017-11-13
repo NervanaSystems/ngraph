@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "ngraph/ops/op.hpp"
 
 namespace ngraph
@@ -48,10 +50,18 @@ namespace ngraph
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
             Add(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-                : BinaryElementwiseArithmetic(arg0, arg1)
+                : BinaryElementwiseArithmetic("Add", arg0, arg1)
             {
             }
-            virtual std::string description() const override { return "Add"; }
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 2)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Add>(new_args.at(0), new_args.at(1));
+            }
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;

@@ -30,9 +30,6 @@
 
 using namespace ngraph;
 
-/// @brief Make a zero matching a value type.
-std::shared_ptr<Node> make_zero(const std::shared_ptr<const ValueType>& value_type);
-
 std::shared_ptr<Node> make_zero(const std::shared_ptr<const TensorViewType>& tensor_view_type)
 {
     std::shared_ptr<Node> zero =
@@ -48,34 +45,6 @@ std::shared_ptr<Node> make_zero(const std::shared_ptr<const TensorViewType>& ten
         zero = std::make_shared<op::Broadcast>(zero, shape, axes);
     }
     return zero;
-}
-
-std::shared_ptr<Node> make_zero(const std::shared_ptr<const TupleType>& tuple_type)
-{
-    std::vector<std::shared_ptr<Node>> elements;
-    for (auto& value_type : tuple_type->get_element_types())
-    {
-        elements.push_back(make_zero(value_type));
-    }
-    return std::make_shared<op::Tuple>(elements);
-}
-
-std::shared_ptr<Node> make_zero(const std::shared_ptr<const ValueType>& value_type)
-{
-    std::shared_ptr<const TensorViewType> tensor_view_type =
-        std::dynamic_pointer_cast<const TensorViewType>(value_type);
-    if (nullptr != tensor_view_type)
-    {
-        return (make_zero(tensor_view_type));
-    }
-    std::shared_ptr<const TupleType> tuple_type =
-        std::dynamic_pointer_cast<const TupleType>(value_type);
-    if (nullptr != tuple_type)
-    {
-        return make_zero(tuple_type);
-    }
-    // Should be impossible
-    throw ngraph_error("Unknown value type");
 }
 
 autodiff::Adjoints::Adjoints(const std::shared_ptr<Node>& y, const std::shared_ptr<Node>& c)
@@ -143,7 +112,7 @@ std::shared_ptr<Node> autodiff::Adjoints::get(const std::shared_ptr<Node>& x)
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)
     {
-        auto result = make_zero(x->get_value_type());
+        auto result = make_zero(x->get_outputs().at(0).get_tensor_view_type());
         adjoint_it = m_adjoint_map.insert({x.get(), result}).first;
     }
     return adjoint_it->second;

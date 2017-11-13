@@ -18,12 +18,19 @@
 using namespace ngraph;
 using namespace ngraph::op;
 
-const element::Type& Not::propagate_element_types(const element::Type& arg_element_type) const
-{
-    if (arg_element_type != element::Bool::element_type())
-    {
-        throw ngraph_error("Operand for logical negation operator must have boolean element type");
-    }
+op::Not::Not(const std::shared_ptr<Node>& arg)
+    : UnaryElementwise(
+          "Not",
+          [](const ngraph::element::Type& arg_element_type) -> const ngraph::element::Type& {
+              if (arg_element_type != element::Bool::element_type())
+              {
+                  throw ngraph_error(
+                      "Operands for logical operators must have boolean element "
+                      "type");
+              }
 
-    return arg_element_type;
+              return arg_element_type;
+          },
+          arg)
+{
 }

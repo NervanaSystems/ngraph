@@ -38,9 +38,7 @@ namespace ngraph
             /// @param node Node that owns this output.
             /// @param index Position of the output tensor in all output tensors
             /// @param tensor_view The view of this tensor; where the value will be written
-            Output(const std::shared_ptr<Node>& node,
-                   size_t index,
-                   const std::shared_ptr<TensorView>& tensor_view);
+            Output(Node* node, size_t index, const std::shared_ptr<TensorView>& tensor_view);
 
             std::shared_ptr<Node> get_node() const;
             size_t get_index() const { return m_index; }
@@ -49,9 +47,14 @@ namespace ngraph
             const std::set<Input*>& get_inputs() const { return m_inputs; }
             const Tensor& get_tensor() const;
             Tensor& get_tensor();
+            /// @return the tensor view type for the connected output
+            std::shared_ptr<const TensorViewType> get_tensor_view_type() const
+            {
+                return get_tensor_view()->get_tensor_view_type();
+            }
 
         protected:
-            std::weak_ptr<Node> m_node;
+            Node* m_node;
             size_t m_index;
             std::shared_ptr<TensorView> m_tensor_view;
             std::set<Input*> m_inputs;

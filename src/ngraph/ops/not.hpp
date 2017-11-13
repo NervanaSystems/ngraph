@@ -39,20 +39,21 @@ namespace ngraph
         /// | Backend | Status           |
         /// | ------- | ---------------- |
         /// | NGVM    | Not implemented. |
-        class Not : public UnaryElementwiseBuiltin
+        class Not : public UnaryElementwise
         {
         public:
             /// \brief Constructs a logical negation operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Not(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseBuiltin(arg)
+            Not(const std::shared_ptr<Node>& arg);
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
+                if (new_args.size() != 1)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Not>(new_args.at(0));
             }
-            virtual std::string description() const override { return "Not"; }
-        protected:
-            virtual const element::Type&
-                propagate_element_types(const element::Type& arg_element_type) const override;
         };
     }
 }

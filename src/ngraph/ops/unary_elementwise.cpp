@@ -12,28 +12,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <stdio.h>
-#include "ngraph/ngraph.hpp"
-#include "ngraph/ops/dot.hpp"
+#include <memory>
+
+#include "ngraph/ops/op.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-int main(int argc, char** argv)
+op::UnaryElementwise::UnaryElementwise(
+    const std::string& node_type,
+    std::function<const element::Type&(const element::Type&)> element_type_function,
+    const std::shared_ptr<Node>& arg)
+    : RequiresTensorViewArgs(node_type, Nodes{arg})
 {
-    printf( "Building graph\n" );
+    auto arg_tensor_type = get_inputs().at(0).get_tensor_view_type();
+    const element::Type& result_element_type =
+        element_type_function(arg_tensor_type->get_element_type());
 
-    // Function with 4 parameters
-    auto arg0        = op::parameter(element::Float::type, {7, 3});
-    auto arg1        = op::parameter(element::Float::type, {3});
-    auto arg2        = op::parameter(element::Float::type, {32, 7});
-    auto arg3        = op::parameter(element::Float::type, {32, 7});
-    auto broadcast_1 = op::broadcast(arg3, {10, 32, 7}, {0});
-    auto dot         = op::dot(arg2, arg0);
-    
-    auto cluster_0 = op::function(dot, {arg0, arg1, arg2, arg3});
-    auto result = cluster_0->result();
-
-    printf( "Finished\n" );
-    
+    set_value_type_checked(
+        make_shared<TensorViewType>(result_element_type, arg_tensor_type->get_shape()));
 }

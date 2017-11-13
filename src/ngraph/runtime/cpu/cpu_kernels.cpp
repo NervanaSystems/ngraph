@@ -12,22 +12,4 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
-
-#include "ngraph/pass/pass.hpp"
-
-namespace ngraph
-{
-    namespace pass
-    {
-        class AssignTensors;
-    }
-}
-
-class ngraph::pass::AssignTensors : public CallGraphPass
-{
-public:
-    virtual bool run_on_call_graph(std::list<std::shared_ptr<Node>>& nodes) override;
-
-private:
-};
+#include "ngraph/runtime/cpu/cpu_kernels.hpp"
