@@ -2,7 +2,7 @@ import clsTraitedType
 import clsParameter
 import clsTensorViewType
 import clsFunction
-
+import clsManager
 
 element_type = clsTraitedType.TraitedTypeF.element_type()
 shape = [2,2]
@@ -12,3 +12,7 @@ c = clsParameter.clsParameter(element_type, shape)
 value_type = clsTensorViewType.clsTensorViewType(element_type, shape)
 parameter_list = [a, b, c]
 function = clsFunction.clsFunction((a + b)*c, value_type, parameter_list, 'test')
+manager = clsManager.clsManager.get('NGVM');
+external = manager.compile(function)
+backend = manager.allocate_backend()
+cf = backend.make_call_frame(external)
