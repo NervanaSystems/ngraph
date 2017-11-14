@@ -122,6 +122,17 @@ ext_modules = [
         ],
         language='c++'
     ),
+    Extension(
+        'ngraph.core.types.clsParameterizedTensorView',
+       ['ngraph/core/types/parameterized_tensor_view.cpp'],
+        include_dirs=[
+            # Path to pybind11 headers
+            os.environ["PYBIND_HEADERS_PATH"],
+            get_pybind_include(),
+            get_pybind_include(user=True)
+        ],
+        language='c++'
+    ),
 
 
 ]
