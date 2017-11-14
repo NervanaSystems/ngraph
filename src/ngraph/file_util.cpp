@@ -78,6 +78,12 @@ size_t ngraph::file_util::get_file_size(const string& filename)
 
 void ngraph::file_util::remove_directory(const string& dir)
 {
+    struct stat status;
+    if (stat(dir.c_str(), &status) == -1)
+    {
+        return;
+    }
+
     file_util::iterate_files(dir,
                              [](const string& file, bool is_dir) {
                                  if (is_dir)
