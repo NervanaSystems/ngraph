@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <iostream>
+
 #include <clang/CodeGen/ObjectFilePCHContainerOperations.h>
 #include <clang/Driver/DriverDiagnostic.h>
 #include <clang/Driver/Options.h>
@@ -191,11 +193,15 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
 
     // Create and execute action
     CodeGenAction* compilerAction = new EmitCodeGenOnlyAction();
-    Clang->ExecuteAction(*compilerAction);
+    std::unique_ptr<llvm::Module> rc;
+    if (Clang->ExecuteAction(*compilerAction) == true)
+    {
+        rc = compilerAction->takeModule();
+    }
 
     buffer.release();
 
-    return compilerAction->takeModule();
+    return rc;
 }
 
 bool execution_state::add_module(std::unique_ptr<llvm::Module>& module)

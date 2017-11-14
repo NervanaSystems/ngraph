@@ -101,7 +101,6 @@ bool pass::Liveness::run_on_call_graph(list<shared_ptr<Node>>& ops)
         }
         for (Tensor* tensor : outputs)
         {
-            NGRAPH_INFO << "found output";
             node->liveness_live_list.insert(tensor);
             node->liveness_free_list.erase(tensor);
 

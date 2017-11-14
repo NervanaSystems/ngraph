@@ -118,6 +118,10 @@ bool Node::is_output() const
 void Node::set_is_output()
 {
     m_is_output = true;
+    for (descriptor::Output& output : get_outputs())
+    {
+        output.get_tensor().set_is_output();
+    }
 }
 
 std::string Node::get_node_id() const

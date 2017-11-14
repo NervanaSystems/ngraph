@@ -27,9 +27,10 @@ namespace ngraph
         {
         public:
             TensorViewInfo(size_t index,
-                           const std::shared_ptr<const ngraph::descriptor::TensorView>& descriptor)
+                           std::shared_ptr<const ngraph::descriptor::TensorView> descriptor)
                 : m_index(index)
                 , m_layout(descriptor->get_tensor_view_layout())
+                , m_tensor_view(descriptor)
             {
             }
 
@@ -46,9 +47,20 @@ namespace ngraph
                 return std::static_pointer_cast<LT>(m_layout);
             }
 
+            std::shared_ptr<const ngraph::descriptor::TensorView> get_tensor_view() const
+            {
+                return m_tensor_view;
+            }
+
+            const ngraph::descriptor::Tensor& get_tensor() const
+            {
+                return m_tensor_view->get_tensor();
+            }
+
         protected:
             size_t m_index;
             std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout> m_layout;
+            std::shared_ptr<const ngraph::descriptor::TensorView> m_tensor_view;
         };
     }
 }

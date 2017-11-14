@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/cpu/external_function.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
@@ -24,7 +25,6 @@
 #define EMITTER_DECL(E)                                                                            \
     E(const ngraph::Node* n,                                                                       \
       ExternalFunction* ef,                                                                        \
-      FunctionMap& function_map,                                                                   \
       const std::vector<TensorViewInfo>& inputs,                                                   \
       const std::vector<TensorViewInfo>& outputs)
 
@@ -37,14 +37,15 @@ namespace ngraph
             class Emitter
             {
             protected:
-                std::string TU;
+                codegen::CodeWriter TU;
 
             public:
                 Emitter()
-                    : TU("")
+                    : TU()
                 {
                 }
-                std::string& GetTU() { return TU; }
+                std::string get_code() { return TU.get_code(); }
+                codegen::CodeWriter& get_code_writer() { return TU; }
                 void EMITTER_DECL(EmitNop);
                 void EMITTER_DECL(EmitAdd);
                 void EMITTER_DECL(EmitDot);

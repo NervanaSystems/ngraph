@@ -21,6 +21,7 @@ set (SRC
     descriptor/tensor.cpp
     descriptor/tensor_view.cpp
     descriptor/tuple.cpp
+    file_util.cpp
     function.cpp
     log.cpp
     node.cpp
@@ -53,7 +54,6 @@ set (SRC
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise.cpp
-    pass/collect_functions.cpp
     pass/dump_sorted.cpp
     pass/liveness.cpp
     pass/manager.cpp
@@ -104,6 +104,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     # Add sources for the CPU backend
     # and all its dependencies
     set(SRC ${SRC}
+        codegen/code_writer.cpp
         codegen/compiler.cpp
         runtime/cpu/call_frame.cpp
         runtime/cpu/cpu_backend.cpp
@@ -111,6 +112,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_kernels.cpp
         runtime/cpu/emitter.cpp
         runtime/cpu/external_function.cpp
+        runtime/cpu/tensor_view.cpp
         )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory

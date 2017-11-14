@@ -12,22 +12,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "code_writer.hpp"
 
-#include "ngraph/pass/pass.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+codegen::CodeWriter::CodeWriter()
+    : indent(0)
+    , m_pending_indent(true)
 {
-    namespace pass
-    {
-        class CollectFunctions;
-    }
 }
 
-class ngraph::pass::CollectFunctions : public FunctionPass
+string codegen::CodeWriter::get_code() const
 {
-public:
-    bool run_on_function(std::shared_ptr<ngraph::Function>) override;
+    return m_ss.str();
+}
 
-private:
-};
+void codegen::CodeWriter::operator+=(const std::string& s)
+{
+    *this << s;
+}

@@ -22,11 +22,18 @@ namespace ngraph
     {
         namespace cpu
         {
-            class CPUBackend : public Backend
+            static size_t alignment = 64;
+
+            class CPUBackend : public runtime::Backend
             {
             public:
-                virtual std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
-                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function);
+                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
+                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function)
+                    override;
+
+                std::shared_ptr<ngraph::runtime::TensorView>
+                    make_primary_tensor_view(const ngraph::element::Type& element_type,
+                                             const Shape& shape) override;
             };
         }
     }
