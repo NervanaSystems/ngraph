@@ -42,8 +42,6 @@ using namespace ngraph::runtime::cpu;
 
 using ngraph::descriptor::layout::DenseTensorViewLayout;
 
-#define TI(x) type_index(typeid(x))
-
 static string eigen_vector_format(const runtime::TensorViewInfo& tvi)
 {
     return "fmt::V{" + to_string(tvi.get_layout<DenseTensorViewLayout>()->get_size()) + "}";
