@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "ngraph/ops/op.hpp"
 
 namespace ngraph
@@ -61,21 +63,20 @@ namespace ngraph
         /// | Backend | Status                                |
         /// | ------- | ------------------------------------- |
         /// | NGVM    | Implemented for vectors and matrices. |
-        class Concat : public Builtin
+        class Concat : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a concatenation operation.
             ///
             /// \param args               The nodes producing the input tensors.
             /// \param concatenation_axis The axis along which to concatenate the input tensors.
-            Concat(const Nodes& args, size_t concatenation_axis)
-                : Builtin(args)
-                , m_concatenation_axis(concatenation_axis)
-            {
-            }
+            Concat(const Nodes& args, size_t concatenation_axis);
 
-            virtual std::string description() const override { return "Concatenate"; }
-            virtual void propagate_types() override;
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                return std::make_shared<Concat>(new_args, m_concatenation_axis);
+            }
 
             /// \return The concatenation axis.
             size_t get_concatenation_axis() const { return m_concatenation_axis; }

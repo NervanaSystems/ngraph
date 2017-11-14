@@ -23,18 +23,14 @@
 #include "ngraph/shape.hpp"
 
 using namespace std;
-using namespace ngraph::op;
+using namespace ngraph;
 
-void Dot::propagate_types()
+op::Dot::Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+    : RequiresTensorViewArgs("Dot", {arg0, arg1})
 {
-    auto arg0_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(0)->get_value_type());
-    auto arg1_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(1)->get_value_type());
-    if (nullptr == arg0_tensor_type || nullptr == arg1_tensor_type)
-    {
-        throw ngraph_error("Arguments to dot must be tensor views");
-    }
+    auto arg0_tensor_type = get_inputs().at(0).get_tensor_view_type();
+    auto arg1_tensor_type = get_inputs().at(1).get_tensor_view_type();
+
     if (arg0_tensor_type->get_element_type() != arg1_tensor_type->get_element_type())
     {
         throw ngraph_error("Arguments to dot must have the same element type");
@@ -108,8 +104,7 @@ ngraph::AxisVector range<ngraph::AxisVector>(size_t n)
     return result;
 }
 
-void ngraph::op::Dot::generate_adjoints(autodiff::Adjoints& adjoints,
-                                        const std::shared_ptr<Node>& delta)
+void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {
     auto x = m_arguments[0];
     auto y = m_arguments[1];

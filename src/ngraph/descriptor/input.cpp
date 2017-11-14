@@ -14,12 +14,12 @@
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/node.hpp"
 
 using namespace ngraph;
 using namespace descriptor;
 
-Input::Input(
-    const std::shared_ptr<Node>& node, size_t index, size_t argno, size_t arg_index, Output& output)
+Input::Input(Node* node, size_t index, size_t argno, size_t arg_index, Output& output)
     : m_node(node)
     , m_index(index)
     , m_argno(argno)
@@ -31,7 +31,7 @@ Input::Input(
 
 std::shared_ptr<Node> Input::get_node()
 {
-    return m_node.lock();
+    return m_node->shared_from_this();
 }
 
 const Tensor& Input::get_tensor() const
@@ -42,4 +42,19 @@ const Tensor& Input::get_tensor() const
 Tensor& Input::get_tensor()
 {
     return m_output.get_tensor();
+}
+
+std::shared_ptr<const TensorView> Input::get_tensor_view() const
+{
+    return m_output.get_tensor_view();
+}
+
+std::shared_ptr<TensorView> Input::get_tensor_view()
+{
+    return m_output.get_tensor_view();
+}
+
+std::shared_ptr<const TensorViewType> Input::get_tensor_view_type() const
+{
+    return m_output.get_tensor_view()->get_tensor_view_type();
 }

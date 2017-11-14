@@ -48,22 +48,24 @@ namespace ngraph
         /// | Backend | Status             |
         /// | ------- | ------------------ |
         /// | NGVM    | Fully implemented. |
-        class Convert : public UnaryElementwiseBuiltin
+        class Convert : public UnaryElementwise
         {
         public:
             /// \brief Constructs a conversion operation.
             ///
             /// \param arg          Node that produces the input tensor.
             /// \param element_type Element type for the output tensor.
-            Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type)
-                : UnaryElementwiseBuiltin({arg})
-                , m_element_type(element_type)
+            Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type);
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
+                if (new_args.size() != 1)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Convert>(new_args.at(0), m_element_type);
             }
 
-            virtual const element::Type&
-                propagate_element_types(const element::Type& arg_element_type) const override;
-            virtual std::string description() const override { return "Convert"; }
+            const element::Type& get_convert_element_type() const { return m_element_type; }
         protected:
             const ngraph::element::Type& m_element_type;
         };

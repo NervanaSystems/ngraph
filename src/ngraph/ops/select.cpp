@@ -19,25 +19,16 @@
 
 using namespace std;
 using namespace ngraph;
-using namespace ngraph::op;
 
-void Select::propagate_types()
+op::Select::Select(const std::shared_ptr<Node>& arg0,
+                   const std::shared_ptr<Node>& arg1,
+                   const std::shared_ptr<Node>& arg2)
+    : RequiresTensorViewArgs("Select", Nodes{arg0, arg1, arg2})
 {
-    if (m_arguments.size() != 3)
-    {
-        throw ngraph_error("Wrong number of arguments.");
-    }
+    auto arg0_tensor_type = get_inputs().at(0).get_tensor_view_type();
+    auto arg1_tensor_type = get_inputs().at(1).get_tensor_view_type();
+    auto arg2_tensor_type = get_inputs().at(2).get_tensor_view_type();
 
-    auto arg0_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(0)->get_value_type());
-    auto arg1_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(1)->get_value_type());
-    auto arg2_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(2)->get_value_type());
-    if (nullptr == arg0_tensor_type || nullptr == arg1_tensor_type || nullptr == arg2_tensor_type)
-    {
-        throw ngraph_error("Arguments must be tensor views");
-    }
     if (arg0_tensor_type->get_element_type() != element::Bool::element_type())
     {
         throw ngraph_error("Argument 0 for arithmetic operators must have boolean element type");

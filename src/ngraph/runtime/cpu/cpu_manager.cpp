@@ -14,29 +14,24 @@
 
 #include <memory>
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/cpu_manager.hpp"
+#include "ngraph/runtime/cpu/external_function.hpp"
 
-using namespace std;
-using namespace ngraph;
-using namespace ngraph::op;
+using namespace ngraph::runtime::cpu;
 
-void UnaryElementwiseBuiltin::propagate_types()
+std::shared_ptr<ngraph::runtime::Backend> CPUManager::allocate_backend()
 {
-    if (m_arguments.size() != 1)
-    {
-        throw ngraph_error("Wrong number of arguments.");
-    }
-
-    auto arg_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(m_arguments.at(0)->get_value_type());
-    if (nullptr == arg_tensor_type)
-    {
-        throw ngraph_error("Argument must be tensor view");
-    }
-
-    const element::Type& result_element_type =
-        propagate_element_types(arg_tensor_type->get_element_type());
-
-    set_value_type_checked(
-        make_shared<TensorViewType>(result_element_type, arg_tensor_type->get_shape()));
+    return std::make_shared<CPUBackend>();
 }
+
+std::shared_ptr<ngraph::runtime::ExternalFunction>
+    CPUManager::compile(const std::shared_ptr<ngraph::Function>& fun)
+{
+    return std::make_shared<ExternalFunction>(fun);
+}
+
+ngraph::runtime::Manager::Factory CPUManager::factory = ngraph::runtime::Manager::register_factory(
+    "CPU", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
+        return std::make_shared<CPUManager>();
+    });

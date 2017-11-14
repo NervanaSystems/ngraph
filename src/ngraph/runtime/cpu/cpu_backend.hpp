@@ -12,29 +12,22 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <sstream>
+#pragma once
 
-#include "ngraph/ngraph.hpp"
-#include "ngraph/pass/propagate_types.hpp"
+#include "ngraph/runtime/backend.hpp"
 
-using namespace std;
-using namespace ngraph;
-
-bool pass::PropagateTypes::run_on_call_graph(list<shared_ptr<Node>>& nodes)
+namespace ngraph
 {
-    for (shared_ptr<Node> node : nodes)
+    namespace runtime
     {
-        try
+        namespace cpu
         {
-            node->propagate_types();
-        }
-        catch (exception& e)
-        {
-            stringstream ss;
-            ss << "Error with node " << *node << ": ";
-            ss << e.what();
-            throw invalid_argument(ss.str());
+            class CPUBackend : public Backend
+            {
+            public:
+                virtual std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
+                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function);
+            };
         }
     }
-    return false;
 }

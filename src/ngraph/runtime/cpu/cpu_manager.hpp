@@ -14,20 +14,35 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#include <memory>
+
+#include "ngraph/codegen/compiler.hpp"
+#include "ngraph/runtime/manager.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    class Function;
+
+    namespace runtime
     {
-        class PropagateTypes;
+        class ExternalFunction;
+
+        namespace cpu
+        {
+            /// @brief Transformer for the interpreted backend
+            class CPUManager : public Manager
+            {
+            protected:
+                ngraph::codegen::execution_state exec_state;
+
+            public:
+                virtual std::shared_ptr<Backend> allocate_backend() override;
+
+                virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
+                    compile(const std::shared_ptr<ngraph::Function>& fun) override;
+
+                static Factory factory;
+            };
+        };
     }
 }
-
-class ngraph::pass::PropagateTypes : public CallGraphPass
-{
-public:
-    virtual bool run_on_call_graph(std::list<std::shared_ptr<Node>>&) override;
-
-private:
-};

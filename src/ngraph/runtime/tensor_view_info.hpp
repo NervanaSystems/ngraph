@@ -27,7 +27,7 @@ namespace ngraph
         {
         public:
             TensorViewInfo(size_t index,
-                           const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor)
+                           const std::shared_ptr<const ngraph::descriptor::TensorView>& descriptor)
                 : m_index(index)
                 , m_layout(descriptor->get_tensor_view_layout())
             {

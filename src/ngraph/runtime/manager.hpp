@@ -18,6 +18,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace ngraph
 {
@@ -46,13 +47,23 @@ namespace ngraph
                 compile(const std::shared_ptr<ngraph::Function>& fun) = 0;
 
             using Factory = std::function<std::shared_ptr<Manager>(const std::string&)>;
-            using FactoryMap = std::map<std::string, Factory>;
-
-            static FactoryMap& get_factory_map();
 
             static std::shared_ptr<Manager> get(const std::string& name);
 
-            static Factory register_factory(std::string name, Factory factory);
+            static Factory register_factory(const std::string& name, Factory factory);
+
+        private:
+            static void load_plugins(const std::string& runtime_plugin_libs);
+
+            static void close_plugins();
+
+            static std::shared_ptr<std::vector<void*>> m_plugin_lib_handles;
+
+            static bool m_is_factory_map_initialized;
+
+            using FactoryMap = std::map<std::string, Factory>;
+
+            static FactoryMap& get_factory_map();
         };
     }
 }
