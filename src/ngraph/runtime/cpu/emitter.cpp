@@ -1060,18 +1060,6 @@ void Emitter::EmitReduce(const ngraph::Node* n,
     auto reduce = static_cast<const op::Reduce*>(n);
     auto reduction_function = reduce->get_reduction_function();
 
-    // std::shared_ptr<ExternalFunction> external;
-
-    // try
-    // {
-    //     external = function_map.at(reduction_function);
-    // }
-    // catch (const std::out_of_range)
-    // {
-    //     external = make_shared<ExternalFunction>(reduction_function);
-    //     function_map.insert({reduction_function, external});
-    // }
-
     auto reductee_type = reduce->get_arguments().at(0)->get_value_type();
     auto reductee_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(reductee_type);
     assert(reductee_tensor_view_type);
