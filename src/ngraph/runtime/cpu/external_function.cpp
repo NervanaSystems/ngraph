@@ -199,14 +199,9 @@ void ExternalFunction::compile()
 
 #include <Eigen/Dense>
 
-#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
-#include "ngraph/runtime/cpu/call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/eigen_utils.hpp"
-#include "ngraph/runtime/utils.hpp"
 
-using namespace ngraph::element;
-using namespace ngraph::runtime;
 using namespace ngraph::runtime::cpu::eigen;
 
 extern "C" void allocate_aligned_buffer(

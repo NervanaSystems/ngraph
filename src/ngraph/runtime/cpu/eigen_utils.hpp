@@ -14,13 +14,9 @@
 
 #pragma once
 
-#include <memory>
-
 #include <Eigen/Dense>
 
-#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
-#include "ngraph/runtime/cpu/call_frame.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
+#include "ngraph/common.hpp"
 
 namespace ngraph
 {
@@ -62,14 +58,6 @@ namespace ngraph
                     class V
                     {
                     public:
-                        V(const TensorViewInfo& tensor_view_info)
-                            : l0(tensor_view_info
-                                     .get_layout<
-                                         ngraph::descriptor::layout::DenseTensorViewLayout>()
-                                     ->get_size())
-                        {
-                        }
-
                         V(size_t s)
                             : l0(s)
                         {
@@ -84,24 +72,12 @@ namespace ngraph
 
                     class M
                     {
-                        M(const std::shared_ptr<ngraph::descriptor::layout::DenseTensorViewLayout>&
-                              layout)
-                            : M(layout->get_shape(), layout->get_strides())
-                        {
-                        }
-
                     public:
                         M(const Shape& shape, const Strides& strides)
                             : l0(shape.at(0))
                             , l1(shape.at(1))
                             , s0(strides.at(0))
                             , s1(strides.at(1))
-                        {
-                        }
-
-                        M(const TensorViewInfo& tensor_view_info)
-                            : M(tensor_view_info.get_layout<
-                                  ngraph::descriptor::layout::DenseTensorViewLayout>())
                         {
                         }
 
@@ -113,7 +89,7 @@ namespace ngraph
                     };
                 }
 
-                // T element type
+                // ET element type
                 // FMT array format (fmt::V for vector, etc.)
                 // BASE select array/matrix
                 template <typename T,
@@ -127,14 +103,6 @@ namespace ngraph
                 public:
                     EigenWrapper(T* t, const FMT& fmt)
                         : base(t, fmt.l0, fmt.l1, STRIDES(fmt.s0, fmt.s1))
-                    {
-                    }
-
-                    EigenWrapper(
-                        T* t,
-                        const std::shared_ptr<ngraph::descriptor::layout::DenseTensorViewLayout>&
-                            layout)
-                        : base(t, layout->get_size(), 1, DynamicStrides(1, 1))
                     {
                     }
 

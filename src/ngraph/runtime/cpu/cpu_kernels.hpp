@@ -14,7 +14,8 @@
 
 #pragma once
 
-#include "ngraph/types/element_type.hpp"
+#include <cinttypes>
+#include <cstddef>
 
 // CBLAS types and wrappers
 
@@ -73,17 +74,17 @@ namespace cblas
     void cblas_sgemm(const Layout layout,
                      const Transpose TransA,
                      const Transpose TransB,
-                     const ngraph::element::Int64::type M,
-                     const ngraph::element::Int64::type N,
-                     const ngraph::element::Int64::type K,
-                     const ngraph::element::Float32::type alpha,
-                     const ngraph::element::Float32::type* A,
-                     const ngraph::element::Int64::type lda,
-                     const ngraph::element::Float32::type* B,
-                     const ngraph::element::Int64::type ldb,
-                     const ngraph::element::Float32::type beta,
-                     ngraph::element::Float32::type* C,
-                     const ngraph::element::Int64::type ldc);
+                     const int64_t M,
+                     const int64_t N,
+                     const int64_t K,
+                     const float alpha,
+                     const float* A,
+                     const int64_t lda,
+                     const float* B,
+                     const int64_t ldb,
+                     const float beta,
+                     float* C,
+                     const int64_t ldc);
     }
 }
 
@@ -94,10 +95,10 @@ namespace mkl
                        char trans,
                        size_t rows,
                        size_t cols,
-                       const ngraph::element::Float32::type alpha,
-                       const ngraph::element::Float32::type* A,
+                       const float alpha,
+                       const float* A,
                        size_t lda,
-                       ngraph::element::Float32::type* B,
+                       float* B,
                        size_t ldb);
     }
 }
