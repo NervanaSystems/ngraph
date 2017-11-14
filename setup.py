@@ -101,6 +101,17 @@ ext_modules = [
         language='c++'
     ),
     Extension(
+        'ngraph.core.types.clsNDArray',
+       ['ngraph/core/types/ndarray.cpp'],
+        include_dirs=[
+            # Path to pybind11 headers
+            os.environ["PYBIND_HEADERS_PATH"],
+            get_pybind_include(),
+            get_pybind_include(user=True)
+        ],
+        language='c++'
+    ),
+    Extension(
         'ngraph.core.types.clsCallFrame',
        ['ngraph/core/types/call_frame.cpp'],
         include_dirs=[
