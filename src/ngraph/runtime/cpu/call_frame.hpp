@@ -55,9 +55,7 @@ namespace ngraph
                 void tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
                                  const std::vector<std::shared_ptr<TensorView>>& outputs);
 
-                void set_return() { m_return = true; }
             protected:
-                bool m_return;
                 EntryPoint m_compiled_function;
             };
         }
