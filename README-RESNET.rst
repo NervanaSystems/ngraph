@@ -61,8 +61,8 @@ To run Intel Nervana graph on a GPU backend, you need to install CUDA* and then 
 Virtual environment activation
 ==================================
 
-The virtual environemt for Intel Nervana Graph is created when you install the prerequisites described in the installation documentation
-`here <https://ngraph.nervanasys.com/docs/latest/installation.html>`_.
+The virtual environment for Intel Nervana Graph is created when you install the prerequisites described in the installation documentation
+`here <https://ngraph.nervanasys.com/docs/latest/installation.html>`_ and in the `README <https://github.com/NervanaSystems/ngraph/blob/master/README.md>`_.
 
 To activate a Python virtualenv, run the following command::
   
