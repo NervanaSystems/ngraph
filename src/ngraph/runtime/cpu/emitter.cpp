@@ -66,11 +66,17 @@ static std::string eigen_matrix_format(const ngraph::Shape& shape, const ngraph:
     return ss.str();
 }
 
-void Emitter::EMITTER_DECL(EmitNop)
+void Emitter::EmitNop(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
 }
 
-void Emitter::EMITTER_DECL(EmitAdd)
+void Emitter::EmitAdd(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -90,7 +96,10 @@ void Emitter::EMITTER_DECL(EmitAdd)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitDot)
+void Emitter::EmitDot(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     auto& arg_nodes = n->get_arguments();
     assert(arg_nodes.size() == 2);
@@ -204,7 +213,10 @@ void Emitter::EMITTER_DECL(EmitDot)
     }
 }
 
-void Emitter::EMITTER_DECL(EmitMultiply)
+void Emitter::EmitMultiply(const ngraph::Node* n,
+                           ExternalFunction* ef,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -223,7 +235,10 @@ void Emitter::EMITTER_DECL(EmitMultiply)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitGetTupleElement)
+void Emitter::EmitGetTupleElement(const ngraph::Node* n,
+                                  ExternalFunction* ef,
+                                  const std::vector<TensorViewInfo>& inputs,
+                                  const std::vector<TensorViewInfo>& outputs)
 {
     auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
     auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
@@ -242,7 +257,10 @@ void Emitter::EMITTER_DECL(EmitGetTupleElement)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitTuple)
+void Emitter::EmitTuple(const ngraph::Node* n,
+                        ExternalFunction* ef,
+                        const std::vector<TensorViewInfo>& inputs,
+                        const std::vector<TensorViewInfo>& outputs)
 {
     assert(inputs.size() == outputs.size());
 
@@ -265,7 +283,10 @@ void Emitter::EMITTER_DECL(EmitTuple)
     TU += "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitAbs)
+void Emitter::EmitAbs(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -281,7 +302,10 @@ void Emitter::EMITTER_DECL(EmitAbs)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitConcat)
+void Emitter::EmitConcat(const ngraph::Node* n,
+                         ExternalFunction* ef,
+                         const std::vector<TensorViewInfo>& inputs,
+                         const std::vector<TensorViewInfo>& outputs)
 {
     auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
     assert(result_tensor_type);
@@ -341,7 +365,10 @@ void Emitter::EMITTER_DECL(EmitConcat)
     }
 }
 
-void Emitter::EMITTER_DECL(EmitDivide)
+void Emitter::EmitDivide(const ngraph::Node* n,
+                         ExternalFunction* ef,
+                         const std::vector<TensorViewInfo>& inputs,
+                         const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -359,7 +386,10 @@ void Emitter::EMITTER_DECL(EmitDivide)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitEqual)
+void Emitter::EmitEqual(const ngraph::Node* n,
+                        ExternalFunction* ef,
+                        const std::vector<TensorViewInfo>& inputs,
+                        const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -377,7 +407,10 @@ void Emitter::EMITTER_DECL(EmitEqual)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitGreater)
+void Emitter::EmitGreater(const ngraph::Node* n,
+                          ExternalFunction* ef,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -395,7 +428,10 @@ void Emitter::EMITTER_DECL(EmitGreater)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitGreaterEq)
+void Emitter::EmitGreaterEq(const ngraph::Node* n,
+                            ExternalFunction* ef,
+                            const std::vector<TensorViewInfo>& inputs,
+                            const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -413,7 +449,10 @@ void Emitter::EMITTER_DECL(EmitGreaterEq)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitLess)
+void Emitter::EmitLess(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -431,7 +470,10 @@ void Emitter::EMITTER_DECL(EmitLess)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitLessEq)
+void Emitter::EmitLessEq(const ngraph::Node* n,
+                         ExternalFunction* ef,
+                         const std::vector<TensorViewInfo>& inputs,
+                         const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -449,7 +491,10 @@ void Emitter::EMITTER_DECL(EmitLessEq)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitLog)
+void Emitter::EmitLog(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -465,7 +510,10 @@ void Emitter::EMITTER_DECL(EmitLog)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitMaximum)
+void Emitter::EmitMaximum(const ngraph::Node* n,
+                          ExternalFunction* ef,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -483,7 +531,10 @@ void Emitter::EMITTER_DECL(EmitMaximum)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitMinimum)
+void Emitter::EmitMinimum(const ngraph::Node* n,
+                          ExternalFunction* ef,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -501,7 +552,10 @@ void Emitter::EMITTER_DECL(EmitMinimum)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitNegative)
+void Emitter::EmitNegative(const ngraph::Node* n,
+                           ExternalFunction* ef,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -517,7 +571,10 @@ void Emitter::EMITTER_DECL(EmitNegative)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitNotEqual)
+void Emitter::EmitNotEqual(const ngraph::Node* n,
+                           ExternalFunction* ef,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -535,7 +592,10 @@ void Emitter::EMITTER_DECL(EmitNotEqual)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitSelect)
+void Emitter::EmitSelect(const ngraph::Node* n,
+                         ExternalFunction* ef,
+                         const std::vector<TensorViewInfo>& inputs,
+                         const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(1)->get_value_type()))
@@ -555,7 +615,10 @@ void Emitter::EMITTER_DECL(EmitSelect)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitSubtract)
+void Emitter::EmitSubtract(const ngraph::Node* n,
+                           ExternalFunction* ef,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -573,7 +636,10 @@ void Emitter::EMITTER_DECL(EmitSubtract)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitParameterizedConstantBool)
+void Emitter::EmitParameterizedConstantBool(const ngraph::Node* n,
+                                            ExternalFunction* ef,
+                                            const std::vector<TensorViewInfo>& inputs,
+                                            const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Bool>*>(n)
                      ->get_value()
@@ -591,7 +657,10 @@ void Emitter::EMITTER_DECL(EmitParameterizedConstantBool)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitParameterizedConstantFloat32)
+void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
+                                               ExternalFunction* ef,
+                                               const std::vector<TensorViewInfo>& inputs,
+                                               const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Float32>*>(n)
                      ->get_value()
@@ -609,7 +678,10 @@ void Emitter::EMITTER_DECL(EmitParameterizedConstantFloat32)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitParameterizedConstantInt8)
+void Emitter::EmitParameterizedConstantInt8(const ngraph::Node* n,
+                                            ExternalFunction* ef,
+                                            const std::vector<TensorViewInfo>& inputs,
+                                            const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int8>*>(n)
                      ->get_value()
@@ -627,7 +699,10 @@ void Emitter::EMITTER_DECL(EmitParameterizedConstantInt8)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitParameterizedConstantInt32)
+void Emitter::EmitParameterizedConstantInt32(const ngraph::Node* n,
+                                             ExternalFunction* ef,
+                                             const std::vector<TensorViewInfo>& inputs,
+                                             const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int32>*>(n)
                      ->get_value()
@@ -645,7 +720,10 @@ void Emitter::EMITTER_DECL(EmitParameterizedConstantInt32)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitParameterizedConstantInt64)
+void Emitter::EmitParameterizedConstantInt64(const ngraph::Node* n,
+                                             ExternalFunction* ef,
+                                             const std::vector<TensorViewInfo>& inputs,
+                                             const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int64>*>(n)
                      ->get_value()
@@ -663,7 +741,10 @@ void Emitter::EMITTER_DECL(EmitParameterizedConstantInt64)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitParameterizedConstantUInt8)
+void Emitter::EmitParameterizedConstantUInt8(const ngraph::Node* n,
+                                             ExternalFunction* ef,
+                                             const std::vector<TensorViewInfo>& inputs,
+                                             const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt8>*>(n)
                      ->get_value()
@@ -681,7 +762,10 @@ void Emitter::EMITTER_DECL(EmitParameterizedConstantUInt8)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitParameterizedConstantUInt32)
+void Emitter::EmitParameterizedConstantUInt32(const ngraph::Node* n,
+                                              ExternalFunction* ef,
+                                              const std::vector<TensorViewInfo>& inputs,
+                                              const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt32>*>(n)
                      ->get_value()
@@ -699,7 +783,10 @@ void Emitter::EMITTER_DECL(EmitParameterizedConstantUInt32)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitParameterizedConstantUInt64)
+void Emitter::EmitParameterizedConstantUInt64(const ngraph::Node* n,
+                                              ExternalFunction* ef,
+                                              const std::vector<TensorViewInfo>& inputs,
+                                              const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt64>*>(n)
                      ->get_value()
@@ -717,7 +804,10 @@ void Emitter::EMITTER_DECL(EmitParameterizedConstantUInt64)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitBroadcast)
+void Emitter::EmitBroadcast(const ngraph::Node* n,
+                            ExternalFunction* ef,
+                            const std::vector<TensorViewInfo>& inputs,
+                            const std::vector<TensorViewInfo>& outputs)
 {
     auto broadcast = static_cast<const op::Broadcast*>(n);
 
@@ -804,7 +894,10 @@ void Emitter::EMITTER_DECL(EmitBroadcast)
     }
 }
 
-void Emitter::EMITTER_DECL(EmitConvert)
+void Emitter::EmitConvert(const ngraph::Node* n,
+                          ExternalFunction* ef,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     auto arg = n->get_arguments().at(0);
 
@@ -829,7 +922,10 @@ void Emitter::EMITTER_DECL(EmitConvert)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitConstant)
+void Emitter::EmitConstant(const ngraph::Node* n,
+                           ExternalFunction* ef,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     auto c = static_cast<const op::Constant*>(n);
     auto c_tensor_type = dynamic_pointer_cast<const TensorViewType>(c->get_value_type());
@@ -848,7 +944,10 @@ void Emitter::EMITTER_DECL(EmitConstant)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitReshape)
+void Emitter::EmitReshape(const ngraph::Node* n,
+                          ExternalFunction* ef,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     auto reshape = static_cast<const op::Reshape*>(n);
 
@@ -932,7 +1031,10 @@ void Emitter::EMITTER_DECL(EmitReshape)
     }
 }
 
-void Emitter::EMITTER_DECL(EmitFunctionCall)
+void Emitter::EmitFunctionCall(const ngraph::Node* n,
+                               ExternalFunction* ef,
+                               const std::vector<TensorViewInfo>& inputs,
+                               const std::vector<TensorViewInfo>& outputs)
 {
     auto function_call = static_cast<const op::FunctionCall*>(n);
     shared_ptr<Function> function = function_call->get_function();
@@ -962,7 +1064,10 @@ void Emitter::EMITTER_DECL(EmitFunctionCall)
 // the compiled version of these ops is intended to have semantics identical
 // to what's seen there (for now atleast)
 
-void Emitter::EMITTER_DECL(EmitReduce)
+void Emitter::EmitReduce(const ngraph::Node* n,
+                         ExternalFunction* ef,
+                         const std::vector<TensorViewInfo>& inputs,
+                         const std::vector<TensorViewInfo>& outputs)
 {
     auto reduce = static_cast<const op::Reduce*>(n);
     auto reduction_function = reduce->get_reduction_function();
@@ -1174,7 +1279,10 @@ void Emitter::EMITTER_DECL(EmitReduce)
     }
 }
 
-void Emitter::EMITTER_DECL(EmitSign)
+void Emitter::EmitSign(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -1190,7 +1298,10 @@ void Emitter::EMITTER_DECL(EmitSign)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitSlice)
+void Emitter::EmitSlice(const ngraph::Node* n,
+                        ExternalFunction* ef,
+                        const std::vector<TensorViewInfo>& inputs,
+                        const std::vector<TensorViewInfo>& outputs)
 {
     auto slice = static_cast<const op::Slice*>(n);
 
@@ -1267,7 +1378,10 @@ void Emitter::EMITTER_DECL(EmitSlice)
     }
 }
 
-void Emitter::EMITTER_DECL(EmitSum)
+void Emitter::EmitSum(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     auto s = static_cast<const op::Sum*>(n);
     auto s_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(s->get_value_type());
@@ -1350,7 +1464,10 @@ void Emitter::EMITTER_DECL(EmitSum)
     }
 }
 
-void Emitter::EMITTER_DECL(EmitExp)
+void Emitter::EmitExp(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -1366,7 +1483,10 @@ void Emitter::EMITTER_DECL(EmitExp)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitSin)
+void Emitter::EmitSin(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -1382,7 +1502,10 @@ void Emitter::EMITTER_DECL(EmitSin)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitSinh)
+void Emitter::EmitSinh(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -1398,7 +1521,10 @@ void Emitter::EMITTER_DECL(EmitSinh)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitCos)
+void Emitter::EmitCos(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -1414,7 +1540,10 @@ void Emitter::EMITTER_DECL(EmitCos)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitCosh)
+void Emitter::EmitCosh(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -1430,7 +1559,10 @@ void Emitter::EMITTER_DECL(EmitCosh)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitTan)
+void Emitter::EmitTan(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -1446,7 +1578,10 @@ void Emitter::EMITTER_DECL(EmitTan)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitTanh)
+void Emitter::EmitTanh(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     // Eigen's generic_fast_tanh_float<float> is currently miscompiled by Clang/LLVM
     // so we fall-back to std::tanh
@@ -1463,7 +1598,10 @@ void Emitter::EMITTER_DECL(EmitTanh)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitAsin)
+void Emitter::EmitAsin(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -1479,7 +1617,10 @@ void Emitter::EMITTER_DECL(EmitAsin)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitAcos)
+void Emitter::EmitAcos(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -1495,7 +1636,10 @@ void Emitter::EMITTER_DECL(EmitAcos)
     TU << "}\n";
 }
 
-void Emitter::EMITTER_DECL(EmitAtan)
+void Emitter::EmitAtan(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
