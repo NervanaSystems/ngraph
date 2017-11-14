@@ -328,6 +328,7 @@ extern "C" void free_aligned_buffer(void* allocated);
 
     string output_dir = "cpu_codegen";
     string function_name = m_function->get_name();
+    file_util::remove_directory(output_dir);
     file_util::make_directory(output_dir);
     string filename = file_util::path_join(output_dir, function_name + "_codegen.cpp");
     ofstream out(filename);
