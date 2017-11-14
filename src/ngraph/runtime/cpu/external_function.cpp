@@ -316,6 +316,8 @@ extern "C" void free_aligned_buffer(void* allocated);
             handler->second(&emitter, node.get(), this, in, out);
         }
 
+        TU << "\nfree_aligned_buffer(allocated_buffer_pool);\n";
+
         TU.indent--;
 
         // End TU
