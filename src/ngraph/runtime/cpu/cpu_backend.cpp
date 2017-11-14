@@ -19,9 +19,6 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" void
-    allocate_aligned_buffer(size_t size, size_t alignment, char** allocated, char** aligned_ptr);
-
 std::shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPUBackend::make_call_frame(
     const std::shared_ptr<ExternalFunction>& external_function)
 {

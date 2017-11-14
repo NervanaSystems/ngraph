@@ -44,16 +44,6 @@ using ngraph::descriptor::layout::DenseTensorViewLayout;
 
 #define TI(x) type_index(typeid(x))
 
-static unordered_map<type_index, string> element_type_names = {
-    {TI(ngraph::element::Bool), "Bool"},
-    {TI(ngraph::element::Float32), "Float32"},
-    {TI(ngraph::element::Int8), "Int8"},
-    {TI(ngraph::element::Int32), "Int32"},
-    {TI(ngraph::element::Int64), "Int64"},
-    {TI(ngraph::element::UInt8), "UInt8"},
-    {TI(ngraph::element::UInt32), "UInt32"},
-    {TI(ngraph::element::UInt64), "UInt64"}};
-
 static string eigen_vector_format(const runtime::TensorViewInfo& tvi)
 {
     return "fmt::V{" + to_string(tvi.get_layout<DenseTensorViewLayout>()->get_size()) + "}";
