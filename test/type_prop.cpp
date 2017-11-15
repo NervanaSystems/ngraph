@@ -1713,3 +1713,64 @@ TEST(type_prop, convolution_deduce_kernel_just_fits)
     ASSERT_EQ(*(conv->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{64, 128, 1, 1}));
 }
+
+TEST(type_prop, pad_zero_deduce)
+{
+    auto shape = Shape{3, 8, 15};
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape));
+    auto padding_below = Shape{1, 0, 2};
+    auto padding_above = Shape{0, 2, 5};
+    auto shape_padded = Shape{4, 10, 22};
+    auto p = make_shared<op::PadZero>(padding_below, padding_above, param);
+    ASSERT_EQ(*(p->get_value_type()),
+              TensorViewType(element::Float32::element_type(), shape_padded));
+}
+
+TEST(type_prop, pad_zero_below_mismatch)
+{
+    auto shape = Shape{3, 8, 15};
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape));
+    auto padding_below = Shape{1, 0, 2, 3};
+    auto padding_above = Shape{0, 2, 5};
+    auto shape_padded = Shape{4, 10, 22};
+    try
+    {
+        auto p = make_shared<op::PadZero>(padding_below, padding_above, param);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Bad below-padding shape not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Padding shape rank must match the rank of the input"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_zero_above_mismatch)
+{
+    auto shape = Shape{3, 8, 15};
+    auto param = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape));
+    auto padding_below = Shape{1, 0, 2};
+    auto padding_above = Shape{0, 2, 0, 5};
+    auto shape_padded = Shape{4, 10, 22};
+    try
+    {
+        auto p = make_shared<op::PadZero>(padding_below, padding_above, param);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Bad above-padding shape not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Padding shape rank must match the rank of the input"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}

@@ -321,6 +321,27 @@ TEST(copy, not_equal)
     ASSERT_TRUE(check_binary<op::NotEqual>());
 }
 
+TEST(copy, pad_zero)
+{
+    Shape shape{2, 3, 4};
+    Shape padding_before{0, 2, 3};
+    Shape padding_after{1, 0, 2};
+    Shape padded_shape{3, 5, 9};
+    auto arg = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+
+    std::vector<std::shared_ptr<Node>> new_args{
+        make_shared<op::Parameter>(element::Float32::element_type(), shape)};
+
+    auto node = make_shared<op::PadZero>(padding_before, padding_after, arg);
+    auto new_node = node->copy_with_new_args(new_args);
+    auto node_cast = dynamic_pointer_cast<op::PadZero>(new_node);
+
+    ASSERT_TRUE(nullptr != new_node);
+    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(node_cast->get_padding_before() == node->get_padding_before());
+    ASSERT_TRUE(node_cast->get_padding_after() == node->get_padding_after());
+}
+
 TEST(copy, parameter)
 {
     Shape shape{1};

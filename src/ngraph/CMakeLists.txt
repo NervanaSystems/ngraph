@@ -44,6 +44,7 @@ set (SRC
     ops/multiply.cpp
     ops/negative.cpp
     ops/op.cpp
+    ops/pad_zero.cpp
     ops/parameter.cpp
     ops/reduce.cpp
     ops/reshape.cpp

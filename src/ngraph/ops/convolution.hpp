@@ -26,19 +26,16 @@ namespace ngraph
         ///
         /// ## Inputs
         ///
-        /// |        | Type                                                                                                    | Description                                                                        |
-        /// | ------ | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-        /// | `arg0` | \f$N[d_\textit{imgs},d_\textit{ci},d_1,\dots,d_n]~(n \geq 0)\f$                                         | (Images) A tensor of rank>2, any shape, and any numeric element type.              |
-        /// | `arg1` | \f$N[d_\textit{co},d_\textit{ci},d^k_1,\dots,d^k_n]~(n \geq 0, 0 < d_\textit{i} \le d^k_\textit{i})\f$  | (Convolution kernels) A tensor with the same rank and element type as `arg0`, with |
-        /// |        |                                                                                                         | the second dimension (corresponding to input channels) matching `arg0`, and with   |
-        /// |        |                                                                                                         | the subsequent dimensions (corresponding to the convolution kernels) no greater    |
-        /// |        |                                                                                                         | than the corresponding image dimension.                                            |
+        /// |        | Type                                                                                                    | Description                                                                                                                                                                                                                                                                                 |
+        /// | ------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+        /// | `arg0` | \f$N[d_\textit{imgs},d_\textit{ci},d_1,\dots,d_n]~(n \geq 0)\f$                                         | (Images) A tensor of rank>2, any shape, and any numeric element type.                                                                                                                                                                                                                       |
+        /// | `arg1` | \f$N[d_\textit{co},d_\textit{ci},d^k_1,\dots,d^k_n]~(n \geq 0, 0 < d_\textit{i} \le d^k_\textit{i})\f$  | (%Convolution kernels) A tensor with the same rank and element type as `arg0`, with the second dimension (corresponding to input channels) matching `arg0`, and with the subsequent dimensions (corresponding to the convolution kernels) no greater than the corresponding image dimension. |
         ///
         /// ## Output
         ///
-        /// | Type                                                                                        | Description                                                                     |
-        /// | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-        /// | \f$N[d_\textit{imgs},d_\textit{co},d'_1,\dots,d'_n]\f$ where \f$d'_i = d_i - (d^k_i - 1)\f$ | The result of convolution (FIXME: vague)                                        |
+        /// | Type                                                                                        | Description                                                                                                                                                                                                                                                       |
+        /// | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+        /// | \f$N[d_\textit{imgs},d_\textit{co},d'_1,\dots,d'_n]\f$ where \f$d'_i = d_i - (d^k_i - 1)\f$ | The tensor \f$T\f$ where \f$T[n,c,i_1,\dots,i_n] = \Sigma(\mathtt{arg0}[n,:,i_1 : i_1 + d^k_1 - 1,\dots,i_n + d^k_n - 1] * \mathtt{arg1}[c])\f$, \f$*\f$ is elementwise multiplication, and \f$\Sigma\f$ denotes summation of the entire tensor down to a scalar. |
         ///
         /// ## Implementation Status
         ///

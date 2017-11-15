@@ -79,6 +79,7 @@
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/op.hpp"
+#include "ngraph/ops/pad_zero.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
