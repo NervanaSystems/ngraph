@@ -24,8 +24,8 @@ class get_pybind_include(object):
 
 ext_modules = [
     Extension(
-        'ngraph.core.types.clsTraitedType',
-        ['ngraph/core/types/element_type.cpp'],
+        'wrapper.ngraph.types.clsTraitedType',
+        ['wrapper/ngraph/types/element_type.cpp'],
         include_dirs=[
             # Path to pybind11 headers
             os.environ["PYBIND_HEADERS_PATH"],
@@ -35,8 +35,8 @@ ext_modules = [
         language='c++'
     ),
     Extension(
-        'ngraph.core.types.clsParameter',
-       ['ngraph/core/types/parameter.cpp'],
+        'wrapper.ngraph.ops.clsParameter',
+       ['wrapper/ngraph/ops/parameter.cpp'],
         include_dirs=[
             # Path to pybind11 headers
             os.environ["PYBIND_HEADERS_PATH"],
@@ -46,8 +46,8 @@ ext_modules = [
         language='c++'
     ),
     Extension(
-        'ngraph.core.types.clsTensorViewType',
-       ['ngraph/core/types/valuetype.cpp'],
+        'wrapper.ngraph.types.clsTensorViewType',
+       ['wrapper/ngraph/types/valuetype.cpp'],
         include_dirs=[
             # Path to pybind11 headers
             os.environ["PYBIND_HEADERS_PATH"],
@@ -57,8 +57,8 @@ ext_modules = [
         language='c++'
     ),
     Extension(
-        'ngraph.core.types.clsFunction',
-       ['ngraph/core/types/function.cpp'],
+        'wrapper.ngraph.clsFunction',
+       ['wrapper/ngraph/function.cpp'],
         include_dirs=[
             # Path to pybind11 headers
             os.environ["PYBIND_HEADERS_PATH"],
@@ -68,8 +68,8 @@ ext_modules = [
         language='c++'
     ),
     Extension(
-        'ngraph.core.types.clsManager',
-       ['ngraph/core/types/manager.cpp'],
+        'wrapper.ngraph.runtime.clsManager',
+       ['wrapper/ngraph/runtime/manager.cpp'],
         include_dirs=[
             # Path to pybind11 headers
             os.environ["PYBIND_HEADERS_PATH"],
@@ -79,8 +79,8 @@ ext_modules = [
         language='c++'
     ),
     Extension(
-        'ngraph.core.types.clsBackend',
-       ['ngraph/core/types/backend.cpp'],
+        'wrapper.ngraph.runtime.clsBackend',
+       ['wrapper/ngraph/runtime/backend.cpp'],
         include_dirs=[
             # Path to pybind11 headers
             os.environ["PYBIND_HEADERS_PATH"],
@@ -90,8 +90,8 @@ ext_modules = [
         language='c++'
     ),
     Extension(
-        'ngraph.core.types.clsExternalFunction',
-       ['ngraph/core/types/external_function.cpp'],
+        'wrapper.ngraph.runtime.clsExternalFunction',
+       ['wrapper/ngraph/runtime/external_function.cpp'],
         include_dirs=[
             # Path to pybind11 headers
             os.environ["PYBIND_HEADERS_PATH"],
@@ -101,8 +101,8 @@ ext_modules = [
         language='c++'
     ),
     Extension(
-        'ngraph.core.types.clsNDArray',
-       ['ngraph/core/types/ndarray.cpp'],
+        'wrapper.ngraph.runtime.clsNDArray',
+       ['wrapper/ngraph/runtime/ndarray.cpp'],
         include_dirs=[
             # Path to pybind11 headers
             os.environ["PYBIND_HEADERS_PATH"],
@@ -112,8 +112,8 @@ ext_modules = [
         language='c++'
     ),
     Extension(
-        'ngraph.core.types.clsCallFrame',
-       ['ngraph/core/types/call_frame.cpp'],
+        'wrapper.ngraph.runtime.clsCallFrame',
+       ['wrapper/ngraph/runtime/call_frame.cpp'],
         include_dirs=[
             # Path to pybind11 headers
             os.environ["PYBIND_HEADERS_PATH"],
@@ -123,8 +123,8 @@ ext_modules = [
         language='c++'
     ),
     Extension(
-        'ngraph.core.types.clsParameterizedTensorView',
-       ['ngraph/core/types/parameterized_tensor_view.cpp'],
+        'wrapper.ngraph.runtime.clsParameterizedTensorView',
+       ['wrapper/ngraph/runtime/parameterized_tensor_view.cpp'],
         include_dirs=[
             # Path to pybind11 headers
             os.environ["PYBIND_HEADERS_PATH"],

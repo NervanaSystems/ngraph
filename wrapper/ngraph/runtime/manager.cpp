@@ -13,9 +13,9 @@ namespace runtime {
 
 PYBIND11_PLUGIN(clsManager) {
 
-    py::module::import("clsFunction");
-    py::module::import("clsExternalFunction");
-    py::module::import("clsBackend");
+    py::module::import("wrapper.ngraph.clsFunction");
+    py::module::import("wrapper.ngraph.runtime.clsExternalFunction");
+    py::module::import("wrapper.ngraph.runtime.clsBackend");
     py::module mod("clsManager");
     py::module mod_1("clsNGVMManager");
 

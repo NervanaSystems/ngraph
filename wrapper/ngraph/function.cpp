@@ -10,8 +10,8 @@ PYBIND11_PLUGIN(clsFunction) {
 
     py::module mod("clsFunction");
 
-    py::module::import("clsParameter");
-    py::module::import("clsTensorViewType");
+    py::module::import("wrapper.ngraph.ops.clsParameter");
+    py::module::import("wrapper.ngraph.types.clsTensorViewType");
     py::class_<Function, std::shared_ptr<Function>> clsFunction(mod, "clsFunction");
 
     clsFunction.def(py::init<const std::shared_ptr<Node>&, const std::shared_ptr<const TensorViewType>&,

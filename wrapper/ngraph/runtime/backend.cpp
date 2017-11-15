@@ -15,8 +15,8 @@ namespace runtime {
 PYBIND11_PLUGIN(clsBackend) {
 
     py::module mod("clsBackend");
-    py::module::import("clsCallFrame");
-    py::module::import("clsParameterizedTensorView");
+    py::module::import("wrapper.ngraph.runtime.clsCallFrame");
+    py::module::import("wrapper.ngraph.runtime.clsParameterizedTensorView");
     using ET = ngraph::element::TraitedType<float>;
 
     py::class_<Backend, std::shared_ptr<Backend>> clsBackend(mod, "clsBackend");

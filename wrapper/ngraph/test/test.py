@@ -1,9 +1,9 @@
-import clsTraitedType
-import clsParameter
-import clsTensorViewType
-import clsFunction
-import clsManager
-import clsParameterizedTensorView
+import wrapper.ngraph.types.clsTraitedType as clsTraitedType
+import wrapper.ngraph.ops.clsParameter as clsParameter
+import wrapper.ngraph.types.clsTensorViewType as clsTensorViewType
+import wrapper.ngraph.clsFunction as clsFunction
+import wrapper.ngraph.runtime.clsManager as clsManager
+import wrapper.ngraph.runtime.clsParameterizedTensorView as clsParameterizedTensorView
 
 element_type = clsTraitedType.TraitedTypeF.element_type()
 shape = [2,2]
