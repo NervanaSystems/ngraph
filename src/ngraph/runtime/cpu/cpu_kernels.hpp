@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <cinttypes>
 #include <cstddef>
+#include <cstdint>
 
 // CBLAS types and wrappers
 
