@@ -1019,6 +1019,39 @@ void Emitter::EmitReshape(const ngraph::Node* n,
     }
 }
 
+void Emitter::generate_call(const std::vector<TensorViewInfo>& inputs,
+                            const std::vector<TensorViewInfo>& outputs,
+                            shared_ptr<Function> function)
+{
+    vector<string> input_names;
+    vector<string> output_names;
+
+    for (const TensorViewInfo& input : inputs)
+    {
+        input_names.push_back(input.get_tensor().get_name());
+    }
+
+    for (const TensorViewInfo& output : outputs)
+    {
+        output_names.push_back(output.get_tensor().get_name());
+    }
+
+    TU << "std::vector<void*> inputs =\n{";
+    TU.indent++;
+    TU << "\n" << join(input_names, ",\n");
+    TU.indent--;
+    TU << "\n};\n";
+
+    TU << "std::vector<void*> outputs =\n{";
+    TU.indent++;
+    TU << "\n" << join(output_names, ",\n");
+    TU.indent--;
+    TU << "\n};\n";
+
+    TU << "\n";
+    TU << function->get_name() << "(inputs, outputs);\n";
+}
+
 void Emitter::EmitFunctionCall(const ngraph::Node* n,
                                ExternalFunction* ef,
                                const std::vector<TensorViewInfo>& inputs,
@@ -1029,19 +1062,7 @@ void Emitter::EmitFunctionCall(const ngraph::Node* n,
 
     TU << "{   // Call " << function->get_name() << "\n";
     TU.indent++;
-    TU << "std::vector<void*> inputs;\n";
-    for (const TensorViewInfo& input : inputs)
-    {
-        TU << "inputs.push_back(" << input.get_tensor().get_name() << ");\n";
-    }
-    TU << "\n";
-    TU << "std::vector<void*> outputs;\n";
-    for (const TensorViewInfo& output : outputs)
-    {
-        TU << "outputs.push_back(" << output.get_tensor().get_name() << ");\n";
-    }
-    TU << "\n";
-    TU << function->get_name() << "(inputs, outputs);\n";
+    generate_call(inputs, outputs, function);
     TU.indent--;
     TU << "}\n";
 }
