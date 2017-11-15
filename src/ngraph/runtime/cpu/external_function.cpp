@@ -81,6 +81,16 @@
 using namespace std;
 using namespace ngraph::runtime::cpu;
 
+static std::string s_output_dir = "cpu_codegen";
+
+class StaticInitializers
+{
+public:
+    StaticInitializers() { ngraph::file_util::remove_directory(s_output_dir); }
+};
+
+static StaticInitializers s_static_initializers;
+
 using ngraph::descriptor::layout::DenseTensorViewLayout;
 
 extern "C" void
@@ -321,11 +331,9 @@ extern "C" void free_aligned_buffer(void* allocated);
 
     // TODO: Cleanup and make this a utility function
 
-    string output_dir = "cpu_codegen";
     string function_name = m_function->get_name();
-    file_util::remove_directory(output_dir);
-    file_util::make_directory(output_dir);
-    string filename = file_util::path_join(output_dir, function_name + "_codegen.cpp");
+    file_util::make_directory(s_output_dir);
+    string filename = file_util::path_join(s_output_dir, function_name + "_codegen.cpp");
     ofstream out(filename);
     string code = TU.get_code();
     out << code;
