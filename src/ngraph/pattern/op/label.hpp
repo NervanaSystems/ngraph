@@ -12,25 +12,30 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <sstream>
+#pragma once
 
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/pattern/op/pattern.hpp"
 
-using namespace std;
-using namespace ngraph::op;
-
-Parameter::Parameter(const std::shared_ptr<const ValueType>& value_type)
-    : Node("Parameter", {})
+namespace ngraph
 {
-    set_value_type_checked(value_type);
-}
-
-Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& shape)
-    : Parameter(make_shared<TensorViewType>(element_type, shape))
-{
-}
-
-void Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
-{
+    namespace pattern
+    {
+        namespace op
+        {
+            class Label : public Pattern
+            {
+                using Pattern::Pattern; // inherit c-tors
+            public:
+                bool is_bound() { return (bool)m_bound; };
+                std::shared_ptr<Node> get_bound_node() { return m_bound; }
+                virtual std::string description() const override { return "Label"; }
+                void reset() { m_bound.reset(); }
+                void bind(std::shared_ptr<Node> n) { m_bound = n; }
+            private:
+                std::shared_ptr<Node> m_bound;
+            };
+        }
+    }
 }

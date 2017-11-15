@@ -12,25 +12,30 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <sstream>
+#pragma once
 
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/pattern/op/pattern.hpp"
 
-using namespace std;
-using namespace ngraph::op;
-
-Parameter::Parameter(const std::shared_ptr<const ValueType>& value_type)
-    : Node("Parameter", {})
+namespace ngraph
 {
-    set_value_type_checked(value_type);
-}
+    namespace pattern
+    {
+        namespace op
+        {
+            class Any : public Pattern
+            {
+            public:
+                Any(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
+                    : Pattern(predicate)
+                {
+                    m_arguments.push_back(arg);
+                    const_cast<std::multiset<Node*>&>(arg->users()).insert(this);
+                }
 
-Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& shape)
-    : Parameter(make_shared<TensorViewType>(element_type, shape))
-{
-}
-
-void Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
-{
+                virtual std::string description() const override { return "Any"; }
+            };
+        }
+    }
 }
