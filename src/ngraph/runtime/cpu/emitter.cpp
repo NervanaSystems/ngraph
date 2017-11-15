@@ -71,10 +71,8 @@ void Emitter::EmitAdd(const ngraph::Node* n,
             ->get_element_type();
     string type = et.c_type_string();
 
-    TU << "{   // " << n->get_name() << " zzzzz\n";
+    TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
-    // TU << "EigenArray1d<" << type << ">(" << outputs[0].get_tensor().get_name() << ", "
-    //    << eigen_vector_format(outputs[0]) << ") =\n";
     TU << emit_array1d(outputs[0]) << " = \n";
     TU.indent++;
     TU << "EigenArray1d<" << type << ">(" << inputs[0].get_tensor().get_name() << ", "
