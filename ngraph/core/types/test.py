@@ -4,7 +4,6 @@ import clsTensorViewType
 import clsFunction
 import clsManager
 import clsParameterizedTensorView
-import numpy as np
 
 element_type = clsTraitedType.TraitedTypeF.element_type()
 shape = [2,2]
@@ -22,3 +21,4 @@ a = backend.make_primary_tensor_view(element_type, shape)
 b = backend.make_primary_tensor_view(element_type, shape)
 c = backend.make_primary_tensor_view(element_type, shape)
 result = backend.make_primary_tensor_view(element_type, shape)
+cf.call([a, b, c], [result])
