@@ -59,7 +59,7 @@ namespace ngraph
             // @return the tensor of the connected output
             Tensor& get_tensor();
 
-			void replace_output(Output& output);
+            void replace_output(Output& output);
 
             /// @return the tensor view for the connected output
             std::shared_ptr<const TensorView> get_tensor_view() const;
@@ -75,7 +75,7 @@ namespace ngraph
             size_t m_index;     // Index into all input tensors
             size_t m_argno;     // Arg number for this input
             size_t m_arg_index; // Index into arg's tensors
-			Output* m_output;
+            Output* m_output;
 
         private:
             Input(const Input&) = delete;

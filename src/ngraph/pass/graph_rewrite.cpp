@@ -20,7 +20,7 @@ bool ngraph::pass::GraphRewrite::run_on_call_graph(std::list<std::shared_ptr<Nod
                              << node->get_name();
                 rewritten = true;
                 matcher->process_match();
-				break; //move onto the next node
+                break; //move onto the next node
             }
         }
     }
@@ -41,29 +41,31 @@ static std::unordered_set<std::shared_ptr<ngraph::Node>> get_users(std::shared_p
 }
 
 void ngraph::pass::GraphRewrite::replace_node(std::shared_ptr<Node> target,
-                                                 std::shared_ptr<Node> replacement)
+                                              std::shared_ptr<Node> replacement)
 {
-	//fix input/output descriptors
-	NGRAPH_DEBUG << "Replacing target = " << target << " , " << target->get_name() << " , "
-		<< "replacement = " << replacement << " , " << replacement->get_name();
+    //fix input/output descriptors
+    NGRAPH_DEBUG << "Replacing target = " << target << " , " << target->get_name() << " , "
+                 << "replacement = " << replacement << " , " << replacement->get_name();
 
-	assert(target->get_outputs().size() == replacement->get_outputs().size());
-	for (size_t i = 0; i < target->get_outputs().size(); i++)
-	{
-		auto& target_output = target->get_outputs().at(i);
-		std::set<ngraph::descriptor::Input*> copy_inputs{begin(target_output.get_inputs()), end(target_output.get_inputs())}; //replace_output modifies target_output->m_inputs
-		for (auto input : copy_inputs)
-		{
-			input->replace_output(replacement->get_outputs().at(i));
-		}
-	}
+    assert(target->get_outputs().size() == replacement->get_outputs().size());
+    for (size_t i = 0; i < target->get_outputs().size(); i++)
+    {
+        auto& target_output = target->get_outputs().at(i);
+        std::set<ngraph::descriptor::Input*> copy_inputs{
+            begin(target_output.get_inputs()),
+            end(target_output.get_inputs())}; //replace_output modifies target_output->m_inputs
+        for (auto input : copy_inputs)
+        {
+            input->replace_output(replacement->get_outputs().at(i));
+        }
+    }
 
-	//fix users and arguments
-	replace_node_users_arguments(target, replacement);
+    //fix users and arguments
+    replace_node_users_arguments(target, replacement);
 }
 
 void ngraph::pass::GraphRewrite::replace_node_users_arguments(std::shared_ptr<Node> target,
-                                              std::shared_ptr<Node> replacement)
+                                                              std::shared_ptr<Node> replacement)
 {
     NGRAPH_DEBUG << "Replacing target = " << target << " , " << target->get_name() << " , "
                  << "replacement = " << replacement << " , " << replacement->get_name();

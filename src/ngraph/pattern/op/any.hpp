@@ -28,10 +28,10 @@ namespace ngraph
             {
             public:
                 Any(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
-					: Pattern("Any", Nodes{ arg }, predicate)
+                    : Pattern("Any", Nodes{arg}, predicate)
                 {
-					set_value_type_checked(arg->get_value_type());
-					//m_arguments.push_back(arg);
+                    set_value_type_checked(arg->get_value_type());
+                    //m_arguments.push_back(arg);
                     //const_cast<std::multiset<Node*>&>(arg->users()).insert(this);
                 }
             };

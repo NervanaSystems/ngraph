@@ -39,7 +39,7 @@ namespace ngraph
             Matcher(const std::shared_ptr<Node> pattern_node = nullptr,
                     gr_callback_fn callback = nullptr)
                 : m_match_root(nullptr)
-				, m_pattern_node(pattern_node)
+                , m_pattern_node(pattern_node)
                 , m_callback(callback)
                 , m_depth(0)
             {
@@ -61,7 +61,7 @@ namespace ngraph
             void process_match(gr_callback_fn callback = nullptr);
 
             static std::string pad(size_t num) { return std::string(num, ' '); }
-            void reset(){}
+            void reset() {}
             bool is_match() { return m_match_root != nullptr; }
             std::shared_ptr<Node> pattern_node() { return m_pattern_node; }
             std::shared_ptr<Node> match_root()

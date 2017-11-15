@@ -44,7 +44,7 @@ namespace ngraph
             size_t get_index() const { return m_index; }
             std::shared_ptr<TensorView> get_tensor_view() const { return m_tensor_view; }
             void add_input(Input* input);
-			void remove_input(Input* input);
+            void remove_input(Input* input);
             const std::set<Input*>& get_inputs() const { return m_inputs; }
             const Tensor& get_tensor() const;
             Tensor& get_tensor();

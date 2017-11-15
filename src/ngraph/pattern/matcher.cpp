@@ -114,7 +114,7 @@ namespace ngraph
         void Matcher::match_class(const std::shared_ptr<Node>& pattern_node,
                                   const std::shared_ptr<Node>& graph_node)
         {
-			assert(pattern_node && graph_node);
+            assert(pattern_node && graph_node);
             static const auto label_type = std::type_index(typeid(op::Label));
             static const auto any_type = std::type_index(typeid(op::Any));
 
@@ -157,8 +157,8 @@ namespace ngraph
                                      bool is_match)
         {
             NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] "
-                         << "pattern = " << pattern_node << " , " << pattern_node->get_name()
-                         << " " << (is_match ? " " : "NOT ") << "matched " << graph_node << " , "
+                         << "pattern = " << pattern_node << " , " << pattern_node->get_name() << " "
+                         << (is_match ? " " : "NOT ") << "matched " << graph_node << " , "
                          << graph_node->get_name();
             if (!is_match)
             {
@@ -219,11 +219,11 @@ namespace ngraph
         bool Matcher::match(const std::shared_ptr<Node>& pattern_node,
                             const std::shared_ptr<Node>& graph_node)
         {
-			if (!pattern_node || !graph_node) 
-			{
-				NGRAPH_DEBUG << "pattern_node or graph_node are not set; matching FAILED";
-				m_match_root.reset();
-			}
+            if (!pattern_node || !graph_node)
+            {
+                NGRAPH_DEBUG << "pattern_node or graph_node are not set; matching FAILED";
+                m_match_root.reset();
+            }
 
             NGRAPH_DEBUG << "Starting match pattern = " << pattern_node << " , "
                          << pattern_node->get_name() << " , graph_node = " << graph_node << " , "

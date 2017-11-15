@@ -27,17 +27,23 @@ namespace ngraph
             class Label : public Pattern
             {
             public:
-				static std::shared_ptr<Label> make_from_node(const std::shared_ptr<ngraph::Node>& node, Predicate pred = nullptr)
-				{
-					auto label = std::make_shared<Label>(pred);
-					label->set_value_type_checked(node->get_value_type());
-					return label;
-				}
+                static std::shared_ptr<Label>
+                    make_from_node(const std::shared_ptr<ngraph::Node>& node,
+                                   Predicate pred = nullptr)
+                {
+                    auto label = std::make_shared<Label>(pred);
+                    label->set_value_type_checked(node->get_value_type());
+                    return label;
+                }
                 bool is_bound() { return m_bound != nullptr; }
                 std::shared_ptr<Node> get_bound_node() { return m_bound; }
                 void reset() { m_bound.reset(); }
                 void bind(std::shared_ptr<Node> n) { m_bound = n; }
-				Label(Predicate pred = nullptr) : Pattern("Label", Nodes{}, pred) {}
+                Label(Predicate pred = nullptr)
+                    : Pattern("Label", Nodes{}, pred)
+                {
+                }
+
             private:
                 std::shared_ptr<Node> m_bound;
             };

@@ -32,7 +32,7 @@ namespace ngraph
             {
             public:
                 Pattern(const std::string& type_name, const Nodes& nodes, Predicate pred)
-					: Node(type_name, nodes)
+                    : Node(type_name, nodes)
                     , m_predicate(pred)
                 {
                 }
@@ -40,10 +40,10 @@ namespace ngraph
                 virtual std::shared_ptr<Node> copy_with_new_args(
                     const std::vector<std::shared_ptr<Node>>& new_args) const override
                 {
-                        throw ngraph_error("Uncopyable");
+                    throw ngraph_error("Uncopyable");
                 }
 
-				Predicate get_predicate() const { return m_predicate;  }
+                Predicate get_predicate() const { return m_predicate; }
             protected:
                 std::function<bool(std::shared_ptr<Node>)> m_predicate;
             };

@@ -89,7 +89,7 @@ namespace nervana
         static std::deque<std::string> queue;
     };
 
-	extern std::ostream& get_nil_stream();
+    extern std::ostream& get_nil_stream();
 
 #define NGRAPH_ERR                                                                                 \
     nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_ERROR,                                        \
@@ -109,7 +109,7 @@ namespace nervana
                         __LINE__,                                                                  \
                         __PRETTY_FUNCTION__)                                                       \
         .stream()
-	/*
+/*
 	#define NGRAPH_DEBUG                                                                               \
 		nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_DEBUG,                                        \
 							nervana::get_file_name(__FILE__),                                          \
@@ -117,5 +117,5 @@ namespace nervana
 							__PRETTY_FUNCTION__)                                                       \
 			.stream()
 	*/
-	#define NGRAPH_DEBUG nervana::get_nil_stream()
-	}
+#define NGRAPH_DEBUG nervana::get_nil_stream()
+}
