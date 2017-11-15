@@ -17,7 +17,6 @@ PYBIND11_PLUGIN(clsBackend) {
     py::module mod("clsBackend");
     py::module::import("clsCallFrame");
     py::module::import("clsParameterizedTensorView");
-    //py::module::import("clsNDArrayBase");
     using ET = ngraph::element::TraitedType<float>;
 
     py::class_<Backend, std::shared_ptr<Backend>> clsBackend(mod, "clsBackend");

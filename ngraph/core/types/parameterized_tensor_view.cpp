@@ -31,8 +31,6 @@ PYBIND11_PLUGIN(clsParameterizedTensorView) {
     py::module::import("clsTraitedType");
 
     declareParameterizedTensorView<ngraph::element::TraitedType<float>>(mod, "F");
-    //declareParameterizedTensorView<double>(mod, "D");
-    //declareParameterizedTensorView<int>(mod, "I");
 
     return mod.ptr();
 }

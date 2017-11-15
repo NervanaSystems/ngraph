@@ -18,9 +18,7 @@ manager = clsManager.clsManager.get('NGVM');
 external = manager.compile(function)
 backend = manager.allocate_backend()
 cf = backend.make_call_frame(external)
-
 a = backend.make_primary_tensor_view(element_type, shape)
 b = backend.make_primary_tensor_view(element_type, shape)
 c = backend.make_primary_tensor_view(element_type, shape)
-
-a.write(np.array[1, 2, 3, 4], 0, 4)
+result = backend.make_primary_tensor_view(element_type, shape)
