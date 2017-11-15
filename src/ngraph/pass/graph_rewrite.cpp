@@ -14,7 +14,9 @@ bool ngraph::pass::GraphRewrite::run_on_call_graph(std::list<std::shared_ptr<Nod
         {
             NGRAPH_DEBUG << "Running matcher " << matcher << " on " << node << " , "
                          << node->get_name();
-            if (!node->is_output() && matcher->match(node))
+            if (!node->is_output() /*this restriction can be lifted when we find an use case for it*/
+                &&
+                matcher->match(node))
             {
                 NGRAPH_DEBUG << "Matcher " << matcher << " matched " << node << " , "
                              << node->get_name();
@@ -27,22 +29,13 @@ bool ngraph::pass::GraphRewrite::run_on_call_graph(std::list<std::shared_ptr<Nod
     return rewritten;
 }
 
-static std::unordered_set<std::shared_ptr<ngraph::Node>> get_users(std::shared_ptr<ngraph::Node> n)
-{
-    std::unordered_set<std::shared_ptr<ngraph::Node>> users;
-    for (auto& output : n->get_outputs())
-    {
-        for (auto& input : output.get_inputs())
-        {
-            users.insert(input->get_node());
-        }
-    }
-    return users;
-}
-
 void ngraph::pass::GraphRewrite::replace_node(std::shared_ptr<Node> target,
                                               std::shared_ptr<Node> replacement)
 {
+    if (target->is_output()) //this restriction can be lifted when we find an use case for it
+    {
+        return;
+    }
     //fix input/output descriptors
     NGRAPH_DEBUG << "Replacing target = " << target << " , " << target->get_name() << " , "
                  << "replacement = " << replacement << " , " << replacement->get_name();
