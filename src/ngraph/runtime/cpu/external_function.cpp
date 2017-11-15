@@ -234,25 +234,29 @@ extern "C" void free_aligned_buffer(void* allocated);
         TU << "{\n";
 
         TU.indent++;
-        TU << "// Allocate the memory pool\n";
-        size_t temp_pool_size = pass_manager.get_state().get_temporary_pool_size();
-        TU << "char* allocated_buffer_pool;\n";
-        TU << "char* aligned_buffer_pool;\n";
-        TU << "allocate_aligned_buffer(" << temp_pool_size << ", 64"
-           << ", &allocated_buffer_pool, &aligned_buffer_pool);\n";
-        TU << "\n";
 
-        TU << "// Define temporary tensors\n";
-        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        size_t temp_pool_size = pass_manager.get_state().get_temporary_pool_size();
+        if (temp_pool_size)
         {
-            for (descriptor::Tensor* tensor : node->liveness_new_list)
+            TU << "// Allocate the memory pool\n";
+            TU << "char* allocated_buffer_pool;\n";
+            TU << "char* aligned_buffer_pool;\n";
+            TU << "allocate_aligned_buffer(" << temp_pool_size << ", 64"
+               << ", &allocated_buffer_pool, &aligned_buffer_pool);\n";
+            TU << "\n";
+
+            TU << "// Define temporary tensors\n";
+            for (shared_ptr<Node> node : current_function->get_ordered_ops())
             {
-                TU << tensor->get_element_type() << "* " << tensor->get_name() << " = ("
-                   << tensor->get_element_type() << "*)(aligned_buffer_pool + "
-                   << tensor->get_pool_offset() << ");\n";
+                for (descriptor::Tensor* tensor : node->liveness_new_list)
+                {
+                    TU << tensor->get_element_type() << "* " << tensor->get_name() << " = ("
+                       << tensor->get_element_type() << "*)(aligned_buffer_pool + "
+                       << tensor->get_pool_offset() << ");\n";
+                }
             }
+            TU << "\n";
         }
-        TU << "\n";
 
         TU << "// Define inputs\n";
         size_t arg_index = 0;
@@ -311,7 +315,10 @@ extern "C" void free_aligned_buffer(void* allocated);
             handler->second(&emitter, node.get(), this, in, out);
         }
 
-        TU << "\nfree_aligned_buffer(allocated_buffer_pool);\n";
+        if (temp_pool_size)
+        {
+            TU << "\nfree_aligned_buffer(allocated_buffer_pool);\n";
+        }
 
         TU.indent--;
 
