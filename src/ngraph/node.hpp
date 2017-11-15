@@ -35,11 +35,6 @@
 
 namespace ngraph
 {
-    namespace pattern
-    {
-        class Matcher;
-    }
-
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// view or a (possibly empty) tuple of values.

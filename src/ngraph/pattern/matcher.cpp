@@ -44,10 +44,10 @@ namespace ngraph
         //and keep track of all pattern nodes
         {
             auto label = std::dynamic_pointer_cast<::ngraph::pattern::op::Label>(node);
-            NGRAPH_DEBUG << "reset_pattern_nodes : node = " << node->description() << " , " << node;
+            NGRAPH_DEBUG << "reset_pattern_nodes : node = " << node->get_name() << " , " << node;
             if (label)
             {
-                NGRAPH_DEBUG << "reset_pattern_nodes : label = " << node->description() << " , "
+                NGRAPH_DEBUG << "reset_pattern_nodes : label = " << node->get_name() << " , "
                              << node;
                 label->reset();
             }
@@ -67,9 +67,9 @@ namespace ngraph
             {
                 if (label->get_bound_node() != graph_node)
                 {
-                    NGRAPH_DEBUG << "get_bound_node " << label->get_bound_node()->description()
+                    NGRAPH_DEBUG << "get_bound_node " << label->get_bound_node()->get_name()
                                  << " , " << label->get_bound_node() << " NOT match "
-                                 << graph_node->description() << " , " << graph_node;
+                                 << graph_node->get_name() << " , " << graph_node;
                     is_match = false;
                 }
             }
@@ -81,7 +81,7 @@ namespace ngraph
 
             if (is_match)
             {
-                NGRAPH_DEBUG << "Binding get_bound_node " << graph_node->description() << " , "
+                NGRAPH_DEBUG << "Binding get_bound_node " << graph_node->get_name() << " , "
                              << graph_node << " , " << graph_node->get_name();
                 label->bind(graph_node);
             }
@@ -114,6 +114,7 @@ namespace ngraph
         void Matcher::match_class(const std::shared_ptr<Node>& pattern_node,
                                   const std::shared_ptr<Node>& graph_node)
         {
+			assert(pattern_node && graph_node);
             static const auto label_type = std::type_index(typeid(op::Label));
             static const auto any_type = std::type_index(typeid(op::Any));
 
@@ -156,9 +157,9 @@ namespace ngraph
                                      bool is_match)
         {
             NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] "
-                         << "pattern = " << pattern_node << " , " << pattern_node->description()
+                         << "pattern = " << pattern_node << " , " << pattern_node->get_name()
                          << " " << (is_match ? " " : "NOT ") << "matched " << graph_node << " , "
-                         << graph_node->description();
+                         << graph_node->get_name();
             if (!is_match)
             {
                 reset_pattern_nodes(pattern_node);
@@ -185,7 +186,7 @@ namespace ngraph
                 do
                 {
                     NGRAPH_DEBUG << pad(2 * m_depth) << "Running a permutation for graph_node "
-                                 << graph_node->description() << " , " << graph_node;
+                                 << graph_node->get_name() << " , " << graph_node;
                     reset_pattern_nodes(pattern_node);
                     m_match_root =
                         old_match_root; //previous permutation wasn't a match; reset m_match_root
@@ -218,9 +219,15 @@ namespace ngraph
         bool Matcher::match(const std::shared_ptr<Node>& pattern_node,
                             const std::shared_ptr<Node>& graph_node)
         {
+			if (!pattern_node || !graph_node) 
+			{
+				NGRAPH_DEBUG << "pattern_node or graph_node are not set; matching FAILED";
+				m_match_root.reset();
+			}
+
             NGRAPH_DEBUG << "Starting match pattern = " << pattern_node << " , "
-                         << pattern_node->description() << " , graph_node = " << graph_node << " , "
-                         << graph_node->description();
+                         << pattern_node->get_name() << " , graph_node = " << graph_node << " , "
+                         << graph_node->get_name();
             reset_pattern_nodes(pattern_node);
             m_match_root = graph_node;
             match_class(pattern_node, graph_node);

@@ -33,6 +33,7 @@ void Input::replace_output(Output& new_output)
 {
 	m_output->remove_input(this);
 	new_output.add_input(this);
+	m_output = &new_output;
 }
 
 std::shared_ptr<Node> Input::get_node()

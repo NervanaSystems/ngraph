@@ -37,6 +37,8 @@ static condition_variable queue_condition;
 static unique_ptr<thread> queue_thread;
 static bool active = false;
 
+std::ostream& nervana::get_nil_stream() { static std::stringstream nil; return nil; }
+
 class nervana::thread_starter
 {
 public:

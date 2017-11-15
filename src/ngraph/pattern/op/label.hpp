@@ -33,7 +33,7 @@ namespace ngraph
 					label->set_value_type_checked(node->get_value_type());
 					return label;
 				}
-                bool is_bound() { return (bool)m_bound; };
+                bool is_bound() { return m_bound != nullptr; }
                 std::shared_ptr<Node> get_bound_node() { return m_bound; }
                 void reset() { m_bound.reset(); }
                 void bind(std::shared_ptr<Node> n) { m_bound = n; }

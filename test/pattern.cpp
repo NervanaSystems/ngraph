@@ -65,6 +65,7 @@ static std::shared_ptr<Node> construct_constant_node(int n)
 class TestGraphRewrite : public ngraph::pass::GraphRewrite
 {
 public:
+	
     void construct_multiply_by_one()
     {
         //pattern #1 : a * 1 = a
@@ -202,23 +203,30 @@ TEST(pattern, graph_rewrite)
     {
         auto a = make_shared<op::Parameter>(element::Int32::element_type(), shape);
         auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);
-        auto iconst0 = construct_constant_node(0);
-        auto graph = b + (a + iconst0);
+        auto iconst0 = construct_constant_node(0);		
+		auto sum = (a + iconst0);
+        auto graph = b + sum;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-		//ASSERT_EQ(graph->get_inputs().at(1).get_output(), a->get_outputs().at(0));
+		ASSERT_EQ(&graph->get_inputs().at(1).get_output(), &a->get_outputs().at(0)); //graph's input points to a's output
+		ASSERT_TRUE(sum->get_outputs().at(0).get_inputs().empty()); //graph's input is removed from sum's output.get_inputs()
+		ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(&graph->get_inputs().at(1))); //a's output feeds into graph's input		
     }
 
+	
     {
         auto a = make_shared<op::Parameter>(element::Int32::element_type(), shape);
         auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);
         auto iconst1 = construct_constant_node(1);
-        auto graph = b + (a * iconst1);
+		auto mul = (a * iconst1);
+        auto graph = b + mul;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-		//ASSERT_EQ(graph->get_inputs().at(1).get_output(), a->get_outputs().at(0));
+		ASSERT_EQ(&graph->get_inputs().at(1).get_output(), &a->get_outputs().at(0)); //graph's input points to a's output
+		ASSERT_TRUE(mul->get_outputs().at(0).get_inputs().empty()); //graph's input is removed from sum's output.get_inputs()
+		ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(&graph->get_inputs().at(1))); //a's output feeds into graph's input		
     }
-
+	
     {
         auto a = make_shared<op::Parameter>(element::Int32::element_type(), shape);
         auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);
@@ -226,7 +234,8 @@ TEST(pattern, graph_rewrite)
         auto graph = ((((a * iconst1) * iconst1) * iconst1) * iconst1) + b;
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(0), a);
-		//ASSERT_EQ(graph->get_inputs().at(0).get_output(), a->get_outputs().at(0));
+		ASSERT_EQ(&graph->get_inputs().at(0).get_output(), &a->get_outputs().at(0)); //graph's input points to a's output
+		ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(&graph->get_inputs().at(0))); //a's output feeds into graph's input		
     }
 
     {
@@ -237,7 +246,8 @@ TEST(pattern, graph_rewrite)
         auto graph = b + (iconst0 + ((a + iconst0) * iconst1));
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-		//ASSERT_EQ(graph->get_inputs().at(1).get_output(), a->get_outputs().at(0));
+		ASSERT_EQ(&graph->get_inputs().at(1).get_output(), &a->get_outputs().at(0)); //graph's input points to a's output
+		ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(&graph->get_inputs().at(1))); //a's output feeds into graph's input		
     }
 
     {
@@ -247,8 +257,10 @@ TEST(pattern, graph_rewrite)
         auto graph = b + (iconst1 * (iconst1 * (iconst1 * (iconst1 * a))));
         run_passes(pass_manager, graph, {a, b});
         ASSERT_EQ(graph->get_arguments().at(1), a);
-		//ASSERT_EQ(graph->get_inputs().at(1).get_output(), a->get_outputs().at(0));
+		ASSERT_EQ(&graph->get_inputs().at(1).get_output(), &a->get_outputs().at(0)); //graph's input points to a's output
+		ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(&graph->get_inputs().at(1))); //a's output feeds into graph's input		
     }
+
 }
 
 TEST(pattern, matcher)
@@ -264,7 +276,7 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(any, abs));
 
     auto any_false =
-        std::make_shared<pattern::op::Any>(a, [](std::shared_ptr<Node> n) { return false; });
+        std::make_shared<pattern::op::Any>(a, [](std::shared_ptr<Node> no) { return false; });
     ASSERT_TRUE(n.match(any_false, a));
 
     auto pattern = pattern::op::Label::make_from_node(a);
@@ -272,7 +284,7 @@ TEST(pattern, matcher)
     ASSERT_EQ(pattern->get_bound_node(), a);
 
     auto pattern_false =
-		pattern::op::Label::make_from_node(a, [](std::shared_ptr<Node> n) { return false; });
+		pattern::op::Label::make_from_node(a, [](std::shared_ptr<Node> no) { return false; });
     ASSERT_FALSE(n.match(pattern_false, a));
 
     auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);
@@ -289,12 +301,13 @@ TEST(pattern, matcher)
     auto c = make_shared<op::Parameter>(element::Int32::element_type(), shape);
     ASSERT_TRUE(n.match(c * (b + pattern), c * (abs + b)));
     ASSERT_EQ(pattern->get_bound_node(), abs);
-
+	
     ASSERT_TRUE(n.match(c * (any + b), c * (abs + b)));     //nested any
     ASSERT_TRUE(n.match(c * (any + b), (b + abs) * c));     //permutations w/ any
     ASSERT_TRUE(n.match(c * (any_false + b), c * (a + b))); //nested any
     ASSERT_TRUE(n.match(c * (any_false + b), (b + a) * c)); //permutations w/ any_false
 
+	
     auto t = ngraph::runtime::make_tensor<element::Int32>(shape);
     auto f = ngraph::runtime::make_tensor<element::Float32>(shape);
     (*t) = std::vector<int>{1};
@@ -305,5 +318,6 @@ TEST(pattern, matcher)
     ASSERT_EQ(pattern->get_bound_node(), a);
 
     auto fconst1_0 = make_shared<op::ParameterizedConstant<element::Float32>>(shape, f);
-    ASSERT_FALSE(n.match(pattern * fconst1_0, a * iconst1_1)); //different iconst
+	auto patternf = pattern::op::Label::make_from_node(fconst1_0);
+    ASSERT_FALSE(n.match(patternf * fconst1_0, a * iconst1_1)); //different iconst
 }

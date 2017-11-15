@@ -26,7 +26,7 @@ namespace ngraph
 
     namespace pattern
     {
-        using gr_callback_fn = std::function<void(Matcher& m)>;
+        using gr_callback_fn = std::function<void(class Matcher& m)>;
 
         namespace op
         {
@@ -38,8 +38,8 @@ namespace ngraph
         public:
             Matcher(const std::shared_ptr<Node> pattern_node = nullptr,
                     gr_callback_fn callback = nullptr)
-                : m_pattern_node(pattern_node)
-                , m_match_root(nullptr)
+                : m_match_root(nullptr)
+				, m_pattern_node(pattern_node)
                 , m_callback(callback)
                 , m_depth(0)
             {
@@ -53,7 +53,7 @@ namespace ngraph
             bool match(const std::shared_ptr<Node>& graph_node)
             {
                 return match(m_pattern_node, graph_node);
-            };
+            }
 
             bool match(const std::shared_ptr<Node>& pattern_node, //keep public for testing for now
                        const std::shared_ptr<Node>& graph_node);
@@ -61,8 +61,8 @@ namespace ngraph
             void process_match(gr_callback_fn callback = nullptr);
 
             static std::string pad(size_t num) { return std::string(num, ' '); }
-            void reset(){};
-            bool is_match() { return (bool)m_match_root; };
+            void reset(){}
+            bool is_match() { return m_match_root != nullptr; }
             std::shared_ptr<Node> pattern_node() { return m_pattern_node; }
             std::shared_ptr<Node> match_root()
             {

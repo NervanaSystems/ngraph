@@ -15,10 +15,9 @@
 #include <memory>
 #include <typeindex>
 #include <typeinfo>
-#include "ngraph/autodiff/adjoints.hpp"
 
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pattern/matcher.hpp"
 
 using namespace std;
 using namespace ngraph;
