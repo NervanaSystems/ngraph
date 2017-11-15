@@ -15,10 +15,12 @@ static void declareParameterizedTensorView(py::module & mod, std::string const &
     using PyClass = py::class_<Class, std::shared_ptr<Class>, TensorView>;
 
     PyClass cls(mod, ("ParameterizedTensorView" + suffix).c_str());
+#if 0
     cls.def("write", [] (py::array_t<float, py::array::c_style> a) {
       py::buffer_info a_info = a.request();
       &Class.write(a_info.ptr, 0, a_info.ndim);
     };
+#endif
 }
 
 }
