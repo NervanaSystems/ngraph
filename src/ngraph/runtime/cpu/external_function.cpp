@@ -74,6 +74,7 @@
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/cpu/call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/emitter.hpp"
 #include "ngraph/runtime/cpu/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
@@ -92,25 +93,6 @@ public:
 static StaticInitializers s_static_initializers;
 
 using ngraph::descriptor::layout::DenseTensorViewLayout;
-
-extern "C" void
-    allocate_aligned_buffer(size_t size, size_t alignment, char** allocated, char** aligned_ptr)
-{
-    size_t allocation_size = size + alignment;
-    *allocated = static_cast<char*>(malloc(allocation_size));
-    *aligned_ptr = *allocated;
-    size_t mod = size_t(*aligned_ptr) % alignment;
-
-    if (mod != 0)
-    {
-        (*aligned_ptr) += (alignment - mod);
-    }
-}
-
-extern "C" void free_aligned_buffer(void* allocated)
-{
-    free(allocated);
-}
 
 #define TI(x) type_index(typeid(x))
 
@@ -211,28 +193,18 @@ void ExternalFunction::compile()
 
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/eigen_utils.hpp"
+#include "ngraph/runtime/cpu/memory_handler.hpp"
 
 using namespace ngraph::runtime::cpu::eigen;
 
-extern "C" void allocate_aligned_buffer(
-    size_t size,
-    size_t alignment,
-    char** allocated,
-    char** aligned_ptr);
-
-extern "C" void free_aligned_buffer(void* allocated);
-
 )";
 
-    TU << "// Declare any functions that are not main\n";
+    TU << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
     {
-        if (f != m_function)
-        {
-            TU << "extern \"C\" void " << f->get_name() << "(\n";
-            TU << "    const std::vector<void*>& inputs,\n";
-            TU << "    const std::vector<void*>& outputs);\n";
-        }
+        TU << "extern \"C\" void " << f->get_name() << "(\n";
+        TU << "    const std::vector<void*>& inputs,\n";
+        TU << "    const std::vector<void*>& outputs);\n";
     }
     TU << "\n";
 
@@ -244,12 +216,10 @@ extern "C" void free_aligned_buffer(void* allocated);
         TU << "{\n";
 
         TU.indent++;
-        TU << "// Allocate the memory pool\n";
         size_t temp_pool_size = pass_manager.get_state().get_temporary_pool_size();
-        TU << "char* allocated_buffer_pool;\n";
-        TU << "char* aligned_buffer_pool;\n";
-        TU << "allocate_aligned_buffer(" << temp_pool_size << ", 64"
-           << ", &allocated_buffer_pool, &aligned_buffer_pool);\n";
+        TU << "// Allocate the memory pool\n";
+        TU << "ngraph::runtime::cpu::MemoryHandler memory_handler(" << temp_pool_size << ", "
+           << ngraph::runtime::cpu::alignment << ");\n";
         TU << "\n";
 
         TU << "// Define temporary tensors\n";
@@ -258,8 +228,8 @@ extern "C" void free_aligned_buffer(void* allocated);
             for (descriptor::Tensor* tensor : node->liveness_new_list)
             {
                 TU << tensor->get_element_type() << "* " << tensor->get_name() << " = ("
-                   << tensor->get_element_type() << "*)(aligned_buffer_pool + "
-                   << tensor->get_pool_offset() << ");\n";
+                   << tensor->get_element_type() << "*)(memory_handler.get_ptr("
+                   << tensor->get_pool_offset() << "));\n";
             }
         }
         TU << "\n";
@@ -320,8 +290,6 @@ extern "C" void free_aligned_buffer(void* allocated);
             }
             handler->second(&emitter, node.get(), this, in, out);
         }
-
-        TU << "\nfree_aligned_buffer(allocated_buffer_pool);\n";
 
         TU.indent--;
 
