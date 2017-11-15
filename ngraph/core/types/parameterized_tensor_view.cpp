@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 #include <string>
 #include "ngraph/runtime/parameterized_tensor_view.hpp"
 
@@ -14,6 +15,10 @@ static void declareParameterizedTensorView(py::module & mod, std::string const &
     using PyClass = py::class_<Class, std::shared_ptr<Class>, TensorView>;
 
     PyClass cls(mod, ("ParameterizedTensorView" + suffix).c_str());
+    cls.def("write", [] (py::array_t<float, py::array::c_style> a) {
+      py::buffer_info a_info = a.request();
+      &Class.write(a_info.ptr, 0, a_info.ndim);
+    };
 }
 
 }
