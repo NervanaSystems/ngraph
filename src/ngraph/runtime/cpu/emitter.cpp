@@ -71,10 +71,11 @@ void Emitter::EmitAdd(const ngraph::Node* n,
             ->get_element_type();
     string type = et.c_type_string();
 
-    TU << "{   // " << n->get_name() << "\n";
+    TU << "{   // " << n->get_name() << " zzzzz\n";
     TU.indent++;
-    TU << "EigenArray1d<" << type << ">(" << outputs[0].get_tensor().get_name() << ", "
-       << eigen_vector_format(outputs[0]) << ") =\n";
+    // TU << "EigenArray1d<" << type << ">(" << outputs[0].get_tensor().get_name() << ", "
+    //    << eigen_vector_format(outputs[0]) << ") =\n";
+    TU << emit_array1d(outputs[0]) << " = \n";
     TU.indent++;
     TU << "EigenArray1d<" << type << ">(" << inputs[0].get_tensor().get_name() << ", "
        << eigen_vector_format(inputs[0]) << ") +\n";
@@ -1648,4 +1649,22 @@ void Emitter::generate_call(const std::vector<TensorViewInfo>& inputs,
 
     TU << "\n";
     TU << function->get_name() << "(inputs, outputs);\n";
+}
+
+string Emitter::emit_vector(const TensorViewInfo& tvi)
+{
+    stringstream ss;
+    const element::Type& et = tvi.get_tensor_view()->get_value_type()->get_element_type();
+    ss << "EigenVector<" << et.c_type_string() << ">(" << tvi.get_tensor().get_name() << ", "
+       << eigen_vector_format(tvi) << ")";
+    return ss.str();
+}
+
+string Emitter::emit_array1d(const TensorViewInfo& tvi)
+{
+    stringstream ss;
+    const element::Type& et = tvi.get_tensor_view()->get_value_type()->get_element_type();
+    ss << "EigenArray1d<" << et.c_type_string() << ">(" << tvi.get_tensor().get_name() << ", "
+       << eigen_vector_format(tvi) << ")";
+    return ss.str();
 }

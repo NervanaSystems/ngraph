@@ -99,6 +99,9 @@ namespace ngraph
                 void generate_call(const std::vector<TensorViewInfo>& inputs,
                                    const std::vector<TensorViewInfo>& outputs,
                                    std::shared_ptr<Function> function);
+
+                std::string emit_vector(const TensorViewInfo&);
+                std::string emit_array1d(const TensorViewInfo&);
             };
         }
     }
