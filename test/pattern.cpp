@@ -23,7 +23,6 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
@@ -69,9 +68,8 @@ public:
     void construct_multiply_by_one()
     {
         //pattern #1 : a * 1 = a
-        //auto pattern = std::make_shared<pattern::op::Label>(ne_const_pred);
-        auto pattern = std::make_shared<pattern::op::Label>();
         auto iconst1 = construct_constant_node(1);
+		auto pattern = pattern::op::Label::make_from_node(iconst1);
 
         NGRAPH_DEBUG << "IN TestGraphRewrite";
 
@@ -124,9 +122,8 @@ public:
     void construct_add_zero()
     {
         //pattern #2 : a + 0 = a
-        //auto pattern = std::make_shared<pattern::op::Label>(ne_const_pred);
-        auto pattern = std::make_shared<pattern::op::Label>();
         auto iconst0 = construct_constant_node(0);
+		auto pattern = pattern::op::Label::make_from_node(iconst0);
 
         NGRAPH_DEBUG << "IN TestGraphRewrite";
 
@@ -200,7 +197,6 @@ TEST(pattern, graph_rewrite)
     pass::Manager pass_manager;
 
     pass_manager.register_pass<pass::TopologicalSort>();
-    pass_manager.register_pass<pass::PropagateTypes>();
     pass_manager.register_pass<TestGraphRewrite>();
 
     {
@@ -271,12 +267,12 @@ TEST(pattern, matcher)
         std::make_shared<pattern::op::Any>(a, [](std::shared_ptr<Node> n) { return false; });
     ASSERT_TRUE(n.match(any_false, a));
 
-    auto pattern = std::make_shared<pattern::op::Label>();
+    auto pattern = pattern::op::Label::make_from_node(a);
     ASSERT_TRUE(n.match(pattern, a));
     ASSERT_EQ(pattern->get_bound_node(), a);
 
     auto pattern_false =
-        std::make_shared<pattern::op::Label>([](std::shared_ptr<Node> n) { return false; });
+		pattern::op::Label::make_from_node(a, [](std::shared_ptr<Node> n) { return false; });
     ASSERT_FALSE(n.match(pattern_false, a));
 
     auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);

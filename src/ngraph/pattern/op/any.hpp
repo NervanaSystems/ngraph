@@ -28,13 +28,12 @@ namespace ngraph
             {
             public:
                 Any(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
-                    : Pattern(predicate)
+					: Pattern("Any", Nodes{ arg }, predicate)
                 {
-                    m_arguments.push_back(arg);
-                    const_cast<std::multiset<Node*>&>(arg->users()).insert(this);
+					set_value_type_checked(arg->get_value_type());
+					//m_arguments.push_back(arg);
+                    //const_cast<std::multiset<Node*>&>(arg->users()).insert(this);
                 }
-
-                virtual std::string description() const override { return "Any"; }
             };
         }
     }
