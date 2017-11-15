@@ -162,6 +162,39 @@ namespace ngraph
         std::string m_name;
     };
 
+    /// Parses a string containing a literal of the underlying type.
+    template <typename T>
+    T parse_string(const std::string& s)
+    {
+        T result;
+        std::stringstream ss;
+
+        ss << s;
+        ss >> result;
+
+        // Check that (1) parsing succeeded and (2) the entire string was used.
+        if (ss.fail() || ss.rdbuf()->in_avail() != 0)
+        {
+            throw std::runtime_error("Could not parse literal '" + s + "'");
+        }
+
+        return result;
+    }
+
+    /// Parses a list of strings containing literals of the underlying type.
+    template <typename T>
+    std::vector<T> parse_string(const std::vector<std::string>& ss)
+    {
+        std::vector<T> result;
+
+        for (auto s : ss)
+        {
+            result.push_back(parse_string<T>(s));
+        }
+
+        return result;
+    }
+
     template <class InputIt, class BinaryOp>
     typename std::iterator_traits<InputIt>::value_type
         reduce(InputIt first, InputIt last, BinaryOp op)
