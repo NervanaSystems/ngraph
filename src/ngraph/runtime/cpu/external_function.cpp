@@ -214,25 +214,37 @@ using namespace ngraph::runtime::cpu::eigen;
         TU << "    const std::vector<void*>& inputs,\n";
         TU << "    const std::vector<void*>& outputs)\n";
         TU << "{\n";
-
         TU.indent++;
-        size_t temp_pool_size = pass_manager.get_state().get_temporary_pool_size();
-        TU << "// Allocate the memory pool\n";
-        TU << "ngraph::runtime::cpu::MemoryHandler memory_handler(" << temp_pool_size << ", "
-           << ngraph::runtime::cpu::alignment << ");\n";
-        TU << "\n";
 
-        TU << "// Define temporary tensors\n";
+        bool temporaries_used = false;
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
-            for (descriptor::Tensor* tensor : node->liveness_new_list)
+            if (node->liveness_new_list.size() > 0)
             {
-                TU << tensor->get_element_type() << "* " << tensor->get_name() << " = ("
-                   << tensor->get_element_type() << "*)(memory_handler.get_ptr("
-                   << tensor->get_pool_offset() << "));\n";
+                temporaries_used = true;
+                break;
             }
         }
-        TU << "\n";
+        if (temporaries_used)
+        {
+            size_t temp_pool_size = pass_manager.get_state().get_temporary_pool_size();
+            TU << "// Allocate the memory pool\n";
+            TU << "ngraph::runtime::cpu::MemoryHandler memory_handler(" << temp_pool_size << ", "
+               << ngraph::runtime::cpu::alignment << ");\n";
+            TU << "\n";
+
+            TU << "// Define temporary tensors\n";
+            for (shared_ptr<Node> node : current_function->get_ordered_ops())
+            {
+                for (descriptor::Tensor* tensor : node->liveness_new_list)
+                {
+                    TU << tensor->get_element_type() << "* " << tensor->get_name() << " = ("
+                       << tensor->get_element_type() << "*)(memory_handler.get_ptr("
+                       << tensor->get_pool_offset() << "));\n";
+                }
+            }
+            TU << "\n";
+        }
 
         TU << "// Define inputs\n";
         size_t arg_index = 0;
@@ -263,13 +275,10 @@ using namespace ngraph::runtime::cpu::eigen;
         }
         TU << "\n";
 
-        TU << "// Define tensor views\n";
-        TU << "\n";
-
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
             auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
-                             // with shared pointers, which is fine here but clang doesn't like it.)
+            // with shared pointers, which is fine here but clang doesn't like it.)
             auto handler = dispatcher.find(type_index(typeid(n)));
             if (handler == dispatcher.end())
             {
