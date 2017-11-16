@@ -130,6 +130,12 @@ endif()
 
 add_library(ngraph SHARED ${SRC})
 
+# NGraph links against one or more libraries (ex. LLVM) but we don't want to
+# export these symbols as part of the DSO. This is a GNU ld (and derivatives) specific
+# option so making this portable is still an open issue. As a note for the future,
+# this is not an issue on Windows and LLVM's lld does support --exclude-libs.
+set_target_properties(ngraph PROPERTIES LINK_FLAGS "-Wl,--exclude-libs,ALL")
+
 # Colon separated string for specified runtime plugin loading, this is made explicit s.t. if a
 # plugin is specified at compile time but the corresponding library could not be resolved at run-
 # time, an error will be generated.
@@ -155,7 +161,7 @@ message(STATUS "LIBRARY_OUTPUT_DIRECTORY set to: ${COMMON_LIBRARY_OUTPUT_DIRECTO
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
 if(NGRAPH_CPU_ENABLE AND LLVM_LINK_LIBS)
-    target_link_libraries(ngraph LINK_PRIVATE ${LLVM_LINK_LIBS})
+    target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
 endif()
 
 if (APPLE)
@@ -165,7 +171,7 @@ if (APPLE)
 endif()
 
 if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
-    target_link_libraries(ngraph LINK_PRIVATE mkldnn)
+    target_link_libraries(ngraph PRIVATE mkldnn)
 endif()
 
 
