@@ -20,35 +20,47 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" void
-    allocate_aligned_buffer(size_t size, size_t alignment, char** allocated, char** aligned_ptr);
-extern "C" void free_aligned_buffer(void* allocated);
-
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape)
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
           std::make_shared<ngraph::TensorViewType>(element_type, shape), "external", true, true))
+    , m_allocated_buffer_pool(nullptr)
+    , m_aligned_buffer_pool(nullptr)
+
 {
     m_descriptor->set_tensor_view_layout(
         std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
 
     m_buffer_size = m_descriptor->get_tensor_view_layout()->get_size() * element_type.size();
-    allocate_aligned_buffer(m_buffer_size, runtime::cpu::alignment, &m_allocated, &m_buffer);
+    if (m_buffer_size > 0)
+    {
+        size_t allocation_size = m_buffer_size + runtime::cpu::alignment;
+        m_allocated_buffer_pool = static_cast<char*>(malloc(allocation_size));
+        m_aligned_buffer_pool = m_allocated_buffer_pool;
+        size_t mod = size_t(m_aligned_buffer_pool) % alignment;
+        if (mod != 0)
+        {
+            m_aligned_buffer_pool += (alignment - mod);
+        }
+    }
 }
 
 runtime::cpu::CPUTensorView::~CPUTensorView()
 {
-    free_aligned_buffer(m_allocated);
+    if (m_allocated_buffer_pool != nullptr)
+    {
+        free(m_allocated_buffer_pool);
+    }
 }
 
 char* runtime::cpu::CPUTensorView::get_data_ptr()
 {
-    return m_buffer;
+    return m_aligned_buffer_pool;
 }
 
 const char* runtime::cpu::CPUTensorView::get_data_ptr() const
 {
-    return m_buffer;
+    return m_aligned_buffer_pool;
 }
 
 void runtime::cpu::CPUTensorView::write(const void* source, size_t tensor_offset, size_t n)
