@@ -316,17 +316,7 @@ std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
 
     buffer.release();
 
-    for (const auto& file : m_compiler->getInvocation().getPreprocessorOpts().RemappedFileBuffers)
-    {
-        NGRAPH_INFO << file.first;
-    }
-
     m_compiler->getInvocation().getPreprocessorOpts().clearRemappedFiles();
-
-    for (const auto& file : m_compiler->getInvocation().getPreprocessorOpts().RemappedFileBuffers)
-    {
-        NGRAPH_INFO << file.first;
-    }
 
     return rc;
 }
