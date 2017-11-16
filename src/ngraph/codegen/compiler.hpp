@@ -28,7 +28,14 @@ namespace ngraph
     {
         class module;
         class execution_state;
+        class HeaderCache;
     }
+}
+
+namespace clang
+{
+    class HeaderSearchOptions;
+    class CompilerInstance;
 }
 
 class ngraph::codegen::module
@@ -73,4 +80,28 @@ private:
     {
         return static_cast<signature*>(reinterpret_cast<signature*>(f));
     }
+    bool is_version_number(const std::string& path);
+    void add_header_search_path(clang::HeaderSearchOptions& hso, const std::string& path);
+    void use_cached_files(std::unique_ptr<clang::CompilerInstance>& Clang);
+};
+
+class ngraph::codegen::HeaderCache
+{
+public:
+    bool is_valid() const { return m_headers_valid; }
+    bool set_valid() { return m_headers_valid = true; }
+    void add_path(const std::string& path) { m_include_paths.push_back(path); }
+    void add_file(const std::string& path, std::unique_ptr<llvm::MemoryBuffer>& code)
+    {
+        m_headers.insert(std::make_pair(path, std::move(code)));
+    }
+    const std::map<std::string, std::unique_ptr<llvm::MemoryBuffer>>& get_header_map() const
+    {
+        return m_headers;
+    }
+    const std::vector<std::string>& get_include_paths() const { return m_include_paths; }
+private:
+    std::map<std::string, std::unique_ptr<llvm::MemoryBuffer>> m_headers;
+    std::vector<std::string> m_include_paths;
+    bool m_headers_valid;
 };

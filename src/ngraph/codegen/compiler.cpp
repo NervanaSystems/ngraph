@@ -49,8 +49,13 @@
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 
 #include "ngraph/codegen/compiler.hpp"
+#include "ngraph/file_util.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/util.hpp"
 
 // TODO: Fix leaks
+
+// #define USE_CACHE
 
 using namespace clang;
 using namespace llvm;
@@ -58,6 +63,8 @@ using namespace llvm::opt;
 using namespace std;
 
 using namespace ngraph::codegen;
+
+static HeaderCache s_header_cache;
 
 static std::string GetExecutablePath(const char* Argv0)
 {
@@ -76,6 +83,70 @@ execution_state::execution_state()
 
 execution_state::~execution_state()
 {
+}
+
+bool execution_state::is_version_number(const string& path)
+{
+    bool rc = true;
+    vector<string> tokens = ngraph::split(path, '.');
+    for (string s : tokens)
+    {
+        for (char c : s)
+        {
+            if (!isdigit(c))
+            {
+                rc = false;
+            }
+        }
+    }
+    return rc;
+}
+
+void execution_state::add_header_search_path(HeaderSearchOptions& hso, const string& path)
+{
+    static vector<string> valid_ext = {".h", ".hpp", ".tcc", ""};
+
+#ifdef USE_CACHE
+    string mapped_path = file_util::path_join("/$BUILTIN", path);
+    mapped_path = path;
+    s_header_cache.add_path(mapped_path);
+    auto func = [&](const std::string& file, bool is_dir) {
+        if (!is_dir)
+        {
+            string ext = file_util::get_file_ext(file);
+            if (contains(valid_ext, ext))
+            {
+                // This is a header file
+                string relative_name = file.substr(path.size() + 1);
+                string mapped_name = file_util::path_join(mapped_path, relative_name);
+
+                ErrorOr<unique_ptr<MemoryBuffer>> code = MemoryBuffer::getFile(file);
+                if (error_code ec = code.getError())
+                {
+                    // throw up
+                }
+
+                s_header_cache.add_file(mapped_name, code.get());
+            }
+        }
+    };
+    file_util::iterate_files(path, func, true);
+#else
+    hso.AddPath(path, clang::frontend::System, false, false);
+#endif
+}
+
+void execution_state::use_cached_files(std::unique_ptr<CompilerInstance>& Clang)
+{
+    HeaderSearchOptions& hso = Clang->getInvocation().getHeaderSearchOpts();
+    for (const string& path : s_header_cache.get_include_paths())
+    {
+        hso.AddPath(path, clang::frontend::System, false, false);
+    }
+    for (auto& header : s_header_cache.get_header_map())
+    {
+        Clang->getPreprocessorOpts().addRemappedFile(header.first, header.second.get());
+    }
 }
 
 std::unique_ptr<llvm::Module> execution_state::compile(const string& source, const string& name)
@@ -113,24 +184,56 @@ std::unique_ptr<llvm::Module> execution_state::compile(const string& source, con
         Clang->getHeaderSearchOpts().ResourceDir = path;
     }
 
-    auto& HSO = Clang->getInvocation().getHeaderSearchOpts();
-    // Add base toolchain-supplied header paths
-    // Ideally one would use the Linux toolchain definition in clang/lib/Driver/ToolChains.h
-    // But that's a private header and isn't part of the public libclang API
-    // Instead of re-implementing all of that functionality in a custom toolchain
-    // just hardcode the paths relevant to frequently used build/test machines for now
-    HSO.AddPath(CLANG_BUILTIN_HEADERS_PATH, clang::frontend::System, false, false);
-    HSO.AddPath("/usr/include/x86_64-linux-gnu", clang::frontend::System, false, false);
-    HSO.AddPath("/usr/include", clang::frontend::System, false, false);
-    // Add C++ standard library headers
-    // Debian-like + GCC 4.8 libstdc++
-    HSO.AddPath("/usr/include/x86_64-linux-gnu/c++/4.8", clang::frontend::System, false, false);
-    HSO.AddPath("/usr/include/c++/4.8", clang::frontend::System, false, false);
-    // Debian-like + GCC 5 libstdc++
-    HSO.AddPath("/usr/include/x86_64-linux-gnu/c++/5", clang::frontend::System, false, false);
-    HSO.AddPath("/usr/include/c++/5", clang::frontend::System, false, false);
-    HSO.AddPath(EIGEN_HEADERS_PATH, clang::frontend::System, false, false);
-    HSO.AddPath(NGRAPH_HEADERS_PATH, clang::frontend::System, false, false);
+    HeaderSearchOptions& hso = Clang->getInvocation().getHeaderSearchOpts();
+    if (s_header_cache.is_valid() == false)
+    {
+        // Add base toolchain-supplied header paths
+        // Ideally one would use the Linux toolchain definition in clang/lib/Driver/ToolChains.h
+        // But that's a private header and isn't part of the public libclang API
+        // Instead of re-implementing all of that functionality in a custom toolchain
+        // just hardcode the paths relevant to frequently used build/test machines for now
+        add_header_search_path(hso, CLANG_BUILTIN_HEADERS_PATH);
+        add_header_search_path(hso, "/usr/include/x86_64-linux-gnu");
+        add_header_search_path(hso, "/usr/include");
+
+        // Search for headers in
+        //    /usr/include/x86_64-linux-gnu/c++/N.N
+        //    /usr/include/c++/N.N
+        // and add them to the header search path
+
+        file_util::iterate_files("/usr/include/x86_64-linux-gnu/c++/",
+                                 [&](const std::string& file, bool is_dir) {
+                                     if (is_dir)
+                                     {
+                                         string dir_name = file_util::get_file_name(file);
+                                         if (is_version_number(dir_name))
+                                         {
+                                             add_header_search_path(hso, file);
+                                         }
+                                     }
+                                 });
+
+        file_util::iterate_files("/usr/include/c++/", [&](const std::string& file, bool is_dir) {
+            if (is_dir)
+            {
+                string dir_name = file_util::get_file_name(file);
+                if (is_version_number(dir_name))
+                {
+                    add_header_search_path(hso, file);
+                }
+            }
+        });
+
+        add_header_search_path(hso, EIGEN_HEADERS_PATH);
+        add_header_search_path(hso, NGRAPH_HEADERS_PATH);
+#ifdef USE_CACHE
+        s_header_cache.set_valid();
+#endif
+    }
+
+#ifdef USE_CACHE
+    use_cached_files(Clang);
+#endif
 
     // Language options
     // These are the C++ features needed to compile ngraph headers
