@@ -34,8 +34,7 @@ public:
     MemoryHandler(size_t pool_size, size_t alignment);
     ~MemoryHandler();
 
-    void* get_ptr(size_t offset) const;
-
+    void* get_ptr(size_t offset) const { return m_aligned_buffer_pool + offset; }
 private:
     char* m_allocated_buffer_pool;
     char* m_aligned_buffer_pool;

@@ -276,6 +276,7 @@ void StaticCompiler::add_header_search_path(const string& path)
                     if (error_code ec = code.getError())
                     {
                         // throw up
+                        throw runtime_error("could not find file '" + file + "'");
                     }
 
                     s_header_cache.add_file(mapped_name, code.get());

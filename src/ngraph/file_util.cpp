@@ -187,7 +187,7 @@ vector<char> ngraph::file_util::read_file_contents(const string& path)
     if (f)
     {
         char* p = data.data();
-        int remainder = static_cast<int>(file_size);
+        size_t remainder = file_size;
         size_t offset = 0;
         while (f && remainder > 0)
         {

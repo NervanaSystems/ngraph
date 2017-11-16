@@ -41,8 +41,3 @@ runtime::cpu::MemoryHandler::~MemoryHandler()
         free(m_allocated_buffer_pool);
     }
 }
-
-void* runtime::cpu::MemoryHandler::get_ptr(size_t offset) const
-{
-    return m_aligned_buffer_pool + offset;
-}

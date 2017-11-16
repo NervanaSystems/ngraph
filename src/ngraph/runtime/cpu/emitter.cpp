@@ -1384,7 +1384,7 @@ void Emitter::generate_call(const std::vector<TensorViewInfo>& inputs,
 static string format_name(const string& name)
 {
     string rc;
-    if (name.size() > 0)
+    if (name.empty())
     {
         rc = " " + name;
     }

@@ -83,7 +83,7 @@
 using namespace std;
 using namespace ngraph::runtime::cpu;
 
-static std::string s_output_dir = "cpu_codegen";
+static const std::string s_output_dir = "cpu_codegen";
 
 class StaticInitializers
 {
