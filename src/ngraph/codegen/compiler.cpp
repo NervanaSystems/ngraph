@@ -62,6 +62,22 @@ using namespace std;
 using namespace ngraph::codegen;
 
 static HeaderCache s_header_cache;
+static StaticCompiler s_static_compiler;
+static std::mutex m_mutex;
+
+Compiler::Compiler()
+{
+}
+
+Compiler::~Compiler()
+{
+}
+
+std::unique_ptr<llvm::Module> Compiler::compile(const std::string& source)
+{
+    lock_guard<mutex> lock(m_mutex);
+    return s_static_compiler.compile(source);
+}
 
 static std::string GetExecutablePath(const char* Argv0)
 {
@@ -71,11 +87,12 @@ static std::string GetExecutablePath(const char* Argv0)
     return llvm::sys::fs::getMainExecutable(Argv0, MainAddr);
 }
 
-Compiler::Compiler()
+StaticCompiler::StaticCompiler()
     : m_precompiled_headers_enabled(false)
     , m_debuginfo_enabled(false)
     , m_source_name("code.cpp")
 {
+    NGRAPH_INFO << "Hello from the static compiler constructor";
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
@@ -215,11 +232,11 @@ Compiler::Compiler()
     TO.FeaturesAsWritten.emplace_back("+fma");
 }
 
-Compiler::~Compiler()
+StaticCompiler::~StaticCompiler()
 {
 }
 
-bool Compiler::is_version_number(const string& path)
+bool StaticCompiler::is_version_number(const string& path)
 {
     bool rc = true;
     vector<string> tokens = ngraph::split(path, '.');
@@ -236,7 +253,7 @@ bool Compiler::is_version_number(const string& path)
     return rc;
 }
 
-void Compiler::add_header_search_path(HeaderSearchOptions& hso, const string& path)
+void StaticCompiler::add_header_search_path(HeaderSearchOptions& hso, const string& path)
 {
 #ifdef USE_CACHE
     static vector<string> valid_ext = {".h", ".hpp", ".tcc", ""};
@@ -269,7 +286,7 @@ void Compiler::add_header_search_path(HeaderSearchOptions& hso, const string& pa
 #endif
 }
 
-void Compiler::use_cached_files(std::unique_ptr<CompilerInstance>& ci)
+void StaticCompiler::use_cached_files(std::unique_ptr<CompilerInstance>& ci)
 {
     HeaderSearchOptions& hso = ci->getInvocation().getHeaderSearchOpts();
     for (const string& path : s_header_cache.get_include_paths())
@@ -282,7 +299,7 @@ void Compiler::use_cached_files(std::unique_ptr<CompilerInstance>& ci)
     }
 }
 
-std::unique_ptr<llvm::Module> Compiler::compile(const string& source)
+std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
 {
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);

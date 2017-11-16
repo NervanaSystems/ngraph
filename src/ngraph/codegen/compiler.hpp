@@ -28,6 +28,7 @@ namespace ngraph
     {
         class module;
         class Compiler;
+        class StaticCompiler;
         class HeaderCache;
     }
 }
@@ -45,11 +46,21 @@ private:
     std::unique_ptr<llvm::Module> m_module;
 };
 
-class ngraph::codegen::Compiler : public llvm::SectionMemoryManager
+class ngraph::codegen::Compiler
 {
 public:
     Compiler();
     ~Compiler();
+    std::unique_ptr<llvm::Module> compile(const std::string& source);
+
+private:
+};
+
+class ngraph::codegen::StaticCompiler : public llvm::SectionMemoryManager
+{
+public:
+    StaticCompiler();
+    ~StaticCompiler();
 
     void set_precompiled_headers_enabled(bool state) { m_precompiled_headers_enabled = state; }
     bool is_precompiled_headers_enabled() { return m_precompiled_headers_enabled; }
