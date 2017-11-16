@@ -22,6 +22,7 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
+#include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
@@ -314,24 +315,25 @@ using namespace ngraph::runtime::cpu::eigen;
     out << code;
     out.close();
 
-    ngraph::codegen::execution_state estate;
+    codegen::Compiler compiler;
+    codegen::ExecutionEngine execution_engine;
 
 #if NGCPU_PCH
-    estate.set_precompiled_headers_enabled(true);
+    compiler.set_precompiled_headers_enabled(true);
 #endif
 
 #if NGCPU_DEBUGINFO
-    estate.set_debuginfo_enabled(true);
+    compiler.set_debuginfo_enabled(true);
 #endif
 
-    auto llvm_module = estate.compile(code, function_name + "_codegen.cpp");
+    auto llvm_module = compiler.compile(code);
     if (llvm_module == nullptr)
     {
         throw runtime_error("function failed to compile");
     }
-    estate.add_module(llvm_module);
-    estate.finalize();
-    m_compiled_function = estate.find_function<EntryPoint_t>(function_name);
+    execution_engine.add_module(llvm_module);
+    execution_engine.finalize();
+    m_compiled_function = execution_engine.find_function<EntryPoint_t>(function_name);
     assert(m_compiled_function);
 
     m_is_compiled = true;

@@ -106,6 +106,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     set(SRC ${SRC}
         codegen/code_writer.cpp
         codegen/compiler.cpp
+        codegen/execution_engine.cpp
         runtime/cpu/call_frame.cpp
         runtime/cpu/cpu_backend.cpp
         runtime/cpu/cpu_manager.cpp

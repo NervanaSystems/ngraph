@@ -27,7 +27,7 @@ namespace ngraph
     namespace codegen
     {
         class module;
-        class execution_state;
+        class Compiler;
         class HeaderCache;
     }
 }
@@ -45,41 +45,24 @@ private:
     std::unique_ptr<llvm::Module> m_module;
 };
 
-class ngraph::codegen::execution_state : public llvm::SectionMemoryManager
+class ngraph::codegen::Compiler : public llvm::SectionMemoryManager
 {
 public:
-    execution_state();
-    ~execution_state();
+    Compiler();
+    ~Compiler();
 
-    void set_precompiled_headers_enabled(bool state) { precompiled_headers_enabled = state; }
-    bool is_precompiled_headers_enabled() { return precompiled_headers_enabled; }
-    void set_debuginfo_enabled(bool state) { debuginfo_enabled = state; }
-    bool is_debuginfo_enabled() { return debuginfo_enabled; }
-    std::unique_ptr<llvm::Module> compile(const std::string& source, const std::string& name = "");
-
-    bool add_module(std::unique_ptr<llvm::Module>&);
-
-    void finalize();
-
-    template <typename ftype>
-    std::function<ftype> find_function(const std::string& func_name)
-    {
-        auto f = m_execution_engine->getPointerToNamedFunction(func_name);
-
-        return f_cast<ftype>(f);
-    }
+    void set_precompiled_headers_enabled(bool state) { m_precompiled_headers_enabled = state; }
+    bool is_precompiled_headers_enabled() { return m_precompiled_headers_enabled; }
+    void set_debuginfo_enabled(bool state) { m_debuginfo_enabled = state; }
+    bool is_debuginfo_enabled() { return m_debuginfo_enabled; }
+    std::unique_ptr<llvm::Module> compile(const std::string& source);
 
 private:
-    llvm::ExecutionEngine* m_execution_engine;
-    std::string jit_error;
-    bool precompiled_headers_enabled;
-    bool debuginfo_enabled;
+    std::unique_ptr<clang::CompilerInstance> m_compiler;
+    bool m_precompiled_headers_enabled;
+    bool m_debuginfo_enabled;
+    std::string m_source_name;
 
-    template <typename signature>
-    std::function<signature> f_cast(void* f)
-    {
-        return static_cast<signature*>(reinterpret_cast<signature*>(f));
-    }
     bool is_version_number(const std::string& path);
     void add_header_search_path(clang::HeaderSearchOptions& hso, const std::string& path);
     void use_cached_files(std::unique_ptr<clang::CompilerInstance>& Clang);
