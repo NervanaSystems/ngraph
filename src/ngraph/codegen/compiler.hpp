@@ -66,6 +66,7 @@ public:
     bool is_precompiled_headers_enabled() { return m_precompiled_headers_enabled; }
     void set_debuginfo_enabled(bool state) { m_debuginfo_enabled = state; }
     bool is_debuginfo_enabled() { return m_debuginfo_enabled; }
+    void add_header_search_path(const std::string& path);
     std::unique_ptr<llvm::Module> compile(const std::string& source);
 
 private:
@@ -73,10 +74,10 @@ private:
     bool m_precompiled_headers_enabled;
     bool m_debuginfo_enabled;
     std::string m_source_name;
+    std::vector<std::string> m_extra_search_path_list;
 
     bool is_version_number(const std::string& path);
-    void add_header_search_path(clang::HeaderSearchOptions& hso, const std::string& path);
-    void use_cached_files(std::unique_ptr<clang::CompilerInstance>& Clang);
+    void use_cached_files();
 };
 
 class ngraph::codegen::HeaderCache

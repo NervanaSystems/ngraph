@@ -92,7 +92,6 @@ StaticCompiler::StaticCompiler()
     , m_debuginfo_enabled(false)
     , m_source_name("code.cpp")
 {
-    NGRAPH_INFO << "Hello from the static compiler constructor";
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
@@ -126,7 +125,6 @@ StaticCompiler::StaticCompiler()
         m_compiler->getHeaderSearchOpts().ResourceDir = path;
     }
 
-    HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
     if (s_header_cache.is_valid() == false)
     {
         // Add base toolchain-supplied header paths
@@ -134,9 +132,9 @@ StaticCompiler::StaticCompiler()
         // But that's a private header and isn't part of the public libclang API
         // Instead of re-implementing all of that functionality in a custom toolchain
         // just hardcode the paths relevant to frequently used build/test machines for now
-        add_header_search_path(hso, CLANG_BUILTIN_HEADERS_PATH);
-        add_header_search_path(hso, "/usr/include/x86_64-linux-gnu");
-        add_header_search_path(hso, "/usr/include");
+        add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+        add_header_search_path("/usr/include/x86_64-linux-gnu");
+        add_header_search_path("/usr/include");
 
         // Search for headers in
         //    /usr/include/x86_64-linux-gnu/c++/N.N
@@ -150,7 +148,7 @@ StaticCompiler::StaticCompiler()
                                          string dir_name = file_util::get_file_name(file);
                                          if (is_version_number(dir_name))
                                          {
-                                             add_header_search_path(hso, file);
+                                             add_header_search_path(file);
                                          }
                                      }
                                  });
@@ -161,13 +159,13 @@ StaticCompiler::StaticCompiler()
                 string dir_name = file_util::get_file_name(file);
                 if (is_version_number(dir_name))
                 {
-                    add_header_search_path(hso, file);
+                    add_header_search_path(file);
                 }
             }
         });
 
-        add_header_search_path(hso, EIGEN_HEADERS_PATH);
-        add_header_search_path(hso, NGRAPH_HEADERS_PATH);
+        add_header_search_path(EIGEN_HEADERS_PATH);
+        add_header_search_path(NGRAPH_HEADERS_PATH);
 #ifdef USE_CACHE
         s_header_cache.set_valid();
 #endif
@@ -253,49 +251,54 @@ bool StaticCompiler::is_version_number(const string& path)
     return rc;
 }
 
-void StaticCompiler::add_header_search_path(HeaderSearchOptions& hso, const string& path)
+void StaticCompiler::add_header_search_path(const string& path)
 {
+    if (!contains(m_extra_search_path_list, path))
+    {
+        m_extra_search_path_list.push_back(path);
+        HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
 #ifdef USE_CACHE
-    static vector<string> valid_ext = {".h", ".hpp", ".tcc", ""};
-    string mapped_path = file_util::path_join("/$BUILTIN", path);
-    mapped_path = path;
-    s_header_cache.add_path(mapped_path);
-    auto func = [&](const std::string& file, bool is_dir) {
-        if (!is_dir)
-        {
-            string ext = file_util::get_file_ext(file);
-            if (contains(valid_ext, ext))
+        static vector<string> valid_ext = {".h", ".hpp", ".tcc", ""};
+        string mapped_path = file_util::path_join("/$BUILTIN", path);
+        mapped_path = path;
+        s_header_cache.add_path(mapped_path);
+        auto func = [&](const std::string& file, bool is_dir) {
+            if (!is_dir)
             {
-                // This is a header file
-                string relative_name = file.substr(path.size() + 1);
-                string mapped_name = file_util::path_join(mapped_path, relative_name);
-
-                ErrorOr<unique_ptr<MemoryBuffer>> code = MemoryBuffer::getFile(file);
-                if (error_code ec = code.getError())
+                string ext = file_util::get_file_ext(file);
+                if (contains(valid_ext, ext))
                 {
-                    // throw up
-                }
+                    // This is a header file
+                    string relative_name = file.substr(path.size() + 1);
+                    string mapped_name = file_util::path_join(mapped_path, relative_name);
 
-                s_header_cache.add_file(mapped_name, code.get());
+                    ErrorOr<unique_ptr<MemoryBuffer>> code = MemoryBuffer::getFile(file);
+                    if (error_code ec = code.getError())
+                    {
+                        // throw up
+                    }
+
+                    s_header_cache.add_file(mapped_name, code.get());
+                }
             }
-        }
-    };
-    file_util::iterate_files(path, func, true);
+        };
+        file_util::iterate_files(path, func, true);
 #else
-    hso.AddPath(path, clang::frontend::System, false, false);
+        hso.AddPath(path, clang::frontend::System, false, false);
 #endif
+    }
 }
 
-void StaticCompiler::use_cached_files(std::unique_ptr<CompilerInstance>& ci)
+void StaticCompiler::use_cached_files()
 {
-    HeaderSearchOptions& hso = ci->getInvocation().getHeaderSearchOpts();
+    HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
     for (const string& path : s_header_cache.get_include_paths())
     {
         hso.AddPath(path, clang::frontend::System, false, false);
     }
     for (auto& header : s_header_cache.get_header_map())
     {
-        ci->getPreprocessorOpts().addRemappedFile(header.first, header.second.get());
+        m_compiler->getPreprocessorOpts().addRemappedFile(header.first, header.second.get());
     }
 }
 
