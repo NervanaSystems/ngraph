@@ -323,3 +323,25 @@ std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
 
     return rc;
 }
+
+// std::unique_ptr<llvm::Module> StaticCompiler::generate_pch(const string& source)
+// {
+//     // Map code filename to a memoryBuffer
+//     StringRef source_ref(source);
+//     unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);
+//     m_compiler->getInvocation().getPreprocessorOpts().addRemappedFile(m_source_name, buffer.get());
+
+//     // Create and execute action
+//     CodeGenAction* compilerAction = new GeneratePCHAction();
+//     std::unique_ptr<llvm::Module> rc;
+//     if (m_compiler->ExecuteAction(*compilerAction) == true)
+//     {
+//         rc = compilerAction->takeModule();
+//     }
+
+//     buffer.release();
+
+//     m_compiler->getInvocation().getPreprocessorOpts().clearRemappedFiles();
+
+//     return rc;
+// }
