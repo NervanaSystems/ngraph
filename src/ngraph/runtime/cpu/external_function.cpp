@@ -318,14 +318,6 @@ using namespace ngraph::runtime::cpu::eigen;
     codegen::Compiler compiler;
     codegen::ExecutionEngine execution_engine;
 
-#if NGCPU_PCH
-    compiler.set_precompiled_headers_enabled(true);
-#endif
-
-#if NGCPU_DEBUGINFO
-    compiler.set_debuginfo_enabled(true);
-#endif
-
     auto llvm_module = compiler.compile(code);
     if (llvm_module == nullptr)
     {
