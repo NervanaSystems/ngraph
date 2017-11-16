@@ -54,11 +54,17 @@ static std::string eigen_matrix_format(const ngraph::Shape& shape, const ngraph:
     return ss.str();
 }
 
-void Emitter::EmitNop(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitNop(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
 }
 
-void Emitter::EmitAdd(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitAdd(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -70,15 +76,20 @@ void Emitter::EmitAdd(const ngraph::Node* n, ExternalFunction* ef, const std::ve
     TU << "}\n";
 }
 
-void Emitter::EmitDot(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitDot(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     auto& arg_nodes = n->get_arguments();
     assert(arg_nodes.size() == 2);
 
-    auto arg0_tensor_type = dynamic_pointer_cast<const TensorViewType>(arg_nodes.at(0)->get_value_type());
+    auto arg0_tensor_type =
+        dynamic_pointer_cast<const TensorViewType>(arg_nodes.at(0)->get_value_type());
     assert(arg0_tensor_type);
 
-    auto arg1_tensor_type = dynamic_pointer_cast<const TensorViewType>(arg_nodes.at(1)->get_value_type());
+    auto arg1_tensor_type =
+        dynamic_pointer_cast<const TensorViewType>(arg_nodes.at(1)->get_value_type());
     assert(arg1_tensor_type);
 
     auto arg0_shape = arg0_tensor_type->get_shape();
@@ -92,7 +103,8 @@ void Emitter::EmitDot(const ngraph::Node* n, ExternalFunction* ef, const std::ve
 
         TU << "{   // " << n->get_name() << "\n";
         TU.indent++;
-        TU << "EigenVector<" << arg0_element_type.c_type_string() << ">(" << outputs[0].get_tensor().get_name() << ", " << eigen_vector_format(outputs[0]) << ")\n    = " << first.get_tensor().get_name() << "[0]\n    * EigenVector<" << arg0_element_type.c_type_string() << ">(" << second.get_tensor().get_name() << ", " << eigen_vector_format(second) << ");\n";
+        TU << "" << emit_vector(outputs[0]) << "\n    = ";
+        TU << first.get_tensor().get_name() << "[0]\n    * " << emit_vector(second) << ";\n";
         TU.indent--;
         TU << "}\n";
     }
@@ -100,9 +112,9 @@ void Emitter::EmitDot(const ngraph::Node* n, ExternalFunction* ef, const std::ve
     {
         TU << "{   // " << n->get_name() << "\n";
         TU.indent++;
-        TU << "EigenVector<" << arg0_element_type.c_type_string() << ">(" << outputs[0].get_tensor().get_name() << ", " << eigen_vector_format(outputs[0]) << ") << \n"
-           << "    EigenVector<" << arg0_element_type.c_type_string() << ">(" << inputs[0].get_tensor().get_name() << ", " << eigen_vector_format(inputs[0]) << ").dot("
-           << "EigenVector<" << arg0_element_type.c_type_string() << ">(" << inputs[1].get_tensor().get_name() << ", " << eigen_vector_format(inputs[1]) << "));\n";
+        TU << "" << emit_vector(outputs[0]) << " << \n"
+           << "    " << emit_vector(inputs[0]) << ".dot("
+           << "" << emit_vector(inputs[1]) << ");\n";
         TU.indent--;
         TU << "}\n";
     }
@@ -112,9 +124,9 @@ void Emitter::EmitDot(const ngraph::Node* n, ExternalFunction* ef, const std::ve
 
         TU << "{   // " << n->get_name() << "\n";
         TU.indent++;
-        TU << "EigenVector<" << arg0_element_type.c_type_string() << ">(" << outputs[0].get_tensor().get_name() << ", " << eigen_vector_format(outputs[0]) << ") = \n"
-           << "    EigenMatrix<" << arg0_element_type.c_type_string() << ">(" << inputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(arg0_layout->get_shape(), arg0_layout->get_strides()) << ") * "
-           << "EigenVector<" << arg0_element_type.c_type_string() << ">(" << inputs[1].get_tensor().get_name() << ", " << eigen_vector_format(inputs[1]) << ");\n";
+        TU << "" << emit_vector(outputs[0]) << " = \n"
+           << "    " << emit_matrix(inputs[0]) << " * "
+           << "" << emit_vector(inputs[1]) << ";\n";
         TU.indent--;
         TU << "}\n";
     }
@@ -145,9 +157,9 @@ void Emitter::EmitDot(const ngraph::Node* n, ExternalFunction* ef, const std::ve
         {
             TU << "{   // " << n->get_name() << "\n";
             TU.indent++;
-            TU << "EigenMatrix<" << arg0_element_type.c_type_string() << ">(" << outputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(out_layout->get_shape(), out_layout->get_strides()) << ") = \n"
-               << "    EigenMatrix<" << arg0_element_type.c_type_string() << ">(" << inputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(arg0_layout->get_shape(), arg0_layout->get_strides()) << ") * "
-               << "EigenMatrix<" << arg0_element_type.c_type_string() << ">(" << inputs[1].get_tensor().get_name() << ", " << eigen_matrix_format(arg1_layout->get_shape(), arg1_layout->get_strides()) << ");\n";
+            TU << "" << emit_matrix(outputs[0]) << " = \n"
+               << "    " << emit_matrix(inputs[0]) << " * "
+               << "" << emit_matrix(inputs[1]) << ";\n";
             TU.indent--;
             TU << "}\n";
         }
@@ -158,9 +170,14 @@ void Emitter::EmitDot(const ngraph::Node* n, ExternalFunction* ef, const std::ve
     }
 }
 
-void Emitter::EmitMultiply(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitMultiply(const ngraph::Node* n,
+                           ExternalFunction* ef,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
-    const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))->get_element_type();
+    const element::Type& et =
+        (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
+            ->get_element_type();
     string type = et.c_type_string();
 
     TU << "{   // " << n->get_name() << "\n";
@@ -172,7 +189,10 @@ void Emitter::EmitMultiply(const ngraph::Node* n, ExternalFunction* ef, const st
     TU << "}\n";
 }
 
-void Emitter::EmitGetTupleElement(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitGetTupleElement(const ngraph::Node* n,
+                                  ExternalFunction* ef,
+                                  const std::vector<TensorViewInfo>& inputs,
+                                  const std::vector<TensorViewInfo>& outputs)
 {
     auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
     auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
@@ -182,12 +202,19 @@ void Emitter::EmitGetTupleElement(const ngraph::Node* n, ExternalFunction* ef, c
 
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
-    TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", " << inputs[get_tuple_element->get_n()].get_tensor().get_name() << ", " << outputs[0].get_tensor_view_layout()->get_size() * outputs[0].get_tensor_view_layout()->get_element_type().size() << ");\n";
+    TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", "
+       << inputs[get_tuple_element->get_n()].get_tensor().get_name() << ", "
+       << outputs[0].get_tensor_view_layout()->get_size() *
+              outputs[0].get_tensor_view_layout()->get_element_type().size()
+       << ");\n";
     TU.indent--;
     TU << "}\n";
 }
 
-void Emitter::EmitTuple(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitTuple(const ngraph::Node* n,
+                        ExternalFunction* ef,
+                        const std::vector<TensorViewInfo>& inputs,
+                        const std::vector<TensorViewInfo>& outputs)
 {
     assert(inputs.size() == outputs.size());
 
@@ -196,15 +223,24 @@ void Emitter::EmitTuple(const ngraph::Node* n, ExternalFunction* ef, const std::
     for (size_t i = 0; i < inputs.size(); ++i)
     {
         auto& et = inputs.at(i).get_tensor_view_layout()->get_element_type();
-        TU << "// call_frame->get_parameterized_tensor_view<" << et.c_type_string() << ">(" << outputs.at(i).get_index() << ")->get_vector() =\n"
-           << "//     call_frame->get_parameterized_tensor_view<" << et.c_type_string() << ">(" << inputs.at(i).get_index() << ")->get_vector();\n";
-        TU << "memcpy(" << outputs.at(i).get_tensor().get_name() << ", " << inputs.at(i).get_tensor().get_name() << ", " << outputs[i].get_tensor_view_layout()->get_size() * outputs[i].get_tensor_view_layout()->get_element_type().size() << ");\n";
+        TU << "// call_frame->get_parameterized_tensor_view<" << et.c_type_string() << ">("
+           << outputs.at(i).get_index() << ")->get_vector() =\n"
+           << "//     call_frame->get_parameterized_tensor_view<" << et.c_type_string() << ">("
+           << inputs.at(i).get_index() << ")->get_vector();\n";
+        TU << "memcpy(" << outputs.at(i).get_tensor().get_name() << ", "
+           << inputs.at(i).get_tensor().get_name() << ", "
+           << outputs[i].get_tensor_view_layout()->get_size() *
+                  outputs[i].get_tensor_view_layout()->get_element_type().size()
+           << ");\n";
     }
     TU.indent--;
     TU += "}\n";
 }
 
-void Emitter::EmitAbs(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitAbs(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -214,25 +250,28 @@ void Emitter::EmitAbs(const ngraph::Node* n, ExternalFunction* ef, const std::ve
     TU << "}\n";
 }
 
-void Emitter::EmitConcat(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitConcat(const ngraph::Node* n,
+                         ExternalFunction* ef,
+                         const std::vector<TensorViewInfo>& inputs,
+                         const std::vector<TensorViewInfo>& outputs)
 {
     auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
     assert(result_tensor_type);
 
     auto result_shape = result_tensor_type->get_shape();
-    auto& result_element_type = result_tensor_type->get_element_type();
 
     if (result_shape.size() == 1)
     {
         TU << "{   // " << n->get_name() << "\n";
         TU.indent++;
-        TU << "EigenVector<" << result_element_type.c_type_string() << "> out_vector(" << outputs[0].get_tensor().get_name() << ", " << eigen_vector_format(outputs[0]) << ");\n";
+        TU << "" << emit_vector(outputs[0], "out_vector") << ";\n";
 
         size_t concat_pos = 0;
         for (size_t i = 0; i < inputs.size(); i++)
         {
-            TU << "out_vector.segment(" << concat_pos << ", " << inputs[i].get_tensor_view_layout()->get_shape().at(0) << ") << "
-               << "EigenVector<" << result_element_type.c_type_string() << ">(" << inputs[i].get_tensor().get_name() << ", " << eigen_vector_format(inputs[i]) << ");\n";
+            TU << "out_vector.segment(" << concat_pos << ", "
+               << inputs[i].get_tensor_view_layout()->get_shape().at(0) << ") << "
+               << "" << emit_vector(inputs[i]) << ";\n";
             concat_pos += inputs[i].get_tensor_view_layout()->get_shape().at(0);
         }
         TU.indent--;
@@ -245,7 +284,7 @@ void Emitter::EmitConcat(const ngraph::Node* n, ExternalFunction* ef, const std:
 
         TU << "{   // " << n->get_name() << "\n";
         TU.indent++;
-        TU << "EigenMatrix<" << result_element_type.c_type_string() << "> out_matrix(" << outputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(out_layout->get_shape(), out_layout->get_strides()) << ");\n";
+        TU << "" << emit_matrix(outputs[0], "out_matrix") << ";\n";
 
         size_t concat_pos[2]{0, 0};
         for (size_t i = 0; i < inputs.size(); i++)
@@ -253,8 +292,9 @@ void Emitter::EmitConcat(const ngraph::Node* n, ExternalFunction* ef, const std:
             auto arg_layout = inputs[i].get_layout<DenseTensorViewLayout>();
             auto& arg_shape = inputs[i].get_tensor_view_layout()->get_shape();
 
-            TU << "out_matrix.block(" << concat_pos[0] << ", " << concat_pos[1] << ", " << arg_shape.at(0) << ", " << arg_shape.at(1) << ") << "
-               << "EigenMatrix<" << result_element_type.c_type_string() << ">(" << inputs[i].get_tensor().get_name() << ", " << eigen_matrix_format(arg_layout->get_shape(), arg_layout->get_strides()) << ");\n";
+            TU << "out_matrix.block(" << concat_pos[0] << ", " << concat_pos[1] << ", "
+               << arg_shape.at(0) << ", " << arg_shape.at(1) << ") << "
+               << "" << emit_matrix(inputs[i]) << ";\n";
 
             concat_pos[axis] += arg_shape.at(axis);
         }
@@ -264,7 +304,10 @@ void Emitter::EmitConcat(const ngraph::Node* n, ExternalFunction* ef, const std:
     }
 }
 
-void Emitter::EmitDivide(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitDivide(const ngraph::Node* n,
+                         ExternalFunction* ef,
+                         const std::vector<TensorViewInfo>& inputs,
+                         const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -275,7 +318,10 @@ void Emitter::EmitDivide(const ngraph::Node* n, ExternalFunction* ef, const std:
     TU << "}\n";
 }
 
-void Emitter::EmitEqual(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitEqual(const ngraph::Node* n,
+                        ExternalFunction* ef,
+                        const std::vector<TensorViewInfo>& inputs,
+                        const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -286,7 +332,10 @@ void Emitter::EmitEqual(const ngraph::Node* n, ExternalFunction* ef, const std::
     TU << "}\n";
 }
 
-void Emitter::EmitGreater(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitGreater(const ngraph::Node* n,
+                          ExternalFunction* ef,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << " xxx\n";
     TU.indent++;
@@ -297,7 +346,10 @@ void Emitter::EmitGreater(const ngraph::Node* n, ExternalFunction* ef, const std
     TU << "}\n";
 }
 
-void Emitter::EmitGreaterEq(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitGreaterEq(const ngraph::Node* n,
+                            ExternalFunction* ef,
+                            const std::vector<TensorViewInfo>& inputs,
+                            const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -308,7 +360,10 @@ void Emitter::EmitGreaterEq(const ngraph::Node* n, ExternalFunction* ef, const s
     TU << "}\n";
 }
 
-void Emitter::EmitLess(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitLess(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -319,7 +374,10 @@ void Emitter::EmitLess(const ngraph::Node* n, ExternalFunction* ef, const std::v
     TU << "}\n";
 }
 
-void Emitter::EmitLessEq(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitLessEq(const ngraph::Node* n,
+                         ExternalFunction* ef,
+                         const std::vector<TensorViewInfo>& inputs,
+                         const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -330,7 +388,10 @@ void Emitter::EmitLessEq(const ngraph::Node* n, ExternalFunction* ef, const std:
     TU << "}\n";
 }
 
-void Emitter::EmitLog(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitLog(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -340,7 +401,10 @@ void Emitter::EmitLog(const ngraph::Node* n, ExternalFunction* ef, const std::ve
     TU << "}\n";
 }
 
-void Emitter::EmitMaximum(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitMaximum(const ngraph::Node* n,
+                          ExternalFunction* ef,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -351,7 +415,10 @@ void Emitter::EmitMaximum(const ngraph::Node* n, ExternalFunction* ef, const std
     TU << "}\n";
 }
 
-void Emitter::EmitMinimum(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitMinimum(const ngraph::Node* n,
+                          ExternalFunction* ef,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -362,7 +429,10 @@ void Emitter::EmitMinimum(const ngraph::Node* n, ExternalFunction* ef, const std
     TU << "}\n";
 }
 
-void Emitter::EmitNegative(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitNegative(const ngraph::Node* n,
+                           ExternalFunction* ef,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -372,7 +442,10 @@ void Emitter::EmitNegative(const ngraph::Node* n, ExternalFunction* ef, const st
     TU << "}\n";
 }
 
-void Emitter::EmitNotEqual(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitNotEqual(const ngraph::Node* n,
+                           ExternalFunction* ef,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -383,7 +456,10 @@ void Emitter::EmitNotEqual(const ngraph::Node* n, ExternalFunction* ef, const st
     TU << "}\n";
 }
 
-void Emitter::EmitSelect(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitSelect(const ngraph::Node* n,
+                         ExternalFunction* ef,
+                         const std::vector<TensorViewInfo>& inputs,
+                         const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -395,7 +471,10 @@ void Emitter::EmitSelect(const ngraph::Node* n, ExternalFunction* ef, const std:
     TU << "}\n";
 }
 
-void Emitter::EmitSubtract(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitSubtract(const ngraph::Node* n,
+                           ExternalFunction* ef,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -406,131 +485,183 @@ void Emitter::EmitSubtract(const ngraph::Node* n, ExternalFunction* ef, const st
     TU << "}\n";
 }
 
-void Emitter::EmitParameterizedConstantBool(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitParameterizedConstantBool(const ngraph::Node* n,
+                                            ExternalFunction* ef,
+                                            const std::vector<TensorViewInfo>& inputs,
+                                            const std::vector<TensorViewInfo>& outputs)
 {
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Bool>*>(n)->get_value()->get_vector();
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Bool>*>(n)
+                     ->get_value()
+                     ->get_vector();
     string type = element::Bool::element_type().c_type_string();
 
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
     for (size_t i = 0; i < value.size(); i++)
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">(" << (value[i] ? "true" : "false") << ");\n";
+        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
+           << (value[i] ? "true" : "false") << ");\n";
     }
     TU.indent--;
     TU << "}\n";
 }
 
-void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
+                                               ExternalFunction* ef,
+                                               const std::vector<TensorViewInfo>& inputs,
+                                               const std::vector<TensorViewInfo>& outputs)
 {
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Float32>*>(n)->get_value()->get_vector();
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Float32>*>(n)
+                     ->get_value()
+                     ->get_vector();
     string type = element::Float32::element_type().c_type_string();
 
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
     for (size_t i = 0; i < value.size(); i++)
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i] << ");\n";
+        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
+           << value[i] << ");\n";
     }
     TU.indent--;
     TU << "}\n";
 }
 
-void Emitter::EmitParameterizedConstantInt8(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitParameterizedConstantInt8(const ngraph::Node* n,
+                                            ExternalFunction* ef,
+                                            const std::vector<TensorViewInfo>& inputs,
+                                            const std::vector<TensorViewInfo>& outputs)
 {
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int8>*>(n)->get_value()->get_vector();
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int8>*>(n)
+                     ->get_value()
+                     ->get_vector();
     string type = element::Int8::element_type().c_type_string();
 
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
     for (size_t i = 0; i < value.size(); i++)
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i] << ");\n";
+        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
+           << value[i] << ");\n";
     }
     TU.indent--;
     TU << "}\n";
 }
 
-void Emitter::EmitParameterizedConstantInt32(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitParameterizedConstantInt32(const ngraph::Node* n,
+                                             ExternalFunction* ef,
+                                             const std::vector<TensorViewInfo>& inputs,
+                                             const std::vector<TensorViewInfo>& outputs)
 {
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int32>*>(n)->get_value()->get_vector();
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int32>*>(n)
+                     ->get_value()
+                     ->get_vector();
     string type = element::Int32::element_type().c_type_string();
 
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
     for (size_t i = 0; i < value.size(); i++)
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i] << ");\n";
+        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
+           << value[i] << ");\n";
     }
     TU.indent--;
     TU << "}\n";
 }
 
-void Emitter::EmitParameterizedConstantInt64(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitParameterizedConstantInt64(const ngraph::Node* n,
+                                             ExternalFunction* ef,
+                                             const std::vector<TensorViewInfo>& inputs,
+                                             const std::vector<TensorViewInfo>& outputs)
 {
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int64>*>(n)->get_value()->get_vector();
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int64>*>(n)
+                     ->get_value()
+                     ->get_vector();
     string type = element::Int64::element_type().c_type_string();
 
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
     for (size_t i = 0; i < value.size(); i++)
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i] << ");\n";
+        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
+           << value[i] << ");\n";
     }
     TU.indent--;
     TU << "}\n";
 }
 
-void Emitter::EmitParameterizedConstantUInt8(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitParameterizedConstantUInt8(const ngraph::Node* n,
+                                             ExternalFunction* ef,
+                                             const std::vector<TensorViewInfo>& inputs,
+                                             const std::vector<TensorViewInfo>& outputs)
 {
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt8>*>(n)->get_value()->get_vector();
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt8>*>(n)
+                     ->get_value()
+                     ->get_vector();
     string type = element::UInt8::element_type().c_type_string();
 
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
     for (size_t i = 0; i < value.size(); i++)
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i] << ");\n";
+        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
+           << value[i] << ");\n";
     }
     TU.indent--;
     TU << "}\n";
 }
 
-void Emitter::EmitParameterizedConstantUInt32(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitParameterizedConstantUInt32(const ngraph::Node* n,
+                                              ExternalFunction* ef,
+                                              const std::vector<TensorViewInfo>& inputs,
+                                              const std::vector<TensorViewInfo>& outputs)
 {
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt32>*>(n)->get_value()->get_vector();
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt32>*>(n)
+                     ->get_value()
+                     ->get_vector();
     string type = element::UInt32::element_type().c_type_string();
 
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
     for (size_t i = 0; i < value.size(); i++)
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i] << ");\n";
+        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
+           << value[i] << ");\n";
     }
     TU.indent--;
     TU << "}\n";
 }
 
-void Emitter::EmitParameterizedConstantUInt64(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitParameterizedConstantUInt64(const ngraph::Node* n,
+                                              ExternalFunction* ef,
+                                              const std::vector<TensorViewInfo>& inputs,
+                                              const std::vector<TensorViewInfo>& outputs)
 {
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt64>*>(n)->get_value()->get_vector();
+    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt64>*>(n)
+                     ->get_value()
+                     ->get_vector();
     string type = element::UInt64::element_type().c_type_string();
 
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
     for (size_t i = 0; i < value.size(); i++)
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i] << ");\n";
+        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
+           << value[i] << ");\n";
     }
     TU.indent--;
     TU << "}\n";
 }
 
-void Emitter::EmitBroadcast(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitBroadcast(const ngraph::Node* n,
+                            ExternalFunction* ef,
+                            const std::vector<TensorViewInfo>& inputs,
+                            const std::vector<TensorViewInfo>& outputs)
 {
     auto broadcast = static_cast<const op::Broadcast*>(n);
 
-    auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type());
+    auto arg_tensor_type =
+        dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type());
     assert(arg_tensor_type);
 
     auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
@@ -538,13 +669,16 @@ void Emitter::EmitBroadcast(const ngraph::Node* n, ExternalFunction* ef, const s
 
     auto arg_shape = arg_tensor_type->get_shape();
     auto result_shape = result_tensor_type->get_shape();
-    auto& result_element_type = result_tensor_type->get_element_type();
 
     if (broadcast->get_broadcast_axes().empty())
     {
         TU << "{   // " << n->get_name() << "\n";
         TU.indent++;
-        TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", " << inputs[0].get_tensor().get_name() << ", " << outputs[0].get_tensor_view_layout()->get_size() * outputs[0].get_tensor_view_layout()->get_element_type().size() << ");\n";
+        TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", "
+           << inputs[0].get_tensor().get_name() << ", "
+           << outputs[0].get_tensor_view_layout()->get_size() *
+                  outputs[0].get_tensor_view_layout()->get_element_type().size()
+           << ");\n";
         TU.indent--;
         TU << "}\n";
     }
@@ -565,8 +699,8 @@ void Emitter::EmitBroadcast(const ngraph::Node* n, ExternalFunction* ef, const s
 
             TU << "{   // " << n->get_name() << "\n";
             TU.indent++;
-            TU << "EigenMatrix<" << result_element_type.c_type_string() << ">(" << outputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(out_layout->get_shape(), out_layout->get_strides()) << ").colwise() =\n"
-               << "    EigenVector<" << result_element_type.c_type_string() << ">(" << inputs[0].get_tensor().get_name() << ", " << eigen_vector_format(inputs[0]) << ");\n";
+            TU << "" << emit_matrix(outputs[0]) << ".colwise() =\n"
+               << "    " << emit_vector(inputs[0]) << ";\n";
             TU.indent--;
             TU << "}\n";
         }
@@ -576,8 +710,8 @@ void Emitter::EmitBroadcast(const ngraph::Node* n, ExternalFunction* ef, const s
 
             TU << "{   // " << n->get_name() << "\n";
             TU.indent++;
-            TU << "EigenMatrix<" << result_element_type.c_type_string() << ">(" << outputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(out_layout->get_shape(), out_layout->get_strides()) << ").rowwise() =\n"
-               << "    EigenVector<" << result_element_type.c_type_string() << ">(" << inputs[0].get_tensor().get_name() << ", " << eigen_vector_format(inputs[0]) << ").transpose();\n";
+            TU << "" << emit_matrix(outputs[0]) << ".rowwise() =\n"
+               << "    " << emit_vector(inputs[0]) << ".transpose();\n";
             TU.indent--;
             TU << "}\n";
         }
@@ -594,7 +728,10 @@ void Emitter::EmitBroadcast(const ngraph::Node* n, ExternalFunction* ef, const s
     }
 }
 
-void Emitter::EmitConvert(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitConvert(const ngraph::Node* n,
+                          ExternalFunction* ef,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     auto arg = n->get_arguments().at(0);
 
@@ -615,7 +752,10 @@ void Emitter::EmitConvert(const ngraph::Node* n, ExternalFunction* ef, const std
     TU << "}\n";
 }
 
-void Emitter::EmitConstant(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitConstant(const ngraph::Node* n,
+                           ExternalFunction* ef,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     auto c = static_cast<const op::Constant*>(n);
     auto c_tensor_type = dynamic_pointer_cast<const TensorViewType>(c->get_value_type());
@@ -627,13 +767,17 @@ void Emitter::EmitConstant(const ngraph::Node* n, ExternalFunction* ef, const st
     TU.indent++;
     for (size_t i = 0; i < c_value_strings.size(); i++)
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << c_element_type.c_type_string() << ">(" << c_value_strings[i] << ");\n";
+        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<"
+           << c_element_type.c_type_string() << ">(" << c_value_strings[i] << ");\n";
     }
     TU.indent--;
     TU << "}\n";
 }
 
-void Emitter::EmitReshape(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitReshape(const ngraph::Node* n,
+                          ExternalFunction* ef,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     auto reshape = static_cast<const op::Reshape*>(n);
 
@@ -659,12 +803,17 @@ void Emitter::EmitReshape(const ngraph::Node* n, ExternalFunction* ef, const std
         result_shape_product *= i;
     }
 
-    // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor, we can just copy.
+    // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor,
+    //  we can just copy.
     if (same_layout || result_shape_product < 2)
     {
         TU << "{   // " << n->get_name() << " 1\n";
         TU.indent++;
-        TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", " << inputs[0].get_tensor().get_name() << ", " << outputs[0].get_tensor_view_layout()->get_size() * outputs[0].get_tensor_view_layout()->get_element_type().size() << ");\n";
+        TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", "
+           << inputs[0].get_tensor().get_name() << ", "
+           << outputs[0].get_tensor_view_layout()->get_size() *
+                  outputs[0].get_tensor_view_layout()->get_element_type().size()
+           << ");\n";
         TU.indent--;
         TU << "}\n";
     }
@@ -694,8 +843,8 @@ void Emitter::EmitReshape(const ngraph::Node* n, ExternalFunction* ef, const std
         {
             TU << "{   // " << n->get_name() << " 3\n";
             TU.indent++;
-            TU << "EigenMatrix<" << result_element_type.c_type_string() << ">(" << outputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(out_layout->get_shape(), out_layout->get_strides()) << ") =\n"
-               << "        EigenMatrix<" << result_element_type.c_type_string() << ">(" << inputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(arg0_layout->get_shape(), arg0_layout->get_strides()) << ").transpose();\n";
+            TU << "" << emit_matrix(outputs[0]) << " =\n"
+               << "        " << emit_matrix(inputs[0]) << ".transpose();\n";
             TU.indent--;
             TU << "}\n";
         }
@@ -703,11 +852,15 @@ void Emitter::EmitReshape(const ngraph::Node* n, ExternalFunction* ef, const std
     // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
     else
     {
-        throw ngraph_error("Axis permutation in reshape is not implemented yet for tensors with rank>2");
+        throw ngraph_error(
+            "Axis permutation in reshape is not implemented yet for tensors with rank>2");
     }
 }
 
-void Emitter::EmitFunctionCall(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitFunctionCall(const ngraph::Node* n,
+                               ExternalFunction* ef,
+                               const std::vector<TensorViewInfo>& inputs,
+                               const std::vector<TensorViewInfo>& outputs)
 {
     auto function_call = static_cast<const op::FunctionCall*>(n);
     shared_ptr<Function> function = function_call->get_function();
@@ -725,7 +878,10 @@ void Emitter::EmitFunctionCall(const ngraph::Node* n, ExternalFunction* ef, cons
 // the compiled version of these ops is intended to have semantics identical
 // to what's seen there (for now atleast)
 
-void Emitter::EmitReduce(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitReduce(const ngraph::Node* n,
+                         ExternalFunction* ef,
+                         const std::vector<TensorViewInfo>& inputs,
+                         const std::vector<TensorViewInfo>& outputs)
 {
     auto reduce = static_cast<const op::Reduce*>(n);
     auto reduction_function = reduce->get_reduction_function();
@@ -754,7 +910,11 @@ void Emitter::EmitReduce(const ngraph::Node* n, ExternalFunction* ef, const std:
     {
         TU << "{   // " << n->get_name() << " 1\n";
         TU.indent++;
-        TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", " << inputs[0].get_tensor().get_name() << ", " << outputs[0].get_tensor_view_layout()->get_size() * outputs[0].get_tensor_view_layout()->get_element_type().size() << ");\n";
+        TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", "
+           << inputs[0].get_tensor().get_name() << ", "
+           << outputs[0].get_tensor_view_layout()->get_size() *
+                  outputs[0].get_tensor_view_layout()->get_element_type().size()
+           << ");\n";
         TU.indent--;
         TU << "}\n";
     }
@@ -783,13 +943,18 @@ void Emitter::EmitReduce(const ngraph::Node* n, ExternalFunction* ef, const std:
     // required to appear at least once. If so, this will need to be reworked,
     // assuming we actually want to mimic XLA's semantics that closely, which
     // we may not.
-    else if ((reductee_shape.size() == 1 && reduction_axes == AxisSet{0}) || (reductee_shape.size() == 2 && reduction_axes == AxisSet{0, 1}))
+    else if ((reductee_shape.size() == 1 && reduction_axes == AxisSet{0}) ||
+             (reductee_shape.size() == 2 && reduction_axes == AxisSet{0, 1}))
     {
         if (reductee_shape.at(0) == 0 || (reductee_shape.size() == 2 && reductee_shape.at(1) == 0))
         {
             TU << "{   // " << n->get_name() << " 2\n";
             TU.indent++;
-            TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", " << inputs[1].get_tensor().get_name() << ", " << outputs[0].get_tensor_view_layout()->get_size() * outputs[0].get_tensor_view_layout()->get_element_type().size() << ");\n";
+            TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", "
+               << inputs[1].get_tensor().get_name() << ", "
+               << outputs[0].get_tensor_view_layout()->get_size() *
+                      outputs[0].get_tensor_view_layout()->get_element_type().size()
+               << ");\n";
             TU.indent--;
             TU << "}\n";
         }
@@ -844,8 +1009,8 @@ void Emitter::EmitReduce(const ngraph::Node* n, ExternalFunction* ef, const std:
             TU << "return result;\n";
             TU.indent--;
             TU << "};\n";
-            TU << "EigenVector<" << f_result_element_type.c_type_string() << ">(" << outputs[0].get_tensor().get_name() << ", " << eigen_vector_format(outputs[0]) << ") =\n"
-               << "        EigenMatrix<" << f_result_element_type.c_type_string() << ">(" << inputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(arg0_layout->get_shape(), arg0_layout->get_strides()) << ").rowwise().redux(f);\n";
+            TU << "" << emit_vector(outputs[0]) << " =\n"
+               << "        " << emit_matrix(inputs[0]) << ".rowwise().redux(f);\n";
             TU.indent--;
             TU << "}\n";
         }
@@ -876,8 +1041,8 @@ void Emitter::EmitReduce(const ngraph::Node* n, ExternalFunction* ef, const std:
             TU << "return result;\n";
             TU.indent--;
             TU << "};\n";
-            TU << "EigenVector<" << f_result_element_type.c_type_string() << ">(" << outputs[0].get_tensor().get_name() << ", " << eigen_vector_format(outputs[0]) << ") =\n"
-               << "    EigenMatrix<" << f_result_element_type.c_type_string() << ">(" << inputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(arg0_layout->get_shape(), arg0_layout->get_strides()) << ").colwise().redux(f);\n";
+            TU << "" << emit_vector(outputs[0]) << " =\n"
+               << "    " << emit_matrix(inputs[0]) << ".colwise().redux(f);\n";
             TU.indent--;
             TU << "}\n";
         }
@@ -888,7 +1053,10 @@ void Emitter::EmitReduce(const ngraph::Node* n, ExternalFunction* ef, const std:
     }
 }
 
-void Emitter::EmitSign(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitSign(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -898,7 +1066,10 @@ void Emitter::EmitSign(const ngraph::Node* n, ExternalFunction* ef, const std::v
     TU << "}\n";
 }
 
-void Emitter::EmitSlice(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitSlice(const ngraph::Node* n,
+                        ExternalFunction* ef,
+                        const std::vector<TensorViewInfo>& inputs,
+                        const std::vector<TensorViewInfo>& outputs)
 {
     auto slice = static_cast<const op::Slice*>(n);
 
@@ -915,7 +1086,6 @@ void Emitter::EmitSlice(const ngraph::Node* n, ExternalFunction* ef, const std::
     assert(arg_tensor_view_type);
     auto arg_shape = arg_tensor_view_type->get_shape();
     auto arg_rank = arg_shape.size();
-    auto& arg_element_type = arg_tensor_view_type->get_element_type();
 
     auto& lower_bounds = slice->get_lower_bounds();
     auto& upper_bounds = slice->get_upper_bounds();
@@ -925,7 +1095,11 @@ void Emitter::EmitSlice(const ngraph::Node* n, ExternalFunction* ef, const std::
     {
         TU << "{   // " << n->get_name() << " 1\n";
         TU.indent++;
-        TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", " << inputs[0].get_tensor().get_name() << ", " << outputs[0].get_tensor_view_layout()->get_size() * outputs[0].get_tensor_view_layout()->get_element_type().size() << ");\n";
+        TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", "
+           << inputs[0].get_tensor().get_name() << ", "
+           << outputs[0].get_tensor_view_layout()->get_size() *
+                  outputs[0].get_tensor_view_layout()->get_element_type().size()
+           << ");\n";
         TU.indent--;
         TU << "}\n";
     }
@@ -933,9 +1107,10 @@ void Emitter::EmitSlice(const ngraph::Node* n, ExternalFunction* ef, const std::
     {
         TU << "{   // " << n->get_name() << " 2\n";
         TU.indent++;
-        TU << "EigenVector<" << arg_element_type.c_type_string() << ">(" << outputs[0].get_tensor().get_name() << ", " << eigen_vector_format(outputs[0]) << ") =\n"
-           << "    EigenVector<" << arg_element_type.c_type_string() << ">(" << inputs[0].get_tensor().get_name() << ", " << eigen_vector_format(inputs[0]) << ").segment(\n"
-           << "        " << to_string(lower_bounds[0]) << ", " << to_string(upper_bounds[0] - lower_bounds[0]) << ");\n";
+        TU << "" << emit_vector(outputs[0]) << " =\n"
+           << "    " << emit_vector(inputs[0]) << ".segment(\n"
+           << "        " << to_string(lower_bounds[0]) << ", "
+           << to_string(upper_bounds[0] - lower_bounds[0]) << ");\n";
         TU.indent--;
         TU << "}\n";
     }
@@ -946,8 +1121,9 @@ void Emitter::EmitSlice(const ngraph::Node* n, ExternalFunction* ef, const std::
 
         TU << "{   // " << n->get_name() << " 3\n";
         TU.indent++;
-        TU << "EigenMatrix<" << arg_element_type.c_type_string() << ">(" << outputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(out_layout->get_shape(), out_layout->get_strides()) << ") = \n"
-           << "        EigenMatrix<" << arg_element_type.c_type_string() << ">(" << inputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(arg0_layout->get_shape(), arg0_layout->get_strides()) << ").block(" << to_string(lower_bounds[0]) << ", " << to_string(lower_bounds[1]) << ",\n"
+        TU << "" << emit_matrix(outputs[0]) << " = \n"
+           << "        " << emit_matrix(inputs[0]) << ".block(" << to_string(lower_bounds[0])
+           << ", " << to_string(lower_bounds[1]) << ",\n"
            << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
            << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ");\n";
         TU.indent--;
@@ -960,12 +1136,14 @@ void Emitter::EmitSlice(const ngraph::Node* n, ExternalFunction* ef, const std::
     }
 }
 
-void Emitter::EmitSum(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitSum(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     auto s = static_cast<const op::Sum*>(n);
     auto s_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(s->get_value_type());
     assert(s_tensor_view_type);
-    auto& s_element_type = s_tensor_view_type->get_element_type();
     auto s_shape = s_tensor_view_type->get_shape();
 
     auto arg = s->get_arguments().at(0);
@@ -982,12 +1160,17 @@ void Emitter::EmitSum(const ngraph::Node* n, ExternalFunction* ef, const std::ve
     {
         TU << "{   // " << n->get_name() << "\n";
         TU.indent++;
-        TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", " << inputs[0].get_tensor().get_name() << ", " << outputs[0].get_tensor_view_layout()->get_size() * outputs[0].get_tensor_view_layout()->get_element_type().size() << ");\n";
+        TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", "
+           << inputs[0].get_tensor().get_name() << ", "
+           << outputs[0].get_tensor_view_layout()->get_size() *
+                  outputs[0].get_tensor_view_layout()->get_element_type().size()
+           << ");\n";
         TU.indent--;
         TU << "}\n";
     }
     // Full reduction? Then sum to scalar.
-    else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) || (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
+    else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
+             (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
     {
         TU << "{   // " << n->get_name() << "\n";
         TU.indent++;
@@ -1002,8 +1185,8 @@ void Emitter::EmitSum(const ngraph::Node* n, ExternalFunction* ef, const std::ve
 
         TU << "{   // " << n->get_name() << "\n";
         TU.indent++;
-        TU << "EigenVector<" << s_element_type.c_type_string() << ">(" << outputs[0].get_tensor().get_name() << ", " << eigen_vector_format(outputs[0]) << ") =\n"
-           << "    EigenMatrix<" << s_element_type.c_type_string() << ">(" << inputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(arg0_layout->get_shape(), arg0_layout->get_strides()) << ").rowwise().sum();\n";
+        TU << "" << emit_vector(outputs[0]) << " =\n"
+           << "    " << emit_matrix(inputs[0]) << ".rowwise().sum();\n";
         TU.indent--;
         TU << "}\n";
     }
@@ -1013,8 +1196,8 @@ void Emitter::EmitSum(const ngraph::Node* n, ExternalFunction* ef, const std::ve
 
         TU << "{   // " << n->get_name() << "\n";
         TU.indent++;
-        TU << "EigenVector<" << s_element_type.c_type_string() << ">(" << outputs[0].get_tensor().get_name() << ", " << eigen_vector_format(outputs[0]) << ") =\n"
-           << "    EigenMatrix<" << s_element_type.c_type_string() << ">(" << inputs[0].get_tensor().get_name() << ", " << eigen_matrix_format(arg0_layout->get_shape(), arg0_layout->get_strides()) << ").colwise().sum();\n";
+        TU << "" << emit_vector(outputs[0]) << " =\n"
+           << "    " << emit_matrix(inputs[0]) << ".colwise().sum();\n";
         TU.indent--;
         TU << "}\n";
     }
@@ -1024,7 +1207,10 @@ void Emitter::EmitSum(const ngraph::Node* n, ExternalFunction* ef, const std::ve
     }
 }
 
-void Emitter::EmitExp(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitExp(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1034,7 +1220,10 @@ void Emitter::EmitExp(const ngraph::Node* n, ExternalFunction* ef, const std::ve
     TU << "}\n";
 }
 
-void Emitter::EmitSin(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitSin(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1044,7 +1233,10 @@ void Emitter::EmitSin(const ngraph::Node* n, ExternalFunction* ef, const std::ve
     TU << "}\n";
 }
 
-void Emitter::EmitSinh(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitSinh(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1054,7 +1246,10 @@ void Emitter::EmitSinh(const ngraph::Node* n, ExternalFunction* ef, const std::v
     TU << "}\n";
 }
 
-void Emitter::EmitCos(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitCos(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1064,7 +1259,10 @@ void Emitter::EmitCos(const ngraph::Node* n, ExternalFunction* ef, const std::ve
     TU << "}\n";
 }
 
-void Emitter::EmitCosh(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitCosh(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1074,7 +1272,10 @@ void Emitter::EmitCosh(const ngraph::Node* n, ExternalFunction* ef, const std::v
     TU << "}\n";
 }
 
-void Emitter::EmitTan(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitTan(const ngraph::Node* n,
+                      ExternalFunction* ef,
+                      const std::vector<TensorViewInfo>& inputs,
+                      const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1084,7 +1285,10 @@ void Emitter::EmitTan(const ngraph::Node* n, ExternalFunction* ef, const std::ve
     TU << "}\n";
 }
 
-void Emitter::EmitTanh(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitTanh(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     // Eigen's generic_fast_tanh_float<float> is currently miscompiled by Clang/LLVM
     // so we fall-back to std::tanh
@@ -1094,13 +1298,17 @@ void Emitter::EmitTanh(const ngraph::Node* n, ExternalFunction* ef, const std::v
     TU.indent++;
     TU << "for (size_t i=0; i<" << outputs[0].get_tensor_view_layout()->get_size() << "; i++)\n";
     TU << "{\n";
-    TU << "    " << outputs[0].get_tensor().get_name() << "[i] = std::tanh(" << inputs[0].get_tensor().get_name() << "[i]);\n";
+    TU << "    " << outputs[0].get_tensor().get_name() << "[i] = std::tanh("
+       << inputs[0].get_tensor().get_name() << "[i]);\n";
     TU << "}\n";
     TU.indent--;
     TU << "}\n";
 }
 
-void Emitter::EmitAsin(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitAsin(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1110,7 +1318,10 @@ void Emitter::EmitAsin(const ngraph::Node* n, ExternalFunction* ef, const std::v
     TU << "}\n";
 }
 
-void Emitter::EmitAcos(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitAcos(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1120,7 +1331,10 @@ void Emitter::EmitAcos(const ngraph::Node* n, ExternalFunction* ef, const std::v
     TU << "}\n";
 }
 
-void Emitter::EmitAtan(const ngraph::Node* n, ExternalFunction* ef, const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs)
+void Emitter::EmitAtan(const ngraph::Node* n,
+                       ExternalFunction* ef,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1134,7 +1348,9 @@ void Emitter::EmitAtan(const ngraph::Node* n, ExternalFunction* ef, const std::v
 // Utility methods
 //------------------------------------------------------------------------------------------------
 
-void Emitter::generate_call(const std::vector<TensorViewInfo>& inputs, const std::vector<TensorViewInfo>& outputs, shared_ptr<Function> function)
+void Emitter::generate_call(const std::vector<TensorViewInfo>& inputs,
+                            const std::vector<TensorViewInfo>& outputs,
+                            shared_ptr<Function> function)
 {
     vector<string> input_names;
     vector<string> output_names;
@@ -1165,18 +1381,44 @@ void Emitter::generate_call(const std::vector<TensorViewInfo>& inputs, const std
     TU << function->get_name() << "(inputs, outputs);\n";
 }
 
-string Emitter::emit_vector(const TensorViewInfo& tvi)
+static string format_name(const string& name)
+{
+    string rc;
+    if (name.size() > 0)
+    {
+        rc = " " + name;
+    }
+    return rc;
+}
+
+string Emitter::emit_vector(const TensorViewInfo& tvi, const string& name)
 {
     stringstream ss;
+
     const element::Type& et = tvi.get_tensor_view()->get_value_type()->get_element_type();
-    ss << "EigenVector<" << et.c_type_string() << ">(" << tvi.get_tensor().get_name() << ", " << eigen_vector_format(tvi) << ")";
+    ss << "EigenVector<" << et.c_type_string() << ">" << format_name(name) << "("
+       << tvi.get_tensor().get_name() << ", " << eigen_vector_format(tvi) << ")";
     return ss.str();
 }
 
-string Emitter::emit_array1d(const TensorViewInfo& tvi)
+string Emitter::emit_array1d(const TensorViewInfo& tvi, const string& name)
 {
     stringstream ss;
+
     const element::Type& et = tvi.get_tensor_view()->get_value_type()->get_element_type();
-    ss << "EigenArray1d<" << et.c_type_string() << ">(" << tvi.get_tensor().get_name() << ", " << eigen_vector_format(tvi) << ")";
+    ss << "EigenArray1d<" << et.c_type_string() << ">" << format_name(name) << "("
+       << tvi.get_tensor().get_name() << ", " << eigen_vector_format(tvi) << ")";
+    return ss.str();
+}
+
+string Emitter::emit_matrix(const TensorViewInfo& tvi, const string& name)
+{
+    stringstream ss;
+    auto layout = tvi.get_layout<DenseTensorViewLayout>();
+
+    const element::Type& et = tvi.get_tensor_view()->get_value_type()->get_element_type();
+    ss << "EigenMatrix<" << et.c_type_string() << ">" << format_name(name) << "("
+       << tvi.get_tensor().get_name() << ", "
+       << eigen_matrix_format(layout->get_shape(), layout->get_strides()) << ")";
     return ss.str();
 }
