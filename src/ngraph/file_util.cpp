@@ -145,7 +145,7 @@ bool ngraph::file_util::make_directory(const string& dir)
 string ngraph::file_util::make_temp_directory(const string& path)
 {
     string fname = path.empty() ? file_util::get_temp_directory() : path;
-    string tmp_template = file_util::path_join(fname, "aeonXXXXXX");
+    string tmp_template = file_util::path_join(fname, "ngraph_XXXXXX");
     char* tmpname = strdup(tmp_template.c_str());
 
     mkdtemp(tmpname);
@@ -157,7 +157,7 @@ string ngraph::file_util::make_temp_directory(const string& path)
 
 std::string ngraph::file_util::get_temp_directory()
 {
-    const vector<string> potential_tmps = {"ngraph_AEON_TMP", "TMPDIR", "TMP", "TEMP", "TEMPDIR"};
+    const vector<string> potential_tmps = {"NGRAPH_TMP", "TMPDIR", "TMP", "TEMP", "TEMPDIR"};
 
     const char* path = nullptr;
     for (const string& var : potential_tmps)
