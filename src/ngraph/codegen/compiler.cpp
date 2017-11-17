@@ -318,7 +318,7 @@ std::unique_ptr<llvm::Module> StaticCompiler::compile(Compiler* compiler, const 
     m_compiler->getInvocation().getPreprocessorOpts().addRemappedFile(m_source_name, buffer.get());
 
     // Create and execute action
-    auto& compiler_action = compiler->compiler_action;
+    auto& compiler_action = compiler->get_compiler_action();
     compiler_action.reset(new EmitCodeGenOnlyAction());
     std::unique_ptr<llvm::Module> rc;
     if (m_compiler->ExecuteAction(*compiler_action) == true)

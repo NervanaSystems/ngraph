@@ -50,13 +50,11 @@ private:
 
 class ngraph::codegen::Compiler
 {
-    friend StaticCompiler;
-
 public:
     Compiler();
     ~Compiler();
     std::unique_ptr<llvm::Module> compile(const std::string& source);
-
+    std::unique_ptr<clang::CodeGenAction>& get_compiler_action() { return compiler_action; }
 private:
     std::unique_ptr<clang::CodeGenAction> compiler_action;
 };
