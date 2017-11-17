@@ -117,37 +117,6 @@ namespace ngraph
             {
                 return std::make_shared<runtime::ParameterizedTensorView<TraitedType<T>>>(shape);
             }
-
-            /// Parses a string containing a literal of the underlying type.
-            static T read(const std::string& s)
-            {
-                T result;
-                std::stringstream ss;
-
-                ss << s;
-                ss >> result;
-
-                // Check that (1) parsing succeeded and (2) the entire string was used.
-                if (ss.fail() || ss.rdbuf()->in_avail() != 0)
-                {
-                    throw ngraph_error("Could not parse literal");
-                }
-
-                return result;
-            }
-
-            /// Parses a list of strings containing literals of the underlying type.
-            static std::vector<T> read(const std::vector<std::string>& ss)
-            {
-                std::vector<T> result;
-
-                for (auto s : ss)
-                {
-                    result.push_back(read(s));
-                }
-
-                return result;
-            }
         };
 
         NGRAPH_DEFINE_TRAITED_TYPE_NAME(char)
@@ -178,23 +147,3 @@ namespace ngraph
         using UInt64 = TraitedType<uint64_t>;
     }
 }
-
-//
-// Utility macro for dispatching an element type-templated function at runtime.
-//
-
-// clang-format off
-// Sorry, but you really don't want to see what clang-format does to this thing. :)
-#define FUNCTION_ON_ELEMENT_TYPE(et, err_msg, f, ...)                                     \
-    (                                                                                     \
-        ((et) == element::Bool::element_type()) ? (f<element::Bool>(__VA_ARGS__)) :       \
-        ((et) == element::Float32::element_type()) ? (f<element::Float32>(__VA_ARGS__)) : \
-        ((et) == element::Int8::element_type()) ? (f<element::Int8>(__VA_ARGS__)) :       \
-        ((et) == element::Int32::element_type()) ? (f<element::Int32>(__VA_ARGS__)) :     \
-        ((et) == element::Int64::element_type()) ? (f<element::Int64>(__VA_ARGS__)) :     \
-        ((et) == element::UInt8::element_type()) ? (f<element::UInt8>(__VA_ARGS__)) :     \
-        ((et) == element::UInt32::element_type()) ? (f<element::UInt32>(__VA_ARGS__)) :   \
-        ((et) == element::UInt64::element_type()) ? (f<element::UInt64>(__VA_ARGS__)) :   \
-        (throw ngraph_error(err_msg))                                                     \
-    )
-// clang-format on
