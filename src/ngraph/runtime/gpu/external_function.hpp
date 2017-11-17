@@ -22,8 +22,15 @@ namespace ngraph
     {
         namespace gpu
         {
+            class Instruction;
+
             class GPUExternalFunction : public ngraph::runtime::ExternalFunction
             {
+              using FunctionMap = std::unordered_map<std::shared_ptr<Function>,
+                                                     std::shared_ptr<ExternalFunction>>;
+            public:
+                GPUExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                                    bool release_function = true);
             };
         }
     }
