@@ -130,11 +130,13 @@ endif()
 
 add_library(ngraph SHARED ${SRC})
 
-# NGraph links against one or more libraries (ex. LLVM) but we don't want to
-# export these symbols as part of the DSO. This is a GNU ld (and derivatives) specific
-# option so making this portable is still an open issue. As a note for the future,
-# this is not an issue on Windows and LLVM's lld does support --exclude-libs.
-set_target_properties(ngraph PROPERTIES LINK_FLAGS "-Wl,--exclude-libs,ALL")
+if (NOT APPLE)
+    # NGraph links against one or more libraries (ex. LLVM) but we don't want to
+    # export these symbols as part of the DSO. This is a GNU ld (and derivatives) specific
+    # option so making this portable is still an open issue. As a note for the future,
+    # this is not an issue on Windows and LLVM's lld does support --exclude-libs.
+    set_target_properties(ngraph PROPERTIES LINK_FLAGS "-Wl,--exclude-libs,ALL")
+endif()
 
 # Colon separated string for specified runtime plugin loading, this is made explicit s.t. if a
 # plugin is specified at compile time but the corresponding library could not be resolved at run-
