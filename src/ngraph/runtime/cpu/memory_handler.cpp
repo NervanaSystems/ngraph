@@ -12,23 +12,32 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/runtime/cpu/cpu_backend.hpp"
-#include "ngraph/runtime/cpu/tensor_view.hpp"
-#include "ngraph/runtime/external_function.hpp"
+#include "ngraph/runtime/cpu/memory_handler.hpp"
 
 using namespace ngraph;
-using namespace std;
 
-std::shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPUBackend::make_call_frame(
-    const std::shared_ptr<ExternalFunction>& external_function)
+runtime::cpu::MemoryHandler::MemoryHandler(size_t byte_size, size_t alignment)
+    : m_allocated_buffer_pool(nullptr)
+    , m_aligned_buffer_pool(nullptr)
 {
-    return external_function->make_call_frame();
+    if (byte_size > 0)
+    {
+        size_t allocation_size = byte_size + alignment;
+        m_allocated_buffer_pool = static_cast<char*>(malloc(allocation_size));
+        m_aligned_buffer_pool = m_allocated_buffer_pool;
+        size_t mod = size_t(m_aligned_buffer_pool) % alignment;
+
+        if (mod != 0)
+        {
+            m_aligned_buffer_pool += (alignment - mod);
+        }
+    }
 }
 
-std::shared_ptr<ngraph::runtime::TensorView>
-    runtime::cpu::CPUBackend::make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                                       const Shape& shape)
+runtime::cpu::MemoryHandler::~MemoryHandler()
 {
-    auto rc = make_shared<runtime::cpu::CPUTensorView>(element_type, shape);
-    return dynamic_pointer_cast<runtime::TensorView>(rc);
+    if (m_allocated_buffer_pool != nullptr)
+    {
+        free(m_allocated_buffer_pool);
+    }
 }

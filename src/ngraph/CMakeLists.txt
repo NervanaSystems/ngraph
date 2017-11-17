@@ -21,6 +21,7 @@ set (SRC
     descriptor/tensor.cpp
     descriptor/tensor_view.cpp
     descriptor/tuple.cpp
+    file_util.cpp
     function.cpp
     log.cpp
     node.cpp
@@ -55,7 +56,6 @@ set (SRC
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise.cpp
-    pass/collect_functions.cpp
     pass/dump_sorted.cpp
     pass/liveness.cpp
     pass/manager.cpp
@@ -106,27 +106,39 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     # Add sources for the CPU backend
     # and all its dependencies
     set(SRC ${SRC}
+        codegen/code_writer.cpp
         codegen/compiler.cpp
+        codegen/execution_engine.cpp
         runtime/cpu/call_frame.cpp
         runtime/cpu/cpu_backend.cpp
         runtime/cpu/cpu_manager.cpp
         runtime/cpu/cpu_kernels.cpp
         runtime/cpu/emitter.cpp
         runtime/cpu/external_function.cpp
+        runtime/cpu/memory_handler.cpp
+        runtime/cpu/tensor_view.cpp
         )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
     # This must be kept in sync with the LLVM + Clang version in use
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS
-      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\"")
+      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";")
     set(NGRAPH_CPU_PCH_ENABLE 0 CACHE STRING "Enable pre-compiled headers in the CPU backend")
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
-    set_source_files_properties(runtime/cpu/external_function.cpp PROPERTIES COMPILE_DEFINITIONS
+    set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
       "NGCPU_PCH=${NGRAPH_CPU_PCH_ENABLE};NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE}")
 endif()
 
 add_library(ngraph SHARED ${SRC})
+
+if (NOT APPLE)
+    # NGraph links against one or more libraries (ex. LLVM) but we don't want to
+    # export these symbols as part of the DSO. This is a GNU ld (and derivatives) specific
+    # option so making this portable is still an open issue. As a note for the future,
+    # this is not an issue on Windows and LLVM's lld does support --exclude-libs.
+    set_target_properties(ngraph PROPERTIES LINK_FLAGS "-Wl,--exclude-libs,ALL")
+endif()
 
 # Colon separated string for specified runtime plugin loading, this is made explicit s.t. if a
 # plugin is specified at compile time but the corresponding library could not be resolved at run-
@@ -153,7 +165,7 @@ message(STATUS "LIBRARY_OUTPUT_DIRECTORY set to: ${COMMON_LIBRARY_OUTPUT_DIRECTO
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
 if(NGRAPH_CPU_ENABLE AND LLVM_LINK_LIBS)
-    target_link_libraries(ngraph LINK_PRIVATE ${LLVM_LINK_LIBS})
+    target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
 endif()
 
 if (APPLE)
@@ -163,7 +175,7 @@ if (APPLE)
 endif()
 
 if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
-    target_link_libraries(ngraph LINK_PRIVATE mkldnn)
+    target_link_libraries(ngraph PRIVATE mkldnn)
 endif()
 
 

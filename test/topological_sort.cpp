@@ -21,7 +21,6 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pass/collect_functions.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
@@ -172,11 +171,11 @@ TEST(topological_sort, collect_functions)
                                    "h");
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::CollectFunctions>();
     pass_manager.run_passes(h);
 
     set<string> expected = {"f", "g", "h"};
     auto functions = pass_manager.get_state().get_functions();
+
     vector<string> fnames;
     for (shared_ptr<Function> func : functions)
     {

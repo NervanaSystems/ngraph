@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "ngraph/common.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/ndarray.hpp"
 
 namespace ngraph

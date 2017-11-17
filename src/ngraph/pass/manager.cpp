@@ -18,6 +18,8 @@
 #include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/ops/function_call.hpp"
+#include "ngraph/ops/reduce.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass.hpp"
 
@@ -36,10 +38,37 @@ void ngraph::pass::Manager::initialize_default_passes()
 {
 }
 
+static void find_functions(shared_ptr<Function> f, set<shared_ptr<Function>>& funcs)
+{
+    funcs.insert(f);
+
+    for (shared_ptr<Node> node : f->get_ops())
+    {
+        shared_ptr<op::FunctionCall> fc = dynamic_pointer_cast<op::FunctionCall>(node);
+        if (fc)
+        {
+            find_functions(fc->get_function(), funcs);
+        }
+        shared_ptr<op::Reduce> reduce = dynamic_pointer_cast<op::Reduce>(node);
+        if (reduce)
+        {
+            find_functions(reduce->get_reduction_function(), funcs);
+        }
+    }
+}
+
 void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 {
-    vector<shared_ptr<Function>> fs = {func};
-    get_state().set_functions(fs);
+    // find all functions
+    set<shared_ptr<Function>> tfs;
+    find_functions(func, tfs);
+    get_state().set_functions(tfs);
+
+    vector<shared_ptr<Function>> fs;
+    for (shared_ptr<Function> f : get_state().get_functions())
+    {
+        fs.push_back(f);
+    }
 
     for (shared_ptr<PassBase> pass : m_pass_list)
     {
@@ -77,40 +106,6 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
             }
         }
     }
-    // for (shared_ptr<ModulePass>& p : m_module_passes)
-    // {
-    //     p->set_state(get_state());
-    //     p->run_on_module(fs);
-    // }
-
-    // for (Function* f : fs)
-    // {
-    //     for (shared_ptr<FunctionPass> p : m_function_passes)
-    //     {
-    //         p->set_state(get_state());
-    //         p->run_on_function(f);
-    //     }
-    // }
-
-    // for (Function* f : fs)
-    // {
-    //     NGRAPH_INFO;
-    //     for (shared_ptr<NodePass> p : m_node_passes)
-    //     {
-    //         for (Node* node : f->get_ops())
-    //         {
-    //             NGRAPH_INFO;
-    //             p->set_state(get_state());
-    //             p->run_on_node(node);
-    //         }
-    //     }
-    // }
-
-    // for (shared_ptr<CallGraphPass>& p : m_call_graph_passes)
-    // {
-    //     p->set_state(get_state());
-    //     p->run_on_call_graph(func->get_ordered_ops());
-    // }
 }
 
 ngraph::pass::ManagerState& ngraph::pass::Manager::get_state()

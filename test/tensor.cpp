@@ -113,3 +113,24 @@ TEST(tensor, read_write)
     test_read_write<element::Float32>({1.0, 3.0, 5.0});
     test_read_write<element::Int64>({-1, 2, 4});
 }
+
+TEST(tensor, output_flag)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::TopologicalSort>();
+    pass_manager.register_pass<pass::Liveness>();
+
+    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+    auto add = make_shared<op::Add>(arg0, arg0);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{1});
+    auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
+
+    pass_manager.run_passes(f0);
+
+    EXPECT_TRUE(f0->get_result()->is_output());
+    for (descriptor::Output& output : f0->get_result()->get_outputs())
+    {
+        const Tensor& t = output.get_tensor();
+        EXPECT_TRUE(t.is_output());
+    }
+}

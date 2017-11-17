@@ -75,7 +75,8 @@ TEST(type_prop, broadcast_bad_arguments)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must be tensor views"));
+        EXPECT_EQ(error.what(),
+                  std::string("Arguments for node type \"Broadcast\" must be tensor views"));
     }
     catch (...)
     {
@@ -382,7 +383,8 @@ TEST(type_prop, dot_deduce_reduction_axes_size_mismatch)
 //
 // Tests for binary elementwise ops.
 //
-void test_binary(shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr<Node>& y))
+void test_binary(std::string node_type,
+                 shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr<Node>& y))
 {
     // Check for bad arguments
     auto tp0_param = make_shared<op::Parameter>(make_shared<TupleType>());
@@ -407,7 +409,9 @@ void test_binary(shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr
         }
         catch (const ngraph_error& error)
         {
-            EXPECT_EQ(error.what(), std::string("Arguments must be tensor views"));
+            EXPECT_EQ(
+                error.what(),
+                std::string("Arguments for node type \"" + node_type + "\" must be tensor views"));
         }
         catch (...)
         {
@@ -469,30 +473,34 @@ void test_binary(shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr
 
 TEST(type_prop, add_bad_arguments)
 {
-    test_binary([](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
-        return make_shared<op::Add>(x, y);
-    });
+    test_binary("Add",
+                [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+                    return make_shared<op::Add>(x, y);
+                });
 }
 
 TEST(type_prop, divide_bad_arguments)
 {
-    test_binary([](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
-        return make_shared<op::Divide>(x, y);
-    });
+    test_binary("Divide",
+                [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+                    return make_shared<op::Divide>(x, y);
+                });
 }
 
 TEST(type_prop, multiply_bad_arguments)
 {
-    test_binary([](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
-        return make_shared<op::Multiply>(x, y);
-    });
+    test_binary("Multiply",
+                [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+                    return make_shared<op::Multiply>(x, y);
+                });
 }
 
 TEST(type_prop, subtract_bad_arguments)
 {
-    test_binary([](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
-        return make_shared<op::Subtract>(x, y);
-    });
+    test_binary("Subtract",
+                [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+                    return make_shared<op::Subtract>(x, y);
+                });
 }
 
 TEST(type_prop, comparison_good)
