@@ -76,7 +76,7 @@ Compiler::~Compiler()
 std::unique_ptr<llvm::Module> Compiler::compile(const std::string& source)
 {
     lock_guard<mutex> lock(m_mutex);
-    return s_static_compiler.compile(this, source);
+    return s_static_compiler.compile(compiler_action, source);
 }
 
 static std::string GetExecutablePath(const char* Argv0)
@@ -310,7 +310,8 @@ void StaticCompiler::use_cached_files()
     }
 }
 
-std::unique_ptr<llvm::Module> StaticCompiler::compile(Compiler* compiler, const string& source)
+std::unique_ptr<llvm::Module>
+    StaticCompiler::compile(std::unique_ptr<clang::CodeGenAction>& compiler_action, const string& source)
 {
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
@@ -318,7 +319,6 @@ std::unique_ptr<llvm::Module> StaticCompiler::compile(Compiler* compiler, const 
     m_compiler->getInvocation().getPreprocessorOpts().addRemappedFile(m_source_name, buffer.get());
 
     // Create and execute action
-    auto& compiler_action = compiler->get_compiler_action();
     compiler_action.reset(new EmitCodeGenOnlyAction());
     std::unique_ptr<llvm::Module> rc;
     if (m_compiler->ExecuteAction(*compiler_action) == true)

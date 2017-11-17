@@ -70,7 +70,8 @@ public:
     void set_debuginfo_enabled(bool state) { m_debuginfo_enabled = state; }
     bool is_debuginfo_enabled() { return m_debuginfo_enabled; }
     void add_header_search_path(const std::string& path);
-    std::unique_ptr<llvm::Module> compile(Compiler* compiler, const std::string& source);
+    std::unique_ptr<llvm::Module> compile(std::unique_ptr<clang::CodeGenAction>& compiler_action,
+                                          const std::string& source);
 
 private:
     std::unique_ptr<clang::CompilerInstance> m_compiler;
