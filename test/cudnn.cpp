@@ -21,6 +21,9 @@
 #include <cuda.h>
 #include <cudnn.h>
 
+#include "ngraph/codegen/nvptx_compiler.hpp"
+#include "ngraph/codegen/nvptx_execution_engine.hpp"
+
 #include "ngraph/runtime/gpu/call_frame.hpp"
 #include "ngraph/runtime/gpu/backend.hpp"
 #include "ngraph/runtime/gpu/external_function.hpp"
