@@ -211,6 +211,19 @@ install(DIRECTORY
     DESTINATION "${NGRAPH_INSTALL_LIB}"
 )
 endif()
+if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
+    MKLDNN_INCLUDE_DIR)
+    # Currently this is required for Argon codegen. To avoid this, we'll need to decouple LLVM from
+    # compiler.hpp
+    install(DIRECTORY
+        ${LLVM_INCLUDE_DIR}/
+        DESTINATION "${NGRAPH_INSTALL_INCLUDE}"
+    )
+    install(DIRECTORY
+        ${LLVM_LIB_DIR}/
+        DESTINATION "${NGRAPH_INSTALL_LIB}"
+)
+endif()
 
 add_dependencies(ngraph eigen)
 

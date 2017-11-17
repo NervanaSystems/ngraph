@@ -55,7 +55,7 @@ namespace ngraph
         void set_ordered_ops_valid() { m_ordered_ops_valid = true; }
         void clear_ordered_ops_valid() { m_ordered_ops_valid = false; }
         friend std::ostream& operator<<(std::ostream&, const Function&);
-
+        size_t get_instance_id() { return m_instance_id; }
     protected:
         std::shared_ptr<Node> m_result;
         std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;
