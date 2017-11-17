@@ -19,23 +19,26 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/codegen/compiler.hpp"
+#include "ngraph/codegen/execution_engine.hpp"
 
 using namespace std;
+using namespace ngraph;
 
 TEST(codegen, simple_return)
 {
-    constexpr auto name = "test.cpp";
     constexpr auto source = R"(extern "C" int test() { return 2+5; })";
 
-    ngraph::codegen::execution_state estate;
-    auto module = estate.compile(source, name);
+    codegen::Compiler compiler;
+    codegen::ExecutionEngine execution_engine;
+
+    auto module = compiler.compile(source);
     ASSERT_NE(nullptr, module);
 
-    estate.add_module(module);
+    execution_engine.add_module(module);
 
-    estate.finalize();
+    execution_engine.finalize();
 
-    auto func = estate.find_function<int()>("test");
+    auto func = execution_engine.find_function<int()>("test");
     ASSERT_NE(nullptr, func);
 
     int result = func();
@@ -44,18 +47,19 @@ TEST(codegen, simple_return)
 
 TEST(codegen, pass_args)
 {
-    constexpr auto name = "test.cpp";
     constexpr auto source = R"(extern "C" int test(int a, int b) { return a+b; })";
 
-    ngraph::codegen::execution_state estate;
-    auto module = estate.compile(source, name);
+    codegen::Compiler compiler;
+    codegen::ExecutionEngine execution_engine;
+
+    auto module = compiler.compile(source);
     ASSERT_NE(nullptr, module);
 
-    estate.add_module(module);
+    execution_engine.add_module(module);
 
-    estate.finalize();
+    execution_engine.finalize();
 
-    auto func = estate.find_function<int(int, int)>("test");
+    auto func = execution_engine.find_function<int(int, int)>("test");
     ASSERT_NE(nullptr, func);
 
     int result = func(20, 22);
@@ -64,7 +68,6 @@ TEST(codegen, pass_args)
 
 TEST(codegen, include)
 {
-    constexpr auto name = "test.cpp";
     constexpr auto source =
         R"(
         #include <cmath>
@@ -74,15 +77,17 @@ TEST(codegen, include)
         }
     )";
 
-    ngraph::codegen::execution_state estate;
-    auto module = estate.compile(source, name);
+    codegen::Compiler compiler;
+    codegen::ExecutionEngine execution_engine;
+
+    auto module = compiler.compile(source);
     ASSERT_NE(nullptr, module);
 
-    estate.add_module(module);
+    execution_engine.add_module(module);
 
-    estate.finalize();
+    execution_engine.finalize();
 
-    auto func = estate.find_function<int(int, int)>("test");
+    auto func = execution_engine.find_function<int(int, int)>("test");
     ASSERT_NE(nullptr, func);
 
     int result = func(20, 2);

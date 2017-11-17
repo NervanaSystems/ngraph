@@ -14,35 +14,28 @@
 
 #pragma once
 
+#include <cstddef>
 #include <memory>
-
-#include "ngraph/codegen/execution_engine.hpp"
-#include "ngraph/runtime/manager.hpp"
 
 namespace ngraph
 {
-    class Function;
-
     namespace runtime
     {
-        class ExternalFunction;
-
         namespace cpu
         {
-            /// @brief Transformer for the interpreted backend
-            class CPUManager : public Manager
-            {
-            protected:
-                ngraph::codegen::ExecutionEngine exec_state;
-
-            public:
-                virtual std::shared_ptr<Backend> allocate_backend() override;
-
-                virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
-                    compile(const std::shared_ptr<ngraph::Function>& fun) override;
-
-                static Factory factory;
-            };
-        };
+            class MemoryHandler;
+        }
     }
 }
+
+class ngraph::runtime::cpu::MemoryHandler
+{
+public:
+    MemoryHandler(size_t pool_size, size_t alignment);
+    ~MemoryHandler();
+
+    void* get_ptr(size_t offset) const { return m_aligned_buffer_pool + offset; }
+private:
+    char* m_allocated_buffer_pool;
+    char* m_aligned_buffer_pool;
+};

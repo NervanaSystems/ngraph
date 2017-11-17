@@ -1,17 +1,16 @@
-/*
- Copyright 2016 Nervana Systems Inc.
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-*/
+// ----------------------------------------------------------------------------
+// Copyright 2017 Nervana Systems Inc.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// ----------------------------------------------------------------------------
 
 #include <cassert>
 #include <dirent.h>
@@ -29,9 +28,36 @@
 #include <unistd.h>
 #include <vector>
 
-#include "file_util.hpp"
+#include "ngraph/file_util.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
+
+std::string ngraph::file_util::get_file_name(const std::string& s)
+{
+    string rc = s;
+    auto pos = s.find_last_of('/');
+    if (pos != string::npos)
+    {
+        rc = s.substr(pos + 1);
+    }
+    return rc;
+}
+
+std::string ngraph::file_util::get_file_ext(const std::string& s)
+{
+    string rc = get_file_name(s);
+    auto pos = rc.find_last_of('.');
+    if (pos != string::npos)
+    {
+        rc = rc.substr(pos);
+    }
+    else
+    {
+        rc = "";
+    }
+    return rc;
+}
 
 string ngraph::file_util::path_join(const string& s1, const string& s2)
 {
@@ -79,20 +105,22 @@ size_t ngraph::file_util::get_file_size(const string& filename)
 void ngraph::file_util::remove_directory(const string& dir)
 {
     struct stat status;
-    if (stat(dir.c_str(), &status) == -1)
+    if (stat(dir.c_str(), &status) != -1)
     {
-        return;
+        iterate_files(dir,
+                      [](const string& file, bool is_dir) {
+                          if (is_dir)
+                          {
+                              rmdir(file.c_str());
+                          }
+                          else
+                          {
+                              remove(file.c_str());
+                          }
+                      },
+                      true);
+        rmdir(dir.c_str());
     }
-
-    file_util::iterate_files(dir,
-                             [](const string& file, bool is_dir) {
-                                 if (is_dir)
-                                     rmdir(file.c_str());
-                                 else
-                                     remove(file.c_str());
-                             },
-                             true);
-    rmdir(dir.c_str());
 }
 
 void ngraph::file_util::remove_file(const string& file)
@@ -117,7 +145,7 @@ bool ngraph::file_util::make_directory(const string& dir)
 string ngraph::file_util::make_temp_directory(const string& path)
 {
     string fname = path.empty() ? file_util::get_temp_directory() : path;
-    string tmp_template = file_util::path_join(fname, "aeonXXXXXX");
+    string tmp_template = file_util::path_join(fname, "ngraph_XXXXXX");
     char* tmpname = strdup(tmp_template.c_str());
 
     mkdtemp(tmpname);
@@ -129,7 +157,7 @@ string ngraph::file_util::make_temp_directory(const string& path)
 
 std::string ngraph::file_util::get_temp_directory()
 {
-    const vector<string> potential_tmps = {"NERVANA_AEON_TMP", "TMPDIR", "TMP", "TEMP", "TEMPDIR"};
+    const vector<string> potential_tmps = {"NGRAPH_TMP", "TMPDIR", "TMP", "TEMP", "TEMPDIR"};
 
     const char* path = nullptr;
     for (const string& var : potential_tmps)
@@ -161,7 +189,7 @@ vector<char> ngraph::file_util::read_file_contents(const string& path)
         char* p = data.data();
         size_t remainder = file_size;
         size_t offset = 0;
-        while (remainder > 0)
+        while (f && remainder > 0)
         {
             size_t rc = fread(&p[offset], 1, remainder, f);
             offset += rc;
@@ -197,12 +225,16 @@ void ngraph::file_util::iterate_files(const string& path,
                                         else
                                             files.push_back(file);
                                     },
-                                    true);
+                                    recurse);
 
     for (auto f : files)
+    {
         func(f, false);
+    }
     for (auto f : dirs)
+    {
         func(f, true);
+    }
 }
 
 void ngraph::file_util::iterate_files_worker(
@@ -218,18 +250,23 @@ void ngraph::file_util::iterate_files_worker(
             switch (ent->d_type)
             {
             case DT_DIR:
-                if (recurse && name != "." && name != "..")
+                if (name != "." && name != "..")
                 {
                     string dir_path = file_util::path_join(path, name);
-                    iterate_files(dir_path, func, recurse);
+                    if (recurse)
+                    {
+                        iterate_files(dir_path, func, recurse);
+                    }
                     func(dir_path, true);
                 }
                 break;
             case DT_LNK: break;
             case DT_REG:
-                name = file_util::path_join(path, name);
-                func(name, false);
+            {
+                string file_name = file_util::path_join(path, name);
+                func(file_name, false);
                 break;
+            }
             default: break;
             }
         }

@@ -89,7 +89,7 @@ namespace ngraph
                     };
                 }
 
-                // ET element type
+                // T element type
                 // FMT array format (fmt::V for vector, etc.)
                 // BASE select array/matrix
                 template <typename T,

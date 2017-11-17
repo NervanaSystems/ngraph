@@ -94,6 +94,15 @@ namespace ngraph
                 void EMITTER_DECL(EmitAsin);
                 void EMITTER_DECL(EmitAcos);
                 void EMITTER_DECL(EmitAtan);
+
+            private:
+                void generate_call(const std::vector<TensorViewInfo>& inputs,
+                                   const std::vector<TensorViewInfo>& outputs,
+                                   std::shared_ptr<Function> function);
+
+                std::string emit_vector(const TensorViewInfo&, const std::string& name = "");
+                std::string emit_array1d(const TensorViewInfo&, const std::string& name = "");
+                std::string emit_matrix(const TensorViewInfo&, const std::string& name = "");
             };
         }
     }
