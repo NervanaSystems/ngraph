@@ -18,6 +18,8 @@
 #include <memory>
 #include <string>
 
+#include <clang/CodeGen/CodeGenAction.h>
+
 #include <llvm/ExecutionEngine/MCJIT.h> // forces JIT to link in
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/Option/Arg.h>
@@ -48,12 +50,15 @@ private:
 
 class ngraph::codegen::Compiler
 {
+    friend StaticCompiler;
+
 public:
     Compiler();
     ~Compiler();
     std::unique_ptr<llvm::Module> compile(const std::string& source);
 
 private:
+    std::unique_ptr<clang::CodeGenAction> compiler_action;
 };
 
 class ngraph::codegen::StaticCompiler : public llvm::SectionMemoryManager
@@ -67,7 +72,7 @@ public:
     void set_debuginfo_enabled(bool state) { m_debuginfo_enabled = state; }
     bool is_debuginfo_enabled() { return m_debuginfo_enabled; }
     void add_header_search_path(const std::string& path);
-    std::unique_ptr<llvm::Module> compile(const std::string& source);
+    std::unique_ptr<llvm::Module> compile(Compiler* compiler, const std::string& source);
 
 private:
     std::unique_ptr<clang::CompilerInstance> m_compiler;

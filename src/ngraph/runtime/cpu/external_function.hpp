@@ -21,6 +21,7 @@
 #include <unordered_map>
 
 #include "ngraph/codegen/compiler.hpp"
+#include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/cpu/call_frame.hpp"
 #include "ngraph/runtime/external_function.hpp"
@@ -36,9 +37,6 @@ namespace ngraph
             class Emitter;
             class CallFrame;
 
-            using FunctionMap =
-                std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<ExternalFunction>>;
-
             using OpFunction = std::function<void(Emitter*,
                                                   const ngraph::Node*,
                                                   ExternalFunction*,
@@ -47,7 +45,8 @@ namespace ngraph
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
-            class ExternalFunction : public ngraph::runtime::ExternalFunction
+            class ExternalFunction : public ngraph::runtime::ExternalFunction,
+                                     public std::enable_shared_from_this<ExternalFunction>
             {
             public:
                 ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
@@ -58,6 +57,10 @@ namespace ngraph
                 void compile();
 
                 EntryPoint m_compiled_function;
+
+            private:
+                std::unique_ptr<codegen::Compiler> compiler;
+                std::unique_ptr<codegen::ExecutionEngine> execution_engine;
             };
         }
     }

@@ -196,6 +196,8 @@ void ExternalFunction::compile()
 
 using namespace ngraph::runtime::cpu::eigen;
 
+void *__dso_handle = 0;
+
 )";
 
     TU << "// Declare all functions\n";
@@ -315,17 +317,17 @@ using namespace ngraph::runtime::cpu::eigen;
     out << code;
     out.close();
 
-    codegen::Compiler compiler;
-    codegen::ExecutionEngine execution_engine;
+    compiler.reset(new codegen::Compiler());
+    execution_engine.reset(new codegen::ExecutionEngine());
 
-    auto llvm_module = compiler.compile(code);
+    auto llvm_module = compiler->compile(code);
     if (llvm_module == nullptr)
     {
         throw runtime_error("function failed to compile");
     }
-    execution_engine.add_module(llvm_module);
-    execution_engine.finalize();
-    m_compiled_function = execution_engine.find_function<EntryPoint_t>(function_name);
+    execution_engine->add_module(llvm_module);
+    execution_engine->finalize();
+    m_compiled_function = execution_engine->find_function<EntryPoint_t>(function_name);
     assert(m_compiled_function);
 
     m_is_compiled = true;
@@ -342,5 +344,5 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
         compile();
     }
 
-    return make_shared<ngraph::runtime::cpu::CallFrame>(m_compiled_function);
+    return make_shared<ngraph::runtime::cpu::CallFrame>(shared_from_this(), m_compiled_function);
 }

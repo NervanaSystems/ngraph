@@ -76,7 +76,7 @@ Compiler::~Compiler()
 std::unique_ptr<llvm::Module> Compiler::compile(const std::string& source)
 {
     lock_guard<mutex> lock(m_mutex);
-    return s_static_compiler.compile(source);
+    return s_static_compiler.compile(this, source);
 }
 
 static std::string GetExecutablePath(const char* Argv0)
@@ -110,11 +110,10 @@ StaticCompiler::StaticCompiler()
     args.push_back(m_source_name.c_str());
 
     // Prepare DiagnosticEngine
-    DiagnosticOptions DiagOpts;
-    TextDiagnosticPrinter* textDiagPrinter = new clang::TextDiagnosticPrinter(errs(), &DiagOpts);
-    IntrusiveRefCntPtr<clang::DiagnosticIDs> pDiagIDs;
-    DiagnosticsEngine* pDiagnosticsEngine =
-        new DiagnosticsEngine(pDiagIDs, &DiagOpts, textDiagPrinter);
+    IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
+    TextDiagnosticPrinter* textDiagPrinter = new clang::TextDiagnosticPrinter(errs(), &*DiagOpts);
+    IntrusiveRefCntPtr<DiagnosticIDs> DiagID(new DiagnosticIDs());
+    DiagnosticsEngine DiagEngine(DiagID, &*DiagOpts, textDiagPrinter);
 
     // Create and initialize CompilerInstance
     m_compiler = std::unique_ptr<CompilerInstance>(new CompilerInstance());
@@ -122,7 +121,7 @@ StaticCompiler::StaticCompiler()
 
     // Initialize CompilerInvocation
     CompilerInvocation::CreateFromArgs(
-        m_compiler->getInvocation(), &args[0], &args[0] + args.size(), *pDiagnosticsEngine);
+        m_compiler->getInvocation(), &args[0], &args[0] + args.size(), DiagEngine);
 
     // Infer the builtin include path if unspecified.
     if (m_compiler->getHeaderSearchOpts().UseBuiltinIncludes &&
@@ -207,7 +206,7 @@ StaticCompiler::StaticCompiler()
     CGO.OmitLeafFramePointer = 1;
     CGO.VectorizeLoop = 1;
     CGO.VectorizeSLP = 1;
-    CGO.CXAAtExit = 0;
+    CGO.CXAAtExit = 1;
 
     if (m_debuginfo_enabled)
     {
@@ -311,7 +310,7 @@ void StaticCompiler::use_cached_files()
     }
 }
 
-std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
+std::unique_ptr<llvm::Module> StaticCompiler::compile(Compiler* compiler, const string& source)
 {
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
@@ -319,11 +318,12 @@ std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
     m_compiler->getInvocation().getPreprocessorOpts().addRemappedFile(m_source_name, buffer.get());
 
     // Create and execute action
-    CodeGenAction* compilerAction = new EmitCodeGenOnlyAction();
+    auto& compiler_action = compiler->compiler_action;
+    compiler_action.reset(new EmitCodeGenOnlyAction());
     std::unique_ptr<llvm::Module> rc;
-    if (m_compiler->ExecuteAction(*compilerAction) == true)
+    if (m_compiler->ExecuteAction(*compiler_action) == true)
     {
-        rc = compilerAction->takeModule();
+        rc = compiler_action->takeModule();
     }
 
     buffer.release();
