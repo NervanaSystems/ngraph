@@ -1472,9 +1472,9 @@ TEST(type_prop, tensor_constant_bad_parse)
         // Should have thrown, so fail if it didn't
         FAIL() << "Bad literal parse not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const runtime_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Could not parse literal"));
+        EXPECT_TRUE(string(error.what()).find("Could not parse literal") != string::npos);
     }
     catch (...)
     {
@@ -1492,9 +1492,9 @@ TEST(type_prop, tensor_constant_bad_parse_float_for_int)
         // Should have thrown, so fail if it didn't
         FAIL() << "Bad literal parse not detected";
     }
-    catch (const ngraph_error& error)
+    catch (const runtime_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Could not parse literal"));
+        EXPECT_TRUE(string(error.what()).find("Could not parse literal") != string::npos);
     }
     catch (...)
     {
