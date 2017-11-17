@@ -92,6 +92,14 @@ StaticCompiler::StaticCompiler()
     , m_debuginfo_enabled(false)
     , m_source_name("code.cpp")
 {
+#if NGCPU_PCH
+    m_precompiled_headers_enabled = true;
+#endif
+
+#if NGCPU_DEBUGINFO
+    m_debuginfo_enabled = true;
+#endif
+
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
