@@ -311,7 +311,8 @@ void StaticCompiler::use_cached_files()
 }
 
 std::unique_ptr<llvm::Module>
-    StaticCompiler::compile(std::unique_ptr<clang::CodeGenAction>& compiler_action, const string& source)
+    StaticCompiler::compile(std::unique_ptr<clang::CodeGenAction>& compiler_action,
+                            const string& source)
 {
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
