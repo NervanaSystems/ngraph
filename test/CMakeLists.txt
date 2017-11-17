@@ -66,9 +66,10 @@ endif()
 
 if(USE_CUDA)
     find_package(CUDA QUIET)
-    include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
+    include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
+    link_directories(${LLVM_LIB_DIR})
     set(SRC main.cpp cudnn.cpp)
-    # set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
+    set(BACKEND_NAMES)
 endif()
 
 foreach(BACKEND_NAME ${BACKEND_NAMES})
@@ -93,6 +94,7 @@ if(LLVM_INCLUDE_DIR)
 endif()
 
 if(CUDNN_INCLUDE_DIR)
+    target_link_libraries(unit-test ${LLVM_LINK_LIBS})
     target_link_libraries(unit-test cudnn)
 endif()
 

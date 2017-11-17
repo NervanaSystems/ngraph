@@ -99,8 +99,8 @@ if(USE_CUDA)
           "Not compiling with CUDA. Suppress this warning with -DUSE_CUDA=OFF")
           set(USE_CUDA OFF)
     else()
-    include_directories(SYSTEM ${CUDNN_INCLUDE_DIR})
-    link_directories(${CUDNN_LIB_DIR})
+    include_directories(SYSTEM ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
+    link_directories(${CUDNN_LIB_DIR} ${LLVM_LIB_DIR})
     endif()
   else()
     message(WARNING "Not compiling with CUDA. Suppress this warning with -DUSE_CUDA=OFF")
@@ -191,7 +191,7 @@ message(STATUS "LIBRARY_OUTPUT_DIRECTORY set to: ${COMMON_LIBRARY_OUTPUT_DIRECTO
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
-if(NGRAPH_CPU_ENABLE AND LLVM_LINK_LIBS)
+if((NGRAPH_CPU_ENABLE OR USE_CUDA) AND LLVM_LINK_LIBS)
     target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
 endif()
 
@@ -256,7 +256,7 @@ endif()
 
 add_dependencies(ngraph eigen)
 
-if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
+if((NGRAPH_CPU_ENABLE OR USE_CUDA) AND LLVM_INCLUDE_DIR)
     add_dependencies(ngraph ext_llvm)
 endif()
 
