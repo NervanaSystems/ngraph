@@ -60,8 +60,8 @@ ext_modules = [
         language='c++'
     ),
     Extension(
-        'wrapper.ngraph.types.clsTensorViewType',
-       ['wrapper/ngraph/types/valuetype.cpp'],
+        'wrapper.ngraph.runtime.clsTensorViewType',
+       ['wrapper/ngraph/runtime/tensor_view.cpp'],
         include_dirs=[
             # Path to pybind11 headers
             os.environ["PYBIND_HEADERS_PATH"],

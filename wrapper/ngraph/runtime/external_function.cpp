@@ -25,8 +25,7 @@ PYBIND11_PLUGIN(clsExternalFunction) {
 
     py::module mod("clsExternalFunction");
 
-    py::class_<ExternalFunction, std::shared_ptr<ExternalFunction>> clsExternalFunction(mod, "clsExternalFunction");
-    
+    py::class_<ExternalFunction, std::shared_ptr<ExternalFunction>> clsExternalFunction(mod, "ExternalFunction");
 
     return mod.ptr();
 

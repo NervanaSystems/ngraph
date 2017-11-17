@@ -1,19 +1,19 @@
 import wrapper.ngraph.types.clsTraitedType as clsTraitedType
 import wrapper.ngraph.ops.clsParameter as clsParameter
-import wrapper.ngraph.types.clsTensorViewType as clsTensorViewType
+import wrapper.ngraph.runtime.clsTensorViewType as clsTensorViewType
 import wrapper.ngraph.clsFunction as clsFunction
 import wrapper.ngraph.runtime.clsManager as clsManager
 import wrapper.ngraph.runtime.clsParameterizedTensorView as clsParameterizedTensorView
 
 element_type = clsTraitedType.TraitedTypeF.element_type()
 shape = [2,2]
-A = clsParameter.clsParameter(element_type, shape)
-B = clsParameter.clsParameter(element_type, shape)
-C = clsParameter.clsParameter(element_type, shape)
-value_type = clsTensorViewType.clsTensorViewType(element_type, shape)
+A = clsParameter.Parameter(element_type, shape)
+B = clsParameter.Parameter(element_type, shape)
+C = clsParameter.Parameter(element_type, shape)
+value_type = clsTensorViewType.TensorViewType(element_type, shape)
 parameter_list = [A, B, C]
-function = clsFunction.clsFunction((A + B) * C, value_type, parameter_list, 'test')
-manager = clsManager.clsManager.get('NGVM');
+function = clsFunction.Function((A + B) * C, value_type, parameter_list, 'test')
+manager = clsManager.Manager.get('NGVM');
 external = manager.compile(function)
 backend = manager.allocate_backend()
 cf = backend.make_call_frame(external)

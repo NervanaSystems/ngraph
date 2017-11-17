@@ -27,14 +27,16 @@ namespace runtime {
 
 PYBIND11_PLUGIN(clsManager) {
 
-    py::module::import("wrapper.ngraph.clsFunction");
-    py::module::import("wrapper.ngraph.runtime.clsExternalFunction");
-    py::module::import("wrapper.ngraph.runtime.clsBackend");
     py::module mod("clsManager");
     py::module mod_1("clsNGVMManager");
 
-    py::class_<Manager, std::shared_ptr<Manager>> clsManager(mod, "clsManager");
-    py::class_<ngvm::NGVMManager, std::shared_ptr<ngvm::NGVMManager>, Manager> clsNGVMManager(mod_1, "clsNGVMManager");
+    py::module::import("wrapper.ngraph.clsFunction");
+    py::module::import("wrapper.ngraph.runtime.clsExternalFunction");
+    py::module::import("wrapper.ngraph.runtime.clsBackend");
+
+    py::class_<Manager, std::shared_ptr<Manager>> clsManager(mod, "Manager");
+    py::class_<ngvm::NGVMManager, std::shared_ptr<ngvm::NGVMManager>, Manager> clsNGVMManager(mod_1, "NGVMManager");
+
     clsManager.def_static("get", &Manager::get);
     clsManager.def("compile", &Manager::compile);
     clsManager.def("allocate_backend", &Manager::allocate_backend);

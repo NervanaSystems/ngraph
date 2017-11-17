@@ -30,8 +30,9 @@ PYBIND11_PLUGIN(clsParameter) {
     py::module mod("clsParameter");
 
     py::module::import("wrapper.ngraph.types.clsTraitedType");
-    py::class_<Node, std::shared_ptr<Node>> clsNode(mod_1, "clsNode");
-    py::class_<op::Parameter, std::shared_ptr<op::Parameter>, Node> clsParameter(mod, "clsParameter");
+
+    py::class_<Node, std::shared_ptr<Node>> clsNode(mod_1, "Node");
+    py::class_<op::Parameter, std::shared_ptr<op::Parameter>, Node> clsParameter(mod, "Parameter");
 
     clsParameter.def(py::init<const ngraph::element::Type&, const ngraph::Shape& >());
     clsParameter.def("description", &op::Parameter::description);
