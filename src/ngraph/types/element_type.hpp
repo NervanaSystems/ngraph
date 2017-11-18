@@ -31,6 +31,12 @@
 
 namespace ngraph
 {
+    namespace runtime
+    {
+        template <typename ET>
+        class ParameterizedTensorView;
+    }
+
     namespace element
     {
         class Type

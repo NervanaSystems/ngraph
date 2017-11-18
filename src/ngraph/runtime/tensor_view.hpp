@@ -33,9 +33,6 @@ namespace ngraph
 
     namespace runtime
     {
-        template <typename ET>
-        class ParameterizedTensorView;
-
         class TensorView : public Value
         {
         protected:
