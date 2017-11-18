@@ -61,13 +61,6 @@ namespace ngraph
             using value_type = typename ET::type;
             using storage_type = std::vector<value_type>;
 
-            template <typename T>
-            ParameterizedTensorView<ET>& operator=(const std::vector<T>& value)
-            {
-                get_vector() = value;
-                return *this;
-            }
-
             // For getting the data out
             storage_type& get_vector() { return m_vector; }
             const storage_type& get_vector() const { return m_vector; }
