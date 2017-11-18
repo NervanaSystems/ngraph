@@ -21,21 +21,23 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace cpu
-        {
-            class MemoryHandler;
-        }
+        class AlignedBuffer;
     }
 }
 
-class ngraph::runtime::cpu::MemoryHandler
+class ngraph::runtime::AlignedBuffer
 {
 public:
-    MemoryHandler(size_t pool_size, size_t alignment);
-    ~MemoryHandler();
+    AlignedBuffer(size_t byte_size, size_t alignment);
+    AlignedBuffer();
+    void initialize(size_t byte_size, size_t alignment);
+    ~AlignedBuffer();
 
-    void* get_ptr(size_t offset) const { return m_aligned_buffer_pool + offset; }
+    size_t size() const { return m_byte_size; }
+    void* get_ptr(size_t offset) const { return m_aligned_buffer + offset; }
+    void* get_ptr() const { return m_aligned_buffer; }
 private:
-    char* m_allocated_buffer_pool;
-    char* m_aligned_buffer_pool;
+    char* m_allocated_buffer;
+    char* m_aligned_buffer;
+    size_t m_byte_size;
 };
