@@ -55,6 +55,7 @@ namespace ngraph
             // For getting the data out
             storage_type& get_vector() { return m_vector; }
             const storage_type& get_vector() const { return m_vector; }
+            void* get_data_ptr() { return m_vector.data(); }
             virtual void write(const void* p, size_t tensor_offset, size_t n) override
             {
                 size_t elt_offset = tensor_offset / sizeof(typename ET::type);

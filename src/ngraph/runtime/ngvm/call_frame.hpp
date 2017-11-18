@@ -64,7 +64,8 @@ namespace ngraph
                 template <typename ET>
                 typename ET::type* get_tensor_view_data(size_t i)
                 {
-                    return &get_parameterized_tensor_view<ET>(i)->get_vector()[0];
+                    return static_cast<typename ET::type*>(
+                        get_parameterized_tensor_view<ET>(i)->get_data_ptr());
                 }
 
             protected:
