@@ -967,8 +967,8 @@ void Emitter::EmitReduce(const ngraph::Node* n,
             TU.indent++;
             TU << "\n";
             TU << type << " result;\n";
-            TU << "std::vector<void*> inputs = {&x, &y};\n";
-            TU << "std::vector<void*> outputs = {&result};\n";
+            TU << "void* inputs[] = {&x, &y};\n";
+            TU << "void* outputs[] = {&result};\n";
             TU << reduction_function->get_name() << "(inputs, outputs);\n";
             TU << "return result;\n";
             TU.indent--;
@@ -1003,8 +1003,8 @@ void Emitter::EmitReduce(const ngraph::Node* n,
             TU.indent++;
             TU << "\n";
             TU << type << " result;\n";
-            TU << "std::vector<void*> inputs = {&x, &y};\n";
-            TU << "std::vector<void*> outputs = {&result};\n";
+            TU << "void* inputs[] = {&x, &y};\n";
+            TU << "void* outputs[] = {&result};\n";
             TU << reduction_function->get_name() << "(inputs, outputs);\n";
             TU << "return result;\n";
             TU.indent--;
@@ -1035,8 +1035,8 @@ void Emitter::EmitReduce(const ngraph::Node* n,
             TU.indent++;
             TU << "\n";
             TU << type << " result;\n";
-            TU << "std::vector<void*> inputs = {&x, &y};\n";
-            TU << "std::vector<void*> outputs = {&result};\n";
+            TU << "void* inputs[] = {&x, &y};\n";
+            TU << "void* outputs[] = {&result};\n";
             TU << reduction_function->get_name() << "(inputs, outputs);\n";
             TU << "return result;\n";
             TU.indent--;
@@ -1365,13 +1365,13 @@ void Emitter::generate_call(const std::vector<TensorViewInfo>& inputs,
         output_names.push_back(output.get_tensor().get_name());
     }
 
-    TU << "std::vector<void*> inputs =\n{";
+    TU << "void* inputs[] =\n{";
     TU.indent++;
     TU << "\n" << join(input_names, ",\n");
     TU.indent--;
     TU << "\n};\n";
 
-    TU << "std::vector<void*> outputs =\n{";
+    TU << "void* outputs[] =\n{";
     TU.indent++;
     TU << "\n" << join(output_names, ",\n");
     TU.indent--;
