@@ -32,7 +32,7 @@ namespace ngraph
     namespace runtime
     {
         template <typename ET>
-        class ParameterizedTensorView : public TensorView
+        class ParameterizedTensorView : public runtime::TensorView
         {
         public:
             /// Create a tensor

@@ -47,11 +47,6 @@ namespace ngraph
         public:
             virtual ~TensorView() {}
             TensorView& operator=(const TensorView&) = default;
-            template <typename ET>
-            ParameterizedTensorView<ET>* get_parameterized_tensor_view()
-            {
-                return dynamic_cast<ParameterizedTensorView<ET>*>(this);
-            }
 
             std::shared_ptr<const ngraph::descriptor::TensorView>
                 get_tensor_view_descriptor() const;

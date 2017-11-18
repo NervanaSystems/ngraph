@@ -58,7 +58,7 @@ namespace ngraph
                 template <typename ET>
                 ParameterizedTensorView<ET>* get_parameterized_tensor_view(size_t i)
                 {
-                    return m_tensor_views[i]->get_parameterized_tensor_view<ET>();
+                    return dynamic_cast<ParameterizedTensorView<ET>*>(m_tensor_views[i].get());
                 }
 
                 template <typename ET>
