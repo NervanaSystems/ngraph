@@ -23,7 +23,6 @@
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
-#include "ngraph/runtime/ndarray.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
@@ -112,11 +111,6 @@ namespace ngraph
                 }
 
                 std::memcpy(p, &m_vector[elt_offset], n);
-            }
-
-            bool operator==(const NDArrayBase<typename ET::type>& ndarray) const
-            {
-                return get_shape() == ndarray.get_shape() && get_vector() == ndarray.get_vector();
             }
 
         protected:
