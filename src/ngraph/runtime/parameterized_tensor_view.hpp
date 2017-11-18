@@ -49,9 +49,6 @@ namespace ngraph
                 m_vector.resize(m_descriptor->get_tensor_view_layout()->get_size());
             }
 
-            ParameterizedTensorView(
-                const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor);
-
             ParameterizedTensorView(const NDArrayBase<typename ET::type>& initializer)
                 : ParameterizedTensorView(initializer.get_shape())
             {
