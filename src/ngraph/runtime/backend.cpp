@@ -15,6 +15,7 @@
 #include <memory>
 
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/parameterized_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/runtime/tuple.hpp"
 #include "ngraph/types/element_type.hpp"

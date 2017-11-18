@@ -26,8 +26,6 @@
 
 #include "ngraph/common.hpp"
 #include "ngraph/except.hpp"
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
 {
