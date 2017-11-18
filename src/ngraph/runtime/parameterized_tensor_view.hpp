@@ -59,7 +59,6 @@ namespace ngraph
                 m_vector = initializer.get_vector();
             }
 
-            using element_type = ET;
             using value_type = typename ET::type;
             using storage_type = std::vector<value_type>;
 
@@ -67,14 +66,6 @@ namespace ngraph
             ParameterizedTensorView<ET>& operator=(const std::vector<T>& value)
             {
                 get_vector() = value;
-                return *this;
-            }
-
-            template <typename T>
-            ParameterizedTensorView<ET>& operator=(const NDArrayBase<T>& ndarray)
-            {
-                assert(ndarray.get_shape() == get_shape());
-                std::copy(ndarray.begin(), ndarray.end(), m_vector.begin());
                 return *this;
             }
 

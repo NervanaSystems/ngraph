@@ -46,6 +46,7 @@ namespace ngraph
 
         public:
             virtual ~TensorView() {}
+            TensorView& operator=(const TensorView&) = default;
             template <typename ET>
             ParameterizedTensorView<ET>* get_parameterized_tensor_view()
             {

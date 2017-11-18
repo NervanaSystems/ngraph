@@ -35,6 +35,7 @@ namespace ngraph
         {
         public:
             virtual ~Value() {}
+            Value& operator=(const Value&) = default;
             /// @brief The compile-time descriptor for this value.
             virtual std::shared_ptr<ngraph::descriptor::Value> get_descriptor() const = 0;
 
