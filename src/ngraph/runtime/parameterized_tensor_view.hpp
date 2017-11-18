@@ -49,12 +49,6 @@ namespace ngraph
                 m_vector.resize(m_descriptor->get_tensor_view_layout()->get_size());
             }
 
-            ParameterizedTensorView(const NDArrayBase<typename ET::type>& initializer)
-                : ParameterizedTensorView(initializer.get_shape())
-            {
-                m_vector = initializer.get_vector();
-            }
-
             using value_type = typename ET::type;
             using storage_type = std::vector<value_type>;
 
