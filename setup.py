@@ -38,6 +38,17 @@ class get_pybind_include(object):
 
 ext_modules = [
     Extension(
+        'wrapper.ngraph.clsUtil',
+        ['wrapper/ngraph/util.cpp'],
+        include_dirs=[
+            # Path to pybind11 headers
+            os.environ["PYBIND_HEADERS_PATH"],
+            get_pybind_include(),
+            get_pybind_include(user=True)
+        ],
+        language='c++'
+    ),
+    Extension(
         'wrapper.ngraph.types.clsTraitedType',
         ['wrapper/ngraph/types/element_type.cpp'],
         include_dirs=[
