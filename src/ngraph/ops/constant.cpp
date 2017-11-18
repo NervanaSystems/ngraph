@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/ops/constant.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 
@@ -21,9 +22,29 @@ namespace
     template <typename ET>
     void check_value_strings(const std::vector<std::string>& value_strings)
     {
-        auto result = ET::read(value_strings);
+        auto result = parse_string<typename ET::type>(value_strings);
     }
 }
+
+//
+// Utility macro for dispatching an element type-templated function at runtime.
+//
+
+// clang-format off
+// Sorry, but you really don't want to see what clang-format does to this thing. :)
+#define FUNCTION_ON_ELEMENT_TYPE(et, err_msg, f, ...)                                     \
+    (                                                                                     \
+        ((et) == element::Bool::element_type()) ? (f<element::Bool>(__VA_ARGS__)) :       \
+        ((et) == element::Float32::element_type()) ? (f<element::Float32>(__VA_ARGS__)) : \
+        ((et) == element::Int8::element_type()) ? (f<element::Int8>(__VA_ARGS__)) :       \
+        ((et) == element::Int32::element_type()) ? (f<element::Int32>(__VA_ARGS__)) :     \
+        ((et) == element::Int64::element_type()) ? (f<element::Int64>(__VA_ARGS__)) :     \
+        ((et) == element::UInt8::element_type()) ? (f<element::UInt8>(__VA_ARGS__)) :     \
+        ((et) == element::UInt32::element_type()) ? (f<element::UInt32>(__VA_ARGS__)) :   \
+        ((et) == element::UInt64::element_type()) ? (f<element::UInt64>(__VA_ARGS__)) :   \
+        (throw ngraph_error(err_msg))                                                     \
+    )
+// clang-format on
 
 op::Constant::Constant(const element::Type& et,
                        const Shape& shape,
