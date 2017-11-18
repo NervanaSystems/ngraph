@@ -55,14 +55,12 @@ static std::string eigen_matrix_format(const ngraph::Shape& shape, const ngraph:
 }
 
 void Emitter::EmitNop(const ngraph::Node* n,
-                      ExternalFunction* ef,
                       const std::vector<TensorViewInfo>& inputs,
                       const std::vector<TensorViewInfo>& outputs)
 {
 }
 
 void Emitter::EmitAdd(const ngraph::Node* n,
-                      ExternalFunction* ef,
                       const std::vector<TensorViewInfo>& inputs,
                       const std::vector<TensorViewInfo>& outputs)
 {
@@ -77,7 +75,6 @@ void Emitter::EmitAdd(const ngraph::Node* n,
 }
 
 void Emitter::EmitDot(const ngraph::Node* n,
-                      ExternalFunction* ef,
                       const std::vector<TensorViewInfo>& inputs,
                       const std::vector<TensorViewInfo>& outputs)
 {
@@ -171,7 +168,6 @@ void Emitter::EmitDot(const ngraph::Node* n,
 }
 
 void Emitter::EmitMultiply(const ngraph::Node* n,
-                           ExternalFunction* ef,
                            const std::vector<TensorViewInfo>& inputs,
                            const std::vector<TensorViewInfo>& outputs)
 {
@@ -190,7 +186,6 @@ void Emitter::EmitMultiply(const ngraph::Node* n,
 }
 
 void Emitter::EmitGetTupleElement(const ngraph::Node* n,
-                                  ExternalFunction* ef,
                                   const std::vector<TensorViewInfo>& inputs,
                                   const std::vector<TensorViewInfo>& outputs)
 {
@@ -212,7 +207,6 @@ void Emitter::EmitGetTupleElement(const ngraph::Node* n,
 }
 
 void Emitter::EmitTuple(const ngraph::Node* n,
-                        ExternalFunction* ef,
                         const std::vector<TensorViewInfo>& inputs,
                         const std::vector<TensorViewInfo>& outputs)
 {
@@ -238,7 +232,6 @@ void Emitter::EmitTuple(const ngraph::Node* n,
 }
 
 void Emitter::EmitAbs(const ngraph::Node* n,
-                      ExternalFunction* ef,
                       const std::vector<TensorViewInfo>& inputs,
                       const std::vector<TensorViewInfo>& outputs)
 {
@@ -251,7 +244,6 @@ void Emitter::EmitAbs(const ngraph::Node* n,
 }
 
 void Emitter::EmitConcat(const ngraph::Node* n,
-                         ExternalFunction* ef,
                          const std::vector<TensorViewInfo>& inputs,
                          const std::vector<TensorViewInfo>& outputs)
 {
@@ -305,7 +297,6 @@ void Emitter::EmitConcat(const ngraph::Node* n,
 }
 
 void Emitter::EmitDivide(const ngraph::Node* n,
-                         ExternalFunction* ef,
                          const std::vector<TensorViewInfo>& inputs,
                          const std::vector<TensorViewInfo>& outputs)
 {
@@ -319,7 +310,6 @@ void Emitter::EmitDivide(const ngraph::Node* n,
 }
 
 void Emitter::EmitEqual(const ngraph::Node* n,
-                        ExternalFunction* ef,
                         const std::vector<TensorViewInfo>& inputs,
                         const std::vector<TensorViewInfo>& outputs)
 {
@@ -333,7 +323,6 @@ void Emitter::EmitEqual(const ngraph::Node* n,
 }
 
 void Emitter::EmitGreater(const ngraph::Node* n,
-                          ExternalFunction* ef,
                           const std::vector<TensorViewInfo>& inputs,
                           const std::vector<TensorViewInfo>& outputs)
 {
@@ -347,7 +336,6 @@ void Emitter::EmitGreater(const ngraph::Node* n,
 }
 
 void Emitter::EmitGreaterEq(const ngraph::Node* n,
-                            ExternalFunction* ef,
                             const std::vector<TensorViewInfo>& inputs,
                             const std::vector<TensorViewInfo>& outputs)
 {
@@ -361,7 +349,6 @@ void Emitter::EmitGreaterEq(const ngraph::Node* n,
 }
 
 void Emitter::EmitLess(const ngraph::Node* n,
-                       ExternalFunction* ef,
                        const std::vector<TensorViewInfo>& inputs,
                        const std::vector<TensorViewInfo>& outputs)
 {
@@ -375,7 +362,6 @@ void Emitter::EmitLess(const ngraph::Node* n,
 }
 
 void Emitter::EmitLessEq(const ngraph::Node* n,
-                         ExternalFunction* ef,
                          const std::vector<TensorViewInfo>& inputs,
                          const std::vector<TensorViewInfo>& outputs)
 {
@@ -389,7 +375,6 @@ void Emitter::EmitLessEq(const ngraph::Node* n,
 }
 
 void Emitter::EmitLog(const ngraph::Node* n,
-                      ExternalFunction* ef,
                       const std::vector<TensorViewInfo>& inputs,
                       const std::vector<TensorViewInfo>& outputs)
 {
@@ -402,7 +387,6 @@ void Emitter::EmitLog(const ngraph::Node* n,
 }
 
 void Emitter::EmitMaximum(const ngraph::Node* n,
-                          ExternalFunction* ef,
                           const std::vector<TensorViewInfo>& inputs,
                           const std::vector<TensorViewInfo>& outputs)
 {
@@ -416,7 +400,6 @@ void Emitter::EmitMaximum(const ngraph::Node* n,
 }
 
 void Emitter::EmitMinimum(const ngraph::Node* n,
-                          ExternalFunction* ef,
                           const std::vector<TensorViewInfo>& inputs,
                           const std::vector<TensorViewInfo>& outputs)
 {
@@ -430,7 +413,6 @@ void Emitter::EmitMinimum(const ngraph::Node* n,
 }
 
 void Emitter::EmitNegative(const ngraph::Node* n,
-                           ExternalFunction* ef,
                            const std::vector<TensorViewInfo>& inputs,
                            const std::vector<TensorViewInfo>& outputs)
 {
@@ -443,7 +425,6 @@ void Emitter::EmitNegative(const ngraph::Node* n,
 }
 
 void Emitter::EmitNotEqual(const ngraph::Node* n,
-                           ExternalFunction* ef,
                            const std::vector<TensorViewInfo>& inputs,
                            const std::vector<TensorViewInfo>& outputs)
 {
@@ -457,7 +438,6 @@ void Emitter::EmitNotEqual(const ngraph::Node* n,
 }
 
 void Emitter::EmitSelect(const ngraph::Node* n,
-                         ExternalFunction* ef,
                          const std::vector<TensorViewInfo>& inputs,
                          const std::vector<TensorViewInfo>& outputs)
 {
@@ -472,7 +452,6 @@ void Emitter::EmitSelect(const ngraph::Node* n,
 }
 
 void Emitter::EmitSubtract(const ngraph::Node* n,
-                           ExternalFunction* ef,
                            const std::vector<TensorViewInfo>& inputs,
                            const std::vector<TensorViewInfo>& outputs)
 {
@@ -486,7 +465,6 @@ void Emitter::EmitSubtract(const ngraph::Node* n,
 }
 
 void Emitter::EmitParameterizedConstantBool(const ngraph::Node* n,
-                                            ExternalFunction* ef,
                                             const std::vector<TensorViewInfo>& inputs,
                                             const std::vector<TensorViewInfo>& outputs)
 {
@@ -507,7 +485,6 @@ void Emitter::EmitParameterizedConstantBool(const ngraph::Node* n,
 }
 
 void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
-                                               ExternalFunction* ef,
                                                const std::vector<TensorViewInfo>& inputs,
                                                const std::vector<TensorViewInfo>& outputs)
 {
@@ -528,7 +505,6 @@ void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
 }
 
 void Emitter::EmitParameterizedConstantInt8(const ngraph::Node* n,
-                                            ExternalFunction* ef,
                                             const std::vector<TensorViewInfo>& inputs,
                                             const std::vector<TensorViewInfo>& outputs)
 {
@@ -549,7 +525,6 @@ void Emitter::EmitParameterizedConstantInt8(const ngraph::Node* n,
 }
 
 void Emitter::EmitParameterizedConstantInt32(const ngraph::Node* n,
-                                             ExternalFunction* ef,
                                              const std::vector<TensorViewInfo>& inputs,
                                              const std::vector<TensorViewInfo>& outputs)
 {
@@ -570,7 +545,6 @@ void Emitter::EmitParameterizedConstantInt32(const ngraph::Node* n,
 }
 
 void Emitter::EmitParameterizedConstantInt64(const ngraph::Node* n,
-                                             ExternalFunction* ef,
                                              const std::vector<TensorViewInfo>& inputs,
                                              const std::vector<TensorViewInfo>& outputs)
 {
@@ -591,7 +565,6 @@ void Emitter::EmitParameterizedConstantInt64(const ngraph::Node* n,
 }
 
 void Emitter::EmitParameterizedConstantUInt8(const ngraph::Node* n,
-                                             ExternalFunction* ef,
                                              const std::vector<TensorViewInfo>& inputs,
                                              const std::vector<TensorViewInfo>& outputs)
 {
@@ -612,7 +585,6 @@ void Emitter::EmitParameterizedConstantUInt8(const ngraph::Node* n,
 }
 
 void Emitter::EmitParameterizedConstantUInt32(const ngraph::Node* n,
-                                              ExternalFunction* ef,
                                               const std::vector<TensorViewInfo>& inputs,
                                               const std::vector<TensorViewInfo>& outputs)
 {
@@ -633,7 +605,6 @@ void Emitter::EmitParameterizedConstantUInt32(const ngraph::Node* n,
 }
 
 void Emitter::EmitParameterizedConstantUInt64(const ngraph::Node* n,
-                                              ExternalFunction* ef,
                                               const std::vector<TensorViewInfo>& inputs,
                                               const std::vector<TensorViewInfo>& outputs)
 {
@@ -654,7 +625,6 @@ void Emitter::EmitParameterizedConstantUInt64(const ngraph::Node* n,
 }
 
 void Emitter::EmitBroadcast(const ngraph::Node* n,
-                            ExternalFunction* ef,
                             const std::vector<TensorViewInfo>& inputs,
                             const std::vector<TensorViewInfo>& outputs)
 {
@@ -729,7 +699,6 @@ void Emitter::EmitBroadcast(const ngraph::Node* n,
 }
 
 void Emitter::EmitConvert(const ngraph::Node* n,
-                          ExternalFunction* ef,
                           const std::vector<TensorViewInfo>& inputs,
                           const std::vector<TensorViewInfo>& outputs)
 {
@@ -753,7 +722,6 @@ void Emitter::EmitConvert(const ngraph::Node* n,
 }
 
 void Emitter::EmitConstant(const ngraph::Node* n,
-                           ExternalFunction* ef,
                            const std::vector<TensorViewInfo>& inputs,
                            const std::vector<TensorViewInfo>& outputs)
 {
@@ -775,7 +743,6 @@ void Emitter::EmitConstant(const ngraph::Node* n,
 }
 
 void Emitter::EmitReshape(const ngraph::Node* n,
-                          ExternalFunction* ef,
                           const std::vector<TensorViewInfo>& inputs,
                           const std::vector<TensorViewInfo>& outputs)
 {
@@ -858,7 +825,6 @@ void Emitter::EmitReshape(const ngraph::Node* n,
 }
 
 void Emitter::EmitFunctionCall(const ngraph::Node* n,
-                               ExternalFunction* ef,
                                const std::vector<TensorViewInfo>& inputs,
                                const std::vector<TensorViewInfo>& outputs)
 {
@@ -879,7 +845,6 @@ void Emitter::EmitFunctionCall(const ngraph::Node* n,
 // to what's seen there (for now atleast)
 
 void Emitter::EmitReduce(const ngraph::Node* n,
-                         ExternalFunction* ef,
                          const std::vector<TensorViewInfo>& inputs,
                          const std::vector<TensorViewInfo>& outputs)
 {
@@ -1054,7 +1019,6 @@ void Emitter::EmitReduce(const ngraph::Node* n,
 }
 
 void Emitter::EmitSign(const ngraph::Node* n,
-                       ExternalFunction* ef,
                        const std::vector<TensorViewInfo>& inputs,
                        const std::vector<TensorViewInfo>& outputs)
 {
@@ -1067,7 +1031,6 @@ void Emitter::EmitSign(const ngraph::Node* n,
 }
 
 void Emitter::EmitSlice(const ngraph::Node* n,
-                        ExternalFunction* ef,
                         const std::vector<TensorViewInfo>& inputs,
                         const std::vector<TensorViewInfo>& outputs)
 {
@@ -1137,7 +1100,6 @@ void Emitter::EmitSlice(const ngraph::Node* n,
 }
 
 void Emitter::EmitSum(const ngraph::Node* n,
-                      ExternalFunction* ef,
                       const std::vector<TensorViewInfo>& inputs,
                       const std::vector<TensorViewInfo>& outputs)
 {
@@ -1208,7 +1170,6 @@ void Emitter::EmitSum(const ngraph::Node* n,
 }
 
 void Emitter::EmitExp(const ngraph::Node* n,
-                      ExternalFunction* ef,
                       const std::vector<TensorViewInfo>& inputs,
                       const std::vector<TensorViewInfo>& outputs)
 {
@@ -1221,7 +1182,6 @@ void Emitter::EmitExp(const ngraph::Node* n,
 }
 
 void Emitter::EmitSin(const ngraph::Node* n,
-                      ExternalFunction* ef,
                       const std::vector<TensorViewInfo>& inputs,
                       const std::vector<TensorViewInfo>& outputs)
 {
@@ -1234,7 +1194,6 @@ void Emitter::EmitSin(const ngraph::Node* n,
 }
 
 void Emitter::EmitSinh(const ngraph::Node* n,
-                       ExternalFunction* ef,
                        const std::vector<TensorViewInfo>& inputs,
                        const std::vector<TensorViewInfo>& outputs)
 {
@@ -1247,7 +1206,6 @@ void Emitter::EmitSinh(const ngraph::Node* n,
 }
 
 void Emitter::EmitCos(const ngraph::Node* n,
-                      ExternalFunction* ef,
                       const std::vector<TensorViewInfo>& inputs,
                       const std::vector<TensorViewInfo>& outputs)
 {
@@ -1260,7 +1218,6 @@ void Emitter::EmitCos(const ngraph::Node* n,
 }
 
 void Emitter::EmitCosh(const ngraph::Node* n,
-                       ExternalFunction* ef,
                        const std::vector<TensorViewInfo>& inputs,
                        const std::vector<TensorViewInfo>& outputs)
 {
@@ -1273,7 +1230,6 @@ void Emitter::EmitCosh(const ngraph::Node* n,
 }
 
 void Emitter::EmitTan(const ngraph::Node* n,
-                      ExternalFunction* ef,
                       const std::vector<TensorViewInfo>& inputs,
                       const std::vector<TensorViewInfo>& outputs)
 {
@@ -1286,7 +1242,6 @@ void Emitter::EmitTan(const ngraph::Node* n,
 }
 
 void Emitter::EmitTanh(const ngraph::Node* n,
-                       ExternalFunction* ef,
                        const std::vector<TensorViewInfo>& inputs,
                        const std::vector<TensorViewInfo>& outputs)
 {
@@ -1306,7 +1261,6 @@ void Emitter::EmitTanh(const ngraph::Node* n,
 }
 
 void Emitter::EmitAsin(const ngraph::Node* n,
-                       ExternalFunction* ef,
                        const std::vector<TensorViewInfo>& inputs,
                        const std::vector<TensorViewInfo>& outputs)
 {
@@ -1319,7 +1273,6 @@ void Emitter::EmitAsin(const ngraph::Node* n,
 }
 
 void Emitter::EmitAcos(const ngraph::Node* n,
-                       ExternalFunction* ef,
                        const std::vector<TensorViewInfo>& inputs,
                        const std::vector<TensorViewInfo>& outputs)
 {
@@ -1332,7 +1285,6 @@ void Emitter::EmitAcos(const ngraph::Node* n,
 }
 
 void Emitter::EmitAtan(const ngraph::Node* n,
-                       ExternalFunction* ef,
                        const std::vector<TensorViewInfo>& inputs,
                        const std::vector<TensorViewInfo>& outputs)
 {

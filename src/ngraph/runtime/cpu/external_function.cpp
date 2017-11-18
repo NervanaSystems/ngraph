@@ -292,7 +292,7 @@ using namespace ngraph::runtime::cpu::eigen;
                 auto tv = output.get_tensor_view();
                 out.push_back({0, tv});
             }
-            handler->second(&emitter, node.get(), this, in, out);
+            handler->second(&emitter, node.get(), in, out);
         }
 
         TU.indent--;
