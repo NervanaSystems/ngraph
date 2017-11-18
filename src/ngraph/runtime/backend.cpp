@@ -24,7 +24,44 @@ using namespace ngraph::runtime;
 std::shared_ptr<TensorView>
     Backend::make_primary_tensor_view(const ngraph::element::Type& element_type, const Shape& shape)
 {
-    return element_type.make_primary_tensor_view(shape);
+    std::shared_ptr<TensorView> rc;
+    if (element_type == element::Bool::element_type())
+    {
+        rc = std::make_shared<ParameterizedTensorView<element::Bool>>(shape);
+    }
+    else if (element_type == element::Float32::element_type())
+    {
+        rc = std::make_shared<ParameterizedTensorView<element::Float32>>(shape);
+    }
+    else if (element_type == element::Float64::element_type())
+    {
+        rc = std::make_shared<ParameterizedTensorView<element::Float64>>(shape);
+    }
+    else if (element_type == element::Int8::element_type())
+    {
+        rc = std::make_shared<ParameterizedTensorView<element::Int8>>(shape);
+    }
+    else if (element_type == element::Int32::element_type())
+    {
+        rc = std::make_shared<ParameterizedTensorView<element::Int32>>(shape);
+    }
+    else if (element_type == element::Int64::element_type())
+    {
+        rc = std::make_shared<ParameterizedTensorView<element::Int64>>(shape);
+    }
+    else if (element_type == element::UInt8::element_type())
+    {
+        rc = std::make_shared<ParameterizedTensorView<element::UInt8>>(shape);
+    }
+    else if (element_type == element::UInt32::element_type())
+    {
+        rc = std::make_shared<ParameterizedTensorView<element::UInt32>>(shape);
+    }
+    else if (element_type == element::UInt64::element_type())
+    {
+        rc = std::make_shared<ParameterizedTensorView<element::UInt64>>(shape);
+    }
+    return rc;
 }
 
 std::shared_ptr<ngraph::runtime::Tuple>

@@ -56,9 +56,6 @@ namespace ngraph
                 return h(m_cname);
             }
 
-            virtual std::shared_ptr<ngraph::runtime::TensorView>
-                make_primary_tensor_view(const Shape& shape) const = 0;
-
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
             friend std::ostream& operator<<(std::ostream&, const Type&);
@@ -116,12 +113,6 @@ namespace ngraph
             {
                 static TraitedType<T> t;
                 return t;
-            }
-
-            virtual std::shared_ptr<ngraph::runtime::TensorView>
-                make_primary_tensor_view(const ngraph::Shape& shape) const override
-            {
-                return std::make_shared<runtime::ParameterizedTensorView<TraitedType<T>>>(shape);
             }
         };
 
