@@ -35,7 +35,10 @@ class get_pybind_include(object):
         import pybind11
         return pybind11.get_include(self.user)
 
-
+requirements = [
+    "numpy",
+    "pybind11",
+]
 include_dirs = [# Path to pybind11 headers
                 os.environ["PYBIND_HEADERS_PATH"],
                 get_pybind_include(),
@@ -107,18 +110,24 @@ class BuildExt(build_ext):
     def build_extensions(self):
         ct = self.compiler.compiler_type
         opts = self.c_opts.get(ct, [])
-        opts.append('-I')
-        opts.append(os.environ['NGRAPH_CPP_BUILD_PATH'])
-        if ct == 'unix':
-            opts.append('-DVERSION_INFO="%s"' % self.distribution.get_version())
-            opts.append(cpp_flag(self.compiler))
-            if has_flag(self.compiler, '-fvisibility=hidden'):
-                opts.append('-fvisibility=hidden')
-        elif ct == 'msvc':
-            opts.append('/DVERSION_INFO=\\"%s\\"' % self.distribution.get_version())
-        for ext in self.extensions:
-            ext.extra_compile_args = opts
-        build_ext.build_extensions(self)
+        if "NGRAPH_CPP_BUILD_PATH" in os.environ:
+            NGRAPH_CPP_INSTALL_PATH = os.environ["NGRAPH_CPP_BUILD_PATH"]
+            opts.append('-I')
+            opts.append('%s/include'%(NGRAPH_CPP_INSTALL_PATH))
+            if ct == 'unix':
+                opts.append('-DVERSION_INFO="%s"' % self.distribution.get_version())
+                opts.append(cpp_flag(self.compiler))
+                if has_flag(self.compiler, '-fvisibility=hidden'):
+                    opts.append('-fvisibility=hidden')
+            elif ct == 'msvc':
+                opts.append('/DVERSION_INFO=\\"%s\\"' % self.distribution.get_version())
+            for ext in self.extensions:
+                ext.library_dirs = ['%s/lib'%(NGRAPH_CPP_INSTALL_PATH)]
+                ext.extra_compile_args = opts
+                ext.extra_link_args = ["-shared", "-lngraph", "-Wl,-rpath,%s/lib"%(NGRAPH_CPP_INSTALL_PATH)]
+            build_ext.build_extensions(self)
+        else:
+            print("NGRAPH_CPP_BUILD_PATH, not defined")
 
 
 setup(
@@ -130,7 +139,7 @@ setup(
     description='A test project using pybind11',
     long_description='',
     ext_modules=ext_modules,
-    install_requires=['pybind11>=2.2'],
+    install_requires=requirements,
     cmdclass={'build_ext': BuildExt},
     zip_safe=False,
 )
