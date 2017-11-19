@@ -42,24 +42,67 @@ namespace ngraph
             const std::shared_ptr<runtime::Manager>& manager,
             const std::shared_ptr<runtime::Backend>& backend,
             const std::shared_ptr<Function>& f,
-            const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>>& args);
+            const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>>& args)
+        {
+            auto y = f->get_result();
+            Shape y_shape =
+                std::dynamic_pointer_cast<const TensorViewType>(y->get_value_type())->get_shape();
 
-        extern template std::vector<
-            std::shared_ptr<runtime::ParameterizedTensorView<ngraph::element::Float32>>>
-            backprop_derivative<ngraph::element::Float32>(
-                const std::shared_ptr<runtime::Manager>& manager,
-                const std::shared_ptr<runtime::Backend>& backend,
-                const std::shared_ptr<Function>& f,
-                const std::vector<
-                    std::shared_ptr<runtime::ParameterizedTensorView<element::Float32>>>& args);
+            auto c_param = std::make_shared<op::Parameter>(ET::element_type(), y_shape);
+            auto c_arg = backend->make_parameterized_tensor_view<ET>(y_shape);
+            auto params = f->get_parameters();
 
-        extern template std::vector<
-            std::shared_ptr<runtime::ParameterizedTensorView<ngraph::element::Float64>>>
-            backprop_derivative<ngraph::element::Float64>(
-                const std::shared_ptr<runtime::Manager>& manager,
-                const std::shared_ptr<runtime::Backend>& backend,
-                const std::shared_ptr<Function>& f,
-                const std::vector<
-                    std::shared_ptr<runtime::ParameterizedTensorView<element::Float64>>>& args);
+            std::vector<std::shared_ptr<Node>> deriv_nodes;
+            std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>> bprops;
+            std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>> results;
+            for (auto param : params)
+            {
+                Shape s = y_shape;
+                auto param_shape =
+                    std::dynamic_pointer_cast<const TensorViewType>(param->get_value_type())
+                        ->get_shape();
+                s.insert(s.end(), param_shape.begin(), param_shape.end());
+                results.push_back(backend->make_parameterized_tensor_view<ET>(s));
+                bprops.push_back(backend->make_parameterized_tensor_view<ET>(param_shape));
+                deriv_nodes.push_back(y->backprop_node(param, c_param));
+            }
+
+            std::vector<std::shared_ptr<op::Parameter>> df_params = params;
+            df_params.push_back(c_param);
+            auto df_result = std::make_shared<op::Tuple>(deriv_nodes);
+            auto df = std::make_shared<Function>(df_result, df_result->get_value_type(), df_params);
+
+            auto external = manager->compile(df);
+            auto cf = backend->make_call_frame(external);
+
+            // We compute the derivatives chunk by chunk
+            std::vector<typename std::vector<typename ET::type>::iterator> result_pos;
+            for (auto result : results)
+            {
+                result_pos.push_back(result->get_vector().begin());
+            }
+
+            ngraph::runtime::TensorViewPtrs args_tv;
+            args_tv.insert(args_tv.begin(), args.begin(), args.end());
+            args_tv.push_back(c_arg);
+
+            runtime::TensorViewPtrs bprops_tv;
+            bprops_tv.insert(bprops_tv.begin(), bprops.begin(), bprops.end());
+
+            auto& c_vec = c_arg->get_vector();
+            for (size_t i = 0; i < c_vec.size(); i++)
+            {
+                c_vec[i] = 1;
+                cf->tensor_call(args_tv, bprops_tv);
+                c_vec[i] = 0;
+                for (size_t j = 0; j < results.size(); j++)
+                {
+                    auto& bprop_vec = bprops[j]->get_vector();
+                    result_pos[j] = std::copy(bprop_vec.begin(), bprop_vec.end(), result_pos[j]);
+                }
+            }
+
+            return results;
+        }
     }
 }
