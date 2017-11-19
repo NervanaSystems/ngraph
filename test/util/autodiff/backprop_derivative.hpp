@@ -16,8 +16,10 @@
 
 #include <memory>
 
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/parameterized_tensor_view.hpp"
 #include "ngraph/types/element_type.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -77,9 +79,11 @@ namespace ngraph
 
             // We compute the derivatives chunk by chunk
             std::vector<typename std::vector<typename ET::type>::iterator> result_pos;
+            std::vector<std::vector<typename ET::type>> result_vect;
             for (auto result : results)
             {
-                result_pos.push_back(result->get_vector().begin());
+                result_vect.push_back(result->get_vector()); // storage for results
+                result_pos.push_back(result_vect.back().begin());
             }
 
             ngraph::runtime::TensorViewPtrs args_tv;
@@ -89,19 +93,26 @@ namespace ngraph
             runtime::TensorViewPtrs bprops_tv;
             bprops_tv.insert(bprops_tv.begin(), bprops.begin(), bprops.end());
 
-            auto& c_vec = c_arg->get_vector();
+            auto c_vec = c_arg->get_vector();
             for (size_t i = 0; i < c_vec.size(); i++)
             {
                 c_vec[i] = 1;
+                c_arg->write(c_vec);
                 cf->tensor_call(args_tv, bprops_tv);
                 c_vec[i] = 0;
+                c_arg->write(c_vec);
                 for (size_t j = 0; j < results.size(); j++)
                 {
-                    auto& bprop_vec = bprops[j]->get_vector();
+                    auto bprop_vec = bprops[j]->get_vector();
                     result_pos[j] = std::copy(bprop_vec.begin(), bprop_vec.end(), result_pos[j]);
                 }
             }
 
+            // Copy results from temp to result vector
+            for (size_t j = 0; j < results.size(); j++)
+            {
+                results[j]->write(result_vect[j]);
+            }
             return results;
         }
     }
