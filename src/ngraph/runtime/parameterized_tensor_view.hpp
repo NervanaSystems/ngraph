@@ -77,6 +77,12 @@ namespace ngraph
                 std::memcpy(&m_vector[elt_offset], p, n);
             }
 
+            template <typename T>
+            void write(const std::vector<T>& values)
+            {
+                write(values.data(), 0, values.size() * sizeof(T));
+            }
+
             virtual void read(void* p, size_t tensor_offset, size_t n) const override
             {
                 size_t elt_offset = tensor_offset / sizeof(typename ET::type);

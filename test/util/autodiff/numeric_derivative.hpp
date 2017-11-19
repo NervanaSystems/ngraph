@@ -82,14 +82,16 @@ namespace ngraph
             for (size_t i = 0; i < args.size(); ++i)
             {
                 auto arg = args[i];
-                auto& res = results[i]->get_vector();
-                auto& vec = arg->get_vector();
+                auto res = results[i]->get_vector();
+                auto vec = arg->get_vector();
                 for (size_t j = 0; j < vec.size(); j++)
                 {
                     auto old_val = vec[j];
                     vec[j] += delta;
+                    arg->write(vec);
                     cf->tensor_call(args_tv, {inc_y});
                     vec[j] = old_val;
+                    arg->write(vec);
                     size_t res_k = j;
                     for (size_t k = 0; k < inc_vec.size(); k++)
                     {
@@ -99,6 +101,7 @@ namespace ngraph
                         res_k += vec.size();
                     }
                 }
+                results[i]->write(res);
             }
             return results;
         }
