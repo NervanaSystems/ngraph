@@ -14,28 +14,33 @@
 
 #pragma once
 
+#include <cstddef>
 #include <memory>
-#include <vector>
-
-#include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/function.hpp"
 
 namespace ngraph
 {
-    namespace descriptor
+    namespace runtime
     {
-        // Describes the frame that will be used when a function is executing
-        class CallFrame
-        {
-        protected:
-            Function m_function;
-
-            // Will be provided by the caller
-            std::vector<std::shared_ptr<TensorView>> m_inputs;
-            std::vector<std::shared_ptr<TensorView>> m_outputs;
-            // Will be provided by the call mechanism
-            // Expect there to be only one buffer
-            std::vector<std::shared_ptr<Buffer>> m_buffers;
-        };
+        class AlignedBuffer;
     }
 }
+
+/// @brief Allocates a block of memory on the specified alignment. The actual size of the
+/// allocated memory is larger than the requested size by the alignment, so allocating 1 byte
+/// on 64 byte alignment will allocate 65 bytes.
+class ngraph::runtime::AlignedBuffer
+{
+public:
+    AlignedBuffer(size_t byte_size, size_t alignment);
+    AlignedBuffer();
+    void initialize(size_t byte_size, size_t alignment);
+    ~AlignedBuffer();
+
+    size_t size() const { return m_byte_size; }
+    void* get_ptr(size_t offset) const { return m_aligned_buffer + offset; }
+    void* get_ptr() const { return m_aligned_buffer; }
+private:
+    char* m_allocated_buffer;
+    char* m_aligned_buffer;
+    size_t m_byte_size;
+};
