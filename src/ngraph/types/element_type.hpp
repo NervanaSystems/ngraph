@@ -44,7 +44,7 @@ namespace ngraph
 
         public:
             virtual ~Type() {}
-            Type(size_t bitwidth, bool is_float, bool is_signed, const std::string& cname);
+            Type(size_t bitwidth, bool is_real, bool is_signed, const std::string& cname);
 
             const std::string& c_type_string() const;
             size_t size() const;
@@ -61,11 +61,12 @@ namespace ngraph
         private:
             static std::map<std::string, Type> m_element_list;
             size_t m_bitwidth;
-            bool m_is_float;
+            bool m_is_real;
             bool m_is_signed;
             const std::string m_cname;
         };
 
+        extern const Type boolean;
         extern const Type f32;
         extern const Type f64;
         extern const Type i8;
