@@ -309,12 +309,10 @@ std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
 {
     if (!m_precompiled_header_valid && m_precomiled_header_source.empty() == false)
     {
-        NGRAPH_INFO << m_precomiled_header_source;
         generate_pch(m_precomiled_header_source);
     }
     if (m_precompiled_header_valid)
     {
-        NGRAPH_INFO;
         // Preprocessor options
         auto& PPO = m_compiler->getInvocation().getPreprocessorOpts();
         PPO.ImplicitPCHInclude = m_pch_path;
@@ -343,7 +341,6 @@ std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
 
 void StaticCompiler::generate_pch(const string& source)
 {
-    NGRAPH_INFO;
     m_pch_path = file_util::path_join(file_util::get_temp_directory(), "ngraph.pch");
     m_compiler->getFrontendOpts().OutputFile = m_pch_path;
 
@@ -356,7 +353,6 @@ void StaticCompiler::generate_pch(const string& source)
     clang::GeneratePCHAction* compilerAction = new clang::GeneratePCHAction();
     if (m_compiler->ExecuteAction(*compilerAction) == true)
     {
-        NGRAPH_INFO;
         m_precompiled_header_valid = true;
     }
 
