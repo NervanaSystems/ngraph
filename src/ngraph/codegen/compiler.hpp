@@ -51,6 +51,7 @@ class ngraph::codegen::Compiler
 public:
     Compiler();
     ~Compiler();
+    void set_precomiled_header_source(const std::string& source);
     std::unique_ptr<llvm::Module> compile(const std::string& source);
 
 private:
