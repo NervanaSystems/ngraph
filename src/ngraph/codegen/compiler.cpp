@@ -89,14 +89,10 @@ static std::string GetExecutablePath(const char* Argv0)
 }
 
 StaticCompiler::StaticCompiler()
-    : m_precompiled_headers_enabled(false)
+    : m_precompiled_header_valid(false)
     , m_debuginfo_enabled(false)
     , m_source_name("code.cpp")
 {
-#if NGCPU_PCH
-    m_precompiled_headers_enabled = true;
-#endif
-
 #if NGCPU_DEBUGINFO
     m_debuginfo_enabled = true;
 #endif
@@ -215,17 +211,6 @@ StaticCompiler::StaticCompiler()
         CGO.setDebugInfo(codegenoptions::FullDebugInfo);
     }
 
-    // if (!m_precompiled_header_valid)
-    // {
-    // }
-    if (m_precompiled_header_valid)
-    {
-        // Preprocessor options
-        auto& PPO = m_compiler->getInvocation().getPreprocessorOpts();
-        PPO.ImplicitPCHInclude = "ngcpu.pch";
-        PPO.DisablePCHValidation = 1;
-    }
-
     // Enable various target features
     // Most of these are for Eigen
     auto& TO = m_compiler->getInvocation().getTargetOpts();
@@ -317,7 +302,19 @@ void StaticCompiler::use_cached_files()
 
 std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
 {
-    generate_pch(source);
+    if (!m_precompiled_header_valid && m_precomiled_header_source.empty() == false)
+    {
+        NGRAPH_INFO << m_precomiled_header_source;
+        generate_pch(m_precomiled_header_source);
+    }
+    if (m_precompiled_header_valid)
+    {
+        NGRAPH_INFO;
+        // Preprocessor options
+        auto& PPO = m_compiler->getInvocation().getPreprocessorOpts();
+        PPO.ImplicitPCHInclude = m_pch_path;
+        PPO.DisablePCHValidation = 1;
+    }
 
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
@@ -342,8 +339,8 @@ std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
 void StaticCompiler::generate_pch(const string& source)
 {
     NGRAPH_INFO;
-    string pch_path = file_util::path_join(file_util::get_temp_directory(), "ngraph.pch");
-    m_compiler->getFrontendOpts().OutputFile = pch_path;
+    m_pch_path = file_util::path_join(file_util::get_temp_directory(), "ngraph.pch");
+    m_compiler->getFrontendOpts().OutputFile = m_pch_path;
 
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
@@ -355,6 +352,7 @@ void StaticCompiler::generate_pch(const string& source)
     if (m_compiler->ExecuteAction(*compilerAction) == true)
     {
         NGRAPH_INFO;
+        m_precompiled_header_valid = true;
     }
 
     buffer.release();
