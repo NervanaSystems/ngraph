@@ -65,15 +65,15 @@ static HeaderCache s_header_cache;
 static StaticCompiler s_static_compiler;
 static std::mutex m_mutex;
 
-Compiler::Compiler()
+NVPTXCompiler::NVPTXCompiler()
 {
 }
 
-Compiler::~Compiler()
+NVPTXCompiler::~NVPTXCompiler()
 {
 }
 
-std::unique_ptr<llvm::Module> Compiler::compile(const std::string& source)
+std::unique_ptr<llvm::Module> NVPTXCompiler::compile(const std::string& source)
 {
     lock_guard<mutex> lock(m_mutex);
     return s_static_compiler.compile(source);
@@ -135,6 +135,7 @@ StaticCompiler::StaticCompiler()
         add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
         add_header_search_path("/usr/include/x86_64-linux-gnu");
         add_header_search_path("/usr/include");
+        add_header_search_path("/usr/local/cuda/include");
 
         // Search for headers in
         //    /usr/include/x86_64-linux-gnu/c++/N.N

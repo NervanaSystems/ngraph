@@ -30,6 +30,7 @@
 #include "ngraph/runtime/gpu/manager.hpp"
 
 using namespace ngraph::runtime::gpu;
+using namespace ngraph;
 using namespace std;
 
 TEST(cudnn, loadTest)
@@ -87,5 +88,10 @@ TEST(cudnn, compileTest)
       cudaDeviceReset();
       return 0;
     })";
+  // codegen::Compiler compiler;
+  codegen::NVPTXCompiler compiler;
+  codegen::NVPTXExecutionEngine execution_engine;
+
+  auto module = compiler.compile(source);
   EXPECT_EQ(source,source);
 }
