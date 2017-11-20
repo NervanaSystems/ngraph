@@ -42,6 +42,7 @@
 #include <clang/Basic/TargetInfo.h>
 #include <clang/CodeGen/CodeGenAction.h>
 #include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/FrontendActions.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <llvm/Support/TargetSelect.h>
 
@@ -214,7 +215,10 @@ StaticCompiler::StaticCompiler()
         CGO.setDebugInfo(codegenoptions::FullDebugInfo);
     }
 
-    if (m_precompiled_headers_enabled)
+    // if (!m_precompiled_header_valid)
+    // {
+    // }
+    if (m_precompiled_header_valid)
     {
         // Preprocessor options
         auto& PPO = m_compiler->getInvocation().getPreprocessorOpts();
@@ -313,6 +317,8 @@ void StaticCompiler::use_cached_files()
 
 std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
 {
+    generate_pch(source);
+
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
     unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);
@@ -333,24 +339,25 @@ std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
     return rc;
 }
 
-// std::unique_ptr<llvm::Module> StaticCompiler::generate_pch(const string& source)
-// {
-//     // Map code filename to a memoryBuffer
-//     StringRef source_ref(source);
-//     unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);
-//     m_compiler->getInvocation().getPreprocessorOpts().addRemappedFile(m_source_name, buffer.get());
+void StaticCompiler::generate_pch(const string& source)
+{
+    NGRAPH_INFO;
+    string pch_path = file_util::path_join(file_util::get_temp_directory(), "ngraph.pch");
+    m_compiler->getFrontendOpts().OutputFile = pch_path;
 
-//     // Create and execute action
-//     CodeGenAction* compilerAction = new GeneratePCHAction();
-//     std::unique_ptr<llvm::Module> rc;
-//     if (m_compiler->ExecuteAction(*compilerAction) == true)
-//     {
-//         rc = compilerAction->takeModule();
-//     }
+    // Map code filename to a memoryBuffer
+    StringRef source_ref(source);
+    unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);
+    m_compiler->getInvocation().getPreprocessorOpts().addRemappedFile(m_source_name, buffer.get());
 
-//     buffer.release();
+    // Create and execute action
+    clang::GeneratePCHAction* compilerAction = new clang::GeneratePCHAction();
+    if (m_compiler->ExecuteAction(*compilerAction) == true)
+    {
+        NGRAPH_INFO;
+    }
 
-//     m_compiler->getInvocation().getPreprocessorOpts().clearRemappedFiles();
+    buffer.release();
 
-//     return rc;
-// }
+    m_compiler->getInvocation().getPreprocessorOpts().clearRemappedFiles();
+}

@@ -68,6 +68,7 @@ public:
     bool is_debuginfo_enabled() { return m_debuginfo_enabled; }
     void add_header_search_path(const std::string& path);
     std::unique_ptr<llvm::Module> compile(const std::string& source);
+    void generate_pch(const std::string& source);
 
 private:
     std::unique_ptr<clang::CompilerInstance> m_compiler;
