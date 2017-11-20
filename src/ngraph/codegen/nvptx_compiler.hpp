@@ -27,9 +27,9 @@ namespace ngraph
     namespace codegen
     {
         class module;
-        class Compiler;
-        class StaticCompiler;
+        class NVPTXCompiler;
         class HeaderCache;
+        class StaticCompiler;
     }
 }
 
@@ -46,11 +46,11 @@ private:
     std::unique_ptr<llvm::Module> m_module;
 };
 
-class ngraph::codegen::Compiler
+class ngraph::codegen::NVPTXCompiler
 {
 public:
-    Compiler();
-    ~Compiler();
+    NVPTXCompiler();
+    ~NVPTXCompiler();
     std::unique_ptr<llvm::Module> compile(const std::string& source);
 
 private:
