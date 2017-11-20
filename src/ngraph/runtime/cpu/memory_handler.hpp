@@ -12,28 +12,30 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <iostream>
+#pragma once
+
+#include <cstddef>
 #include <memory>
 
-#include "ngraph/function.hpp"
-#include "ngraph/log.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/pass/manager_state.hpp"
-
-using namespace std;
-using namespace ngraph;
-
-const vector<shared_ptr<Function>>& ngraph::pass::ManagerState::get_functions()
+namespace ngraph
 {
-    return m_function_list;
+    namespace runtime
+    {
+        namespace cpu
+        {
+            class MemoryHandler;
+        }
+    }
 }
 
-size_t ngraph::pass::ManagerState::get_temporary_pool_size()
+class ngraph::runtime::cpu::MemoryHandler
 {
-    return m_temporary_pool_size;
-}
+public:
+    MemoryHandler(size_t pool_size, size_t alignment);
+    ~MemoryHandler();
 
-void ngraph::pass::ManagerState::set_temporary_pool_size(size_t size)
-{
-    m_temporary_pool_size = size;
-}
+    void* get_ptr(size_t offset) const { return m_aligned_buffer_pool + offset; }
+private:
+    char* m_allocated_buffer_pool;
+    char* m_aligned_buffer_pool;
+};

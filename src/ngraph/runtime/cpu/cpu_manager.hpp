@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "ngraph/codegen/compiler.hpp"
+#include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/runtime/manager.hpp"
 
 namespace ngraph
@@ -33,7 +33,7 @@ namespace ngraph
             class CPUManager : public Manager
             {
             protected:
-                ngraph::codegen::execution_state exec_state;
+                ngraph::codegen::ExecutionEngine exec_state;
 
             public:
                 virtual std::shared_ptr<Backend> allocate_backend() override;

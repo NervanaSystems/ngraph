@@ -33,9 +33,11 @@ namespace ngraph
 class ngraph::pass::MemoryLayout : public CallGraphPass
 {
 public:
+    MemoryLayout(size_t alignment = 1);
     virtual bool run_on_call_graph(std::list<std::shared_ptr<Node>>&) override;
 
 private:
+    size_t m_alignment;
 };
 
 class ngraph::pass::MemoryManager

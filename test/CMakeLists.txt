@@ -26,6 +26,7 @@ set (SRC
     copy.cpp
     build_graph.cpp
     eigen.cpp
+    file_util.cpp
     input_output_assign.cpp
     main.cpp
     op.cpp
@@ -61,6 +62,7 @@ endif()
 
 if(LLVM_INCLUDE_DIR)
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
+    link_directories(${LLVM_LIB_DIR})
     set(SRC ${SRC} codegen.cpp)
     set(BACKEND_NAMES ${BACKEND_NAMES} "CPU")
 endif()
@@ -79,6 +81,11 @@ add_executable(unit-test ${SRC})
 if(MKLDNN_INCLUDE_DIR)
     target_link_libraries(unit-test mkldnn)
     add_dependencies(unit-test ext_mkldnn)
+endif()
+
+if(LLVM_INCLUDE_DIR)
+    target_link_libraries(unit-test ${LLVM_LINK_LIBS})
+    add_dependencies(unit-test ext_llvm)
 endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)

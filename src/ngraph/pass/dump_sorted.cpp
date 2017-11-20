@@ -35,6 +35,9 @@ bool pass::DumpSorted::run_on_module(vector<shared_ptr<ngraph::Function>>& funct
     {
         for (shared_ptr<Function> f : functions)
         {
+            out << "=====================================================================\n";
+            out << f->get_name() << " start\n";
+            out << "=====================================================================\n";
             for (const shared_ptr<Node>& node : f->get_ordered_ops())
             {
                 out << node->get_name() << "(";
@@ -67,6 +70,9 @@ bool pass::DumpSorted::run_on_module(vector<shared_ptr<ngraph::Function>>& funct
                     out << "    F " << tensor->get_name() << "\n";
                 }
             }
+            out << "=====================================================================\n";
+            out << f->get_name() << " end\n";
+            out << "=====================================================================\n";
         }
     }
 
