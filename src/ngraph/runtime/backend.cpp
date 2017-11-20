@@ -62,6 +62,10 @@ std::shared_ptr<TensorView>
     {
         rc = std::make_shared<ParameterizedTensorView<element::UInt64>>(shape);
     }
+    else
+    {
+        throw std::invalid_argument("Unknown element type in make_primary_tensor_view");
+    }
     return rc;
 }
 
