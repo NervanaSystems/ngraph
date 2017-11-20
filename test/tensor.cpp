@@ -89,7 +89,6 @@ void test_read_write(const std::vector<typename ET::type>& x)
     auto backend = manager->allocate_backend();
 
     auto a = backend->make_primary_tensor_view(ET::element_type(), Shape{2, x.size()});
-    auto af = a->template get_parameterized_tensor_view<ET>();
 
     std::vector<T> result(2 * x.size());
 
@@ -98,7 +97,8 @@ void test_read_write(const std::vector<typename ET::type>& x)
     a->write(&x[0], x.size() * sizeof(T), x.size() * sizeof(T));
     std::copy(x.begin(), x.end(), result.begin() + x.size());
 
-    auto& af_vector = af->get_vector();
+    std::vector<T> af_vector(2 * x.size());
+    a->read(af_vector.data(), 0, af_vector.size() * sizeof(typename ET::type));
     ASSERT_EQ(af_vector, result);
 
     std::vector<T> result1(x.size());

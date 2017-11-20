@@ -81,8 +81,7 @@ TEST(build_graph, literal)
 {
     // float scalar from a float
     //auto float0 = FloatConstant::make(3.0);
-    auto float_t = ngraph::runtime::make_tensor<element::Float32>(Shape{});
-    (*float_t) = std::vector<float>{3.0};
+    auto float_t = ngraph::runtime::make_tensor<element::Float32>(Shape{}, {3.0});
     auto float0 = make_shared<op::Float32Constant>(Shape{}, float_t);
     auto float_scalar_type = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
     ASSERT_EQ(float0->get_value()->get_vector(), std::vector<float>{3.0});
@@ -91,8 +90,7 @@ TEST(build_graph, literal)
     ASSERT_EQ(d->get_arguments().at(0), float0);
     ASSERT_EQ(d->get_arguments().at(1), float0);
 
-    auto int32_t = ngraph::runtime::make_tensor<element::Int32>(Shape{});
-    (*int32_t) = std::vector<int>{3};
+    auto int32_t = ngraph::runtime::make_tensor<element::Int32>(Shape{}, {3});
     auto int32_0 = make_shared<op::Int32Constant>(Shape{}, int32_t);
     auto int32_scalar_type = make_shared<TensorViewType>(element::Int32::element_type(), Shape{});
     ASSERT_EQ(int32_0->get_value()->get_vector(), std::vector<int>{3});
