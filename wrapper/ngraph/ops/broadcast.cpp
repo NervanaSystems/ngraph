@@ -14,27 +14,26 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/operators.h>
 #include <string>
-#include "ngraph/node.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/broadcast.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
+namespace op {
 
-PYBIND11_PLUGIN(clsParameter) {
+PYBIND11_PLUGIN(clsBroadcast) {
 
-    py::module mod("clsParameter");
+    py::module mod("clsBroadcast");
 
-    py::module::import("wrapper.ngraph.types.clsTraitedType");
-    py::module::import("wrapper.ngraph.clsNode");
-    py::class_<op::Parameter, std::shared_ptr<op::Parameter>, Node> clsParameter(mod, "Parameter");
-
-    clsParameter.def(py::init<const ngraph::element::Type&, const ngraph::Shape& >());
-    clsParameter.def("description", &op::Parameter::description);
+    py::module::import("wrapper.ngraph.ops.clsOp");
+    using AxisSet = std::set<size_t>;
+ 
+    py::class_<Broadcast, std::shared_ptr<Broadcast>, Builtin> clsBroadcast(mod, "Broadcast");
+    clsBroadcast.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&,
+                              const AxisSet& >());
 
     return mod.ptr();
 
 }
 
-}  // ngraph
+}}  // ngraph

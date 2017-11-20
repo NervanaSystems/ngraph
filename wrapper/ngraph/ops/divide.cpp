@@ -14,27 +14,25 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/operators.h>
 #include <string>
-#include "ngraph/node.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/divide.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
+namespace op {
 
-PYBIND11_PLUGIN(clsParameter) {
+PYBIND11_PLUGIN(clsDivide) {
 
-    py::module mod("clsParameter");
+    py::module mod("clsDivide");
 
-    py::module::import("wrapper.ngraph.types.clsTraitedType");
-    py::module::import("wrapper.ngraph.clsNode");
-    py::class_<op::Parameter, std::shared_ptr<op::Parameter>, Node> clsParameter(mod, "Parameter");
+    py::module::import("wrapper.ngraph.ops.clsOp");
 
-    clsParameter.def(py::init<const ngraph::element::Type&, const ngraph::Shape& >());
-    clsParameter.def("description", &op::Parameter::description);
+    py::class_<Divide, std::shared_ptr<Divide>, BinaryElementwiseArithmetic> clsDivide(mod, "Divide");
+    clsDivide.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                           const std::shared_ptr<ngraph::Node>& >());
 
     return mod.ptr();
 
 }
 
-}  // ngraph
+}}  // ngraph

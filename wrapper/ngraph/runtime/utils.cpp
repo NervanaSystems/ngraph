@@ -14,27 +14,23 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/operators.h>
 #include <string>
-#include "ngraph/node.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/runtime/utils.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
+namespace runtime{
 
-PYBIND11_PLUGIN(clsParameter) {
+PYBIND11_PLUGIN(clsUtils) {
 
-    py::module mod("clsParameter");
+    py::module mod("clsUtils");
+    py::module::import("wrapper.ngraph.runtime.clsParameterizedTensorView");
+    using ET = ngraph::element::TraitedType<float>;    
 
-    py::module::import("wrapper.ngraph.types.clsTraitedType");
-    py::module::import("wrapper.ngraph.clsNode");
-    py::class_<op::Parameter, std::shared_ptr<op::Parameter>, Node> clsParameter(mod, "Parameter");
-
-    clsParameter.def(py::init<const ngraph::element::Type&, const ngraph::Shape& >());
-    clsParameter.def("description", &op::Parameter::description);
-
+    mod.def("make_tensor", &make_tensor<ET>);
+    
     return mod.ptr();
 
 }
 
-}  // ngraph
+}}  // ngraph

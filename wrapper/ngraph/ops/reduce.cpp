@@ -14,27 +14,29 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/operators.h>
 #include <string>
-#include "ngraph/node.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/reduce.hpp"
+#include "ngraph/function.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
+namespace op {
 
-PYBIND11_PLUGIN(clsParameter) {
+PYBIND11_PLUGIN(clsReduce) {
 
-    py::module mod("clsParameter");
+    py::module mod("clsReduce");
 
-    py::module::import("wrapper.ngraph.types.clsTraitedType");
-    py::module::import("wrapper.ngraph.clsNode");
-    py::class_<op::Parameter, std::shared_ptr<op::Parameter>, Node> clsParameter(mod, "Parameter");
-
-    clsParameter.def(py::init<const ngraph::element::Type&, const ngraph::Shape& >());
-    clsParameter.def("description", &op::Parameter::description);
+    py::module::import("wrapper.ngraph.ops.clsOp");
+    using AxisSet = std::set<size_t>;
+ 
+    py::class_<Reduce, std::shared_ptr<Reduce>, Builtin> clsReduce(mod, "Reduce");
+    clsReduce.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                           const std::shared_ptr<ngraph::Node>&,
+                           const std::shared_ptr<ngraph::Function>&,
+                           const AxisSet& >());
 
     return mod.ptr();
 
 }
 
-}  // ngraph
+}}  // ngraph

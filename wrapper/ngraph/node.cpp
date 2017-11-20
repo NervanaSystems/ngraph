@@ -14,24 +14,30 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/operators.h>
 #include <string>
 #include "ngraph/node.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/add.hpp"
+#include "ngraph/ops/multiply.hpp"
+#include "ngraph/ops/divide.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
 
-PYBIND11_PLUGIN(clsParameter) {
+PYBIND11_PLUGIN(clsNode) {
 
-    py::module mod("clsParameter");
+    py::module mod("clsNode");
 
-    py::module::import("wrapper.ngraph.types.clsTraitedType");
-    py::module::import("wrapper.ngraph.clsNode");
-    py::class_<op::Parameter, std::shared_ptr<op::Parameter>, Node> clsParameter(mod, "Parameter");
-
-    clsParameter.def(py::init<const ngraph::element::Type&, const ngraph::Shape& >());
-    clsParameter.def("description", &op::Parameter::description);
+    py::class_<Node, std::shared_ptr<Node>> clsNode(mod, "Node");
+ 
+    clsNode.def("__add__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
+                return a + b;
+               }, py::is_operator());
+    clsNode.def("__mul__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
+                return a * b;
+               }, py::is_operator());
+    clsNode.def("__truediv__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
+                return a/b;
+               }, py::is_operator());
 
     return mod.ptr();
 

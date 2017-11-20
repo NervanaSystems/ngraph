@@ -14,27 +14,31 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/operators.h>
 #include <string>
-#include "ngraph/node.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/op.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
+namespace op {
 
-PYBIND11_PLUGIN(clsParameter) {
+PYBIND11_PLUGIN(clsOp) {
 
-    py::module mod("clsParameter");
+    py::module mod("clsOp");  
 
-    py::module::import("wrapper.ngraph.types.clsTraitedType");
     py::module::import("wrapper.ngraph.clsNode");
-    py::class_<op::Parameter, std::shared_ptr<op::Parameter>, Node> clsParameter(mod, "Parameter");
 
-    clsParameter.def(py::init<const ngraph::element::Type&, const ngraph::Shape& >());
-    clsParameter.def("description", &op::Parameter::description);
+    py::class_<Builtin, std::shared_ptr<Builtin>, Node> clsBuiltin(mod, "Builtin");
+    py::class_<UnaryElementwiseBuiltin, std::shared_ptr<UnaryElementwiseBuiltin>,
+        Builtin> clsUnaryElementwiseBuiltin(mod, "UnaryElementwiseBuiltin");
+    py::class_<UnaryElementwiseArithmetic, std::shared_ptr<UnaryElementwiseArithmetic>, 
+        UnaryElementwiseBuiltin> clsUnaryElementwiseArithmetic(mod, "UnaryElementwiseArithmetic"); 
+    py::class_<BinaryElementwiseBuiltin, std::shared_ptr<BinaryElementwiseBuiltin>,
+        Builtin> clsBinaryElementwiseBuiltin(mod, "BinaryElementwiseBuiltin");
+    py::class_<BinaryElementwiseArithmetic, std::shared_ptr<BinaryElementwiseArithmetic>,
+        BinaryElementwiseBuiltin> clsBinaryElementwiseArithmetic(mod, "BinaryElementwiseArithmetic");    
 
     return mod.ptr();
 
 }
 
-}  // ngraph
+}}  // ngraph

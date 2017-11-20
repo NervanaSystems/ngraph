@@ -14,27 +14,25 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/operators.h>
 #include <string>
-#include "ngraph/node.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/dot.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
+namespace op {
 
-PYBIND11_PLUGIN(clsParameter) {
+PYBIND11_PLUGIN(clsDot) {
 
-    py::module mod("clsParameter");
+    py::module mod("clsDot");
 
-    py::module::import("wrapper.ngraph.types.clsTraitedType");
-    py::module::import("wrapper.ngraph.clsNode");
-    py::class_<op::Parameter, std::shared_ptr<op::Parameter>, Node> clsParameter(mod, "Parameter");
+    py::module::import("wrapper.ngraph.ops.clsOp");
 
-    clsParameter.def(py::init<const ngraph::element::Type&, const ngraph::Shape& >());
-    clsParameter.def("description", &op::Parameter::description);
+    py::class_<Dot, std::shared_ptr<Dot>, Builtin> clsDot(mod, "Dot");
+    clsDot.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                        const std::shared_ptr<ngraph::Node>& >());
 
     return mod.ptr();
 
 }
 
-}  // ngraph
+}}  // ngraph
