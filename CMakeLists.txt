@@ -93,6 +93,24 @@ if (NOT DEFINED NGRAPH_CPU_ENABLE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
+# GPU support
+#-----------------------------------------------------------------------------------------------
+# Setup CUDA and cuDNN if NGRAPH_GPU_ENABLE=TRUE
+if(NGRAPH_GPU_ENABLE)
+  find_package(CUDA 8 REQUIRED)
+  find_package(CUDNN 5 QUIET REQUIRED)
+  include_directories(${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
+  if (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND
+        NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 6.0 AND
+        CUDA_HOST_COMPILER STREQUAL CMAKE_C_COMPILER)
+      message(FATAL_ERROR
+        "CUDA 8.0 is not compatible with GCC version >= 6.\n"
+        "Please select a correct compiler version\n"
+        )
+    endif()
+endif()
+
+#-----------------------------------------------------------------------------------------------
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
 

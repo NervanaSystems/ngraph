@@ -64,12 +64,12 @@ if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
     set(BACKEND_NAMES ${BACKEND_NAMES} "CPU")
 endif()
 
-if(USE_CUDA)
-    find_package(CUDA QUIET)
-    include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
-    link_directories(${LLVM_LIB_DIR})
-    set(SRC main.cpp cudnn.cpp)
-    set(BACKEND_NAMES)
+if(NGRAPH_GPU_ENABLE)
+    set(SRC
+        main.cpp
+        cudnn.cpp)
+    # Disabled for testing
+    # set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
 endif()
 
 foreach(BACKEND_NAME ${BACKEND_NAMES})
@@ -93,9 +93,8 @@ if(LLVM_INCLUDE_DIR)
     add_dependencies(unit-test ext_llvm)
 endif()
 
-if(CUDNN_INCLUDE_DIR)
-    target_link_libraries(unit-test ${LLVM_LINK_LIBS})
-    target_link_libraries(unit-test cudnn)
+if(CUDA_INCLUDE_DIRS)
+  target_link_libraries(unit-test ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)

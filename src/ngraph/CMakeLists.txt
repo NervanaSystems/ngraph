@@ -79,35 +79,6 @@ set (SRC
     util.cpp
     )
 
-if(USE_CUDA)
-  find_package(CUDA 8 REQUIRED)
-  if(CUDA_FOUND)
-    include_directories(SYSTEM ${CUDA_INCLUDE_DIR})
-    link_directories(${CUDA_LIB_DIR})
-    if (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND
-          NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 6.0 AND
-          CUDA_HOST_COMPILER STREQUAL CMAKE_C_COMPILER)
-        message(FATAL_ERROR
-          "CUDA 8.0 is not compatible with GCC version >= 6.\n"
-          "Please select a correct compiler version\n"
-          )
-      endif()
-    find_package(CUDNN 5 QUIET)
-    if(NOT CUDNN_FOUND)
-       message(WARNING
-          "If cuDNN is installed, try setting -DCUDNN_ROOT_DIR"
-          "Not compiling with CUDA. Suppress this warning with -DUSE_CUDA=OFF")
-          set(USE_CUDA OFF)
-    else()
-    include_directories(SYSTEM ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
-    link_directories(${CUDNN_LIB_DIR} ${LLVM_LIB_DIR})
-    endif()
-  else()
-    message(WARNING "Not compiling with CUDA. Suppress this warning with -DUSE_CUDA=OFF")
-    set(USE_CUDA OFF)
-  endif()
-endif()
-
 # find_program (GRAPHVIZ dot)
 # message (STATUS "graphviz '${GRAPHVIZ}'")
 find_package(Graphviz)
@@ -191,7 +162,7 @@ message(STATUS "LIBRARY_OUTPUT_DIRECTORY set to: ${COMMON_LIBRARY_OUTPUT_DIRECTO
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
-if((NGRAPH_CPU_ENABLE OR USE_CUDA) AND LLVM_LINK_LIBS)
+if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_LINK_LIBS)
     target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
 endif()
 
@@ -203,6 +174,10 @@ endif()
 
 if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
     target_link_libraries(ngraph PRIVATE mkldnn)
+endif()
+
+if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
+    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
 
@@ -256,7 +231,7 @@ endif()
 
 add_dependencies(ngraph eigen)
 
-if((NGRAPH_CPU_ENABLE OR USE_CUDA) AND LLVM_INCLUDE_DIR)
+if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_INCLUDE_DIR)
     add_dependencies(ngraph ext_llvm)
 endif()
 
