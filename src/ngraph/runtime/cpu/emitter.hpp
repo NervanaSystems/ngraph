@@ -103,6 +103,39 @@ namespace ngraph
                 std::string emit_vector(const TensorViewInfo&, const std::string& name = "");
                 std::string emit_array1d(const TensorViewInfo&, const std::string& name = "");
                 std::string emit_matrix(const TensorViewInfo&, const std::string& name = "");
+
+                template <typename T>
+                void EmitParameterizedConstant(const std::string& type,
+                                               const ngraph::Node* n,
+                                               const std::vector<T>& value,
+                                               const TensorViewInfo& tv)
+                {
+                    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+                    if (tv.get_tensor().is_output())
+                    {
+                        // Special case where constant is stored directly in the output
+                        for (size_t i = 0; i < value.size(); i++)
+                        {
+                            TU << tv.get_tensor().get_name() << "[" << i << "] = static_cast<"
+                               << type << ">(" << value[i] << ");\n";
+                        }
+                    }
+                    else
+                    {
+                        TU << "// this should be const but eigen hates const :(\n";
+                        TU << type << " " << tv.get_tensor().get_name() << "[] = {\n";
+                        for (size_t i = 0; i < value.size(); i++)
+                        {
+                            if (i != 0)
+                            {
+                                TU << ",\n";
+                            }
+                            TU << "    " << value[i];
+                        }
+                        TU << "\n};";
+                    }
+                    TU << "\n";
+                }
             };
         }
     }

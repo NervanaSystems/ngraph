@@ -493,17 +493,32 @@ void Emitter::EmitParameterizedConstantBool(const ngraph::Node* n,
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Bool>*>(n)
                      ->get_value()
                      ->get_vector();
-    string type = element::Bool::element_type().c_type_string();
 
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    for (size_t i = 0; i < value.size(); i++)
+    TU << "// " << n->get_name() << " EmitParameterizedConstantBool\n";
+    if (outputs[0].get_tensor().is_output())
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
-           << (value[i] ? "true" : "false") << ");\n";
+        // Special case where constant is stored directly in the output
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<bool>("
+               << (value[i] ? "true" : "false") << ");\n";
+        }
     }
-    TU.indent--;
-    TU << "}\n";
+    else
+    {
+        TU << "// this should be const but eigen hates const :(\n";
+        TU << "bool " << outputs[0].get_tensor().get_name() << "[] = {\n";
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            if (i != 0)
+            {
+                TU << ",\n";
+            }
+            TU << "    " << (value[i] ? "true" : "false");
+        }
+        TU << "\n};";
+    }
+    TU << "\n";
 }
 
 void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
@@ -514,17 +529,33 @@ void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Float32>*>(n)
                      ->get_value()
                      ->get_vector();
-    string type = element::Float32::element_type().c_type_string();
+    const char* type = "float";
 
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    for (size_t i = 0; i < value.size(); i++)
+    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    if (outputs[0].get_tensor().is_output())
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
-           << value[i] << ");\n";
+        // Special case where constant is stored directly in the output
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type
+               << ">(" << value[i] << ");\n";
+        }
     }
-    TU.indent--;
-    TU << "}\n";
+    else
+    {
+        TU << "// this should be const but eigen hates const :(\n";
+        TU << type << " " << outputs[0].get_tensor().get_name() << "[] = {\n";
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            if (i != 0)
+            {
+                TU << ",\n";
+            }
+            TU << "    " << value[i];
+        }
+        TU << "\n};";
+    }
+    TU << "\n";
 }
 
 void Emitter::EmitParameterizedConstantInt8(const ngraph::Node* n,
@@ -535,17 +566,33 @@ void Emitter::EmitParameterizedConstantInt8(const ngraph::Node* n,
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int8>*>(n)
                      ->get_value()
                      ->get_vector();
-    string type = element::Int8::element_type().c_type_string();
+    const char* type = "int8_t";
 
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    for (size_t i = 0; i < value.size(); i++)
+    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    if (outputs[0].get_tensor().is_output())
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
-           << value[i] << ");\n";
+        // Special case where constant is stored directly in the output
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type
+               << ">(" << static_cast<int>(value[i]) << ");\n";
+        }
     }
-    TU.indent--;
-    TU << "}\n";
+    else
+    {
+        TU << "// this should be const but eigen hates const :(\n";
+        TU << type << " " << outputs[0].get_tensor().get_name() << "[] = {\n";
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            if (i != 0)
+            {
+                TU << ",\n";
+            }
+            TU << "    " << value[i];
+        }
+        TU << "\n};";
+    }
+    TU << "\n";
 }
 
 void Emitter::EmitParameterizedConstantInt32(const ngraph::Node* n,
@@ -556,17 +603,33 @@ void Emitter::EmitParameterizedConstantInt32(const ngraph::Node* n,
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int32>*>(n)
                      ->get_value()
                      ->get_vector();
-    string type = element::Int32::element_type().c_type_string();
+    const char* type = "int32_t";
 
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    for (size_t i = 0; i < value.size(); i++)
+    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    if (outputs[0].get_tensor().is_output())
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
-           << value[i] << ");\n";
+        // Special case where constant is stored directly in the output
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type
+               << ">(" << value[i] << ");\n";
+        }
     }
-    TU.indent--;
-    TU << "}\n";
+    else
+    {
+        TU << "// this should be const but eigen hates const :(\n";
+        TU << type << " " << outputs[0].get_tensor().get_name() << "[] = {\n";
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            if (i != 0)
+            {
+                TU << ",\n";
+            }
+            TU << "    " << value[i];
+        }
+        TU << "\n};";
+    }
+    TU << "\n";
 }
 
 void Emitter::EmitParameterizedConstantInt64(const ngraph::Node* n,
@@ -577,17 +640,33 @@ void Emitter::EmitParameterizedConstantInt64(const ngraph::Node* n,
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int64>*>(n)
                      ->get_value()
                      ->get_vector();
-    string type = element::Int64::element_type().c_type_string();
+    const char* type = "int64_t";
 
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    for (size_t i = 0; i < value.size(); i++)
+    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    if (outputs[0].get_tensor().is_output())
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
-           << value[i] << ");\n";
+        // Special case where constant is stored directly in the output
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type
+               << ">(" << value[i] << ");\n";
+        }
     }
-    TU.indent--;
-    TU << "}\n";
+    else
+    {
+        TU << "// this should be const but eigen hates const :(\n";
+        TU << type << " " << outputs[0].get_tensor().get_name() << "[] = {\n";
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            if (i != 0)
+            {
+                TU << ",\n";
+            }
+            TU << "    " << value[i];
+        }
+        TU << "\n};";
+    }
+    TU << "\n";
 }
 
 void Emitter::EmitParameterizedConstantUInt8(const ngraph::Node* n,
@@ -598,17 +677,33 @@ void Emitter::EmitParameterizedConstantUInt8(const ngraph::Node* n,
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt8>*>(n)
                      ->get_value()
                      ->get_vector();
-    string type = element::UInt8::element_type().c_type_string();
+    const char* type = "uint8_t";
 
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    for (size_t i = 0; i < value.size(); i++)
+    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    if (outputs[0].get_tensor().is_output())
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
-           << value[i] << ");\n";
+        // Special case where constant is stored directly in the output
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type
+               << ">(" << static_cast<uint>(value[i]) << ");\n";
+        }
     }
-    TU.indent--;
-    TU << "}\n";
+    else
+    {
+        TU << "// this should be const but eigen hates const :(\n";
+        TU << type << " " << outputs[0].get_tensor().get_name() << "[] = {\n";
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            if (i != 0)
+            {
+                TU << ",\n";
+            }
+            TU << "    " << value[i];
+        }
+        TU << "\n};";
+    }
+    TU << "\n";
 }
 
 void Emitter::EmitParameterizedConstantUInt32(const ngraph::Node* n,
@@ -619,17 +714,33 @@ void Emitter::EmitParameterizedConstantUInt32(const ngraph::Node* n,
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt32>*>(n)
                      ->get_value()
                      ->get_vector();
-    string type = element::UInt32::element_type().c_type_string();
+    const char* type = "uint32_t";
 
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    for (size_t i = 0; i < value.size(); i++)
+    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    if (outputs[0].get_tensor().is_output())
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
-           << value[i] << ");\n";
+        // Special case where constant is stored directly in the output
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type
+               << ">(" << value[i] << ");\n";
+        }
     }
-    TU.indent--;
-    TU << "}\n";
+    else
+    {
+        TU << "// this should be const but eigen hates const :(\n";
+        TU << type << " " << outputs[0].get_tensor().get_name() << "[] = {\n";
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            if (i != 0)
+            {
+                TU << ",\n";
+            }
+            TU << "    " << value[i];
+        }
+        TU << "\n};";
+    }
+    TU << "\n";
 }
 
 void Emitter::EmitParameterizedConstantUInt64(const ngraph::Node* n,
@@ -640,17 +751,33 @@ void Emitter::EmitParameterizedConstantUInt64(const ngraph::Node* n,
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt64>*>(n)
                      ->get_value()
                      ->get_vector();
-    string type = element::UInt64::element_type().c_type_string();
+    const char* type = "uint64_t";
 
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    for (size_t i = 0; i < value.size(); i++)
+    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    if (outputs[0].get_tensor().is_output())
     {
-        TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
-           << value[i] << ");\n";
+        // Special case where constant is stored directly in the output
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type
+               << ">(" << value[i] << ");\n";
+        }
     }
-    TU.indent--;
-    TU << "}\n";
+    else
+    {
+        TU << "// this should be const but eigen hates const :(\n";
+        TU << type << " " << outputs[0].get_tensor().get_name() << "[] = {\n";
+        for (size_t i = 0; i < value.size(); i++)
+        {
+            if (i != 0)
+            {
+                TU << ",\n";
+            }
+            TU << "    " << value[i];
+        }
+        TU << "\n};";
+    }
+    TU << "\n";
 }
 
 void Emitter::EmitBroadcast(const ngraph::Node* n,
@@ -763,7 +890,7 @@ void Emitter::EmitConstant(const ngraph::Node* n,
     auto& c_element_type = c_tensor_type->get_element_type();
     auto c_value_strings = c->get_value_strings();
 
-    TU << "{   // " << n->get_name() << "\n";
+    TU << "{   // " << n->get_name() << " EmitConstant\n";
     TU.indent++;
     for (size_t i = 0; i < c_value_strings.size(); i++)
     {

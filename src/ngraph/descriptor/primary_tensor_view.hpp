@@ -43,7 +43,8 @@ namespace ngraph
             PrimaryTensorView(const std::shared_ptr<const TensorViewType>& tensor_view_type,
                               const std::string& name,
                               bool is_output,
-                              bool is_input);
+                              bool is_input,
+                              bool is_constant);
 
             virtual const Tensor& get_tensor() const override;
             virtual Tensor& get_tensor() override;
