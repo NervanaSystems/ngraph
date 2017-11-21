@@ -1068,8 +1068,7 @@ TEST(${BACKEND_NAME}, subtract)
 TEST(${BACKEND_NAME}, scalar_constant)
 {
     auto shape = Shape{};
-    auto t = runtime::make_tensor<element::Float32>(shape);
-    (*t) = std::vector<float>{-3.0f};
+    auto t = runtime::make_tensor<element::Float32>(shape, {-3.0f});
     auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
@@ -1089,8 +1088,7 @@ TEST(${BACKEND_NAME}, scalar_constant)
 TEST(${BACKEND_NAME}, tensor_constant)
 {
     auto shape = Shape{2, 2, 2};
-    auto t = runtime::make_tensor<element::Float32>(shape);
-    (*t) = std::vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
+    auto t = runtime::make_tensor<element::Float32>(shape, {1, 2, 3, 4, 5, 6, 7, 8});
     auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
@@ -1110,8 +1108,7 @@ TEST(${BACKEND_NAME}, tensor_constant)
 TEST(${BACKEND_NAME}, tensor_constant_with_op)
 {
     auto shape = Shape{2, 2, 2};
-    auto t = runtime::make_tensor<element::Float32>(shape);
-    (*t) = std::vector<float>{-1, 2, 3, -4, 5, -6, -7, 8};
+    auto t = runtime::make_tensor<element::Float32>(shape, {-1, 2, 3, -4, 5, -6, -7, 8});
     auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Abs>(A), rt, op::Parameters{});

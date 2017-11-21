@@ -15,6 +15,7 @@
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/common.hpp"
 #include "ngraph/types/element_type.hpp"
+#include "ngraph/types/type.hpp"
 
 using namespace ngraph::runtime;
 

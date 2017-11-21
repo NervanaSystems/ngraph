@@ -14,8 +14,10 @@
 
 #include <memory>
 
-#include "cpu_backend.hpp"
-#include "tensor_view.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/descriptor/primary_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;
