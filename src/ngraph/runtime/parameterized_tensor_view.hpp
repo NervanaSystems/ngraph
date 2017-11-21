@@ -23,7 +23,6 @@
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
-#include "ngraph/runtime/ndarray.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
@@ -33,7 +32,7 @@ namespace ngraph
     namespace runtime
     {
         template <typename ET>
-        class ParameterizedTensorView : public TensorView
+        class ParameterizedTensorView : public runtime::TensorView
         {
         public:
             /// Create a tensor
@@ -50,37 +49,12 @@ namespace ngraph
                 m_vector.resize(m_descriptor->get_tensor_view_layout()->get_size());
             }
 
-            ParameterizedTensorView(
-                const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor);
-
-            ParameterizedTensorView(const NDArrayBase<typename ET::type>& initializer)
-                : ParameterizedTensorView(initializer.get_shape())
-            {
-                m_vector = initializer.get_vector();
-            }
-
-            using element_type = ET;
             using value_type = typename ET::type;
             using storage_type = std::vector<value_type>;
 
-            template <typename T>
-            ParameterizedTensorView<ET>& operator=(const std::vector<T>& value)
-            {
-                get_vector() = value;
-                return *this;
-            }
-
-            template <typename T>
-            ParameterizedTensorView<ET>& operator=(const NDArrayBase<T>& ndarray)
-            {
-                assert(ndarray.get_shape() == get_shape());
-                std::copy(ndarray.begin(), ndarray.end(), m_vector.begin());
-                return *this;
-            }
-
             // For getting the data out
-            storage_type& get_vector() { return m_vector; }
             const storage_type& get_vector() const { return m_vector; }
+            void* get_data_ptr() { return m_vector.data(); }
             virtual void write(const void* p, size_t tensor_offset, size_t n) override
             {
                 size_t elt_offset = tensor_offset / sizeof(typename ET::type);
@@ -102,6 +76,12 @@ namespace ngraph
                 std::memcpy(&m_vector[elt_offset], p, n);
             }
 
+            template <typename T>
+            void write(const std::vector<T>& values)
+            {
+                write(values.data(), 0, values.size() * sizeof(T));
+            }
+
             virtual void read(void* p, size_t tensor_offset, size_t n) const override
             {
                 size_t elt_offset = tensor_offset / sizeof(typename ET::type);
@@ -121,11 +101,6 @@ namespace ngraph
                 }
 
                 std::memcpy(p, &m_vector[elt_offset], n);
-            }
-
-            bool operator==(const NDArrayBase<typename ET::type>& ndarray) const
-            {
-                return get_shape() == ndarray.get_shape() && get_vector() == ndarray.get_vector();
             }
 
         protected:

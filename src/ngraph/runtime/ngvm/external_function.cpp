@@ -124,6 +124,7 @@
 #include "ngraph/runtime/ngvm/eigen/vector_slice.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph::runtime::ngvm;
@@ -342,13 +343,24 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
                            instr_class);                                                           \
     }
 
+template <typename ET>
+std::vector<typename ET::type>
+    get_vector(std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>> ptv)
+{
+    std::vector<typename ET::type> rc;
+
+    rc = ptv->get_vector();
+
+    return rc;
+}
+
 #define REGISTER_CONSTANT_INSTRUCTIONS(T)                                                          \
     {                                                                                              \
         REGISTER_INSTRUCTION(                                                                      \
             op::ParameterizedConstant<T>,                                                          \
             eigen::ConstantInstruction<T>,                                                         \
             std::vector<T::type>{                                                                  \
-                dynamic_cast<const op::ParameterizedConstant<T>*>(n)->get_value()->get_vector()},  \
+                get_vector<T>(dynamic_cast<const op::ParameterizedConstant<T>*>(n)->get_value())}, \
             out[0]);                                                                               \
     }
 
@@ -406,8 +418,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto c_value_strings = c->get_value_strings();
 
 #define M_REGISTER_POLYMORPHIC_CONSTANT(ET)                                                        \
-    ef->get_instructions()->push_back(                                                             \
-        make_shared<eigen::ConstantInstruction<ET>>(ET::read(c_value_strings), out[0]));
+    ef->get_instructions()->push_back(make_shared<eigen::ConstantInstruction<ET>>(                 \
+        parse_string<typename ET::type>(c_value_strings), out[0]));
 
             DO_ON_ELEMENT_TYPE(c_element_type,
                                "Constant has unhandled element type",

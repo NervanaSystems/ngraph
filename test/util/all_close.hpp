@@ -25,33 +25,27 @@ namespace ngraph
     namespace test
     {
         /// @brief Same as numpy.allclose
-        /// @param as First tensors to compare
-        /// @param bs Second tensors to compare
+        /// @param a First tensor to compare
+        /// @param b Second tensor to compare
         /// @param rtol Relative tolerance
         /// @param atol Absolute tolerance
-        /// Returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
-        template <typename ET>
-        bool all_close(
-            const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>& as,
-            const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>& bs,
-            typename ET::type rtol,
-            typename ET::type atol);
-
-        extern template bool all_close<element::Float32>(
-            const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<element::Float32>>>&
-                as,
-            const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<element::Float32>>>&
-                bs,
-            element::Float32::type rtol,
-            element::Float32::type atol);
-
-        extern template bool all_close<element::Float64>(
-            const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<element::Float64>>>&
-                as,
-            const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<element::Float64>>>&
-                bs,
-            element::Float64::type rtol,
-            element::Float64::type atol);
+        /// @returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
+        template <typename T>
+        bool all_close(const std::vector<T>& a,
+                       const std::vector<T>& b,
+                       T rtol = 1e-5f,
+                       T atol = 1e-8f)
+        {
+            assert(a.size() == b.size());
+            for (size_t i = 0; i < a.size(); ++i)
+            {
+                if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
 
         /// @brief Same as numpy.allclose
         /// @param a First tensor to compare
@@ -63,44 +57,45 @@ namespace ngraph
         bool all_close(const std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>& a,
                        const std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>& b,
                        typename ET::type rtol = 1e-5f,
-                       typename ET::type atol = 1e-8f);
+                       typename ET::type atol = 1e-8f)
+        {
+            // Check that the layouts are compatible
+            if (*a->get_tensor_view_layout() != *b->get_tensor_view_layout())
+            {
+                throw ngraph_error("Cannot compare tensors with different layouts");
+            }
 
-        extern template bool all_close<ngraph::element::Float32>(
-            const std::shared_ptr<
-                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>>& a,
-            const std::shared_ptr<
-                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>>& b,
-            ngraph::element::Float32::type rtol,
-            ngraph::element::Float32::type atol);
+            if (a->get_shape() != b->get_shape())
+                return false;
 
-        extern template bool all_close<ngraph::element::Float64>(
-            const std::shared_ptr<
-                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float64>>& a,
-            const std::shared_ptr<
-                ngraph::runtime::ParameterizedTensorView<ngraph::element::Float64>>& b,
-            ngraph::element::Float64::type rtol,
-            ngraph::element::Float64::type atol);
+            return all_close(a->get_vector(), b->get_vector(), rtol, atol);
+        }
 
         /// @brief Same as numpy.allclose
-        /// @param a First tensor to compare
-        /// @param b Second tensor to compare
+        /// @param as First tensors to compare
+        /// @param bs Second tensors to compare
         /// @param rtol Relative tolerance
         /// @param atol Absolute tolerance
-        /// @returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
-        template <typename T>
-        bool all_close(const std::vector<T>& a,
-                       const std::vector<T>& b,
-                       T rtol = 1e-5f,
-                       T atol = 1e-8f);
-
-        extern template bool all_close<float>(const std::vector<float>& a,
-                                              const std::vector<float>& b,
-                                              float rtol,
-                                              float atol);
-
-        extern template bool all_close<double>(const std::vector<double>& a,
-                                               const std::vector<double>& b,
-                                               double rtol,
-                                               double atol);
+        /// Returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
+        template <typename ET>
+        bool all_close(
+            const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>& as,
+            const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>& bs,
+            typename ET::type rtol,
+            typename ET::type atol)
+        {
+            if (as.size() != bs.size())
+            {
+                return false;
+            }
+            for (size_t i = 0; i < as.size(); ++i)
+            {
+                if (!all_close(as[i], bs[i], rtol, atol))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }
