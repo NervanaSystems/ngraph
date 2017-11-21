@@ -70,7 +70,8 @@ void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
                     tvt,
                     ngraph::descriptor::Tensor::make_tensor_name(this, i),
                     is_output(),
-                    is_parameter());
+                    is_parameter(),
+                    is_constant());
                 m_outputs.emplace_back(this, i, tensor_view_descriptor);
                 i++;
             }
@@ -122,6 +123,11 @@ void Node::set_is_output()
     {
         output.get_tensor().set_is_output();
     }
+}
+
+bool Node::is_constant() const
+{
+    return false;
 }
 
 std::string Node::get_node_id() const

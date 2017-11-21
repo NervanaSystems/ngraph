@@ -41,7 +41,8 @@ namespace ngraph
                       std::make_shared<ngraph::TensorViewType>(ET::element_type(), shape),
                       "external",
                       true,
-                      true))
+                      true,
+                      false))
             {
                 m_descriptor->set_tensor_view_layout(
                     std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(

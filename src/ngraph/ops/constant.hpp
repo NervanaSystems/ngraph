@@ -40,6 +40,8 @@ namespace ngraph
             {
                 set_value_type_checked(type);
             }
+
+            virtual bool is_constant() const override { return true; }
         };
 
         /// \brief Class for constants whose element types are known at C++ compile-time.

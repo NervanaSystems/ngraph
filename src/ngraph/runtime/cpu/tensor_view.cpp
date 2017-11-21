@@ -25,7 +25,11 @@ using namespace std;
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape)
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
-          std::make_shared<ngraph::TensorViewType>(element_type, shape), "external", true, true))
+          std::make_shared<ngraph::TensorViewType>(element_type, shape),
+          "external",
+          true,
+          true,
+          false))
     , m_allocated_buffer_pool(nullptr)
     , m_aligned_buffer_pool(nullptr)
 
