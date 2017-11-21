@@ -27,11 +27,24 @@ namespace ngraph
 {
     namespace builder
     {
+        std::shared_ptr<Node> L2Norm(const std::shared_ptr<Node>& node,
+                                     const AxisSet& reduction_axes);
+
         std::shared_ptr<Node> Mean(const std::shared_ptr<Node>& node,
                                    const AxisSet& reduction_axes);
-        std::shared_ptr<Node> Sum(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes);
+
         std::shared_ptr<Node> Prod(const std::shared_ptr<Node>& node,
                                    const AxisSet& reduction_axes);
+
+        std::shared_ptr<Node> Sum(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes);
+
+        std::shared_ptr<Node> Std_dev(const std::shared_ptr<Node>& node,
+                                      const AxisSet& reduction_axes, 
+                                       const bool bessel_correction = false);
+
+        std::shared_ptr<Node> Variance(const std::shared_ptr<Node>& node,
+                                       const AxisSet& reduction_axes, 
+                                       const bool bessel_correction = false);
 
     } // namespace builder
 } // namespace ngraph
