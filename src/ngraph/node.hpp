@@ -90,7 +90,7 @@ namespace ngraph
         bool is_output() const;
         void set_is_output();
         virtual bool is_constant() const;
-
+        virtual bool is_commutative() { return false; };
         size_t get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
 

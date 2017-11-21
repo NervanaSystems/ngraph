@@ -55,6 +55,7 @@ set (SRC
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise.cpp
     pass/dump_sorted.cpp
+    pass/graph_rewrite.cpp
     pass/liveness.cpp
     pass/manager.cpp
     pass/manager_state.cpp
@@ -64,6 +65,7 @@ set (SRC
     pass/topological_sort.cpp
     pass/visualize_tree.cpp
     runtime/aligned_buffer.cpp
+    pattern/matcher.cpp
     runtime/backend.cpp
     runtime/manager.cpp
     runtime/ngvm/call_frame.cpp
