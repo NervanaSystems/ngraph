@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <string>
 #include <typeindex>
@@ -520,8 +521,29 @@ void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
     TU.indent++;
     for (size_t i = 0; i < value.size(); i++)
     {
+        string value_string;
+        if (isnan(value[i]))
+        {
+            value_string = "NAN";
+        }
+        else if (isinf(value[i]))
+        {
+            if (value[i] > 0)
+            {
+                value_string = "INFINITY";
+            }
+            else
+            {
+                value_string = "-INFINITY";
+            }
+        }
+        else
+        {
+            value_string = to_string(value[i]);
+        }
+
         TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type << ">("
-           << value[i] << ");\n";
+           << value_string << ");\n";
     }
     TU.indent--;
     TU << "}\n";
