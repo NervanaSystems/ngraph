@@ -319,7 +319,7 @@ using namespace ngraph::runtime::cpu::eigen;
     codegen::Compiler compiler;
     codegen::ExecutionEngine execution_engine;
 
-    compiler.set_precomiled_header_source(pch_header_source);
+    compiler.set_precompiled_header_source(pch_header_source);
 
     auto llvm_module = compiler.compile(code);
     if (llvm_module == nullptr)

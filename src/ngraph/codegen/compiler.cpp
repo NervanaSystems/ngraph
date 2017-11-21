@@ -74,9 +74,9 @@ Compiler::~Compiler()
 {
 }
 
-void Compiler::set_precomiled_header_source(const std::string& source)
+void Compiler::set_precompiled_header_source(const std::string& source)
 {
-    s_static_compiler.set_precomiled_header_source(source);
+    s_static_compiler.set_precompiled_header_source(source);
 }
 
 std::unique_ptr<llvm::Module> Compiler::compile(const std::string& source)
@@ -316,7 +316,7 @@ std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
         // Preprocessor options
         auto& PPO = m_compiler->getInvocation().getPreprocessorOpts();
         PPO.ImplicitPCHInclude = m_pch_path;
-        PPO.DisablePCHValidation = 1;
+        PPO.DisablePCHValidation = 0;
     }
 
     // Map code filename to a memoryBuffer

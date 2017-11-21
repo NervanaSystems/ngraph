@@ -51,7 +51,7 @@ class ngraph::codegen::Compiler
 public:
     Compiler();
     ~Compiler();
-    void set_precomiled_header_source(const std::string& source);
+    void set_precompiled_header_source(const std::string& source);
     std::unique_ptr<llvm::Module> compile(const std::string& source);
 
 private:
@@ -65,7 +65,7 @@ public:
 
     void set_debuginfo_enabled(bool state) { m_debuginfo_enabled = state; }
     bool is_debuginfo_enabled() { return m_debuginfo_enabled; }
-    void set_precomiled_header_source(const std::string& source)
+    void set_precompiled_header_source(const std::string& source)
     {
         m_precomiled_header_source = source;
     }
