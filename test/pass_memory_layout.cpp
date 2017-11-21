@@ -218,3 +218,23 @@ TEST(memory_layout, basic)
     size_t temporary_pool_size = pass_manager.get_state().get_temporary_pool_size();
     EXPECT_EQ(12, temporary_pool_size);
 }
+
+TEST(memory_layout, constant)
+{
+    string dump_file = "constant.txt";
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::TopologicalSort>();
+    pass_manager.register_pass<pass::Liveness>();
+    pass_manager.register_pass<pass::MemoryLayout>();
+    pass_manager.register_pass<pass::DumpSorted>(dump_file);
+
+    auto shape = Shape{1};
+    auto c = make_shared<op::Constant>(element::i32, Shape{}, "5");
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Negative>(c), rt, op::Parameters{});
+
+    pass_manager.run_passes(f);
+    auto sorted = f->get_ordered_ops();
+    size_t temporary_pool_size = pass_manager.get_state().get_temporary_pool_size();
+    EXPECT_EQ(0, temporary_pool_size);
+}
