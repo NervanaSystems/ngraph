@@ -33,9 +33,6 @@ namespace ngraph
 
     namespace runtime
     {
-        template <typename ET>
-        class ParameterizedTensorView;
-
         class TensorView : public Value
         {
         protected:
@@ -46,11 +43,7 @@ namespace ngraph
 
         public:
             virtual ~TensorView() {}
-            template <typename ET>
-            ParameterizedTensorView<ET>* get_parameterized_tensor_view()
-            {
-                return dynamic_cast<ParameterizedTensorView<ET>*>(this);
-            }
+            TensorView& operator=(const TensorView&) = default;
 
             std::shared_ptr<const ngraph::descriptor::TensorView>
                 get_tensor_view_descriptor() const;
@@ -70,6 +63,12 @@ namespace ngraph
             /// @param tensor_offset Offset into tensor storage to begin writing. Must be element-aligned.
             /// @param n Number of bytes to write, must be integral number of elements.
             virtual void write(const void* p, size_t tensor_offset, size_t n) = 0;
+
+            template <typename T>
+            void write(const std::vector<T>& values)
+            {
+                write(values.data(), 0, values.size() * sizeof(T));
+            }
 
             /// @brief Read bytes directly from the tensor
             /// @param p Pointer to destination for data

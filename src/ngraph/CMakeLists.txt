@@ -63,6 +63,7 @@ set (SRC
     pass/pass.cpp
     pass/topological_sort.cpp
     pass/visualize_tree.cpp
+    runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/manager.cpp
     runtime/ngvm/call_frame.cpp
@@ -113,7 +114,6 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_kernels.cpp
         runtime/cpu/emitter.cpp
         runtime/cpu/external_function.cpp
-        runtime/cpu/memory_handler.cpp
         runtime/cpu/tensor_view.cpp
         )
     # LLVM binary builds are typically built without RTTI

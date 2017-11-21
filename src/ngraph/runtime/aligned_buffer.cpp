@@ -12,32 +12,42 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/runtime/cpu/memory_handler.hpp"
+#include "ngraph/runtime/aligned_buffer.hpp"
 
 using namespace ngraph;
 
-runtime::cpu::MemoryHandler::MemoryHandler(size_t byte_size, size_t alignment)
-    : m_allocated_buffer_pool(nullptr)
-    , m_aligned_buffer_pool(nullptr)
+runtime::AlignedBuffer::AlignedBuffer()
+    : m_allocated_buffer(nullptr)
+    , m_aligned_buffer(nullptr)
 {
-    if (byte_size > 0)
+}
+
+runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment)
+{
+    initialize(byte_size, alignment);
+}
+
+void runtime::AlignedBuffer::initialize(size_t byte_size, size_t alignment)
+{
+    m_byte_size = byte_size;
+    if (m_byte_size > 0)
     {
-        size_t allocation_size = byte_size + alignment;
-        m_allocated_buffer_pool = static_cast<char*>(malloc(allocation_size));
-        m_aligned_buffer_pool = m_allocated_buffer_pool;
-        size_t mod = size_t(m_aligned_buffer_pool) % alignment;
+        size_t allocation_size = m_byte_size + alignment;
+        m_allocated_buffer = static_cast<char*>(malloc(allocation_size));
+        m_aligned_buffer = m_allocated_buffer;
+        size_t mod = size_t(m_aligned_buffer) % alignment;
 
         if (mod != 0)
         {
-            m_aligned_buffer_pool += (alignment - mod);
+            m_aligned_buffer += (alignment - mod);
         }
     }
 }
 
-runtime::cpu::MemoryHandler::~MemoryHandler()
+runtime::AlignedBuffer::~AlignedBuffer()
 {
-    if (m_allocated_buffer_pool != nullptr)
+    if (m_allocated_buffer != nullptr)
     {
-        free(m_allocated_buffer_pool);
+        free(m_allocated_buffer);
     }
 }
