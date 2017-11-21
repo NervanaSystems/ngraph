@@ -95,7 +95,7 @@ include_directories(
     "${EIGEN_INCLUDE_DIR}"
     )
 
-if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
+if (LLVM_INCLUDE_DIR AND
     MKLDNN_INCLUDE_DIR)
     find_package(ZLIB REQUIRED)
 
@@ -162,7 +162,7 @@ message(STATUS "LIBRARY_OUTPUT_DIRECTORY set to: ${COMMON_LIBRARY_OUTPUT_DIRECTO
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
-if(NGRAPH_CPU_ENABLE AND LLVM_LINK_LIBS)
+if(LLVM_LINK_LIBS)
     target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
 endif()
 
@@ -172,7 +172,7 @@ if (APPLE)
     set_property(TARGET ngraph PROPERTY SUFFIX "")
 endif()
 
-if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
+if(MKLDNN_LIB_DIR)
     target_link_libraries(ngraph PRIVATE mkldnn)
 endif()
 
@@ -211,7 +211,7 @@ install(DIRECTORY
     DESTINATION "${NGRAPH_INSTALL_LIB}"
 )
 endif()
-if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
+if (LLVM_INCLUDE_DIR AND
     MKLDNN_INCLUDE_DIR)
     # Currently this is required for Argon codegen. To avoid this, we'll need to decouple LLVM from
     # compiler.hpp
@@ -227,10 +227,10 @@ endif()
 
 add_dependencies(ngraph eigen)
 
-if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
+if(LLVM_INCLUDE_DIR)
     add_dependencies(ngraph ext_llvm)
 endif()
 
-if(NGRAPH_CPU_ENABLE AND MKLDNN_INCLUDE_DIR)
+if(MKLDNN_INCLUDE_DIR)
     add_dependencies(ngraph ext_mkldnn)
 endif()
