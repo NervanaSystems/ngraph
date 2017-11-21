@@ -2708,3 +2708,30 @@ TEST(${BACKEND_NAME}, sign)
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), result->get_vector<float>());
 }
+
+TEST(${BACKEND_NAME}, constant_equality_bool)
+{
+    auto shape = Shape{4};
+    // auto A = make_shared<op::Parameter>(element::Bool::element_type(), shape);
+    // auto B = make_shared<op::Parameter>(element::Bool::element_type(), shape);
+    // auto result_type = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    // auto f = make_shared<Function>(make_shared<op::Equal>(A, B), result_type, op::Parameters{A, B});
+
+    auto a = runtime::make_tensor<element::Bool>(shape, {true, false, true, false});
+    auto A = make_shared<op::ParameterizedConstant<element::Bool>>(shape, a);
+    auto b = runtime::make_tensor<element::Bool>(shape, {true, true, true, true});
+    auto B = make_shared<op::ParameterizedConstant<element::Bool>>(shape, b);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<char>{true, false, true, false}), result->get_vector<char>());
+}
