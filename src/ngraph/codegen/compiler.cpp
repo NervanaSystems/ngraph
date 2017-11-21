@@ -42,6 +42,7 @@
 #include <clang/Basic/TargetInfo.h>
 #include <clang/CodeGen/CodeGenAction.h>
 #include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/FrontendActions.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <llvm/Support/TargetSelect.h>
 
@@ -73,6 +74,11 @@ Compiler::~Compiler()
 {
 }
 
+void Compiler::set_precompiled_header_source(const std::string& source)
+{
+    s_static_compiler.set_precompiled_header_source(source);
+}
+
 std::unique_ptr<llvm::Module> Compiler::compile(const std::string& source)
 {
     lock_guard<mutex> lock(m_mutex);
@@ -88,14 +94,10 @@ static std::string GetExecutablePath(const char* Argv0)
 }
 
 StaticCompiler::StaticCompiler()
-    : m_precompiled_headers_enabled(false)
+    : m_precompiled_header_valid(false)
     , m_debuginfo_enabled(false)
     , m_source_name("code.cpp")
 {
-#if NGCPU_PCH
-    m_precompiled_headers_enabled = true;
-#endif
-
 #if NGCPU_DEBUGINFO
     m_debuginfo_enabled = true;
 #endif
@@ -214,14 +216,6 @@ StaticCompiler::StaticCompiler()
         CGO.setDebugInfo(codegenoptions::FullDebugInfo);
     }
 
-    if (m_precompiled_headers_enabled)
-    {
-        // Preprocessor options
-        auto& PPO = m_compiler->getInvocation().getPreprocessorOpts();
-        PPO.ImplicitPCHInclude = "ngcpu.pch";
-        PPO.DisablePCHValidation = 1;
-    }
-
     // Enable various target features
     // Most of these are for Eigen
     auto& TO = m_compiler->getInvocation().getTargetOpts();
@@ -313,6 +307,18 @@ void StaticCompiler::use_cached_files()
 
 std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
 {
+    if (!m_precompiled_header_valid && m_precomiled_header_source.empty() == false)
+    {
+        generate_pch(m_precomiled_header_source);
+    }
+    if (m_precompiled_header_valid)
+    {
+        // Preprocessor options
+        auto& PPO = m_compiler->getInvocation().getPreprocessorOpts();
+        PPO.ImplicitPCHInclude = m_pch_path;
+        PPO.DisablePCHValidation = 0;
+    }
+
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
     unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);
@@ -333,24 +339,24 @@ std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
     return rc;
 }
 
-// std::unique_ptr<llvm::Module> StaticCompiler::generate_pch(const string& source)
-// {
-//     // Map code filename to a memoryBuffer
-//     StringRef source_ref(source);
-//     unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);
-//     m_compiler->getInvocation().getPreprocessorOpts().addRemappedFile(m_source_name, buffer.get());
+void StaticCompiler::generate_pch(const string& source)
+{
+    m_pch_path = file_util::tmp_filename();
+    m_compiler->getFrontendOpts().OutputFile = m_pch_path;
 
-//     // Create and execute action
-//     CodeGenAction* compilerAction = new GeneratePCHAction();
-//     std::unique_ptr<llvm::Module> rc;
-//     if (m_compiler->ExecuteAction(*compilerAction) == true)
-//     {
-//         rc = compilerAction->takeModule();
-//     }
+    // Map code filename to a memoryBuffer
+    StringRef source_ref(source);
+    unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);
+    m_compiler->getInvocation().getPreprocessorOpts().addRemappedFile(m_source_name, buffer.get());
 
-//     buffer.release();
+    // Create and execute action
+    clang::GeneratePCHAction* compilerAction = new clang::GeneratePCHAction();
+    if (m_compiler->ExecuteAction(*compilerAction) == true)
+    {
+        m_precompiled_header_valid = true;
+    }
 
-//     m_compiler->getInvocation().getPreprocessorOpts().clearRemappedFiles();
+    buffer.release();
 
-//     return rc;
-// }
+    m_compiler->getInvocation().getPreprocessorOpts().clearRemappedFiles();
+}

@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <string>
 #include <typeindex>
@@ -521,6 +522,29 @@ void Emitter::EmitParameterizedConstantBool(const ngraph::Node* n,
     TU << "\n";
 }
 
+static string format_float_as_string(float value)
+{
+    if (isnan(value))
+    {
+        return "NAN";
+    }
+    else if (isinf(value))
+    {
+        if (value > 0)
+        {
+            return "INFINITY";
+        }
+        else
+        {
+            return "-INFINITY";
+        }
+    }
+    else
+    {
+        return to_string(value);
+    }
+}
+
 void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
                                                ExternalFunction* ef,
                                                const std::vector<TensorViewInfo>& inputs,
@@ -538,7 +562,7 @@ void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
         for (size_t i = 0; i < value.size(); i++)
         {
             TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<" << type
-               << ">(" << value[i] << ");\n";
+               << ">(" << format_float_as_string(value[i]) << ");\n";
         }
     }
     else
@@ -551,7 +575,7 @@ void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
             {
                 TU << ",\n";
             }
-            TU << "    " << value[i];
+            TU << "    " << format_float_as_string(value[i]);
         }
         TU << "\n};";
     }
