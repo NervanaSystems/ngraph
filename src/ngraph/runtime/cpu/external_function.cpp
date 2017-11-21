@@ -196,6 +196,7 @@ void ExternalFunction::compile()
 using namespace ngraph::runtime::cpu::eigen;
 
 )";
+    string pch_header_source = TU.get_code();
 
     TU << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
@@ -313,6 +314,8 @@ using namespace ngraph::runtime::cpu::eigen;
 
     codegen::Compiler compiler;
     codegen::ExecutionEngine execution_engine;
+
+    compiler.set_precompiled_header_source(pch_header_source);
 
     auto llvm_module = compiler.compile(code);
     if (llvm_module == nullptr)
