@@ -125,8 +125,7 @@ bool pass::Liveness::run_on_call_graph(list<shared_ptr<Node>>& ops)
 bool pass::Liveness::is_temporary(const Tensor& tensor)
 {
     return tensor.is_persistent() == false && tensor.is_input() == false &&
-           tensor.is_output() == false;
-    // && tensor.is_constant() == false
+           tensor.is_output() == false && tensor.is_constant() == false;
     // && tensor.is_compile_only() == false;
 }
 

@@ -14,8 +14,10 @@
 
 #include <memory>
 
-#include "cpu_backend.hpp"
-#include "tensor_view.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/descriptor/primary_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -23,7 +25,11 @@ using namespace std;
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape)
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
-          std::make_shared<ngraph::TensorViewType>(element_type, shape), "external", true, true))
+          std::make_shared<ngraph::TensorViewType>(element_type, shape),
+          "external",
+          true,
+          true,
+          false))
     , m_allocated_buffer_pool(nullptr)
     , m_aligned_buffer_pool(nullptr)
 

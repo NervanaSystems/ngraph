@@ -41,8 +41,7 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        call_frame.get_parameterized_tensor_view<ET>(m_out.get_index())
-                            ->get_vector() = m_value;
+                        call_frame.get_tensor_view(m_out.get_index())->write(m_value);
                     }
 
                 protected:

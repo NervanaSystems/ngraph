@@ -195,9 +195,9 @@ void ExternalFunction::compile()
 
 #include <Eigen/Dense>
 
+#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/eigen_utils.hpp"
-#include "ngraph/runtime/cpu/memory_handler.hpp"
 
 using namespace ngraph::runtime::cpu::eigen;
 
@@ -235,7 +235,7 @@ void *__dso_handle = 0;
         {
             size_t temp_pool_size = pass_manager.get_state().get_temporary_pool_size();
             TU << "// Allocate the memory pool\n";
-            TU << "ngraph::runtime::cpu::MemoryHandler memory_handler(" << temp_pool_size << ", "
+            TU << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
                << ngraph::runtime::cpu::alignment << ");\n";
             TU << "\n";
 

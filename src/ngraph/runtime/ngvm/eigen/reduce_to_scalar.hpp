@@ -51,10 +51,8 @@ namespace ngraph
                             std::shared_ptr<CallFrame> cf =
                                 std::dynamic_pointer_cast<CallFrame>(ef->make_call_frame());
 
-                            auto tx = ngraph::runtime::make_tensor<ET>(Shape{});
-                            *tx = std::vector<typename ET::type>({x});
-                            auto ty = ngraph::runtime::make_tensor<ET>(Shape{});
-                            *ty = std::vector<typename ET::type>({y});
+                            auto tx = ngraph::runtime::make_tensor<ET>(Shape{}, {x});
+                            auto ty = ngraph::runtime::make_tensor<ET>(Shape{}, {y});
                             auto tr = ngraph::runtime::make_tensor<ET>(Shape{});
 
                             (*cf)({tx, ty}, {tr});
