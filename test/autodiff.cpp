@@ -223,6 +223,81 @@ TEST(backwards, broadcast1)
         autodiff_numeric_compare<element::Float32>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
+TEST(backwards, concat_vector)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    auto shape_0 = Shape{3};
+    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape_0));
+    auto shape_1 = Shape{2};
+    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape_1));
+    auto shape_2 = Shape{1};
+    auto x2 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape_2));
+
+    auto make_graph = [shape_0, shape_1, shape_2]() {
+        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape_0);
+        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape_1);
+        auto X2 = make_shared<op::Parameter>(element::Float32::element_type(), shape_2);
+        return make_shared<Function>(make_shared<op::Concat>(Nodes{X0, X1, X2}, 0),
+                                     nullptr,
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+        manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));
+}
+
+TEST(backwards, concat_axis_0)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    auto shape_0 = Shape{3, 2};
+    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape_0));
+    auto shape_1 = Shape{2, 2};
+    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape_1));
+    auto shape_2 = Shape{1, 2};
+    auto x2 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape_2));
+
+    auto make_graph = [shape_0, shape_1, shape_2]() {
+        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape_0);
+        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape_1);
+        auto X2 = make_shared<op::Parameter>(element::Float32::element_type(), shape_2);
+        return make_shared<Function>(make_shared<op::Concat>(Nodes{X0, X1, X2}, 0),
+                                     nullptr,
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+        manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));
+}
+
+TEST(backwards, concat_axis_1)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    auto shape_0 = Shape{2, 3};
+    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape_0));
+    auto shape_1 = Shape{2, 2};
+    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape_1));
+    auto shape_2 = Shape{2, 1};
+    auto x2 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape_2));
+
+    auto make_graph = [shape_0, shape_1, shape_2]() {
+        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape_0);
+        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape_1);
+        auto X2 = make_shared<op::Parameter>(element::Float32::element_type(), shape_2);
+        return make_shared<Function>(make_shared<op::Concat>(Nodes{X0, X1, X2}, 1),
+                                     nullptr,
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
+        manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));
+}
+
 TEST(backwards, ceiling)
 {
     auto manager = runtime::Manager::get("NGVM");
