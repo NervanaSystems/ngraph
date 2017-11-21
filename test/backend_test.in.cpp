@@ -2708,3 +2708,27 @@ TEST(${BACKEND_NAME}, sign)
     (*cf)({a}, {result});
     ASSERT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), result->get_vector<float>());
 }
+
+TEST(${BACKEND_NAME}, power)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Power>(A, B), rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 2, 3, 5});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{2, 0, 6, 3});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+
+    (*cf)({a, b}, {result});
+    ASSERT_EQ((vector<float>{1, 1, 729, 125}), result->get_vector<float>());
+}
