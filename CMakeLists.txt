@@ -87,6 +87,11 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 
+# Set true if CPU backend is built by default
+if (NOT DEFINED NGRAPH_CPU_ENABLE)
+    SET(NGRAPH_CPU_ENABLE TRUE)
+endif()
+
 #-----------------------------------------------------------------------------------------------
 # External projects install directory
 #-----------------------------------------------------------------------------------------------

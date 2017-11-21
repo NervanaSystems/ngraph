@@ -57,7 +57,7 @@ if(MKLDNN_INCLUDE_DIR)
     set(SRC ${SRC} mkldnn.cpp)
 endif()
 
-if(LLVM_INCLUDE_DIR)
+if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
     link_directories(${LLVM_LIB_DIR})
     set(SRC ${SRC} codegen.cpp)
