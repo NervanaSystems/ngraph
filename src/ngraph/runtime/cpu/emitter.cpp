@@ -531,7 +531,7 @@ void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
                      ->get_vector();
     const char* type = "float";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    TU << "// " << n->get_name() << " EmitParameterizedConstantFloat32\n";
     if (outputs[0].get_tensor().is_output())
     {
         // Special case where constant is stored directly in the output
@@ -568,7 +568,7 @@ void Emitter::EmitParameterizedConstantInt8(const ngraph::Node* n,
                      ->get_vector();
     const char* type = "int8_t";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    TU << "// " << n->get_name() << " EmitParameterizedConstantInt8\n";
     if (outputs[0].get_tensor().is_output())
     {
         // Special case where constant is stored directly in the output
@@ -605,7 +605,7 @@ void Emitter::EmitParameterizedConstantInt32(const ngraph::Node* n,
                      ->get_vector();
     const char* type = "int32_t";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    TU << "// " << n->get_name() << " EmitParameterizedConstantInt32\n";
     if (outputs[0].get_tensor().is_output())
     {
         // Special case where constant is stored directly in the output
@@ -642,7 +642,7 @@ void Emitter::EmitParameterizedConstantInt64(const ngraph::Node* n,
                      ->get_vector();
     const char* type = "int64_t";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    TU << "// " << n->get_name() << " EmitParameterizedConstantInt64\n";
     if (outputs[0].get_tensor().is_output())
     {
         // Special case where constant is stored directly in the output
@@ -679,7 +679,7 @@ void Emitter::EmitParameterizedConstantUInt8(const ngraph::Node* n,
                      ->get_vector();
     const char* type = "uint8_t";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    TU << "// " << n->get_name() << " EmitParameterizedConstantUInt8\n";
     if (outputs[0].get_tensor().is_output())
     {
         // Special case where constant is stored directly in the output
@@ -716,7 +716,7 @@ void Emitter::EmitParameterizedConstantUInt32(const ngraph::Node* n,
                      ->get_vector();
     const char* type = "uint32_t";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    TU << "// " << n->get_name() << " EmitParameterizedConstantUInt32\n";
     if (outputs[0].get_tensor().is_output())
     {
         // Special case where constant is stored directly in the output
@@ -753,7 +753,7 @@ void Emitter::EmitParameterizedConstantUInt64(const ngraph::Node* n,
                      ->get_vector();
     const char* type = "uint64_t";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstant_" << type << "\n";
+    TU << "// " << n->get_name() << " EmitParameterizedConstantUInt64\n";
     if (outputs[0].get_tensor().is_output())
     {
         // Special case where constant is stored directly in the output
