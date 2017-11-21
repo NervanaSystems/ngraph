@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <typeindex>
 #include <typeinfo>
+
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/ops/parameter.hpp"
@@ -36,6 +37,12 @@ namespace ngraph
 
             return std::vector<std::shared_ptr<Node>>(
                 begin(arguments), end(arguments)); //vector is needed for generating permutations
+        }
+
+        std::shared_ptr<Node> Matcher::match_root()
+        {
+            assert(is_match());
+            return m_match_root;
         }
 
         void Matcher::reset_pattern_nodes(

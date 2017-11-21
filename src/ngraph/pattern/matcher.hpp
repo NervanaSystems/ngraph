@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <memory.h>
 #include "ngraph/node.hpp"
 
@@ -64,12 +65,7 @@ namespace ngraph
             void reset() {}
             bool is_match() { return m_match_root != nullptr; }
             std::shared_ptr<Node> pattern_node() { return m_pattern_node; }
-            std::shared_ptr<Node> match_root()
-            {
-                assert(is_match());
-                return m_match_root;
-            }
-
+            std::shared_ptr<Node> match_root();
             void reset_pattern_nodes(std::shared_ptr<Node> node);
 
             friend op::Label; //TODO: refine to match_class

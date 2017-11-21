@@ -56,10 +56,8 @@ class TestMatcher : public pattern::Matcher
 
 static std::shared_ptr<Node> construct_constant_node(int n)
 {
-    auto shape = Shape{1};
-    auto t = ngraph::runtime::make_tensor<element::Int32>(shape);
-    (*t) = std::vector<int>{n};
-    return std::make_shared<op::ParameterizedConstant<element::Int32>>(shape, t);
+    auto int_t = ngraph::runtime::make_tensor<element::Int32>(Shape{1}, {n});
+    return make_shared<op::Int32Constant>(Shape{1}, int_t);
 }
 
 class TestGraphRewrite : public ngraph::pass::GraphRewrite
@@ -320,16 +318,12 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(c * (any_false + b), c * (a + b))); //nested any
     ASSERT_TRUE(n.match(c * (any_false + b), (b + a) * c)); //permutations w/ any_false
 
-    auto t = ngraph::runtime::make_tensor<element::Int32>(shape);
-    auto f = ngraph::runtime::make_tensor<element::Float32>(shape);
-    (*t) = std::vector<int>{1};
-    (*f) = std::vector<float>{1};
-    auto iconst1_0 = make_shared<op::ParameterizedConstant<element::Int32>>(shape, t);
-    auto iconst1_1 = make_shared<op::ParameterizedConstant<element::Int32>>(shape, t);
+    auto iconst1_0 = construct_constant_node(1);
+    auto iconst1_1 = construct_constant_node(1);
     ASSERT_TRUE(n.match(pattern * iconst1_0, a * iconst1_1)); //different iconst
     ASSERT_EQ(pattern->get_bound_node(), a);
-
-    auto fconst1_0 = make_shared<op::ParameterizedConstant<element::Float32>>(shape, f);
+    auto fconst1_0 =
+        make_shared<op::Constant>(element::Float32::element_type(), Shape{1}, std::to_string(1));
     auto patternf = pattern::op::Label::make_from_node(fconst1_0);
     ASSERT_FALSE(n.match(patternf * fconst1_0, a * iconst1_1)); //different iconst
 }
