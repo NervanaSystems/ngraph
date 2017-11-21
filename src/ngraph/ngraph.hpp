@@ -33,6 +33,12 @@
 /// @namespace ngraph::runtime
 /// @brief The objects used for executing the graph.
 
+//#include "ngraph/builder/max.hpp"
+//#include "ngraph/builder/min.hpp"
+//#include "ngraph/builder/mean.hpp"
+//#include "ngraph/builder/prod.hpp"
+#include "ngraph/builder/reduce.hpp"
+#include "ngraph/builder/sum.hpp"
 #include "ngraph/common.hpp"
 #include "ngraph/descriptor/buffer.hpp"
 #include "ngraph/descriptor/input.hpp"

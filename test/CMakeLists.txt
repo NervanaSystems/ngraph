@@ -22,6 +22,7 @@ include_directories(
     )
 
 set (SRC
+    builder_reduce_ops.cpp
     autodiff.cpp
     copy.cpp
     build_graph.cpp

@@ -13,6 +13,12 @@
 
 set (SRC
     autodiff/adjoints.cpp
+    #builder/max.cpp
+    #builder/min.cpp
+    #builder/mean.cpp
+    #builder/prod.cpp
+    builder/reduce.cpp
+    builder/sum.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
     descriptor/layout/tensor_view_layout.cpp
