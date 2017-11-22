@@ -18,6 +18,8 @@
 #include <memory>
 #include <string>
 
+#include <clang/CodeGen/CodeGenAction.h>
+
 #include <llvm/ExecutionEngine/MCJIT.h> // forces JIT to link in
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/Option/Arg.h>
@@ -53,8 +55,9 @@ public:
     ~Compiler();
     void set_precompiled_header_source(const std::string& source);
     std::unique_ptr<llvm::Module> compile(const std::string& source);
-
+    std::unique_ptr<clang::CodeGenAction>& get_compiler_action() { return compiler_action; }
 private:
+    std::unique_ptr<clang::CodeGenAction> compiler_action;
 };
 
 class ngraph::codegen::StaticCompiler : public llvm::SectionMemoryManager
@@ -70,7 +73,9 @@ public:
         m_precomiled_header_source = source;
     }
     void add_header_search_path(const std::string& path);
-    std::unique_ptr<llvm::Module> compile(const std::string& source);
+
+    std::unique_ptr<llvm::Module> compile(std::unique_ptr<clang::CodeGenAction>& compiler_action,
+                                          const std::string& source);
     void generate_pch(const std::string& source);
 
 private:

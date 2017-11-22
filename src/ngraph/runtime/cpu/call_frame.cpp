@@ -20,8 +20,10 @@
 using namespace std;
 using namespace ngraph::runtime::cpu;
 
-CallFrame::CallFrame(EntryPoint compiled_function)
-    : m_compiled_function(compiled_function)
+CallFrame::CallFrame(std::shared_ptr<ExternalFunction> external_function,
+                     EntryPoint compiled_function)
+    : m_external_function(external_function)
+    , m_compiled_function(compiled_function)
 {
 }
 
@@ -45,7 +47,7 @@ void CallFrame::tensor_call(
     }
 
     // Invoke compiled computation
-    m_compiled_function(inputs, outputs);
+    m_compiled_function(inputs.data(), outputs.data());
 }
 
 void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,
