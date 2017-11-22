@@ -479,14 +479,14 @@ void Emitter::EmitParameterizedConstantBool(const ngraph::Node* n,
         // Special case where constant is stored directly in the output
         for (size_t i = 0; i < value.size(); i++)
         {
-            TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<bool>("
+            TU << outputs[0].get_tensor().get_name() << "[" << i << "] = static_cast<char>("
                << (value[i] ? "true" : "false") << ");\n";
         }
     }
     else
     {
         TU << "// this should be const but eigen hates const :(\n";
-        TU << "bool " << outputs[0].get_tensor().get_name() << "[] = {\n";
+        TU << "char " << outputs[0].get_tensor().get_name() << "[] = {\n";
         for (size_t i = 0; i < value.size(); i++)
         {
             if (i != 0)

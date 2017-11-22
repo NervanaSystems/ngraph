@@ -341,7 +341,7 @@ std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
 
 void StaticCompiler::generate_pch(const string& source)
 {
-    m_pch_path = file_util::path_join(file_util::get_temp_directory(), "ngraph.pch");
+    m_pch_path = file_util::tmp_filename();
     m_compiler->getFrontendOpts().OutputFile = m_pch_path;
 
     // Map code filename to a memoryBuffer
