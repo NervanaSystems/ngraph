@@ -45,7 +45,7 @@ void CallFrame::tensor_call(
     }
 
     // Invoke compiled computation
-    m_compiled_function(inputs, outputs);
+    m_compiled_function(inputs.data(), outputs.data());
 }
 
 void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,

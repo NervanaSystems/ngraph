@@ -24,7 +24,6 @@
 
 #define EMITTER_DECL(E)                                                                            \
     E(const ngraph::Node* n,                                                                       \
-      ExternalFunction* ef,                                                                        \
       const std::vector<TensorViewInfo>& inputs,                                                   \
       const std::vector<TensorViewInfo>& outputs)
 

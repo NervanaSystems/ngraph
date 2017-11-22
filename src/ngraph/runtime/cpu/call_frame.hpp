@@ -32,8 +32,7 @@ namespace ngraph
         {
             class CallFrame;
 
-            using EntryPoint_t = void(const std::vector<void*>& inputs,
-                                      const std::vector<void*>& outputs);
+            using EntryPoint_t = void(void** inputs, void** outputs);
 
             using EntryPoint = std::function<EntryPoint_t>;
 
