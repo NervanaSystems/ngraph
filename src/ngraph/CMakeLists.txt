@@ -178,6 +178,29 @@ if (NGRAPH_ARGON_ENABLE)
     link_directories(${ARGON_LIB_DIR})
 endif()
 
+if (NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
+    include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
+    include_directories(${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+    link_directories(${LLVM_LIB_DIR} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+
+    # Add sources for the CPU backend
+    # and all its dependencies
+    set(SRC ${SRC}
+        codegen/nvptx_compiler.cpp
+        codegen/nvptx_execution_engine.cpp
+        )
+    # LLVM binary builds are typically built without RTTI
+    # The built-in headers are in a version-specific directory
+    # This must be kept in sync with the LLVM + Clang version in use
+    set_source_files_properties(codegen/nvptx_compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
+    set_source_files_properties(codegen/nvptx_compiler.cpp PROPERTIES COMPILE_DEFINITIONS
+      "CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";")
+    set(NGRAPH_GPU_PCH_ENABLE 0 CACHE STRING "Enable pre-compiled headers in the GPU backend")
+    set(NGRAPH_GPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the GPU backend")
+    set_property(SOURCE codegen/nvptx_compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+      "NGGPU_PCH=${NGRAPH_GPU_PCH_ENABLE};NGGPU_DEBUGINFO=${NGRAPH_GPU_DEBUGINFO_ENABLE}")
+endif()
+
 add_library(ngraph SHARED ${SRC})
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     # Generate the resource file containing all headers used by the codegen compiler
