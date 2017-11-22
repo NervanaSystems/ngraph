@@ -26,19 +26,19 @@ namespace py = pybind11;
 namespace ngraph {
 namespace runtime {
 
-PYBIND11_MODULE(clsBackend, mod) {
+PYBIND11_MODULE(Backend, mod) {
 
-    py::module::import("wrapper.ngraph.runtime.clsCallFrame");
-    py::module::import("wrapper.ngraph.runtime.clsParameterizedTensorView");
+    py::module::import("wrapper.ngraph.runtime.CallFrame");
+    py::module::import("wrapper.ngraph.runtime.ParameterizedTensorView");
     using ET = ngraph::element::TraitedType<float>;
 
-    py::class_<Backend, std::shared_ptr<Backend>> clsBackend(mod, "Backend");
+    py::class_<Backend, std::shared_ptr<Backend>> backend(mod, "Backend");
 
-    clsBackend.def("make_call_frame", &Backend::make_call_frame);
-    clsBackend.def("make_primary_tensor_view",
+    backend.def("make_call_frame", &Backend::make_call_frame);
+    backend.def("make_primary_tensor_view",
                    &Backend::make_primary_tensor_view);
-    clsBackend.def("make_parameterized_tensor_view", (std::shared_ptr<ParameterizedTensorView<ET>> (Backend::*) (const ngraph::Shape& )) &Backend::make_parameterized_tensor_view);
-    clsBackend.def("make_parameterized_tensor_view", (std::shared_ptr<ParameterizedTensorView<ET>> (Backend::*) (const NDArrayBase<ET::type>& )) &Backend::make_parameterized_tensor_view);
+    backend.def("make_parameterized_tensor_view", (std::shared_ptr<ParameterizedTensorView<ET>> (Backend::*) (const ngraph::Shape& )) &Backend::make_parameterized_tensor_view);
+    backend.def("make_parameterized_tensor_view", (std::shared_ptr<ParameterizedTensorView<ET>> (Backend::*) (const NDArrayBase<ET::type>& )) &Backend::make_parameterized_tensor_view);
 }
 
 }}  // ngraph

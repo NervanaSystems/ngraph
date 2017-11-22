@@ -21,13 +21,13 @@ namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_MODULE(clsBroadcast, mod) {
+PYBIND11_MODULE(Broadcast, mod) {
 
-    py::module::import("wrapper.ngraph.ops.clsOp");
+    py::module::import("wrapper.ngraph.ops.Op");
     using AxisSet = std::set<size_t>;
  
-    py::class_<Broadcast, std::shared_ptr<Broadcast>, Builtin> clsBroadcast(mod, "Broadcast");
-    clsBroadcast.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&,
+    py::class_<Broadcast, std::shared_ptr<Broadcast>, Builtin> broadcast(mod, "Broadcast");
+    broadcast.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&,
                               const AxisSet& >());
 }
 

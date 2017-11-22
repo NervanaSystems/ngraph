@@ -22,12 +22,12 @@ namespace py = pybind11;
 namespace ngraph {
 namespace runtime {
 
-PYBIND11_MODULE(clsCallFrame, mod) {
+PYBIND11_MODULE(CallFrame, mod) {
 
-    py::class_<CallFrame, std::shared_ptr<CallFrame>> clsCallFrame(mod, "CallFrame");
-    py::class_<ngvm::CallFrame, std::shared_ptr<ngvm::CallFrame>, CallFrame> clsNGVMCallFrame(mod, "clsNGVMCallFrame");
+    py::class_<CallFrame, std::shared_ptr<CallFrame>> callFrame(mod, "CallFrame");
+    py::class_<ngvm::CallFrame, std::shared_ptr<ngvm::CallFrame>, CallFrame> ngvmCallFrame(mod, "NGVMCallFrame");
 
-    clsCallFrame.def("call", [](const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
+    callFrame.def("call", [](const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
                               const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outputs) {
                       (inputs, outputs);
                      }, py::is_operator());

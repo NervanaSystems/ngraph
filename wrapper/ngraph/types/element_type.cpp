@@ -40,9 +40,9 @@ static void declareTraitedType(py::module & mod, std::string const & suffix) {
 
 }
 
-PYBIND11_MODULE(clsTraitedType, mod) {
+PYBIND11_MODULE(TraitedType, mod) {
 
-    py::class_<Type, std::shared_ptr<Type>> clsType(mod, "Type");
+    py::class_<Type, std::shared_ptr<Type>> type(mod, "Type");
 
     declareTraitedType<float>(mod, "F");
     declareTraitedType<double>(mod, "D");

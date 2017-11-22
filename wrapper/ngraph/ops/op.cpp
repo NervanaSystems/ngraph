@@ -21,19 +21,19 @@ namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_MODULE(clsOp, mod) {
+PYBIND11_MODULE(Op, mod) {
 
-    py::module::import("wrapper.ngraph.clsNode");
+    py::module::import("wrapper.ngraph.Node");
 
-    py::class_<Builtin, std::shared_ptr<Builtin>, Node> clsBuiltin(mod, "Builtin");
+    py::class_<Builtin, std::shared_ptr<Builtin>, Node> builtin(mod, "Builtin");
     py::class_<UnaryElementwiseBuiltin, std::shared_ptr<UnaryElementwiseBuiltin>,
-        Builtin> clsUnaryElementwiseBuiltin(mod, "UnaryElementwiseBuiltin");
+        Builtin> unaryElementwiseBuiltin(mod, "UnaryElementwiseBuiltin");
     py::class_<UnaryElementwiseArithmetic, std::shared_ptr<UnaryElementwiseArithmetic>, 
-        UnaryElementwiseBuiltin> clsUnaryElementwiseArithmetic(mod, "UnaryElementwiseArithmetic"); 
+        UnaryElementwiseBuiltin> unaryElementwiseArithmetic(mod, "UnaryElementwiseArithmetic"); 
     py::class_<BinaryElementwiseBuiltin, std::shared_ptr<BinaryElementwiseBuiltin>,
-        Builtin> clsBinaryElementwiseBuiltin(mod, "BinaryElementwiseBuiltin");
+        Builtin> binaryElementwiseBuiltin(mod, "BinaryElementwiseBuiltin");
     py::class_<BinaryElementwiseArithmetic, std::shared_ptr<BinaryElementwiseArithmetic>,
-        BinaryElementwiseBuiltin> clsBinaryElementwiseArithmetic(mod, "BinaryElementwiseArithmetic");    
+        BinaryElementwiseBuiltin> binaryElementwiseArithmetic(mod, "BinaryElementwiseArithmetic");    
 
 }
 

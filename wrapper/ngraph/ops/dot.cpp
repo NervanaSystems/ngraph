@@ -21,12 +21,12 @@ namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_MODULE(clsDot, mod) {
+PYBIND11_MODULE(Dot, mod) {
 
-    py::module::import("wrapper.ngraph.ops.clsOp");
+    py::module::import("wrapper.ngraph.ops.Op");
 
-    py::class_<Dot, std::shared_ptr<Dot>, Builtin> clsDot(mod, "Dot");
-    clsDot.def(py::init<const std::shared_ptr<ngraph::Node>&,
+    py::class_<Dot, std::shared_ptr<Dot>, Builtin> dot(mod, "Dot");
+    dot.def(py::init<const std::shared_ptr<ngraph::Node>&,
                         const std::shared_ptr<ngraph::Node>& >());
 }
 

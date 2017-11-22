@@ -21,9 +21,9 @@ namespace py = pybind11;
 namespace ngraph {
 namespace runtime{
 
-PYBIND11_MODULE(clsUtils, mod) {
+PYBIND11_MODULE(Utils, mod) {
 
-    py::module::import("wrapper.ngraph.runtime.clsParameterizedTensorView");
+    py::module::import("wrapper.ngraph.runtime.ParameterizedTensorView");
     using ET = ngraph::element::TraitedType<float>;    
 
     mod.def("make_tensor", &make_tensor<ET>);

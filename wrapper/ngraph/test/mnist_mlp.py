@@ -14,59 +14,59 @@
 # limitations under the License.
 # ----------------------------------------------------------------------------
 
-import wrapper.ngraph.types.clsTraitedType as clsTraitedType
-import wrapper.ngraph.ops.clsParameter as clsParameter
-import wrapper.ngraph.runtime.clsTensorViewType as clsTensorViewType
-import wrapper.ngraph.clsFunction as clsFunction
-import wrapper.ngraph.ops.clsMaximum as clsMaximum
-import wrapper.ngraph.ops.clsReshape as clsReshape
-import wrapper.ngraph.ops.clsDot as clsDot
-import wrapper.ngraph.ops.clsBroadcast as clsBroadcast
-import wrapper.ngraph.runtime.clsUtils as clsUtils
-import wrapper.ngraph.ops.clsParameterizedConstant as clsParameterizedConstant
-import wrapper.ngraph.ops.clsExp as clsExp
-import wrapper.ngraph.ops.clsReduce as clsReduce
+import wrapper.ngraph.types.TraitedType as TraitedType
+import wrapper.ngraph.ops.Parameter as Parameter
+import wrapper.ngraph.runtime.TensorViewType as TensorViewType
+import wrapper.ngraph.Function as Function
+import wrapper.ngraph.ops.Maximum as Maximum
+import wrapper.ngraph.ops.Reshape as Reshape
+import wrapper.ngraph.ops.Dot as Dot
+import wrapper.ngraph.ops.Broadcast as Broadcast
+import wrapper.ngraph.runtime.Utils as Utils
+import wrapper.ngraph.ops.ParameterizedConstant as ParameterizedConstant
+import wrapper.ngraph.ops.Exp as Exp
+import wrapper.ngraph.ops.Reduce as Reduce
 
-float_element_type = clsTraitedType.TraitedTypeF.element_type()
-int_element_type = clsTraitedType.TraitedTypeI.element_type()
+float_element_type = TraitedType.TraitedTypeF.element_type()
+int_element_type = TraitedType.TraitedTypeI.element_type()
 bz = 53
-Input = clsParameter.Parameter(float_element_type, [bz, 28, 28])
-Label = clsParameter.Parameter(int_element_type, [bz])
+Input = Parameter.Parameter(float_element_type, [bz, 28, 28])
+Label = Parameter.Parameter(int_element_type, [bz])
 
-MaxParam1 = clsParameter.Parameter(float_element_type, [])
-MaxParam2 = clsParameter.Parameter(float_element_type, [])
-MaxOutput = clsTensorViewType.TensorViewType(float_element_type, []) 
-MaxFn = clsFunction.Function(clsMaximum.Maximum(MaxParam1, MaxParam2), MaxOutput, [MaxParam1, MaxParam2], 'mnist')
+MaxParam1 = Parameter.Parameter(float_element_type, [])
+MaxParam2 = Parameter.Parameter(float_element_type, [])
+MaxOutput = TensorViewType.TensorViewType(float_element_type, []) 
+MaxFn = Function.Function(Maximum.Maximum(MaxParam1, MaxParam2), MaxOutput, [MaxParam1, MaxParam2], 'mnist')
 
-constant_tensor = clsUtils.make_tensor([]) 
+constant_tensor = Utils.make_tensor([]) 
 #constant_tensor = [None]*255
-constant_op = clsParameterizedConstant.ParameterizedConstantF([], constant_tensor) 
-constant_broadcast = clsBroadcast.Broadcast(constant_op, [bz, 784], {0, 1})
+constant_op = ParameterizedConstant.ParameterizedConstantF([], constant_tensor) 
+constant_broadcast = Broadcast.Broadcast(constant_op, [bz, 784], {0, 1})
 
 # Flatten
-X1 = clsReshape.Reshape(Input, [0, 1, 2], [bz, 784])
+X1 = Reshape.Reshape(Input, [0, 1, 2], [bz, 784])
 
 # Normalize
 X2 = X1/constant_broadcast 
 
 # Affine 1
-W1 = clsParameter.Parameter(float_element_type, [784, 100])
-b1 = clsParameter.Parameter(float_element_type, [100])
-X3 = clsDot.Dot(X2, W1) + clsBroadcast.Broadcast(b1, [bz, 100], {0}) 
+W1 = Parameter.Parameter(float_element_type, [784, 100])
+b1 = Parameter.Parameter(float_element_type, [100])
+X3 = Dot.Dot(X2, W1) + Broadcast.Broadcast(b1, [bz, 100], {0}) 
 
-constant_broadcast_1 = clsBroadcast.Broadcast(constant_op, [bz, 100], {0, 1})
+constant_broadcast_1 = Broadcast.Broadcast(constant_op, [bz, 100], {0, 1})
 
-X4 = clsMaximum.Maximum(X3, constant_broadcast_1)
+X4 = Maximum.Maximum(X3, constant_broadcast_1)
 
 #Affine 2
-W2 = clsParameter.Parameter(float_element_type, [100, 10])
-b2 = clsParameter.Parameter(float_element_type, [10])
-X5 = clsDot.Dot(X4, W2) + clsBroadcast.Broadcast(b2, [bz, 10], {0})
+W2 = Parameter.Parameter(float_element_type, [100, 10])
+b2 = Parameter.Parameter(float_element_type, [10])
+X5 = Dot.Dot(X4, W2) + Broadcast.Broadcast(b2, [bz, 10], {0})
 
 # Softmax and loss
-constant_broadcast_2 = clsBroadcast.Broadcast(constant_op, [0], {0})
+constant_broadcast_2 = Broadcast.Broadcast(constant_op, [0], {0})
 Logits = X5
-Exp = clsExp.Exp(Logits) 
-Max = clsReduce.Reduce(Exp, constant_broadcast_2, MaxFn, {1}) 
-MaxBroadcast = clsBroadcast.Broadcast(Max, [bz, 10], {1})
+Exp = Exp.Exp(Logits) 
+Max = Reduce.Reduce(Exp, constant_broadcast_2, MaxFn, {1}) 
+MaxBroadcast = Broadcast.Broadcast(Max, [bz, 10], {1})
 Softmax = Exp / MaxBroadcast

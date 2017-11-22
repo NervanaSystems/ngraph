@@ -23,17 +23,17 @@
 namespace py = pybind11;
 namespace ngraph {
 
-PYBIND11_MODULE(clsNode, mod) {
+PYBIND11_MODULE(Node, mod) {
 
-    py::class_<Node, std::shared_ptr<Node>> clsNode(mod, "Node");
+    py::class_<Node, std::shared_ptr<Node>> node(mod, "Node");
  
-    clsNode.def("__add__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
+    node.def("__add__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
                 return a + b;
                }, py::is_operator());
-    clsNode.def("__mul__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
+    node.def("__mul__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
                 return a * b;
                }, py::is_operator());
-    clsNode.def("__truediv__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
+    node.def("__truediv__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
                 return a/b;
                }, py::is_operator());
 }

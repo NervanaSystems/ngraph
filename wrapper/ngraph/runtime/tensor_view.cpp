@@ -20,13 +20,13 @@
 namespace py = pybind11;
 namespace ngraph {
 
-PYBIND11_MODULE(clsTensorViewType, mod) {
+PYBIND11_MODULE(TensorViewType, mod) {
 
-    py::class_<ValueType, std::shared_ptr<ValueType>> clsValueType(mod, "ValueType"); 
-    py::class_<TensorViewType, std::shared_ptr<TensorViewType>, ValueType> clsTensorViewType(mod, "TensorViewType");
+    py::class_<ValueType, std::shared_ptr<ValueType>> valueType(mod, "ValueType"); 
+    py::class_<TensorViewType, std::shared_ptr<TensorViewType>, ValueType> tensorViewType(mod, "TensorViewType");
 
-    clsTensorViewType.def(py::init<const element::Type&, const Shape&>());
-    clsTensorViewType.def("get_shape", &TensorViewType::get_shape);
+    tensorViewType.def(py::init<const element::Type&, const Shape&>());
+    tensorViewType.def("get_shape", &TensorViewType::get_shape);
 }
 
 }  // ngraph
