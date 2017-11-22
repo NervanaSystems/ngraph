@@ -29,23 +29,28 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             ext_tbb
             GIT_REPOSITORY ${TBB_GIT_REPO_URL}
             GIT_TAG ${TBB_GIT_TAG}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ""
             UPDATE_COMMAND ""
-            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${TBB_INSTALL_DIR}
+            INSTALL_COMMAND ""
             )
     else()
         ExternalProject_Add(
             ext_tbb
             GIT_REPOSITORY ${TBB_GIT_REPO_URL}
             GIT_TAG ${TBB_GIT_TAG}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ""
             UPDATE_COMMAND ""
-            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${TBB_INSTALL_DIR}
+            INSTALL_COMMAND ""
             BUILD_BYPRODUCTS "${TBB_INSTALL_DIR}/include/tbb/tbb.h"
             )
     endif()
 
     ExternalProject_Get_Property(ext_tbb source_dir binary_dir)
 
-    set(TBB_INCLUDE_DIR "${TBB_INSTALL_DIR}/include" PARENT_SCOPE)
-    set(TBB_LIB_DIR "${TBB_INSTALL_DIR}/lib" PARENT_SCOPE)
-
+    include(${source_dir}/cmake/TBBBuild.cmake)
+    tbb_build(TBB_ROOT ${source_dir} MAKE_ARGS compiler=clang CONFIG_DIR TBB_DIR)
+    find_package(TBB REQUIRED tbb)
+    
 endif()
