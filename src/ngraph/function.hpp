@@ -56,6 +56,9 @@ namespace ngraph
         void clear_ordered_ops_valid() { m_ordered_ops_valid = false; }
         friend std::ostream& operator<<(std::ostream&, const Function&);
         size_t get_instance_id() { return m_instance_id; }
+        size_t get_temporary_pool_size();
+        void set_temporary_pool_size(size_t);
+
     protected:
         std::shared_ptr<Node> m_result;
         std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;
@@ -64,6 +67,7 @@ namespace ngraph
         bool m_ordered_ops_valid;
         std::list<std::shared_ptr<Node>> m_ordered_ops;
         std::list<std::shared_ptr<Node>> m_ops;
+        size_t m_temporary_pool_size;
 
     private:
         Function(const Function&) = delete;

@@ -39,7 +39,6 @@ namespace ngraph
 
             using OpFunction = std::function<void(Emitter*,
                                                   const ngraph::Node*,
-                                                  ExternalFunction*,
                                                   const std::vector<TensorViewInfo>& inputs,
                                                   const std::vector<TensorViewInfo>& outputs)>;
 
