@@ -25,16 +25,13 @@ static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
     tv->write(data.data(), 0, data_size);
 }
 
-
 std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result(
-    std::function < std::shared_ptr<Node> (const std::shared_ptr<Node>&, const AxisSet&) > func)
+    std::function<std::shared_ptr<Node>(const std::shared_ptr<Node>&, const AxisSet&)> func)
 {
     auto shape_a = Shape{3, 2};
-    auto A =
-        make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
     auto shape_rt = Shape{2};
-    auto rt =
-        make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
     auto f = make_shared<Function>(func(A, {0}), rt, op::Parameters{A});
     auto manager = runtime::Manager::get("NGVM");
     auto external = manager->compile(f);
@@ -43,22 +40,19 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result(
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(
-        element::Float32::element_type(), shape_rt);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
     (*cf)({a}, {result});
 
     return result;
 }
 
 std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_true(
-    std::function < std::shared_ptr<Node> (const std::shared_ptr<Node>&, const AxisSet&, bool) > func)
+    std::function<std::shared_ptr<Node>(const std::shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
     auto shape_a = Shape{3, 2};
-    auto A =
-        make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
     auto shape_rt = Shape{2};
-    auto rt =
-        make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
     auto f = make_shared<Function>(func(A, {0}, true), rt, op::Parameters{A});
     auto manager = runtime::Manager::get("NGVM");
     auto external = manager->compile(f);
@@ -67,22 +61,19 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_true(
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(
-        element::Float32::element_type(), shape_rt);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
     (*cf)({a}, {result});
 
     return result;
 }
 
 std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_false(
-    std::function < std::shared_ptr<Node> (const std::shared_ptr<Node>&, const AxisSet&, bool) > func)
+    std::function<std::shared_ptr<Node>(const std::shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
     auto shape_a = Shape{3, 2};
-    auto A =
-        make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
     auto shape_rt = Shape{2};
-    auto rt =
-        make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
     auto f = make_shared<Function>(func(A, {0}, false), rt, op::Parameters{A});
     auto manager = runtime::Manager::get("NGVM");
     auto external = manager->compile(f);
@@ -91,20 +82,19 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_false(
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(
-        element::Float32::element_type(), shape_rt);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
     (*cf)({a}, {result});
 
     return result;
 }
 
-TEST(builder_reduce_ops, L2Norm) 
+TEST(builder_reduce_ops, L2Norm)
 {
     auto result = make_reduce_result(builder::L2Norm);
     ASSERT_EQ((vector<float>{5.83095189485f, 7.48331477355f}), result->get_vector<float>());
 }
 
-TEST(builder_reduce_ops, Mean) 
+TEST(builder_reduce_ops, Mean)
 {
     auto result = make_reduce_result(builder::Mean);
     ASSERT_EQ((vector<float>{3, 4}), result->get_vector<float>());

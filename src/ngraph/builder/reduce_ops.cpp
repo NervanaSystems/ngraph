@@ -17,9 +17,8 @@
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/multiply.hpp"
-#include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/power.hpp"
-
+#include "ngraph/ops/subtract.hpp"
 
 namespace ngraph
 {
@@ -47,10 +46,9 @@ namespace ngraph
                                      const AxisSet& reduction_axes)
         {
             const auto& et = node->get_element_type();
-            auto two = std::make_shared<op::Constant>(et, node->get_shape(), "2");
-            auto pow = std::make_shared<op::Power>(node, two);
+            auto x2 = node * node;
 
-            auto summed = create_reduction<op::Add>(pow, "0", reduction_axes);
+            auto summed = create_reduction<op::Add>(x2, "0", reduction_axes);
             auto half = std::make_shared<op::Constant>(et, summed->get_shape(), "0.5");
 
             return std::make_shared<op::Power>(summed, half);
@@ -58,6 +56,8 @@ namespace ngraph
 
         std::shared_ptr<Node> Mean(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
         {
+            const auto& et = node->get_element_type();
+
             size_t N = 1;
             for (auto a : reduction_axes)
             {
@@ -65,10 +65,9 @@ namespace ngraph
             }
 
             auto sum = Sum(node, reduction_axes);
-            const auto& et = node->get_element_type();
             auto divisor = std::make_shared<op::Constant>(et, sum->get_shape(), std::to_string(N));
 
-            return std::make_shared<op::Divide>(sum, divisor);
+            return sum / divisor;
         }
 
         std::shared_ptr<Node> Prod(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
@@ -76,9 +75,10 @@ namespace ngraph
             return create_reduction<op::Multiply>(node, "1", reduction_axes);
         }
 
-        std::shared_ptr<Node> Std_dev(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes, 
-                                       const bool bessel_correction)
-        {   
+        std::shared_ptr<Node> Std_dev(const std::shared_ptr<Node>& node,
+                                      const AxisSet& reduction_axes,
+                                      const bool bessel_correction)
+        {
             const auto& et = node->get_element_type();
             auto var = Variance(node, reduction_axes, bessel_correction);
             auto half = std::make_shared<op::Constant>(et, var->get_shape(), "0.5");
@@ -90,9 +90,12 @@ namespace ngraph
         {
             return create_reduction<op::Add>(node, "0", reduction_axes);
         }
-        
+
+        // This currently calculates [E[X^2] - E[X]^2] instead of [E[(X-\mu)^2]]
+        // The second might be more numerically stable/easier to pattern match
+        // It also requires adding a broadcast op, and would probably be slower
         std::shared_ptr<Node> Variance(const std::shared_ptr<Node>& node,
-                                       const AxisSet& reduction_axes, 
+                                       const AxisSet& reduction_axes,
                                        const bool bessel_correction)
         {
             const auto& et = node->get_element_type();
@@ -104,20 +107,23 @@ namespace ngraph
 
             auto sum = Sum(node, reduction_axes);
 
-            auto two = std::make_shared<op::Constant>(et, node->get_shape(), "2");
-            auto pow = std::make_shared<op::Power>(node, two);
+            auto x2 = node * node;
 
-            auto x2bar = create_reduction<op::Add>(pow, "0", reduction_axes);
+            auto x2sum = Sum(x2, reduction_axes);
 
             auto Nconst = std::make_shared<op::Constant>(et, sum->get_shape(), std::to_string(N));
             auto xbar2 = (sum * sum) / Nconst;
 
-            auto diff = x2bar - xbar2;
+            auto diff = x2sum - xbar2;
 
-            if (bessel_correction) {
-                auto N1const = std::make_shared<op::Constant>(et, sum->get_shape(), std::to_string(N-1));
+            if (bessel_correction)
+            {
+                auto N1const =
+                    std::make_shared<op::Constant>(et, sum->get_shape(), std::to_string(N - 1));
                 return diff / N1const;
-            } else {
+            }
+            else
+            {
                 return diff / Nconst;
             }
         }
