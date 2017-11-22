@@ -26,8 +26,8 @@ using namespace ngraph;
 void ngraph::op::Minimum::generate_adjoints(autodiff::Adjoints& adjoints,
                                             const std::shared_ptr<Node>& delta)
 {
-    auto x = get_output_node(0);
-    auto y = get_output_node(1);
+    auto x = get_input_argument(0);
+    auto y = get_input_argument(1);
 
     adjoints.add_delta(x,
                        delta * make_shared<op::Convert>(make_shared<op::Less>(x, y),

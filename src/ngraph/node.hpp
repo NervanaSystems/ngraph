@@ -106,19 +106,13 @@ namespace ngraph
         std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
                                             const std::shared_ptr<Node>& c);
 
-        void aso() { assert(get_outputs().size() == 1); }
-        std::shared_ptr<Node> get_single_argument()
-        {
-            aso();
-            return get_outputs().at(0).get_node();
-        }
-        std::shared_ptr<Node> get_output_node(size_t index)
+        std::shared_ptr<Node> get_input_argument(size_t index)
         {
             for (auto arg : m_arguments)
             {
                 assert(arg->get_outputs().size() == 1); //to avoid subtle logical errors w/ tuples
             }
-            return get_outputs().at(index).get_node();
+            return m_inputs.at(index).get_output().get_node();
         }
 
         /// Returns the shape if this node has tensor type, otherwise an ngraph-error is thrown.
