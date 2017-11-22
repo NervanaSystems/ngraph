@@ -29,14 +29,22 @@
 
 namespace ngraph
 {
-    namespace runtime
-    {
-        template <typename ET>
-        class ParameterizedTensorView;
-    }
-
     namespace element
     {
+        class Type;
+
+        extern const Type boolean;
+        extern const Type f32;
+        extern const Type f64;
+        extern const Type i8;
+        extern const Type i16;
+        extern const Type i32;
+        extern const Type i64;
+        extern const Type u8;
+        extern const Type u16;
+        extern const Type u32;
+        extern const Type u64;
+
         class Type
         {
             Type(const Type&) = delete;
@@ -66,15 +74,58 @@ namespace ngraph
             const std::string m_cname;
         };
 
-        extern const Type boolean;
-        extern const Type f32;
-        extern const Type f64;
-        extern const Type i8;
-        extern const Type i32;
-        extern const Type i64;
-        extern const Type u8;
-        extern const Type u32;
-        extern const Type u64;
+        template <typename T>
+        const Type& to_type()
+        {
+            if (typeid(T) == typeid(char) || typeid(T) == typeid(bool))
+            {
+                return boolean;
+            }
+            else if (typeid(T) == typeid(float))
+            {
+                return f32;
+            }
+            else if (typeid(T) == typeid(double))
+            {
+                return f64;
+            }
+            else if (typeid(T) == typeid(int8_t))
+            {
+                return i8;
+            }
+            else if (typeid(T) == typeid(int16_t))
+            {
+                return i16;
+            }
+            else if (typeid(T) == typeid(int32_t))
+            {
+                return i32;
+            }
+            else if (typeid(T) == typeid(int64_t))
+            {
+                return i64;
+            }
+            else if (typeid(T) == typeid(uint8_t))
+            {
+                return u8;
+            }
+            else if (typeid(T) == typeid(uint16_t))
+            {
+                return u16;
+            }
+            else if (typeid(T) == typeid(uint32_t))
+            {
+                return u32;
+            }
+            else if (typeid(T) == typeid(uint64_t))
+            {
+                return u64;
+            }
+            else
+            {
+                throw std::invalid_argument("Unknown type");
+            }
+        }
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
 

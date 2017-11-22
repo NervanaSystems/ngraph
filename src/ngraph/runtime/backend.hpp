@@ -18,7 +18,7 @@
 
 #include "ngraph/common.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/runtime/ndarray.hpp"
+#include "ngraph/types/element_type.hpp"
 
 namespace ngraph
 {
@@ -34,9 +34,6 @@ namespace ngraph
         class TensorView;
         class Tuple;
         class Value;
-
-        template <typename ET>
-        class ParameterizedTensorView;
 
         /// @brief Interface to a generic backend.
         ///
@@ -56,12 +53,11 @@ namespace ngraph
                 make_primary_tensor_view(const ngraph::element::Type& element_type,
                                          const Shape& shape);
 
-            template <typename ET>
-            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>
-                make_parameterized_tensor_view(const Shape& shape)
+            template <typename T>
+            std::shared_ptr<ngraph::runtime::TensorView>
+                make_primary_tensor_view(const Shape& shape)
             {
-                return std::dynamic_pointer_cast<ngraph::runtime::ParameterizedTensorView<ET>>(
-                    make_primary_tensor_view(ET::element_type(), shape));
+                return make_primary_tensor_view(element::to_type<T>(), shape);
             }
 
             /// @brief Construct a tuple handle from a sequence of values.

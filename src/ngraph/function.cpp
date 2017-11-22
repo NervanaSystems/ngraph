@@ -34,7 +34,6 @@ Function::Function(const std::shared_ptr<Node>& result,
     , m_temporary_pool_size(0)
     , m_instance_id(m_next_instance_id.fetch_add(1))
 {
-    m_result->set_is_output();
     traverse_nodes(this, [&](shared_ptr<Node> node) { m_ops.push_back(node); });
 }
 
