@@ -18,26 +18,16 @@
 #include <algorithm>
 
 using namespace std;
-using namespace ngraph::op;
+using namespace ngraph;
 
-void Reshape::propagate_types()
+op::Reshape::Reshape(const std::shared_ptr<Node>& arg,
+                     const AxisVector& input_order,
+                     const Shape& output_shape)
+    : RequiresTensorViewArgs("Reshape", {arg})
+    , m_input_order(input_order)
+    , m_output_shape(output_shape)
 {
-    if (m_arguments.size() != 1)
-    {
-        throw ngraph_error("Wrong number of arguments.");
-    }
-
-    auto arg_type = m_arguments.at(0)->get_value_type();
-    if (nullptr == arg_type)
-    {
-        throw ngraph_error("Argument to reshape is missing type.");
-    }
-    auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
-    if (nullptr == arg_tensor_view_type)
-    {
-        throw ngraph_error("Argument to reshape is not a tensor view");
-    }
-
+    auto arg_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
     auto arg_shape = arg_tensor_view_type->get_shape();
     auto arg_rank = arg_shape.size();
 
@@ -79,8 +69,8 @@ void Reshape::propagate_types()
         make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), m_output_shape));
 }
 
-void ngraph::op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const std::shared_ptr<Node>& delta)
+void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints,
+                                    const std::shared_ptr<Node>& delta)
 {
     auto x = m_arguments[0];
     auto x_type = x->get_value_type();

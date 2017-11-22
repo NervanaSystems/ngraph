@@ -47,7 +47,8 @@ private:
            PrimaryTensorView* tensor_view,
            const std::string& name,
            bool is_output,
-           bool is_input);
+           bool is_input,
+           bool is_constant);
 
     std::string get_next_view_name();
 
@@ -55,19 +56,21 @@ public:
     bool is_output() const { return m_is_output; }
     bool is_input() const { return m_is_input; }
     bool is_persistent() const { return m_is_persistent; }
+    bool is_constant() const { return m_is_constant; }
     const std::string& get_name() const { return m_name; }
     size_t size() const;
     void set_pool_offset(size_t);
     size_t get_pool_offset() const;
-
+    const element::Type& get_element_type() const { return m_element_type; }
     static std::string make_tensor_name(const Node* node, size_t value_index);
-
+    void set_is_output() { m_is_output = true; }
 protected:
     const element::Type& m_element_type;
     PrimaryTensorView* m_primary_tensor_view;
     bool m_is_output;
     bool m_is_input;
     bool m_is_persistent;
+    bool m_is_constant;
     std::string m_name;
     size_t m_next_view_id;
     size_t m_size;

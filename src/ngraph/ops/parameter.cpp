@@ -20,16 +20,13 @@ using namespace std;
 using namespace ngraph::op;
 
 Parameter::Parameter(const std::shared_ptr<const ValueType>& value_type)
-    : Node(value_type)
+    : Node("Parameter", {})
 {
+    set_value_type_checked(value_type);
 }
 
 Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& shape)
     : Parameter(make_shared<TensorViewType>(element_type, shape))
-{
-}
-
-void Parameter::propagate_types()
 {
 }
 

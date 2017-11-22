@@ -21,10 +21,8 @@
 #include "gtest/gtest.h"
 #include "ngraph/function.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "util/test_tools.hpp"
 
@@ -37,8 +35,6 @@ TEST(tensor, size)
     pass::Manager pass_manager;
 
     pass_manager.register_pass<pass::TopologicalSort>();
-    pass_manager.register_pass<pass::PropagateTypes>();
-    pass_manager.register_pass<pass::AssignTensors>();
     pass_manager.register_pass<pass::Liveness>();
 
     {
@@ -93,7 +89,6 @@ void test_read_write(const std::vector<typename ET::type>& x)
     auto backend = manager->allocate_backend();
 
     auto a = backend->make_primary_tensor_view(ET::element_type(), Shape{2, x.size()});
-    auto af = a->template get_parameterized_tensor_view<ET>();
 
     std::vector<T> result(2 * x.size());
 
@@ -102,7 +97,8 @@ void test_read_write(const std::vector<typename ET::type>& x)
     a->write(&x[0], x.size() * sizeof(T), x.size() * sizeof(T));
     std::copy(x.begin(), x.end(), result.begin() + x.size());
 
-    auto& af_vector = af->get_vector();
+    std::vector<T> af_vector(2 * x.size());
+    a->read(af_vector.data(), 0, af_vector.size() * sizeof(typename ET::type));
     ASSERT_EQ(af_vector, result);
 
     std::vector<T> result1(x.size());
@@ -116,4 +112,25 @@ TEST(tensor, read_write)
 {
     test_read_write<element::Float32>({1.0, 3.0, 5.0});
     test_read_write<element::Int64>({-1, 2, 4});
+}
+
+TEST(tensor, output_flag)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::TopologicalSort>();
+    pass_manager.register_pass<pass::Liveness>();
+
+    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+    auto add = make_shared<op::Add>(arg0, arg0);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{1});
+    auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
+
+    pass_manager.run_passes(f0);
+
+    EXPECT_TRUE(f0->get_result()->is_output());
+    for (descriptor::Output& output : f0->get_result()->get_outputs())
+    {
+        const Tensor& t = output.get_tensor();
+        EXPECT_TRUE(t.is_output());
+    }
 }

@@ -18,6 +18,8 @@
 #include <memory>
 #include <string>
 
+#include <clang/CodeGen/CodeGenAction.h>
+
 #include <llvm/ExecutionEngine/MCJIT.h> // forces JIT to link in
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/Option/Arg.h>
@@ -27,8 +29,16 @@ namespace ngraph
     namespace codegen
     {
         class module;
-        class execution_state;
+        class Compiler;
+        class StaticCompiler;
+        class HeaderCache;
     }
+}
+
+namespace clang
+{
+    class HeaderSearchOptions;
+    class CompilerInstance;
 }
 
 class ngraph::codegen::module
@@ -38,39 +48,66 @@ private:
     std::unique_ptr<llvm::Module> m_module;
 };
 
-class ngraph::codegen::execution_state : public llvm::SectionMemoryManager
+class ngraph::codegen::Compiler
 {
 public:
-    execution_state();
-    ~execution_state();
+    Compiler();
+    ~Compiler();
+    void set_precompiled_header_source(const std::string& source);
+    std::unique_ptr<llvm::Module> compile(const std::string& source);
+    std::unique_ptr<clang::CodeGenAction>& get_compiler_action() { return compiler_action; }
+private:
+    std::unique_ptr<clang::CodeGenAction> compiler_action;
+};
 
-    void set_precompiled_headers_enabled(bool state) { precompiled_headers_enabled = state; }
-    bool is_precompiled_headers_enabled() { return precompiled_headers_enabled; }
-    void set_debuginfo_enabled(bool state) { debuginfo_enabled = state; }
-    bool is_debuginfo_enabled() { return debuginfo_enabled; }
-    std::unique_ptr<llvm::Module> compile(const std::string& source, const std::string& name = "");
+class ngraph::codegen::StaticCompiler : public llvm::SectionMemoryManager
+{
+public:
+    StaticCompiler();
+    ~StaticCompiler();
 
-    bool add_module(std::unique_ptr<llvm::Module>&);
-
-    void finalize();
-
-    template <typename ftype>
-    std::function<ftype> find_function(const std::string& func_name)
+    void set_debuginfo_enabled(bool state) { m_debuginfo_enabled = state; }
+    bool is_debuginfo_enabled() { return m_debuginfo_enabled; }
+    void set_precompiled_header_source(const std::string& source)
     {
-        auto f = m_execution_engine->getPointerToNamedFunction(func_name);
-
-        return f_cast<ftype>(f);
+        m_precomiled_header_source = source;
     }
+    void add_header_search_path(const std::string& path);
+
+    std::unique_ptr<llvm::Module> compile(std::unique_ptr<clang::CodeGenAction>& compiler_action,
+                                          const std::string& source);
+    void generate_pch(const std::string& source);
 
 private:
-    llvm::ExecutionEngine* m_execution_engine;
-    std::string jit_error;
-    bool precompiled_headers_enabled;
-    bool debuginfo_enabled;
+    std::unique_ptr<clang::CompilerInstance> m_compiler;
+    bool m_precompiled_header_valid;
+    bool m_debuginfo_enabled;
+    std::string m_source_name;
+    std::vector<std::string> m_extra_search_path_list;
+    std::string m_pch_path;
+    std::string m_precomiled_header_source;
 
-    template <typename signature>
-    std::function<signature> f_cast(void* f)
+    bool is_version_number(const std::string& path);
+    void use_cached_files();
+};
+
+class ngraph::codegen::HeaderCache
+{
+public:
+    bool is_valid() const { return m_headers_valid; }
+    bool set_valid() { return m_headers_valid = true; }
+    void add_path(const std::string& path) { m_include_paths.push_back(path); }
+    void add_file(const std::string& path, std::unique_ptr<llvm::MemoryBuffer>& code)
     {
-        return static_cast<signature*>(reinterpret_cast<signature*>(f));
+        m_headers.insert(std::make_pair(path, std::move(code)));
     }
+    const std::map<std::string, std::unique_ptr<llvm::MemoryBuffer>>& get_header_map() const
+    {
+        return m_headers;
+    }
+    const std::vector<std::string>& get_include_paths() const { return m_include_paths; }
+private:
+    std::map<std::string, std::unique_ptr<llvm::MemoryBuffer>> m_headers;
+    std::vector<std::string> m_include_paths;
+    bool m_headers_valid;
 };

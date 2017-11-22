@@ -21,11 +21,8 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pass/assign_tensors.hpp"
-#include "ngraph/pass/collect_functions.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/util.hpp"
@@ -174,11 +171,11 @@ TEST(topological_sort, collect_functions)
                                    "h");
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::CollectFunctions>();
     pass_manager.run_passes(h);
 
     set<string> expected = {"f", "g", "h"};
     auto functions = pass_manager.get_state().get_functions();
+
     vector<string> fnames;
     for (shared_ptr<Function> func : functions)
     {
@@ -204,8 +201,6 @@ TEST(topological_sort, unused_function_arg)
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
-    pass_manager.register_pass<pass::PropagateTypes>();
-    pass_manager.register_pass<pass::AssignTensors>();
     // pass_manager.register_pass<pass::DumpSorted>("sorted.txt");
     pass_manager.run_passes(f);
     list<shared_ptr<Node>> ops = f->get_ordered_ops();

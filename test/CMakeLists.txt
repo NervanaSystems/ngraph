@@ -23,8 +23,10 @@ include_directories(
 
 set (SRC
     autodiff.cpp
+    copy.cpp
     build_graph.cpp
     eigen.cpp
+    file_util.cpp
     input_output_assign.cpp
     main.cpp
     op.cpp
@@ -35,7 +37,7 @@ set (SRC
     tensor.cpp
     topological_sort.cpp
     type_prop.cpp
-    util/all_close.cpp
+    util/autodiff/backprop_function.cpp
     util/test_tools.cpp
     util.cpp
     uuid.cpp
@@ -55,8 +57,9 @@ if(MKLDNN_INCLUDE_DIR)
     set(SRC ${SRC} mkldnn.cpp)
 endif()
 
-if(LLVM_INCLUDE_DIR)
+if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
+    link_directories(${LLVM_LIB_DIR})
     set(SRC ${SRC} codegen.cpp)
     set(BACKEND_NAMES ${BACKEND_NAMES} "CPU")
 endif()
@@ -75,6 +78,11 @@ add_executable(unit-test ${SRC})
 if(MKLDNN_INCLUDE_DIR)
     target_link_libraries(unit-test mkldnn)
     add_dependencies(unit-test ext_mkldnn)
+endif()
+
+if(LLVM_INCLUDE_DIR)
+    target_link_libraries(unit-test ${LLVM_LINK_LIBS})
+    add_dependencies(unit-test ext_llvm)
 endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)

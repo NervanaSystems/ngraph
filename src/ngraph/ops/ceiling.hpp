@@ -46,11 +46,17 @@ namespace ngraph
             ///
             /// \param arg Node that produces the input tensor.
             Ceiling(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic(arg)
+                : UnaryElementwiseArithmetic("Ceiling", arg)
             {
             }
 
-            virtual std::string description() const override { return "Ceiling"; }
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 1)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Ceiling>(new_args.at(0));
+            }
         };
     }
 }

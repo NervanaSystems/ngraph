@@ -23,12 +23,14 @@ Tensor::Tensor(const element::Type& element_type,
                PrimaryTensorView* primary_tensor_view,
                const std::string& name,
                bool is_output,
-               bool is_input)
+               bool is_input,
+               bool is_constant)
     : m_element_type(element_type)
     , m_primary_tensor_view(primary_tensor_view)
     , m_is_output{is_output}
     , m_is_input{is_input}
     , m_is_persistent{false}
+    , m_is_constant{is_constant}
     , m_name{name}
     , m_next_view_id{0}
 {

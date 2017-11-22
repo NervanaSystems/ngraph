@@ -13,21 +13,32 @@
 // ----------------------------------------------------------------------------
 
 #include <algorithm>
+#include <cinttypes>
 #include "gtest/gtest.h"
 
 #include <cmath>
+#include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 
 using namespace std;
 using namespace ngraph;
 
+template <typename T>
+static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
+{
+    size_t data_size = data.size() * sizeof(T);
+    tv->write(data.data(), 0, data_size);
+}
+
 TEST(${BACKEND_NAME}, abc)
 {
+    using f32 = element::Float32;
+
     auto shape = Shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto A = make_shared<op::Parameter>(f32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(f32::element_type(), shape);
+    auto C = make_shared<op::Parameter>(f32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(f32::element_type(), shape);
     auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -36,22 +47,27 @@ TEST(${BACKEND_NAME}, abc)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(
-        runtime::NDArray<float, 2>({{1, 2}, {3, 4}}));
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(
-        runtime::NDArray<float, 2>({{5, 6}, {7, 8}}));
-    auto c = backend->make_parameterized_tensor_view<element::Float32>(
-        runtime::NDArray<float, 2>({{9, 10}, {11, 12}}));
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    shared_ptr<runtime::TensorView> a =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+    shared_ptr<runtime::TensorView> b =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+    shared_ptr<runtime::TensorView> c =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+    shared_ptr<runtime::TensorView> result =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+
+    copy_data(a, runtime::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, runtime::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+    copy_data(c, runtime::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     (*cf)({a, b, c}, {result});
-    ASSERT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
+    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
 
     (*cf)({b, a, c}, {result});
-    ASSERT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
+    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
 
     (*cf)({a, c, b}, {result});
-    ASSERT_EQ(*result, (runtime::NDArray<float, 2>({{50, 72}, {98, 128}})));
+    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{50, 72}, {98, 128}})));
 }
 
 TEST(${BACKEND_NAME}, abc_int64)
@@ -69,22 +85,22 @@ TEST(${BACKEND_NAME}, abc_int64)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Int64>(shape);
-    *a = vector<element::Int64::type>{1, 2, 3, 4};
-    auto b = backend->make_parameterized_tensor_view<element::Int64>(shape);
-    *b = vector<element::Int64::type>{5, 6, 7, 8};
-    auto c = backend->make_parameterized_tensor_view<element::Int64>(shape);
-    *c = vector<element::Int64::type>{9, 10, 11, 12};
-    auto result = backend->make_parameterized_tensor_view<element::Int64>(shape);
+    auto a = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
+    copy_data(a, vector<element::Int64::type>{1, 2, 3, 4});
+    auto b = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
+    copy_data(b, vector<element::Int64::type>{5, 6, 7, 8});
+    auto c = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
+    copy_data(c, vector<element::Int64::type>{9, 10, 11, 12});
+    auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
 
     (*cf)({a, b, c}, {result});
-    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+    EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector<int64_t>());
 
     (*cf)({b, a, c}, {result});
-    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+    EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector<int64_t>());
 
     (*cf)({a, c, b}, {result});
-    ASSERT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector());
+    EXPECT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector<int64_t>());
 }
 
 // Same as abc, but using tuples for input and output
@@ -109,26 +125,26 @@ TEST(${BACKEND_NAME}, abc_tuple)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, 2, 3, 4};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{5, 6, 7, 8};
-    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *c = vector<float>{9, 10, 11, 12};
-    auto abc = ngraph::runtime::make_tuple({a, b, c});
-    auto bac = ngraph::runtime::make_tuple({b, a, c});
-    auto acb = ngraph::runtime::make_tuple({a, c, b});
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    auto result_tuple = ngraph::runtime::make_tuple({result});
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{5, 6, 7, 8});
+    auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(c, vector<float>{9, 10, 11, 12});
+    auto abc = runtime::make_tuple({a, b, c});
+    auto bac = runtime::make_tuple({b, a, c});
+    auto acb = runtime::make_tuple({a, c, b});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    auto result_tuple = runtime::make_tuple({result});
 
     (*cf)({abc}, {result_tuple});
-    ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector());
+    ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
 
     (*cf)({bac}, {result_tuple});
-    ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector());
+    ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
 
     (*cf)({acb}, {result_tuple});
-    ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector());
+    ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector<float>());
 }
 
 // Same as abc, but using tuples for input and output
@@ -153,26 +169,29 @@ TEST(${BACKEND_NAME}, abc_tuple_int64)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Int64>(shape);
-    *a = vector<element::Int64::type>{1, 2, 3, 4};
-    auto b = backend->make_parameterized_tensor_view<element::Int64>(shape);
-    *b = vector<element::Int64::type>{5, 6, 7, 8};
-    auto c = backend->make_parameterized_tensor_view<element::Int64>(shape);
-    *c = vector<element::Int64::type>{9, 10, 11, 12};
-    auto abc = ngraph::runtime::make_tuple({a, b, c});
-    auto bac = ngraph::runtime::make_tuple({b, a, c});
-    auto acb = ngraph::runtime::make_tuple({a, c, b});
-    auto result = ngraph::runtime::make_tensor<element::Int64>(shape);
-    auto result_tuple = ngraph::runtime::make_tuple({result});
+    auto a = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
+    copy_data(a, vector<element::Int64::type>{1, 2, 3, 4});
+    auto b = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
+    copy_data(b, vector<element::Int64::type>{5, 6, 7, 8});
+    auto c = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
+    copy_data(c, vector<element::Int64::type>{9, 10, 11, 12});
+    auto abc = runtime::make_tuple({a, b, c});
+    auto bac = runtime::make_tuple({b, a, c});
+    auto acb = runtime::make_tuple({a, c, b});
+    auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
+    auto result_tuple = runtime::make_tuple({result});
 
     (*cf)({abc}, {result_tuple});
-    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}),
+              result->get_vector<element::Int64::type>());
 
     (*cf)({bac}, {result_tuple});
-    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector());
+    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}),
+              result->get_vector<element::Int64::type>());
 
     (*cf)({acb}, {result_tuple});
-    ASSERT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector());
+    ASSERT_EQ((vector<element::Int64::type>{50, 72, 98, 128}),
+              result->get_vector<element::Int64::type>());
 }
 
 // Multiple retrive values
@@ -196,21 +215,21 @@ TEST(${BACKEND_NAME}, tuple_result)
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, 2, 3, 4};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{5, 6, 7, 8};
-    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *c = vector<float>{9, 10, 11, 12};
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{5, 6, 7, 8});
+    auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(c, vector<float>{9, 10, 11, 12});
 
-    auto r0 = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    auto r1 = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    auto result_tuple = ngraph::runtime::make_tuple({r0, r1});
+    auto r0 = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    auto r1 = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    auto result_tuple = runtime::make_tuple({r0, r1});
 
     (*cf)({a, b, c}, {result_tuple});
 
-    ASSERT_EQ((vector<float>{6, 8, 10, 12}), r0->get_vector());
-    ASSERT_EQ((vector<float>{54, 80, 110, 144}), r1->get_vector());
+    ASSERT_EQ((vector<float>{6, 8, 10, 12}), r0->get_vector<float>());
+    ASSERT_EQ((vector<float>{54, 80, 110, 144}), r1->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, abs)
@@ -226,12 +245,12 @@ TEST(${BACKEND_NAME}, abs)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, -2, 0, -4.8f};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, -2, 0, -4.8f});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1, 2, 0, 4.8f}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 0, 4.8f}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, concat_matrix_colwise)
@@ -253,17 +272,17 @@ TEST(${BACKEND_NAME}, concat_matrix_colwise)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{2, 4, 8, 16};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
-    *b = vector<float>{1, 2, 4, 8, 16, 32};
-    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape_c);
-    *c = vector<float>{2, 3, 5, 7, 11, 13};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{2, 4, 8, 16});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{1, 2, 4, 8, 16, 32});
+    auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape_c);
+    copy_data(c, vector<float>{2, 3, 5, 7, 11, 13});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a, b, c}, {result});
     ASSERT_EQ((vector<float>{2, 4, 1, 2, 4, 2, 3, 5, 8, 16, 8, 16, 32, 7, 11, 13}),
-              result->get_vector());
+              result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, concat_matrix_rowwise)
@@ -285,17 +304,17 @@ TEST(${BACKEND_NAME}, concat_matrix_rowwise)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{2, 4, 8, 16};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
-    *b = vector<float>{1, 2, 4, 8, 16, 32};
-    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape_c);
-    *c = vector<float>{2, 3, 5, 7, 11, 13};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{2, 4, 8, 16});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{1, 2, 4, 8, 16, 32});
+    auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape_c);
+    copy_data(c, vector<float>{2, 3, 5, 7, 11, 13});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a, b, c}, {result});
     ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
-              result->get_vector());
+              result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, concat_matrix_int64)
@@ -317,17 +336,17 @@ TEST(${BACKEND_NAME}, concat_matrix_int64)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Int64>(shape_a);
-    *a = vector<element::Int64::type>{2, 4, 8, 16};
-    auto b = backend->make_parameterized_tensor_view<element::Int64>(shape_b);
-    *b = vector<element::Int64::type>{1, 2, 4, 8, 16, 32};
-    auto c = backend->make_parameterized_tensor_view<element::Int64>(shape_c);
-    *c = vector<element::Int64::type>{2, 3, 5, 7, 11, 13};
-    auto result = backend->make_parameterized_tensor_view<element::Int64>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Int64::element_type(), shape_a);
+    copy_data(a, vector<element::Int64::type>{2, 4, 8, 16});
+    auto b = backend->make_primary_tensor_view(element::Int64::element_type(), shape_b);
+    copy_data(b, vector<element::Int64::type>{1, 2, 4, 8, 16, 32});
+    auto c = backend->make_primary_tensor_view(element::Int64::element_type(), shape_c);
+    copy_data(c, vector<element::Int64::type>{2, 3, 5, 7, 11, 13});
+    auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape_r);
 
     (*cf)({a, b, c}, {result});
     ASSERT_EQ((vector<element::Int64::type>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
-              result->get_vector());
+              result->get_vector<element::Int64::type>());
 }
 
 TEST(${BACKEND_NAME}, concat_vector)
@@ -349,16 +368,17 @@ TEST(${BACKEND_NAME}, concat_vector)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{2, 4, 8, 16};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
-    *b = vector<float>{1, 2, 4, 8, 16, 32};
-    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape_c);
-    *c = vector<float>{18, 19};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{2, 4, 8, 16});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{1, 2, 4, 8, 16, 32});
+    auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape_c);
+    copy_data(c, vector<float>{18, 19});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a, b, c}, {result});
-    ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), result->get_vector());
+    ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}),
+              result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, divide)
@@ -381,14 +401,14 @@ TEST(${BACKEND_NAME}, divide)
     auto cf = backend->make_call_frame(make_external());
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{2, 4, 8, 16};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{1, 2, 4, 8};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{2, 4, 8, 16});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 2, 4, 8});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{2, 2, 2, 2}), result->get_vector());
+    ASSERT_EQ((vector<float>{2, 2, 2, 2}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, equal)
@@ -405,14 +425,14 @@ TEST(${BACKEND_NAME}, equal)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5};
-    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5});
+    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), result->get_vector());
+    ASSERT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), result->get_vector<char>());
 }
 
 TEST(${BACKEND_NAME}, dot_0_0)
@@ -430,14 +450,14 @@ TEST(${BACKEND_NAME}, dot_0_0)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{0}), result->get_vector());
+    ASSERT_EQ((vector<float>{0}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
@@ -462,14 +482,14 @@ TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
     auto cf = backend->make_call_frame(make_external());
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
-    *b = vector<float>{};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{0, 0, 0, 0}), result->get_vector());
+    ASSERT_EQ((vector<float>{0, 0, 0, 0}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
@@ -488,14 +508,14 @@ TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
-    *b = vector<float>{};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{}), result->get_vector());
+    ASSERT_EQ((vector<float>{}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
@@ -514,14 +534,14 @@ TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3, 4, 5, 6};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
-    *b = vector<float>{};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{}), result->get_vector());
+    ASSERT_EQ((vector<float>{}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot_scalar_0x2)
@@ -540,14 +560,14 @@ TEST(${BACKEND_NAME}, dot_scalar_0x2)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{1};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
-    *b = vector<float>{};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{}), result->get_vector());
+    ASSERT_EQ((vector<float>{}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot_2x0_0)
@@ -566,14 +586,14 @@ TEST(${BACKEND_NAME}, dot_2x0_0)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
-    *b = vector<float>{};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{0, 0}), result->get_vector());
+    ASSERT_EQ((vector<float>{0, 0}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot1d)
@@ -591,14 +611,14 @@ TEST(${BACKEND_NAME}, dot1d)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{2, 4, 8, 16};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{1, 2, 4, 8};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{2, 4, 8, 16});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 2, 4, 8});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{170}), result->get_vector());
+    ASSERT_EQ((vector<float>{170}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot2d)
@@ -616,14 +636,14 @@ TEST(${BACKEND_NAME}, dot2d)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, 2, 3, 4};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{5, 6, 7, 8};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{5, 6, 7, 8});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{19, 22, 43, 50}), result->get_vector());
+    ASSERT_EQ((vector<float>{19, 22, 43, 50}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
@@ -641,14 +661,14 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{6};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
-    *b = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{6});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector());
+    ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
@@ -666,14 +686,14 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
-    *b = vector<float>{6};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{6});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector());
+    ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot_scalar_scalar)
@@ -690,14 +710,14 @@ TEST(${BACKEND_NAME}, dot_scalar_scalar)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{8};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{6};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{8});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{6});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{48}), result->get_vector());
+    ASSERT_EQ((vector<float>{48}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot_matrix_vector)
@@ -716,14 +736,14 @@ TEST(${BACKEND_NAME}, dot_matrix_vector)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape_b);
-    *b = vector<float>{17, 18, 19, 20};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{17, 18, 19, 20});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{190, 486, 782, 1078}), result->get_vector());
+    ASSERT_EQ((vector<float>{190, 486, 782, 1078}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
@@ -742,14 +762,16 @@ TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Int64>(shape_a);
-    *a = vector<element::Int64::type>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-    auto b = backend->make_parameterized_tensor_view<element::Int64>(shape_b);
-    *b = vector<element::Int64::type>{17, 18, 19, 20};
-    auto result = backend->make_parameterized_tensor_view<element::Int64>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Int64::element_type(), shape_a);
+    copy_data(a,
+              vector<element::Int64::type>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto b = backend->make_primary_tensor_view(element::Int64::element_type(), shape_b);
+    copy_data(b, vector<element::Int64::type>{17, 18, 19, 20});
+    auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape_r);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<element::Int64::type>{190, 486, 782, 1078}), result->get_vector());
+    ASSERT_EQ((vector<element::Int64::type>{190, 486, 782, 1078}),
+              result->get_vector<element::Int64::type>());
 }
 
 TEST(${BACKEND_NAME}, greater)
@@ -766,14 +788,14 @@ TEST(${BACKEND_NAME}, greater)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
-    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
+    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), result->get_vector());
+    ASSERT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), result->get_vector<char>());
 }
 
 TEST(${BACKEND_NAME}, greatereq)
@@ -790,14 +812,14 @@ TEST(${BACKEND_NAME}, greatereq)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, 8, -8, 17, -0.5, 0, 2, 1};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5};
-    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0, 2, 1});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5});
+    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), result->get_vector());
+    ASSERT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), result->get_vector<char>());
 }
 
 TEST(${BACKEND_NAME}, less)
@@ -814,14 +836,14 @@ TEST(${BACKEND_NAME}, less)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
-    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
+    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<char>{0, 0, 1, 0, 1, 0, 0, 1}), result->get_vector());
+    ASSERT_EQ((vector<char>{0, 0, 1, 0, 1, 0, 0, 1}), result->get_vector<char>());
 }
 
 TEST(${BACKEND_NAME}, lesseq)
@@ -838,14 +860,14 @@ TEST(${BACKEND_NAME}, lesseq)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, 8, -8, 17, -0.5, 0, 2, 1};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5};
-    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0, 2, 1});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5});
+    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), result->get_vector());
+    ASSERT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), result->get_vector<char>());
 }
 
 TEST(${BACKEND_NAME}, lesseq_bool)
@@ -862,14 +884,14 @@ TEST(${BACKEND_NAME}, lesseq_bool)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Bool>(shape);
-    *a = vector<char>{1, 1, 1, 1, 1, 1, 1, 1};
-    auto b = backend->make_parameterized_tensor_view<element::Bool>(shape);
-    *b = vector<char>{0, 0, 0, 0, 0, 0, 0, 0};
-    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+    auto a = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
+    copy_data(a, vector<char>{1, 1, 1, 1, 1, 1, 1, 1});
+    auto b = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
+    copy_data(b, vector<char>{0, 0, 0, 0, 0, 0, 0, 0});
+    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<char>{0, 0, 0, 0, 0, 0, 0, 0}), result->get_vector());
+    ASSERT_EQ((vector<char>{0, 0, 0, 0, 0, 0, 0, 0}), result->get_vector<char>());
 }
 
 TEST(${BACKEND_NAME}, log)
@@ -885,17 +907,18 @@ TEST(${BACKEND_NAME}, log)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{expf(1), expf(2), expf(3), expf(4), expf(5), expf(6), expf(7), expf(8)};
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(
+        a, vector<float>{expf(1), expf(2), expf(3), expf(4), expf(5), expf(6), expf(7), expf(8)});
     vector<float> loga;
-    for (auto elt : a->get_vector())
+    for (auto elt : a->get_vector<float>())
     {
         loga.push_back(logf(elt));
     }
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a}, {result});
-    ASSERT_EQ(loga, result->get_vector());
+    ASSERT_EQ(loga, result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, maximum)
@@ -912,14 +935,14 @@ TEST(${BACKEND_NAME}, maximum)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, minimum)
@@ -936,14 +959,14 @@ TEST(${BACKEND_NAME}, minimum)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0.5, 2, 1});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{1, 2, -8, 8, -.5, 0, 1, 1}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, -8, 8, -.5, 0, 1, 1}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, negative)
@@ -959,12 +982,12 @@ TEST(${BACKEND_NAME}, negative)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, -2, 0, -4.8f, 8.6f, -8.6f};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, -2, 0, -4.8f, 8.6f, -8.6f});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{-1, 2, 0, 4.8f, -8.6f, 8.6f}), result->get_vector());
+    ASSERT_EQ((vector<float>{-1, 2, 0, 4.8f, -8.6f, 8.6f}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, notequal)
@@ -981,14 +1004,14 @@ TEST(${BACKEND_NAME}, notequal)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5};
-    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 0, 1, 1});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5});
+    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), result->get_vector());
+    ASSERT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), result->get_vector<char>());
 }
 
 TEST(${BACKEND_NAME}, select)
@@ -1006,16 +1029,16 @@ TEST(${BACKEND_NAME}, select)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Bool>(shape);
-    *a = vector<char>{0, 1, 1, 0, 0, 1, 0, 1};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
-    auto c = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *c = vector<float>{11, 12, 13, 14, 15, 16, 17, 18};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
+    copy_data(a, vector<char>{0, 1, 1, 0, 0, 1, 0, 1});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
+    auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(c, vector<float>{11, 12, 13, 14, 15, 16, 17, 18});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a, b, c}, {result});
-    ASSERT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), result->get_vector());
+    ASSERT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, subtract)
@@ -1032,21 +1055,40 @@ TEST(${BACKEND_NAME}, subtract)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{2, 4, 8, 16};
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *b = vector<float>{1, 2, 4, 8};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{2, 4, 8, 16});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 2, 4, 8});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{1, 2, 4, 8}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 4, 8}), result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, scalar_constant)
+TEST(${BACKEND_NAME}, scalar_parameterized_constant_bool)
 {
     auto shape = Shape{};
-    auto t = ngraph::runtime::make_tensor<element::Float32>(shape);
-    (*t) = std::vector<float>{-3.0f};
+    auto t = runtime::make_tensor<element::Bool>(shape, {true});
+    auto A = make_shared<op::ParameterizedConstant<element::Bool>>(shape, t);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(A, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<char>{true}), result->get_vector<char>());
+}
+
+TEST(${BACKEND_NAME}, scalar_parameterized_constant_float)
+{
+    auto shape = Shape{};
+    auto t = runtime::make_tensor<element::Float32>(shape, {-3.0f});
     auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
@@ -1057,17 +1099,136 @@ TEST(${BACKEND_NAME}, scalar_constant)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({}, {result});
-    ASSERT_EQ((vector<float>{-3.0f}), result->get_vector());
+    ASSERT_EQ((vector<float>{-3.0f}), result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, scalar_parameterized_constant_int8)
+{
+    auto shape = Shape{};
+    auto t = runtime::make_tensor<element::Int8>(shape, {-3});
+    auto A = make_shared<op::ParameterizedConstant<element::Int8>>(shape, t);
+    auto rt = make_shared<TensorViewType>(element::Int8::element_type(), shape);
+    auto f = make_shared<Function>(A, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::Int8::element_type(), shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<int8_t>{-3}), result->get_vector<int8_t>());
+}
+
+TEST(${BACKEND_NAME}, scalar_parameterized_constant_int32)
+{
+    auto shape = Shape{};
+    auto t = runtime::make_tensor<element::Int32>(shape, {-3});
+    auto A = make_shared<op::ParameterizedConstant<element::Int32>>(shape, t);
+    auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape);
+    auto f = make_shared<Function>(A, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<int32_t>{-3}), result->get_vector<int32_t>());
+}
+
+TEST(${BACKEND_NAME}, scalar_parameterized_constant_int64)
+{
+    auto shape = Shape{};
+    auto t = runtime::make_tensor<element::Int64>(shape, {-3});
+    auto A = make_shared<op::ParameterizedConstant<element::Int64>>(shape, t);
+    auto rt = make_shared<TensorViewType>(element::Int64::element_type(), shape);
+    auto f = make_shared<Function>(A, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<int64_t>{-3}), result->get_vector<int64_t>());
+}
+
+TEST(${BACKEND_NAME}, scalar_parameterized_constant_uint8)
+{
+    auto shape = Shape{};
+    auto t = runtime::make_tensor<element::UInt8>(shape, {3});
+    auto A = make_shared<op::ParameterizedConstant<element::UInt8>>(shape, t);
+    auto rt = make_shared<TensorViewType>(element::UInt8::element_type(), shape);
+    auto f = make_shared<Function>(A, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::UInt8::element_type(), shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<uint8_t>{3}), result->get_vector<uint8_t>());
+}
+
+TEST(${BACKEND_NAME}, scalar_parameterized_constant_uint32)
+{
+    auto shape = Shape{};
+    auto t = runtime::make_tensor<element::UInt32>(shape, {3});
+    auto A = make_shared<op::ParameterizedConstant<element::UInt32>>(shape, t);
+    auto rt = make_shared<TensorViewType>(element::UInt32::element_type(), shape);
+    auto f = make_shared<Function>(A, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::UInt32::element_type(), shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<uint32_t>{3}), result->get_vector<uint32_t>());
+}
+
+TEST(${BACKEND_NAME}, scalar_parameterized_constant_uint64)
+{
+    auto shape = Shape{};
+    auto t = runtime::make_tensor<element::UInt64>(shape, {3});
+    auto A = make_shared<op::ParameterizedConstant<element::UInt64>>(shape, t);
+    auto rt = make_shared<TensorViewType>(element::UInt64::element_type(), shape);
+    auto f = make_shared<Function>(A, rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::UInt64::element_type(), shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<uint64_t>{3}), result->get_vector<uint64_t>());
 }
 
 TEST(${BACKEND_NAME}, tensor_constant)
 {
     auto shape = Shape{2, 2, 2};
-    auto t = ngraph::runtime::make_tensor<element::Float32>(shape);
-    (*t) = std::vector<float>{1, 2, 3, 4, 5, 6, 7, 8};
+    auto t = runtime::make_tensor<element::Float32>(shape, {1, 2, 3, 4, 5, 6, 7, 8});
     auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
@@ -1078,17 +1239,16 @@ TEST(${BACKEND_NAME}, tensor_constant)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({}, {result});
-    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, tensor_constant_with_op)
 {
     auto shape = Shape{2, 2, 2};
-    auto t = ngraph::runtime::make_tensor<element::Float32>(shape);
-    (*t) = std::vector<float>{-1, 2, 3, -4, 5, -6, -7, 8};
+    auto t = runtime::make_tensor<element::Float32>(shape, {-1, 2, 3, -4, 5, -6, -7, 8});
     auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Abs>(A), rt, op::Parameters{});
@@ -1099,10 +1259,10 @@ TEST(${BACKEND_NAME}, tensor_constant_with_op)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({}, {result});
-    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, function_call)
@@ -1131,22 +1291,22 @@ TEST(${BACKEND_NAME}, function_call)
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
-    auto x = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *x = vector<float>{1, 2, 3, 4};
-    auto y = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *y = vector<float>{5, 6, 7, 8};
-    auto z = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *z = vector<float>{9, 10, 11, 12};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto x = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(x, vector<float>{1, 2, 3, 4});
+    auto y = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(y, vector<float>{5, 6, 7, 8});
+    auto z = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(z, vector<float>{9, 10, 11, 12});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({x, y, z}, {result});
-    ASSERT_EQ((vector<float>{108, 160, 220, 288}), result->get_vector());
+    ASSERT_EQ((vector<float>{108, 160, 220, 288}), result->get_vector<float>());
 
     (*cf)({y, x, z}, {result});
-    ASSERT_EQ((vector<float>{108, 160, 220, 288}), result->get_vector());
+    ASSERT_EQ((vector<float>{108, 160, 220, 288}), result->get_vector<float>());
 
     (*cf)({x, z, y}, {result});
-    ASSERT_EQ((vector<float>{100, 144, 196, 256}), result->get_vector());
+    ASSERT_EQ((vector<float>{100, 144, 196, 256}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, broadcast_scalar_vector)
@@ -1164,12 +1324,12 @@ TEST(${BACKEND_NAME}, broadcast_scalar_vector)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{6};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{6});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector());
+    ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
@@ -1187,12 +1347,12 @@ TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{6};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{6});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector());
+    ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
@@ -1210,12 +1370,12 @@ TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{6};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{6});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), result->get_vector());
+    ASSERT_EQ((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, broadcast_trivial)
@@ -1232,12 +1392,12 @@ TEST(${BACKEND_NAME}, broadcast_trivial)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{2, 4, 6, 8, 16, 32, 64, 128};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{2, 4, 6, 8, 16, 32, 64, 128});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), result->get_vector());
+    ASSERT_EQ((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, broadcast_vector_colwise)
@@ -1255,12 +1415,12 @@ TEST(${BACKEND_NAME}, broadcast_vector_colwise)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
@@ -1278,12 +1438,12 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3, 4};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
@@ -1301,13 +1461,13 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Int64>(shape_a);
-    *a = vector<element::Int64::type>{1, 2, 3, 4};
-    auto result = backend->make_parameterized_tensor_view<element::Int64>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Int64::element_type(), shape_a);
+    copy_data(a, vector<element::Int64::type>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape_r);
 
     (*cf)({a}, {result});
     ASSERT_EQ((vector<element::Int64::type>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}),
-              result->get_vector());
+              result->get_vector<element::Int64::type>());
 }
 
 TEST(${BACKEND_NAME}, convert_int32_float32)
@@ -1324,12 +1484,12 @@ TEST(${BACKEND_NAME}, convert_int32_float32)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Int32>(shape);
-    *a = vector<element::Int32::type>{1, 2, 3, 4};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape);
+    copy_data(a, vector<element::Int32::type>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<element::Float32::type>{1, 2, 3, 4}), result->get_vector());
+    ASSERT_EQ((vector<element::Float32::type>{1, 2, 3, 4}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, convert_int32_bool)
@@ -1346,12 +1506,12 @@ TEST(${BACKEND_NAME}, convert_int32_bool)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Int32>(shape);
-    *a = vector<element::Int32::type>{1, 2, 3, 4};
-    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+    auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape);
+    copy_data(a, vector<element::Int32::type>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector());
+    ASSERT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector<element::Bool::type>());
 }
 
 TEST(${BACKEND_NAME}, convert_float32_bool)
@@ -1368,12 +1528,12 @@ TEST(${BACKEND_NAME}, convert_float32_bool)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<element::Float32::type>{1, 2, 3, 4};
-    auto result = backend->make_parameterized_tensor_view<element::Bool>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<element::Float32::type>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector());
+    ASSERT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector<element::Bool::type>());
 }
 
 // Trivial case with no reduction axes.
@@ -1399,14 +1559,14 @@ TEST(${BACKEND_NAME}, reduce_trivial)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a = vector<float>{1, 2, 3, 4};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *b = vector<float>{0};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{0, 0, 0, 0});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{1, 2, 3, 4}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reduce_to_scalar)
@@ -1431,19 +1591,19 @@ TEST(${BACKEND_NAME}, reduce_to_scalar)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a = vector<float>{1, 2, 3, 4};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(Shape{});
-    *b = vector<float>{0};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(Shape{});
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
+    copy_data(b, vector<float>{0});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{10}), result->get_vector());
+    ASSERT_EQ((vector<float>{10}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{1, 2, 3, 4}), a->get_vector());
-    ASSERT_EQ((vector<float>{0}), b->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4}), a->get_vector<float>());
+    ASSERT_EQ((vector<float>{0}), b->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reduce_matrix_columns)
@@ -1469,19 +1629,19 @@ TEST(${BACKEND_NAME}, reduce_matrix_columns)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3, 4, 5, 6};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(Shape{});
-    *b = vector<float>{0};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
+    copy_data(b, vector<float>{0});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{9, 12}), result->get_vector());
+    ASSERT_EQ((vector<float>{9, 12}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), a->get_vector());
-    ASSERT_EQ((vector<float>{0}), b->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), a->get_vector<float>());
+    ASSERT_EQ((vector<float>{0}), b->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reduce_matrix_rows)
@@ -1507,19 +1667,19 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3, 4, 5, 6};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(Shape{});
-    *b = vector<float>{0};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
+    copy_data(b, vector<float>{0});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{3, 7, 11}), result->get_vector());
+    ASSERT_EQ((vector<float>{3, 7, 11}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), a->get_vector());
-    ASSERT_EQ((vector<float>{0}), b->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), a->get_vector<float>());
+    ASSERT_EQ((vector<float>{0}), b->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
@@ -1545,19 +1705,19 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(Shape{});
-    *b = vector<float>{66};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
+    copy_data(b, vector<float>{66});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{66, 66, 66}), result->get_vector());
+    ASSERT_EQ((vector<float>{66, 66, 66}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{}), a->get_vector());
-    ASSERT_EQ((vector<float>{66}), b->get_vector());
+    ASSERT_EQ((vector<float>{}), a->get_vector<float>());
+    ASSERT_EQ((vector<float>{66}), b->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
@@ -1583,19 +1743,19 @@ TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(Shape{});
-    *b = vector<float>{77};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
+    copy_data(b, vector<float>{77});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{77, 77}), result->get_vector());
+    ASSERT_EQ((vector<float>{77, 77}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{}), a->get_vector());
-    ASSERT_EQ((vector<float>{77}), b->get_vector());
+    ASSERT_EQ((vector<float>{}), a->get_vector<float>());
+    ASSERT_EQ((vector<float>{77}), b->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reduce_vector_zero)
@@ -1621,19 +1781,19 @@ TEST(${BACKEND_NAME}, reduce_vector_zero)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(Shape{});
-    *b = vector<float>{88};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
+    copy_data(b, vector<float>{88});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{88}), result->get_vector());
+    ASSERT_EQ((vector<float>{88}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{}), a->get_vector());
-    ASSERT_EQ((vector<float>{88}), b->get_vector());
+    ASSERT_EQ((vector<float>{}), a->get_vector<float>());
+    ASSERT_EQ((vector<float>{88}), b->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
@@ -1659,19 +1819,19 @@ TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{};
-    auto b = ngraph::runtime::make_tensor<element::Float32>(Shape{});
-    *b = vector<float>{99};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
+    copy_data(b, vector<float>{99});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
     (*cf)({a, b}, {result});
-    ASSERT_EQ((vector<float>{99}), result->get_vector());
+    ASSERT_EQ((vector<float>{99}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{}), a->get_vector());
-    ASSERT_EQ((vector<float>{99}), b->get_vector());
+    ASSERT_EQ((vector<float>{}), a->get_vector<float>());
+    ASSERT_EQ((vector<float>{99}), b->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reshape_t2v_012)
@@ -1690,12 +1850,12 @@ TEST(${BACKEND_NAME}, reshape_t2v_012)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reshape_t2s_012)
@@ -1714,12 +1874,12 @@ TEST(${BACKEND_NAME}, reshape_t2s_012)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{6};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{6});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{6}), result->get_vector());
+    ASSERT_EQ((vector<float>{6}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reshape_t2s_120)
@@ -1738,12 +1898,12 @@ TEST(${BACKEND_NAME}, reshape_t2s_120)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{6};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{6});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{6}), result->get_vector());
+    ASSERT_EQ((vector<float>{6}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reshape_s2t)
@@ -1762,12 +1922,12 @@ TEST(${BACKEND_NAME}, reshape_s2t)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{42};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{42});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{42}), result->get_vector());
+    ASSERT_EQ((vector<float>{42}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reshape_v2m_col)
@@ -1786,12 +1946,12 @@ TEST(${BACKEND_NAME}, reshape_v2m_col)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reshape_v2m_row)
@@ -1810,12 +1970,12 @@ TEST(${BACKEND_NAME}, reshape_v2m_row)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reshape_v2t_middle)
@@ -1834,12 +1994,12 @@ TEST(${BACKEND_NAME}, reshape_v2t_middle)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reshape_m2m_same)
@@ -1858,12 +2018,12 @@ TEST(${BACKEND_NAME}, reshape_m2m_same)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reshape_m2m_transpose)
@@ -1882,12 +2042,12 @@ TEST(${BACKEND_NAME}, reshape_m2m_transpose)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1, 4, 7, 2, 5, 8, 3, 6, 9}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 4, 7, 2, 5, 8, 3, 6, 9}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
@@ -1906,12 +2066,12 @@ TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3, 4, 5, 6};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, sin)
@@ -1928,16 +2088,16 @@ TEST(${BACKEND_NAME}, sin)
 
     // Create some tensors for input/output
     float pi = acosf(-1);
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     vector<float> input{pi / 2, 0.0f, -0.0f, pi / 6, -pi, pi};
-    *a = input;
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    copy_data(a, input);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return sinf(x); });
 
     (*cf)({a}, {result});
-    ASSERT_EQ(input, result->get_vector());
+    ASSERT_EQ(input, result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, cos)
@@ -1954,16 +2114,16 @@ TEST(${BACKEND_NAME}, cos)
 
     // Create some tensors for input/output
     float pi = acosf(-1);
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     vector<float> input{pi / 2, 0.0f, -0.0f, pi / 3, -pi, pi};
-    *a = input;
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    copy_data(a, input);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return cosf(x); });
 
     (*cf)({a}, {result});
-    ASSERT_EQ(input, result->get_vector());
+    ASSERT_EQ(input, result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, tan)
@@ -1980,16 +2140,16 @@ TEST(${BACKEND_NAME}, tan)
 
     // Create some tensors for input/output
     float pi = acosf(-1);
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     vector<float> input{pi / 4, 0.0f, -0.0f, 7 * pi / 4, 3 * pi / 4, 5 * pi / 4};
-    *a = input;
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    copy_data(a, input);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanf(x); });
 
     (*cf)({a}, {result});
-    ASSERT_EQ(input, result->get_vector());
+    ASSERT_EQ(input, result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, asin)
@@ -2005,16 +2165,16 @@ TEST(${BACKEND_NAME}, asin)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
-    *a = input;
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    copy_data(a, input);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return asinf(x); });
 
     (*cf)({a}, {result});
-    ASSERT_EQ(input, result->get_vector());
+    ASSERT_EQ(input, result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, acos)
@@ -2030,16 +2190,16 @@ TEST(${BACKEND_NAME}, acos)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
-    *a = input;
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    copy_data(a, input);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return acosf(x); });
 
     (*cf)({a}, {result});
-    ASSERT_EQ(input, result->get_vector());
+    ASSERT_EQ(input, result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, atan)
@@ -2055,16 +2215,16 @@ TEST(${BACKEND_NAME}, atan)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
-    *a = input;
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    copy_data(a, input);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return atanf(x); });
 
     (*cf)({a}, {result});
-    ASSERT_EQ(input, result->get_vector());
+    ASSERT_EQ(input, result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, sinh)
@@ -2080,16 +2240,16 @@ TEST(${BACKEND_NAME}, sinh)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 5.0f, -5.0f};
-    *a = input;
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    copy_data(a, input);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return sinhf(x); });
 
     (*cf)({a}, {result});
-    ASSERT_EQ(input, result->get_vector());
+    ASSERT_EQ(input, result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, cosh)
@@ -2105,16 +2265,16 @@ TEST(${BACKEND_NAME}, cosh)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 5.0f, -5.0f};
-    *a = input;
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    copy_data(a, input);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return coshf(x); });
 
     (*cf)({a}, {result});
-    ASSERT_EQ(input, result->get_vector());
+    ASSERT_EQ(input, result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, tanh)
@@ -2130,16 +2290,16 @@ TEST(${BACKEND_NAME}, tanh)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     vector<float> input{1.0f, 0.0f, -0.0f, -1.0f, 0.5f, -0.5f};
-    *a = input;
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    copy_data(a, input);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanhf(x); });
 
     (*cf)({a}, {result});
-    ASSERT_EQ(input, result->get_vector());
+    ASSERT_EQ(input, result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, exp)
@@ -2155,14 +2315,14 @@ TEST(${BACKEND_NAME}, exp)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{-4, -3, -2, -1, 0, 1, 2, 3};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{-4, -3, -2, -1, 0, 1, 2, 3});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a}, {result});
     ASSERT_EQ(
         (vector<float>{expf(-4), expf(-3), expf(-2), expf(-1), expf(0), expf(1), expf(2), expf(3)}),
-        result->get_vector());
+        result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, slice_scalar)
@@ -2181,12 +2341,12 @@ TEST(${BACKEND_NAME}, slice_scalar)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{312};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{312});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{312}), result->get_vector());
+    ASSERT_EQ((vector<float>{312}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, slice_matrix)
@@ -2205,12 +2365,12 @@ TEST(${BACKEND_NAME}, slice_matrix)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{2, 3, 6, 7, 10, 11}), result->get_vector());
+    ASSERT_EQ((vector<float>{2, 3, 6, 7, 10, 11}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, slice_vector)
@@ -2229,12 +2389,12 @@ TEST(${BACKEND_NAME}, slice_vector)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), result->get_vector());
+    ASSERT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, scalar_constant_float32)
@@ -2249,10 +2409,10 @@ TEST(${BACKEND_NAME}, scalar_constant_float32)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto result = ngraph::runtime::make_tensor<element::Float32>(Shape{});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
 
     (*cf)({}, {result});
-    ASSERT_EQ(vector<float>{std::strtof("4.8", NULL)}, result->get_vector());
+    ASSERT_EQ(vector<float>{std::strtof("4.8", NULL)}, result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, scalar_constant_int64)
@@ -2267,10 +2427,11 @@ TEST(${BACKEND_NAME}, scalar_constant_int64)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto result = ngraph::runtime::make_tensor<element::Int64>(Shape{});
+    auto result = backend->make_primary_tensor_view(element::Int64::element_type(), Shape{});
 
     (*cf)({}, {result});
-    ASSERT_EQ(vector<element::Int64::type>{std::strtol("2112", NULL, 10)}, result->get_vector());
+    ASSERT_EQ(vector<element::Int64::type>{std::strtol("2112", NULL, 10)},
+              result->get_vector<element::Int64::type>());
 }
 
 TEST(${BACKEND_NAME}, tensor_constant_float32)
@@ -2288,14 +2449,14 @@ TEST(${BACKEND_NAME}, tensor_constant_float32)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({}, {result});
     ASSERT_EQ((vector<float>{std::strtof("4.8", NULL),
                              std::strtof("4.7", NULL),
                              std::strtof("-5.3", NULL),
                              std::strtof("0", NULL)}),
-              result->get_vector());
+              result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, tensor_constant_int64)
@@ -2313,14 +2474,14 @@ TEST(${BACKEND_NAME}, tensor_constant_int64)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto result = ngraph::runtime::make_tensor<element::Int64>(shape);
+    auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
 
     (*cf)({}, {result});
     ASSERT_EQ((vector<element::Int64::type>{std::strtol("2112", NULL, 10),
                                             std::strtol("1848", NULL, 10),
                                             std::strtol("1776", NULL, 10),
                                             std::strtol("1964", NULL, 10)}),
-              result->get_vector());
+              result->get_vector<element::Int64::type>());
 }
 
 // Trivial case with no summed axes.
@@ -2337,12 +2498,12 @@ TEST(${BACKEND_NAME}, sum_trivial)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a = vector<float>{1, 2, 3, 4};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1, 2, 3, 4}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, sum_to_scalar)
@@ -2358,16 +2519,16 @@ TEST(${BACKEND_NAME}, sum_to_scalar)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape);
-    *a = vector<float>{1, 2, 3, 4};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(Shape{});
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{10}), result->get_vector());
+    ASSERT_EQ((vector<float>{10}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{1, 2, 3, 4}), a->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4}), a->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, sum_matrix_columns)
@@ -2384,16 +2545,16 @@ TEST(${BACKEND_NAME}, sum_matrix_columns)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3, 4, 5, 6};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{9, 12}), result->get_vector());
+    ASSERT_EQ((vector<float>{9, 12}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), a->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), a->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, sum_matrix_rows)
@@ -2410,16 +2571,16 @@ TEST(${BACKEND_NAME}, sum_matrix_rows)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{1, 2, 3, 4, 5, 6};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{3, 7, 11}), result->get_vector());
+    ASSERT_EQ((vector<float>{3, 7, 11}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), a->get_vector());
+    ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), a->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
@@ -2436,16 +2597,16 @@ TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{0, 0, 0}), result->get_vector());
+    ASSERT_EQ((vector<float>{0, 0, 0}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{}), a->get_vector());
+    ASSERT_EQ((vector<float>{}), a->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
@@ -2463,16 +2624,16 @@ TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{0, 0}), result->get_vector());
+    ASSERT_EQ((vector<float>{0, 0}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{}), a->get_vector());
+    ASSERT_EQ((vector<float>{}), a->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, sum_vector_zero)
@@ -2489,16 +2650,16 @@ TEST(${BACKEND_NAME}, sum_vector_zero)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{0}), result->get_vector());
+    ASSERT_EQ((vector<float>{0}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{}), a->get_vector());
+    ASSERT_EQ((vector<float>{}), a->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
@@ -2515,16 +2676,16 @@ TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = ngraph::runtime::make_tensor<element::Float32>(shape_a);
-    *a = vector<float>{};
-    auto result = ngraph::runtime::make_tensor<element::Float32>(shape_rt);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{0}), result->get_vector());
+    ASSERT_EQ((vector<float>{0}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    ASSERT_EQ((vector<float>{}), a->get_vector());
+    ASSERT_EQ((vector<float>{}), a->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, sign)
@@ -2540,10 +2701,37 @@ TEST(${BACKEND_NAME}, sign)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
-    *a = vector<float>{1, -2, 0, -4.8f, 4.8f, -0.0};
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, -2, 0, -4.8f, 4.8f, -0.0});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), result->get_vector());
+    ASSERT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, constant_equality_bool)
+{
+    auto shape = Shape{4};
+    // auto A = make_shared<op::Parameter>(element::Bool::element_type(), shape);
+    // auto B = make_shared<op::Parameter>(element::Bool::element_type(), shape);
+    // auto result_type = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    // auto f = make_shared<Function>(make_shared<op::Equal>(A, B), result_type, op::Parameters{A, B});
+
+    auto a = runtime::make_tensor<element::Bool>(shape, {true, false, true, false});
+    auto A = make_shared<op::ParameterizedConstant<element::Bool>>(shape, a);
+    auto b = runtime::make_tensor<element::Bool>(shape, {true, true, true, true});
+    auto B = make_shared<op::ParameterizedConstant<element::Bool>>(shape, b);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
+
+    (*cf)({}, {result});
+    ASSERT_EQ((vector<char>{true, false, true, false}), result->get_vector<char>());
 }

@@ -20,16 +20,21 @@
 
 #include <map>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <type_traits>
 
 #include "ngraph/common.hpp"
 #include "ngraph/except.hpp"
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
 {
+    namespace runtime
+    {
+        template <typename ET>
+        class ParameterizedTensorView;
+    }
+
     namespace element
     {
         class Type
@@ -39,7 +44,7 @@ namespace ngraph
 
         public:
             virtual ~Type() {}
-            Type(size_t bitwidth, bool is_float, bool is_signed, const std::string& cname);
+            Type(size_t bitwidth, bool is_real, bool is_signed, const std::string& cname);
 
             const std::string& c_type_string() const;
             size_t size() const;
@@ -49,9 +54,6 @@ namespace ngraph
                 return h(m_cname);
             }
 
-            virtual std::shared_ptr<ngraph::runtime::TensorView>
-                make_primary_tensor_view(const Shape& shape) const = 0;
-
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
             friend std::ostream& operator<<(std::ostream&, const Type&);
@@ -59,10 +61,20 @@ namespace ngraph
         private:
             static std::map<std::string, Type> m_element_list;
             size_t m_bitwidth;
-            bool m_is_float;
+            bool m_is_real;
             bool m_is_signed;
             const std::string m_cname;
         };
+
+        extern const Type boolean;
+        extern const Type f32;
+        extern const Type f64;
+        extern const Type i8;
+        extern const Type i32;
+        extern const Type i64;
+        extern const Type u8;
+        extern const Type u32;
+        extern const Type u64;
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
 
@@ -110,43 +122,6 @@ namespace ngraph
                 static TraitedType<T> t;
                 return t;
             }
-
-            virtual std::shared_ptr<ngraph::runtime::TensorView>
-                make_primary_tensor_view(const ngraph::Shape& shape) const override
-            {
-                return std::make_shared<runtime::ParameterizedTensorView<TraitedType<T>>>(shape);
-            }
-
-            /// Parses a string containing a literal of the underlying type.
-            static T read(const std::string& s)
-            {
-                T result;
-                std::stringstream ss;
-
-                ss << s;
-                ss >> result;
-
-                // Check that (1) parsing succeeded and (2) the entire string was used.
-                if (ss.fail() || ss.rdbuf()->in_avail() != 0)
-                {
-                    throw ngraph_error("Could not parse literal");
-                }
-
-                return result;
-            }
-
-            /// Parses a list of strings containing literals of the underlying type.
-            static std::vector<T> read(const std::vector<std::string>& ss)
-            {
-                std::vector<T> result;
-
-                for (auto s : ss)
-                {
-                    result.push_back(read(s));
-                }
-
-                return result;
-            }
         };
 
         NGRAPH_DEFINE_TRAITED_TYPE_NAME(char)
@@ -177,23 +152,3 @@ namespace ngraph
         using UInt64 = TraitedType<uint64_t>;
     }
 }
-
-//
-// Utility macro for dispatching an element type-templated function at runtime.
-//
-
-// clang-format off
-// Sorry, but you really don't want to see what clang-format does to this thing. :)
-#define FUNCTION_ON_ELEMENT_TYPE(et, err_msg, f, ...)                                     \
-    (                                                                                     \
-        ((et) == element::Bool::element_type()) ? (f<element::Bool>(__VA_ARGS__)) :       \
-        ((et) == element::Float32::element_type()) ? (f<element::Float32>(__VA_ARGS__)) : \
-        ((et) == element::Int8::element_type()) ? (f<element::Int8>(__VA_ARGS__)) :       \
-        ((et) == element::Int32::element_type()) ? (f<element::Int32>(__VA_ARGS__)) :     \
-        ((et) == element::Int64::element_type()) ? (f<element::Int64>(__VA_ARGS__)) :     \
-        ((et) == element::UInt8::element_type()) ? (f<element::UInt8>(__VA_ARGS__)) :     \
-        ((et) == element::UInt32::element_type()) ? (f<element::UInt32>(__VA_ARGS__)) :   \
-        ((et) == element::UInt64::element_type()) ? (f<element::UInt64>(__VA_ARGS__)) :   \
-        (throw ngraph_error(err_msg))                                                     \
-    )
-// clang-format on

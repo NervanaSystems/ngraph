@@ -15,15 +15,21 @@
 #include "ngraph/ops/op.hpp"
 
 using namespace ngraph;
-using namespace ngraph::op;
 
-const element::Type&
-    UnaryElementwiseArithmetic::propagate_element_types(const element::Type& arg_element_type) const
+op::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
+                                                           const std::shared_ptr<Node>& arg)
+    : UnaryElementwise(
+          node_type,
+          [](const ngraph::element::Type& arg_element_type) -> const ngraph::element::Type& {
+              if (arg_element_type == element::Bool::element_type())
+              {
+                  throw ngraph_error(
+                      "Operands for arithmetic operators must have numeric element "
+                      "type");
+              }
+
+              return arg_element_type;
+          },
+          arg)
 {
-    if (arg_element_type == element::Bool::element_type())
-    {
-        throw ngraph_error("Operands for arithmetic operators must have numeric element type");
-    }
-
-    return arg_element_type;
 }

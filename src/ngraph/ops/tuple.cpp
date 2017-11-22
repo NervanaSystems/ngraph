@@ -18,9 +18,10 @@
 #include "ngraph/ops/tuple.hpp"
 
 using namespace std;
-using namespace ngraph::op;
+using namespace ngraph;
 
-void Tuple::propagate_types()
+op::Tuple::Tuple(const Nodes& args)
+    : Node("Tuple", args)
 {
     vector<shared_ptr<const ValueType>> element_types;
     for (auto argument : m_arguments)

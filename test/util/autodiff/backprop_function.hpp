@@ -12,29 +12,29 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <sstream>
+#pragma once
 
-#include "ngraph/ngraph.hpp"
-#include "ngraph/pass/propagate_types.hpp"
+#include <memory>
+#include <unordered_map>
 
-using namespace std;
-using namespace ngraph;
+#include "ngraph/runtime/parameterized_tensor_view.hpp"
 
-bool pass::PropagateTypes::run_on_call_graph(list<shared_ptr<Node>>& nodes)
+namespace ngraph
 {
-    for (shared_ptr<Node> node : nodes)
+    class Node;
+    class Function;
+
+    namespace runtime
     {
-        try
-        {
-            node->propagate_types();
-        }
-        catch (exception& e)
-        {
-            stringstream ss;
-            ss << "Error with node " << *node << ": ";
-            ss << e.what();
-            throw invalid_argument(ss.str());
-        }
+        class Backend;
+        class Manager;
     }
-    return false;
+
+    namespace autodiff
+    {
+        /// @brief Returns a FunctionSpec for the backprop derivative of its argument.
+        /// @param f is f(X_i...)
+        /// @returns f'(X_i..., c) where f'(x_i, ..., c)_j is backprop for X_j
+        std::shared_ptr<Function> backprop_function(const std::shared_ptr<Function>& f);
+    }
 }

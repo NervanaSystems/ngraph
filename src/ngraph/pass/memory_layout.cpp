@@ -26,10 +26,15 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::descriptor;
 
-bool pass::MemoryLayout::run_on_call_graph(std::list<std::shared_ptr<Node>>& node_list)
+pass::MemoryLayout::MemoryLayout(size_t alignment)
+    : m_alignment(alignment)
 {
-    MemoryManager mm;
-    for (shared_ptr<Node> node : node_list)
+}
+
+bool pass::MemoryLayout::run_on_function(std::shared_ptr<ngraph::Function> function)
+{
+    MemoryManager mm(m_alignment);
+    for (shared_ptr<Node> node : function->get_ordered_ops())
     {
         for (Tensor* tensor : node->liveness_new_list)
         {
@@ -41,7 +46,7 @@ bool pass::MemoryLayout::run_on_call_graph(std::list<std::shared_ptr<Node>>& nod
             mm.free(tensor->get_pool_offset());
         }
     }
-    get_state().set_temporary_pool_size(mm.max_allocated());
+    function->set_temporary_pool_size(mm.max_allocated());
 
     return false;
 }

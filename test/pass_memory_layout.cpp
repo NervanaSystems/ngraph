@@ -20,13 +20,11 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
-#include "ngraph/pass/propagate_types.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "util/test_tools.hpp"
@@ -210,8 +208,6 @@ TEST(memory_layout, basic)
     string dump_file = "memory_layout.txt";
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
-    pass_manager.register_pass<pass::PropagateTypes>();
-    pass_manager.register_pass<pass::AssignTensors>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>();
     pass_manager.register_pass<pass::DumpSorted>(dump_file);
@@ -219,6 +215,26 @@ TEST(memory_layout, basic)
     auto graph = make_test_graph();
     pass_manager.run_passes(graph);
     auto sorted = graph->get_ordered_ops();
-    size_t temporary_pool_size = pass_manager.get_state().get_temporary_pool_size();
+    size_t temporary_pool_size = graph->get_temporary_pool_size();
     EXPECT_EQ(12, temporary_pool_size);
+}
+
+TEST(memory_layout, constant)
+{
+    string dump_file = "constant.txt";
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::TopologicalSort>();
+    pass_manager.register_pass<pass::Liveness>();
+    pass_manager.register_pass<pass::MemoryLayout>();
+    pass_manager.register_pass<pass::DumpSorted>(dump_file);
+
+    auto shape = Shape{1};
+    auto c = make_shared<op::Constant>(element::i32, Shape{}, "5");
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Negative>(c), rt, op::Parameters{});
+
+    pass_manager.run_passes(f);
+    auto sorted = f->get_ordered_ops();
+    size_t temporary_pool_size = f->get_temporary_pool_size();
+    EXPECT_EQ(0, temporary_pool_size);
 }

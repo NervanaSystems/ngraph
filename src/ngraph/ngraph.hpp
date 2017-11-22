@@ -35,7 +35,6 @@
 
 #include "ngraph/common.hpp"
 #include "ngraph/descriptor/buffer.hpp"
-#include "ngraph/descriptor/call_frame.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"

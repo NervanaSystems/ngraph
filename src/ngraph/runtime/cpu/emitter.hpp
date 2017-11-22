@@ -17,14 +17,13 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/cpu/external_function.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
 
 #define EMITTER_DECL(E)                                                                            \
     E(const ngraph::Node* n,                                                                       \
-      ExternalFunction* ef,                                                                        \
-      FunctionMap& function_map,                                                                   \
       const std::vector<TensorViewInfo>& inputs,                                                   \
       const std::vector<TensorViewInfo>& outputs)
 
@@ -37,14 +36,15 @@ namespace ngraph
             class Emitter
             {
             protected:
-                std::string TU;
+                codegen::CodeWriter TU;
 
             public:
                 Emitter()
-                    : TU("")
+                    : TU()
                 {
                 }
-                std::string& GetTU() { return TU; }
+                std::string get_code() { return TU.get_code(); }
+                codegen::CodeWriter& get_code_writer() { return TU; }
                 void EMITTER_DECL(EmitNop);
                 void EMITTER_DECL(EmitAdd);
                 void EMITTER_DECL(EmitDot);
@@ -93,6 +93,15 @@ namespace ngraph
                 void EMITTER_DECL(EmitAsin);
                 void EMITTER_DECL(EmitAcos);
                 void EMITTER_DECL(EmitAtan);
+
+            private:
+                void generate_call(const std::vector<TensorViewInfo>& inputs,
+                                   const std::vector<TensorViewInfo>& outputs,
+                                   std::shared_ptr<Function> function);
+
+                std::string emit_vector(const TensorViewInfo&, const std::string& name = "");
+                std::string emit_array1d(const TensorViewInfo&, const std::string& name = "");
+                std::string emit_matrix(const TensorViewInfo&, const std::string& name = "");
             };
         }
     }

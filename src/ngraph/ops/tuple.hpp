@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
@@ -39,19 +39,19 @@ namespace ngraph
         /// | Backend | Status             |
         /// | ------- | ------------------ |
         /// | NGVM    | Fully implemented. |
-        class Tuple : public Builtin
+        class Tuple : public ngraph::Node
         {
         public:
             /// \brief Constructs a tuple construction operation.
             ///
             /// \param args The nodes that produce the elements of the constructed tuple.
-            Tuple(const Nodes& args)
-                : Builtin(args)
-            {
-            }
+            Tuple(const Nodes& args);
 
-            virtual std::string description() const override { return "Tuple"; }
-            virtual void propagate_types() override;
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                return std::make_shared<Tuple>(new_args);
+            }
         };
     }
 }

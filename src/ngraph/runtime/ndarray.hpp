@@ -177,6 +177,10 @@ namespace ngraph
             const_iterator end() const { return m_elements.end(); }
             vtype get_vector() { return m_elements; }
             const vtype get_vector() const { return m_elements; }
+            operator const vtype() const { return m_elements; }
+            operator vtype() { return m_elements; }
+            void* data() { return m_elements.data(); }
+            const void* data() const { return m_elements.data(); }
             bool operator==(const NDArrayBase<T>& other) const
             {
                 return m_shape == other.m_shape && m_elements == other.m_elements;

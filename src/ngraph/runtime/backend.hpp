@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "ngraph/common.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/ndarray.hpp"
 
 namespace ngraph
@@ -61,17 +62,6 @@ namespace ngraph
             {
                 return std::dynamic_pointer_cast<ngraph::runtime::ParameterizedTensorView<ET>>(
                     make_primary_tensor_view(ET::element_type(), shape));
-            }
-
-            template <typename ET>
-            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>
-                make_parameterized_tensor_view(const NDArrayBase<typename ET::type>& ndarray)
-            {
-                auto result =
-                    std::dynamic_pointer_cast<ngraph::runtime::ParameterizedTensorView<ET>>(
-                        make_primary_tensor_view(ET::element_type(), ndarray.get_shape()));
-                *result = ndarray;
-                return result;
             }
 
             /// @brief Construct a tuple handle from a sequence of values.

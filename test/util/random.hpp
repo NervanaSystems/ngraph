@@ -43,10 +43,12 @@ namespace ngraph
             const std::shared_ptr<runtime::ParameterizedTensorView<ET>>
                 initialize(const std::shared_ptr<runtime::ParameterizedTensorView<ET>>& ptv)
             {
-                for (auto& elt : ptv->get_vector())
+                auto vec = ptv->get_vector();
+                for (auto& elt : vec)
                 {
                     elt = m_r();
                 }
+                ptv->write(vec);
                 return ptv;
             }
 

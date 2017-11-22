@@ -12,30 +12,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "code_writer.hpp"
 
-#include <memory>
-#include <vector>
+using namespace std;
+using namespace ngraph;
 
-#include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/function.hpp"
-
-namespace ngraph
+codegen::CodeWriter::CodeWriter()
+    : indent(0)
+    , m_pending_indent(true)
 {
-    namespace descriptor
-    {
-        // Describes the frame that will be used when a function is executing
-        class CallFrame
-        {
-        protected:
-            Function m_function;
+}
 
-            // Will be provided by the caller
-            std::vector<std::shared_ptr<TensorView>> m_inputs;
-            std::vector<std::shared_ptr<TensorView>> m_outputs;
-            // Will be provided by the call mechanism
-            // Expect there to be only one buffer
-            std::vector<std::shared_ptr<Buffer>> m_buffers;
-        };
-    }
+string codegen::CodeWriter::get_code() const
+{
+    return m_ss.str();
+}
+
+void codegen::CodeWriter::operator+=(const std::string& s)
+{
+    *this << s;
 }

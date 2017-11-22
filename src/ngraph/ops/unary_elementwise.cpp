@@ -12,22 +12,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include <memory>
 
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/ops/op.hpp"
 
-namespace ngraph
+using namespace std;
+using namespace ngraph;
+
+op::UnaryElementwise::UnaryElementwise(
+    const std::string& node_type,
+    std::function<const element::Type&(const element::Type&)> element_type_function,
+    const std::shared_ptr<Node>& arg)
+    : RequiresTensorViewArgs(node_type, Nodes{arg})
 {
-    namespace pass
-    {
-        class CollectFunctions;
-    }
+    auto arg_tensor_type = get_inputs().at(0).get_tensor_view_type();
+    const element::Type& result_element_type =
+        element_type_function(arg_tensor_type->get_element_type());
+
+    set_value_type_checked(
+        make_shared<TensorViewType>(result_element_type, arg_tensor_type->get_shape()));
 }
-
-class ngraph::pass::CollectFunctions : public FunctionPass
-{
-public:
-    bool run_on_function(std::shared_ptr<ngraph::Function>) override;
-
-private:
-};

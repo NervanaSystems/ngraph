@@ -46,14 +46,20 @@ namespace ngraph
             ///
             /// \param arg Node that produces the input tensor.
             Negative(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic(arg)
+                : UnaryElementwiseArithmetic("Negative", arg)
             {
+            }
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 1)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Negative>(new_args.at(0));
             }
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
-
-            virtual std::string description() const override { return "Negative"; }
         };
     }
     inline std::shared_ptr<ngraph::Node> operator-(const std::shared_ptr<ngraph::Node> arg0)

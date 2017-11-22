@@ -16,25 +16,16 @@
 #include "ngraph/ops/sum.hpp"
 
 using namespace std;
-using namespace ngraph::op;
+using namespace ngraph;
 
-void Broadcast::propagate_types()
+op::Broadcast::Broadcast(const std::shared_ptr<Node>& arg,
+                         const Shape& shape,
+                         const AxisSet& broadcast_axes)
+    : RequiresTensorViewArgs("Broadcast", {arg})
+    , m_shape(shape)
+    , m_broadcast_axes(broadcast_axes)
 {
-    if (m_arguments.size() != 1)
-    {
-        throw ngraph_error("Wrong number of arguments.");
-    }
-
-    auto arg_type = m_arguments.at(0)->get_value_type();
-    if (nullptr == arg_type)
-    {
-        throw ngraph_error("Argument to broadcast is missing type.");
-    }
-    auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
-    if (nullptr == arg_tensor_view_type)
-    {
-        throw ngraph_error("Argument to broadcast is not a tensor view");
-    }
+    auto arg_tensor_view_type = m_inputs.at(0).get_tensor_view_type();
     vector<size_t> target_shape = m_shape;
     for (auto i = m_broadcast_axes.rbegin(); i != m_broadcast_axes.rend(); ++i)
     {
@@ -48,8 +39,8 @@ void Broadcast::propagate_types()
         make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), m_shape));
 }
 
-void ngraph::op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints,
-                                              const std::shared_ptr<Node>& delta)
+void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints,
+                                      const std::shared_ptr<Node>& delta)
 {
     auto x = m_arguments[0];
 

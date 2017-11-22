@@ -52,7 +52,7 @@ namespace ngraph
         /// | Backend | Status                                          |
         /// | ------- | ----------------------------------------------- |
         /// | NGVM    | Implemented for scalars, matrices, and vectors. |
-        class Slice : public Builtin
+        class Slice : public RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a tensor slice operation.
@@ -65,13 +65,7 @@ namespace ngraph
             Slice(const std::shared_ptr<Node>& arg,
                   const Coordinate& lower_bounds,
                   const Coordinate& upper_bounds,
-                  const Shape& step)
-                : Builtin({arg})
-                , m_lower_bounds(lower_bounds)
-                , m_upper_bounds(upper_bounds)
-                , m_step(step)
-            {
-            }
+                  const Shape& step);
 
             /// \brief Constructs a tensor slice operation with unit step; i.e., every element inside the bounding box will be copied to the output slice.
             ///
@@ -80,16 +74,16 @@ namespace ngraph
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
             Slice(const std::shared_ptr<Node>& arg,
                   const Coordinate& lower_bounds,
-                  const Coordinate& upper_bounds)
-                : Builtin({arg})
-                , m_lower_bounds(lower_bounds)
-                , m_upper_bounds(upper_bounds)
-                , m_step(Shape(lower_bounds.size(), 1))
-            {
-            }
+                  const Coordinate& upper_bounds);
 
-            virtual std::string description() const override { return "Slice"; }
-            virtual void propagate_types() override;
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 1)
+                    throw ngraph_error("Incorrect number of new arguments");
+                return std::make_shared<Slice>(
+                    new_args.at(0), m_lower_bounds, m_upper_bounds, m_step);
+            }
 
             /// \return The inclusive lower-bound coordinates.
             const Coordinate& get_lower_bounds() const { return m_lower_bounds; }
@@ -98,6 +92,8 @@ namespace ngraph
             /// \return The slicing step.
             const Shape& get_step() const { return m_step; }
         protected:
+            void check_args();
+
             const Coordinate m_lower_bounds;
             const Coordinate m_upper_bounds;
             const Shape m_step;

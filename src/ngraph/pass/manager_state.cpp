@@ -23,17 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-vector<shared_ptr<Function>>& ngraph::pass::ManagerState::get_functions()
+const vector<shared_ptr<Function>>& ngraph::pass::ManagerState::get_functions()
 {
     return m_function_list;
-}
-
-size_t ngraph::pass::ManagerState::get_temporary_pool_size()
-{
-    return m_temporary_pool_size;
-}
-
-void ngraph::pass::ManagerState::set_temporary_pool_size(size_t size)
-{
-    m_temporary_pool_size = size;
 }

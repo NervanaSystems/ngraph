@@ -20,7 +20,6 @@
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/pass/assign_tensors.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/util.hpp"
 
@@ -102,7 +101,6 @@ bool pass::Liveness::run_on_call_graph(list<shared_ptr<Node>>& ops)
         }
         for (Tensor* tensor : outputs)
         {
-            NGRAPH_INFO << "found output";
             node->liveness_live_list.insert(tensor);
             node->liveness_free_list.erase(tensor);
 
@@ -127,8 +125,7 @@ bool pass::Liveness::run_on_call_graph(list<shared_ptr<Node>>& ops)
 bool pass::Liveness::is_temporary(const Tensor& tensor)
 {
     return tensor.is_persistent() == false && tensor.is_input() == false &&
-           tensor.is_output() == false;
-    // && tensor.is_constant() == false
+           tensor.is_output() == false && tensor.is_constant() == false;
     // && tensor.is_compile_only() == false;
 }
 
