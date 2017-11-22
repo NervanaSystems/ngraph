@@ -31,6 +31,7 @@ Function::Function(const std::shared_ptr<Node>& result,
     , m_name(name)
     , m_result_type(result_type)
     , m_ordered_ops_valid(false)
+    , m_temporary_pool_size(0)
     , m_instance_id(m_next_instance_id.fetch_add(1))
 {
     m_result->set_is_output();
@@ -95,6 +96,16 @@ void Function::set_name(const string& name)
     {
         throw ngraph_error("Function name may be set exactly once");
     }
+}
+
+size_t Function::get_temporary_pool_size()
+{
+    return m_temporary_pool_size;
+}
+
+void Function::set_temporary_pool_size(size_t size)
+{
+    m_temporary_pool_size = size;
 }
 
 std::ostream& ngraph::operator<<(std::ostream& out, const Function& f)

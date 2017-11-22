@@ -39,10 +39,6 @@ public:
         m_function_list.insert(m_function_list.begin(), collection.begin(), collection.end());
     }
 
-    size_t get_temporary_pool_size();
-    void set_temporary_pool_size(size_t);
-
 private:
-    size_t m_temporary_pool_size = 0;
     std::vector<std::shared_ptr<Function>> m_function_list;
 };

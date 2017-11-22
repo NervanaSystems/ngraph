@@ -223,7 +223,7 @@ using namespace ngraph::runtime::cpu::eigen;
         }
         if (temporaries_used)
         {
-            size_t temp_pool_size = pass_manager.get_state().get_temporary_pool_size();
+            size_t temp_pool_size = current_function->get_temporary_pool_size();
             TU << "// Allocate the memory pool\n";
             TU << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
                << ngraph::runtime::cpu::alignment << ");\n";
