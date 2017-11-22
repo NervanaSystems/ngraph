@@ -29,7 +29,7 @@ namespace ngraph
         class module;
         class NVPTXCompiler;
         class HeaderCache;
-        class StaticCompiler;
+        class NVPTXStaticCompiler;
     }
 }
 
@@ -56,11 +56,11 @@ public:
 private:
 };
 
-class ngraph::codegen::StaticCompiler : public llvm::SectionMemoryManager
+class ngraph::codegen::NVPTXStaticCompiler : public llvm::SectionMemoryManager
 {
 public:
-    StaticCompiler();
-    ~StaticCompiler();
+    NVPTXStaticCompiler();
+    ~NVPTXStaticCompiler();
 
     void set_precompiled_headers_enabled(bool state) { m_precompiled_headers_enabled = state; }
     bool is_precompiled_headers_enabled() { return m_precompiled_headers_enabled; }
