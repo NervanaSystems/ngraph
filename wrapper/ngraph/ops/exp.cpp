@@ -21,17 +21,12 @@ namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_PLUGIN(clsExp) {
-
-    py::module mod("clsExp");
+PYBIND11_MODULE(clsExp, mod) {
 
     py::module::import("wrapper.ngraph.ops.clsOp");
 
     py::class_<Exp, std::shared_ptr<Exp>, UnaryElementwiseArithmetic> clsExp(mod, "Exp");
     clsExp.def(py::init<const std::shared_ptr<ngraph::Node>& >());
-
-    return mod.ptr();
-
 }
 
 }}  // ngraph

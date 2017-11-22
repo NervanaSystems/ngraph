@@ -21,14 +21,9 @@ namespace py = pybind11;
 namespace ngraph {
 namespace runtime {
 
-PYBIND11_PLUGIN(clsExternalFunction) {
-
-    py::module mod("clsExternalFunction");
+PYBIND11_MODULE(clsExternalFunction, mod) {
 
     py::class_<ExternalFunction, std::shared_ptr<ExternalFunction>> clsExternalFunction(mod, "ExternalFunction");
-
-    return mod.ptr();
-
 }
 
 }}  // ngraph

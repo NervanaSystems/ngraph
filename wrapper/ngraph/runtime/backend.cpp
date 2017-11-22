@@ -26,9 +26,7 @@ namespace py = pybind11;
 namespace ngraph {
 namespace runtime {
 
-PYBIND11_PLUGIN(clsBackend) {
-
-    py::module mod("clsBackend");
+PYBIND11_MODULE(clsBackend, mod) {
 
     py::module::import("wrapper.ngraph.runtime.clsCallFrame");
     py::module::import("wrapper.ngraph.runtime.clsParameterizedTensorView");
@@ -41,9 +39,6 @@ PYBIND11_PLUGIN(clsBackend) {
                    &Backend::make_primary_tensor_view);
     clsBackend.def("make_parameterized_tensor_view", (std::shared_ptr<ParameterizedTensorView<ET>> (Backend::*) (const ngraph::Shape& )) &Backend::make_parameterized_tensor_view);
     clsBackend.def("make_parameterized_tensor_view", (std::shared_ptr<ParameterizedTensorView<ET>> (Backend::*) (const NDArrayBase<ET::type>& )) &Backend::make_parameterized_tensor_view);
-
-    return mod.ptr();
-
 }
 
 }}  // ngraph

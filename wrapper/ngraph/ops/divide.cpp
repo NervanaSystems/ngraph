@@ -21,18 +21,13 @@ namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_PLUGIN(clsDivide) {
-
-    py::module mod("clsDivide");
+PYBIND11_MODULE(clsDivide, mod) {
 
     py::module::import("wrapper.ngraph.ops.clsOp");
 
     py::class_<Divide, std::shared_ptr<Divide>, BinaryElementwiseArithmetic> clsDivide(mod, "Divide");
     clsDivide.def(py::init<const std::shared_ptr<ngraph::Node>&,
                            const std::shared_ptr<ngraph::Node>& >());
-
-    return mod.ptr();
-
 }
 
 }}  // ngraph

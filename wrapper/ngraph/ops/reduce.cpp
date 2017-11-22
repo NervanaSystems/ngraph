@@ -22,9 +22,7 @@ namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_PLUGIN(clsReduce) {
-
-    py::module mod("clsReduce");
+PYBIND11_MODULE(clsReduce, mod) {
 
     py::module::import("wrapper.ngraph.ops.clsOp");
     using AxisSet = std::set<size_t>;
@@ -34,9 +32,6 @@ PYBIND11_PLUGIN(clsReduce) {
                            const std::shared_ptr<ngraph::Node>&,
                            const std::shared_ptr<ngraph::Function>&,
                            const AxisSet& >());
-
-    return mod.ptr();
-
 }
 
 }}  // ngraph

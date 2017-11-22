@@ -21,17 +21,13 @@ namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_PLUGIN(clsMaximum) {
-
-    py::module mod("clsMaximum");
+PYBIND11_MODULE(clsMaximum, mod) {
 
     py::module::import("wrapper.ngraph.ops.clsOp");
 
     py::class_<Maximum, std::shared_ptr<Maximum>, BinaryElementwiseArithmetic> clsMaximum(mod, "Maximum");
     clsMaximum.def(py::init<const std::shared_ptr<ngraph::Node>&,
                         const std::shared_ptr<ngraph::Node>& >());
-
-    return mod.ptr();
 
 }
 

@@ -23,9 +23,7 @@
 namespace py = pybind11;
 namespace ngraph {
 
-PYBIND11_PLUGIN(clsNode) {
-
-    py::module mod("clsNode");
+PYBIND11_MODULE(clsNode, mod) {
 
     py::class_<Node, std::shared_ptr<Node>> clsNode(mod, "Node");
  
@@ -38,9 +36,6 @@ PYBIND11_PLUGIN(clsNode) {
     clsNode.def("__truediv__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
                 return a/b;
                }, py::is_operator());
-
-    return mod.ptr();
-
 }
 
 }  // ngraph

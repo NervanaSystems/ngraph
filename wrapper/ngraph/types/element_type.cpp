@@ -40,17 +40,13 @@ static void declareTraitedType(py::module & mod, std::string const & suffix) {
 
 }
 
-PYBIND11_PLUGIN(clsTraitedType) {
+PYBIND11_MODULE(clsTraitedType, mod) {
 
-    py::module mod1("clsType");
-    py::class_<Type, std::shared_ptr<Type>> clsType(mod1, "Type");
-    py::module mod("clsTraitedType");
+    py::class_<Type, std::shared_ptr<Type>> clsType(mod, "Type");
 
     declareTraitedType<float>(mod, "F");
     declareTraitedType<double>(mod, "D");
     declareTraitedType<int>(mod, "I");
-
-    return mod.ptr();
 }
 
 }}  // ngraph

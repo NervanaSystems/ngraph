@@ -21,18 +21,13 @@ namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_PLUGIN(clsMinimum) {
-
-    py::module mod("clsMinimum");
+PYBIND11_MODULE(clsMinimum, mod) {
 
     py::module::import("wrapper.ngraph.ops.clsOp");
 
     py::class_<Minimum, std::shared_ptr<Minimum>, BinaryElementwiseArithmetic> clsMinimum(mod, "Minimum");
     clsMinimum.def(py::init<const std::shared_ptr<ngraph::Node>&,
                             const std::shared_ptr<ngraph::Node>& >());    
-
-    return mod.ptr();
-
 }
 
 }}  // ngraph

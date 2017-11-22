@@ -34,19 +34,15 @@ static void declareParameterizedConstant(py::module & mod, std::string const & s
 
 }
 
-PYBIND11_PLUGIN(clsParameterizedConstant) {
+PYBIND11_MODULE(clsParameterizedConstant, mod) {
 
     py::module::import("wrapper.ngraph.clsNode");
     py::module::import("wrapper.ngraph.runtime.clsParameterizedTensorView");
     using ET = ngraph::element::TraitedType<float>;
 
-    py::module mod1("clsConstantBase");
-    py::class_<ConstantBase, std::shared_ptr<ConstantBase>, Node> clsConstantBase(mod1, "ConstantBase");
-    py::module mod("clsParameterizedConstant");
+    py::class_<ConstantBase, std::shared_ptr<ConstantBase>, Node> clsConstantBase(mod, "ConstantBase");
 
     declareParameterizedConstant<ET>(mod, "F");
-
-    return mod.ptr();
 }
 
 }}  // ngraph

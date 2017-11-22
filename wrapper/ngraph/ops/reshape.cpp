@@ -21,9 +21,7 @@ namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_PLUGIN(clsReshape) {
-
-    py::module mod("clsReshape");
+PYBIND11_MODULE(clsReshape, mod) {
 
     py::module::import("wrapper.ngraph.ops.clsOp");
     using AxisVector = std::vector<size_t>;
@@ -31,9 +29,6 @@ PYBIND11_PLUGIN(clsReshape) {
     py::class_<Reshape, std::shared_ptr<Reshape>, Builtin> clsReshape(mod, "Reshape");
     clsReshape.def(py::init<const std::shared_ptr<ngraph::Node>&, const AxisVector&,
                             const ngraph::Shape& >());
-
-    return mod.ptr();
-
 }
 
 }}  // ngraph

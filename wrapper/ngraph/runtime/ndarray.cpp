@@ -44,7 +44,7 @@ static void declareNDArray(py::module & mod, std::string const & suffix) {
     //clsNDArray.def(py::init<std::vector
 }
 
-PYBIND11_PLUGIN(clsNDArray) {
+PYBIND11_MODULE(clsNDArray, mod) {
 
     py::module clsNDArrayBase("clsNDArrayBase");
     declareNDArrayBase<float>(clsNDArrayBase, "F");

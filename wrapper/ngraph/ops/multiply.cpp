@@ -21,18 +21,13 @@ namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_PLUGIN(clsMultiply) {
-
-    py::module mod("clsMultiply");
+PYBIND11_MODULE(clsMultiply, mod) {
 
     py::module::import("wrapper.ngraph.ops.clsOp");
 
     py::class_<Multiply, std::shared_ptr<Multiply>, BinaryElementwiseArithmetic> clsMultiply(mod, "Multiply");
     clsMultiply.def(py::init<const std::shared_ptr<ngraph::Node>&,
                              const std::shared_ptr<ngraph::Node>& >());
-
-    return mod.ptr();
-
 }
 
 }}  // ngraph

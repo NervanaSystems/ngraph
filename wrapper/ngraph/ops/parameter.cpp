@@ -22,9 +22,7 @@
 namespace py = pybind11;
 namespace ngraph {
 
-PYBIND11_PLUGIN(clsParameter) {
-
-    py::module mod("clsParameter");
+PYBIND11_MODULE(clsParameter, mod) {
 
     py::module::import("wrapper.ngraph.types.clsTraitedType");
     py::module::import("wrapper.ngraph.clsNode");
@@ -32,9 +30,6 @@ PYBIND11_PLUGIN(clsParameter) {
 
     clsParameter.def(py::init<const ngraph::element::Type&, const ngraph::Shape& >());
     clsParameter.def("description", &op::Parameter::description);
-
-    return mod.ptr();
-
 }
 
 }  // ngraph

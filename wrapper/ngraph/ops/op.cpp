@@ -21,9 +21,7 @@ namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_PLUGIN(clsOp) {
-
-    py::module mod("clsOp");  
+PYBIND11_MODULE(clsOp, mod) {
 
     py::module::import("wrapper.ngraph.clsNode");
 
@@ -36,8 +34,6 @@ PYBIND11_PLUGIN(clsOp) {
         Builtin> clsBinaryElementwiseBuiltin(mod, "BinaryElementwiseBuiltin");
     py::class_<BinaryElementwiseArithmetic, std::shared_ptr<BinaryElementwiseArithmetic>,
         BinaryElementwiseBuiltin> clsBinaryElementwiseArithmetic(mod, "BinaryElementwiseArithmetic");    
-
-    return mod.ptr();
 
 }
 

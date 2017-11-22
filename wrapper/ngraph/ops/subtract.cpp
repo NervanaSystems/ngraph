@@ -21,18 +21,13 @@ namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_PLUGIN(clsSubtract) {
-
-    py::module mod("clsSubtract");
+PYBIND11_MODULE(clsSubtract, mod) {
 
     py::module::import("wrapper.ngraph.ops.clsOp");
 
     py::class_<Subtract, std::shared_ptr<Subtract>, BinaryElementwiseArithmetic> clsSubtract(mod, "Subtract");
     clsSubtract.def(py::init<const std::shared_ptr<ngraph::Node>&,
                              const std::shared_ptr<ngraph::Node>& >());
-
-    return mod.ptr();
-
 }
 
 }}  // ngraph

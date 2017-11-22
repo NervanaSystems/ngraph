@@ -20,8 +20,6 @@ void* numpy_to_c(py::array a) {
   return info.ptr;
 }
 
-PYBIND11_PLUGIN(clsUtil) {
-    py::module mod("clsUtil");
+PYBIND11_MODULE(clsUtil, mod) {
     mod.def("numpy_to_c", &numpy_to_c);
-    return mod.ptr();
 }

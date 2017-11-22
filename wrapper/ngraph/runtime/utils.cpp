@@ -21,16 +21,12 @@ namespace py = pybind11;
 namespace ngraph {
 namespace runtime{
 
-PYBIND11_PLUGIN(clsUtils) {
+PYBIND11_MODULE(clsUtils, mod) {
 
-    py::module mod("clsUtils");
     py::module::import("wrapper.ngraph.runtime.clsParameterizedTensorView");
     using ET = ngraph::element::TraitedType<float>;    
 
     mod.def("make_tensor", &make_tensor<ET>);
-    
-    return mod.ptr();
-
 }
 
 }}  // ngraph

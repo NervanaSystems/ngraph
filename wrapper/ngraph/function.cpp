@@ -20,9 +20,7 @@
 namespace py = pybind11;
 namespace ngraph {
 
-PYBIND11_PLUGIN(clsFunction) {
-
-    py::module mod("clsFunction");
+PYBIND11_MODULE(clsFunction, mod) {
 
     py::module::import("wrapper.ngraph.ops.clsParameter");
     py::module::import("wrapper.ngraph.runtime.clsTensorViewType");
@@ -32,9 +30,6 @@ PYBIND11_PLUGIN(clsFunction) {
     clsFunction.def(py::init<const std::shared_ptr<Node>&, const std::shared_ptr<const TensorViewType>&,
                              const std::vector<std::shared_ptr<op::Parameter>>&, const std::string&>());
     clsFunction.def("get_result_type", &Function::get_result_type);
-
-    return mod.ptr();
-
 }
 
 }  // ngraph
