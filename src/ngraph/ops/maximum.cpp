@@ -26,8 +26,8 @@ using namespace ngraph;
 void ngraph::op::Maximum::generate_adjoints(autodiff::Adjoints& adjoints,
                                             const std::shared_ptr<Node>& delta)
 {
-    auto x = m_arguments[0];
-    auto y = m_arguments[1];
+    auto x = get_output_node(0);
+    auto y = get_output_node(1);
 
     adjoints.add_delta(x,
                        delta * make_shared<op::Convert>(make_shared<op::Greater>(x, y),

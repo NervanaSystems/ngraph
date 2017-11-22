@@ -23,7 +23,7 @@ op::Concat::Concat(const Nodes& args, size_t concatenation_axis)
     : RequiresTensorViewArgs("Concat", args)
     , m_concatenation_axis(concatenation_axis)
 {
-    if (m_arguments.size() < 1)
+    if (get_arguments().size() < 1) //TODO: [nikolayk] fix in the next iteration
     {
         throw ngraph_error("At least one argument required");
     }

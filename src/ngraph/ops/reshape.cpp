@@ -72,7 +72,7 @@ op::Reshape::Reshape(const std::shared_ptr<Node>& arg,
 void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints,
                                     const std::shared_ptr<Node>& delta)
 {
-    auto x = m_arguments[0];
+    auto x = get_output_node(0);
     auto x_type = x->get_value_type();
     auto x_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(x_type);
     if (nullptr == x_type)

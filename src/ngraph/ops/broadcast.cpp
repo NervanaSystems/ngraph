@@ -42,7 +42,7 @@ op::Broadcast::Broadcast(const std::shared_ptr<Node>& arg,
 void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints,
                                       const std::shared_ptr<Node>& delta)
 {
-    auto x = m_arguments[0];
+    auto x = get_output_node(0);
 
     adjoints.add_delta(x, make_shared<op::Sum>(delta, m_broadcast_axes));
 }
