@@ -52,5 +52,5 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     include(${source_dir}/cmake/TBBBuild.cmake)
     tbb_build(TBB_ROOT ${source_dir} MAKE_ARGS compiler=clang CONFIG_DIR TBB_DIR)
     find_package(TBB REQUIRED tbb)
-    
+
 endif()
