@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include "ngraph/ops/power.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/log.hpp"
 #include "ngraph/ops/multiply.hpp"
-#include "ngraph/ops/power.hpp"
 
 void ngraph::op::Power::generate_adjoints(autodiff::Adjoints& adjoints,
                                           const std::shared_ptr<Node>& delta)

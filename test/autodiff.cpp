@@ -423,8 +423,9 @@ TEST(backwards, power)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            std::make_shared<op::Power>(X0,X1), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(std::make_shared<op::Power>(X0, X1),
+                                     nullptr,
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
 
     auto x0 = rng_neg.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
