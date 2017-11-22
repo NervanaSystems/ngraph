@@ -62,7 +62,7 @@ using namespace std;
 using namespace ngraph::codegen;
 
 static HeaderCache s_header_cache;
-static StaticCompiler s_static_compiler;
+static NVPTXStaticCompiler s_static_compiler;
 static std::mutex m_mutex;
 
 NVPTXCompiler::NVPTXCompiler()
@@ -87,7 +87,7 @@ static std::string GetExecutablePath(const char* Argv0)
     return llvm::sys::fs::getMainExecutable(Argv0, MainAddr);
 }
 
-StaticCompiler::StaticCompiler()
+NVPTXStaticCompiler::NVPTXStaticCompiler()
     : m_precompiled_headers_enabled(false)
     , m_debuginfo_enabled(false)
     , m_source_name("code.cpp")
@@ -229,11 +229,11 @@ StaticCompiler::StaticCompiler()
     TO.FeaturesAsWritten.emplace_back("+fma");
 }
 
-StaticCompiler::~StaticCompiler()
+NVPTXStaticCompiler::~NVPTXStaticCompiler()
 {
 }
 
-bool StaticCompiler::is_version_number(const string& path)
+bool NVPTXStaticCompiler::is_version_number(const string& path)
 {
     bool rc = true;
     vector<string> tokens = ngraph::split(path, '.');
@@ -250,7 +250,7 @@ bool StaticCompiler::is_version_number(const string& path)
     return rc;
 }
 
-void StaticCompiler::add_header_search_path(const string& path)
+void NVPTXStaticCompiler::add_header_search_path(const string& path)
 {
     if (!contains(m_extra_search_path_list, path))
     {
@@ -289,7 +289,7 @@ void StaticCompiler::add_header_search_path(const string& path)
     }
 }
 
-void StaticCompiler::use_cached_files()
+void NVPTXStaticCompiler::use_cached_files()
 {
     HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
     for (const string& path : s_header_cache.get_include_paths())
@@ -302,7 +302,7 @@ void StaticCompiler::use_cached_files()
     }
 }
 
-std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
+std::unique_ptr<llvm::Module> NVPTXStaticCompiler::compile(const string& source)
 {
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
@@ -323,25 +323,3 @@ std::unique_ptr<llvm::Module> StaticCompiler::compile(const string& source)
 
     return rc;
 }
-
-// std::unique_ptr<llvm::Module> StaticCompiler::generate_pch(const string& source)
-// {
-//     // Map code filename to a memoryBuffer
-//     StringRef source_ref(source);
-//     unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);
-//     m_compiler->getInvocation().getPreprocessorOpts().addRemappedFile(m_source_name, buffer.get());
-
-//     // Create and execute action
-//     CodeGenAction* compilerAction = new GeneratePCHAction();
-//     std::unique_ptr<llvm::Module> rc;
-//     if (m_compiler->ExecuteAction(*compilerAction) == true)
-//     {
-//         rc = compilerAction->takeModule();
-//     }
-
-//     buffer.release();
-
-//     m_compiler->getInvocation().getPreprocessorOpts().clearRemappedFiles();
-
-//     return rc;
-// }
