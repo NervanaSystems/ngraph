@@ -360,4 +360,5 @@ void StaticCompiler::generate_pch(const string& source)
     buffer.release();
 
     m_compiler->getInvocation().getPreprocessorOpts().clearRemappedFiles();
+    delete compilerAction;
 }
