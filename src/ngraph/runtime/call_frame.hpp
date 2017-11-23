@@ -36,8 +36,8 @@ namespace ngraph
             ///
             /// Tuples will be expanded into their tensor views to build the call frame.
             virtual void
-                operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
-                           const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outputs) = 0;
+                call(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
+                     const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outputs) = 0;
 
             /// @brief Invoke the function with tuples pre-expanded to their underlying tensor views.
             virtual void tensor_call(const TensorViewPtrs& inputs,
