@@ -31,6 +31,36 @@ static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
     tv->write(data.data(), 0, data_size);
 }
 
+TEST(${BACKEND_NAME}, ab)
+{
+    using f32 = element::Float32;
+
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(f32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(f32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(f32::element_type(), shape);
+    auto f = make_shared<Function>(A + B, rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+    shared_ptr<runtime::TensorView> b =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+    shared_ptr<runtime::TensorView> result =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+
+    copy_data(a, runtime::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, runtime::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{6, 8}, {10, 12}})));
+}
+
 TEST(${BACKEND_NAME}, abc)
 {
     using f32 = element::Float32;
@@ -104,135 +134,6 @@ TEST(${BACKEND_NAME}, abc_int64)
     EXPECT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector<int64_t>());
 }
 
-// Same as abc, but using tuples for input and output
-TEST(${BACKEND_NAME}, abc_tuple)
-{
-    auto shape = Shape{2, 2};
-
-    auto tensor_view_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-
-    auto ABC = make_shared<op::Parameter>(
-        make_shared<TupleType>(ValueTypes{tensor_view_type, tensor_view_type, tensor_view_type}));
-
-    auto A = make_shared<op::GetTupleElement>(ABC, 0);
-    auto B = make_shared<op::GetTupleElement>(ABC, 1);
-    auto C = make_shared<op::GetTupleElement>(ABC, 2);
-    auto f = make_shared<Function>(
-        make_shared<op::Tuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
-    copy_data(a, vector<float>{1, 2, 3, 4});
-    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
-    copy_data(b, vector<float>{5, 6, 7, 8});
-    auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
-    copy_data(c, vector<float>{9, 10, 11, 12});
-    auto abc = runtime::make_tuple({a, b, c});
-    auto bac = runtime::make_tuple({b, a, c});
-    auto acb = runtime::make_tuple({a, c, b});
-    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
-    auto result_tuple = runtime::make_tuple({result});
-
-    cf->call({abc}, {result_tuple});
-    ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
-
-    cf->call({bac}, {result_tuple});
-    ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
-
-    cf->call({acb}, {result_tuple});
-    ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector<float>());
-}
-
-// Same as abc, but using tuples for input and output
-TEST(${BACKEND_NAME}, abc_tuple_int64)
-{
-    auto shape = Shape{2, 2};
-
-    auto tensor_view_type = make_shared<TensorViewType>(element::Int64::element_type(), shape);
-
-    auto ABC = make_shared<op::Parameter>(
-        make_shared<TupleType>(ValueTypes{tensor_view_type, tensor_view_type, tensor_view_type}));
-
-    auto A = make_shared<op::GetTupleElement>(ABC, 0);
-    auto B = make_shared<op::GetTupleElement>(ABC, 1);
-    auto C = make_shared<op::GetTupleElement>(ABC, 2);
-    auto f = make_shared<Function>(
-        make_shared<op::Tuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
-    copy_data(a, vector<element::Int64::type>{1, 2, 3, 4});
-    auto b = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
-    copy_data(b, vector<element::Int64::type>{5, 6, 7, 8});
-    auto c = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
-    copy_data(c, vector<element::Int64::type>{9, 10, 11, 12});
-    auto abc = runtime::make_tuple({a, b, c});
-    auto bac = runtime::make_tuple({b, a, c});
-    auto acb = runtime::make_tuple({a, c, b});
-    auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
-    auto result_tuple = runtime::make_tuple({result});
-
-    cf->call({abc}, {result_tuple});
-    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}),
-              result->get_vector<element::Int64::type>());
-
-    cf->call({bac}, {result_tuple});
-    ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}),
-              result->get_vector<element::Int64::type>());
-
-    cf->call({acb}, {result_tuple});
-    ASSERT_EQ((vector<element::Int64::type>{50, 72, 98, 128}),
-              result->get_vector<element::Int64::type>());
-}
-
-// Multiple retrive values
-TEST(${BACKEND_NAME}, tuple_result)
-{
-    auto shape = Shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto A_add_B = make_shared<op::Add>(A, B);
-    auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
-
-    auto rt = make_shared<TupleType>(std::vector<shared_ptr<const ValueType>>(
-        {make_shared<TensorViewType>(element::Float32::element_type(), shape),
-         make_shared<TensorViewType>(element::Float32::element_type(), shape)}));
-    auto f = make_shared<Function>(
-        make_shared<op::Tuple>(Nodes{A_add_B, A_add_B_mul_C}), rt, op::Parameters{A, B, C});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
-    copy_data(a, vector<float>{1, 2, 3, 4});
-    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
-    copy_data(b, vector<float>{5, 6, 7, 8});
-    auto c = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
-    copy_data(c, vector<float>{9, 10, 11, 12});
-
-    auto r0 = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
-    auto r1 = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
-    auto result_tuple = runtime::make_tuple({r0, r1});
-
-    cf->call({a, b, c}, {result_tuple});
-
-    ASSERT_EQ((vector<float>{6, 8, 10, 12}), r0->get_vector<float>());
-    ASSERT_EQ((vector<float>{54, 80, 110, 144}), r1->get_vector<float>());
-}
-
 TEST(${BACKEND_NAME}, abs)
 {
     auto shape = Shape{2, 2};
@@ -261,7 +162,7 @@ TEST(${BACKEND_NAME}, ceiling)
     auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Ceiling>(A), result_type, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -527,7 +428,7 @@ TEST(${BACKEND_NAME}, floor)
     auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Floor>(A), result_type, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -3069,6 +2970,7 @@ TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
     copy_data(a, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+    copy_data(result, vector<float>({3, 3, 3}));
 
     cf->call({a}, {result});
     ASSERT_EQ((vector<float>{0, 0, 0}), result->get_vector<float>());
@@ -3096,6 +2998,7 @@ TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
     copy_data(a, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+    copy_data(result, vector<float>({3, 3}));
 
     cf->call({a}, {result});
     ASSERT_EQ((vector<float>{0, 0}), result->get_vector<float>());
@@ -3122,6 +3025,7 @@ TEST(${BACKEND_NAME}, sum_vector_zero)
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
     copy_data(a, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+    copy_data(result, vector<float>({3}));
 
     cf->call({a}, {result});
     ASSERT_EQ((vector<float>{0}), result->get_vector<float>());
@@ -3148,6 +3052,7 @@ TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
     copy_data(a, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+    copy_data(result, vector<float>({3}));
 
     cf->call({a}, {result});
     ASSERT_EQ((vector<float>{0}), result->get_vector<float>());
@@ -3377,7 +3282,7 @@ TEST(${BACKEND_NAME}, sqrt)
     auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Sqrt>(A), result_type, op::Parameters{A});
 
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);

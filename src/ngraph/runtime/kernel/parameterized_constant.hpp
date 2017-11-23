@@ -12,24 +12,22 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
-#include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/types/element_type.hpp"
-#include "ngraph/types/type.hpp"
+#pragma once
 
-using namespace ngraph::descriptor::layout;
-
-TensorViewLayout::TensorViewLayout(const ngraph::descriptor::TensorView& tensor_view)
-    : m_tensor_view_type(tensor_view.get_tensor_view_type())
+namespace ngraph
 {
-}
-
-const ngraph::element::Type& TensorViewLayout::get_element_type() const
-{
-    return m_tensor_view_type->get_element_type();
-}
-
-const ngraph::Shape& TensorViewLayout::get_shape() const
-{
-    return m_tensor_view_type->get_shape();
+    namespace runtime
+    {
+        namespace kernel
+        {
+            template <typename T>
+            void parameterized_constant(const T* arg0, T* out, size_t count)
+            {
+                for (size_t i = 0; i < count; i++)
+                {
+                    out[i] = arg0[i];
+                }
+            }
+        }
+    }
 }

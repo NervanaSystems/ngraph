@@ -96,6 +96,9 @@ namespace ngraph
                 void EMITTER_DECL(EmitPower);
                 void EMITTER_DECL(EmitReplaceSlice);
                 void EMITTER_DECL(EmitOneHot);
+                void EMITTER_DECL(EmitFloor);
+                void EMITTER_DECL(EmitCeiling);
+                void EMITTER_DECL(EmitSqrt);
 
             private:
                 void generate_call(const std::vector<TensorViewInfo>& inputs,

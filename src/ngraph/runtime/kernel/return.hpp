@@ -12,24 +12,26 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
-#include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/types/element_type.hpp"
-#include "ngraph/types/type.hpp"
+#pragma once
 
-using namespace ngraph::descriptor::layout;
+#include "ngraph/runtime/interpreter/call_frame.hpp"
+#include "ngraph/runtime/interpreter/instruction.hpp"
 
-TensorViewLayout::TensorViewLayout(const ngraph::descriptor::TensorView& tensor_view)
-    : m_tensor_view_type(tensor_view.get_tensor_view_type())
+namespace ngraph
 {
-}
-
-const ngraph::element::Type& TensorViewLayout::get_element_type() const
-{
-    return m_tensor_view_type->get_element_type();
-}
-
-const ngraph::Shape& TensorViewLayout::get_shape() const
-{
-    return m_tensor_view_type->get_shape();
+    namespace runtime
+    {
+        namespace kernel
+        {
+            class ReturnInstruction : public Instruction
+            {
+            public:
+                ReturnInstruction() {}
+                virtual void execute(CallFrame& call_frame) const override
+                {
+                    call_frame.set_return();
+                }
+            };
+        }
+    }
 }
