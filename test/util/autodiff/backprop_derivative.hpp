@@ -50,7 +50,7 @@ namespace ngraph
             Shape y_shape =
                 std::dynamic_pointer_cast<const TensorViewType>(y->get_value_type())->get_shape();
 
-            auto c_param = std::make_shared<op::Parameter>(element::to_type<T>(), y_shape);
+            auto c_param = std::make_shared<op::Parameter>(element::from<T>(), y_shape);
             auto c_arg = backend->make_primary_tensor_view<T>(y_shape);
             auto params = f->get_parameters();
 

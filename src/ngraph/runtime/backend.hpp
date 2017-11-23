@@ -57,7 +57,7 @@ namespace ngraph
             std::shared_ptr<ngraph::runtime::TensorView>
                 make_primary_tensor_view(const Shape& shape)
             {
-                return make_primary_tensor_view(element::to_type<T>(), shape);
+                return make_primary_tensor_view(element::from<T>(), shape);
             }
 
             /// @brief Construct a tuple handle from a sequence of values.

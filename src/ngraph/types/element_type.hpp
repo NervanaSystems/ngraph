@@ -75,7 +75,7 @@ namespace ngraph
         };
 
         template <typename T>
-        const Type& to_type()
+        const Type& from()
         {
             if (typeid(T) == typeid(char) || typeid(T) == typeid(bool))
             {
