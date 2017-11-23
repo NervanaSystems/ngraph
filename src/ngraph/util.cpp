@@ -21,6 +21,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/ops/function_provider.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

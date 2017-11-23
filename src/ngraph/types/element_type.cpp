@@ -49,7 +49,7 @@ const std::string& element::Type::c_type_string() const
 bool element::Type::operator==(const element::Type& other) const
 {
     return m_bitwidth == other.m_bitwidth && m_is_real == other.m_is_real &&
-           m_is_signed == other.m_is_signed && m_cname == other.m_cname;
+           m_is_signed == other.m_is_signed;
 }
 
 bool element::Type::operator<(const Type& other) const
@@ -83,4 +83,18 @@ std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
     out << "element::Type(" << obj.m_bitwidth << ", " << obj.m_is_real << ", " << obj.m_is_signed
         << ")";
     return out;
+}
+
+void ngraph::element::to_json(nlohmann::json& j, const ngraph::element::Type& n)
+{
+    j["bitwidth"] = n.bitwidth();
+    j["is_real"] = n.is_real();
+    j["is_signed"] = n.is_signed();
+}
+
+void ngraph::element::from_json(const nlohmann::json& j, ngraph::element::Type& n)
+{
+    n.m_bitwidth = j.at("bitwidth").get<size_t>();
+    n.m_is_real = j.at("is_real").get<bool>();
+    n.m_is_signed = j.at("is_signed").get<bool>();
 }

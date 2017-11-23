@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "ngraph/ops/function_provider.hpp"
 #include "ngraph/ops/op.hpp"
 
 namespace ngraph
@@ -87,7 +88,7 @@ namespace ngraph
         /// | ------- | ----------------------------------------------------- |
         /// | NGVM    | Fully implemented for scalars, vectors, and matrices. |
 
-        class Reduce : public RequiresTensorViewArgs
+        class Reduce : public RequiresTensorViewArgs, public FunctionProvider
         {
         public:
             /// \brief Constructs a reduction operation.
