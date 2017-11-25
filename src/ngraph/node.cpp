@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include "ngraph/node.hpp"
 #include "ngraph/autodiff/adjoints.hpp"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/descriptor/primary_tensor_view.hpp"
+#include "ngraph/ops/parameter.hpp"
 
 using namespace std;
 using namespace ngraph;

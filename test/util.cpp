@@ -185,20 +185,20 @@ TEST(util, all_close)
     auto backend = manager->allocate_backend();
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(Shape{2, 3});
-    auto b = backend->make_parameterized_tensor_view<element::Float32>(Shape{2, 3});
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 3});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 3});
 
     copy_data(a, runtime::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
     copy_data(b, runtime::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
 
-    EXPECT_TRUE(ngraph::test::all_close(a, b));
+    EXPECT_TRUE(ngraph::test::all_close<float>(a, b));
 
-    auto c = backend->make_parameterized_tensor_view<element::Float32>(Shape{2, 3});
+    auto c = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 3});
     copy_data(c, runtime::NDArray<float, 2>({{1.1f, 2, 3}, {3, 4, 5}}).get_vector());
 
-    EXPECT_FALSE(ngraph::test::all_close(c, a, 0, .05f));
-    EXPECT_TRUE(ngraph::test::all_close(c, a, 0, .11f));
+    EXPECT_FALSE(ngraph::test::all_close<float>(c, a, 0, .05f));
+    EXPECT_TRUE(ngraph::test::all_close<float>(c, a, 0, .11f));
 
-    EXPECT_FALSE(ngraph::test::all_close(c, a, .05f, 0));
-    EXPECT_TRUE(ngraph::test::all_close(c, a, .11f, 0));
+    EXPECT_FALSE(ngraph::test::all_close<float>(c, a, .05f, 0));
+    EXPECT_TRUE(ngraph::test::all_close<float>(c, a, .11f, 0));
 }
