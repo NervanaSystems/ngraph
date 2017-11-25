@@ -56,6 +56,7 @@
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not_equal.hpp"
+#include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
@@ -117,6 +118,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Minimum), &Emitter::EmitMinimum},
     {TI(ngraph::op::Negative), &Emitter::EmitNegative},
     {TI(ngraph::op::NotEqual), &Emitter::EmitNotEqual},
+    {TI(ngraph::op::Power), &Emitter::EmitPower},
     {TI(ngraph::op::Select), &Emitter::EmitSelect},
     {TI(ngraph::op::Subtract), &Emitter::EmitSubtract},
     {TI(ngraph::op::ParameterizedConstant<ngraph::element::Bool>),

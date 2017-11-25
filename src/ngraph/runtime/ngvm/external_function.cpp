@@ -50,6 +50,7 @@
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not_equal.hpp"
+#include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
@@ -98,6 +99,7 @@
 #include "ngraph/runtime/ngvm/eigen/multiply.hpp"
 #include "ngraph/runtime/ngvm/eigen/negate.hpp"
 #include "ngraph/runtime/ngvm/eigen/not_equal.hpp"
+#include "ngraph/runtime/ngvm/eigen/power.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_rows.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_to_scalar.hpp"
@@ -380,6 +382,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_NUMERIC_BINOP(op::Maximum, eigen::MaximumInstruction);
         REGISTER_NUMERIC_BINOP(op::Minimum, eigen::MinimumInstruction);
         REGISTER_NUMERIC_BINOP(op::Multiply, eigen::MultiplyInstruction);
+        REGISTER_NUMERIC_BINOP(op::Power, eigen::PowerInstruction);
         REGISTER_NUMERIC_BINOP(op::Subtract, eigen::SubtractInstruction);
 
         REGISTER_TO_OP_MAP(op::Constant)

@@ -1447,6 +1447,20 @@ void Emitter::EmitAtan(const ngraph::Node* n,
     TU << "}\n";
 }
 
+void Emitter::EmitPower(const ngraph::Node* n,
+                        const std::vector<TensorViewInfo>& inputs,
+                        const std::vector<TensorViewInfo>& outputs)
+{
+    TU << "{   // " << n->get_name() << "\n";
+    TU.indent++;
+    TU << emit_array1d(outputs[0]) << " = \n";
+    TU.indent++;
+    TU << emit_array1d(inputs[0]) << ".pow(\n ";
+    TU << emit_array1d(inputs[1]) << ");\n";
+    TU.indent -= 2;
+    TU << "}\n";
+}
+
 //------------------------------------------------------------------------------------------------
 // Utility methods
 //------------------------------------------------------------------------------------------------
