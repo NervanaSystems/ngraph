@@ -47,9 +47,8 @@ namespace ngraph
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
-                void
-                    operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
-                               const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outputs);
+                void call(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
+                          const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outputs);
 
                 /// @brief Invoke the function with tuples pre-expanded to their underlying tensor views.
                 void tensor_call(const TensorViewPtrs& inputs, const TensorViewPtrs& outputs);

@@ -55,7 +55,7 @@ namespace ngraph
                             auto ty = ngraph::runtime::make_tensor<ET>(Shape{}, {y});
                             auto tr = ngraph::runtime::make_tensor<ET>(Shape{});
 
-                            (*cf)({tx, ty}, {tr});
+                            cf->call({tx, ty}, {tr});
                             return tr->get_vector()[0];
                         };
                         EigenVector<ET>(call_frame, m_out) =
