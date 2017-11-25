@@ -1448,7 +1448,6 @@ void Emitter::EmitAtan(const ngraph::Node* n,
 }
 
 void Emitter::EmitPower(const ngraph::Node* n,
-                        ExternalFunction* ef,
                         const std::vector<TensorViewInfo>& inputs,
                         const std::vector<TensorViewInfo>& outputs)
 {

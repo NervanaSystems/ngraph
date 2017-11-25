@@ -408,8 +408,8 @@ TEST(backwards, power)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng_neg(-5.0f, -0.5f);
-    test::Uniform<element::Float32> rng_pos(0.5f, 5.0f);
+    test::Uniform<float> rng_neg(-5.0f, -0.5f);
+    test::Uniform<float> rng_pos(0.5f, 5.0f);
     auto shape = Shape{2, 3};
 
     auto make_graph = [shape]() {
@@ -420,29 +420,29 @@ TEST(backwards, power)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
 
-    auto x0 = rng_neg.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    auto x1 = rng_pos.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x1 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
 
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 
-    x0 = rng_pos.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    x1 = rng_neg.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    x0 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+    x1 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
 
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 
-    x0 = rng_neg.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    x1 = rng_neg.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    x0 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
+    x1 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
 
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 
-    x0 = rng_pos.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    x1 = rng_pos.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    x0 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
+    x1 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
 
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(backwards, reshape)
