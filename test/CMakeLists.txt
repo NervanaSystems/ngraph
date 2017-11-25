@@ -23,9 +23,10 @@ include_directories(
 
 set (SRC
     autodiff.cpp
-    copy.cpp
     build_graph.cpp
+    copy.cpp
     eigen.cpp
+    element_type.cpp
     file_util.cpp
     input_output_assign.cpp
     main.cpp
@@ -33,6 +34,7 @@ set (SRC
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    serialize.cpp
     shape.cpp
     tensor.cpp
     topological_sort.cpp
@@ -57,7 +59,7 @@ if(MKLDNN_INCLUDE_DIR)
     set(SRC ${SRC} mkldnn.cpp)
 endif()
 
-if(LLVM_INCLUDE_DIR)
+if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
     link_directories(${LLVM_LIB_DIR})
     set(SRC ${SRC} codegen.cpp)

@@ -39,8 +39,8 @@ namespace ngraph
         /// @returns f'(X_i..., c) where f'(x_i, ..., c)_j is backprop for X_j
         std::shared_ptr<Function> backprop_function(const std::shared_ptr<Function>& f);
 
-        template <typename ET>
-        std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>
+        template <typename T>
+        std::vector<std::shared_ptr<runtime::TensorView>>
             backprop_derivative(const std::shared_ptr<runtime::Manager>& manager,
                                 const std::shared_ptr<runtime::Backend>& backend,
                                 const std::shared_ptr<Function>& f,
@@ -51,13 +51,13 @@ namespace ngraph
             Shape y_shape =
                 std::dynamic_pointer_cast<const TensorViewType>(y->get_value_type())->get_shape();
 
-            auto c_param = std::make_shared<op::Parameter>(ET::element_type(), y_shape);
-            auto c_arg = backend->make_parameterized_tensor_view<ET>(y_shape);
+            auto c_param = std::make_shared<op::Parameter>(element::from<T>(), y_shape);
+            auto c_arg = backend->make_primary_tensor_view<T>(y_shape);
             auto params = f->get_parameters();
 
             std::vector<std::shared_ptr<Node>> deriv_nodes;
-            std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>> bprops;
-            std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>> results;
+            std::vector<std::shared_ptr<runtime::TensorView>> bprops;
+            std::vector<std::shared_ptr<runtime::TensorView>> results;
 
             for (auto param : indep_params)
             {
@@ -66,8 +66,8 @@ namespace ngraph
                     std::dynamic_pointer_cast<const TensorViewType>(param->get_value_type())
                         ->get_shape();
                 s.insert(s.end(), param_shape.begin(), param_shape.end());
-                results.push_back(backend->make_parameterized_tensor_view<ET>(s));
-                bprops.push_back(backend->make_parameterized_tensor_view<ET>(param_shape));
+                results.push_back(backend->make_primary_tensor_view<T>(s));
+                bprops.push_back(backend->make_primary_tensor_view<T>(param_shape));
                 deriv_nodes.push_back(y->backprop_node(param, c_param));
             }
 
@@ -80,22 +80,22 @@ namespace ngraph
             auto cf = backend->make_call_frame(external);
 
             // We compute the derivatives chunk by chunk
-            std::vector<typename std::vector<typename ET::type>::iterator> result_pos;
-            std::vector<std::vector<typename ET::type>> result_vect;
+            std::vector<typename std::vector<T>::iterator> result_pos;
+            std::vector<std::vector<T>> result_vect;
             for (auto result : results)
             {
-                result_vect.push_back(result->get_vector()); // storage for results
+                result_vect.push_back(result->get_vector<T>()); // storage for results
                 result_pos.push_back(result_vect.back().begin());
             }
 
-            ngraph::runtime::TensorViewPtrs args_tv;
+            std::vector<std::shared_ptr<ngraph::runtime::TensorView>> args_tv;
             args_tv.insert(args_tv.begin(), args.begin(), args.end());
             args_tv.push_back(c_arg);
 
-            runtime::TensorViewPtrs bprops_tv;
+            std::vector<std::shared_ptr<ngraph::runtime::TensorView>> bprops_tv;
             bprops_tv.insert(bprops_tv.begin(), bprops.begin(), bprops.end());
 
-            auto c_vec = c_arg->get_vector();
+            auto c_vec = c_arg->template get_vector<T>();
             for (size_t i = 0; i < c_vec.size(); i++)
             {
                 c_vec[i] = 1;
@@ -105,7 +105,7 @@ namespace ngraph
                 c_arg->write(c_vec);
                 for (size_t j = 0; j < results.size(); j++)
                 {
-                    auto bprop_vec = bprops[j]->get_vector();
+                    auto bprop_vec = bprops[j]->get_vector<T>();
                     result_pos[j] = std::copy(bprop_vec.begin(), bprop_vec.end(), result_pos[j]);
                 }
             }

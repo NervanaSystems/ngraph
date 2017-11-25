@@ -18,6 +18,10 @@
 
 #pragma once
 
+#ifdef IN_NGRAPH_LIBRARY
+#error("ngraph.hpp is for external use only")
+#endif
+
 /// @namespace ngraph
 /// @brief The Intel Nervana Graph C++ API.
 

@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
 #include "ngraph/runtime/ngvm/eigen/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
@@ -29,15 +28,13 @@ namespace ngraph
             namespace eigen
             {
                 template <typename ET>
-                class ReduceMatrixColumnsInstruction : public Instruction
+                class PowerInstruction : public Instruction
                 {
                 public:
-                    ReduceMatrixColumnsInstruction(std::shared_ptr<ExternalFunction> ef,
-                                                   const TensorViewInfo& arg0,
-                                                   const TensorViewInfo& arg1,
-                                                   const TensorViewInfo& out)
-                        : m_external_function(ef)
-                        , m_arg0(arg0)
+                    PowerInstruction(const TensorViewInfo& arg0,
+                                     const TensorViewInfo& arg1,
+                                     const TensorViewInfo& out)
+                        : m_arg0(arg0)
                         , m_arg1(arg1)
                         , m_out(out)
                     {
@@ -45,25 +42,12 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        auto ef = m_external_function;
-                        auto f = [ef](typename ET::type x, typename ET::type y) -> typename ET::type
-                        {
-                            std::shared_ptr<CallFrame> cf =
-                                std::dynamic_pointer_cast<CallFrame>(ef->make_call_frame());
-
-                            auto tx = ngraph::runtime::make_tensor<ET>(Shape{}, {x});
-                            auto ty = ngraph::runtime::make_tensor<ET>(Shape{}, {y});
-                            auto tr = ngraph::runtime::make_tensor<ET>(Shape{});
-
-                            cf->call({tx, ty}, {tr});
-                            return tr->get_vector()[0];
-                        };
-                        EigenVector<ET>(call_frame, m_out) =
-                            EigenMatrix<ET>(call_frame, m_arg0).colwise().redux(f);
+                        EigenArray1d<ET>(call_frame, m_out) =
+                            EigenArray1d<ET>(call_frame, m_arg0)
+                                .pow(EigenArray1d<ET>(call_frame, m_arg1));
                     }
 
                 protected:
-                    std::shared_ptr<ExternalFunction> m_external_function;
                     TensorViewInfo m_arg0;
                     TensorViewInfo m_arg1;
                     TensorViewInfo m_out;

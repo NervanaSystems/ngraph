@@ -34,13 +34,13 @@ namespace ngraph
         /// @param delta increment for the variables
         /// @param indep_params parameters with respect to which to compute derivatives
         /// @returns vector of dy/dvar, where each dy/dvar's shape is concat(y.shape(), var.shape())
-        template <typename ET>
-        std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>>
+        template <typename T>
+        std::vector<std::shared_ptr<runtime::TensorView>>
             numeric_derivative(const std::shared_ptr<runtime::Manager>& manager,
                                const std::shared_ptr<runtime::Backend>& backend,
                                const std::shared_ptr<Function>& f,
                                const std::vector<std::shared_ptr<runtime::TensorView>>& args,
-                               typename ET::type delta,
+                               T delta,
                                const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
             auto y = f->get_result();
@@ -51,7 +51,8 @@ namespace ngraph
             auto params = f->get_parameters();
 
             // Results for each derivative, shape Y|X_i
-            std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>> results;
+            std::vector<std::shared_ptr<runtime::TensorView>> results;
+
             for (auto param : indep_params)
             {
                 Shape s = y_shape;
@@ -59,28 +60,24 @@ namespace ngraph
                     std::dynamic_pointer_cast<const TensorViewType>(param->get_value_type())
                         ->get_shape();
                 s.insert(s.end(), param_shape.begin(), param_shape.end());
-                results.push_back(backend->make_parameterized_tensor_view<ET>(s));
+                results.push_back(backend->make_primary_tensor_view<T>(s));
             }
 
             auto external = manager->compile(f);
             auto cf = backend->make_call_frame(external);
 
             // ref_y is the function evaluated at the args
-            auto ref_y = backend->make_parameterized_tensor_view<ET>(y_shape);
+            auto ref_y = backend->make_primary_tensor_view<T>(y_shape);
 
-            ngraph::runtime::TensorViewPtrs args_tv;
-            args_tv.insert(args_tv.begin(), args.begin(), args.end());
-
-            cf->tensor_call(args_tv, runtime::TensorViewPtrs{ref_y});
-            auto& ref_vec = ref_y->get_vector();
+            cf->tensor_call(args, std::vector<std::shared_ptr<ngraph::runtime::TensorView>>{ref_y});
+            auto ref_vec = ref_y->template get_vector<T>();
 
             // inc_y will hold f(x+dx) values
-            auto inc_y = backend->make_parameterized_tensor_view<ET>(y_shape);
-            auto& inc_vec = inc_y->get_vector();
+            auto inc_y = backend->make_primary_tensor_view<T>(y_shape);
 
             // Assuming vars, y, and results are row-major
 
-            typename ET::type inv_delta = 1 / delta;
+            T inv_delta = 1 / delta;
 
             size_t pos = 0;
 
@@ -89,17 +86,16 @@ namespace ngraph
                 if (std::find(indep_params.begin(), indep_params.end(), params[i]) !=
                     indep_params.end())
                 {
-                    auto arg =
-                        std::dynamic_pointer_cast<ngraph::runtime::ParameterizedTensorView<ET>>(
-                            args[i]);
-                    auto res = results[pos]->get_vector();
-                    auto vec = arg->get_vector();
+                    auto arg = args[i];
+                    auto res = results[pos]->get_vector<T>();
+                    auto vec = arg->get_vector<T>();
                     for (size_t j = 0; j < vec.size(); j++)
                     {
                         auto old_val = vec[j];
                         vec[j] += delta;
                         arg->write(vec);
-                        cf->tensor_call(args_tv, {inc_y});
+                        cf->tensor_call(args, {inc_y});
+                        auto inc_vec = inc_y->template get_vector<T>();
                         vec[j] = old_val;
                         arg->write(vec);
                         size_t res_k = j;

@@ -18,6 +18,8 @@
 #include <memory>
 #include <string>
 
+#include <clang/CodeGen/CodeGenAction.h>
+
 #include <llvm/ExecutionEngine/MCJIT.h> // forces JIT to link in
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/Option/Arg.h>
@@ -51,9 +53,11 @@ class ngraph::codegen::Compiler
 public:
     Compiler();
     ~Compiler();
+    void set_precompiled_header_source(const std::string& source);
     std::unique_ptr<llvm::Module> compile(const std::string& source);
-
+    std::unique_ptr<clang::CodeGenAction>& get_compiler_action() { return compiler_action; }
 private:
+    std::unique_ptr<clang::CodeGenAction> compiler_action;
 };
 
 class ngraph::codegen::StaticCompiler : public llvm::SectionMemoryManager
@@ -62,19 +66,26 @@ public:
     StaticCompiler();
     ~StaticCompiler();
 
-    void set_precompiled_headers_enabled(bool state) { m_precompiled_headers_enabled = state; }
-    bool is_precompiled_headers_enabled() { return m_precompiled_headers_enabled; }
     void set_debuginfo_enabled(bool state) { m_debuginfo_enabled = state; }
     bool is_debuginfo_enabled() { return m_debuginfo_enabled; }
+    void set_precompiled_header_source(const std::string& source)
+    {
+        m_precomiled_header_source = source;
+    }
     void add_header_search_path(const std::string& path);
-    std::unique_ptr<llvm::Module> compile(const std::string& source);
+
+    std::unique_ptr<llvm::Module> compile(std::unique_ptr<clang::CodeGenAction>& compiler_action,
+                                          const std::string& source);
+    void generate_pch(const std::string& source);
 
 private:
     std::unique_ptr<clang::CompilerInstance> m_compiler;
-    bool m_precompiled_headers_enabled;
+    bool m_precompiled_header_valid;
     bool m_debuginfo_enabled;
     std::string m_source_name;
     std::vector<std::string> m_extra_search_path_list;
+    std::string m_pch_path;
+    std::string m_precomiled_header_source;
 
     bool is_version_number(const std::string& path);
     void use_cached_files();

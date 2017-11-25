@@ -60,13 +60,13 @@ TEST(${BACKEND_NAME}, abc)
     copy_data(b, runtime::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, runtime::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    (*cf)({a, b, c}, {result});
+    cf->call({a, b, c}, {result});
     EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
 
-    (*cf)({b, a, c}, {result});
+    cf->call({b, a, c}, {result});
     EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
 
-    (*cf)({a, c, b}, {result});
+    cf->call({a, c, b}, {result});
     EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{50, 72}, {98, 128}})));
 }
 
@@ -93,13 +93,13 @@ TEST(${BACKEND_NAME}, abc_int64)
     copy_data(c, vector<element::Int64::type>{9, 10, 11, 12});
     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
 
-    (*cf)({a, b, c}, {result});
+    cf->call({a, b, c}, {result});
     EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector<int64_t>());
 
-    (*cf)({b, a, c}, {result});
+    cf->call({b, a, c}, {result});
     EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector<int64_t>());
 
-    (*cf)({a, c, b}, {result});
+    cf->call({a, c, b}, {result});
     EXPECT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector<int64_t>());
 }
 
@@ -137,13 +137,13 @@ TEST(${BACKEND_NAME}, abc_tuple)
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     auto result_tuple = runtime::make_tuple({result});
 
-    (*cf)({abc}, {result_tuple});
+    cf->call({abc}, {result_tuple});
     ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
 
-    (*cf)({bac}, {result_tuple});
+    cf->call({bac}, {result_tuple});
     ASSERT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
 
-    (*cf)({acb}, {result_tuple});
+    cf->call({acb}, {result_tuple});
     ASSERT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector<float>());
 }
 
@@ -181,15 +181,15 @@ TEST(${BACKEND_NAME}, abc_tuple_int64)
     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
     auto result_tuple = runtime::make_tuple({result});
 
-    (*cf)({abc}, {result_tuple});
+    cf->call({abc}, {result_tuple});
     ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}),
               result->get_vector<element::Int64::type>());
 
-    (*cf)({bac}, {result_tuple});
+    cf->call({bac}, {result_tuple});
     ASSERT_EQ((vector<element::Int64::type>{54, 80, 110, 144}),
               result->get_vector<element::Int64::type>());
 
-    (*cf)({acb}, {result_tuple});
+    cf->call({acb}, {result_tuple});
     ASSERT_EQ((vector<element::Int64::type>{50, 72, 98, 128}),
               result->get_vector<element::Int64::type>());
 }
@@ -226,7 +226,7 @@ TEST(${BACKEND_NAME}, tuple_result)
     auto r1 = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     auto result_tuple = runtime::make_tuple({r0, r1});
 
-    (*cf)({a, b, c}, {result_tuple});
+    cf->call({a, b, c}, {result_tuple});
 
     ASSERT_EQ((vector<float>{6, 8, 10, 12}), r0->get_vector<float>());
     ASSERT_EQ((vector<float>{54, 80, 110, 144}), r1->get_vector<float>());
@@ -249,7 +249,7 @@ TEST(${BACKEND_NAME}, abs)
     copy_data(a, vector<float>{1, -2, 0, -4.8f});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 0, 4.8f}), result->get_vector<float>());
 }
 
@@ -266,12 +266,12 @@ TEST(${BACKEND_NAME}, ceiling)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     copy_data(a, vector<float>{-2.5f, -2.0f, 0.3f, 4.8f});
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{-2.0f, -2.0f, 1.0f, 5.0f}), result->get_vector());
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{-2.0f, -2.0f, 1.0f, 5.0f}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, concat_matrix_colwise)
@@ -301,7 +301,7 @@ TEST(${BACKEND_NAME}, concat_matrix_colwise)
     copy_data(c, vector<float>{2, 3, 5, 7, 11, 13});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a, b, c}, {result});
+    cf->call({a, b, c}, {result});
     ASSERT_EQ((vector<float>{2, 4, 1, 2, 4, 2, 3, 5, 8, 16, 8, 16, 32, 7, 11, 13}),
               result->get_vector<float>());
 }
@@ -333,7 +333,7 @@ TEST(${BACKEND_NAME}, concat_matrix_rowwise)
     copy_data(c, vector<float>{2, 3, 5, 7, 11, 13});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a, b, c}, {result});
+    cf->call({a, b, c}, {result});
     ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
               result->get_vector<float>());
 }
@@ -365,7 +365,7 @@ TEST(${BACKEND_NAME}, concat_matrix_int64)
     copy_data(c, vector<element::Int64::type>{2, 3, 5, 7, 11, 13});
     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape_r);
 
-    (*cf)({a, b, c}, {result});
+    cf->call({a, b, c}, {result});
     ASSERT_EQ((vector<element::Int64::type>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
               result->get_vector<element::Int64::type>());
 }
@@ -397,7 +397,7 @@ TEST(${BACKEND_NAME}, concat_vector)
     copy_data(c, vector<float>{18, 19});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a, b, c}, {result});
+    cf->call({a, b, c}, {result});
     ASSERT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}),
               result->get_vector<float>());
 }
@@ -428,7 +428,7 @@ TEST(${BACKEND_NAME}, divide)
     copy_data(b, vector<float>{1, 2, 4, 8});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{2, 2, 2, 2}), result->get_vector<float>());
 }
 
@@ -452,7 +452,7 @@ TEST(${BACKEND_NAME}, equal)
     copy_data(b, vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5});
     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), result->get_vector<char>());
 }
 
@@ -469,12 +469,12 @@ TEST(${BACKEND_NAME}, floor)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view<element::Float32>(shape);
     copy_data(a, vector<float>{-2.5f, -2.0f, 0.3f, 4.8f});
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto result = backend->make_primary_tensor_view<element::Float32>(shape);
 
-    (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{-3.0f, -2.0f, 0.0f, 4.0f}), result->get_vector());
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{-3.0f, -2.0f, 0.0f, 4.0f}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot_0_0)
@@ -498,7 +498,7 @@ TEST(${BACKEND_NAME}, dot_0_0)
     copy_data(b, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{0}), result->get_vector<float>());
 }
 
@@ -530,7 +530,7 @@ TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
     copy_data(b, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{0, 0, 0, 0}), result->get_vector<float>());
 }
 
@@ -556,7 +556,7 @@ TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
     copy_data(b, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{}), result->get_vector<float>());
 }
 
@@ -582,7 +582,7 @@ TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
     copy_data(b, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{}), result->get_vector<float>());
 }
 
@@ -608,7 +608,7 @@ TEST(${BACKEND_NAME}, dot_scalar_0x2)
     copy_data(b, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{}), result->get_vector<float>());
 }
 
@@ -634,7 +634,7 @@ TEST(${BACKEND_NAME}, dot_2x0_0)
     copy_data(b, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{0, 0}), result->get_vector<float>());
 }
 
@@ -659,7 +659,7 @@ TEST(${BACKEND_NAME}, dot1d)
     copy_data(b, vector<float>{1, 2, 4, 8});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{170}), result->get_vector<float>());
 }
 
@@ -684,7 +684,7 @@ TEST(${BACKEND_NAME}, dot2d)
     copy_data(b, vector<float>{5, 6, 7, 8});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{19, 22, 43, 50}), result->get_vector<float>());
 }
 
@@ -709,7 +709,7 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
     copy_data(b, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector<float>());
 }
 
@@ -734,7 +734,7 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
     copy_data(b, vector<float>{6});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), result->get_vector<float>());
 }
 
@@ -758,7 +758,7 @@ TEST(${BACKEND_NAME}, dot_scalar_scalar)
     copy_data(b, vector<float>{6});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{48}), result->get_vector<float>());
 }
 
@@ -784,7 +784,7 @@ TEST(${BACKEND_NAME}, dot_matrix_vector)
     copy_data(b, vector<float>{17, 18, 19, 20});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{190, 486, 782, 1078}), result->get_vector<float>());
 }
 
@@ -811,7 +811,7 @@ TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
     copy_data(b, vector<element::Int64::type>{17, 18, 19, 20});
     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape_r);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<element::Int64::type>{190, 486, 782, 1078}),
               result->get_vector<element::Int64::type>());
 }
@@ -836,7 +836,7 @@ TEST(${BACKEND_NAME}, greater)
     copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), result->get_vector<char>());
 }
 
@@ -860,7 +860,7 @@ TEST(${BACKEND_NAME}, greatereq)
     copy_data(b, vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5});
     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), result->get_vector<char>());
 }
 
@@ -884,7 +884,7 @@ TEST(${BACKEND_NAME}, less)
     copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<char>{0, 0, 1, 0, 1, 0, 0, 1}), result->get_vector<char>());
 }
 
@@ -908,7 +908,7 @@ TEST(${BACKEND_NAME}, lesseq)
     copy_data(b, vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5});
     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), result->get_vector<char>());
 }
 
@@ -932,7 +932,7 @@ TEST(${BACKEND_NAME}, lesseq_bool)
     copy_data(b, vector<char>{0, 0, 0, 0, 0, 0, 0, 0});
     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<char>{0, 0, 0, 0, 0, 0, 0, 0}), result->get_vector<char>());
 }
 
@@ -959,7 +959,7 @@ TEST(${BACKEND_NAME}, log)
     }
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ(loga, result->get_vector<float>());
 }
 
@@ -983,7 +983,7 @@ TEST(${BACKEND_NAME}, maximum)
     copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), result->get_vector<float>());
 }
 
@@ -1007,7 +1007,7 @@ TEST(${BACKEND_NAME}, minimum)
     copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{1, 2, -8, 8, -.5, 0, 1, 1}), result->get_vector<float>());
 }
 
@@ -1028,7 +1028,7 @@ TEST(${BACKEND_NAME}, negative)
     copy_data(a, vector<float>{1, -2, 0, -4.8f, 8.6f, -8.6f});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{-1, 2, 0, 4.8f, -8.6f, 8.6f}), result->get_vector<float>());
 }
 
@@ -1052,7 +1052,7 @@ TEST(${BACKEND_NAME}, notequal)
     copy_data(b, vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5});
     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), result->get_vector<char>());
 }
 
@@ -1079,7 +1079,7 @@ TEST(${BACKEND_NAME}, select)
     copy_data(c, vector<float>{11, 12, 13, 14, 15, 16, 17, 18});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a, b, c}, {result});
+    cf->call({a, b, c}, {result});
     ASSERT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), result->get_vector<float>());
 }
 
@@ -1103,7 +1103,7 @@ TEST(${BACKEND_NAME}, subtract)
     copy_data(b, vector<float>{1, 2, 4, 8});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{1, 2, 4, 8}), result->get_vector<float>());
 }
 
@@ -1123,7 +1123,7 @@ TEST(${BACKEND_NAME}, scalar_parameterized_constant_bool)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ((vector<char>{true}), result->get_vector<char>());
 }
 
@@ -1143,7 +1143,7 @@ TEST(${BACKEND_NAME}, scalar_parameterized_constant_float)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ((vector<float>{-3.0f}), result->get_vector<float>());
 }
 
@@ -1163,7 +1163,7 @@ TEST(${BACKEND_NAME}, scalar_parameterized_constant_int8)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::Int8::element_type(), shape);
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ((vector<int8_t>{-3}), result->get_vector<int8_t>());
 }
 
@@ -1183,7 +1183,7 @@ TEST(${BACKEND_NAME}, scalar_parameterized_constant_int32)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape);
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ((vector<int32_t>{-3}), result->get_vector<int32_t>());
 }
 
@@ -1203,7 +1203,7 @@ TEST(${BACKEND_NAME}, scalar_parameterized_constant_int64)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ((vector<int64_t>{-3}), result->get_vector<int64_t>());
 }
 
@@ -1223,7 +1223,7 @@ TEST(${BACKEND_NAME}, scalar_parameterized_constant_uint8)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::UInt8::element_type(), shape);
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ((vector<uint8_t>{3}), result->get_vector<uint8_t>());
 }
 
@@ -1243,7 +1243,7 @@ TEST(${BACKEND_NAME}, scalar_parameterized_constant_uint32)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::UInt32::element_type(), shape);
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ((vector<uint32_t>{3}), result->get_vector<uint32_t>());
 }
 
@@ -1263,7 +1263,7 @@ TEST(${BACKEND_NAME}, scalar_parameterized_constant_uint64)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::UInt64::element_type(), shape);
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ((vector<uint64_t>{3}), result->get_vector<uint64_t>());
 }
 
@@ -1283,7 +1283,7 @@ TEST(${BACKEND_NAME}, tensor_constant)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector<float>());
 }
 
@@ -1303,7 +1303,7 @@ TEST(${BACKEND_NAME}, tensor_constant_with_op)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector<float>());
 }
 
@@ -1341,13 +1341,13 @@ TEST(${BACKEND_NAME}, function_call)
     copy_data(z, vector<float>{9, 10, 11, 12});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({x, y, z}, {result});
+    cf->call({x, y, z}, {result});
     ASSERT_EQ((vector<float>{108, 160, 220, 288}), result->get_vector<float>());
 
-    (*cf)({y, x, z}, {result});
+    cf->call({y, x, z}, {result});
     ASSERT_EQ((vector<float>{108, 160, 220, 288}), result->get_vector<float>());
 
-    (*cf)({x, z, y}, {result});
+    cf->call({x, z, y}, {result});
     ASSERT_EQ((vector<float>{100, 144, 196, 256}), result->get_vector<float>());
 }
 
@@ -1370,7 +1370,7 @@ TEST(${BACKEND_NAME}, broadcast_scalar_vector)
     copy_data(a, vector<float>{6});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector<float>());
 }
 
@@ -1393,7 +1393,7 @@ TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
     copy_data(a, vector<float>{6});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{6, 6, 6, 6}), result->get_vector<float>());
 }
 
@@ -1416,7 +1416,7 @@ TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
     copy_data(a, vector<float>{6});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), result->get_vector<float>());
 }
 
@@ -1438,7 +1438,7 @@ TEST(${BACKEND_NAME}, broadcast_trivial)
     copy_data(a, vector<float>{2, 4, 6, 8, 16, 32, 64, 128});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), result->get_vector<float>());
 }
 
@@ -1461,7 +1461,7 @@ TEST(${BACKEND_NAME}, broadcast_vector_colwise)
     copy_data(a, vector<float>{1, 2, 3});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), result->get_vector<float>());
 }
 
@@ -1484,7 +1484,7 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
     copy_data(a, vector<float>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), result->get_vector<float>());
 }
 
@@ -1507,7 +1507,7 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
     copy_data(a, vector<element::Int64::type>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<element::Int64::type>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}),
               result->get_vector<element::Int64::type>());
 }
@@ -1530,7 +1530,7 @@ TEST(${BACKEND_NAME}, convert_int32_float32)
     copy_data(a, vector<element::Int32::type>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<element::Float32::type>{1, 2, 3, 4}), result->get_vector<float>());
 }
 
@@ -1552,7 +1552,7 @@ TEST(${BACKEND_NAME}, convert_int32_bool)
     copy_data(a, vector<element::Int32::type>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector<element::Bool::type>());
 }
 
@@ -1574,7 +1574,7 @@ TEST(${BACKEND_NAME}, convert_float32_bool)
     copy_data(a, vector<element::Float32::type>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector<element::Bool::type>());
 }
 
@@ -1607,7 +1607,7 @@ TEST(${BACKEND_NAME}, reduce_trivial)
     copy_data(b, vector<float>{0, 0, 0, 0});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4}), result->get_vector<float>());
 }
 
@@ -1639,7 +1639,7 @@ TEST(${BACKEND_NAME}, reduce_to_scalar)
     copy_data(b, vector<float>{0});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{10}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -1677,7 +1677,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_columns)
     copy_data(b, vector<float>{0});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{9, 12}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -1715,7 +1715,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows)
     copy_data(b, vector<float>{0});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{3, 7, 11}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -1753,7 +1753,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
     copy_data(b, vector<float>{66});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{66, 66, 66}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -1791,7 +1791,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
     copy_data(b, vector<float>{77});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{77, 77}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -1829,7 +1829,7 @@ TEST(${BACKEND_NAME}, reduce_vector_zero)
     copy_data(b, vector<float>{88});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{88}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -1867,7 +1867,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
     copy_data(b, vector<float>{99});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{99}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -1896,7 +1896,7 @@ TEST(${BACKEND_NAME}, reshape_t2v_012)
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}), result->get_vector<float>());
 }
 
@@ -1920,7 +1920,7 @@ TEST(${BACKEND_NAME}, reshape_t2s_012)
     copy_data(a, vector<float>{6});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{6}), result->get_vector<float>());
 }
 
@@ -1944,7 +1944,7 @@ TEST(${BACKEND_NAME}, reshape_t2s_120)
     copy_data(a, vector<float>{6});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{6}), result->get_vector<float>());
 }
 
@@ -1968,7 +1968,7 @@ TEST(${BACKEND_NAME}, reshape_s2t)
     copy_data(a, vector<float>{42});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{42}), result->get_vector<float>());
 }
 
@@ -1992,7 +1992,7 @@ TEST(${BACKEND_NAME}, reshape_v2m_col)
     copy_data(a, vector<float>{1, 2, 3});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector<float>());
 }
 
@@ -2016,7 +2016,7 @@ TEST(${BACKEND_NAME}, reshape_v2m_row)
     copy_data(a, vector<float>{1, 2, 3});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector<float>());
 }
 
@@ -2040,7 +2040,7 @@ TEST(${BACKEND_NAME}, reshape_v2t_middle)
     copy_data(a, vector<float>{1, 2, 3});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3}), result->get_vector<float>());
 }
 
@@ -2064,7 +2064,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_same)
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), result->get_vector<float>());
 }
 
@@ -2088,7 +2088,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_transpose)
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{1, 4, 7, 2, 5, 8, 3, 6, 9}), result->get_vector<float>());
 }
 
@@ -2112,7 +2112,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), result->get_vector<float>());
 }
 
@@ -2138,7 +2138,7 @@ TEST(${BACKEND_NAME}, sin)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return sinf(x); });
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ(input, result->get_vector<float>());
 }
 
@@ -2164,7 +2164,7 @@ TEST(${BACKEND_NAME}, cos)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return cosf(x); });
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ(input, result->get_vector<float>());
 }
 
@@ -2190,7 +2190,7 @@ TEST(${BACKEND_NAME}, tan)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanf(x); });
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ(input, result->get_vector<float>());
 }
 
@@ -2215,7 +2215,7 @@ TEST(${BACKEND_NAME}, asin)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return asinf(x); });
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ(input, result->get_vector<float>());
 }
 
@@ -2240,7 +2240,7 @@ TEST(${BACKEND_NAME}, acos)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return acosf(x); });
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ(input, result->get_vector<float>());
 }
 
@@ -2265,7 +2265,7 @@ TEST(${BACKEND_NAME}, atan)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return atanf(x); });
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ(input, result->get_vector<float>());
 }
 
@@ -2290,7 +2290,7 @@ TEST(${BACKEND_NAME}, sinh)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return sinhf(x); });
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ(input, result->get_vector<float>());
 }
 
@@ -2315,7 +2315,7 @@ TEST(${BACKEND_NAME}, cosh)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return coshf(x); });
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ(input, result->get_vector<float>());
 }
 
@@ -2340,7 +2340,7 @@ TEST(${BACKEND_NAME}, tanh)
     std::transform(
         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanhf(x); });
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ(input, result->get_vector<float>());
 }
 
@@ -2361,7 +2361,7 @@ TEST(${BACKEND_NAME}, exp)
     copy_data(a, vector<float>{-4, -3, -2, -1, 0, 1, 2, 3});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ(
         (vector<float>{expf(-4), expf(-3), expf(-2), expf(-1), expf(0), expf(1), expf(2), expf(3)}),
         result->get_vector<float>());
@@ -2387,7 +2387,7 @@ TEST(${BACKEND_NAME}, slice_scalar)
     copy_data(a, vector<float>{312});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{312}), result->get_vector<float>());
 }
 
@@ -2411,7 +2411,7 @@ TEST(${BACKEND_NAME}, slice_matrix)
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{2, 3, 6, 7, 10, 11}), result->get_vector<float>());
 }
 
@@ -2435,7 +2435,7 @@ TEST(${BACKEND_NAME}, slice_vector)
     copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), result->get_vector<float>());
 }
 
@@ -2453,7 +2453,7 @@ TEST(${BACKEND_NAME}, scalar_constant_float32)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ(vector<float>{std::strtof("4.8", NULL)}, result->get_vector<float>());
 }
 
@@ -2471,7 +2471,7 @@ TEST(${BACKEND_NAME}, scalar_constant_int64)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), Shape{});
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ(vector<element::Int64::type>{std::strtol("2112", NULL, 10)},
               result->get_vector<element::Int64::type>());
 }
@@ -2493,7 +2493,7 @@ TEST(${BACKEND_NAME}, tensor_constant_float32)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ((vector<float>{std::strtof("4.8", NULL),
                              std::strtof("4.7", NULL),
                              std::strtof("-5.3", NULL),
@@ -2518,7 +2518,7 @@ TEST(${BACKEND_NAME}, tensor_constant_int64)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
 
-    (*cf)({}, {result});
+    cf->call({}, {result});
     ASSERT_EQ((vector<element::Int64::type>{std::strtol("2112", NULL, 10),
                                             std::strtol("1848", NULL, 10),
                                             std::strtol("1776", NULL, 10),
@@ -2544,7 +2544,7 @@ TEST(${BACKEND_NAME}, sum_trivial)
     copy_data(a, vector<float>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4}), result->get_vector<float>());
 }
 
@@ -2565,7 +2565,7 @@ TEST(${BACKEND_NAME}, sum_to_scalar)
     copy_data(a, vector<float>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{10}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2591,7 +2591,7 @@ TEST(${BACKEND_NAME}, sum_matrix_columns)
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{9, 12}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2617,7 +2617,7 @@ TEST(${BACKEND_NAME}, sum_matrix_rows)
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{3, 7, 11}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2643,7 +2643,7 @@ TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
     copy_data(a, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{0, 0, 0}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2670,7 +2670,7 @@ TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
     copy_data(a, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{0, 0}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2696,7 +2696,7 @@ TEST(${BACKEND_NAME}, sum_vector_zero)
     copy_data(a, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{0}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2722,7 +2722,7 @@ TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
     copy_data(a, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{0}), result->get_vector<float>());
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
@@ -2747,7 +2747,7 @@ TEST(${BACKEND_NAME}, sign)
     copy_data(a, vector<float>{1, -2, 0, -4.8f, 4.8f, -0.0});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
     ASSERT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), result->get_vector<float>());
 }
 
@@ -2764,10 +2764,61 @@ TEST(${BACKEND_NAME}, sqrt)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view<element::Float32>(shape);
     copy_data(a, vector<float>{16, 4, 81, 100, 10000, 0});
-    auto result = backend->make_parameterized_tensor_view<element::Float32>(shape);
+    auto result = backend->make_primary_tensor_view<element::Float32>(shape);
 
-    (*cf)({a}, {result});
-    ASSERT_EQ((vector<float>{4, 2, 9, 10, 100, 0}), result->get_vector());
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{4, 2, 9, 10, 100, 0}), result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, power)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Power>(A, B), rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 2, 3, 5});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{2, 0, 6, 3});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{1, 1, 729, 125}), result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, constant_equality_bool)
+{
+    auto shape = Shape{4};
+    // auto A = make_shared<op::Parameter>(element::Bool::element_type(), shape);
+    // auto B = make_shared<op::Parameter>(element::Bool::element_type(), shape);
+    // auto result_type = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    // auto f = make_shared<Function>(make_shared<op::Equal>(A, B), result_type, op::Parameters{A, B});
+
+    auto a = runtime::make_tensor<element::Bool>(shape, {true, false, true, false});
+    auto A = make_shared<op::ParameterizedConstant<element::Bool>>(shape, a);
+    auto b = runtime::make_tensor<element::Bool>(shape, {true, true, true, true});
+    auto B = make_shared<op::ParameterizedConstant<element::Bool>>(shape, b);
+    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
+
+    cf->call({}, {result});
+    ASSERT_EQ((vector<char>{true, false, true, false}), result->get_vector<char>());
 }

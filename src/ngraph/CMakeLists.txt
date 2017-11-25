@@ -51,6 +51,7 @@ set (SRC
     ops/not.cpp
     ops/op.cpp
     ops/parameter.cpp
+    ops/power.cpp
     ops/reduce.cpp
     ops/reshape.cpp
     ops/select.cpp
