@@ -67,6 +67,7 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
     vector<shared_ptr<Function>> fs;
     for (shared_ptr<Function> f : get_state().get_functions())
     {
+        f->get_result()->set_is_output();
         fs.push_back(f);
     }
 
