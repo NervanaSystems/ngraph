@@ -172,13 +172,16 @@ void ExternalFunction::compile()
         return;
     }
 
+    string function_name = m_function->get_name();
+    string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
+
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>(64);
-    pass_manager.register_pass<pass::DumpSorted>("sorted_ops.txt");
+    pass_manager.register_pass<pass::DumpSorted>(dump_filename);
     pass_manager.run_passes(m_function);
 
     // Now we build the TU
@@ -313,7 +316,6 @@ using namespace ngraph::runtime::cpu::eigen;
 
     // TODO: Cleanup and make this a utility function
 
-    string function_name = m_function->get_name();
     file_util::make_directory(s_output_dir);
     string filename = file_util::path_join(s_output_dir, function_name + "_codegen.cpp");
     ofstream out(filename);

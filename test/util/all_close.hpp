@@ -54,11 +54,11 @@ namespace ngraph
         /// @param rtol Relative tolerance
         /// @param atol Absolute tolerance
         /// Returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
-        template <typename ET>
-        bool all_close(const std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>& a,
-                       const std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>& b,
-                       typename ET::type rtol = 1e-5f,
-                       typename ET::type atol = 1e-8f)
+        template <typename T>
+        bool all_close(const std::shared_ptr<ngraph::runtime::TensorView>& a,
+                       const std::shared_ptr<ngraph::runtime::TensorView>& b,
+                       T rtol = 1e-5f,
+                       T atol = 1e-8f)
         {
             // Check that the layouts are compatible
             if (*a->get_tensor_view_layout() != *b->get_tensor_view_layout())
@@ -69,7 +69,7 @@ namespace ngraph
             if (a->get_shape() != b->get_shape())
                 return false;
 
-            return all_close(a->get_vector(), b->get_vector(), rtol, atol);
+            return all_close(a->get_vector<T>(), b->get_vector<T>(), rtol, atol);
         }
 
         /// @brief Same as numpy.allclose
@@ -78,12 +78,11 @@ namespace ngraph
         /// @param rtol Relative tolerance
         /// @param atol Absolute tolerance
         /// Returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
-        template <typename ET>
-        bool all_close(
-            const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>& as,
-            const std::vector<std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>>& bs,
-            typename ET::type rtol,
-            typename ET::type atol)
+        template <typename T>
+        bool all_close(const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& as,
+                       const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& bs,
+                       T rtol,
+                       T atol)
         {
             if (as.size() != bs.size())
             {

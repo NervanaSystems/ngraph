@@ -69,6 +69,18 @@ size_t Tensor::get_pool_offset() const
 
 std::ostream& operator<<(std::ostream& out, const Tensor& tensor)
 {
-    out << "Tensor(" << tensor.get_name() << ")";
+    out << "Tensor(" << tensor.get_name() << ", ";
+    out << (tensor.is_persistent() ? "P" : "");
+    out << (tensor.is_constant() ? "C" : "");
+    out << (tensor.is_input() ? "I" : "");
+    out << (tensor.is_output() ? "O" : "");
+
+    if (!tensor.is_persistent() && !tensor.is_constant() && !tensor.is_input() &&
+        !tensor.is_output())
+    {
+        out << "T";
+    }
+
+    out << ")";
     return out;
 }

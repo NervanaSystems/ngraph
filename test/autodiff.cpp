@@ -29,19 +29,17 @@
 using namespace std;
 using namespace ngraph;
 
-template <typename ET>
-bool autodiff_numeric_compare(
-    const std::shared_ptr<runtime::Manager>& manager,
-    const std::shared_ptr<runtime::Backend>& backend,
-    std::function<std::shared_ptr<Function>()> make_graph,
-    const std::vector<std::shared_ptr<runtime::ParameterizedTensorView<ET>>>& args,
-    typename ET::type rtol,
-    typename ET::type atol)
+template <typename T>
+bool autodiff_numeric_compare(const std::shared_ptr<runtime::Manager>& manager,
+                              const std::shared_ptr<runtime::Backend>& backend,
+                              std::function<std::shared_ptr<Function>()> make_graph,
+                              const std::vector<std::shared_ptr<runtime::TensorView>>& args,
+                              T rtol,
+                              T atol)
 {
-    auto results_num =
-        autodiff::numeric_derivative<element::Float32>(manager, backend, make_graph(), args, .001f);
-    auto results_sym =
-        autodiff::backprop_derivative<element::Float32>(manager, backend, make_graph(), args);
+    auto results_num = autodiff::numeric_derivative<T>(manager, backend, make_graph(), args, .001f);
+    auto results_sym = autodiff::backprop_derivative<T>(manager, backend, make_graph(), args);
+
     return test::all_close(results_num, results_sym, .01f, .01f);
 }
 
@@ -50,10 +48,10 @@ TEST(backwards, add)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape = Shape{2, 3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -61,8 +59,8 @@ TEST(backwards, add)
         return make_shared<Function>(
             X0 + X1, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(backwards, add_nested)
@@ -70,10 +68,10 @@ TEST(backwards, add_nested)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape = Shape{2, 3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -81,8 +79,8 @@ TEST(backwards, add_nested)
         return make_shared<Function>(
             (X0 + X1) + (X1 + X0), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(backwards, broadcast0)
@@ -90,9 +88,9 @@ TEST(backwards, broadcast0)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape = Shape{3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -100,8 +98,7 @@ TEST(backwards, broadcast0)
                                      nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<element::Float32>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(backwards, broadcast1)
@@ -109,9 +106,9 @@ TEST(backwards, broadcast1)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape = Shape{3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -119,8 +116,7 @@ TEST(backwards, broadcast1)
                                      nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<element::Float32>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(backwards, divide)
@@ -128,13 +124,13 @@ TEST(backwards, divide)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
-    test::Uniform<element::Float32> rng1(1.0f, 2.0f);
-    test::Uniform<element::Float32> rng2(-2.0f, -1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng1(1.0f, 2.0f);
+    test::Uniform<float> rng2(-2.0f, -1.0f);
     auto shape = Shape{2, 3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    auto x1 = rng1.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    auto x2 = rng2.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x1 = rng1.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x2 = rng2.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -142,10 +138,10 @@ TEST(backwards, divide)
         return make_shared<Function>(
             X0 / X1, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x2}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x2}, .01f, .01f));
 }
 
 TEST(backwards, dot_scalar_scalar)
@@ -153,11 +149,11 @@ TEST(backwards, dot_scalar_scalar)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape0 = Shape{};
     auto shape1 = Shape{};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape0));
-    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape1));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
@@ -166,8 +162,8 @@ TEST(backwards, dot_scalar_scalar)
                                      nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(backwards, dot_scalar_tensor)
@@ -175,11 +171,11 @@ TEST(backwards, dot_scalar_tensor)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape0 = Shape{};
     auto shape1 = Shape{3, 4};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape0));
-    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape1));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
@@ -188,8 +184,8 @@ TEST(backwards, dot_scalar_tensor)
                                      nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(backwards, dot_tensor_scalar)
@@ -197,11 +193,11 @@ TEST(backwards, dot_tensor_scalar)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape0 = Shape{3, 4};
     auto shape1 = Shape{};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape0));
-    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape1));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
@@ -210,8 +206,8 @@ TEST(backwards, dot_tensor_scalar)
                                      nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(backwards, dot_vector_vector)
@@ -219,11 +215,11 @@ TEST(backwards, dot_vector_vector)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape0 = Shape{3};
     auto shape1 = Shape{3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape0));
-    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape1));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
@@ -232,8 +228,8 @@ TEST(backwards, dot_vector_vector)
                                      nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(backwards, dot_tensor_vector)
@@ -241,11 +237,11 @@ TEST(backwards, dot_tensor_vector)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape0 = Shape{4, 3};
     auto shape1 = Shape{3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape0));
-    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape1));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
@@ -254,8 +250,8 @@ TEST(backwards, dot_tensor_vector)
                                      nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(backwards, dot_tensor2_tensor2)
@@ -263,11 +259,11 @@ TEST(backwards, dot_tensor2_tensor2)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape0 = Shape{4, 3};
     auto shape1 = Shape{3, 5};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape0));
-    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape1));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
@@ -276,8 +272,8 @@ TEST(backwards, dot_tensor2_tensor2)
                                      nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(backwards, exp)
@@ -285,17 +281,16 @@ TEST(backwards, exp)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape = Shape{2, 3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         return make_shared<Function>(
             make_shared<op::Exp>(X0), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<element::Float32>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(backwards, log)
@@ -303,17 +298,16 @@ TEST(backwards, log)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(1.0f, 2.0f);
+    test::Uniform<float> rng(1.0f, 2.0f);
     auto shape = Shape{2, 3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         return make_shared<Function>(
             make_shared<op::Log>(X0), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<element::Float32>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(backwards, maximum)
@@ -321,10 +315,10 @@ TEST(backwards, maximum)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape = Shape{2, 3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -333,8 +327,8 @@ TEST(backwards, maximum)
                                      nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(backwards, minimum)
@@ -342,10 +336,10 @@ TEST(backwards, minimum)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape = Shape{2, 3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -354,8 +348,8 @@ TEST(backwards, minimum)
                                      nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(backwards, multiply)
@@ -363,10 +357,10 @@ TEST(backwards, multiply)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape = Shape{2, 3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -374,8 +368,8 @@ TEST(backwards, multiply)
         return make_shared<Function>(
             X0 * X1, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(backwards, negative)
@@ -383,16 +377,15 @@ TEST(backwards, negative)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape = Shape{2, 3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         return make_shared<Function>(-X0, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<element::Float32>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(backwards, parameter)
@@ -400,15 +393,14 @@ TEST(backwards, parameter)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape = Shape{2, 3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         return make_shared<Function>(X0, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<element::Float32>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(backwards, power)
@@ -458,9 +450,9 @@ TEST(backwards, reshape)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape = Shape{3, 4};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -468,8 +460,7 @@ TEST(backwards, reshape)
                                      nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
-    EXPECT_TRUE(
-        autodiff_numeric_compare<element::Float32>(manager, backend, make_graph, {x0}, .01f, .01f));
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
 TEST(backwards, subtract)
@@ -477,10 +468,10 @@ TEST(backwards, subtract)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape = Shape{2, 3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -488,8 +479,8 @@ TEST(backwards, subtract)
         return make_shared<Function>(
             X0 - X1, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
 TEST(backwards, abc)
@@ -497,11 +488,11 @@ TEST(backwards, abc)
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
 
-    test::Uniform<element::Float32> rng(-1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape = Shape{2, 3};
-    auto x0 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    auto x1 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
-    auto x2 = rng.initialize(backend->make_parameterized_tensor_view<element::Float32>(shape));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+    auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -510,6 +501,6 @@ TEST(backwards, abc)
         return make_shared<Function>(
             (X0 + X1) * X2, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<element::Float32>(
-        manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));
 }
