@@ -103,7 +103,7 @@ autodiff::Adjoints::Adjoints(const std::shared_ptr<Node>& y, const std::shared_p
                 nodes_to_check.push_front(arg);
             }
         }
-        node->generate_adjoints(*this, m_adjoint_map.at(node.get()));
+        node->generate_adjoints(*this, get(node));
     }
 }
 

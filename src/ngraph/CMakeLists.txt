@@ -31,7 +31,6 @@ set (SRC
     ops/binary_elementwise_comparison.cpp
     ops/binary_elementwise.cpp
     ops/broadcast.cpp
-    ops/ceiling.cpp
     ops/concatenate.cpp
     ops/constant.cpp
     ops/convert.cpp
@@ -40,7 +39,6 @@ set (SRC
     ops/divide.cpp
     ops/dot.cpp
     ops/exp.cpp
-    ops/floor.cpp
     ops/function_call.cpp
     ops/get_tuple_element.cpp
     ops/log.cpp
@@ -55,7 +53,6 @@ set (SRC
     ops/reduce.cpp
     ops/reshape.cpp
     ops/select.cpp
-    ops/sign.cpp
     ops/sin.cpp
     ops/sinh.cpp
     ops/slice.cpp

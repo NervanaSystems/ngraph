@@ -53,20 +53,14 @@ op::Select::Select(const std::shared_ptr<Node>& arg0,
 void ngraph::op::Select::generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta)
 {
-    auto p = m_arguments[0];
-    auto x = m_arguments[1];
-    auto y = m_arguments[2];
+    auto p = get_inputs().at(0).get_output().get_node();
+    auto x = get_inputs().at(1).get_output().get_node();
+    auto y = get_inputs().at(2).get_output().get_node();
 
     auto p_as_float = std::make_shared<op::Convert>(p, element::Float32::element_type());
     auto not_p_as_float = std::make_shared<op::Convert>(std::make_shared<op::Not>(p),
                                                         element::Float32::element_type());
 
-    auto p_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(p->get_value_type());
-    auto& p_element_type = p_tensor_view_type->get_element_type();
-    auto p_shape = p_tensor_view_type->get_shape();
-    auto p_zero = std::make_shared<op::Constant>(p_element_type, p_shape, "0");
-
-    adjoints.add_delta(p, p_zero);
     adjoints.add_delta(x, delta * p_as_float);
     adjoints.add_delta(y, delta * not_p_as_float);
 }

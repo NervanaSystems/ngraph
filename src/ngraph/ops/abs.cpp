@@ -19,7 +19,7 @@
 void ngraph::op::Abs::generate_adjoints(autodiff::Adjoints& adjoints,
                                         const std::shared_ptr<Node>& delta)
 {
-    auto x = m_arguments[0];
+    auto x = get_inputs().at(0).get_output().get_node();
 
     adjoints.add_delta(x, delta * std::make_shared<op::Sign>(x));
 }
