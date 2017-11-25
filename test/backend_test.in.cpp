@@ -2729,7 +2729,7 @@ TEST(${BACKEND_NAME}, power)
     copy_data(b, vector<float>{2, 0, 6, 3});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
-    (*cf)({a, b}, {result});
+    cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{1, 1, 729, 125}), result->get_vector<float>());
 }
 
