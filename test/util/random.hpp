@@ -25,13 +25,11 @@ namespace ngraph
     {
         /// @brief A predictable pseudo-random number generator
         /// The seed is initialized so that we get repeatable pseudo-random numbers for tests
-        template <typename ET>
+        template <typename T>
         class Uniform
         {
         public:
-            using type = typename ET::type;
-
-            Uniform(type min, type max, type seed = 0)
+            Uniform(T min, T max, T seed = 0)
                 : m_engine(seed)
                 , m_distribution(min, max)
                 , m_r(std::bind(m_distribution, m_engine))
@@ -40,11 +38,11 @@ namespace ngraph
 
             /// @brief Randomly initialize a tensor
             /// @param ptv The tensor to initialize
-            const std::shared_ptr<runtime::ParameterizedTensorView<ET>>
-                initialize(const std::shared_ptr<runtime::ParameterizedTensorView<ET>>& ptv)
+            const std::shared_ptr<runtime::TensorView>
+                initialize(const std::shared_ptr<runtime::TensorView>& ptv)
             {
-                auto vec = ptv->get_vector();
-                for (auto& elt : vec)
+                std::vector<T> vec = ptv->get_vector<T>();
+                for (T& elt : vec)
                 {
                     elt = m_r();
                 }
@@ -54,8 +52,8 @@ namespace ngraph
 
         protected:
             std::default_random_engine m_engine;
-            std::uniform_real_distribution<type> m_distribution;
-            std::function<type()> m_r;
+            std::uniform_real_distribution<T> m_distribution;
+            std::function<T()> m_r;
         };
     }
 }
