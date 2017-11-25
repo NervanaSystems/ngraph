@@ -36,9 +36,9 @@ namespace ngraph
         ///
         /// ## Implementation Status
         ///
-        /// | Backend | Status           |
-        /// | ------- | ---------------- |
-        /// | NGVM    | Not implemented. |
+        /// | Backend | Status             |
+        /// | ------- | ------------------ |
+        /// | NGVM    | Fully implemented. |
         class Not : public UnaryElementwise
         {
         public:
