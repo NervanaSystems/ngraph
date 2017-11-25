@@ -469,9 +469,9 @@ TEST(${BACKEND_NAME}, floor)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view<element::Float32>(shape);
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
     copy_data(a, vector<float>{-2.5f, -2.0f, 0.3f, 4.8f});
-    auto result = backend->make_primary_tensor_view<element::Float32>(shape);
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     cf->call({a}, {result});
     ASSERT_EQ((vector<float>{-3.0f, -2.0f, 0.0f, 4.0f}), result->get_vector<float>());
@@ -2751,27 +2751,6 @@ TEST(${BACKEND_NAME}, sign)
     ASSERT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, sqrt)
-{
-    auto shape = Shape{2, 3};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f = make_shared<Function>(make_shared<op::Sqrt>(A), result_type, op::Parameters{A});
-
-    auto manager = runtime::Manager::get("NGVM");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view<element::Float32>(shape);
-    copy_data(a, vector<float>{16, 4, 81, 100, 10000, 0});
-    auto result = backend->make_primary_tensor_view<element::Float32>(shape);
-
-    cf->call({a}, {result});
-    ASSERT_EQ((vector<float>{4, 2, 9, 10, 100, 0}), result->get_vector<float>());
-}
-
 TEST(${BACKEND_NAME}, power)
 {
     auto shape = Shape{2, 2};
@@ -2821,4 +2800,25 @@ TEST(${BACKEND_NAME}, constant_equality_bool)
 
     cf->call({}, {result});
     ASSERT_EQ((vector<char>{true, false, true, false}), result->get_vector<char>());
+}
+
+TEST(${BACKEND_NAME}, sqrt)
+{
+    auto shape = Shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Sqrt>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("NGVM");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{16, 4, 81, 100, 10000, 0});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{4, 2, 9, 10, 100, 0}), result->get_vector<float>());
 }

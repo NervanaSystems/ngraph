@@ -223,11 +223,11 @@ TEST(backwards, concat_vector)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape_0 = Shape{3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<element::Float32>(shape_0));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view(element::Float32::element_type(), shape_0));
     auto shape_1 = Shape{2};
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<element::Float32>(shape_1));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view(element::Float32::element_type(), shape_1));
     auto shape_2 = Shape{1};
-    auto x2 = rng.initialize(backend->make_primary_tensor_view<element::Float32>(shape_2));
+    auto x2 = rng.initialize(backend->make_primary_tensor_view(element::Float32::element_type(), shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape_0);
@@ -248,11 +248,11 @@ TEST(backwards, concat_axis_0)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape_0 = Shape{3, 2};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<element::Float32>(shape_0));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view(element::Float32::element_type(), shape_0));
     auto shape_1 = Shape{2, 2};
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<element::Float32>(shape_1));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view(element::Float32::element_type(), shape_1));
     auto shape_2 = Shape{1, 2};
-    auto x2 = rng.initialize(backend->make_primary_tensor_view<element::Float32>(shape_2));
+    auto x2 = rng.initialize(backend->make_primary_tensor_view(element::Float32::element_type(), shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape_0);
@@ -273,11 +273,11 @@ TEST(backwards, concat_axis_1)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape_0 = Shape{2, 3};
-    auto x0 = rng.initialize(backend->make_primary_tensor_view<element::Float32>(shape_0));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view(element::Float32::element_type(), shape_0));
     auto shape_1 = Shape{2, 2};
-    auto x1 = rng.initialize(backend->make_primary_tensor_view<element::Float32>(shape_1));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view(element::Float32::element_type(), shape_1));
     auto shape_2 = Shape{2, 1};
-    auto x2 = rng.initialize(backend->make_primary_tensor_view<element::Float32>(shape_2));
+    auto x2 = rng.initialize(backend->make_primary_tensor_view(element::Float32::element_type(), shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
         auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape_0);
@@ -343,7 +343,7 @@ TEST(backwards, cos)
 
     for (auto i = 0; i < 100; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<element::Float32>(shape));
+        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
     }
@@ -364,7 +364,7 @@ TEST(backwards, cosh)
 
     for (auto i = 0; i < 100; i++)
     {
-        auto x = rng.initialize(backend->make_primary_tensor_view<element::Float32>(shape));
+        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
     }
@@ -769,7 +769,7 @@ TEST(backwards, select)
 
     for (auto i = 0; i < 100; i++)
     {
-        auto x0 = backend->make_primary_tensor_view<char>(shape);
+        auto x0 = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
         x0->write(vector<char>{0, 1, 0, 1, 0, 1});
         auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
         auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
@@ -803,7 +803,7 @@ TEST(backwards, select_nested)
 
     for (auto i = 0; i < 100; i++)
     {
-        auto x0 = backend->make_primary_tensor_view<char>(shape);
+        auto x0 = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
         x0->write(vector<char>{0, 1, 0, 1, 0, 1});
         auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
         auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
