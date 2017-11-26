@@ -1,4 +1,6 @@
 // clang-format off
+#pragma clang diagnostic ignored "-Weverything"
+
 /*
     __ _____ _____ _____
  __|  |   __|     |   | |  JSON for Modern C++
@@ -14720,9 +14722,5 @@ inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std
 #undef NLOHMANN_BASIC_JSON_TPL_DECLARATION
 #undef NLOHMANN_BASIC_JSON_TPL
 
-<<<<<<< HEAD
 #endif
 // clang-format on
-=======
-#endif
->>>>>>> b5f06fd... add json lib 2.1.1

@@ -21,6 +21,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/ops/function_provider.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -145,7 +146,6 @@ void ngraph::traverse_nodes(std::shared_ptr<ngraph::Function> p,
 }
 
 void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<Node>)> f)
-
 {
     std::unordered_set<shared_ptr<Node>> instances_seen;
     deque<shared_ptr<Node>> stack;
@@ -168,6 +168,34 @@ void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<N
         for (auto arg : n->get_arguments())
         {
             stack.push_front(arg);
+        }
+    }
+}
+
+void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
+                                std::function<void(shared_ptr<Function>)> f)
+{
+    std::unordered_set<shared_ptr<Function>> instances_seen;
+    deque<shared_ptr<Function>> stack;
+
+    stack.push_front(p);
+
+    while (stack.size() > 0)
+    {
+        shared_ptr<Function> func = stack.front();
+        if (instances_seen.find(func) == instances_seen.end())
+        {
+            instances_seen.insert(func);
+            f(func);
+        }
+        stack.pop_front();
+        for (shared_ptr<Node> op : func->get_ops())
+        {
+            shared_ptr<op::FunctionProvider> fp = dynamic_pointer_cast<op::FunctionProvider>(op);
+            if (fp)
+            {
+                stack.push_front(fp->get_function());
+            }
         }
     }
 }

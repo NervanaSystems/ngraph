@@ -15,6 +15,7 @@
 #pragma once
 
 #include "ngraph/node.hpp"
+#include "ngraph/ops/function_provider.hpp"
 
 namespace ngraph
 {
@@ -45,7 +46,7 @@ namespace ngraph
         /// | Backend | Status             |
         /// | ------- | ------------------ |
         /// | NGVM    | Fully implemented. |
-        class FunctionCall : public ngraph::Node
+        class FunctionCall : public Node, public FunctionProvider
         {
         public:
             /// \brief Constructs a function call operation.
@@ -62,7 +63,7 @@ namespace ngraph
             }
 
             /// \return The function to be called.
-            std::shared_ptr<Function> get_function() const { return m_function; }
+            std::shared_ptr<Function> get_function() const override { return m_function; }
         protected:
             std::shared_ptr<Function> m_function;
         };

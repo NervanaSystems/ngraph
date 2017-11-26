@@ -31,6 +31,7 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/json.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph

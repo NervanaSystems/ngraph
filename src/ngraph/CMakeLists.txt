@@ -74,15 +74,29 @@ set (SRC
     runtime/tensor_view.cpp
     runtime/tuple.cpp
     runtime/utils.cpp
+    serializer.cpp
     shape.cpp
     types/element_type.cpp
     types/type.cpp
     util.cpp
     )
 
+message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
+file(GLOB_RECURSE OPS "${CMAKE_CURRENT_SOURCE_DIR}/ops" "${CMAKE_CURRENT_SOURCE_DIR}/ops/*.hpp")
+foreach(OP ${OPS})
+    file(STRINGS ${OP} OP_CLASS REGEX "class [A-Za-z0-9_]+ :")
+    foreach(LINE ${OP_CLASS})
+        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1:\\2" CLASS_FOUND ${LINE})
+        set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
+   endforeach(LINE ${OP_CLASS})
+endforeach()
+message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt")
+string(REPLACE ";" "\n" OP_CLASS_LINES "${OP_CLASS_LIST}")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt" "${OP_CLASS_LINES}")
+
 # find_program (GRAPHVIZ dot)
 # message (STATUS "graphviz '${GRAPHVIZ}'")
-find_package(Graphviz)
+find_package(Graphviz QUIET)
 if (GRAPHVIZ_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGRAPHVIZ_FOUND")
 endif()

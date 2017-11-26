@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/json.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/op.hpp"
@@ -40,6 +41,7 @@ namespace ngraph
                  const std::string& name = "");
 
         std::shared_ptr<Node> get_result() { return m_result; }
+        std::shared_ptr<const Node> get_result() const { return m_result; }
         const std::vector<std::shared_ptr<op::Parameter>>& get_parameters() const
         {
             return m_parameters;

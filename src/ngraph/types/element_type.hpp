@@ -26,6 +26,7 @@
 
 #include "ngraph/common.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/json.hpp"
 
 namespace ngraph
 {
@@ -47,13 +48,11 @@ namespace ngraph
 
         class Type
         {
-            Type(const Type&) = delete;
-            Type& operator=(const Type&) = delete;
-
         public:
-            virtual ~Type() {}
+            Type() = default;
+            Type(const Type&) = default;
             Type(size_t bitwidth, bool is_real, bool is_signed, const std::string& cname);
-
+            virtual ~Type() {}
             const std::string& c_type_string() const;
             size_t size() const;
             size_t hash() const
@@ -61,10 +60,15 @@ namespace ngraph
                 std::hash<std::string> h;
                 return h(m_cname);
             }
-
+            bool is_real() const { return m_is_real; }
+            bool is_signed() const { return m_is_signed; }
+            size_t bitwidth() const { return m_bitwidth; }
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
             friend std::ostream& operator<<(std::ostream&, const Type&);
+
+            friend void to_json(nlohmann::json&, const Type&);
+            friend void from_json(const nlohmann::json&, Type&);
 
         private:
             static std::map<std::string, Type> m_element_list;
@@ -126,6 +130,17 @@ namespace ngraph
                 throw std::invalid_argument("Unknown type");
             }
         }
+        extern const Type boolean;
+        extern const Type f32;
+        extern const Type f64;
+        extern const Type i8;
+        extern const Type i16;
+        extern const Type i32;
+        extern const Type i64;
+        extern const Type u8;
+        extern const Type u16;
+        extern const Type u32;
+        extern const Type u64;
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
 

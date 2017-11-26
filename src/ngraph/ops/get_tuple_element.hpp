@@ -20,8 +20,6 @@ namespace ngraph
 {
     namespace op
     {
-        class Node;
-
         /// \brief Operation to get an element from a tuple.
         ///
         /// ## Parameters
@@ -47,7 +45,7 @@ namespace ngraph
         /// | Backend | Status             |
         /// | ------- | ------------------ |
         /// | NGVM    | Fully implemented. |
-        class GetTupleElement : public ngraph::Node
+        class GetTupleElement : public Node
         {
         public:
             /// \brief Constructs a get-tuple-element operation.

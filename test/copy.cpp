@@ -358,7 +358,7 @@ TEST(copy, reduce)
 
     ASSERT_TRUE(nullptr != new_node);
     ASSERT_TRUE(new_args == new_node->get_arguments());
-    ASSERT_TRUE(f == node_cast->get_reduction_function());
+    ASSERT_TRUE(f == node_cast->get_function());
     ASSERT_TRUE(axes == node_cast->get_reduction_axes());
 }
 

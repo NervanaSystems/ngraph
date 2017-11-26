@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <list>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -230,8 +231,9 @@ namespace ngraph
     }
 
     void traverse_nodes(Function* p, std::function<void(std::shared_ptr<Node>)> f);
-
     void traverse_nodes(std::shared_ptr<Function> p, std::function<void(std::shared_ptr<Node>)> f);
+    void traverse_functions(std::shared_ptr<Function> p,
+                            std::function<void(std::shared_ptr<Function>)> f);
 
     void free_nodes(std::shared_ptr<Function>);
 } // end namespace ngraph
