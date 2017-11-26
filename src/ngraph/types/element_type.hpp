@@ -130,17 +130,6 @@ namespace ngraph
                 throw std::invalid_argument("Unknown type");
             }
         }
-        extern const Type boolean;
-        extern const Type f32;
-        extern const Type f64;
-        extern const Type i8;
-        extern const Type i16;
-        extern const Type i32;
-        extern const Type i64;
-        extern const Type u8;
-        extern const Type u16;
-        extern const Type u32;
-        extern const Type u64;
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
 
