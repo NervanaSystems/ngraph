@@ -46,7 +46,7 @@ public:
     }
 
 private:
-    llvm::ExecutionEngine* m_execution_engine;
+    std::unique_ptr<llvm::ExecutionEngine> m_execution_engine;
     std::string m_jit_error;
 
     template <typename signature>

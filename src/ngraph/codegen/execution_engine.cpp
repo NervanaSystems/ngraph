@@ -34,11 +34,11 @@ bool codegen::ExecutionEngine::add_module(std::unique_ptr<llvm::Module>& module)
     {
         if (!m_execution_engine)
         {
-            m_execution_engine = llvm::EngineBuilder(move(module))
-                                     .setEngineKind(llvm::EngineKind::JIT)
-                                     .setOptLevel(llvm::CodeGenOpt::Aggressive)
-                                     .setErrorStr(&m_jit_error)
-                                     .create();
+            m_execution_engine.reset(llvm::EngineBuilder(move(module))
+                                         .setEngineKind(llvm::EngineKind::JIT)
+                                         .setOptLevel(llvm::CodeGenOpt::Aggressive)
+                                         .setErrorStr(&m_jit_error)
+                                         .create());
 
             if (!m_execution_engine)
             {

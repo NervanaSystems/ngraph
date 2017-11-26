@@ -58,7 +58,7 @@ namespace ngraph
                         {
                             outputs.push_back(call_frame.get_tensor_view(out.get_index()));
                         }
-                        (*cf)(inputs, outputs);
+                        cf->call(inputs, outputs);
                     }
 
                 protected:

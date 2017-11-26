@@ -12,33 +12,4 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
-
-#include <memory>
-#include <vector>
-
-#include "ngraph/function.hpp"
-
-namespace ngraph
-{
-    namespace pass
-    {
-        class ManagerState;
-    }
-}
-
-class ngraph::pass::ManagerState
-{
-public:
-    const std::vector<std::shared_ptr<Function>>& get_functions();
-
-    template <typename T>
-    void set_functions(const T& collection)
-    {
-        m_function_list.clear();
-        m_function_list.insert(m_function_list.begin(), collection.begin(), collection.end());
-    }
-
-private:
-    std::vector<std::shared_ptr<Function>> m_function_list;
-};
+#include "gtest/gtest.h"
