@@ -15,7 +15,6 @@
 #include <memory>
 
 #include "ngraph/function.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

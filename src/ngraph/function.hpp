@@ -22,7 +22,6 @@
 #include <vector>
 
 #include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/json.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/op.hpp"

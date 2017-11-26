@@ -25,6 +25,13 @@
 using namespace std;
 using namespace ngraph;
 
+template <typename T>
+static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
+{
+    size_t data_size = data.size() * sizeof(T);
+    tv->write(data.data(), 0, data_size);
+}
+
 TEST(serialize, element_type)
 {
     nlohmann::json j;
@@ -83,4 +90,21 @@ TEST(serialize, main)
     auto external = manager->compile(sfunc);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
+
+    auto x = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(x, vector<float>{1, 2, 3, 4});
+    auto y = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(y, vector<float>{5, 6, 7, 8});
+    auto z = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(z, vector<float>{9, 10, 11, 12});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+
+    cf->call({x, y, z}, {result});
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
+
+    cf->call({y, x, z}, {result});
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
+
+    cf->call({x, z, y}, {result});
+    EXPECT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector<float>());
 }
