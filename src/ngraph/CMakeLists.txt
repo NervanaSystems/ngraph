@@ -172,7 +172,7 @@ message(STATUS "LIBRARY_OUTPUT_DIRECTORY set to: ${COMMON_LIBRARY_OUTPUT_DIRECTO
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
-if(NGRAPH_CPU_ENABLE AND LLVM_LINK_LIBS)
+if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_LINK_LIBS)
     target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
 endif()
 
@@ -184,6 +184,10 @@ endif()
 
 if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
     target_link_libraries(ngraph PRIVATE mkldnn)
+endif()
+
+if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
+    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
 
@@ -237,7 +241,7 @@ endif()
 
 add_dependencies(ngraph eigen)
 
-if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
+if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_INCLUDE_DIR)
     add_dependencies(ngraph ext_llvm)
 endif()
 
