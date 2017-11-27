@@ -92,11 +92,10 @@ static StaticInitializers s_static_initializers;
 
 using ngraph::descriptor::layout::DenseTensorViewLayout;
 
-#define TI(x) type_index(typeid(x))
-
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                    bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
+    , m_function(function)
 {
     NGRAPH_INFO;
 }
@@ -115,9 +114,6 @@ void ExternalFunction::compile()
     pass_manager.register_pass<pass::TopologicalSort>();
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
-    pass_manager.register_pass<pass::Liveness>();
-    pass_manager.register_pass<pass::MemoryLayout>(64);
-    pass_manager.register_pass<pass::DumpSorted>(dump_filename);
     pass_manager.run_passes(m_function);
 
     m_is_compiled = true;
@@ -134,5 +130,5 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
         compile();
     }
 
-    return make_shared<ngraph::runtime::interpreter::CallFrame>(shared_from_this());
+    return make_shared<ngraph::runtime::interpreter::CallFrame>(shared_from_this(), m_function);
 }

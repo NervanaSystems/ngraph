@@ -20,8 +20,10 @@
 using namespace std;
 using namespace ngraph::runtime::interpreter;
 
-CallFrame::CallFrame(std::shared_ptr<ExternalFunction> external_function)
+CallFrame::CallFrame(std::shared_ptr<ExternalFunction> external_function,
+                     shared_ptr<ngraph::Function> func)
     : m_external_function(external_function)
+    , m_function(func)
 {
     NGRAPH_INFO;
 }
@@ -46,8 +48,11 @@ void CallFrame::tensor_call(
         outputs.push_back(tv->get_data_ptr());
     }
 
-    // Invoke compiled computation
-    // m_compiled_function(inputs.data(), outputs.data());
+    // Invoke computation
+    for (shared_ptr<Node> op : m_function->get_ordered_ops())
+    {
+        NGRAPH_INFO << *op;
+    }
 }
 
 void CallFrame::call(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,

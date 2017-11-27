@@ -37,7 +37,8 @@ namespace ngraph
             class CallFrame : public ngraph::runtime::CallFrame
             {
             public:
-                CallFrame(std::shared_ptr<ExternalFunction> external_function);
+                CallFrame(std::shared_ptr<ExternalFunction> external_function,
+                          std::shared_ptr<ngraph::Function> func);
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
@@ -52,6 +53,7 @@ namespace ngraph
 
             protected:
                 std::shared_ptr<ExternalFunction> m_external_function;
+                std::shared_ptr<ngraph::Function> m_function;
             };
         }
     }
