@@ -39,7 +39,7 @@
 #include "ngraph/ops/equal.hpp"
 #include "ngraph/ops/exp.hpp"
 #include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
 #include "ngraph/ops/greater_eq.hpp"
 #include "ngraph/ops/less.hpp"
@@ -652,10 +652,10 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         // Parameter is a "runtime no-op" because the output tensor has already been filled.
         REGISTER_TO_OP_MAP(op::Parameter){};
 
-        // GetTupleElement will be spliced out, with the users of out redirected to in's source, but, for now, we need to copy.
-        REGISTER_TO_OP_MAP(op::GetTupleElement)
+        // XLAGetTupleElement will be spliced out, with the users of out redirected to in's source, but, for now, we need to copy.
+        REGISTER_TO_OP_MAP(op::XLAGetTupleElement)
         {
-            auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
+            auto get_tuple_element = static_cast<const op::XLAGetTupleElement*>(n);
 
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
@@ -664,7 +664,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto& result_element_type = result_tensor_type->get_element_type();
 
             PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                         "GetTupleElement has unhandled element type",
+                                         "XLAGetTupleElement has unhandled element type",
                                          eigen::CopyInstruction,
                                          in.at(get_tuple_element->get_n()).get_index(),
                                          out.at(0).get_index());

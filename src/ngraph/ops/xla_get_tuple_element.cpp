@@ -14,13 +14,13 @@
 
 #include <sstream>
 
-#include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::GetTupleElement::GetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
-    : Node("GetTupleElement", {arg})
+op::XLAGetTupleElement::XLAGetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
+    : Node("XLAGetTupleElement", {arg})
     , m_n{n}
 {
     auto arg0_tuple_type =

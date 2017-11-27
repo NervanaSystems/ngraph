@@ -45,7 +45,7 @@
 #include "ngraph/ops/equal.hpp"
 #include "ngraph/ops/exp.hpp"
 #include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
 #include "ngraph/ops/greater_eq.hpp"
 #include "ngraph/ops/less.hpp"
@@ -103,7 +103,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Dot), &Emitter::EmitDot},
     {TI(ngraph::op::Multiply), &Emitter::EmitMultiply},
     {TI(ngraph::op::Parameter), &Emitter::EmitNop},
-    {TI(ngraph::op::GetTupleElement), &Emitter::EmitGetTupleElement},
+    {TI(ngraph::op::XLAGetTupleElement), &Emitter::EmitXLAGetTupleElement},
     {TI(ngraph::op::Tuple), &Emitter::EmitTuple},
     {TI(ngraph::op::Abs), &Emitter::EmitAbs},
     {TI(ngraph::op::Concat), &Emitter::EmitConcat},

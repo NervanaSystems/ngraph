@@ -26,7 +26,7 @@
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/slice.hpp"
@@ -186,11 +186,11 @@ void Emitter::EmitMultiply(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitGetTupleElement(const ngraph::Node* n,
+void Emitter::EmitXLAGetTupleElement(const ngraph::Node* n,
                                   const std::vector<TensorViewInfo>& inputs,
                                   const std::vector<TensorViewInfo>& outputs)
 {
-    auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
+    auto get_tuple_element = static_cast<const op::XLAGetTupleElement*>(n);
     auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
     assert(result_tensor_type);
     auto& result_element_type = result_tensor_type->get_element_type();

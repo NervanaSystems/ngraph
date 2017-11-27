@@ -47,21 +47,21 @@ namespace ngraph
         /// | Backend | Status             |
         /// | ------- | ------------------ |
         /// | NGVM    | Fully implemented. |
-        class GetTupleElement : public ngraph::Node
+        class XLAGetTupleElement : public ngraph::Node
         {
         public:
             /// \brief Constructs a get-tuple-element operation.
             ///
             /// \param arg The input tuple.
             /// \param n The index of the tuple element to get.
-            GetTupleElement(const std::shared_ptr<Node>& arg, size_t n);
+            XLAGetTupleElement(const std::shared_ptr<Node>& arg, size_t n);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 1)
                     throw ngraph_error("Incorrect number of new arguments");
-                return std::make_shared<GetTupleElement>(new_args.at(0), m_n);
+                return std::make_shared<XLAGetTupleElement>(new_args.at(0), m_n);
             }
 
             /// \return The index of the tuple element to get.
