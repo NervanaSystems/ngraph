@@ -60,6 +60,7 @@ namespace ngraph
             auto x2 = node * node;
             auto x2sum = std::make_shared<op::Sum>(x2, reduction_axes);
 
+            // TODO(mbrookhart): Use Sqrt instead of Power
             auto half = std::make_shared<op::Constant>(et, x2sum->get_shape(), "0.5");
             return std::make_shared<op::Power>(x2sum, half);
         }
@@ -88,14 +89,15 @@ namespace ngraph
             auto var = variance(node, reduction_axes, bessel_correction);
 
             const auto& et = node->get_element_type();
+            // TODO(mbrookhart): Use Sqrt instead of Power
             auto half = std::make_shared<op::Constant>(et, var->get_shape(), "0.5");
-
             return std::make_shared<op::Power>(var, half);
         }
 
         // This currently calculates [E[X^2] - E[X]^2] instead of [E[(X-\mu)^2]]
         // The second might be more numerically stable/easier to pattern match
         // It also requires adding a broadcast op, and would probably be slower
+        // TODO(mbrookhart): Switch to E[(X-\mu)^2]?
         std::shared_ptr<Node> variance(const std::shared_ptr<Node>& node,
                                        const AxisSet& reduction_axes,
                                        const bool bessel_correction)
