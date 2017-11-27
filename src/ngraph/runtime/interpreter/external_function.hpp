@@ -35,13 +35,6 @@ namespace ngraph
             class Emitter;
             class CallFrame;
 
-            using OpFunction = std::function<void(Emitter*,
-                                                  const ngraph::Node*,
-                                                  const std::vector<TensorViewInfo>& inputs,
-                                                  const std::vector<TensorViewInfo>& outputs)>;
-
-            using OpMap = std::unordered_map<std::type_index, OpFunction>;
-
             class ExternalFunction : public ngraph::runtime::ExternalFunction,
                                      public std::enable_shared_from_this<ExternalFunction>
             {
