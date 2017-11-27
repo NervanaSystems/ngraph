@@ -52,7 +52,7 @@ set (SRC
     ops/slice.cpp
     ops/subtract.cpp
     ops/sum.cpp
-    ops/tuple.cpp
+    ops/xla_tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise.cpp
     pass/dump_sorted.cpp

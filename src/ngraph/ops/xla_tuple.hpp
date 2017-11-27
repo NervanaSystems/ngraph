@@ -39,18 +39,18 @@ namespace ngraph
         /// | Backend | Status             |
         /// | ------- | ------------------ |
         /// | NGVM    | Fully implemented. |
-        class Tuple : public ngraph::Node
+        class XLATuple : public ngraph::Node
         {
         public:
             /// \brief Constructs a tuple construction operation.
             ///
             /// \param args The nodes that produce the elements of the constructed tuple.
-            Tuple(const Nodes& args);
+            XLATuple(const Nodes& args);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
-                return std::make_shared<Tuple>(new_args);
+                return std::make_shared<XLATuple>(new_args);
             }
         };
     }

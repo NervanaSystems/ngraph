@@ -62,7 +62,7 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/ops/tuple.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/ngvm/eigen/abs.hpp"

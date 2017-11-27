@@ -95,7 +95,7 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/ops/tuple.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/external_function.hpp"
