@@ -30,11 +30,11 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::MemoryLayout : public CallGraphPass
+class ngraph::pass::MemoryLayout : public FunctionPass
 {
 public:
     MemoryLayout(size_t alignment = 1);
-    virtual bool run_on_call_graph(std::list<std::shared_ptr<Node>>&) override;
+    bool run_on_function(std::shared_ptr<ngraph::Function>) override;
 
 private:
     size_t m_alignment;

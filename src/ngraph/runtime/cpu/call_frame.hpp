@@ -31,9 +31,9 @@ namespace ngraph
         namespace cpu
         {
             class CallFrame;
+            class ExternalFunction;
 
-            using EntryPoint_t = void(const std::vector<void*>& inputs,
-                                      const std::vector<void*>& outputs);
+            using EntryPoint_t = void(void** inputs, void** outputs);
 
             using EntryPoint = std::function<EntryPoint_t>;
 
@@ -41,14 +41,14 @@ namespace ngraph
             class CallFrame : public ngraph::runtime::CallFrame
             {
             public:
-                CallFrame(EntryPoint compiled_function);
+                CallFrame(std::shared_ptr<ExternalFunction> external_function,
+                          EntryPoint compiled_function);
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
-                void
-                    operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
-                               const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outputs);
+                void call(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
+                          const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outputs);
 
                 /// @brief Invoke the function with tuples pre-expanded to their underlying
                 /// tensor views.
@@ -56,6 +56,7 @@ namespace ngraph
                                  const std::vector<std::shared_ptr<TensorView>>& outputs);
 
             protected:
+                std::shared_ptr<ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
             };
         }

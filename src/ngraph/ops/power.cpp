@@ -12,33 +12,19 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "ngraph/ops/power.hpp"
+#include "ngraph/ops/divide.hpp"
+#include "ngraph/ops/log.hpp"
+#include "ngraph/ops/multiply.hpp"
 
-#include <memory>
-#include <vector>
-
-#include "ngraph/function.hpp"
-
-namespace ngraph
+void ngraph::op::Power::generate_adjoints(autodiff::Adjoints& adjoints,
+                                          const std::shared_ptr<Node>& delta)
 {
-    namespace pass
-    {
-        class ManagerState;
-    }
+    auto x = m_arguments[0];
+    auto y = m_arguments[1];
+
+    auto log_x = std::make_shared<op::Log>(x);
+
+    adjoints.add_delta(x, delta * y * shared_from_this() / x);
+    adjoints.add_delta(y, delta * shared_from_this() * log_x);
 }
-
-class ngraph::pass::ManagerState
-{
-public:
-    const std::vector<std::shared_ptr<Function>>& get_functions();
-
-    template <typename T>
-    void set_functions(const T& collection)
-    {
-        m_function_list.clear();
-        m_function_list.insert(m_function_list.begin(), collection.begin(), collection.end());
-    }
-
-private:
-    std::vector<std::shared_ptr<Function>> m_function_list;
-};
