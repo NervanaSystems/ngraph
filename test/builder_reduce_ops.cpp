@@ -41,7 +41,7 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result(
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
 
     return result;
 }
@@ -62,7 +62,7 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_true(
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
 
     return result;
 }
@@ -83,7 +83,7 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_false(
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
-    (*cf)({a}, {result});
+    cf->call({a}, {result});
 
     return result;
 }
@@ -91,7 +91,7 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_false(
 TEST(builder_reduce_ops, L2Norm)
 {
     auto result = make_reduce_result(builder::L2Norm);
-    ASSERT_EQ((vector<float>{5.83095189485f, 7.48331477355f}), result->get_vector<float>());
+    ASSERT_EQ((vector<float>{5.9160797831f, 7.48331477355f}), result->get_vector<float>());
 }
 
 TEST(builder_reduce_ops, Mean)
