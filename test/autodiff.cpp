@@ -943,6 +943,78 @@ TEST(backwards, subtract)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
+TEST(backwards, sum_v2s)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    auto shape = Shape{8};
+    auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0}),
+                                     nullptr,
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+}
+
+TEST(backwards, sum_m2s)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    auto shape = Shape{8, 9};
+    auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0, 1}),
+                                     nullptr,
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+}
+
+TEST(backwards, sum_m2v_0)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    auto shape = Shape{8, 9};
+    auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0}),
+                                     nullptr,
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+}
+
+TEST(backwards, sum_m2v_1)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    auto shape = Shape{8, 9};
+    auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{1}),
+                                     nullptr,
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+    EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+}
+
 TEST(backwards, tan)
 {
     auto manager = runtime::Manager::get("NGVM");
