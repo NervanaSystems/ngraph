@@ -66,7 +66,7 @@ To perform the unit tests
 Then modify the following line in `tensorflow/workspace.bzl` file and provide absolute path to `~/ngraph_dist` :
 ```
 path = "/your/home/directory/where/ngraph_is_installed",
-``` 
+```
 3. Now run `configure` and rest of the TF build.
 
 ## System Requirements
