@@ -27,7 +27,7 @@ namespace ngraph
 {
     namespace builder
     {
-        /// \brief Reduction-based L2 Norm of a Tensor.
+        /// \brief Sum-based L2 Norm of a Tensor.
         ///
         /// Calculates
         ///
@@ -50,7 +50,7 @@ namespace ngraph
         std::shared_ptr<Node> l2_norm(const std::shared_ptr<Node>& node,
                                       const AxisSet& reduction_axes);
 
-        /// \brief Reduction-based Mean of a Tensor.
+        /// \brief Sum-based Mean of a Tensor.
         ///
         /// Calculates
         ///
@@ -79,7 +79,9 @@ namespace ngraph
         ///
         /// \f$\prod_{i=1}^{N} x_i\f$
         ///
-        /// Where `i` traverses all of the axes provided in `reduction_axes`
+        /// Where `i` traverses all of the axes provided in `reduction_axes`.
+        ///
+        /// Because Autodiff doesn't support Reduce, this op is currently unsupported by Autodiff (11/27/2017)
         ///
         /// ## Inputs
         ///
@@ -96,29 +98,7 @@ namespace ngraph
         std::shared_ptr<Node> prod(const std::shared_ptr<Node>& node,
                                    const AxisSet& reduction_axes);
 
-        /// \brief Reduction-based Sum of a Tensor.
-        ///
-        /// Calculates
-        ///
-        /// \f$\sum_{i=1}^{N} x_i\f$
-        ///
-        /// Where `i` traverses all of the axes provided in `reduction_axes`
-        ///
-        /// ## Inputs
-        ///
-        /// |                  | Type                              | Description                                                                                           |
-        /// | ---------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------- |
-        /// | `node`           | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | An input tensor of any shape
-        /// | `reduction_axes` | AxesSet                           | The axes to eliminate through reduction (0 indexed).                                                                                  |
-        ///
-        /// ## Output
-        ///
-        /// | Type                                      | Description                                                                                                      |
-        /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-        /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
-        std::shared_ptr<Node> sum(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes);
-
-        /// \brief Reduction-based Standard Deviation of a Tensor.
+        /// \brief Sum-based Standard Deviation of a Tensor.
         ///
         /// If bessel_correct is true, calculates
         ///
@@ -147,7 +127,7 @@ namespace ngraph
                                       const AxisSet& reduction_axes,
                                       const bool bessel_correction = false);
 
-        /// \brief Reduction-based Variance of a Tensor.
+        /// \brief Sum-based Variance of a Tensor.
         ///
         /// If bessel_correct is true, calculates
         ///

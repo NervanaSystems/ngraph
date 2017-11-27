@@ -106,12 +106,6 @@ TEST(builder_reduce_ops, prod)
     ASSERT_EQ((vector<float>{15, 48}), result->get_vector<float>());
 }
 
-TEST(builder_reduce_ops, sum)
-{
-    auto result = make_reduce_result(builder::sum);
-    ASSERT_EQ((vector<float>{9, 12}), result->get_vector<float>());
-}
-
 TEST(builder_reduce_ops, std_dev)
 {
     auto result = make_reduce_result_false(builder::std_dev);

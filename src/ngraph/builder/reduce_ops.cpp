@@ -19,6 +19,7 @@
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/subtract.hpp"
+#include "ngraph/ops/sum.hpp"
 
 namespace ngraph
 {
@@ -57,15 +58,15 @@ namespace ngraph
         {
             const auto& et = node->get_element_type();
             auto x2 = node * node;
-            auto summed = create_reduction<op::Add>(x2, "0", reduction_axes);
-            auto half = std::make_shared<op::Constant>(et, summed->get_shape(), "0.5");
+            auto x2sum = std::make_shared<op::Sum>(x2, reduction_axes);
 
-            return std::make_shared<op::Power>(summed, half);
+            auto half = std::make_shared<op::Constant>(et, x2sum->get_shape(), "0.5");
+            return std::make_shared<op::Power>(x2sum, half);
         }
 
         std::shared_ptr<Node> mean(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
         {
-            auto xsum = sum(node, reduction_axes);
+            auto xsum = std::make_shared<op::Sum>(node, reduction_axes);
 
             auto N = get_num_elements(node->get_shape(), reduction_axes);
             const auto& et = node->get_element_type();
@@ -92,11 +93,6 @@ namespace ngraph
             return std::make_shared<op::Power>(var, half);
         }
 
-        std::shared_ptr<Node> sum(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
-        {
-            return create_reduction<op::Add>(node, "0", reduction_axes);
-        }
-
         // This currently calculates [E[X^2] - E[X]^2] instead of [E[(X-\mu)^2]]
         // The second might be more numerically stable/easier to pattern match
         // It also requires adding a broadcast op, and would probably be slower
@@ -104,11 +100,11 @@ namespace ngraph
                                        const AxisSet& reduction_axes,
                                        const bool bessel_correction)
         {
-            auto xsum = sum(node, reduction_axes);
+            auto xsum = std::make_shared<op::Sum>(node, reduction_axes);
 
             auto x2 = node * node;
 
-            auto x2sum = sum(x2, reduction_axes);
+            auto x2sum = std::make_shared<op::Sum>(x2, reduction_axes);
 
             const auto& et = node->get_element_type();
             auto N = get_num_elements(node->get_shape(), reduction_axes);
