@@ -15,6 +15,7 @@
 #include <algorithm>
 
 #include "call_frame.hpp"
+#include "ngraph/runtime/interpreter/op_engine.hpp"
 #include "ngraph/runtime/interpreter/tensor_view.hpp"
 
 using namespace std;
@@ -52,6 +53,51 @@ void CallFrame::tensor_call(
     for (shared_ptr<Node> op : m_function->get_ordered_ops())
     {
         NGRAPH_INFO << *op;
+        NGRAPH_INFO << op->get_element_type();
+        if (op->get_element_type() == element::boolean)
+        {
+            op_engine<char>(*op);
+        }
+        else if (op->get_element_type() == element::f32)
+        {
+            op_engine<float>(*op);
+        }
+        else if (op->get_element_type() == element::f64)
+        {
+            op_engine<double>(*op);
+        }
+        else if (op->get_element_type() == element::i8)
+        {
+            op_engine<int8_t>(*op);
+        }
+        else if (op->get_element_type() == element::i16)
+        {
+            op_engine<int16_t>(*op);
+        }
+        else if (op->get_element_type() == element::i32)
+        {
+            op_engine<int32_t>(*op);
+        }
+        else if (op->get_element_type() == element::i64)
+        {
+            op_engine<int64_t>(*op);
+        }
+        else if (op->get_element_type() == element::u8)
+        {
+            op_engine<uint8_t>(*op);
+        }
+        else if (op->get_element_type() == element::u16)
+        {
+            op_engine<uint16_t>(*op);
+        }
+        else if (op->get_element_type() == element::u32)
+        {
+            op_engine<uint32_t>(*op);
+        }
+        else if (op->get_element_type() == element::u64)
+        {
+            op_engine<uint64_t>(*op);
+        }
     }
 }
 
