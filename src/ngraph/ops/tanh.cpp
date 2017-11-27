@@ -20,7 +20,7 @@
 void ngraph::op::Tanh::generate_adjoints(autodiff::Adjoints& adjoints,
                                          const std::shared_ptr<Node>& delta)
 {
-    auto x = m_arguments[0];
+    auto x = get_input_op(0);
 
     auto c = std::make_shared<op::Cosh>(x);
 

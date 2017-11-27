@@ -15,16 +15,16 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/ops/tuple.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::Tuple::Tuple(const Nodes& args)
-    : Node("Tuple", args)
+op::XLATuple::XLATuple(const Nodes& args)
+    : Node("XLATuple", args)
 {
     vector<shared_ptr<const ValueType>> element_types;
-    for (auto argument : m_arguments)
+    for (auto argument : get_arguments_via_inputs())
     {
         element_types.push_back(argument->get_value_type());
     }

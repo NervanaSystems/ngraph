@@ -80,6 +80,6 @@ TEST(input_output, simple_output)
         ASSERT_EQ(i, input.get_index());
         ASSERT_EQ(i, input.get_argno());
         ASSERT_EQ(0, input.get_arg_index());
-        ASSERT_EQ(input.get_output().get_node(), add->get_arguments()[i]);
+        ASSERT_EQ(input.get_output().get_node(), add->get_arguments_via_inputs()[i]);
     }
 }

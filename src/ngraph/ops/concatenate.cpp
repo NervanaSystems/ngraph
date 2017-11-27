@@ -25,7 +25,7 @@ op::Concat::Concat(const Nodes& args, size_t concatenation_axis)
     : RequiresTensorViewArgs("Concat", args)
     , m_concatenation_axis(concatenation_axis)
 {
-    if (m_arguments.size() < 1)
+    if (m_inputs.size() < 1)
     {
         throw ngraph_error("At least one argument required");
     }
@@ -88,7 +88,7 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const std::shar
 
     size_t pos = 0;
 
-    for (auto arg : m_arguments)
+    for (auto arg : get_arguments_via_inputs())
     {
         auto arg_value_type = arg->get_value_type();
         auto arg_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(arg_value_type);

@@ -76,7 +76,7 @@ op::Reduce::Reduce(const std::shared_ptr<Node>& arg_reductee,
         throw ngraph_error("Argument 1 of reduction function has wrong type");
     }
 
-    auto f_result_type = m_reduction_function->get_result_type();
+    auto f_result_type = m_reduction_function->get_result_types().at(0);
 
     if (*(f_result_type) != *(arg_init->get_value_type()))
     {

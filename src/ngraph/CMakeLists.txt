@@ -28,6 +28,7 @@ set (SRC
     descriptor/tuple.cpp
     file_util.cpp
     function.cpp
+    xla_function.cpp
     log.cpp
     node.cpp
     ops/abs.cpp
@@ -45,6 +46,7 @@ set (SRC
     ops/dot.cpp
     ops/exp.cpp
     ops/function_call.cpp
+    ops/xla_get_tuple_element.cpp
     ops/get_tuple_element.cpp
     ops/log.cpp
     ops/maximum.cpp
@@ -68,7 +70,7 @@ set (SRC
     ops/sum.cpp
     ops/tan.cpp
     ops/tanh.cpp
-    ops/tuple.cpp
+    ops/xla_tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise.cpp
     pass/dump_sorted.cpp

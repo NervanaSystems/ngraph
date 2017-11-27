@@ -65,7 +65,7 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/ops/tuple.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/liveness.hpp"
