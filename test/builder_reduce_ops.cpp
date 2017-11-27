@@ -88,42 +88,42 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_false(
     return result;
 }
 
-TEST(builder_reduce_ops, L2Norm)
+TEST(builder_reduce_ops, l2_norm)
 {
-    auto result = make_reduce_result(builder::L2Norm);
+    auto result = make_reduce_result(builder::l2_norm);
     ASSERT_EQ((vector<float>{5.9160797831f, 7.48331477355f}), result->get_vector<float>());
 }
 
-TEST(builder_reduce_ops, Mean)
+TEST(builder_reduce_ops, mean)
 {
-    auto result = make_reduce_result(builder::Mean);
+    auto result = make_reduce_result(builder::mean);
     ASSERT_EQ((vector<float>{3, 4}), result->get_vector<float>());
 }
 
-TEST(builder_reduce_ops, Prod)
+TEST(builder_reduce_ops, prod)
 {
-    auto result = make_reduce_result(builder::Prod);
+    auto result = make_reduce_result(builder::prod);
     ASSERT_EQ((vector<float>{15, 48}), result->get_vector<float>());
 }
 
-TEST(builder_reduce_ops, Sum)
+TEST(builder_reduce_ops, sum)
 {
-    auto result = make_reduce_result(builder::Sum);
+    auto result = make_reduce_result(builder::sum);
     ASSERT_EQ((vector<float>{9, 12}), result->get_vector<float>());
 }
 
-TEST(builder_reduce_ops, Std_dev)
+TEST(builder_reduce_ops, std_dev)
 {
-    auto result = make_reduce_result_false(builder::Std_dev);
+    auto result = make_reduce_result_false(builder::std_dev);
     ASSERT_EQ((vector<float>{1.63299316186f, 1.63299316186f}), result->get_vector<float>());
-    result = make_reduce_result_true(builder::Std_dev);
+    result = make_reduce_result_true(builder::std_dev);
     ASSERT_EQ((vector<float>{2, 2}), result->get_vector<float>());
 }
 
-TEST(builder_reduce_ops, Variance)
+TEST(builder_reduce_ops, variance)
 {
-    auto result = make_reduce_result_false(builder::Variance);
+    auto result = make_reduce_result_false(builder::variance);
     ASSERT_EQ((vector<float>{2.66666666666f, 2.66666666666f}), result->get_vector<float>());
-    result = make_reduce_result_true(builder::Variance);
+    result = make_reduce_result_true(builder::variance);
     ASSERT_EQ((vector<float>{4, 4}), result->get_vector<float>());
 }

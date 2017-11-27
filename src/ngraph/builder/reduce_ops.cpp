@@ -24,6 +24,16 @@ namespace ngraph
 {
     namespace builder
     {
+        size_t get_num_elements(const Shape& shape, const AxisSet& reduction_axes)
+        {
+            size_t N = 1;
+            for (auto a : reduction_axes)
+            {
+                N *= shape[a];
+            }
+            return N;
+        }
+
         template <typename T>
         inline std::shared_ptr<Node> create_reduction(const std::shared_ptr<Node>& node,
                                                       const std::string& init_val,
@@ -42,51 +52,47 @@ namespace ngraph
             return std::make_shared<op::Reduce>(node, init, f, reduction_axes);
         }
 
-        std::shared_ptr<Node> L2Norm(const std::shared_ptr<Node>& node,
-                                     const AxisSet& reduction_axes)
+        std::shared_ptr<Node> l2_norm(const std::shared_ptr<Node>& node,
+                                      const AxisSet& reduction_axes)
         {
             const auto& et = node->get_element_type();
             auto x2 = node * node;
-
             auto summed = create_reduction<op::Add>(x2, "0", reduction_axes);
             auto half = std::make_shared<op::Constant>(et, summed->get_shape(), "0.5");
 
             return std::make_shared<op::Power>(summed, half);
         }
 
-        std::shared_ptr<Node> Mean(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
+        std::shared_ptr<Node> mean(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
         {
+            auto xsum = sum(node, reduction_axes);
+
+            auto N = get_num_elements(node->get_shape(), reduction_axes);
             const auto& et = node->get_element_type();
 
-            size_t N = 1;
-            for (auto a : reduction_axes)
-            {
-                N *= node->get_shape()[a];
-            }
+            auto divisor = std::make_shared<op::Constant>(et, xsum->get_shape(), std::to_string(N));
 
-            auto sum = Sum(node, reduction_axes);
-            auto divisor = std::make_shared<op::Constant>(et, sum->get_shape(), std::to_string(N));
-
-            return sum / divisor;
+            return xsum / divisor;
         }
 
-        std::shared_ptr<Node> Prod(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
+        std::shared_ptr<Node> prod(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
         {
             return create_reduction<op::Multiply>(node, "1", reduction_axes);
         }
 
-        std::shared_ptr<Node> Std_dev(const std::shared_ptr<Node>& node,
+        std::shared_ptr<Node> std_dev(const std::shared_ptr<Node>& node,
                                       const AxisSet& reduction_axes,
                                       const bool bessel_correction)
         {
+            auto var = variance(node, reduction_axes, bessel_correction);
+
             const auto& et = node->get_element_type();
-            auto var = Variance(node, reduction_axes, bessel_correction);
             auto half = std::make_shared<op::Constant>(et, var->get_shape(), "0.5");
 
             return std::make_shared<op::Power>(var, half);
         }
 
-        std::shared_ptr<Node> Sum(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
+        std::shared_ptr<Node> sum(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
         {
             return create_reduction<op::Add>(node, "0", reduction_axes);
         }
@@ -94,32 +100,28 @@ namespace ngraph
         // This currently calculates [E[X^2] - E[X]^2] instead of [E[(X-\mu)^2]]
         // The second might be more numerically stable/easier to pattern match
         // It also requires adding a broadcast op, and would probably be slower
-        std::shared_ptr<Node> Variance(const std::shared_ptr<Node>& node,
+        std::shared_ptr<Node> variance(const std::shared_ptr<Node>& node,
                                        const AxisSet& reduction_axes,
                                        const bool bessel_correction)
         {
-            const auto& et = node->get_element_type();
-            size_t N = 1;
-            for (auto a : reduction_axes)
-            {
-                N *= node->get_shape()[a];
-            }
-
-            auto sum = Sum(node, reduction_axes);
+            auto xsum = sum(node, reduction_axes);
 
             auto x2 = node * node;
 
-            auto x2sum = Sum(x2, reduction_axes);
+            auto x2sum = sum(x2, reduction_axes);
 
-            auto Nconst = std::make_shared<op::Constant>(et, sum->get_shape(), std::to_string(N));
-            auto xbar2 = (sum * sum) / Nconst;
+            const auto& et = node->get_element_type();
+            auto N = get_num_elements(node->get_shape(), reduction_axes);
+
+            auto Nconst = std::make_shared<op::Constant>(et, xsum->get_shape(), std::to_string(N));
+            auto xbar2 = (xsum * xsum) / Nconst;
 
             auto diff = x2sum - xbar2;
 
             if (bessel_correction)
             {
                 auto N1const =
-                    std::make_shared<op::Constant>(et, sum->get_shape(), std::to_string(N - 1));
+                    std::make_shared<op::Constant>(et, xsum->get_shape(), std::to_string(N - 1));
                 return diff / N1const;
             }
             else
