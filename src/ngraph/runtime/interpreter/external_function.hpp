@@ -20,8 +20,6 @@
 #include <typeinfo>
 #include <unordered_map>
 
-#include "ngraph/codegen/compiler.hpp"
-#include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/interpreter/call_frame.hpp"
@@ -54,12 +52,6 @@ namespace ngraph
 
             protected:
                 void compile();
-
-                EntryPoint m_compiled_function;
-
-            private:
-                std::unique_ptr<codegen::Compiler> compiler;
-                std::unique_ptr<codegen::ExecutionEngine> execution_engine;
             };
         }
     }

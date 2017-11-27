@@ -32,6 +32,6 @@ std::shared_ptr<ngraph::runtime::ExternalFunction>
 }
 
 ngraph::runtime::Manager::Factory CPUManager::factory = ngraph::runtime::Manager::register_factory(
-    "CPU", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
+    "INTERPRETER", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
         return std::make_shared<CPUManager>();
     });

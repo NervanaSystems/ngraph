@@ -97,8 +97,8 @@ using ngraph::descriptor::layout::DenseTensorViewLayout;
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                    bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
-    , m_compiled_function(nullptr)
 {
+    NGRAPH_INFO;
 }
 
 void ExternalFunction::compile()
@@ -120,7 +120,6 @@ void ExternalFunction::compile()
     pass_manager.register_pass<pass::DumpSorted>(dump_filename);
     pass_manager.run_passes(m_function);
 
-
     m_is_compiled = true;
     if (m_release_function)
     {
@@ -135,6 +134,5 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
         compile();
     }
 
-    return make_shared<ngraph::runtime::interpreter::CallFrame>(shared_from_this(),
-                                                                m_compiled_function);
+    return make_shared<ngraph::runtime::interpreter::CallFrame>(shared_from_this());
 }

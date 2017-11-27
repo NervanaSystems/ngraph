@@ -22,6 +22,7 @@ using namespace std;
 std::shared_ptr<ngraph::runtime::CallFrame> runtime::interpreter::CPUBackend::make_call_frame(
     const std::shared_ptr<ExternalFunction>& external_function)
 {
+    NGRAPH_INFO;
     return external_function->make_call_frame();
 }
 

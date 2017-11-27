@@ -20,17 +20,17 @@
 using namespace std;
 using namespace ngraph::runtime::interpreter;
 
-CallFrame::CallFrame(std::shared_ptr<ExternalFunction> external_function,
-                     EntryPoint compiled_function)
+CallFrame::CallFrame(std::shared_ptr<ExternalFunction> external_function)
     : m_external_function(external_function)
-    , m_compiled_function(compiled_function)
 {
+    NGRAPH_INFO;
 }
 
 void CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
 {
+    NGRAPH_INFO;
     vector<void*> inputs;
     vector<void*> outputs;
     for (size_t i = 0; i < input_tvs.size(); i++)
@@ -47,12 +47,13 @@ void CallFrame::tensor_call(
     }
 
     // Invoke compiled computation
-    m_compiled_function(inputs.data(), outputs.data());
+    // m_compiled_function(inputs.data(), outputs.data());
 }
 
 void CallFrame::call(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,
                      const std::vector<std::shared_ptr<ngraph::runtime::Value>>& results)
 {
+    NGRAPH_INFO;
     // TODO: Check types of args and result
     vector<shared_ptr<ngraph::runtime::TensorView>> inputs;
     for (shared_ptr<ngraph::runtime::Value> argument : arguments)
