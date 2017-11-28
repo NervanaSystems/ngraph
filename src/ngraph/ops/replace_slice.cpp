@@ -22,7 +22,7 @@ op::ReplaceSlice::ReplaceSlice(const std::shared_ptr<Node>& arg0,
                                const Coordinate& lower_bounds,
                                const Coordinate& upper_bounds,
                                const Shape& step)
-    : RequiresTensorViewArgs("ReplaceSlice", {arg0,arg1})
+    : RequiresTensorViewArgs("ReplaceSlice", {arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_step(step)
@@ -34,7 +34,7 @@ op::ReplaceSlice::ReplaceSlice(const std::shared_ptr<Node>& arg0,
                                const std::shared_ptr<Node>& arg1,
                                const Coordinate& lower_bounds,
                                const Coordinate& upper_bounds)
-    : RequiresTensorViewArgs("ReplaceSlice", {arg0,arg1})
+    : RequiresTensorViewArgs("ReplaceSlice", {arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_step(Shape(lower_bounds.size(), 1))

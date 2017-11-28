@@ -47,7 +47,8 @@ namespace ngraph
                     virtual void execute(CallFrame& call_frame) const override
                     {
                         EigenVector<ET>(call_frame, m_out) = EigenVector<ET>(call_frame, m_arg0);
-                        EigenVector<ET>(call_frame, m_out).segment(m_lower, m_upper - m_lower) = EigenVector<ET>(call_frame, m_arg1);
+                        EigenVector<ET>(call_frame, m_out).segment(m_lower, m_upper - m_lower) =
+                            EigenVector<ET>(call_frame, m_arg1);
                     }
 
                 protected:

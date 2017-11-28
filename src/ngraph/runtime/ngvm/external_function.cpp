@@ -1060,7 +1060,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 if (1 != d)
                 {
-                    throw ngraph_error("Replace-slice does not support non-unit step yet in the VM");
+                    throw ngraph_error(
+                        "Replace-slice does not support non-unit step yet in the VM");
                 }
             }
 
@@ -1116,7 +1117,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             // Other cases (slicing for tensors with rank>2) are not handled yet.
             else
             {
-                throw ngraph_error("Replace-slice is not implemented yet for tensors with rank>2 in VM");
+                throw ngraph_error(
+                    "Replace-slice is not implemented yet for tensors with rank>2 in VM");
             }
         };
 

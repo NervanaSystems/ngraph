@@ -51,11 +51,11 @@ namespace ngraph
                     virtual void execute(CallFrame& call_frame) const override
                     {
                         EigenMatrix<ET>(call_frame, m_out) = EigenMatrix<ET>(call_frame, m_arg0);
-                        EigenMatrix<ET>(call_frame, m_out).block(m_lower_row,
-                                                                 m_lower_col,
-                                                                 m_upper_row - m_lower_row,
-                                                                 m_upper_col - m_lower_col)
-                                                           = EigenMatrix<ET>(call_frame, m_arg1);
+                        EigenMatrix<ET>(call_frame, m_out)
+                            .block(m_lower_row,
+                                   m_lower_col,
+                                   m_upper_row - m_lower_row,
+                                   m_upper_col - m_lower_col) = EigenMatrix<ET>(call_frame, m_arg1);
                     }
 
                 protected:
