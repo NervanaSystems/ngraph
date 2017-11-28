@@ -22,34 +22,18 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace ngvm
+        namespace interpreter
         {
             namespace eigen
             {
                 template <typename T>
-                class MultiplyInstruction : public Instruction
-                {
-                public:
-                    MultiplyInstruction(TensorViewInfo arg0,
+                    void MultiplyInstruction(TensorViewInfo arg0,
                                         TensorViewInfo arg1,
                                         TensorViewInfo out)
-                        : m_arg0(arg0)
-                        , m_arg1(arg1)
-                        , m_out(out)
                     {
+                        EigenArray1d<T>(out) = EigenArray1d<T>(arg0) *
+                                                              EigenArray1d<T>(arg1);
                     }
-
-                    virtual void execute(CallFrame& call_frame) const override
-                    {
-                        EigenArray1d<T>(call_frame, m_out) = EigenArray1d<T>(call_frame, m_arg0) *
-                                                              EigenArray1d<T>(call_frame, m_arg1);
-                    }
-
-                protected:
-                    TensorViewInfo m_arg0;
-                    TensorViewInfo m_arg1;
-                    TensorViewInfo m_out;
-                };
             }
         }
     }

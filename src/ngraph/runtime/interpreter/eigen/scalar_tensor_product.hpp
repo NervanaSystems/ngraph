@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace ngvm
+        namespace interpreter
         {
             namespace eigen
             {
@@ -46,9 +46,9 @@ namespace ngraph
                         // pull it out as a vector. This works because of the way
                         // fmt::V computes sizes---it lumps together any higher
                         // dimensions---while fmt::M ignores them.
-                        EigenVector<T>(call_frame, m_out) =
+                        EigenVector<T>(out) =
                             call_frame.get_tensor_view_data<T>(m_arg0.get_index())[0] *
-                            EigenVector<T>(call_frame, m_arg1);
+                            EigenVector<T>(arg1);
                     }
 
                 protected:

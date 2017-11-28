@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace ngvm
+        namespace interpreter
         {
             namespace eigen
             {
@@ -58,8 +58,8 @@ namespace ngraph
                             cf->call({tx, ty}, {tr});
                             return tr->get_vector()[0];
                         };
-                        EigenVector<T>(call_frame, m_out) =
-                            EigenMatrix<T>(call_frame, m_arg0).rowwise().redux(f);
+                        EigenVector<T>(out) =
+                            EigenMatrix<T>(arg0).rowwise().redux(f);
                     }
 
                 protected:

@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace ngvm
+        namespace interpreter
         {
             namespace eigen
             {
@@ -43,8 +43,8 @@ namespace ngraph
                         // pull it out as a vector. This works because of the way
                         // fmt::V computes sizes---it lumps together any higher
                         // dimensions---while fmt::M ignores them.
-                        EigenArray1d<T>(call_frame, m_out) =
-                            EigenArray1d<T>(call_frame, m_arg)(0, 0);
+                        EigenArray1d<T>(out) =
+                            EigenArray1d<T>(arg)(0, 0);
                     }
 
                 protected:

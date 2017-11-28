@@ -24,30 +24,16 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace ngvm
+        namespace interpreter
         {
             namespace eigen
             {
                 template <typename T>
-                class AbsInstruction : public Instruction
-                {
-                public:
-                    AbsInstruction(const TensorViewInfo& arg, const TensorViewInfo& out)
-                        : m_arg(arg)
-                        , m_out(out)
+                    void AbsInstruction(const TensorViewInfo& arg, const TensorViewInfo& out)
                     {
+                        EigenArray1d<T>(out) =
+                            Eigen::abs(EigenArray1d<T>(arg));
                     }
-
-                    virtual void execute(CallFrame& call_frame) const override
-                    {
-                        EigenArray1d<T>(call_frame, m_out) =
-                            Eigen::abs(EigenArray1d<T>(call_frame, m_arg));
-                    }
-
-                protected:
-                    TensorViewInfo m_arg;
-                    TensorViewInfo m_out;
-                };
             }
         }
     }

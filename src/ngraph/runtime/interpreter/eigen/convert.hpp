@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace ngvm
+        namespace interpreter
         {
             namespace eigen
             {
@@ -40,8 +40,8 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        EigenArray1d<ETO>(call_frame, m_out) =
-                            EigenArray1d<ETI>(call_frame, m_arg)
+                        EigenArray1d<ETO>(out) =
+                            EigenArray1d<ETI>(arg)
                                 .template cast<typename ETO::type>();
                     }
 

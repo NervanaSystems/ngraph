@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace ngvm
+        namespace interpreter
 
         {
             namespace eigen
@@ -41,8 +41,8 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        EigenMatrix<T>(call_frame, m_out).colwise() =
-                            EigenVector<T>(call_frame, m_arg);
+                        EigenMatrix<T>(out).colwise() =
+                            EigenVector<T>(arg);
                     }
 
                 protected:

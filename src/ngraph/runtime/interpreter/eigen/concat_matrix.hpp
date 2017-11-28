@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace ngvm
+        namespace interpreter
         {
             namespace eigen
             {
@@ -51,12 +51,12 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        EigenMatrix<T> out(call_frame, m_out);
+                        EigenMatrix<T> out(out);
                         for (size_t i = 0; i < m_args.size(); i++)
                         {
                             auto& b = m_blocks[i];
                             out.block(b[0], b[1], b[2], b[3])
-                                << EigenMatrix<T>(call_frame, m_args.at(i));
+                                << EigenMatrix<T>(args.at(i));
                         }
                     }
 

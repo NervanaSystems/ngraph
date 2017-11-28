@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace ngvm
+        namespace interpreter
         {
             namespace eigen
             {
@@ -44,10 +44,10 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        EigenArray1d<T>(call_frame, m_out) =
-                            EigenArray1d<element::Bool>(call_frame, m_arg0)
-                                .select(EigenArray1d<T>(call_frame, m_arg1),
-                                        EigenArray1d<T>(call_frame, m_arg2));
+                        EigenArray1d<T>(out) =
+                            EigenArray1d<element::Bool>(arg0)
+                                .select(EigenArray1d<T>(arg1),
+                                        EigenArray1d<T>(arg2));
                     }
 
                 protected:

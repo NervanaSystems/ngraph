@@ -155,8 +155,8 @@ namespace ngraph
                 else if (node_op == "Parameter")
                 {
                     NGRAPH_INFO << node_op;
-                    // auto shape = node_js.at("shape");
-                    // node = make_shared<op::Parameter>(node_etype, shape);
+                    // const op::Parameter* param = dynamic_cast<const op::Parameter*>(&n);
+                    // auto shape = param->get_shape();
                 }
                 else if (node_op == "Power")
                 {

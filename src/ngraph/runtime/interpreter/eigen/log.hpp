@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace ngvm
+        namespace interpreter
         {
             namespace eigen
             {
@@ -39,8 +39,8 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        EigenArray1d<T, fmt::V>(call_frame, m_out) =
-                            Eigen::log(EigenArray1d<T, fmt::V>(call_frame, m_arg));
+                        EigenArray1d<T, fmt::V>(out) =
+                            Eigen::log(EigenArray1d<T, fmt::V>(arg));
                     }
 
                 protected:

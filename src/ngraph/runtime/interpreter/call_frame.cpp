@@ -33,7 +33,8 @@ void CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
 {
-    NGRAPH_INFO;
+    NGRAPH_INFO << "----------------------------------";
+    unordered_map<string, shared_ptr<Node>> node_map;
     vector<void*> inputs;
     vector<void*> outputs;
     for (size_t i = 0; i < input_tvs.size(); i++)
@@ -41,6 +42,7 @@ void CallFrame::tensor_call(
         shared_ptr<runtime::interpreter::CPUTensorView> tv =
             static_pointer_cast<runtime::interpreter::CPUTensorView>(input_tvs[i]);
         inputs.push_back(tv->get_data_ptr());
+        NGRAPH_INFO << tv->get_name();
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
