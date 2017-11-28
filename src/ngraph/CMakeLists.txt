@@ -174,6 +174,16 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
 endif()
 
 add_library(ngraph SHARED ${SRC})
+if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
+    # Generate the resource file containing all headers used by the codegen compiler
+    add_custom_target(header_resource
+        resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
+        DEPENDS resource_generator eigen ext_llvm ext_mkldnn
+        BYPRODUCTS
+    )
+    add_dependencies(ngraph header_resource)
+    include_directories(${CMAKE_BINARY_DIR})
+endif()
 
 if (NOT APPLE)
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
