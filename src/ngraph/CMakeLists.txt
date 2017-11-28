@@ -38,6 +38,7 @@ set (SRC
     ops/exp.cpp
     ops/function_call.cpp
     ops/xla_get_tuple_element.cpp
+    ops/get_tuple_element.cpp
     ops/log.cpp
     ops/maximum.cpp
     ops/minimum.cpp

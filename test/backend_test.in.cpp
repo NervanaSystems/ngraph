@@ -113,11 +113,11 @@ TEST(${BACKEND_NAME}, abc_tuple)
     auto ABC = make_shared<op::Parameter>(
         make_shared<TupleType>(ValueTypes{tensor_view_type, tensor_view_type, tensor_view_type}));
 
-    auto A = make_shared<op::GetTupleElement>(ABC, 0);
-    auto B = make_shared<op::GetTupleElement>(ABC, 1);
-    auto C = make_shared<op::GetTupleElement>(ABC, 2);
+    auto A = make_shared<op::XLAGetTupleElement>(ABC, 0);
+    auto B = make_shared<op::XLAGetTupleElement>(ABC, 1);
+    auto C = make_shared<op::XLAGetTupleElement>(ABC, 2);
     auto f = make_shared<Function>(
-        make_shared<op::Tuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
+        make_shared<op::XLATuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -157,11 +157,11 @@ TEST(${BACKEND_NAME}, abc_tuple_int64)
     auto ABC = make_shared<op::Parameter>(
         make_shared<TupleType>(ValueTypes{tensor_view_type, tensor_view_type, tensor_view_type}));
 
-    auto A = make_shared<op::GetTupleElement>(ABC, 0);
-    auto B = make_shared<op::GetTupleElement>(ABC, 1);
-    auto C = make_shared<op::GetTupleElement>(ABC, 2);
+    auto A = make_shared<op::XLAGetTupleElement>(ABC, 0);
+    auto B = make_shared<op::XLAGetTupleElement>(ABC, 1);
+    auto C = make_shared<op::XLAGetTupleElement>(ABC, 2);
     auto f = make_shared<Function>(
-        make_shared<op::Tuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
+        make_shared<op::XLATuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -208,7 +208,7 @@ TEST(${BACKEND_NAME}, tuple_result)
         {make_shared<TensorViewType>(element::Float32::element_type(), shape),
          make_shared<TensorViewType>(element::Float32::element_type(), shape)}));
     auto f = make_shared<Function>(
-        make_shared<op::Tuple>(Nodes{A_add_B, A_add_B_mul_C}), rt, op::Parameters{A, B, C});
+        make_shared<op::XLATuple>(Nodes{A_add_B, A_add_B_mul_C}), rt, op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);

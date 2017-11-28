@@ -104,7 +104,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Multiply), &Emitter::EmitMultiply},
     {TI(ngraph::op::Parameter), &Emitter::EmitNop},
     {TI(ngraph::op::XLAGetTupleElement), &Emitter::EmitXLAGetTupleElement},
-    {TI(ngraph::op::Tuple), &Emitter::EmitTuple},
+    {TI(ngraph::op::XLATuple), &Emitter::EmitTuple},
     {TI(ngraph::op::Abs), &Emitter::EmitAbs},
     {TI(ngraph::op::Concat), &Emitter::EmitConcat},
     {TI(ngraph::op::Divide), &Emitter::EmitDivide},

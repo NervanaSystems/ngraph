@@ -12,21 +12,28 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <memory>
-#include <vector>
+#include <sstream>
 
-#include "ngraph/ops/xla_tuple.hpp"
+#include "ngraph/ops/get_tuple_element.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::XLATuple::XLATuple(const Nodes& args)
-    : Node("XLATuple", args)
+op::GetTupleElement::GetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
+    : Node("GetTupleElement", {arg})
+    , m_n{n}
 {
-    vector<shared_ptr<const ValueType>> element_types;
-    for (auto argument : m_arguments)
+
+	if (arg->get_outputs().size() > 1) 
+	{
+		throw ngraph_error("Argument must have multiple output tensors");
+	}
+
+    if (m_n >= arg->get_outputs().size())
     {
-        element_types.push_back(argument->get_value_type());
+        throw ngraph_error("Indexing tuple beyond its size");
     }
-    set_value_type_checked(make_shared<TupleType>(element_types));
+
+    set_value_type_checked(arg->get_outputs().at(n).get_tensor_view_type());
 }
+

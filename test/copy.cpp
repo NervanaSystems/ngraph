@@ -257,9 +257,9 @@ TEST(copy, GetTupleElement)
 
     std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(tuple_type)};
 
-    auto node = make_shared<op::GetTupleElement>(arg0, n);
+    auto node = make_shared<op::XLAGetTupleElement>(arg0, n);
     auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::GetTupleElement>(new_node);
+    auto node_cast = dynamic_pointer_cast<op::XLAGetTupleElement>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
@@ -488,9 +488,9 @@ TEST(copy, tuple)
         make_shared<op::Parameter>(element::Float32::element_type(), shape),
         make_shared<op::Parameter>(element::Float32::element_type(), shape)};
 
-    auto node = make_shared<op::Tuple>(Nodes{arg0, arg1});
+    auto node = make_shared<op::XLATuple>(Nodes{arg0, arg1});
     auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::Tuple>(new_node);
+    auto node_cast = dynamic_pointer_cast<op::XLATuple>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);

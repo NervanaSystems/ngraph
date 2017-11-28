@@ -671,7 +671,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         };
 
         // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
-        REGISTER_TO_OP_MAP(op::Tuple)
+        REGISTER_TO_OP_MAP(op::XLATuple)
         {
             for (size_t i = 0; i < in.size(); ++i)
             {
