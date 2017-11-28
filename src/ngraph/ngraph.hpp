@@ -37,6 +37,11 @@
 /// @namespace ngraph::runtime
 /// @brief The objects used for executing the graph.
 
+/// @namespace ngraph::builder
+/// @brief Convenience functions that create addional graph nodes to implement commonly-used
+///        recipes, for example auto-broadcast.
+
+#include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/common.hpp"
 #include "ngraph/descriptor/buffer.hpp"
 #include "ngraph/descriptor/input.hpp"
