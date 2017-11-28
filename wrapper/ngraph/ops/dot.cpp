@@ -27,7 +27,7 @@ PYBIND11_MODULE(Dot, mod) {
 
     py::class_<Dot, std::shared_ptr<Dot>, Builtin> dot(mod, "Dot");
     dot.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                        const std::shared_ptr<ngraph::Node>& >());
+                     const std::shared_ptr<ngraph::Node>& >());
 }
 
 }}  // ngraph

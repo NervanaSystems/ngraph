@@ -27,7 +27,7 @@ PYBIND11_MODULE(Divide, mod) {
 
     py::class_<Divide, std::shared_ptr<Divide>, BinaryElementwiseArithmetic> divide(mod, "Divide");
     divide.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                           const std::shared_ptr<ngraph::Node>& >());
+                        const std::shared_ptr<ngraph::Node>& >());
 }
 
 }}  // ngraph

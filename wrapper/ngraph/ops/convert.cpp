@@ -15,21 +15,19 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/convert.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_MODULE(Reshape, mod) {
+PYBIND11_MODULE(Convert, mod) {
 
     py::module::import("wrapper.ngraph.ops.Op");
 
-    using AxisVector = std::vector<size_t>;
-
-    py::class_<Reshape, std::shared_ptr<Reshape>, Builtin> reshape(mod, "Reshape");
-    reshape.def(py::init<const std::shared_ptr<ngraph::Node>&, const AxisVector&,
-                         const ngraph::Shape& >());
+    py::class_<Convert, std::shared_ptr<Convert>, UnaryElementwiseBuiltin> convert(mod, "Convert");
+    convert.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                         const ngraph::element::Type&>());
 }
 
 }}  // ngraph

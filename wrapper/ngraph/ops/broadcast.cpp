@@ -28,7 +28,7 @@ PYBIND11_MODULE(Broadcast, mod) {
  
     py::class_<Broadcast, std::shared_ptr<Broadcast>, Builtin> broadcast(mod, "Broadcast");
     broadcast.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&,
-                              const AxisSet& >());
+                           const AxisSet& >());
 }
 
 }}  // ngraph

@@ -32,6 +32,8 @@ PYBIND11_MODULE(Op, mod) {
         UnaryElementwiseBuiltin> unaryElementwiseArithmetic(mod, "UnaryElementwiseArithmetic"); 
     py::class_<BinaryElementwiseBuiltin, std::shared_ptr<BinaryElementwiseBuiltin>,
         Builtin> binaryElementwiseBuiltin(mod, "BinaryElementwiseBuiltin");
+    py::class_<BinaryElementwiseComparison, std::shared_ptr<BinaryElementwiseComparison>,
+        BinaryElementwiseBuiltin> binaryElementwiseComparison(mod, "BinaryElementwiseComparison");
     py::class_<BinaryElementwiseArithmetic, std::shared_ptr<BinaryElementwiseArithmetic>,
         BinaryElementwiseBuiltin> binaryElementwiseArithmetic(mod, "BinaryElementwiseArithmetic");    
 
