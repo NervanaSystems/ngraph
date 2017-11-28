@@ -36,6 +36,7 @@ set (SRC
     pass_manager.cpp
     pass_memory_layout.cpp
     serialize.cpp
+    pattern.cpp
     shape.cpp
     tensor.cpp
     topological_sort.cpp
