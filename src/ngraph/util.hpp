@@ -16,13 +16,13 @@
 
 #include <algorithm>
 #include <chrono>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <functional>
 
 namespace ngraph
 {
