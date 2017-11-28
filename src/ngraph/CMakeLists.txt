@@ -51,6 +51,7 @@ set (SRC
     ops/parameter.cpp
     ops/power.cpp
     ops/reduce.cpp
+    ops/replace_slice.cpp
     ops/reshape.cpp
     ops/select.cpp
     ops/sin.cpp

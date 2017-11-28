@@ -55,6 +55,7 @@
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/sign.hpp"
@@ -110,6 +111,8 @@
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_rows.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_to_scalar.hpp"
+#include "ngraph/runtime/ngvm/eigen/replace_matrix_slice.hpp"
+#include "ngraph/runtime/ngvm/eigen/replace_vector_slice.hpp"
 #include "ngraph/runtime/ngvm/eigen/return.hpp"
 #include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/eigen/select.hpp"
@@ -1042,10 +1045,78 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                              upper_bounds[1]);
             }
 
-            // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
+            // Other cases (slicing for tensors with rank>2) are not handled yet.
             else
             {
                 throw ngraph_error("Slice is not implemented yet for tensors with rank>2 in VM");
+            }
+        };
+
+        REGISTER_TO_OP_MAP(op::ReplaceSlice)
+        {
+            auto replace_slice = static_cast<const op::ReplaceSlice*>(n);
+
+            for (auto d : replace_slice->get_step())
+            {
+                if (1 != d)
+                {
+                    throw ngraph_error("Replace-slice does not support non-unit step yet in the VM");
+                }
+            }
+
+            auto arg0_type = replace_slice->get_arguments().at(0)->get_value_type();
+            auto arg0_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg0_type);
+            assert(nullptr != arg0_tensor_view_type);
+            auto arg0_shape = arg0_tensor_view_type->get_shape();
+            auto arg0_rank = arg0_shape.size();
+            auto& arg0_element_type = arg0_tensor_view_type->get_element_type();
+
+            auto arg1_type = replace_slice->get_arguments().at(1)->get_value_type();
+            auto arg1_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg1_type);
+            assert(nullptr != arg1_tensor_view_type);
+            auto arg1_shape = arg1_tensor_view_type->get_shape();
+
+            auto& lower_bounds = replace_slice->get_lower_bounds();
+            auto& upper_bounds = replace_slice->get_upper_bounds();
+
+            // Scalar slice necessarily just overwrites.
+            if (arg0_rank == 0)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+                                             "Replace-slice has unhandled element type",
+                                             runtime::ngvm::eigen::CopyInstruction,
+                                             in.at(1).get_index(),
+                                             out.at(0).get_index());
+            }
+            else if (arg0_rank == 1)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+                                             "Replace-slice has unhandled element type",
+                                             runtime::ngvm::eigen::ReplaceVectorSliceInstruction,
+                                             in[0],
+                                             in[1],
+                                             out[0],
+                                             lower_bounds[0],
+                                             upper_bounds[0]);
+            }
+            else if (arg0_rank == 2)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+                                             "Replace-slice has unhandled element type",
+                                             runtime::ngvm::eigen::ReplaceMatrixSliceInstruction,
+                                             in[0],
+                                             in[1],
+                                             out[0],
+                                             lower_bounds[0],
+                                             lower_bounds[1],
+                                             upper_bounds[0],
+                                             upper_bounds[1]);
+            }
+
+            // Other cases (slicing for tensors with rank>2) are not handled yet.
+            else
+            {
+                throw ngraph_error("Replace-slice is not implemented yet for tensors with rank>2 in VM");
             }
         };
 
