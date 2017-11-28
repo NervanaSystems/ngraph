@@ -742,6 +742,33 @@ TEST(backwards, power)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
+TEST(backwards, replace_slice)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<float> rng(-10.0f, 10.0f);
+    auto shape_x = Shape{5, 5};
+    auto shape_y = Shape{2, 2};
+    auto make_graph = [shape_x, shape_y]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape_x);
+        auto Y = make_shared<op::Parameter>(element::Float32::element_type(), shape_y);
+        return make_shared<Function>(
+            make_shared<op::ReplaceSlice>(X, Y, Coordinate{2, 3}, Coordinate{4, 5}),
+            nullptr,
+            std::vector<std::shared_ptr<op::Parameter>>{X, Y});
+    };
+
+    for (auto i = 0; i < 100; i++)
+    {
+        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape_x));
+        auto y = rng.initialize(backend->make_primary_tensor_view<float>(shape_y));
+
+        EXPECT_TRUE(
+            autodiff_numeric_compare<float>(manager, backend, make_graph, {x, y}, .01f, .01f));
+    }
+}
+
 TEST(backwards, reshape)
 {
     auto manager = runtime::Manager::get("NGVM");
@@ -891,6 +918,28 @@ TEST(backwards, sinh)
         auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
         return make_shared<Function>(
             make_shared<op::Sinh>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+    };
+
+    for (auto i = 0; i < 100; i++)
+    {
+        auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
+
+        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+    }
+}
+
+TEST(backwards, slice)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<float> rng(-10.0f, 10.0f);
+    auto shape = Shape{5, 5};
+    auto make_graph = [shape]() {
+        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        return make_shared<Function>(make_shared<op::Slice>(X, Coordinate{2, 3}, Coordinate{4, 5}),
+                                     nullptr,
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)

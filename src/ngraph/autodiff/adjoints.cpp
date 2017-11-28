@@ -25,6 +25,8 @@
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
+#include "ngraph/ops/replace_slice.hpp"
+#include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/types/type.hpp"
 
@@ -130,5 +132,39 @@ void autodiff::Adjoints::add_delta(const std::shared_ptr<Node>& x,
     else
     {
         adjoint_it->second = std::make_shared<op::Add>(adjoint_it->second, delta);
+    }
+}
+
+void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
+                                            const std::shared_ptr<Node>& delta,
+                                            const Coordinate& lower_bounds,
+                                            const Coordinate& upper_bounds,
+                                            const Shape& step)
+{
+    auto x_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(x->get_value_type());
+    auto delta_tensor_view_type =
+        std::dynamic_pointer_cast<const TensorViewType>(delta->get_value_type());
+    assert(nullptr != x_tensor_view_type);
+    assert(nullptr != delta_tensor_view_type);
+    assert(x_tensor_view_type->get_element_type() == delta_tensor_view_type->get_element_type());
+    assert(x_tensor_view_type->get_shape().size() == delta_tensor_view_type->get_shape().size());
+
+    auto adjoint_it = m_adjoint_map.find(x.get());
+    if (m_adjoint_map.end() == adjoint_it)
+    {
+        auto zeros = make_zero(x->get_outputs().at(0).get_tensor_view_type());
+        m_adjoint_map.insert(
+            {x.get(),
+             std::make_shared<op::ReplaceSlice>(zeros, delta, lower_bounds, upper_bounds, step)});
+    }
+    else
+    {
+        adjoint_it->second = std::make_shared<op::ReplaceSlice>(
+            adjoint_it->second,
+            std::make_shared<op::Slice>(adjoint_it->second, lower_bounds, upper_bounds, step) +
+                delta,
+            lower_bounds,
+            upper_bounds,
+            step);
     }
 }

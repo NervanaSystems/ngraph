@@ -13,6 +13,8 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/ops/replace_slice.hpp"
+#include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/slice.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -111,4 +113,22 @@ void op::ReplaceSlice::check_args()
     }
 
     set_value_type_checked(arg0_tensor_view_type);
+}
+
+void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints,
+                                         const std::shared_ptr<Node>& delta)
+{
+    auto x = get_inputs().at(0).get_output().get_node();
+    auto& y_input = get_inputs().at(1);
+    auto y = y_input.get_output().get_node();
+    auto& y_element_type = y_input.get_tensor_view_type()->get_element_type();
+    auto y_shape = y_input.get_tensor_view_type()->get_shape();
+
+    auto zeros_shaped_like_y = std::make_shared<op::Constant>(y_element_type, y_shape, "0");
+
+    adjoints.add_delta(x,
+                       std::make_shared<op::ReplaceSlice>(
+                           delta, zeros_shaped_like_y, m_lower_bounds, m_upper_bounds, m_step));
+    adjoints.add_delta(y,
+                       std::make_shared<op::Slice>(delta, m_lower_bounds, m_upper_bounds, m_step));
 }

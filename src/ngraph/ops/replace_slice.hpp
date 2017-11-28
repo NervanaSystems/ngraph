@@ -94,6 +94,8 @@ namespace ngraph
             /// \return The slicing step.
             const Shape& get_step() const { return m_step; }
         protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
             void check_args();
 
             const Coordinate m_lower_bounds;
