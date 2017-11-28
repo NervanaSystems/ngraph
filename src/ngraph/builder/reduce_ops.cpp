@@ -35,24 +35,6 @@ namespace ngraph
             return N;
         }
 
-        template <typename T>
-        inline std::shared_ptr<Node> create_reduction(const std::shared_ptr<Node>& node,
-                                                      const std::string& init_val,
-                                                      const AxisSet& reduction_axes)
-        {
-            const auto& et = node->get_element_type();
-
-            auto f_A = std::make_shared<op::Parameter>(et, Shape{});
-            auto f_B = std::make_shared<op::Parameter>(et, Shape{});
-            auto f_rt = std::make_shared<TensorViewType>(et, Shape{});
-            auto f = std::make_shared<Function>(
-                std::make_shared<T>(f_A, f_B), f_rt, op::Parameters{f_A, f_B});
-
-            auto init = std::make_shared<op::Constant>(et, Shape{}, init_val);
-
-            return std::make_shared<op::Reduce>(node, init, f, reduction_axes);
-        }
-
         std::shared_ptr<Node> l2_norm(const std::shared_ptr<Node>& node,
                                       const AxisSet& reduction_axes)
         {
@@ -75,11 +57,6 @@ namespace ngraph
             auto divisor = std::make_shared<op::Constant>(et, xsum->get_shape(), std::to_string(N));
 
             return xsum / divisor;
-        }
-
-        std::shared_ptr<Node> prod(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
-        {
-            return create_reduction<op::Multiply>(node, "1", reduction_axes);
         }
 
         std::shared_ptr<Node> std_dev(const std::shared_ptr<Node>& node,

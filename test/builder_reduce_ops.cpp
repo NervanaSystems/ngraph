@@ -103,12 +103,6 @@ TEST(builder_reduce_ops, mean)
     ASSERT_TRUE(all_close((vector<float>{3, 4}), result->get_vector<float>()));
 }
 
-TEST(builder_reduce_ops, prod)
-{
-    auto result = make_reduce_result(builder::prod);
-    ASSERT_TRUE(all_close((vector<float>{15, 48}), result->get_vector<float>()));
-}
-
 TEST(builder_reduce_ops, std_dev)
 {
     auto result = make_reduce_result_false(builder::std_dev);

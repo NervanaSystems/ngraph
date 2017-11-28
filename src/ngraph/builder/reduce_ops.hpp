@@ -73,31 +73,6 @@ namespace ngraph
         std::shared_ptr<Node> mean(const std::shared_ptr<Node>& node,
                                    const AxisSet& reduction_axes);
 
-        /// \brief Reduction-based Product of a Tensor.
-        ///
-        /// Calculates
-        ///
-        /// \f$\prod_{i=1}^{N} x_i\f$
-        ///
-        /// Where `i` traverses all of the axes provided in `reduction_axes`.
-        ///
-        /// Because Autodiff doesn't support Reduce, this op is currently unsupported by Autodiff (11/27/2017)
-        ///
-        /// ## Inputs
-        ///
-        /// |                  | Type                              | Description                                                                                           |
-        /// | ---------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------- |
-        /// | `node`           | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | An input tensor of any shape
-        /// | `reduction_axes` | AxesSet                           | The axes to eliminate through reduction (0 indexed).                                                                                  |
-        ///
-        /// ## Output
-        ///
-        /// | Type                                      | Description                                                                                                      |
-        /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-        /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
-        std::shared_ptr<Node> prod(const std::shared_ptr<Node>& node,
-                                   const AxisSet& reduction_axes);
-
         /// \brief Sum-based Standard Deviation of a Tensor.
         ///
         /// If bessel_correct is true, calculates
