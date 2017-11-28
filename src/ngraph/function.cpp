@@ -22,20 +22,27 @@ using namespace ngraph;
 
 atomic<size_t> Function::m_next_instance_id(0);
 
-Function::Function(const std::shared_ptr<Node>& result,
-                   const std::shared_ptr<const ValueType>& result_type,
-                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                   const std::string& name)
-    : m_result(result)
+
+Function::Function(const Nodes& results,
+                 const std::vector<std::shared_ptr<const ValueType>>& result_types,
+                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                 const std::string& name)
+    : m_results(results)
     , m_parameters(parameters)
     , m_name(name)
-    , m_result_type(result_type)
+    , m_result_types(result_types)
     , m_ordered_ops_valid(false)
     , m_temporary_pool_size(0)
     , m_instance_id(m_next_instance_id.fetch_add(1))
 {
     traverse_nodes(this, [&](shared_ptr<Node> node) { m_ops.push_back(node); });
 }
+
+XLAFunction::XLAFunction(const std::shared_ptr<Node>& result,
+                 const std::shared_ptr<const ValueType>& result_type,
+                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                 const std::string& name): Function ({result}, {result_type}, parameters, name) {};
+
 
 void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)
 {
