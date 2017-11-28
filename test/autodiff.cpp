@@ -37,20 +37,13 @@ bool autodiff_numeric_compare(const std::shared_ptr<runtime::Manager>& manager,
                               T rtol,
                               T atol)
 {
-    std::vector<std::shared_ptr<runtime::TensorView>> args_as_tv;
-
-    for (auto arg : args)
-    {
-        args_as_tv.push_back(static_pointer_cast<runtime::TensorView>(arg));
-    }
-
     auto f = make_graph();
-    auto results_num = autodiff::numeric_derivative<T>(
-        manager, backend, f, args_as_tv, .001f, f->get_parameters());
+    auto results_num =
+        autodiff::numeric_derivative<T>(manager, backend, f, args, .001f, f->get_parameters());
 
     auto g = make_graph();
     auto results_sym =
-        autodiff::backprop_derivative<T>(manager, backend, g, args_as_tv, g->get_parameters());
+        autodiff::backprop_derivative<T>(manager, backend, g, args, g->get_parameters());
 
     return test::all_close(results_num, results_sym, rtol, atol);
 }
@@ -65,13 +58,6 @@ bool autodiff_numeric_compare_selective(
     T atol,
     const std::vector<bool>& indep_param_mask)
 {
-    std::vector<std::shared_ptr<runtime::TensorView>> args_as_tv;
-
-    for (auto arg : args)
-    {
-        args_as_tv.push_back(static_pointer_cast<runtime::TensorView>(arg));
-    }
-
     std::vector<std::shared_ptr<op::Parameter>> f_indep_params;
     auto f = make_graph();
 
@@ -87,7 +73,7 @@ bool autodiff_numeric_compare_selective(
     }
 
     auto results_num =
-        autodiff::numeric_derivative<T>(manager, backend, f, args_as_tv, .001f, f_indep_params);
+        autodiff::numeric_derivative<T>(manager, backend, f, args, .001f, f_indep_params);
 
     std::vector<std::shared_ptr<op::Parameter>> g_indep_params;
     auto g = make_graph();
@@ -103,8 +89,7 @@ bool autodiff_numeric_compare_selective(
         i++;
     }
 
-    auto results_sym =
-        autodiff::backprop_derivative<T>(manager, backend, g, args_as_tv, g_indep_params);
+    auto results_sym = autodiff::backprop_derivative<T>(manager, backend, g, args, g_indep_params);
 
     return test::all_close(results_num, results_sym, rtol, atol);
 }
