@@ -40,15 +40,15 @@ namespace ngraph
         ///
         /// ## Output
         ///
-        /// | Type                   | Description                                                                                                                                                                                                        |
-        /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-        /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$ where \f$T[i_1,\dots,i_n] = \texttt{arg1}[j_1,\dots,j_n]\f$ if \f$j_1,\dots,j_n\f$ is in bounds and for all \f$m\f$, \f$i_m = l_m + j_m * s_m\f$, otherwise \f$\texttt{arg0}[i_1,\dots,i_n]\f$. |
+        /// | Type                   | Description                                                                                                                                                                                                                 |
+        /// | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+        /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$ where \f$T[i_1,\dots,i_n] = \texttt{arg1}[j_1,\dots,j_n]\f$ if \f$j_1,\dots,j_n\f$ is in bounds for `arg1` and for all \f$m\f$, \f$i_m = l_m + j_m s_m\f$, otherwise \f$\texttt{arg0}[i_1,\dots,i_n]\f$. |
         ///
         /// ## Implementation Status
         ///
-        /// | Backend | Status           |
-        /// | ------- | ---------------- |
-        /// | NGVM    | Not implemented. |
+        /// | Backend | Status                                          |
+        /// | ------- | ----------------------------------------------- |
+        /// | NGVM    | Implemented for scalars, matrices, and vectors. |
         class ReplaceSlice : public RequiresTensorViewArgs
         {
         public:
