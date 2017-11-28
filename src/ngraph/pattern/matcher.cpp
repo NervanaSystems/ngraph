@@ -18,7 +18,6 @@
 #include <typeinfo>
 
 #include "ngraph/log.hpp"
-#include "ngraph/ngraph.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
