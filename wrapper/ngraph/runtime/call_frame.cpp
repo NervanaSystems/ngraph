@@ -27,11 +27,10 @@ PYBIND11_MODULE(CallFrame, mod) {
     py::class_<CallFrame, std::shared_ptr<CallFrame>> callFrame(mod, "CallFrame");
     py::class_<ngvm::CallFrame, std::shared_ptr<ngvm::CallFrame>, CallFrame> ngvmCallFrame(mod, "NGVMCallFrame");
 
-    callFrame.def("call", [](const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
-                              const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outputs) {
-                      (inputs, outputs);
-                     }, py::is_operator());
+    callFrame.def("call", &CallFrame::call);
+    ngvmCallFrame.def("call", &ngvm::CallFrame::call);
 }
+
 
 }}  // ngraph
 

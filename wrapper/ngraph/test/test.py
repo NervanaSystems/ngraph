@@ -44,10 +44,20 @@ a.write(Util.numpy_to_c(np.array([1,2,3,4], dtype=np.float32)), 0, 16)
 b.write(Util.numpy_to_c(np.array([5,6,7,8], dtype=np.float32)), 0, 16)
 c.write(Util.numpy_to_c(np.array([9,10,11,12], dtype=np.float32)), 0, 16)
 
+a_arr = np.array([0, 0, 0, 0], dtype=np.float32)
+b_arr = np.array([0, 0, 0, 0], dtype=np.float32)
+c_arr = np.array([0, 0, 0, 0], dtype=np.float32)
+a.read(Util.numpy_to_c(a_arr), 0, 16)
+b.read(Util.numpy_to_c(b_arr), 0, 16)
+c.read(Util.numpy_to_c(c_arr), 0, 16)
+print('A = ', a_arr)
+print('B = ', b_arr)
+print('C = ', c_arr)
+
 result_arr = np.array([0, 0, 0, 0], dtype=np.float32)
 result.write(Util.numpy_to_c(result_arr), 0, 16)
 
 cf.call([a, b, c], [result])
 
 result.read(Util.numpy_to_c(result_arr), 0, 16)
-#print(result_arr)
+print('Result = ', result_arr)
