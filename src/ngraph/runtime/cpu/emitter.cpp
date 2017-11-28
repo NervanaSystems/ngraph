@@ -26,6 +26,7 @@
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/function_call.hpp"
+#include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/xla_get_tuple_element.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reshape.hpp"
@@ -182,6 +183,27 @@ void Emitter::EmitMultiply(const ngraph::Node* n,
     TU << emit_array1d(outputs[0]) << " =\n"
        << "   " << emit_array1d(inputs[0]) << " *\n"
        << "   " << emit_array1d(inputs[1]) << ";\n";
+    TU.indent--;
+    TU << "}\n";
+}
+
+void Emitter::EmitGetTupleElement(const ngraph::Node* n,
+                                  const std::vector<TensorViewInfo>& inputs,
+                                  const std::vector<TensorViewInfo>& outputs)
+{
+    auto get_tuple_element = static_cast<const op::XLAGetTupleElement*>(n);
+    auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+    assert(result_tensor_type);
+    auto& result_element_type = result_tensor_type->get_element_type();
+    string type = result_element_type.c_type_string();
+
+    TU << "{   // " << n->get_name() << "\n";
+    TU.indent++;
+    TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", "
+       << inputs[get_tuple_element->get_n()].get_tensor().get_name() << ", "
+       << outputs[0].get_tensor_view_layout()->get_size() *
+              outputs[0].get_tensor_view_layout()->get_element_type().size()
+       << ");\n";
     TU.indent--;
     TU << "}\n";
 }

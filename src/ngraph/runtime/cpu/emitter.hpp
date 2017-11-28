@@ -49,6 +49,7 @@ namespace ngraph
                 void EMITTER_DECL(EmitAdd);
                 void EMITTER_DECL(EmitDot);
                 void EMITTER_DECL(EmitMultiply);
+                void EMITTER_DECL(EmitGetTupleElement);
                 void EMITTER_DECL(EmitXLAGetTupleElement);
                 void EMITTER_DECL(EmitTuple);
                 void EMITTER_DECL(EmitAbs);
