@@ -24,6 +24,9 @@ namespace ngraph
     {
         namespace op
         {
+            /// \brief Labels are used in patterns to express repeating nodes in an input graph
+            /// and bind them to specific nodes from the graph
+            ///
             class Label : public Pattern
             {
             public:

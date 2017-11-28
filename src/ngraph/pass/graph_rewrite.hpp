@@ -30,6 +30,16 @@ namespace ngraph
     }
 }
 
+/// \brief GraphRewrite (in tandem with \sa Matcher) performs transformations on specified patterns
+///
+/// Graph rewrite pass essentially allows pass users to rewrite parts of the
+/// input graph in any way they want. Fusion is one example of graph rewrite that
+/// fuses multiple ops together. At a high-level users of the pass need to
+/// specify 2 things: 1) which ops to fuse (via \sa Matcher, and 2) how to create new op(s) from
+/// the existing ops by providing a callback to \p Matcher object
+/// Patterns can be added by using \sa add_matcher
+/// Callbacks should use \sa replace_node to transform matched sub graphs
+
 class ngraph::pass::GraphRewrite : public CallGraphPass
 {
 public:

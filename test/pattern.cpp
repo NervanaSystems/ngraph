@@ -299,7 +299,9 @@ TEST(pattern, matcher)
     ASSERT_FALSE(n.match(pattern_false, a));
 
     auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);
-    ASSERT_FALSE(n.match(a, b));
+    auto d = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+    ASSERT_FALSE(n.match(d, b));
+
     ASSERT_FALSE(n.match(abs + b, b + b));
     ASSERT_TRUE(n.match(any + b, abs + b));
 

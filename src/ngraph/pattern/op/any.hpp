@@ -24,6 +24,9 @@ namespace ngraph
     {
         namespace op
         {
+            /// \brief \p Any allows users to specify unexpected nodes in a pattern
+            /// and skip them if a predicate condition is satisfied.
+            ///
             class Any : public Pattern
             {
             public:

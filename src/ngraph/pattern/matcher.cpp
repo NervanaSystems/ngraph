@@ -19,8 +19,6 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/ops/parameter.hpp"
-#include "ngraph/pattern/op/any.hpp"
-#include "ngraph/pattern/op/label.hpp"
 
 namespace ngraph
 {
@@ -64,10 +62,9 @@ namespace ngraph
             }
         }
 
-        void Matcher::match_pattern(const std::shared_ptr<Node>& pattern_node,
+        void Matcher::match_pattern(const std::shared_ptr<op::Label>& label,
                                     const std::shared_ptr<Node>& graph_node)
         {
-            auto label = std::dynamic_pointer_cast<op::Label>(pattern_node);
             bool is_match = true;
             if (label->is_bound())
             {
@@ -99,19 +96,18 @@ namespace ngraph
             }
         }
 
-        void Matcher::match_any(const std::shared_ptr<Node>& pattern_node,
+        void Matcher::match_any(const std::shared_ptr<op::Any>& any,
                                 const std::shared_ptr<Node>& graph_node)
         {
-            auto any = std::dynamic_pointer_cast<op::Any>(pattern_node);
             auto predicate = any->get_predicate();
 
             if (!predicate || any->get_predicate()(graph_node))
             {
-                on_match_class(pattern_node, graph_node, true);
+                on_match_class(any, graph_node, true);
             }
             else
             {
-                auto args = get_arguments(pattern_node);
+                auto args = get_arguments(any);
                 assert(args.size() == 1);
                 on_match_class(args.at(0), graph_node, true);
             }
@@ -121,19 +117,16 @@ namespace ngraph
                                   const std::shared_ptr<Node>& graph_node)
         {
             assert(pattern_node && graph_node);
-            static const auto label_type = std::type_index(typeid(op::Label));
-            static const auto any_type = std::type_index(typeid(op::Any));
-
-            const auto pattern_type = std::type_index(typeid(*&*pattern_node));
-            if (pattern_type == label_type)
+            if (auto label_node = std::dynamic_pointer_cast<op::Label>(pattern_node))
             {
-                match_pattern(pattern_node, graph_node);
+                match_pattern(label_node, graph_node);
                 return;
             }
 
-            if (pattern_type == any_type) //matches PatternSkipOp semantics
+            if (auto any_node = std::dynamic_pointer_cast<op::Any>(
+                    pattern_node)) //matches PatternSkipOp semantics
             {
-                match_any(pattern_node, graph_node);
+                match_any(any_node, graph_node);
                 return;
             }
 
@@ -222,6 +215,21 @@ namespace ngraph
             cb(*this);
         }
 
+        static Nodes get_users(std::shared_ptr<Node> node)
+        {
+            Nodes result;
+
+            for (auto& output : node->get_outputs())
+            {
+                for (auto input : output.get_inputs())
+                {
+                    result.push_back(input->get_node());
+                }
+            }
+
+            return result;
+        }
+
         bool Matcher::match(const std::shared_ptr<Node>& pattern_node,
                             const std::shared_ptr<Node>& graph_node)
         {
@@ -231,9 +239,15 @@ namespace ngraph
                 m_match_root.reset();
             }
 
+            if (get_users(pattern_node).size())
+            {
+                throw "Pattern Node must not be used elsewhere!";
+            }
+
             NGRAPH_DEBUG << "Starting match pattern = " << pattern_node << " , "
                          << pattern_node->get_name() << " , graph_node = " << graph_node << " , "
                          << graph_node->get_name();
+
             reset_pattern_nodes(pattern_node);
             m_match_root = graph_node;
             match_class(pattern_node, graph_node);

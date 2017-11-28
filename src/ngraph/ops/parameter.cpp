@@ -15,7 +15,6 @@
 #include <sstream>
 
 #include "ngraph/ops/parameter.hpp"
-#include "ngraph/pattern/matcher.hpp"
 
 using namespace std;
 using namespace ngraph::op;
