@@ -71,7 +71,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/ngvm/eigen/abs.hpp"
-#include "ngraph/runtime/ngvm/eigen/acos.hpp"
+#include "ngraph/runtime/ngvm/instruction/acos.hpp"
 #include "ngraph/runtime/ngvm/instruction/add.hpp"
 #include "ngraph/runtime/ngvm/eigen/asin.hpp"
 #include "ngraph/runtime/ngvm/eigen/atan.hpp"
@@ -388,7 +388,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
     static OpMap op_map;
     if (!initialized)
     {
-        REGISTER_NUMERIC_UNOP(op::Acos, eigen::AcosInstruction);
+        REGISTER_NUMERIC_UNOP(op::Acos, instruction::AcosInstruction);
         REGISTER_NUMERIC_UNOP(op::Asin, eigen::AsinInstruction);
         REGISTER_NUMERIC_UNOP(op::Atan, eigen::AtanInstruction);
         REGISTER_NUMERIC_UNOP(op::Ceiling, eigen::CeilingInstruction);
