@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "ngraph/log.hpp"
 #include "ngraph/runtime/interpreter/eigen/eigen_utils.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 

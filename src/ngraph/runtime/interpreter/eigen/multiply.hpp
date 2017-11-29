@@ -14,9 +14,8 @@
 
 #pragma once
 
-#include "ngraph/runtime/interpreter/call_frame.hpp"
-#include "ngraph/runtime/interpreter/eigen/utils.hpp"
-#include "ngraph/runtime/interpreter/instruction.hpp"
+#include "ngraph/runtime/interpreter/eigen/eigen_utils.hpp"
+#include "ngraph/runtime/interpreter/int_call_frame.hpp"
 
 namespace ngraph
 {
@@ -27,13 +26,13 @@ namespace ngraph
             namespace eigen
             {
                 template <typename T>
-                    void MultiplyInstruction(TensorViewInfo arg0,
-                                        TensorViewInfo arg1,
-                                        TensorViewInfo out)
+                void MultiplyInstruction(T* arg0, T* arg1, T* out, size_t count)
+                {
+                    for (size_t i = 0; i < count; i++)
                     {
-                        EigenArray1d<T>(out) = EigenArray1d<T>(arg0) *
-                                                              EigenArray1d<T>(arg1);
+                        out[i] = arg0[i] * arg1[i];
                     }
+                }
             }
         }
     }
