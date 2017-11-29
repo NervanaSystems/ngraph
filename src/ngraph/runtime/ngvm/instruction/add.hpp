@@ -14,8 +14,9 @@
 
 #pragma once
 
+#include "ngraph/runtime/kernel/add.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/eigen/utils.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
@@ -25,7 +26,7 @@ namespace ngraph
     {
         namespace ngvm
         {
-            namespace eigen
+            namespace instruction
             {
                 template <typename ET>
                 class AddInstruction : public Instruction
@@ -42,8 +43,13 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        EigenArray1d<ET>(call_frame, m_out) = EigenArray1d<ET>(call_frame, m_arg0) +
-                                                              EigenArray1d<ET>(call_frame, m_arg1);
+                        typename ET::type* arg0 = get_tensor_data_ptr<ET>(call_frame, m_arg0);
+                        typename ET::type* arg1 = get_tensor_data_ptr<ET>(call_frame, m_arg1);
+                        typename ET::type* out = get_tensor_data_ptr<ET>(call_frame, m_out);
+
+                        size_t count = get_tensor_element_count(call_frame, m_arg0);
+
+                        kernel::add<typename ET::type>(arg0, arg1, out, count);
                     }
 
                 protected:

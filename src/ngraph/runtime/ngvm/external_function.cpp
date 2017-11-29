@@ -72,7 +72,7 @@
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/ngvm/eigen/abs.hpp"
 #include "ngraph/runtime/ngvm/eigen/acos.hpp"
-#include "ngraph/runtime/ngvm/eigen/add.hpp"
+#include "ngraph/runtime/ngvm/instruction/add.hpp"
 #include "ngraph/runtime/ngvm/eigen/asin.hpp"
 #include "ngraph/runtime/ngvm/eigen/atan.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_scalar.hpp"
@@ -407,7 +407,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_SIGNED_NUMERIC_UNOP(op::Abs, eigen::AbsInstruction);
 
-        REGISTER_NUMERIC_BINOP(op::Add, eigen::AddInstruction);
+        REGISTER_NUMERIC_BINOP(op::Add, instruction::AddInstruction);
         REGISTER_NUMERIC_BINOP(op::Divide, eigen::DivideInstruction);
         REGISTER_NUMERIC_BINOP(op::Maximum, eigen::MaximumInstruction);
         REGISTER_NUMERIC_BINOP(op::Minimum, eigen::MinimumInstruction);
