@@ -15,6 +15,10 @@
 #include <memory>
 
 #include "ngraph/log.hpp"
+#include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/convert.hpp"
+#include "ngraph/ops/multiply.hpp"
+#include "ngraph/ops/not.hpp"
 #include "ngraph/ops/select.hpp"
 
 using namespace std;
@@ -44,4 +48,19 @@ op::Select::Select(const std::shared_ptr<Node>& arg0,
     }
 
     set_value_type_checked(arg1_tensor_type);
+}
+
+void ngraph::op::Select::generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta)
+{
+    auto p = get_inputs().at(0).get_output().get_node();
+    auto x = get_inputs().at(1).get_output().get_node();
+    auto y = get_inputs().at(2).get_output().get_node();
+
+    auto p_as_float = std::make_shared<op::Convert>(p, element::Float32::element_type());
+    auto not_p_as_float = std::make_shared<op::Convert>(std::make_shared<op::Not>(p),
+                                                        element::Float32::element_type());
+
+    adjoints.add_delta(x, delta * p_as_float);
+    adjoints.add_delta(y, delta * not_p_as_float);
 }

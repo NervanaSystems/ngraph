@@ -1521,3 +1521,404 @@ TEST(type_prop, tensor_constant_bad_count)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, replace_slice_deduce_vector)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3}));
+    auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{2}, Coordinate{5});
+    ASSERT_EQ(*(rsl->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{6}));
+}
+
+TEST(type_prop, replace_slice_deduce_matrix)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 6}));
+    auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{2, 1}, Coordinate{5, 7});
+    ASSERT_EQ(*(rsl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{6, 8}));
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_strided)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{1, 3}));
+    auto rsl = make_shared<op::ReplaceSlice>(
+        param0, param1, Coordinate{2, 1}, Coordinate{5, 7}, Shape{3, 2});
+    ASSERT_EQ(*(rsl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{6, 8}));
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_strided_uneven)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{1, 2}));
+    auto rsl = make_shared<op::ReplaceSlice>(
+        param0, param1, Coordinate{2, 1}, Coordinate{5, 7}, Shape{3, 4});
+    ASSERT_EQ(*(rsl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{6, 8}));
+}
+
+TEST(type_prop, replace_slice_deduce_vector_edge)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
+    auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0}, Coordinate{6});
+    ASSERT_EQ(*(rsl->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{6}));
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_edge)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{6, 8});
+    ASSERT_EQ(*(rsl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{6, 8}));
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_zero_cols)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 0}));
+    auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{6, 0});
+    ASSERT_EQ(*(rsl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{6, 8}));
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_zero_zero)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{0, 0}));
+    auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{0, 0});
+    ASSERT_EQ(*(rsl->get_value_type()),
+              TensorViewType(element::Float32::element_type(), Shape{6, 8}));
+}
+
+TEST(type_prop, replace_slice_deduce_vector_invalid_step)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{4}));
+    try
+    {
+        auto sl = make_shared<op::ReplaceSlice>(
+            param0, param1, Coordinate{0}, Coordinate{7}, Shape{1, 2});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid slice step not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Number of step axes provided for slice does not match number of input axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_arg_rank_mismatch)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 6, 5}));
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, Coordinate{2, 1}, Coordinate{5, 7});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Argument rank mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Replace-slice argument ranks do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_arg_element_type_mismatch)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Int32::element_type(), Shape{3, 6}));
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, Coordinate{2, 1}, Coordinate{5, 7});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Argument element type mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Element types for replace-slice arguments do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 6}));
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, Coordinate{1, 1}, Coordinate{5, 7});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Slice shape mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Shape of replacement tensor does not match slice shape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch_strided)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{4, 6}));
+    try
+    {
+        auto rsl = make_shared<op::ReplaceSlice>(
+            param0, param1, Coordinate{1, 1}, Coordinate{5, 7}, Coordinate{1, 2});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Slice shape mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Shape of replacement tensor does not match slice shape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_deduce_vector_edge_upper_oob)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{7}));
+    try
+    {
+        auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0}, Coordinate{7});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Upper bound out of range not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Upper bound for slice is out of range"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_edge_upper_oob)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 9}));
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{6, 9});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Upper bound out of range not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Upper bound for slice is out of range"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_deduce_vector_lower_above_upper)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{0}));
+    try
+    {
+        auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{3}, Coordinate{2});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Lower bound above upper not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Lower bound for slice is greater than upper bound"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_lower_above_upper)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 0}));
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 5}, Coordinate{6, 4});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Lower bound above upper not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Lower bound for slice is greater than upper bound"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_lower_missing)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 6}));
+    try
+    {
+        auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0}, Coordinate{5, 5});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Missing lower bound coordinate not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Number of lower bounds provided for slice does not match number of input axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_upper_missing)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 6}));
+    try
+    {
+        auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{5});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Missing upper bound coordinate not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Number of upper bounds provided for slice does not match number of input axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_lower_extra)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 6}));
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0, 0}, Coordinate{5, 5});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Extra lower bound coordinate not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Number of lower bounds provided for slice does not match number of input axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_deduce_matrix_upper_extra)
+{
+    auto param0 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 8}));
+    auto param1 = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), Shape{6, 6}));
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{5, 5, 5});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Extra upper bound coordinate not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Number of upper bounds provided for slice does not match number of input axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}

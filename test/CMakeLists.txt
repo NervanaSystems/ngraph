@@ -22,6 +22,7 @@ include_directories(
     )
 
 set (SRC
+    builder_reduce_ops.cpp
     autodiff.cpp
     build_graph.cpp
     copy.cpp
@@ -35,6 +36,7 @@ set (SRC
     pass_manager.cpp
     pass_memory_layout.cpp
     serialize.cpp
+    pattern.cpp
     shape.cpp
     tensor.cpp
     topological_sort.cpp
@@ -66,6 +68,14 @@ if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
     set(BACKEND_NAMES ${BACKEND_NAMES} "CPU")
 endif()
 
+if(NGRAPH_GPU_ENABLE)
+    set(SRC
+        main.cpp
+        cudnn.cpp)
+    # Disabled for testing
+    # set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
+endif()
+
 foreach(BACKEND_NAME ${BACKEND_NAMES})
     configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
     set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp)
@@ -85,6 +95,10 @@ endif()
 if(LLVM_INCLUDE_DIR)
     target_link_libraries(unit-test ${LLVM_LINK_LIBS})
     add_dependencies(unit-test ext_llvm)
+endif()
+
+if(CUDA_INCLUDE_DIRS)
+  target_link_libraries(unit-test ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)

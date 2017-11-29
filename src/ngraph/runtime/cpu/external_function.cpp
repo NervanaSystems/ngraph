@@ -58,6 +58,7 @@
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/sign.hpp"
@@ -156,6 +157,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Asin), &Emitter::EmitAsin},
     {TI(ngraph::op::Acos), &Emitter::EmitAcos},
     {TI(ngraph::op::Atan), &Emitter::EmitAtan},
+    {TI(ngraph::op::ReplaceSlice), &Emitter::EmitReplaceSlice},
 };
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,

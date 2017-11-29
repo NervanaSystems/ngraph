@@ -32,6 +32,7 @@ namespace ngraph
         /// @param f A function
         /// @param args Values for the arguments (the independent variables)
         /// @param delta increment for the variables
+        /// @param indep_params parameters with respect to which to compute derivatives
         /// @returns vector of dy/dvar, where each dy/dvar's shape is concat(y.shape(), var.shape())
         template <typename T>
         std::vector<std::shared_ptr<runtime::TensorView>>
@@ -39,7 +40,8 @@ namespace ngraph
                                const std::shared_ptr<runtime::Backend>& backend,
                                const std::shared_ptr<Function>& f,
                                const std::vector<std::shared_ptr<runtime::TensorView>>& args,
-                               T delta)
+                               T delta,
+                               const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
             auto y = f->get_result();
 
@@ -50,7 +52,8 @@ namespace ngraph
 
             // Results for each derivative, shape Y|X_i
             std::vector<std::shared_ptr<runtime::TensorView>> results;
-            for (auto param : params)
+
+            for (auto param : indep_params)
             {
                 Shape s = y_shape;
                 auto param_shape =
@@ -75,30 +78,38 @@ namespace ngraph
             // Assuming vars, y, and results are row-major
 
             T inv_delta = 1 / delta;
+
+            size_t pos = 0;
+
             for (size_t i = 0; i < args.size(); ++i)
             {
-                auto arg = args[i];
-                auto res = results[i]->get_vector<T>();
-                auto vec = arg->get_vector<T>();
-                for (size_t j = 0; j < vec.size(); j++)
+                if (std::find(indep_params.begin(), indep_params.end(), params[i]) !=
+                    indep_params.end())
                 {
-                    auto old_val = vec[j];
-                    vec[j] += delta;
-                    arg->write(vec);
-                    cf->tensor_call(args, {inc_y});
-                    auto inc_vec = inc_y->template get_vector<T>();
-                    vec[j] = old_val;
-                    arg->write(vec);
-                    size_t res_k = j;
-                    for (size_t k = 0; k < inc_vec.size(); k++)
+                    auto arg = args[i];
+                    auto res = results[pos]->get_vector<T>();
+                    auto vec = arg->get_vector<T>();
+                    for (size_t j = 0; j < vec.size(); j++)
                     {
-                        auto y1 = inc_vec[k];
-                        auto y0 = ref_vec[k];
-                        res[res_k] = inv_delta * (y1 - y0);
-                        res_k += vec.size();
+                        auto old_val = vec[j];
+                        vec[j] += delta;
+                        arg->write(vec);
+                        cf->tensor_call(args, {inc_y});
+                        auto inc_vec = inc_y->template get_vector<T>();
+                        vec[j] = old_val;
+                        arg->write(vec);
+                        size_t res_k = j;
+                        for (size_t k = 0; k < inc_vec.size(); k++)
+                        {
+                            auto y1 = inc_vec[k];
+                            auto y0 = ref_vec[k];
+                            res[res_k] = inv_delta * (y1 - y0);
+                            res_k += vec.size();
+                        }
                     }
+                    results[pos]->write(res);
+                    pos++;
                 }
-                results[i]->write(res);
             }
             return results;
         }

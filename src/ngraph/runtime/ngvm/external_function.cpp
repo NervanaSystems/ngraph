@@ -29,6 +29,7 @@
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/broadcast.hpp"
+#include "ngraph/ops/ceiling.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
@@ -38,6 +39,7 @@
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/equal.hpp"
 #include "ngraph/ops/exp.hpp"
+#include "ngraph/ops/floor.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
@@ -49,15 +51,18 @@
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
+#include "ngraph/ops/not.hpp"
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/sign.hpp"
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
@@ -74,6 +79,7 @@
 #include "ngraph/runtime/ngvm/eigen/broadcast_vector_colwise.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_vector_rowwise.hpp"
 #include "ngraph/runtime/ngvm/eigen/call.hpp"
+#include "ngraph/runtime/ngvm/eigen/ceiling.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_vector.hpp"
 #include "ngraph/runtime/ngvm/eigen/constant.hpp"
@@ -85,6 +91,7 @@
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
 #include "ngraph/runtime/ngvm/eigen/equal.hpp"
 #include "ngraph/runtime/ngvm/eigen/exp.hpp"
+#include "ngraph/runtime/ngvm/eigen/floor.hpp"
 #include "ngraph/runtime/ngvm/eigen/greater_eq.hpp"
 #include "ngraph/runtime/ngvm/eigen/greater_than.hpp"
 #include "ngraph/runtime/ngvm/eigen/less_eq.hpp"
@@ -98,17 +105,21 @@
 #include "ngraph/runtime/ngvm/eigen/minimum.hpp"
 #include "ngraph/runtime/ngvm/eigen/multiply.hpp"
 #include "ngraph/runtime/ngvm/eigen/negate.hpp"
+#include "ngraph/runtime/ngvm/eigen/not.hpp"
 #include "ngraph/runtime/ngvm/eigen/not_equal.hpp"
 #include "ngraph/runtime/ngvm/eigen/power.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_rows.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_to_scalar.hpp"
+#include "ngraph/runtime/ngvm/eigen/replace_matrix_slice.hpp"
+#include "ngraph/runtime/ngvm/eigen/replace_vector_slice.hpp"
 #include "ngraph/runtime/ngvm/eigen/return.hpp"
 #include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/eigen/select.hpp"
 #include "ngraph/runtime/ngvm/eigen/sign.hpp"
 #include "ngraph/runtime/ngvm/eigen/sin.hpp"
 #include "ngraph/runtime/ngvm/eigen/sinh.hpp"
+#include "ngraph/runtime/ngvm/eigen/sqrt.hpp"
 #include "ngraph/runtime/ngvm/eigen/subtract.hpp"
 #include "ngraph/runtime/ngvm/eigen/sum_matrix_columns.hpp"
 #include "ngraph/runtime/ngvm/eigen/sum_matrix_rows.hpp"
@@ -278,6 +289,22 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
                            instr_class);                                                           \
     }
 
+#define REGISTER_LOGICAL_UNOP(op_class, instr_class)                                               \
+    REGISTER_TO_OP_MAP(op_class)                                                                   \
+    {                                                                                              \
+        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
+                                       n->get_arguments().at(0)->get_value_type()))                \
+                                      ->get_element_type();                                        \
+        if (element::Bool::element_type() == et)                                                   \
+        {                                                                                          \
+            ef->get_instructions()->push_back(make_shared<instr_class>(in[0], out[0]));            \
+        }                                                                                          \
+        else                                                                                       \
+        {                                                                                          \
+            throw ngraph_error("Internal error: logical unop has unhandled element type");         \
+        }                                                                                          \
+    }
+
 #define M_REGISTER_NUMERIC_BINOP(T, instr_class)                                                   \
     ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], in[1], out[0]));
 #define REGISTER_NUMERIC_BINOP(op_class, instr_class)                                              \
@@ -364,14 +391,17 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_NUMERIC_UNOP(op::Acos, eigen::AcosInstruction);
         REGISTER_NUMERIC_UNOP(op::Asin, eigen::AsinInstruction);
         REGISTER_NUMERIC_UNOP(op::Atan, eigen::AtanInstruction);
+        REGISTER_NUMERIC_UNOP(op::Ceiling, eigen::CeilingInstruction);
         REGISTER_NUMERIC_UNOP(op::Cos, eigen::CosInstruction);
         REGISTER_NUMERIC_UNOP(op::Cosh, eigen::CoshInstruction);
         REGISTER_NUMERIC_UNOP(op::Exp, eigen::ExpInstruction);
+        REGISTER_NUMERIC_UNOP(op::Floor, eigen::FloorInstruction);
         REGISTER_NUMERIC_UNOP(op::Log, eigen::LogInstruction);
         REGISTER_NUMERIC_UNOP(op::Negative, eigen::NegateInstruction);
         REGISTER_NUMERIC_UNOP(op::Sign, eigen::SignInstruction);
         REGISTER_NUMERIC_UNOP(op::Sin, eigen::SinInstruction);
         REGISTER_NUMERIC_UNOP(op::Sinh, eigen::SinhInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sqrt, eigen::SqrtInstruction);
         REGISTER_NUMERIC_UNOP(op::Tan, eigen::TanInstruction);
         REGISTER_NUMERIC_UNOP(op::Tanh, eigen::TanhInstruction);
 
@@ -419,6 +449,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt8);
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt32);
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt64);
+
+        REGISTER_LOGICAL_UNOP(op::Not, eigen::NotInstruction);
 
         REGISTER_TO_OP_MAP(op::Broadcast)
         {
@@ -1013,10 +1045,80 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                              upper_bounds[1]);
             }
 
-            // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
+            // Other cases (slicing for tensors with rank>2) are not handled yet.
             else
             {
                 throw ngraph_error("Slice is not implemented yet for tensors with rank>2 in VM");
+            }
+        };
+
+        REGISTER_TO_OP_MAP(op::ReplaceSlice)
+        {
+            auto replace_slice = static_cast<const op::ReplaceSlice*>(n);
+
+            for (auto d : replace_slice->get_step())
+            {
+                if (1 != d)
+                {
+                    throw ngraph_error(
+                        "Replace-slice does not support non-unit step yet in the VM");
+                }
+            }
+
+            auto arg0_type = replace_slice->get_arguments().at(0)->get_value_type();
+            auto arg0_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg0_type);
+            assert(nullptr != arg0_tensor_view_type);
+            auto arg0_shape = arg0_tensor_view_type->get_shape();
+            auto arg0_rank = arg0_shape.size();
+            auto& arg0_element_type = arg0_tensor_view_type->get_element_type();
+
+            auto arg1_type = replace_slice->get_arguments().at(1)->get_value_type();
+            auto arg1_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg1_type);
+            assert(nullptr != arg1_tensor_view_type);
+            auto arg1_shape = arg1_tensor_view_type->get_shape();
+
+            auto& lower_bounds = replace_slice->get_lower_bounds();
+            auto& upper_bounds = replace_slice->get_upper_bounds();
+
+            // Scalar slice necessarily just overwrites.
+            if (arg0_rank == 0)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+                                             "Replace-slice has unhandled element type",
+                                             runtime::ngvm::eigen::CopyInstruction,
+                                             in.at(1).get_index(),
+                                             out.at(0).get_index());
+            }
+            else if (arg0_rank == 1)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+                                             "Replace-slice has unhandled element type",
+                                             runtime::ngvm::eigen::ReplaceVectorSliceInstruction,
+                                             in[0],
+                                             in[1],
+                                             out[0],
+                                             lower_bounds[0],
+                                             upper_bounds[0]);
+            }
+            else if (arg0_rank == 2)
+            {
+                PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+                                             "Replace-slice has unhandled element type",
+                                             runtime::ngvm::eigen::ReplaceMatrixSliceInstruction,
+                                             in[0],
+                                             in[1],
+                                             out[0],
+                                             lower_bounds[0],
+                                             lower_bounds[1],
+                                             upper_bounds[0],
+                                             upper_bounds[1]);
+            }
+
+            // Other cases (slicing for tensors with rank>2) are not handled yet.
+            else
+            {
+                throw ngraph_error(
+                    "Replace-slice is not implemented yet for tensors with rank>2 in VM");
             }
         };
 
