@@ -154,6 +154,14 @@ StaticCompiler::StaticCompiler()
         // Instead of re-implementing all of that functionality in a custom toolchain
         // just hardcode the paths relevant to frequently used build/test machines for now
         add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+        add_header_search_path(
+            file_util::path_join(CLANG_BUILTIN_HEADERS_PATH, "../lib/clang/5.0.0/include"));
+        string install_path = file_util::path_join(get_install_dir(), "../include");
+        string install_path2 =
+            file_util::path_join(get_install_dir(), "../lib/clang/5.0.0/include");
+        add_header_search_path(install_path);
+        add_header_search_path(install_path2);
+
         add_header_search_path("/usr/include/x86_64-linux-gnu");
         add_header_search_path("/usr/include");
 
@@ -187,7 +195,7 @@ StaticCompiler::StaticCompiler()
 
         add_header_search_path(EIGEN_HEADERS_PATH);
         add_header_search_path(NGRAPH_HEADERS_PATH);
-        add_header_search_path(get_install_dir() + "../include");
+
 #ifdef USE_CACHE
         s_header_cache.set_valid();
 #endif
@@ -267,6 +275,7 @@ bool StaticCompiler::is_version_number(const string& path)
 
 void StaticCompiler::add_header_search_path(const string& path)
 {
+    NGRAPH_INFO << path;
     if (!contains(m_extra_search_path_list, path))
     {
         m_extra_search_path_list.push_back(path);
