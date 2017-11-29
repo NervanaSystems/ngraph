@@ -17,8 +17,8 @@
 #include <sstream>
 
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/interpreter/kernel/add.hpp"
-#include "ngraph/runtime/interpreter/kernel/multiply.hpp"
+#include "ngraph/runtime/kernel/add.hpp"
+#include "ngraph/runtime/kernel/multiply.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
 namespace ngraph
@@ -43,10 +43,12 @@ namespace ngraph
                 }
                 else if (node_op == "Add")
                 {
-                    kernel::AddInstruction<T>(reinterpret_cast<T*>(args[0].get()),
-                                             reinterpret_cast<T*>(args[1].get()),
-                                             reinterpret_cast<T*>(out[0].get()),
+                    NGRAPH_INFO;
+                    kernel::AddInstruction<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                             reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                                              out[0]->get_element_count());
+                    NGRAPH_INFO;
                 }
                 else if (node_op == "Asin")
                 {
