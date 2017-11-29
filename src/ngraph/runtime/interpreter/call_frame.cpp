@@ -35,20 +35,19 @@ void CallFrame::tensor_call(
 {
     NGRAPH_INFO << "----------------------------------";
     unordered_map<string, shared_ptr<Node>> node_map;
-    vector<void*> inputs;
-    vector<void*> outputs;
+    vector<shared_ptr<runtime::interpreter::CPUTensorView>> inputs;
+    vector<shared_ptr<runtime::interpreter::CPUTensorView>> outputs;
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
         shared_ptr<runtime::interpreter::CPUTensorView> tv =
             static_pointer_cast<runtime::interpreter::CPUTensorView>(input_tvs[i]);
-        inputs.push_back(tv->get_data_ptr());
-        NGRAPH_INFO << tv->get_name();
+        inputs.push_back(tv);
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
         shared_ptr<runtime::interpreter::CPUTensorView> tv =
             static_pointer_cast<runtime::interpreter::CPUTensorView>(output_tvs[i]);
-        outputs.push_back(tv->get_data_ptr());
+        outputs.push_back(tv);
     }
 
     // Invoke computation
