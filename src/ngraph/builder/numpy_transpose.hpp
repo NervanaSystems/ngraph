@@ -39,16 +39,16 @@ namespace ngraph
         ///
         /// shape [1,2,4] with order [1,2,0] becomes shape [2,4,1]
         ///
-        /// |                  | Type                              | Description                                                                                           |
-        /// | ---------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------- |
-        /// | `node`           | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | An input tensor of any shape
-        /// | `order`          | AxisVector (empty default)        | The axes to eliminate through reduction (0 indexed).                                                                                  |
+        /// |                  | Type                                  | Description                                             |
+        /// | ---------------- | ------------------------------------- | ------------------------------------------------------- |
+        /// | `node`           | \f$E[d_0,\dots,d_{n-1}]~(n \geq 0)\f$ | An input tensor of any shape                            |
+        /// | `order`          | AxisVector (empty default)            | The axes to eliminate through reduction (0 indexed).    |
         ///
         /// ## Output
         ///
-        /// | Type                                      | Description                                                                                                      |
-        /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-        /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the axes reordered via Numpy Transpose rules          |
+        /// | Type                                                                         | Description                                                                                                      |
+        /// | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+        /// | \f$E[d_{n-1},\dots,d_0)]\textit{ or }E[d_{order[0]},\dots,d_{order[n-1]}]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the axes reordered via Numpy Transpose rules          |
         std::shared_ptr<Node> numpy_transpose(const std::shared_ptr<Node>& node,
                                               AxisVector order = {});
     } // namespace builder
