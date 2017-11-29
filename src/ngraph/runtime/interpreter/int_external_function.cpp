@@ -97,7 +97,6 @@ runtime::interpreter::ExternalFunction::ExternalFunction(const shared_ptr<Functi
     : runtime::ExternalFunction(function, release_function)
     , m_function(function)
 {
-    NGRAPH_INFO;
 }
 
 void runtime::interpreter::ExternalFunction::compile()

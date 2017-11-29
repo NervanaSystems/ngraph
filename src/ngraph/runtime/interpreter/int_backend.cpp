@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/runtime/interpreter/int_backend.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
@@ -31,5 +32,5 @@ shared_ptr<runtime::TensorView>
                                                                 const Shape& shape)
 {
     auto rc = make_shared<runtime::interpreter::INT_TensorView>(element_type, shape);
-    return dynamic_pointer_cast<runtime::TensorView>(rc);
+    return static_pointer_cast<runtime::TensorView>(rc);
 }

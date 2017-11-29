@@ -17,6 +17,7 @@
 #include <sstream>
 
 #include "ngraph/node.hpp"
+#include "ngraph/runtime/interpreter/eigen/add.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
 namespace ngraph
@@ -27,8 +28,8 @@ namespace ngraph
         {
             template <typename T>
             void op_engine(ngraph::Node& node,
-                           const std::vector<std::shared_ptr<INT_TensorView>>& inputs,
-                           const std::vector<std::shared_ptr<INT_TensorView>>& outputs)
+                           const std::vector<std::shared_ptr<INT_TensorView>>& args,
+                           const std::vector<std::shared_ptr<INT_TensorView>>& out)
             {
                 std::string node_op = node.description();
                 if (node_op == "Abs")
@@ -41,6 +42,8 @@ namespace ngraph
                 }
                 else if (node_op == "Add")
                 {
+                    NGRAPH_INFO;
+                    eigen::AddInstruction<T>(args[0], args[1], out[0]);
                     // node = make_shared<op::Add>(args[0], args[1]);
                 }
                 else if (node_op == "Asin")

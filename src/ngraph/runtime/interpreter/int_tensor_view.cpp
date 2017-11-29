@@ -16,6 +16,7 @@
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
@@ -30,6 +31,7 @@ runtime::interpreter::INT_TensorView::INT_TensorView(const element::Type& elemen
     , m_aligned_buffer_pool(nullptr)
 
 {
+    NGRAPH_INFO << join(shape);
     m_descriptor->set_tensor_view_layout(
         std::make_shared<descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
 

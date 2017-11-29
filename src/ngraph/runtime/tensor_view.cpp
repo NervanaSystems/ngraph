@@ -45,3 +45,14 @@ std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout>
 {
     return m_descriptor->get_tensor_view_layout();
 }
+
+size_t TensorView::get_element_count() const
+{
+    size_t rc = 1;
+    for (size_t s : get_shape())
+    {
+        rc *= s;
+    }
+    NGRAPH_INFO << rc;
+    return rc;
+}

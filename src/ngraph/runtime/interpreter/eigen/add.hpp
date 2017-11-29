@@ -14,10 +14,9 @@
 
 #pragma once
 
-#include "ngraph/runtime/interpreter/call_frame.hpp"
-#include "ngraph/runtime/interpreter/eigen/utils.hpp"
-#include "ngraph/runtime/interpreter/instruction.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/runtime/interpreter/eigen/eigen_utils.hpp"
+#include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
 namespace ngraph
 {
@@ -28,12 +27,19 @@ namespace ngraph
             namespace eigen
             {
                 template <typename T>
-                void AddInstruction(const TensorViewInfo& arg0,
-                                    const TensorViewInfo& arg1,
-                                    const TensorViewInfo& out)
+                void AddInstruction(std::shared_ptr<INT_TensorView> arg0,
+                                    std::shared_ptr<INT_TensorView> arg1,
+                                    std::shared_ptr<INT_TensorView> out)
                 {
-                    EigenArray1d<T>(out) =
-                        EigenArray1d<T>(arg0) + EigenArray1d<T>(arg1);
+                    size_t element_count = out->get_element_count();
+                    T* data0 = reinterpret_cast<T*>(arg0->get_data_ptr());
+                    T* data1 = reinterpret_cast<T*>(arg1->get_data_ptr());
+                    T* out0 = reinterpret_cast<T*>(out->get_data_ptr());
+                    for (size_t i = 0; i < element_count; i++)
+                    {
+                        NGRAPH_INFO << data0[i] << ", " << data1[i];
+                        out0[i] = data0[i] + data1[i];
+                    }
                 }
             }
         }
