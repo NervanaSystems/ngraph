@@ -111,6 +111,8 @@ namespace ngraph
         virtual std::shared_ptr<Node>
             copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const = 0;
 
+        virtual std::shared_ptr<Function> get_function() const;
+
     protected:
         std::string m_node_type;
         Nodes m_arguments;

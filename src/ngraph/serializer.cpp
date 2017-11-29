@@ -31,7 +31,6 @@
 #include "ngraph/ops/exp.hpp"
 #include "ngraph/ops/floor.hpp"
 #include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/function_provider.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
 #include "ngraph/ops/greater_eq.hpp"
@@ -455,16 +454,6 @@ nlohmann::json serialize::write(const Node& n)
     node["name"] = n.get_name();
     node["op"] = n.description();
     node["element_type"] = n.get_element_type();
-    const op::Parameter* param = dynamic_cast<const op::Parameter*>(&n);
-    if (param)
-    {
-        node["shape"] = param->get_shape();
-    }
-    const op::FunctionProvider* fp = dynamic_cast<const op::FunctionProvider*>(&n);
-    if (fp)
-    {
-        node["function"] = fp->get_function()->get_name();
-    }
     nlohmann::json inputs = nlohmann::json::array();
     nlohmann::json outputs = nlohmann::json::array();
     for (const descriptor::Input& input : n.get_inputs())
@@ -542,6 +531,7 @@ nlohmann::json serialize::write(const Node& n)
     }
     else if (node_op == "FunctionCall")
     {
+        node["function"] = n.get_function()->get_name();
     }
     else if (node_op == "GetTupleElement")
     {
@@ -578,6 +568,8 @@ nlohmann::json serialize::write(const Node& n)
     }
     else if (node_op == "Parameter")
     {
+        auto tmp = dynamic_cast<const op::Parameter*>(&n);
+        node["shape"] = tmp->get_shape();
     }
     else if (node_op == "Power")
     {
@@ -585,6 +577,7 @@ nlohmann::json serialize::write(const Node& n)
     else if (node_op == "Reduce")
     {
         auto tmp = dynamic_cast<const op::Reduce*>(&n);
+        node["function"] = tmp->get_function()->get_name();
         node["reduction_axes"] = tmp->get_reduction_axes();
     }
     else if (node_op == "Remainder")

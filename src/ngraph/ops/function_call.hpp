@@ -15,7 +15,6 @@
 #pragma once
 
 #include "ngraph/node.hpp"
-#include "ngraph/ops/function_provider.hpp"
 
 namespace ngraph
 {
@@ -46,7 +45,7 @@ namespace ngraph
         /// | Backend | Status             |
         /// | ------- | ------------------ |
         /// | NGVM    | Fully implemented. |
-        class FunctionCall : public Node, public FunctionProvider
+        class FunctionCall : public Node
         {
         public:
             /// \brief Constructs a function call operation.

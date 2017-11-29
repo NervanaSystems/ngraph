@@ -21,7 +21,6 @@
 #include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/ops/function_provider.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -191,10 +190,10 @@ void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
         stack.pop_front();
         for (shared_ptr<Node> op : func->get_ops())
         {
-            shared_ptr<op::FunctionProvider> fp = dynamic_pointer_cast<op::FunctionProvider>(op);
+            shared_ptr<Function> fp = op->get_function();
             if (fp)
             {
-                stack.push_front(fp->get_function());
+                stack.push_front(fp);
             }
         }
     }
