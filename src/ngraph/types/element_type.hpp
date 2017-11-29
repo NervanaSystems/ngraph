@@ -66,6 +66,8 @@ namespace ngraph
             bool operator!=(const Type& other) const { return !(*this == other); }
             friend std::ostream& operator<<(std::ostream&, const Type&);
 
+            /// Returns true if the type is floating point, else false.
+            bool get_is_real() const { return m_is_real; }
         private:
             static std::map<std::string, Type> m_element_list;
             size_t m_bitwidth;

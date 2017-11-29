@@ -48,6 +48,7 @@ set (SRC
     ops/multiply.cpp
     ops/negative.cpp
     ops/not.cpp
+    ops/one_hot.cpp
     ops/op.cpp
     ops/parameter.cpp
     ops/power.cpp
