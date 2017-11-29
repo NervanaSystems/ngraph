@@ -37,7 +37,8 @@ class TestMatcher : public pattern::Matcher
 {
     using pattern::Matcher::Matcher;
     void virtual match_class(const std::shared_ptr<Node>& pattern_node,
-                             const std::shared_ptr<Node>& graph_node, PatternMap& pattern_map) override
+                             const std::shared_ptr<Node>& graph_node,
+                             PatternMap& pattern_map) override
     {
         static const auto parameter_type = std::type_index(typeid(::ngraph::op::Parameter));
         const auto pattern_type = std::type_index(typeid(*&*pattern_node));
@@ -46,7 +47,7 @@ class TestMatcher : public pattern::Matcher
         {
             on_match_class(pattern_node,
                            graph_node,
-						   pattern_map,
+                           pattern_map,
                            pattern_node.get() ==
                                dynamic_cast<::ngraph::op::Parameter*>(graph_node.get()));
             return;
@@ -56,21 +57,19 @@ class TestMatcher : public pattern::Matcher
     }
 
 public:
-	bool match(const std::shared_ptr<Node>& pattern_node,
-		const std::shared_ptr<Node>& graph_node)
-	{
-		NGRAPH_DEBUG << "Starting match pattern = " << pattern_node << " , "
-			<< pattern_node->get_name() << " , graph_node = " << graph_node << " , "
-			<< graph_node->get_name();
+    bool match(const std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node)
+    {
+        NGRAPH_DEBUG << "Starting match pattern = " << pattern_node << " , "
+                     << pattern_node->get_name() << " , graph_node = " << graph_node << " , "
+                     << graph_node->get_name();
 
-		//reset_pattern_nodes(pattern_node);
-		m_pattern_map.clear();
-		m_match_root = graph_node;
-		match_class(pattern_node, graph_node, m_pattern_map);
-		//NGRAPH_DEBUG << pad(2 * m_depth) << "is_match() " << is_match();
-		return is_match();
-	}
-
+        //reset_pattern_nodes(pattern_node);
+        m_pattern_map.clear();
+        m_match_root = graph_node;
+        match_class(pattern_node, graph_node, m_pattern_map);
+        //NGRAPH_DEBUG << pad(2 * m_depth) << "is_match() " << is_match();
+        return is_match();
+    }
 };
 
 static std::shared_ptr<Node> construct_constant_node(int n)
@@ -94,10 +93,9 @@ public:
             NGRAPH_DEBUG << "IN CALLBACK";
             assert(m.match_root()->get_arguments().size() == 2);
 
-			auto pattern_map = m.get_pattern_map();
+            auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index =
-                m.match_root()->get_arguments().at(0) == pattern_map[pattern];
+            size_t const_node_index = m.match_root()->get_arguments().at(0) == pattern_map[pattern];
             auto const_node = dynamic_pointer_cast<op::ParameterizedConstant<element::Int32>>(
                 m.match_root()->get_arguments().at(const_node_index));
             auto second_node = m.match_root()->get_arguments().at(const_node_index);
@@ -106,8 +104,8 @@ public:
                          << pattern_map[pattern];
             assert(const_node);
 
-            auto pattern_value_type = dynamic_pointer_cast<const TensorViewType>(
-                pattern_map[pattern]->get_value_type());
+            auto pattern_value_type =
+                dynamic_pointer_cast<const TensorViewType>(pattern_map[pattern]->get_value_type());
             auto const_node_value_type =
                 dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
             assert(pattern_value_type && const_node);
@@ -150,10 +148,9 @@ public:
             NGRAPH_DEBUG << "IN CALLBACK";
             assert(m.match_root()->get_arguments().size() == 2);
 
-			auto pattern_map = m.get_pattern_map();
+            auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index =
-                m.match_root()->get_arguments().at(0) == pattern_map[pattern];
+            size_t const_node_index = m.match_root()->get_arguments().at(0) == pattern_map[pattern];
             auto const_node = dynamic_pointer_cast<op::ParameterizedConstant<element::Int32>>(
                 m.match_root()->get_arguments().at(const_node_index));
             auto second_node = m.match_root()->get_arguments().at(const_node_index);
@@ -162,8 +159,8 @@ public:
                          << pattern_map[pattern];
             assert(const_node);
 
-            auto pattern_value_type = dynamic_pointer_cast<const TensorViewType>(
-                pattern_map[pattern]->get_value_type());
+            auto pattern_value_type =
+                dynamic_pointer_cast<const TensorViewType>(pattern_map[pattern]->get_value_type());
             auto const_node_value_type =
                 dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
             assert(pattern_value_type && const_node);
