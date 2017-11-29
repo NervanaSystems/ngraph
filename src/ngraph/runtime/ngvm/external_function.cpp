@@ -82,8 +82,8 @@
 #include "ngraph/runtime/ngvm/instruction/ceiling.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_vector.hpp"
-#include "ngraph/runtime/ngvm/eigen/constant.hpp"
-#include "ngraph/runtime/ngvm/eigen/convert.hpp"
+#include "ngraph/runtime/ngvm/instruction/constant.hpp"
+#include "ngraph/runtime/ngvm/instruction/convert.hpp"
 #include "ngraph/runtime/ngvm/instruction/copy.hpp"
 #include "ngraph/runtime/ngvm/instruction/copy_by_index.hpp"
 #include "ngraph/runtime/ngvm/instruction/cos.hpp"
@@ -325,7 +325,7 @@ std::vector<typename ET::type>
     {                                                                                              \
         REGISTER_INSTRUCTION(                                                                      \
             op::ParameterizedConstant<T>,                                                          \
-            eigen::ConstantInstruction<T>,                                                         \
+            instruction::ConstantInstruction<T>,                                                         \
             std::vector<T::type>{                                                                  \
                 get_vector<T>(dynamic_cast<const op::ParameterizedConstant<T>*>(n)->get_value())}, \
             out[0]);                                                                               \
@@ -385,7 +385,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto c_value_strings = c->get_value_strings();
 
 #define M_REGISTER_POLYMORPHIC_CONSTANT(ET)                                                        \
-    ef->get_instructions()->push_back(make_shared<eigen::ConstantInstruction<ET>>(                 \
+    ef->get_instructions()->push_back(make_shared<instruction::ConstantInstruction<ET>>(                 \
         parse_string<typename ET::type>(c_value_strings), out[0]));
 
             DO_ON_ELEMENT_TYPE(c_element_type,
@@ -532,7 +532,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
              result_element_type == (TO::element_type()))                                          \
     {                                                                                              \
         ef->get_instructions()->push_back(                                                         \
-            make_shared<eigen::ConvertInstruction<TI, TO>>(in[0], out[0]));                        \
+            make_shared<instruction::ConvertInstruction<TI, TO>>(in[0], out[0]));                        \
     }
 // End hacky macro
 
