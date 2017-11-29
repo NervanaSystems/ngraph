@@ -16,8 +16,8 @@
 
 #include "ngraph/runtime/kernel/select.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
@@ -33,9 +33,9 @@ namespace ngraph
                 {
                 public:
                     SelectInstruction(const TensorViewInfo& arg0,
-                                   const TensorViewInfo& arg1,
-                                   const TensorViewInfo& arg2,
-                                   const TensorViewInfo& out)
+                                      const TensorViewInfo& arg1,
+                                      const TensorViewInfo& arg2,
+                                      const TensorViewInfo& out)
                         : m_arg0(arg0)
                         , m_arg1(arg1)
                         , m_arg2(arg2)
@@ -45,7 +45,8 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        char* arg0 = get_tensor_data_ptr<element::Bool>(call_frame, m_arg0); // FIXME: temporarily char not bool
+                        char* arg0 = get_tensor_data_ptr<element::Bool>(
+                            call_frame, m_arg0); // FIXME: temporarily char not bool
                         typename ET::type* arg1 = get_tensor_data_ptr<ET>(call_frame, m_arg1);
                         typename ET::type* arg2 = get_tensor_data_ptr<ET>(call_frame, m_arg2);
                         typename ET::type* out = get_tensor_data_ptr<ET>(call_frame, m_out);

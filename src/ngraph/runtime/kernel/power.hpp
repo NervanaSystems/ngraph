@@ -25,7 +25,7 @@ namespace ngraph
             {
                 for (size_t i = 0; i < count; i++)
                 {
-                    out[i] = std::pow(arg0[i],arg1[i]);
+                    out[i] = std::pow(arg0[i], arg1[i]);
                 }
             }
         }

@@ -16,8 +16,8 @@
 
 #include "ngraph/runtime/kernel/not.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
@@ -31,8 +31,7 @@ namespace ngraph
                 class NotInstruction : public Instruction
                 {
                 public:
-                    NotInstruction(const TensorViewInfo& arg,
-                                   const TensorViewInfo& out)
+                    NotInstruction(const TensorViewInfo& arg, const TensorViewInfo& out)
                         : m_arg(arg)
                         , m_out(out)
                     {
@@ -40,8 +39,10 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        char* arg = get_tensor_data_ptr<element::Bool>(call_frame, m_arg); // FIXME: temporarily char not bool
-                        char* out = get_tensor_data_ptr<element::Bool>(call_frame, m_out); // FIXME: temporarily char not bool
+                        char* arg = get_tensor_data_ptr<element::Bool>(
+                            call_frame, m_arg); // FIXME: temporarily char not bool
+                        char* out = get_tensor_data_ptr<element::Bool>(
+                            call_frame, m_out); // FIXME: temporarily char not bool
 
                         size_t count = get_tensor_element_count(call_frame, m_arg);
 

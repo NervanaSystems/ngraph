@@ -21,7 +21,11 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void select(char* arg0, T* arg1, T* arg2, T* out, size_t count) // FIXME: temporararily char not bool
+            void select(char* arg0,
+                        T* arg1,
+                        T* arg2,
+                        T* out,
+                        size_t count) // FIXME: temporararily char not bool
             {
                 for (size_t i = 0; i < count; i++)
                 {

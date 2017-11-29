@@ -16,8 +16,8 @@
 
 #include "ngraph/runtime/kernel/abs.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
@@ -32,8 +32,7 @@ namespace ngraph
                 class AbsInstruction : public Instruction
                 {
                 public:
-                    AbsInstruction(const TensorViewInfo& arg,
-                                   const TensorViewInfo& out)
+                    AbsInstruction(const TensorViewInfo& arg, const TensorViewInfo& out)
                         : m_arg(arg)
                         , m_out(out)
                     {

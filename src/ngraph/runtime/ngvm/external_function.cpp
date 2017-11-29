@@ -70,18 +70,34 @@
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
+#include "ngraph/runtime/ngvm/eigen/broadcast_scalar.hpp"
+#include "ngraph/runtime/ngvm/eigen/broadcast_vector_colwise.hpp"
+#include "ngraph/runtime/ngvm/eigen/broadcast_vector_rowwise.hpp"
+#include "ngraph/runtime/ngvm/eigen/concat_matrix.hpp"
+#include "ngraph/runtime/ngvm/eigen/concat_vector.hpp"
+#include "ngraph/runtime/ngvm/eigen/dot.hpp"
+#include "ngraph/runtime/ngvm/eigen/matrix_mult.hpp"
+#include "ngraph/runtime/ngvm/eigen/matrix_slice.hpp"
+#include "ngraph/runtime/ngvm/eigen/matrix_transpose.hpp"
+#include "ngraph/runtime/ngvm/eigen/matrix_vector_product.hpp"
+#include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
+#include "ngraph/runtime/ngvm/eigen/reduce_matrix_rows.hpp"
+#include "ngraph/runtime/ngvm/eigen/reduce_to_scalar.hpp"
+#include "ngraph/runtime/ngvm/eigen/replace_matrix_slice.hpp"
+#include "ngraph/runtime/ngvm/eigen/replace_vector_slice.hpp"
+#include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
+#include "ngraph/runtime/ngvm/eigen/sum_matrix_columns.hpp"
+#include "ngraph/runtime/ngvm/eigen/sum_matrix_rows.hpp"
+#include "ngraph/runtime/ngvm/eigen/sum_to_scalar.hpp"
+#include "ngraph/runtime/ngvm/eigen/vector_slice.hpp"
+#include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/ngvm/instruction/abs.hpp"
 #include "ngraph/runtime/ngvm/instruction/acos.hpp"
 #include "ngraph/runtime/ngvm/instruction/add.hpp"
 #include "ngraph/runtime/ngvm/instruction/asin.hpp"
 #include "ngraph/runtime/ngvm/instruction/atan.hpp"
-#include "ngraph/runtime/ngvm/eigen/broadcast_scalar.hpp"
-#include "ngraph/runtime/ngvm/eigen/broadcast_vector_colwise.hpp"
-#include "ngraph/runtime/ngvm/eigen/broadcast_vector_rowwise.hpp"
 #include "ngraph/runtime/ngvm/instruction/call.hpp"
 #include "ngraph/runtime/ngvm/instruction/ceiling.hpp"
-#include "ngraph/runtime/ngvm/eigen/concat_matrix.hpp"
-#include "ngraph/runtime/ngvm/eigen/concat_vector.hpp"
 #include "ngraph/runtime/ngvm/instruction/constant.hpp"
 #include "ngraph/runtime/ngvm/instruction/convert.hpp"
 #include "ngraph/runtime/ngvm/instruction/copy.hpp"
@@ -89,19 +105,14 @@
 #include "ngraph/runtime/ngvm/instruction/cos.hpp"
 #include "ngraph/runtime/ngvm/instruction/cosh.hpp"
 #include "ngraph/runtime/ngvm/instruction/divide.hpp"
-#include "ngraph/runtime/ngvm/eigen/dot.hpp"
 #include "ngraph/runtime/ngvm/instruction/equal.hpp"
 #include "ngraph/runtime/ngvm/instruction/exp.hpp"
 #include "ngraph/runtime/ngvm/instruction/floor.hpp"
-#include "ngraph/runtime/ngvm/instruction/greater_eq.hpp"
 #include "ngraph/runtime/ngvm/instruction/greater.hpp"
-#include "ngraph/runtime/ngvm/instruction/less_eq.hpp"
+#include "ngraph/runtime/ngvm/instruction/greater_eq.hpp"
 #include "ngraph/runtime/ngvm/instruction/less.hpp"
+#include "ngraph/runtime/ngvm/instruction/less_eq.hpp"
 #include "ngraph/runtime/ngvm/instruction/log.hpp"
-#include "ngraph/runtime/ngvm/eigen/matrix_mult.hpp"
-#include "ngraph/runtime/ngvm/eigen/matrix_slice.hpp"
-#include "ngraph/runtime/ngvm/eigen/matrix_transpose.hpp"
-#include "ngraph/runtime/ngvm/eigen/matrix_vector_product.hpp"
 #include "ngraph/runtime/ngvm/instruction/maximum.hpp"
 #include "ngraph/runtime/ngvm/instruction/minimum.hpp"
 #include "ngraph/runtime/ngvm/instruction/multiply.hpp"
@@ -109,26 +120,15 @@
 #include "ngraph/runtime/ngvm/instruction/not.hpp"
 #include "ngraph/runtime/ngvm/instruction/not_equal.hpp"
 #include "ngraph/runtime/ngvm/instruction/power.hpp"
-#include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
-#include "ngraph/runtime/ngvm/eigen/reduce_matrix_rows.hpp"
-#include "ngraph/runtime/ngvm/eigen/reduce_to_scalar.hpp"
-#include "ngraph/runtime/ngvm/eigen/replace_matrix_slice.hpp"
-#include "ngraph/runtime/ngvm/eigen/replace_vector_slice.hpp"
 #include "ngraph/runtime/ngvm/instruction/return.hpp"
-#include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/instruction/select.hpp"
 #include "ngraph/runtime/ngvm/instruction/sign.hpp"
 #include "ngraph/runtime/ngvm/instruction/sin.hpp"
 #include "ngraph/runtime/ngvm/instruction/sinh.hpp"
 #include "ngraph/runtime/ngvm/instruction/sqrt.hpp"
 #include "ngraph/runtime/ngvm/instruction/subtract.hpp"
-#include "ngraph/runtime/ngvm/eigen/sum_matrix_columns.hpp"
-#include "ngraph/runtime/ngvm/eigen/sum_matrix_rows.hpp"
-#include "ngraph/runtime/ngvm/eigen/sum_to_scalar.hpp"
 #include "ngraph/runtime/ngvm/instruction/tan.hpp"
 #include "ngraph/runtime/ngvm/instruction/tanh.hpp"
-#include "ngraph/runtime/ngvm/eigen/vector_slice.hpp"
-#include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
 #include "ngraph/util.hpp"
 
@@ -325,7 +325,7 @@ std::vector<typename ET::type>
     {                                                                                              \
         REGISTER_INSTRUCTION(                                                                      \
             op::ParameterizedConstant<T>,                                                          \
-            instruction::ConstantInstruction<T>,                                                         \
+            instruction::ConstantInstruction<T>,                                                   \
             std::vector<T::type>{                                                                  \
                 get_vector<T>(dynamic_cast<const op::ParameterizedConstant<T>*>(n)->get_value())}, \
             out[0]);                                                                               \
@@ -385,7 +385,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto c_value_strings = c->get_value_strings();
 
 #define M_REGISTER_POLYMORPHIC_CONSTANT(ET)                                                        \
-    ef->get_instructions()->push_back(make_shared<instruction::ConstantInstruction<ET>>(                 \
+    ef->get_instructions()->push_back(make_shared<instruction::ConstantInstruction<ET>>(           \
         parse_string<typename ET::type>(c_value_strings), out[0]));
 
             DO_ON_ELEMENT_TYPE(c_element_type,
@@ -532,7 +532,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
              result_element_type == (TO::element_type()))                                          \
     {                                                                                              \
         ef->get_instructions()->push_back(                                                         \
-            make_shared<instruction::ConvertInstruction<TI, TO>>(in[0], out[0]));                        \
+            make_shared<instruction::ConvertInstruction<TI, TO>>(in[0], out[0]));                  \
     }
 // End hacky macro
 

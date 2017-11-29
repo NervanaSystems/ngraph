@@ -16,8 +16,8 @@
 
 #include "ngraph/runtime/kernel/greater.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
@@ -33,8 +33,8 @@ namespace ngraph
                 {
                 public:
                     GreaterInstruction(const TensorViewInfo& arg0,
-                                   const TensorViewInfo& arg1,
-                                   const TensorViewInfo& out)
+                                       const TensorViewInfo& arg1,
+                                       const TensorViewInfo& out)
                         : m_arg0(arg0)
                         , m_arg1(arg1)
                         , m_out(out)
@@ -45,7 +45,8 @@ namespace ngraph
                     {
                         typename ET::type* arg0 = get_tensor_data_ptr<ET>(call_frame, m_arg0);
                         typename ET::type* arg1 = get_tensor_data_ptr<ET>(call_frame, m_arg1);
-                        char* out = get_tensor_data_ptr<element::Bool>(call_frame, m_out); // FIXME: temporarily char not bool
+                        char* out = get_tensor_data_ptr<element::Bool>(
+                            call_frame, m_out); // FIXME: temporarily char not bool
 
                         size_t count = get_tensor_element_count(call_frame, m_arg0);
 

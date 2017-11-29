@@ -33,14 +33,18 @@ namespace ngraph
             class CallFrame;
 
             template <typename ET>
-            typename ET::type* get_tensor_data_ptr(CallFrame& call_frame, const TensorViewInfo& tensor_view_info)
+            typename ET::type* get_tensor_data_ptr(CallFrame& call_frame,
+                                                   const TensorViewInfo& tensor_view_info)
             {
                 return call_frame.get_tensor_view_data<ET>(tensor_view_info.get_index());
             }
 
-            size_t get_tensor_element_count(CallFrame& call_frame, const TensorViewInfo& tensor_view_info)
+            size_t get_tensor_element_count(CallFrame& call_frame,
+                                            const TensorViewInfo& tensor_view_info)
             {
-                return tensor_view_info.get_layout<ngraph::descriptor::layout::DenseTensorViewLayout>()->get_size();
+                return tensor_view_info
+                    .get_layout<ngraph::descriptor::layout::DenseTensorViewLayout>()
+                    ->get_size();
             }
         }
     }

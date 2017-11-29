@@ -21,7 +21,10 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void greater_eq(T* arg0, T* arg1, char* out, size_t count) // FIXME: temporarily char not bool
+            void greater_eq(T* arg0,
+                            T* arg1,
+                            char* out,
+                            size_t count) // FIXME: temporarily char not bool
             {
                 for (size_t i = 0; i < count; i++)
                 {

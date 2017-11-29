@@ -16,8 +16,8 @@
 
 #include "ngraph/runtime/kernel/multiply.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
@@ -33,8 +33,8 @@ namespace ngraph
                 {
                 public:
                     MultiplyInstruction(const TensorViewInfo& arg0,
-                                   const TensorViewInfo& arg1,
-                                   const TensorViewInfo& out)
+                                        const TensorViewInfo& arg1,
+                                        const TensorViewInfo& out)
                         : m_arg0(arg0)
                         , m_arg1(arg1)
                         , m_out(out)

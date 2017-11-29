@@ -23,7 +23,7 @@ namespace ngraph
             template <typename T>
             void copy(T* arg, T* out, size_t count)
             {
-                memcpy(out,arg,sizeof(T) * count);
+                memcpy(out, arg, sizeof(T) * count);
             }
         }
     }

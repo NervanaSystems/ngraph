@@ -16,8 +16,8 @@
 
 #include "ngraph/runtime/kernel/convert.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
@@ -28,12 +28,11 @@ namespace ngraph
         {
             namespace instruction
             {
-                template <typename ETI,typename ETO>
+                template <typename ETI, typename ETO>
                 class ConvertInstruction : public Instruction
                 {
                 public:
-                    ConvertInstruction(const TensorViewInfo& arg,
-                                   const TensorViewInfo& out)
+                    ConvertInstruction(const TensorViewInfo& arg, const TensorViewInfo& out)
                         : m_arg(arg)
                         , m_out(out)
                     {
@@ -46,7 +45,7 @@ namespace ngraph
 
                         size_t count = get_tensor_element_count(call_frame, m_arg);
 
-                        kernel::convert<typename ETI::type,typename ETO::type>(arg, out, count);
+                        kernel::convert<typename ETI::type, typename ETO::type>(arg, out, count);
                     }
 
                 protected:

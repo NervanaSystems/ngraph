@@ -20,7 +20,9 @@ namespace ngraph
     {
         namespace kernel
         {
-            void logical_not(char* arg, char* out, size_t count) // FIXME: temporararily char not bool
+            void logical_not(char* arg,
+                             char* out,
+                             size_t count) // FIXME: temporararily char not bool
             {
                 for (size_t i = 0; i < count; i++)
                 {

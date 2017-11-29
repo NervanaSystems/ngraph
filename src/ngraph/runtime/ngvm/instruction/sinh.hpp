@@ -16,8 +16,8 @@
 
 #include "ngraph/runtime/kernel/sinh.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
@@ -32,8 +32,7 @@ namespace ngraph
                 class SinhInstruction : public Instruction
                 {
                 public:
-                    SinhInstruction(const TensorViewInfo& arg,
-                                       const TensorViewInfo& out)
+                    SinhInstruction(const TensorViewInfo& arg, const TensorViewInfo& out)
                         : m_arg(arg)
                         , m_out(out)
                     {
