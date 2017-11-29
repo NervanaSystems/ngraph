@@ -56,6 +56,7 @@
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not_equal.hpp"
+#include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -158,6 +159,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Acos), &Emitter::EmitAcos},
     {TI(ngraph::op::Atan), &Emitter::EmitAtan},
     {TI(ngraph::op::ReplaceSlice), &Emitter::EmitReplaceSlice},
+    {TI(ngraph::op::OneHot), &Emitter::EmitOneHot},
 };
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
