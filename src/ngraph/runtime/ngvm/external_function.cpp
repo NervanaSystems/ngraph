@@ -70,7 +70,7 @@
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/runtime/ngvm/eigen/abs.hpp"
+#include "ngraph/runtime/ngvm/instruction/abs.hpp"
 #include "ngraph/runtime/ngvm/instruction/acos.hpp"
 #include "ngraph/runtime/ngvm/instruction/add.hpp"
 #include "ngraph/runtime/ngvm/instruction/asin.hpp"
@@ -230,49 +230,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         }                                                                                          \
     }
 
-#define DO_ON_SIGNED_NUMERIC_TYPE(et, err_msg, macro, ...)                                         \
-    {                                                                                              \
-        if (et == element::Float32::element_type())                                                \
-        {                                                                                          \
-            macro(element::Float32, ##__VA_ARGS__);                                                \
-        }                                                                                          \
-        else if (et == element::Int8::element_type())                                              \
-        {                                                                                          \
-            macro(element::Int8, ##__VA_ARGS__);                                                   \
-        }                                                                                          \
-        else if (et == element::Int32::element_type())                                             \
-        {                                                                                          \
-            macro(element::Int32, ##__VA_ARGS__);                                                  \
-        }                                                                                          \
-        else if (et == element::Int64::element_type())                                             \
-        {                                                                                          \
-            macro(element::Int64, ##__VA_ARGS__);                                                  \
-        }                                                                                          \
-        else                                                                                       \
-        {                                                                                          \
-            throw ngraph_error(err_msg);                                                           \
-        }                                                                                          \
-    }
-
 #define REGISTER_INSTRUCTION(op_class, instr_class, ...)                                           \
     REGISTER_TO_OP_MAP(op_class)                                                                   \
     {                                                                                              \
         ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__));                  \
-    }
-
-#define M_REGISTER_SIGNED_NUMERIC_UNOP(T, instr_class)                                             \
-    ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], out[0]));
-#define REGISTER_SIGNED_NUMERIC_UNOP(op_class, instr_class)                                        \
-    REGISTER_TO_OP_MAP(op_class)                                                                   \
-    {                                                                                              \
-        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
-                                       n->get_arguments().at(0)->get_value_type()))                \
-                                      ->get_element_type();                                        \
-        DO_ON_SIGNED_NUMERIC_TYPE(                                                                 \
-            et,                                                                                    \
-            "Internal error: signed numeric unop has unhandled element type",                      \
-            M_REGISTER_SIGNED_NUMERIC_UNOP,                                                        \
-            instr_class);                                                                          \
     }
 
 #define M_REGISTER_NUMERIC_UNOP(T, instr_class)                                                    \
@@ -388,6 +349,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
     static OpMap op_map;
     if (!initialized)
     {
+        REGISTER_NUMERIC_UNOP(op::Abs, instruction::AbsInstruction);
         REGISTER_NUMERIC_UNOP(op::Acos, instruction::AcosInstruction);
         REGISTER_NUMERIC_UNOP(op::Asin, instruction::AsinInstruction);
         REGISTER_NUMERIC_UNOP(op::Atan, instruction::AtanInstruction);
@@ -404,8 +366,6 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_NUMERIC_UNOP(op::Sqrt, instruction::SqrtInstruction);
         REGISTER_NUMERIC_UNOP(op::Tan, instruction::TanInstruction);
         REGISTER_NUMERIC_UNOP(op::Tanh, instruction::TanhInstruction);
-
-        REGISTER_SIGNED_NUMERIC_UNOP(op::Abs, eigen::AbsInstruction);
 
         REGISTER_NUMERIC_BINOP(op::Add, instruction::AddInstruction);
         REGISTER_NUMERIC_BINOP(op::Divide, instruction::DivideInstruction);
