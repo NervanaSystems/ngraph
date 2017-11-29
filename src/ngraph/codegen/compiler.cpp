@@ -69,20 +69,14 @@ static std::mutex m_mutex;
 std::string get_install_dir()
 {
     Dl_info dlInfo;
-    dladdr((const void*)get_install_dir, &dlInfo);
+    string rc;
+    dladdr(reinterpret_cast<void*>(get_install_dir), &dlInfo);
     if (dlInfo.dli_sname != nullptr && dlInfo.dli_saddr != nullptr)
     {
-        std::cout << "The location of the .so: \n" << dlInfo.dli_fname;
-        // TODO
-        // Strip the libngraph.so and construct the path
-        // Now return the path
-        return dlInfo.dli_fname;
+        rc = dlInfo.dli_fname;
+        rc = rc.substr(0, rc.find_last_of('/'));
     }
-    else
-    {
-        std::cout << "Can't find the path for the .so\n";
-        return "";
-    }
+    return rc;
 }
 
 Compiler::Compiler()
@@ -120,8 +114,6 @@ StaticCompiler::StaticCompiler()
 #if NGCPU_DEBUGINFO
     m_debuginfo_enabled = true;
 #endif
-    get_install_dir();
-
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
@@ -195,6 +187,7 @@ StaticCompiler::StaticCompiler()
 
         add_header_search_path(EIGEN_HEADERS_PATH);
         add_header_search_path(NGRAPH_HEADERS_PATH);
+        add_header_search_path(get_install_dir());
 #ifdef USE_CACHE
         s_header_cache.set_valid();
 #endif
