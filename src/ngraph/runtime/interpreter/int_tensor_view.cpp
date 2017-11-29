@@ -31,7 +31,6 @@ runtime::interpreter::INT_TensorView::INT_TensorView(const element::Type& elemen
     , m_aligned_buffer_pool(nullptr)
 
 {
-    NGRAPH_INFO << join(shape);
     m_descriptor->set_tensor_view_layout(
         std::make_shared<descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
 

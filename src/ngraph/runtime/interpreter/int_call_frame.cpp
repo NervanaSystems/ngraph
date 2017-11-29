@@ -37,16 +37,23 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
     unordered_map<string, shared_ptr<Node>> node_map;
     vector<shared_ptr<runtime::interpreter::INT_TensorView>> inputs;
     vector<shared_ptr<runtime::interpreter::INT_TensorView>> outputs;
+    unordered_map<string, shared_ptr<runtime::interpreter::INT_TensorView>> tensor_map;
+    const std::vector<std::shared_ptr<op::Parameter>>& params = m_function->get_parameters();
+
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
         shared_ptr<runtime::interpreter::INT_TensorView> tv =
             static_pointer_cast<runtime::interpreter::INT_TensorView>(input_tvs[i]);
+        string name = params[i]->get_name();
+        tensor_map.insert({name, tv});
         inputs.push_back(tv);
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
         shared_ptr<runtime::interpreter::INT_TensorView> tv =
             static_pointer_cast<runtime::interpreter::INT_TensorView>(output_tvs[i]);
+        string name = m_function->get_result()->get_name();
+        tensor_map.insert({name, tv});
         outputs.push_back(tv);
     }
 
@@ -55,6 +62,13 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
     {
         NGRAPH_INFO << *op;
         NGRAPH_INFO << op->get_element_type();
+
+        for (const descriptor::Input& input : op->get_inputs())
+        {
+        }
+        for (descriptor::Output& output : op->get_outputs())
+        {
+        }
         if (op->get_element_type() == element::boolean)
         {
             op_engine<char>(*op, inputs, outputs);
