@@ -27,8 +27,8 @@ namespace ngraph
         {
             template <typename T>
             void op_engine(ngraph::Node& node,
-                           const std::vector<std::shared_ptr<CPUTensorView>>& inputs,
-                           const std::vector<std::shared_ptr<CPUTensorView>>& outputs)
+                           const std::vector<std::shared_ptr<INTTensorView>>& inputs,
+                           const std::vector<std::shared_ptr<INTTensorView>>& outputs)
             {
                 std::string node_op = node.description();
                 if (node_op == "Abs")

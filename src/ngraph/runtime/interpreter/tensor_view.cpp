@@ -22,7 +22,7 @@
 using namespace ngraph;
 using namespace std;
 
-runtime::interpreter::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
+runtime::interpreter::INTTensorView::INTTensorView(const ngraph::element::Type& element_type,
                                                    const Shape& shape)
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
           std::make_shared<ngraph::TensorViewType>(element_type, shape),
@@ -51,7 +51,7 @@ runtime::interpreter::CPUTensorView::CPUTensorView(const ngraph::element::Type& 
     }
 }
 
-runtime::interpreter::CPUTensorView::~CPUTensorView()
+runtime::interpreter::INTTensorView::~INTTensorView()
 {
     if (m_allocated_buffer_pool != nullptr)
     {
@@ -59,17 +59,17 @@ runtime::interpreter::CPUTensorView::~CPUTensorView()
     }
 }
 
-char* runtime::interpreter::CPUTensorView::get_data_ptr()
+char* runtime::interpreter::INTTensorView::get_data_ptr()
 {
     return m_aligned_buffer_pool;
 }
 
-const char* runtime::interpreter::CPUTensorView::get_data_ptr() const
+const char* runtime::interpreter::INTTensorView::get_data_ptr() const
 {
     return m_aligned_buffer_pool;
 }
 
-void runtime::interpreter::CPUTensorView::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::interpreter::INTTensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
     if (tensor_offset + n > m_buffer_size)
     {
@@ -79,7 +79,7 @@ void runtime::interpreter::CPUTensorView::write(const void* source, size_t tenso
     memcpy(&target[tensor_offset], source, n);
 }
 
-void runtime::interpreter::CPUTensorView::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::interpreter::INTTensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
     if (tensor_offset + n > m_buffer_size)
     {

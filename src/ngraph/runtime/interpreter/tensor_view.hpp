@@ -25,16 +25,16 @@ namespace ngraph
     {
         namespace interpreter
         {
-            class CPUTensorView;
+            class INTTensorView;
         }
     }
 }
 
-class ngraph::runtime::interpreter::CPUTensorView : public ngraph::runtime::TensorView
+class ngraph::runtime::interpreter::INTTensorView : public ngraph::runtime::TensorView
 {
 public:
-    CPUTensorView(const ngraph::element::Type& element_type, const Shape& shape);
-    virtual ~CPUTensorView();
+    INTTensorView(const ngraph::element::Type& element_type, const Shape& shape);
+    virtual ~INTTensorView();
 
     char* get_data_ptr();
     const char* get_data_ptr() const;
