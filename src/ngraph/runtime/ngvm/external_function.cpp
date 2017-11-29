@@ -115,7 +115,7 @@
 #include "ngraph/runtime/ngvm/eigen/replace_vector_slice.hpp"
 #include "ngraph/runtime/ngvm/eigen/return.hpp"
 #include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
-#include "ngraph/runtime/ngvm/eigen/select.hpp"
+#include "ngraph/runtime/ngvm/instruction/select.hpp"
 #include "ngraph/runtime/ngvm/instruction/sign.hpp"
 #include "ngraph/runtime/ngvm/instruction/sin.hpp"
 #include "ngraph/runtime/ngvm/instruction/sinh.hpp"
@@ -399,7 +399,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_POLYMORPHIC_BINOP(op::Less, instruction::LessInstruction);
         REGISTER_POLYMORPHIC_BINOP(op::LessEq, instruction::LessEqInstruction);
 
-        REGISTER_POLYMORPHIC_TERNOP(op::Select, eigen::SelectInstruction);
+        REGISTER_POLYMORPHIC_TERNOP(op::Select, instruction::SelectInstruction);
 
         REGISTER_CONSTANT_INSTRUCTIONS(element::Bool);
         REGISTER_CONSTANT_INSTRUCTIONS(element::Float32);
