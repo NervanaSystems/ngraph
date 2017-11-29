@@ -21,7 +21,7 @@
 
 using namespace ngraph;
 
-const element::Type element::boolean(8, false, false, "bool");
+const element::Type element::boolean(8, false, false, "char");
 const element::Type element::f32(32, true, true, "float");
 const element::Type element::f64(64, true, true, "double");
 const element::Type element::i8(8, false, true, "int8_t");
@@ -49,7 +49,7 @@ const std::string& element::Type::c_type_string() const
 bool element::Type::operator==(const element::Type& other) const
 {
     return m_bitwidth == other.m_bitwidth && m_is_real == other.m_is_real &&
-           m_is_signed == other.m_is_signed;
+           m_is_signed == other.m_is_signed && m_cname == other.m_cname;
 }
 
 bool element::Type::operator<(const Type& other) const
