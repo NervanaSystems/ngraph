@@ -748,7 +748,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             assert(nullptr != reductee_tensor_view_type);
             auto reductee_shape = reductee_tensor_view_type->get_shape();
 
-            auto f_result_type = reduction_function->get_result_type();
+            auto f_result_type = reduction_function->get_result_types().at(0);
             auto f_result_tensor_view_type =
                 dynamic_pointer_cast<const TensorViewType>(f_result_type);
             assert(nullptr != f_result_tensor_view_type);
@@ -1088,9 +1088,9 @@ void ExternalFunction::compile(FunctionMap& function_map)
     }
     m_n_inputs = m_frame_size;
 
-    for (const descriptor::Output& output : m_function->get_result()->get_outputs())
+    for (const descriptor::Output* output : m_function->get_outputs())
     {
-        auto tv = output.get_tensor_view();
+        auto tv = output->get_tensor_view();
         size_t index = m_frame_size++;
         auto prev_index_it = tensor_index.find(tv);
         if (prev_index_it != tensor_index.end())

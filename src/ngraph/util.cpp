@@ -150,7 +150,11 @@ void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<N
     std::unordered_set<shared_ptr<Node>> instances_seen;
     deque<shared_ptr<Node>> stack;
 
-    stack.push_front(p->get_result());
+    for (auto r : p->get_results())
+    {
+        stack.push_front(r);
+    }
+    
     for (auto param : p->get_parameters())
     {
         stack.push_front(param);

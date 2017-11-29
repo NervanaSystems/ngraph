@@ -28,6 +28,7 @@
 #include "ngraph/ops/op.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/types/type.hpp"
+#include "ngraph/descriptor/output.hpp"
 
 namespace ngraph
 {
@@ -46,6 +47,14 @@ namespace ngraph
             assert (m_results.size() < 2); 
             return m_results[0]; 
         }
+
+        const Nodes& get_results()
+        { 
+            return m_results; 
+        }
+
+        std::vector<descriptor::Output*> get_outputs();
+
         const std::vector<std::shared_ptr<op::Parameter>>& get_parameters() const
         {
             return m_parameters;
@@ -57,8 +66,8 @@ namespace ngraph
         }
         const std::vector<std::shared_ptr<const ValueType>>& get_result_types() const { return m_result_types; } //TODO: switch ValueType to TensorViewType
         std::string get_name() const;
-        void set_name(const std::string& name);
-        std::list<std::shared_ptr<Node>>& get_ops();
+        virtual void set_name(const std::string& name); //so we can check if we are dealing with XLA or regular function
+        std::list<std::shared_ptr<Node>>& get_ops();    //overriding get_result_type doesn't work because we would like different behaviours(checks) depending on a caller
         const std::list<std::shared_ptr<Node>>& get_ops() const;
         std::list<std::shared_ptr<Node>>& get_ordered_ops();
         const std::list<std::shared_ptr<Node>>& get_ordered_ops() const;

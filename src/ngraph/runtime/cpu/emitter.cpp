@@ -1029,7 +1029,7 @@ void Emitter::EmitReduce(const ngraph::Node* n,
     assert(reductee_tensor_view_type);
     auto reductee_shape = reductee_tensor_view_type->get_shape();
 
-    auto f_result_type = reduction_function->get_result_type();
+    auto f_result_type = reduction_function->get_result_types().at(0);
     auto f_result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(f_result_type);
     assert(f_result_tensor_view_type);
     auto& f_result_element_type = f_result_tensor_view_type->get_element_type();

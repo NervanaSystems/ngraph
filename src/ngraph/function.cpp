@@ -50,6 +50,19 @@ void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)
     m_ordered_ops_valid = true;
 }
 
+std::vector<descriptor::Output*> Function::get_outputs()
+{
+    std::vector<descriptor::Output*> outputs;
+    for (auto rn : m_results) 
+    {
+        for (auto& output : rn->get_outputs())
+        {
+            outputs.push_back(&output);
+        }
+    }
+    return outputs;    
+}
+
 std::list<shared_ptr<Node>>& Function::get_ops()
 {
     return m_ops;
