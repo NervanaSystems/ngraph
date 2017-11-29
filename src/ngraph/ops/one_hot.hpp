@@ -39,7 +39,7 @@ namespace ngraph
         ///
         /// | Type                   | Description                                                                                                                                         |
         /// | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | \f$I[d_1,\dots,d_n]\f$ | The tensor \f$T'\f$, where \f$T'[i_1,\dots,i_{m-1},i_m,i_{m+1},\dots,i_n] = 1\f$ if \f$T[i_1,\dots,i_{m-1},i_{m+1},\dots,i_n] = i_m$, else \f$0\f$. |
+        /// | \f$I[d_1,\dots,d_n]\f$ | The tensor \f$T'\f$, where \f$T'[i_1,\dots,i_{m-1},i_m,i_{m+1},\dots,i_n] = 1\f$ if \f$T[i_1,\dots,i_{m-1},i_{m+1},\dots,i_n] = i_m\f$, else \f$0\f$. |
         ///
         /// ## Implementation Status
         ///
