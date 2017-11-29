@@ -56,7 +56,9 @@
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not_equal.hpp"
+#include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/sign.hpp"
@@ -117,6 +119,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Minimum), &Emitter::EmitMinimum},
     {TI(ngraph::op::Negative), &Emitter::EmitNegative},
     {TI(ngraph::op::NotEqual), &Emitter::EmitNotEqual},
+    {TI(ngraph::op::Power), &Emitter::EmitPower},
     {TI(ngraph::op::Select), &Emitter::EmitSelect},
     {TI(ngraph::op::Subtract), &Emitter::EmitSubtract},
     {TI(ngraph::op::ParameterizedConstant<ngraph::element::Bool>),
@@ -154,6 +157,7 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Asin), &Emitter::EmitAsin},
     {TI(ngraph::op::Acos), &Emitter::EmitAcos},
     {TI(ngraph::op::Atan), &Emitter::EmitAtan},
+    {TI(ngraph::op::ReplaceSlice), &Emitter::EmitReplaceSlice},
 };
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
@@ -170,13 +174,16 @@ void ExternalFunction::compile()
         return;
     }
 
+    string function_name = m_function->get_name();
+    string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
+
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>(64);
-    pass_manager.register_pass<pass::DumpSorted>("sorted_ops.txt");
+    pass_manager.register_pass<pass::DumpSorted>(dump_filename);
     pass_manager.run_passes(m_function);
 
     // Now we build the TU
@@ -311,7 +318,6 @@ using namespace ngraph::runtime::cpu::eigen;
 
     // TODO: Cleanup and make this a utility function
 
-    string function_name = m_function->get_name();
     file_util::make_directory(s_output_dir);
     string filename = file_util::path_join(s_output_dir, function_name + "_codegen.cpp");
     ofstream out(filename);

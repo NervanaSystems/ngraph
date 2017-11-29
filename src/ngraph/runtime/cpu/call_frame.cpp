@@ -50,8 +50,8 @@ void CallFrame::tensor_call(
     m_compiled_function(inputs.data(), outputs.data());
 }
 
-void CallFrame::operator()(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,
-                           const std::vector<std::shared_ptr<ngraph::runtime::Value>>& results)
+void CallFrame::call(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,
+                     const std::vector<std::shared_ptr<ngraph::runtime::Value>>& results)
 {
     // TODO: Check types of args and result
     vector<shared_ptr<ngraph::runtime::TensorView>> inputs;

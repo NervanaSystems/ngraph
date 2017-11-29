@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <cassert>
 #include <memory>
 
 #include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/slice.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -69,4 +71,42 @@ op::Concat::Concat(const Nodes& args, size_t concatenation_axis)
     concatenated_shape.at(m_concatenation_axis) = concatenation_axis_length;
 
     set_value_type_checked(make_shared<TensorViewType>(arg0_element_type, concatenated_shape));
+}
+
+void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+{
+    auto value_type = get_value_type();
+    auto tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(value_type);
+
+    assert(nullptr != tensor_view_type);
+
+    auto concat_result_shape = tensor_view_type->get_shape();
+
+    Coordinate arg_delta_slice_lower = Coordinate(concat_result_shape.size(), 0);
+    Coordinate arg_delta_slice_upper = concat_result_shape;
+    Coordinate arg_delta_slice_step = Coordinate(concat_result_shape.size(), 1);
+
+    size_t pos = 0;
+
+    for (auto arg : m_arguments)
+    {
+        auto arg_value_type = arg->get_value_type();
+        auto arg_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(arg_value_type);
+        assert(nullptr != arg_tensor_view_type);
+        auto arg_shape = arg_tensor_view_type->get_shape();
+
+        auto slice_width = arg_shape[m_concatenation_axis];
+
+        size_t next_pos = pos + slice_width;
+
+        arg_delta_slice_lower[m_concatenation_axis] = pos;
+        arg_delta_slice_upper[m_concatenation_axis] = next_pos;
+
+        adjoints.add_delta(
+            arg,
+            make_shared<op::Slice>(
+                delta, arg_delta_slice_lower, arg_delta_slice_upper, arg_delta_slice_step));
+
+        pos = next_pos;
+    }
 }

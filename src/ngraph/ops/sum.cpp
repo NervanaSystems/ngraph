@@ -14,6 +14,7 @@
 
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/ops/broadcast.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -51,4 +52,12 @@ op::Sum::Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
 
     set_value_type_checked(
         make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), result_shape));
+}
+
+void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+{
+    auto x = get_inputs().at(0).get_output().get_node();
+    auto& x_shape = get_inputs().at(0).get_tensor_view_type()->get_shape();
+
+    adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, m_reduction_axes));
 }

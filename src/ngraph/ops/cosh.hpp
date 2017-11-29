@@ -57,6 +57,10 @@ namespace ngraph
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<Cosh>(new_args.at(0));
             }
+
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
         };
     }
 }

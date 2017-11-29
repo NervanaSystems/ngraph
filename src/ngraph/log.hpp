@@ -58,6 +58,7 @@ namespace nervana
         _LOG_TYPE_ERROR,
         _LOG_TYPE_WARNING,
         _LOG_TYPE_INFO,
+        _LOG_TYPE_DEBUG,
     };
 
     class log_helper
@@ -88,6 +89,8 @@ namespace nervana
         static std::deque<std::string> queue;
     };
 
+    extern std::ostream& get_nil_stream();
+
 #define NGRAPH_ERR                                                                                 \
     nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_ERROR,                                        \
                         nervana::get_file_name(__FILE__),                                          \
@@ -106,4 +109,13 @@ namespace nervana
                         __LINE__,                                                                  \
                         __PRETTY_FUNCTION__)                                                       \
         .stream()
+/*
+	#define NGRAPH_DEBUG                                                                               \
+		nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_DEBUG,                                        \
+							nervana::get_file_name(__FILE__),                                          \
+							__LINE__,                                                                  \
+							__PRETTY_FUNCTION__)                                                       \
+			.stream()
+	*/
+#define NGRAPH_DEBUG nervana::get_nil_stream()
 }

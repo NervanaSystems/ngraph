@@ -18,6 +18,10 @@
 
 #pragma once
 
+#ifdef IN_NGRAPH_LIBRARY
+#error("ngraph.hpp is for external use only")
+#endif
+
 /// @namespace ngraph
 /// @brief The Intel Nervana Graph C++ API.
 
@@ -33,6 +37,11 @@
 /// @namespace ngraph::runtime
 /// @brief The objects used for executing the graph.
 
+/// @namespace ngraph::builder
+/// @brief Convenience functions that create addional graph nodes to implement commonly-used
+///        recipes, for example auto-broadcast.
+
+#include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/common.hpp"
 #include "ngraph/descriptor/buffer.hpp"
 #include "ngraph/descriptor/input.hpp"
@@ -75,18 +84,21 @@
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
+#include "ngraph/ops/not.hpp"
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/op.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/remainder.hpp"
+#include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/sign.hpp"
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
