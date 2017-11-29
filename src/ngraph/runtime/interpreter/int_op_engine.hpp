@@ -42,9 +42,10 @@ namespace ngraph
                 }
                 else if (node_op == "Add")
                 {
-                    NGRAPH_INFO;
-                    eigen::AddInstruction<T>(args[0], args[1], out[0]);
-                    // node = make_shared<op::Add>(args[0], args[1]);
+                    eigen::AddInstruction<T>(reinterpret_cast<T*>(args[0].get()),
+                                             reinterpret_cast<T*>(args[1].get()),
+                                             reinterpret_cast<T*>(out[0].get()),
+                                             out[0]->get_element_count());
                 }
                 else if (node_op == "Asin")
                 {
