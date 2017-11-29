@@ -23,17 +23,6 @@
 
 namespace ngraph
 {
-    namespace serialize
-    {
-        std::string serialize(std::shared_ptr<ngraph::Function>);
-        std::shared_ptr<ngraph::Function> deserialize(std::istream&);
-
-        std::shared_ptr<ngraph::Function>
-            read_function(const nlohmann::json&,
-                          std::unordered_map<std::string, std::shared_ptr<Function>>&);
-
-        nlohmann::json write(const ngraph::Function&);
-        nlohmann::json write(const ngraph::Node&);
-        nlohmann::json write(const ngraph::element::Type&);
-    }
+    std::string serialize(std::shared_ptr<ngraph::Function>);
+    std::shared_ptr<ngraph::Function> deserialize(std::istream&);
 }

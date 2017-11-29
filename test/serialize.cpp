@@ -64,7 +64,7 @@ TEST(serialize, main)
                                    op::Parameters{X1, Y1, Z1},
                                    "h");
 
-    string js = serialize::serialize(h);
+    string js = serialize(h);
 
     {
         ofstream f("serialize_function.js");
@@ -72,7 +72,7 @@ TEST(serialize, main)
     }
 
     istringstream in(js);
-    shared_ptr<Function> sfunc = serialize::deserialize(in);
+    shared_ptr<Function> sfunc = deserialize(in);
 
     // Now call g on some test vectors.
     auto manager = runtime::Manager::get("CPU");

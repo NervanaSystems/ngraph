@@ -61,6 +61,14 @@
 using namespace ngraph;
 using namespace std;
 
+std::shared_ptr<ngraph::Function>
+    read_function(const nlohmann::json&,
+                  std::unordered_map<std::string, std::shared_ptr<Function>>&);
+
+nlohmann::json write(const ngraph::Function&);
+nlohmann::json write(const ngraph::Node&);
+nlohmann::json write(const ngraph::element::Type&);
+
 // This stupidity is caused by the fact that we do not pass element types
 // by value but by reference even though they can be compared. There is no reason to pass
 // them by reference EVERYWERE but here we are...
@@ -133,7 +141,7 @@ static const element::Type& read_element_type(const nlohmann::json& j)
     return to_ref(element::Type(bitwidth, is_real, is_signed, c_type_string));
 }
 
-string serialize::serialize(shared_ptr<ngraph::Function> func)
+string ngraph::serialize(shared_ptr<ngraph::Function> func)
 {
     nlohmann::json j;
     vector<nlohmann::json> functions;
@@ -147,7 +155,7 @@ string serialize::serialize(shared_ptr<ngraph::Function> func)
     return j.dump();
 }
 
-shared_ptr<ngraph::Function> serialize::deserialize(istream& in)
+shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 {
     nlohmann::json js = nlohmann::json::array();
     shared_ptr<Function> rc;
@@ -165,7 +173,7 @@ shared_ptr<ngraph::Function> serialize::deserialize(istream& in)
     return rc;
 }
 
-nlohmann::json serialize::write(const Function& f)
+nlohmann::json write(const Function& f)
 {
     nlohmann::json function;
     function["name"] = f.get_name();
@@ -220,8 +228,8 @@ nlohmann::json serialize::write(const Function& f)
 }
 
 shared_ptr<ngraph::Function>
-    serialize::read_function(const nlohmann::json& func_js,
-                             unordered_map<string, shared_ptr<Function>>& function_map)
+    read_function(const nlohmann::json& func_js,
+                  unordered_map<string, shared_ptr<Function>>& function_map)
 {
     shared_ptr<ngraph::Function> rc;
 
@@ -466,7 +474,7 @@ shared_ptr<ngraph::Function>
     return rc;
 }
 
-nlohmann::json serialize::write(const Node& n)
+nlohmann::json write(const Node& n)
 {
     nlohmann::json node;
     node["name"] = n.get_name();
