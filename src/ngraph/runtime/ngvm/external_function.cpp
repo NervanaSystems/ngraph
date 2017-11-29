@@ -87,7 +87,7 @@
 #include "ngraph/runtime/ngvm/eigen/copy.hpp"
 #include "ngraph/runtime/ngvm/instruction/cos.hpp"
 #include "ngraph/runtime/ngvm/instruction/cosh.hpp"
-#include "ngraph/runtime/ngvm/eigen/divide.hpp"
+#include "ngraph/runtime/ngvm/instruction/divide.hpp"
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
 #include "ngraph/runtime/ngvm/eigen/equal.hpp"
 #include "ngraph/runtime/ngvm/instruction/exp.hpp"
@@ -101,13 +101,13 @@
 #include "ngraph/runtime/ngvm/eigen/matrix_slice.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_transpose.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_vector_product.hpp"
-#include "ngraph/runtime/ngvm/eigen/maximum.hpp"
-#include "ngraph/runtime/ngvm/eigen/minimum.hpp"
-#include "ngraph/runtime/ngvm/eigen/multiply.hpp"
+#include "ngraph/runtime/ngvm/instruction/maximum.hpp"
+#include "ngraph/runtime/ngvm/instruction/minimum.hpp"
+#include "ngraph/runtime/ngvm/instruction/multiply.hpp"
 #include "ngraph/runtime/ngvm/instruction/negate.hpp"
 #include "ngraph/runtime/ngvm/eigen/not.hpp"
 #include "ngraph/runtime/ngvm/eigen/not_equal.hpp"
-#include "ngraph/runtime/ngvm/eigen/power.hpp"
+#include "ngraph/runtime/ngvm/instruction/power.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_rows.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_to_scalar.hpp"
@@ -120,7 +120,7 @@
 #include "ngraph/runtime/ngvm/instruction/sin.hpp"
 #include "ngraph/runtime/ngvm/instruction/sinh.hpp"
 #include "ngraph/runtime/ngvm/instruction/sqrt.hpp"
-#include "ngraph/runtime/ngvm/eigen/subtract.hpp"
+#include "ngraph/runtime/ngvm/instruction/subtract.hpp"
 #include "ngraph/runtime/ngvm/eigen/sum_matrix_columns.hpp"
 #include "ngraph/runtime/ngvm/eigen/sum_matrix_rows.hpp"
 #include "ngraph/runtime/ngvm/eigen/sum_to_scalar.hpp"
@@ -408,12 +408,12 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_SIGNED_NUMERIC_UNOP(op::Abs, eigen::AbsInstruction);
 
         REGISTER_NUMERIC_BINOP(op::Add, instruction::AddInstruction);
-        REGISTER_NUMERIC_BINOP(op::Divide, eigen::DivideInstruction);
-        REGISTER_NUMERIC_BINOP(op::Maximum, eigen::MaximumInstruction);
-        REGISTER_NUMERIC_BINOP(op::Minimum, eigen::MinimumInstruction);
-        REGISTER_NUMERIC_BINOP(op::Multiply, eigen::MultiplyInstruction);
-        REGISTER_NUMERIC_BINOP(op::Power, eigen::PowerInstruction);
-        REGISTER_NUMERIC_BINOP(op::Subtract, eigen::SubtractInstruction);
+        REGISTER_NUMERIC_BINOP(op::Divide, instruction::DivideInstruction);
+        REGISTER_NUMERIC_BINOP(op::Maximum, instruction::MaximumInstruction);
+        REGISTER_NUMERIC_BINOP(op::Minimum, instruction::MinimumInstruction);
+        REGISTER_NUMERIC_BINOP(op::Multiply, instruction::MultiplyInstruction);
+        REGISTER_NUMERIC_BINOP(op::Power, instruction::PowerInstruction);
+        REGISTER_NUMERIC_BINOP(op::Subtract, instruction::SubtractInstruction);
 
         REGISTER_TO_OP_MAP(op::Constant)
         {

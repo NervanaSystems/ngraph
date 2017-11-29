@@ -14,9 +14,11 @@
 
 #pragma once
 
+#include "ngraph/runtime/kernel/maximum.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/eigen/utils.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
 {
@@ -24,15 +26,15 @@ namespace ngraph
     {
         namespace ngvm
         {
-            namespace eigen
+            namespace instruction
             {
                 template <typename ET>
-                class MultiplyInstruction : public Instruction
+                class MaximumInstruction : public Instruction
                 {
                 public:
-                    MultiplyInstruction(TensorViewInfo arg0,
-                                        TensorViewInfo arg1,
-                                        TensorViewInfo out)
+                    MaximumInstruction(const TensorViewInfo& arg0,
+                                   const TensorViewInfo& arg1,
+                                   const TensorViewInfo& out)
                         : m_arg0(arg0)
                         , m_arg1(arg1)
                         , m_out(out)
@@ -41,8 +43,13 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        EigenArray1d<ET>(call_frame, m_out) = EigenArray1d<ET>(call_frame, m_arg0) *
-                                                              EigenArray1d<ET>(call_frame, m_arg1);
+                        typename ET::type* arg0 = get_tensor_data_ptr<ET>(call_frame, m_arg0);
+                        typename ET::type* arg1 = get_tensor_data_ptr<ET>(call_frame, m_arg1);
+                        typename ET::type* out = get_tensor_data_ptr<ET>(call_frame, m_out);
+
+                        size_t count = get_tensor_element_count(call_frame, m_arg0);
+
+                        kernel::maximum<typename ET::type>(arg0, arg1, out, count);
                     }
 
                 protected:
