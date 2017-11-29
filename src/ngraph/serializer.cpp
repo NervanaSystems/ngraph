@@ -60,14 +60,14 @@
 
 using namespace ngraph;
 using namespace std;
+using json = nlohmann::json;
 
 std::shared_ptr<ngraph::Function>
-    read_function(const nlohmann::json&,
-                  std::unordered_map<std::string, std::shared_ptr<Function>>&);
+    read_function(const json&, std::unordered_map<std::string, std::shared_ptr<Function>>&);
 
-nlohmann::json write(const ngraph::Function&);
-nlohmann::json write(const ngraph::Node&);
-nlohmann::json write(const ngraph::element::Type&);
+json write(const ngraph::Function&);
+json write(const ngraph::Node&);
+json write(const ngraph::element::Type&);
 
 // This stupidity is caused by the fact that we do not pass element types
 // by value but by reference even though they can be compared. There is no reason to pass
@@ -121,9 +121,9 @@ const element::Type& to_ref(const element::Type& t)
     throw runtime_error("type not valid");
 }
 
-static nlohmann::json write_element_type(const ngraph::element::Type& n)
+static json write_element_type(const ngraph::element::Type& n)
 {
-    nlohmann::json j;
+    json j;
     j["bitwidth"] = n.bitwidth();
     j["is_real"] = n.is_real();
     j["is_signed"] = n.is_signed();
@@ -131,7 +131,7 @@ static nlohmann::json write_element_type(const ngraph::element::Type& n)
     return j;
 }
 
-static const element::Type& read_element_type(const nlohmann::json& j)
+static const element::Type& read_element_type(const json& j)
 {
     size_t bitwidth = j.at("bitwidth").get<size_t>();
     bool is_real = j.at("is_real").get<bool>();
@@ -143,8 +143,8 @@ static const element::Type& read_element_type(const nlohmann::json& j)
 
 string ngraph::serialize(shared_ptr<ngraph::Function> func)
 {
-    nlohmann::json j;
-    vector<nlohmann::json> functions;
+    json j;
+    vector<json> functions;
     traverse_functions(func,
                        [&](shared_ptr<ngraph::Function> f) { functions.push_back(write(*f)); });
     for (auto it = functions.rbegin(); it != functions.rend(); it++)
@@ -157,11 +157,11 @@ string ngraph::serialize(shared_ptr<ngraph::Function> func)
 
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 {
-    nlohmann::json js = nlohmann::json::array();
+    json js = json::array();
     shared_ptr<Function> rc;
     in >> js;
     unordered_map<string, shared_ptr<Function>> function_map;
-    for (nlohmann::json func : js)
+    for (json func : js)
     {
         shared_ptr<Function> f = read_function(func, function_map);
         if (rc == nullptr)
@@ -173,9 +173,9 @@ shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
     return rc;
 }
 
-nlohmann::json write(const Function& f)
+json write(const Function& f)
 {
-    nlohmann::json function;
+    json function;
     function["name"] = f.get_name();
     function["result_type"] = write_element_type(f.get_result_type()->get_element_type());
     function["result_shape"] = f.get_result_type()->get_shape();
@@ -218,7 +218,7 @@ nlohmann::json write(const Function& f)
         }
     }
 
-    nlohmann::json nodes;
+    json nodes;
     for (shared_ptr<Node> node : result_list)
     {
         nodes.push_back(write(*node));
@@ -228,8 +228,7 @@ nlohmann::json write(const Function& f)
 }
 
 shared_ptr<ngraph::Function>
-    read_function(const nlohmann::json& func_js,
-                  unordered_map<string, shared_ptr<Function>>& function_map)
+    read_function(const json& func_js, unordered_map<string, shared_ptr<Function>>& function_map)
 {
     shared_ptr<ngraph::Function> rc;
 
@@ -239,7 +238,7 @@ shared_ptr<ngraph::Function>
     const element::Type& result_type = read_element_type(func_js.at("result_type"));
     vector<size_t> result_shape = func_js.at("result_shape").get<vector<size_t>>();
     unordered_map<string, shared_ptr<Node>> node_map;
-    for (nlohmann::json node_js : func_js.at("ops"))
+    for (json node_js : func_js.at("ops"))
     {
         string node_name = node_js.at("name").get<string>();
         string node_op = node_js.at("op").get<string>();
@@ -474,14 +473,14 @@ shared_ptr<ngraph::Function>
     return rc;
 }
 
-nlohmann::json write(const Node& n)
+json write(const Node& n)
 {
-    nlohmann::json node;
+    json node;
     node["name"] = n.get_name();
     node["op"] = n.description();
     node["element_type"] = write_element_type(n.get_element_type());
-    nlohmann::json inputs = nlohmann::json::array();
-    nlohmann::json outputs = nlohmann::json::array();
+    json inputs = json::array();
+    json outputs = json::array();
     for (const descriptor::Input& input : n.get_inputs())
     {
         inputs.push_back(input.get_output().get_node()->get_name());
