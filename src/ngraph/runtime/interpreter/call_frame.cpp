@@ -19,19 +19,19 @@
 #include "ngraph/runtime/interpreter/tensor_view.hpp"
 
 using namespace std;
-using namespace ngraph::runtime::interpreter;
+using namespace ngraph;
 
-CallFrame::CallFrame(std::shared_ptr<ExternalFunction> external_function,
-                     shared_ptr<ngraph::Function> func)
+runtime::interpreter::CallFrame::CallFrame(std::shared_ptr<ExternalFunction> external_function,
+                                           shared_ptr<Function> func)
     : m_external_function(external_function)
     , m_function(func)
 {
     NGRAPH_INFO;
 }
 
-void CallFrame::tensor_call(
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs,
-    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
+void runtime::interpreter::CallFrame::tensor_call(
+    const std::vector<std::shared_ptr<runtime::TensorView>>& input_tvs,
+    const std::vector<std::shared_ptr<runtime::TensorView>>& output_tvs)
 {
     NGRAPH_INFO << "----------------------------------";
     unordered_map<string, shared_ptr<Node>> node_map;
@@ -102,19 +102,20 @@ void CallFrame::tensor_call(
     }
 }
 
-void CallFrame::call(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,
-                     const std::vector<std::shared_ptr<ngraph::runtime::Value>>& results)
+void runtime::interpreter::CallFrame::call(
+    const std::vector<std::shared_ptr<runtime::Value>>& arguments,
+    const std::vector<std::shared_ptr<runtime::Value>>& results)
 {
     NGRAPH_INFO;
     // TODO: Check types of args and result
-    vector<shared_ptr<ngraph::runtime::TensorView>> inputs;
-    for (shared_ptr<ngraph::runtime::Value> argument : arguments)
+    vector<shared_ptr<runtime::TensorView>> inputs;
+    for (shared_ptr<runtime::Value> argument : arguments)
     {
         argument->collect_tensor_views(inputs, argument);
     }
 
-    vector<shared_ptr<ngraph::runtime::TensorView>> outputs;
-    for (shared_ptr<ngraph::runtime::Value> result : results)
+    vector<shared_ptr<runtime::TensorView>> outputs;
+    for (shared_ptr<runtime::Value> result : results)
     {
         result->collect_tensor_views(outputs, result);
     }

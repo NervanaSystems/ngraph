@@ -78,7 +78,7 @@
 #include "ngraph/runtime/utils.hpp"
 
 using namespace std;
-using namespace ngraph::runtime::interpreter;
+using namespace ngraph;
 
 static const std::string s_output_dir = "cpu_codegen";
 
@@ -92,15 +92,15 @@ static StaticInitializers s_static_initializers;
 
 using ngraph::descriptor::layout::DenseTensorViewLayout;
 
-ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                   bool release_function)
+runtime::interpreter::ExternalFunction::ExternalFunction(
+    const std::shared_ptr<ngraph::Function>& function, bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
     , m_function(function)
 {
     NGRAPH_INFO;
 }
 
-void ExternalFunction::compile()
+void runtime::interpreter::ExternalFunction::compile()
 {
     if (m_is_compiled)
     {
@@ -123,7 +123,7 @@ void ExternalFunction::compile()
     }
 }
 
-shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame()
+shared_ptr<ngraph::runtime::CallFrame> runtime::interpreter::ExternalFunction::make_call_frame()
 {
     if (!m_is_compiled)
     {

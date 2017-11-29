@@ -18,20 +18,21 @@
 #include "ngraph/runtime/interpreter/cpu_manager.hpp"
 #include "ngraph/runtime/interpreter/external_function.hpp"
 
-using namespace ngraph::runtime::interpreter;
+using namespace ngraph;
 
-std::shared_ptr<ngraph::runtime::Backend> CPUManager::allocate_backend()
+std::shared_ptr<runtime::Backend> runtime::interpreter::CPUManager::allocate_backend()
 {
     return std::make_shared<CPUBackend>();
 }
 
-std::shared_ptr<ngraph::runtime::ExternalFunction>
-    CPUManager::compile(const std::shared_ptr<ngraph::Function>& fun)
+std::shared_ptr<runtime::ExternalFunction>
+    runtime::interpreter::CPUManager::compile(const std::shared_ptr<Function>& fun)
 {
     return std::make_shared<ExternalFunction>(fun);
 }
 
-ngraph::runtime::Manager::Factory CPUManager::factory = ngraph::runtime::Manager::register_factory(
-    "INTERPRETER", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
-        return std::make_shared<CPUManager>();
-    });
+runtime::Manager::Factory runtime::interpreter::CPUManager::factory =
+    runtime::Manager::register_factory(
+        "INTERPRETER", [](const std::string& name) -> std::shared_ptr<runtime::Manager> {
+            return std::make_shared<CPUManager>();
+        });

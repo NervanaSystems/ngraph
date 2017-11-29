@@ -34,17 +34,17 @@ namespace ngraph
             class ExternalFunction;
 
             // Compile and execute graphs
-            class CallFrame : public ngraph::runtime::CallFrame
+            class CallFrame : public runtime::CallFrame
             {
             public:
                 CallFrame(std::shared_ptr<ExternalFunction> external_function,
-                          std::shared_ptr<ngraph::Function> func);
+                          std::shared_ptr<Function> func);
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
-                void call(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
-                          const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outputs);
+                void call(const std::vector<std::shared_ptr<runtime::Value>>& inputs,
+                          const std::vector<std::shared_ptr<runtime::Value>>& outputs);
 
                 /// @brief Invoke the function with tuples pre-expanded to their underlying
                 /// tensor views.
@@ -53,7 +53,7 @@ namespace ngraph
 
             protected:
                 std::shared_ptr<ExternalFunction> m_external_function;
-                std::shared_ptr<ngraph::Function> m_function;
+                std::shared_ptr<Function> m_function;
             };
         }
     }
