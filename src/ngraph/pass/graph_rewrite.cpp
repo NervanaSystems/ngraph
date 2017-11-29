@@ -6,8 +6,8 @@
 #include "ngraph/pattern/matcher.hpp"
 
 bool ngraph::pass::GraphRewrite::run_matchers_on_nodes_list(
-    std::list<std::shared_ptr<ngraph::Node>>& nodes,
-    std::vector<std::shared_ptr<pattern::Matcher>> matchers)
+    const std::list<std::shared_ptr<ngraph::Node>>& nodes,
+    const std::vector<std::shared_ptr<pattern::Matcher>>& matchers)
 {
     bool rewritten = false;
     for (auto node : nodes)

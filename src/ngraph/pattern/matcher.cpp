@@ -113,11 +113,13 @@ namespace ngraph
                 return;
             }
 
+            auto p_pattern_node = pattern_node.get();
+            auto p_graph_node = graph_node.get();
             on_match_class(pattern_node,
                            graph_node,
                            pattern_map,
-                           std::type_index(typeid(*&*pattern_node)) ==
-                               std::type_index(typeid(*&*graph_node)));
+                           std::type_index(typeid(*p_pattern_node)) ==
+                               std::type_index(typeid(*p_graph_node)));
         }
 
         void Matcher::match_arguments(const Nodes& pattern_args,

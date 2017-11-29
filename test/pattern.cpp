@@ -40,10 +40,7 @@ class TestMatcher : public pattern::Matcher
                              const std::shared_ptr<Node>& graph_node,
                              PatternMap& pattern_map) override
     {
-        static const auto parameter_type = std::type_index(typeid(::ngraph::op::Parameter));
-        const auto pattern_type = std::type_index(typeid(*&*pattern_node));
-
-        if (pattern_type == parameter_type)
+        if (std::dynamic_pointer_cast<::ngraph::op::Parameter>(pattern_node))
         {
             on_match_class(pattern_node,
                            graph_node,

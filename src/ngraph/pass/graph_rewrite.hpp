@@ -50,8 +50,9 @@ public:
 
     void add_matcher(std::shared_ptr<pattern::Matcher> m) { m_matchers.push_back(m); }
     virtual bool run_on_call_graph(std::list<std::shared_ptr<ngraph::Node>>&) override;
-    static bool run_matchers_on_nodes_list(std::list<std::shared_ptr<ngraph::Node>>&,
-                                           std::vector<std::shared_ptr<pattern::Matcher>> matchers);
+    static bool
+        run_matchers_on_nodes_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes,
+                                   const std::vector<std::shared_ptr<pattern::Matcher>>& matchers);
 
 private:
     //enable cascading rewrites
