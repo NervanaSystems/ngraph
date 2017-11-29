@@ -14,35 +14,27 @@
 
 #pragma once
 
-#include <memory>
-
-#include "ngraph/codegen/execution_engine.hpp"
-#include "ngraph/runtime/manager.hpp"
+#include "ngraph/runtime/backend.hpp"
 
 namespace ngraph
 {
-    class Function;
-
     namespace runtime
     {
-        class ExternalFunction;
-
         namespace interpreter
         {
-            /// @brief Transformer for the interpreted backend
-            class CPUManager : public Manager
+            static size_t alignment = 64;
+
+            class INT_Backend : public runtime::Backend
             {
-            protected:
-                ngraph::codegen::ExecutionEngine exec_state;
-
             public:
-                virtual std::shared_ptr<Backend> allocate_backend() override;
+                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
+                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function)
+                    override;
 
-                virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
-                    compile(const std::shared_ptr<ngraph::Function>& fun) override;
-
-                static Factory factory;
+                std::shared_ptr<ngraph::runtime::TensorView>
+                    make_primary_tensor_view(const ngraph::element::Type& element_type,
+                                             const Shape& shape) override;
             };
-        };
+        }
     }
 }

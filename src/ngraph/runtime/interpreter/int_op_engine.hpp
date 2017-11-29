@@ -17,7 +17,7 @@
 #include <sstream>
 
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/interpreter/tensor_view.hpp"
+#include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
 namespace ngraph
 {
@@ -27,8 +27,8 @@ namespace ngraph
         {
             template <typename T>
             void op_engine(ngraph::Node& node,
-                           const std::vector<std::shared_ptr<INTTensorView>>& inputs,
-                           const std::vector<std::shared_ptr<INTTensorView>>& outputs)
+                           const std::vector<std::shared_ptr<INT_TensorView>>& inputs,
+                           const std::vector<std::shared_ptr<INT_TensorView>>& outputs)
             {
                 std::string node_op = node.description();
                 if (node_op == "Abs")

@@ -30,15 +30,14 @@ namespace ngraph
 
         namespace interpreter
         {
-            class CallFrame;
             class ExternalFunction;
 
             // Compile and execute graphs
-            class CallFrame : public runtime::CallFrame
+            class INT_CallFrame : public runtime::CallFrame
             {
             public:
-                CallFrame(std::shared_ptr<ExternalFunction> external_function,
-                          std::shared_ptr<Function> func);
+                INT_CallFrame(std::shared_ptr<ExternalFunction> external_function,
+                              std::shared_ptr<Function> func);
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///

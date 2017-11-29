@@ -81,12 +81,12 @@ set (SRC
     pattern/matcher.cpp
     runtime/backend.cpp
     runtime/manager.cpp
-    runtime/interpreter/call_frame.cpp
-    runtime/interpreter/cpu_backend.cpp
-    runtime/interpreter/cpu_manager.cpp
-    runtime/interpreter/cpu_kernels.cpp
-    runtime/interpreter/external_function.cpp
-    runtime/interpreter/tensor_view.cpp
+    runtime/interpreter/int_call_frame.cpp
+    runtime/interpreter/int_backend.cpp
+    runtime/interpreter/int_manager.cpp
+    runtime/interpreter/int_kernels.cpp
+    runtime/interpreter/int_external_function.cpp
+    runtime/interpreter/int_tensor_view.cpp
     runtime/ngvm/call_frame.cpp
     runtime/ngvm/external_function.cpp
     runtime/ngvm/ngvm_backend.cpp

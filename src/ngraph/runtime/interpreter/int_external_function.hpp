@@ -14,7 +14,16 @@
 
 #pragma once
 
-#include "ngraph/runtime/backend.hpp"
+#include <functional>
+#include <memory>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
+
+#include "ngraph/function.hpp"
+#include "ngraph/runtime/external_function.hpp"
+#include "ngraph/runtime/interpreter/int_call_frame.hpp"
+#include "ngraph/runtime/tensor_view_info.hpp"
 
 namespace ngraph
 {
@@ -22,18 +31,17 @@ namespace ngraph
     {
         namespace interpreter
         {
-            static size_t alignment = 64;
-
-            class CPUBackend : public runtime::Backend
+            class ExternalFunction : public ngraph::runtime::ExternalFunction,
+                                     public std::enable_shared_from_this<ExternalFunction>
             {
             public:
-                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
-                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function)
-                    override;
+                ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                                 bool release_function = true);
+                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
-                std::shared_ptr<ngraph::runtime::TensorView>
-                    make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                             const Shape& shape) override;
+            protected:
+                std::shared_ptr<ngraph::Function> m_function;
+                void compile();
             };
         }
     }

@@ -72,29 +72,29 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/runtime/interpreter/call_frame.hpp"
-#include "ngraph/runtime/interpreter/cpu_backend.hpp"
-#include "ngraph/runtime/interpreter/external_function.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
+#include "ngraph/runtime/interpreter/int_call_frame.hpp"
+#include "ngraph/runtime/interpreter/int_external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-static const std::string s_output_dir = "cpu_codegen";
+static const string s_output_dir = "cpu_codegen";
 
 class StaticInitializers
 {
 public:
-    StaticInitializers() { ngraph::file_util::remove_directory(s_output_dir); }
+    StaticInitializers() { file_util::remove_directory(s_output_dir); }
 };
 
 static StaticInitializers s_static_initializers;
 
-using ngraph::descriptor::layout::DenseTensorViewLayout;
+using descriptor::layout::DenseTensorViewLayout;
 
-runtime::interpreter::ExternalFunction::ExternalFunction(
-    const std::shared_ptr<ngraph::Function>& function, bool release_function)
-    : ngraph::runtime::ExternalFunction(function, release_function)
+runtime::interpreter::ExternalFunction::ExternalFunction(const shared_ptr<Function>& function,
+                                                         bool release_function)
+    : runtime::ExternalFunction(function, release_function)
     , m_function(function)
 {
     NGRAPH_INFO;
@@ -123,12 +123,12 @@ void runtime::interpreter::ExternalFunction::compile()
     }
 }
 
-shared_ptr<ngraph::runtime::CallFrame> runtime::interpreter::ExternalFunction::make_call_frame()
+shared_ptr<runtime::CallFrame> runtime::interpreter::ExternalFunction::make_call_frame()
 {
     if (!m_is_compiled)
     {
         compile();
     }
 
-    return make_shared<ngraph::runtime::interpreter::CallFrame>(shared_from_this(), m_function);
+    return make_shared<runtime::interpreter::INT_CallFrame>(shared_from_this(), m_function);
 }

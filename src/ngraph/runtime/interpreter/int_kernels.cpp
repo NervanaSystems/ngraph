@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/runtime/interpreter/cpu_kernels.hpp"
+#include "ngraph/runtime/interpreter/int_kernels.hpp"

@@ -14,39 +14,35 @@
 
 #pragma once
 
-#include <functional>
 #include <memory>
-#include <typeindex>
-#include <typeinfo>
-#include <unordered_map>
 
-#include "ngraph/function.hpp"
-#include "ngraph/runtime/external_function.hpp"
-#include "ngraph/runtime/interpreter/call_frame.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
+#include "ngraph/codegen/execution_engine.hpp"
+#include "ngraph/runtime/manager.hpp"
 
 namespace ngraph
 {
+    class Function;
+
     namespace runtime
     {
+        class ExternalFunction;
+
         namespace interpreter
         {
-            class ExternalFunction;
-            class Emitter;
-            class CallFrame;
-
-            class ExternalFunction : public ngraph::runtime::ExternalFunction,
-                                     public std::enable_shared_from_this<ExternalFunction>
+            /// @brief Transformer for the interpreted backend
+            class INT_Manager : public Manager
             {
-            public:
-                ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                 bool release_function = true);
-                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
-
             protected:
-                std::shared_ptr<ngraph::Function> m_function;
-                void compile();
+                ngraph::codegen::ExecutionEngine exec_state;
+
+            public:
+                virtual std::shared_ptr<Backend> allocate_backend() override;
+
+                virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
+                    compile(const std::shared_ptr<ngraph::Function>& fun) override;
+
+                static Factory factory;
             };
-        }
+        };
     }
 }

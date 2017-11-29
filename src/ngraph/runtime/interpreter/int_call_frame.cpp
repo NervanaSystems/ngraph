@@ -14,39 +14,39 @@
 
 #include <algorithm>
 
-#include "call_frame.hpp"
-#include "ngraph/runtime/interpreter/op_engine.hpp"
-#include "ngraph/runtime/interpreter/tensor_view.hpp"
+#include "ngraph/runtime/interpreter/int_call_frame.hpp"
+#include "ngraph/runtime/interpreter/int_op_engine.hpp"
+#include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-runtime::interpreter::CallFrame::CallFrame(std::shared_ptr<ExternalFunction> external_function,
-                                           shared_ptr<Function> func)
+runtime::interpreter::INT_CallFrame::INT_CallFrame(shared_ptr<ExternalFunction> external_function,
+                                                   shared_ptr<Function> func)
     : m_external_function(external_function)
     , m_function(func)
 {
     NGRAPH_INFO;
 }
 
-void runtime::interpreter::CallFrame::tensor_call(
-    const std::vector<std::shared_ptr<runtime::TensorView>>& input_tvs,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& output_tvs)
+void runtime::interpreter::INT_CallFrame::tensor_call(
+    const vector<shared_ptr<runtime::TensorView>>& input_tvs,
+    const vector<shared_ptr<runtime::TensorView>>& output_tvs)
 {
     NGRAPH_INFO << "----------------------------------";
     unordered_map<string, shared_ptr<Node>> node_map;
-    vector<shared_ptr<runtime::interpreter::INTTensorView>> inputs;
-    vector<shared_ptr<runtime::interpreter::INTTensorView>> outputs;
+    vector<shared_ptr<runtime::interpreter::INT_TensorView>> inputs;
+    vector<shared_ptr<runtime::interpreter::INT_TensorView>> outputs;
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
-        shared_ptr<runtime::interpreter::INTTensorView> tv =
-            static_pointer_cast<runtime::interpreter::INTTensorView>(input_tvs[i]);
+        shared_ptr<runtime::interpreter::INT_TensorView> tv =
+            static_pointer_cast<runtime::interpreter::INT_TensorView>(input_tvs[i]);
         inputs.push_back(tv);
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        shared_ptr<runtime::interpreter::INTTensorView> tv =
-            static_pointer_cast<runtime::interpreter::INTTensorView>(output_tvs[i]);
+        shared_ptr<runtime::interpreter::INT_TensorView> tv =
+            static_pointer_cast<runtime::interpreter::INT_TensorView>(output_tvs[i]);
         outputs.push_back(tv);
     }
 
@@ -102,9 +102,8 @@ void runtime::interpreter::CallFrame::tensor_call(
     }
 }
 
-void runtime::interpreter::CallFrame::call(
-    const std::vector<std::shared_ptr<runtime::Value>>& arguments,
-    const std::vector<std::shared_ptr<runtime::Value>>& results)
+void runtime::interpreter::INT_CallFrame::call(const vector<shared_ptr<runtime::Value>>& arguments,
+                                               const vector<shared_ptr<runtime::Value>>& results)
 {
     NGRAPH_INFO;
     // TODO: Check types of args and result

@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/runtime/interpreter/cpu_backend.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/external_function.hpp"
-#include "ngraph/runtime/interpreter/tensor_view.hpp"
+#include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-std::shared_ptr<ngraph::runtime::CallFrame> runtime::interpreter::CPUBackend::make_call_frame(
-    const std::shared_ptr<ExternalFunction>& external_function)
+shared_ptr<runtime::CallFrame> runtime::interpreter::INT_Backend::make_call_frame(
+    const shared_ptr<ExternalFunction>& external_function)
 {
     NGRAPH_INFO;
     return external_function->make_call_frame();
 }
 
-std::shared_ptr<ngraph::runtime::TensorView>
-    runtime::interpreter::CPUBackend::make_primary_tensor_view(
-        const ngraph::element::Type& element_type, const Shape& shape)
+shared_ptr<runtime::TensorView>
+    runtime::interpreter::INT_Backend::make_primary_tensor_view(const element::Type& element_type,
+                                                                const Shape& shape)
 {
-    auto rc = make_shared<runtime::interpreter::INTTensorView>(element_type, shape);
+    auto rc = make_shared<runtime::interpreter::INT_TensorView>(element_type, shape);
     return dynamic_pointer_cast<runtime::TensorView>(rc);
 }
