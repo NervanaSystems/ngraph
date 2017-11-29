@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ops/add.hpp"
+#include "ngraph/ops/abs.hpp"
+#include "ngraph/ops/multiply.hpp"
+#include "ngraph/ops/sign.hpp"
 
-void ngraph::op::Add::generate_adjoints(autodiff::Adjoints& adjoints,
+void ngraph::op::Abs::generate_adjoints(autodiff::Adjoints& adjoints,
                                         const std::shared_ptr<Node>& delta)
 {
     auto x = get_inputs().at(0).get_output().get_node();
-    auto y = get_inputs().at(1).get_output().get_node();
 
-    adjoints.add_delta(x, delta);
-    adjoints.add_delta(y, delta);
+    adjoints.add_delta(x, delta * std::make_shared<op::Sign>(x));
 }

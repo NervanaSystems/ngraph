@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ops/add.hpp"
+#include "ngraph/ops/tan.hpp"
+#include "ngraph/ops/cos.hpp"
+#include "ngraph/ops/divide.hpp"
+#include "ngraph/ops/multiply.hpp"
 
-void ngraph::op::Add::generate_adjoints(autodiff::Adjoints& adjoints,
+void ngraph::op::Tan::generate_adjoints(autodiff::Adjoints& adjoints,
                                         const std::shared_ptr<Node>& delta)
 {
-    auto x = get_inputs().at(0).get_output().get_node();
-    auto y = get_inputs().at(1).get_output().get_node();
+    auto x = m_arguments[0];
 
-    adjoints.add_delta(x, delta);
-    adjoints.add_delta(y, delta);
+    auto c = std::make_shared<op::Cos>(x);
+
+    adjoints.add_delta(x, delta / (c * c));
 }

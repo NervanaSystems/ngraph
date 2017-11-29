@@ -20,7 +20,7 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise floor operation.
+        /// \brief Elementwise square root operation.
         ///
         /// ## Inputs
         ///
@@ -30,23 +30,23 @@ namespace ngraph
         ///
         /// ## Output
         ///
-        /// | Type                   | Description                                                                                    |
-        /// | ---------------------- | ---------------------------------------------------------------------------------------------- |
-        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \lfloor \texttt{arg}[i_1,\dots,i_n] \rfloor\f$ |
+        /// | Type                   | Description                                                                           |
+        /// | ---------------------- | ------------------------------------------------------------------------------------- |
+        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \sqrt{\texttt{arg}[i_1,\dots,i_n]}\f$ |
         ///
         /// ## Implementation Status
         ///
         /// | Backend | Status             |
         /// | ------- | ------------------ |
         /// | NGVM    | Fully implemented. |
-        class Floor : public UnaryElementwiseArithmetic
+        class Sqrt : public UnaryElementwiseArithmetic
         {
         public:
-            /// \brief Constructs a floor operation.
+            /// \brief Constructs a square operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Floor(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic("Floor", arg)
+            Sqrt(const std::shared_ptr<Node>& arg)
+                : UnaryElementwiseArithmetic("Sqrt", arg)
             {
             }
 
@@ -55,8 +55,12 @@ namespace ngraph
             {
                 if (new_args.size() != 1)
                     throw ngraph_error("Incorrect number of new arguments");
-                return std::make_shared<Floor>(new_args.at(0));
+                return std::make_shared<Sqrt>(new_args.at(0));
             }
+
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
         };
     }
 }

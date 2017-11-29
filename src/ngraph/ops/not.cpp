@@ -12,14 +12,25 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ops/add.hpp"
+#include "ngraph/ops/not.hpp"
+#include "ngraph/ops/op.hpp"
 
-void ngraph::op::Add::generate_adjoints(autodiff::Adjoints& adjoints,
-                                        const std::shared_ptr<Node>& delta)
+using namespace ngraph;
+using namespace ngraph::op;
+
+op::Not::Not(const std::shared_ptr<Node>& arg)
+    : UnaryElementwise(
+          "Not",
+          [](const ngraph::element::Type& arg_element_type) -> const ngraph::element::Type& {
+              if (arg_element_type != element::Bool::element_type())
+              {
+                  throw ngraph_error(
+                      "Operands for logical operators must have boolean element "
+                      "type");
+              }
+
+              return arg_element_type;
+          },
+          arg)
 {
-    auto x = get_inputs().at(0).get_output().get_node();
-    auto y = get_inputs().at(1).get_output().get_node();
-
-    adjoints.add_delta(x, delta);
-    adjoints.add_delta(y, delta);
 }

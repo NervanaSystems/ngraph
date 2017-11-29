@@ -94,6 +94,7 @@ namespace ngraph
                 void EMITTER_DECL(EmitAcos);
                 void EMITTER_DECL(EmitAtan);
                 void EMITTER_DECL(EmitPower);
+                void EMITTER_DECL(EmitReplaceSlice);
 
             private:
                 void generate_call(const std::vector<TensorViewInfo>& inputs,

@@ -91,3 +91,10 @@ void op::Slice::check_args()
     set_value_type_checked(
         make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), result_shape));
 }
+
+void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+{
+    auto x = get_inputs().at(0).get_output().get_node();
+
+    adjoints.add_delta_to_slice(x, delta, m_lower_bounds, m_upper_bounds, m_step);
+}

@@ -20,42 +20,39 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise floor operation.
+        /// \brief Elementwise logical negation operation.
         ///
         /// ## Inputs
         ///
-        /// |       | Type                              | Description                                     |
-        /// | ----- | --------------------------------- | ----------------------------------------------- |
-        /// | `arg` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type. |
+        /// |       | Type                                          | Description                                       |
+        /// | ----- | --------------------------------------------- | ------------------------------------------------- |
+        /// | `arg` | \f$\texttt{bool}[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape, with boolean element type. |
         ///
         /// ## Output
         ///
-        /// | Type                   | Description                                                                                    |
-        /// | ---------------------- | ---------------------------------------------------------------------------------------------- |
-        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \lfloor \texttt{arg}[i_1,\dots,i_n] \rfloor\f$ |
+        /// | Type                               | Description                                                                                                    |
+        /// | ---------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+        /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = 1\text{ if }\texttt{arg}[i_1,\dots,i_n] = 0\text{, else } 0\f$ |
         ///
         /// ## Implementation Status
         ///
         /// | Backend | Status             |
         /// | ------- | ------------------ |
         /// | NGVM    | Fully implemented. |
-        class Floor : public UnaryElementwiseArithmetic
+        class Not : public UnaryElementwise
         {
         public:
-            /// \brief Constructs a floor operation.
+            /// \brief Constructs a logical negation operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Floor(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic("Floor", arg)
-            {
-            }
+            Not(const std::shared_ptr<Node>& arg);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 1)
                     throw ngraph_error("Incorrect number of new arguments");
-                return std::make_shared<Floor>(new_args.at(0));
+                return std::make_shared<Not>(new_args.at(0));
             }
         };
     }
