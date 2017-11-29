@@ -16,6 +16,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -38,10 +39,19 @@ Function::Function(const Nodes& results,
     traverse_nodes(this, [&](shared_ptr<Node> node) { m_ops.push_back(node); });
 }
 
+Function::Function(const std::shared_ptr<Node>& result,
+                 const std::shared_ptr<const ValueType>& result_type,
+                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                 const std::string& name): Function (Nodes {result}, std::vector<std::shared_ptr<const ValueType>> {result_type}, parameters, name) 
+                 {
+                     assert(!std::dynamic_pointer_cast<op::XLATuple>(result));
+                 };
+
 XLAFunction::XLAFunction(const std::shared_ptr<Node>& result,
                  const std::shared_ptr<const ValueType>& result_type,
                  const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                 const std::string& name): Function ({result}, {result_type}, parameters, name) {};
+                 const std::string& name): Function (Nodes {result},  std::vector<std::shared_ptr<const ValueType>> {result_type}, parameters, name) {};
+
 
 
 void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)

@@ -274,7 +274,7 @@ using namespace ngraph::runtime::cpu::eigen;
 
         TU << "// Define outputs\n";
         size_t output_index = 0;
-        for (const descriptor::Output* output : m_function->get_outputs())
+        for (const descriptor::Output* output : current_function->get_outputs())
         {
             shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
             const element::Type& et = tv->get_tensor_view_type()->get_element_type();

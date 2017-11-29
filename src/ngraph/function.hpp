@@ -42,6 +42,11 @@ namespace ngraph
                  const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                  const std::string& name = "");
 
+        Function(const std::shared_ptr<Node>& result,
+                 const std::shared_ptr<const ValueType>& result_type,
+                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                 const std::string& name = "");
+
         std::shared_ptr<Node> get_result() //TODO: push up to XLAFunction
         { 
             assert (m_results.size() < 2); 

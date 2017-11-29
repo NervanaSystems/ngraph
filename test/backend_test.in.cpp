@@ -116,7 +116,7 @@ TEST(${BACKEND_NAME}, abc_tuple)
     auto A = make_shared<op::XLAGetTupleElement>(ABC, 0);
     auto B = make_shared<op::XLAGetTupleElement>(ABC, 1);
     auto C = make_shared<op::XLAGetTupleElement>(ABC, 2);
-    auto f = make_shared<Function>(
+    auto f = make_shared<XLAFunction>(
         make_shared<op::XLATuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -160,7 +160,7 @@ TEST(${BACKEND_NAME}, abc_tuple_int64)
     auto A = make_shared<op::XLAGetTupleElement>(ABC, 0);
     auto B = make_shared<op::XLAGetTupleElement>(ABC, 1);
     auto C = make_shared<op::XLAGetTupleElement>(ABC, 2);
-    auto f = make_shared<Function>(
+    auto f = make_shared<XLAFunction>(
         make_shared<op::XLATuple>(Nodes{(A + B) * C}), tensor_view_type, op::Parameters{ABC});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -207,7 +207,7 @@ TEST(${BACKEND_NAME}, tuple_result)
     auto rt = make_shared<TupleType>(std::vector<shared_ptr<const ValueType>>(
         {make_shared<TensorViewType>(element::Float32::element_type(), shape),
          make_shared<TensorViewType>(element::Float32::element_type(), shape)}));
-    auto f = make_shared<Function>(
+    auto f = make_shared<XLAFunction>(
         make_shared<op::XLATuple>(Nodes{A_add_B, A_add_B_mul_C}), rt, op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
