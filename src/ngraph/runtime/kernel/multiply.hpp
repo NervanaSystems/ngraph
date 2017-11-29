@@ -23,7 +23,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void MultiplyInstruction(T* arg0, T* arg1, T* out, size_t count)
+            void multiply(T* arg0, T* arg1, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {
