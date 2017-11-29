@@ -57,16 +57,14 @@ namespace ngraph
 
                             if (pos < m_bounds)
                             {
-                               if (m_one_hot_axis == 0)
-                               {
-                                   std::cout << "marking (" << pos << "," << i << ")" << std::endl;
-                                   out(pos, i) = 1;
-                               }
-                               else
-                               {
-                                   std::cout << "marking (" << i << "," << pos << ")" << std::endl;
-                                   out(i, pos) = 1;
-                               }
+                                if (m_one_hot_axis == 0)
+                                {
+                                    out(pos, i) = 1;
+                                }
+                                else
+                                {
+                                    out(i, pos) = 1;
+                                }
                             }
                         }
                     }
