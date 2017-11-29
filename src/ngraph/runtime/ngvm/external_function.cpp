@@ -105,7 +105,7 @@
 #include "ngraph/runtime/ngvm/instruction/minimum.hpp"
 #include "ngraph/runtime/ngvm/instruction/multiply.hpp"
 #include "ngraph/runtime/ngvm/instruction/negate.hpp"
-#include "ngraph/runtime/ngvm/eigen/not.hpp"
+#include "ngraph/runtime/ngvm/instruction/not.hpp"
 #include "ngraph/runtime/ngvm/instruction/not_equal.hpp"
 #include "ngraph/runtime/ngvm/instruction/power.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
@@ -399,6 +399,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_POLYMORPHIC_BINOP(op::Less, instruction::LessInstruction);
         REGISTER_POLYMORPHIC_BINOP(op::LessEq, instruction::LessEqInstruction);
 
+        REGISTER_LOGICAL_UNOP(op::Not, instruction::NotInstruction);
+
         REGISTER_POLYMORPHIC_TERNOP(op::Select, instruction::SelectInstruction);
 
         REGISTER_CONSTANT_INSTRUCTIONS(element::Bool);
@@ -409,8 +411,6 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt8);
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt32);
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt64);
-
-        REGISTER_LOGICAL_UNOP(op::Not, eigen::NotInstruction);
 
         REGISTER_TO_OP_MAP(op::Broadcast)
         {

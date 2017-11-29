@@ -14,8 +14,9 @@
 
 #pragma once
 
+#include "ngraph/runtime/kernel/not.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/eigen/utils.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
@@ -25,12 +26,13 @@ namespace ngraph
     {
         namespace ngvm
         {
-            namespace eigen
+            namespace instruction
             {
                 class NotInstruction : public Instruction
                 {
                 public:
-                    NotInstruction(TensorViewInfo arg, TensorViewInfo out)
+                    NotInstruction(const TensorViewInfo& arg,
+                                   const TensorViewInfo& out)
                         : m_arg(arg)
                         , m_out(out)
                     {
@@ -38,13 +40,12 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        // This is a bit frustrating. We have to cast the Eigen
-                        // matrix to a real bool, negate that, then cast that
-                        // back to our storage representation (ultimately char).
-                        EigenArray1d<element::Bool>(call_frame, m_out) =
-                            (!(EigenArray1d<element::Bool>(call_frame, m_arg)
-                                   .template cast<bool>()))
-                                .template cast<element::Bool::type>();
+                        char* arg = get_tensor_data_ptr<element::Bool>(call_frame, m_arg); // FIXME: temporarily char not bool
+                        char* out = get_tensor_data_ptr<element::Bool>(call_frame, m_out); // FIXME: temporarily char not bool
+
+                        size_t count = get_tensor_element_count(call_frame, m_arg);
+
+                        kernel::logical_not(arg, out, count);
                     }
 
                 protected:
