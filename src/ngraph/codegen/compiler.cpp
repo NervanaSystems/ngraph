@@ -12,15 +12,22 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <dlfcn.h>
 #include <iostream>
 
+#include <clang/Basic/DiagnosticOptions.h>
+#include <clang/Basic/TargetInfo.h>
+#include <clang/CodeGen/CodeGenAction.h>
 #include <clang/CodeGen/ObjectFilePCHContainerOperations.h>
 #include <clang/Driver/DriverDiagnostic.h>
 #include <clang/Driver/Options.h>
 #include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/CompilerInvocation.h>
+#include <clang/Frontend/FrontendActions.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
 #include <clang/Frontend/TextDiagnosticBuffer.h>
+#include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/Frontend/Utils.h>
 #include <clang/FrontendTool/Utils.h>
@@ -35,16 +42,9 @@
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/Signals.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/Timer.h>
 #include <llvm/Support/raw_ostream.h>
-
-#include <clang/Basic/DiagnosticOptions.h>
-#include <clang/Basic/TargetInfo.h>
-#include <clang/CodeGen/CodeGenAction.h>
-#include <clang/Frontend/CompilerInstance.h>
-#include <clang/Frontend/FrontendActions.h>
-#include <clang/Frontend/TextDiagnosticPrinter.h>
-#include <llvm/Support/TargetSelect.h>
 
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/file_util.hpp"
@@ -65,6 +65,25 @@ using namespace ngraph::codegen;
 static HeaderCache s_header_cache;
 static StaticCompiler s_static_compiler;
 static std::mutex m_mutex;
+
+std::string get_install_dir()
+{
+    Dl_info dlInfo;
+    dladdr((const void*)get_install_dir, &dlInfo);
+    if (dlInfo.dli_sname != nullptr && dlInfo.dli_saddr != nullptr)
+    {
+        std::cout << "The location of the .so: \n" << dlInfo.dli_fname;
+        // TODO
+        // Strip the libngraph.so and construct the path
+        // Now return the path
+        return dlInfo.dli_fname;
+    }
+    else
+    {
+        std::cout << "Can't find the path for the .so\n";
+        return "";
+    }
+}
 
 Compiler::Compiler()
 {
@@ -101,6 +120,7 @@ StaticCompiler::StaticCompiler()
 #if NGCPU_DEBUGINFO
     m_debuginfo_enabled = true;
 #endif
+    get_install_dir();
 
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
