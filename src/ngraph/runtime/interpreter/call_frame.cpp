@@ -57,47 +57,47 @@ void CallFrame::tensor_call(
         NGRAPH_INFO << op->get_element_type();
         if (op->get_element_type() == element::boolean)
         {
-            op_engine<char>(*op);
+            op_engine<char>(*op, inputs, outputs);
         }
         else if (op->get_element_type() == element::f32)
         {
-            op_engine<float>(*op);
+            op_engine<float>(*op, inputs, outputs);
         }
         else if (op->get_element_type() == element::f64)
         {
-            op_engine<double>(*op);
+            op_engine<double>(*op, inputs, outputs);
         }
         else if (op->get_element_type() == element::i8)
         {
-            op_engine<int8_t>(*op);
+            op_engine<int8_t>(*op, inputs, outputs);
         }
         else if (op->get_element_type() == element::i16)
         {
-            op_engine<int16_t>(*op);
+            op_engine<int16_t>(*op, inputs, outputs);
         }
         else if (op->get_element_type() == element::i32)
         {
-            op_engine<int32_t>(*op);
+            op_engine<int32_t>(*op, inputs, outputs);
         }
         else if (op->get_element_type() == element::i64)
         {
-            op_engine<int64_t>(*op);
+            op_engine<int64_t>(*op, inputs, outputs);
         }
         else if (op->get_element_type() == element::u8)
         {
-            op_engine<uint8_t>(*op);
+            op_engine<uint8_t>(*op, inputs, outputs);
         }
         else if (op->get_element_type() == element::u16)
         {
-            op_engine<uint16_t>(*op);
+            op_engine<uint16_t>(*op, inputs, outputs);
         }
         else if (op->get_element_type() == element::u32)
         {
-            op_engine<uint32_t>(*op);
+            op_engine<uint32_t>(*op, inputs, outputs);
         }
         else if (op->get_element_type() == element::u64)
         {
-            op_engine<uint64_t>(*op);
+            op_engine<uint64_t>(*op, inputs, outputs);
         }
     }
 }

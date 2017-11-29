@@ -17,6 +17,7 @@
 #include <sstream>
 
 #include "ngraph/node.hpp"
+#include "ngraph/runtime/interpreter/tensor_view.hpp"
 
 namespace ngraph
 {
@@ -25,7 +26,9 @@ namespace ngraph
         namespace interpreter
         {
             template <typename T>
-            void op_engine(ngraph::Node& node)
+            void op_engine(ngraph::Node& node,
+                           const std::vector<std::shared_ptr<CPUTensorView>>& inputs,
+                           const std::vector<std::shared_ptr<CPUTensorView>>& outputs)
             {
                 std::string node_op = node.description();
                 if (node_op == "Abs")
