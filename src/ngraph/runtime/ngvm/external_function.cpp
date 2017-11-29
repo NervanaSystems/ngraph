@@ -73,30 +73,30 @@
 #include "ngraph/runtime/ngvm/eigen/abs.hpp"
 #include "ngraph/runtime/ngvm/instruction/acos.hpp"
 #include "ngraph/runtime/ngvm/instruction/add.hpp"
-#include "ngraph/runtime/ngvm/eigen/asin.hpp"
-#include "ngraph/runtime/ngvm/eigen/atan.hpp"
+#include "ngraph/runtime/ngvm/instruction/asin.hpp"
+#include "ngraph/runtime/ngvm/instruction/atan.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_scalar.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_vector_colwise.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_vector_rowwise.hpp"
 #include "ngraph/runtime/ngvm/eigen/call.hpp"
-#include "ngraph/runtime/ngvm/eigen/ceiling.hpp"
+#include "ngraph/runtime/ngvm/instruction/ceiling.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_vector.hpp"
 #include "ngraph/runtime/ngvm/eigen/constant.hpp"
 #include "ngraph/runtime/ngvm/eigen/convert.hpp"
 #include "ngraph/runtime/ngvm/eigen/copy.hpp"
-#include "ngraph/runtime/ngvm/eigen/cos.hpp"
-#include "ngraph/runtime/ngvm/eigen/cosh.hpp"
+#include "ngraph/runtime/ngvm/instruction/cos.hpp"
+#include "ngraph/runtime/ngvm/instruction/cosh.hpp"
 #include "ngraph/runtime/ngvm/eigen/divide.hpp"
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
 #include "ngraph/runtime/ngvm/eigen/equal.hpp"
-#include "ngraph/runtime/ngvm/eigen/exp.hpp"
-#include "ngraph/runtime/ngvm/eigen/floor.hpp"
+#include "ngraph/runtime/ngvm/instruction/exp.hpp"
+#include "ngraph/runtime/ngvm/instruction/floor.hpp"
 #include "ngraph/runtime/ngvm/eigen/greater_eq.hpp"
 #include "ngraph/runtime/ngvm/eigen/greater_than.hpp"
 #include "ngraph/runtime/ngvm/eigen/less_eq.hpp"
 #include "ngraph/runtime/ngvm/eigen/less_than.hpp"
-#include "ngraph/runtime/ngvm/eigen/log.hpp"
+#include "ngraph/runtime/ngvm/instruction/log.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_mult.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_slice.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_transpose.hpp"
@@ -104,7 +104,7 @@
 #include "ngraph/runtime/ngvm/eigen/maximum.hpp"
 #include "ngraph/runtime/ngvm/eigen/minimum.hpp"
 #include "ngraph/runtime/ngvm/eigen/multiply.hpp"
-#include "ngraph/runtime/ngvm/eigen/negate.hpp"
+#include "ngraph/runtime/ngvm/instruction/negate.hpp"
 #include "ngraph/runtime/ngvm/eigen/not.hpp"
 #include "ngraph/runtime/ngvm/eigen/not_equal.hpp"
 #include "ngraph/runtime/ngvm/eigen/power.hpp"
@@ -116,16 +116,16 @@
 #include "ngraph/runtime/ngvm/eigen/return.hpp"
 #include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/eigen/select.hpp"
-#include "ngraph/runtime/ngvm/eigen/sign.hpp"
-#include "ngraph/runtime/ngvm/eigen/sin.hpp"
-#include "ngraph/runtime/ngvm/eigen/sinh.hpp"
-#include "ngraph/runtime/ngvm/eigen/sqrt.hpp"
+#include "ngraph/runtime/ngvm/instruction/sign.hpp"
+#include "ngraph/runtime/ngvm/instruction/sin.hpp"
+#include "ngraph/runtime/ngvm/instruction/sinh.hpp"
+#include "ngraph/runtime/ngvm/instruction/sqrt.hpp"
 #include "ngraph/runtime/ngvm/eigen/subtract.hpp"
 #include "ngraph/runtime/ngvm/eigen/sum_matrix_columns.hpp"
 #include "ngraph/runtime/ngvm/eigen/sum_matrix_rows.hpp"
 #include "ngraph/runtime/ngvm/eigen/sum_to_scalar.hpp"
-#include "ngraph/runtime/ngvm/eigen/tan.hpp"
-#include "ngraph/runtime/ngvm/eigen/tanh.hpp"
+#include "ngraph/runtime/ngvm/instruction/tan.hpp"
+#include "ngraph/runtime/ngvm/instruction/tanh.hpp"
 #include "ngraph/runtime/ngvm/eigen/vector_slice.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/utils.hpp"
@@ -389,21 +389,21 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
     if (!initialized)
     {
         REGISTER_NUMERIC_UNOP(op::Acos, instruction::AcosInstruction);
-        REGISTER_NUMERIC_UNOP(op::Asin, eigen::AsinInstruction);
-        REGISTER_NUMERIC_UNOP(op::Atan, eigen::AtanInstruction);
-        REGISTER_NUMERIC_UNOP(op::Ceiling, eigen::CeilingInstruction);
-        REGISTER_NUMERIC_UNOP(op::Cos, eigen::CosInstruction);
-        REGISTER_NUMERIC_UNOP(op::Cosh, eigen::CoshInstruction);
-        REGISTER_NUMERIC_UNOP(op::Exp, eigen::ExpInstruction);
-        REGISTER_NUMERIC_UNOP(op::Floor, eigen::FloorInstruction);
-        REGISTER_NUMERIC_UNOP(op::Log, eigen::LogInstruction);
-        REGISTER_NUMERIC_UNOP(op::Negative, eigen::NegateInstruction);
-        REGISTER_NUMERIC_UNOP(op::Sign, eigen::SignInstruction);
-        REGISTER_NUMERIC_UNOP(op::Sin, eigen::SinInstruction);
-        REGISTER_NUMERIC_UNOP(op::Sinh, eigen::SinhInstruction);
-        REGISTER_NUMERIC_UNOP(op::Sqrt, eigen::SqrtInstruction);
-        REGISTER_NUMERIC_UNOP(op::Tan, eigen::TanInstruction);
-        REGISTER_NUMERIC_UNOP(op::Tanh, eigen::TanhInstruction);
+        REGISTER_NUMERIC_UNOP(op::Asin, instruction::AsinInstruction);
+        REGISTER_NUMERIC_UNOP(op::Atan, instruction::AtanInstruction);
+        REGISTER_NUMERIC_UNOP(op::Ceiling, instruction::CeilingInstruction);
+        REGISTER_NUMERIC_UNOP(op::Cos, instruction::CosInstruction);
+        REGISTER_NUMERIC_UNOP(op::Cosh, instruction::CoshInstruction);
+        REGISTER_NUMERIC_UNOP(op::Exp, instruction::ExpInstruction);
+        REGISTER_NUMERIC_UNOP(op::Floor, instruction::FloorInstruction);
+        REGISTER_NUMERIC_UNOP(op::Log, instruction::LogInstruction);
+        REGISTER_NUMERIC_UNOP(op::Negative, instruction::NegateInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sign, instruction::SignInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sin, instruction::SinInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sinh, instruction::SinhInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sqrt, instruction::SqrtInstruction);
+        REGISTER_NUMERIC_UNOP(op::Tan, instruction::TanInstruction);
+        REGISTER_NUMERIC_UNOP(op::Tanh, instruction::TanhInstruction);
 
         REGISTER_SIGNED_NUMERIC_UNOP(op::Abs, eigen::AbsInstruction);
 

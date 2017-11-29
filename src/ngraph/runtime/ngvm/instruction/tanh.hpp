@@ -14,11 +14,11 @@
 
 #pragma once
 
+#include "ngraph/runtime/kernel/tanh.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/eigen/utils.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
 
 namespace ngraph
 {
@@ -26,13 +26,14 @@ namespace ngraph
     {
         namespace ngvm
         {
-            namespace eigen
+            namespace instruction
             {
                 template <typename ET>
-                class SqrtInstruction : public Instruction
+                class TanhInstruction : public Instruction
                 {
                 public:
-                    SqrtInstruction(const TensorViewInfo& arg, const TensorViewInfo& out)
+                    TanhInstruction(const TensorViewInfo& arg,
+                                       const TensorViewInfo& out)
                         : m_arg(arg)
                         , m_out(out)
                     {
@@ -40,8 +41,12 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        EigenArray1d<ET>(call_frame, m_out) =
-                            Eigen::sqrt(EigenArray1d<ET>(call_frame, m_arg));
+                        typename ET::type* arg = get_tensor_data_ptr<ET>(call_frame, m_arg);
+                        typename ET::type* out = get_tensor_data_ptr<ET>(call_frame, m_out);
+
+                        size_t count = get_tensor_element_count(call_frame, m_arg);
+
+                        kernel::tanh<typename ET::type>(arg, out, count);
                     }
 
                 protected:
