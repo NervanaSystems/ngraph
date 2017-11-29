@@ -237,6 +237,6 @@ TEST(util, traverse_functions)
                                    "h");
 
     vector<Function*> functions;
-    traverse_functions(h, [&](shared_ptr<Function> f) { functions.push_back(f.get()); });
+    traverse_functions(h, [&](shared_ptr<Function> fp) { functions.push_back(fp.get()); });
     ASSERT_EQ(3, functions.size());
 }

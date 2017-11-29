@@ -34,5 +34,6 @@ namespace ngraph
 
         nlohmann::json write(const ngraph::Function&);
         nlohmann::json write(const ngraph::Node&);
+        nlohmann::json write(const ngraph::element::Type&);
     }
 }

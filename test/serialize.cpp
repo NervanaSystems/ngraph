@@ -32,17 +32,6 @@ static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
     tv->write(data.data(), 0, data_size);
 }
 
-TEST(serialize, element_type)
-{
-    nlohmann::json j;
-    element::Type input = element::f32;
-    j = input;
-
-    element::Type output = j.get<element::Type>();
-
-    EXPECT_EQ(input, output);
-}
-
 TEST(serialize, main)
 {
     // First create "f(A,B,C) = (A+B)*C".

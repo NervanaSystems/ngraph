@@ -26,7 +26,6 @@
 
 #include "ngraph/common.hpp"
 #include "ngraph/except.hpp"
-#include "ngraph/json.hpp"
 
 namespace ngraph
 {
@@ -49,26 +48,20 @@ namespace ngraph
         class Type
         {
         public:
-            Type() = default;
+            Type() = delete;
             Type(const Type&) = default;
             Type(size_t bitwidth, bool is_real, bool is_signed, const std::string& cname);
             virtual ~Type() {}
             const std::string& c_type_string() const;
             size_t size() const;
-            size_t hash() const
-            {
-                std::hash<std::string> h;
-                return h(m_cname);
-            }
+            size_t hash() const;
             bool is_real() const { return m_is_real; }
             bool is_signed() const { return m_is_signed; }
             size_t bitwidth() const { return m_bitwidth; }
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
+            bool operator<(const Type& other) const;
             friend std::ostream& operator<<(std::ostream&, const Type&);
-
-            friend void to_json(nlohmann::json&, const Type&);
-            friend void from_json(const nlohmann::json&, Type&);
 
         private:
             static std::map<std::string, Type> m_element_list;

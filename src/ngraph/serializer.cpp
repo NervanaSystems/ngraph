@@ -113,6 +113,26 @@ const element::Type& to_ref(const element::Type& t)
     throw runtime_error("type not valid");
 }
 
+static nlohmann::json write_element_type(const ngraph::element::Type& n)
+{
+    nlohmann::json j;
+    j["bitwidth"] = n.bitwidth();
+    j["is_real"] = n.is_real();
+    j["is_signed"] = n.is_signed();
+    j["c_type_string"] = n.c_type_string();
+    return j;
+}
+
+static const element::Type& read_element_type(const nlohmann::json& j)
+{
+    size_t bitwidth = j.at("bitwidth").get<size_t>();
+    bool is_real = j.at("is_real").get<bool>();
+    bool is_signed = j.at("is_signed").get<bool>();
+    string c_type_string = j.at("c_type_string").get<string>();
+
+    return to_ref(element::Type(bitwidth, is_real, is_signed, c_type_string));
+}
+
 string serialize::serialize(shared_ptr<ngraph::Function> func)
 {
     nlohmann::json j;
@@ -149,7 +169,7 @@ nlohmann::json serialize::write(const Function& f)
 {
     nlohmann::json function;
     function["name"] = f.get_name();
-    function["result_type"] = f.get_result_type()->get_element_type();
+    function["result_type"] = write_element_type(f.get_result_type()->get_element_type());
     function["result_shape"] = f.get_result_type()->get_shape();
     for (auto param : f.get_parameters())
     {
@@ -208,16 +228,14 @@ shared_ptr<ngraph::Function>
     string func_name = func_js.at("name").get<string>();
     vector<string> func_result = func_js.at("result").get<vector<string>>();
     vector<string> func_parameters = func_js.at("parameters").get<vector<string>>();
-    const element::Type& result_type =
-        to_ref(func_js.at("result_type").get<ngraph::element::Type>());
+    const element::Type& result_type = read_element_type(func_js.at("result_type"));
     vector<size_t> result_shape = func_js.at("result_shape").get<vector<size_t>>();
     unordered_map<string, shared_ptr<Node>> node_map;
     for (nlohmann::json node_js : func_js.at("ops"))
     {
         string node_name = node_js.at("name").get<string>();
         string node_op = node_js.at("op").get<string>();
-        const element::Type& node_etype =
-            to_ref(node_js.at("element_type").get<ngraph::element::Type>());
+        const element::Type& node_etype = read_element_type(node_js.at("element_type"));
         vector<string> node_inputs = node_js.at("inputs").get<vector<string>>();
         vector<string> node_outputs = node_js.at("outputs").get<vector<string>>();
         shared_ptr<Node> node;
@@ -277,7 +295,7 @@ shared_ptr<ngraph::Function>
         }
         else if (node_op == "Convert")
         {
-            auto target_type = node_js.at("target_type").get<element::Type>();
+            auto target_type = read_element_type(node_js.at("target_type"));
             node = make_shared<op::Convert>(args[0], target_type);
         }
         else if (node_op == "Cos")
@@ -453,7 +471,7 @@ nlohmann::json serialize::write(const Node& n)
     nlohmann::json node;
     node["name"] = n.get_name();
     node["op"] = n.description();
-    node["element_type"] = n.get_element_type();
+    node["element_type"] = write_element_type(n.get_element_type());
     nlohmann::json inputs = nlohmann::json::array();
     nlohmann::json outputs = nlohmann::json::array();
     for (const descriptor::Input& input : n.get_inputs())
@@ -506,7 +524,7 @@ nlohmann::json serialize::write(const Node& n)
     else if (node_op == "Convert")
     {
         auto tmp = dynamic_cast<const op::Convert*>(&n);
-        node["target_type"] = tmp->get_convert_element_type();
+        node["target_type"] = write_element_type(tmp->get_convert_element_type());
     }
     else if (node_op == "Cos")
     {

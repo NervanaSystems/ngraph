@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <map>
+
 #include "gtest/gtest.h"
 
 #include "ngraph/types/element_type.hpp"
@@ -32,4 +34,51 @@ TEST(element_type, from)
     EXPECT_EQ(element::from<uint16_t>(), element::u16);
     EXPECT_EQ(element::from<uint32_t>(), element::u32);
     EXPECT_EQ(element::from<uint64_t>(), element::u64);
+}
+
+TEST(element_type, mapable)
+{
+    std::map<element::Type, std::string> test_map;
+
+    test_map.insert({element::f32, "float"});
+}
+
+TEST(element_type, size)
+{
+    {
+        element::Type t1{1, false, false, ""};
+        EXPECT_EQ(1, t1.size());
+    }
+    {
+        element::Type t1{2, false, false, ""};
+        EXPECT_EQ(1, t1.size());
+    }
+    {
+        element::Type t1{3, false, false, ""};
+        EXPECT_EQ(1, t1.size());
+    }
+    {
+        element::Type t1{4, false, false, ""};
+        EXPECT_EQ(1, t1.size());
+    }
+    {
+        element::Type t1{5, false, false, ""};
+        EXPECT_EQ(1, t1.size());
+    }
+    {
+        element::Type t1{6, false, false, ""};
+        EXPECT_EQ(1, t1.size());
+    }
+    {
+        element::Type t1{7, false, false, ""};
+        EXPECT_EQ(1, t1.size());
+    }
+    {
+        element::Type t1{2, false, false, ""};
+        EXPECT_EQ(1, t1.size());
+    }
+    {
+        element::Type t1{9, false, false, ""};
+        EXPECT_EQ(2, t1.size());
+    }
 }
