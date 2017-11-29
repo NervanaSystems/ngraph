@@ -49,9 +49,6 @@ public:
     }
 
     void add_matcher(std::shared_ptr<pattern::Matcher> m) { m_matchers.push_back(m); }
-    static void replace_node_users_arguments(std::shared_ptr<Node> target,
-                                             std::shared_ptr<Node> replacement);
-    static void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
     virtual bool run_on_call_graph(std::list<std::shared_ptr<ngraph::Node>>&) override;
 
 private:

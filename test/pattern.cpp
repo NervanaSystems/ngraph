@@ -27,6 +27,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -110,7 +111,7 @@ public:
             }
 
             NGRAPH_DEBUG << "BEFORE REPLACE";
-            ngraph::pass::GraphRewrite::replace_node(m.match_root(), pattern->get_bound_node());
+            ngraph::replace_node(m.match_root(), pattern->get_bound_node());
         };
 
         auto m = make_shared<TestMatcher>(pattern * iconst1, callback);
@@ -164,7 +165,7 @@ public:
             }
 
             NGRAPH_DEBUG << "BEFORE REPLACE";
-            ngraph::pass::GraphRewrite::replace_node(m.match_root(), pattern->get_bound_node());
+            ngraph::replace_node(m.match_root(), pattern->get_bound_node());
         };
 
         auto m = make_shared<TestMatcher>(pattern + iconst0, callback);
