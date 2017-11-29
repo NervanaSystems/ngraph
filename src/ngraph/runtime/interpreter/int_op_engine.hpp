@@ -17,8 +17,8 @@
 #include <sstream>
 
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/interpreter/eigen/add.hpp"
-#include "ngraph/runtime/interpreter/eigen/multiply.hpp"
+#include "ngraph/runtime/interpreter/kernel/add.hpp"
+#include "ngraph/runtime/interpreter/kernel/multiply.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
 namespace ngraph
@@ -43,7 +43,7 @@ namespace ngraph
                 }
                 else if (node_op == "Add")
                 {
-                    eigen::AddInstruction<T>(reinterpret_cast<T*>(args[0].get()),
+                    kernel::AddInstruction<T>(reinterpret_cast<T*>(args[0].get()),
                                              reinterpret_cast<T*>(args[1].get()),
                                              reinterpret_cast<T*>(out[0].get()),
                                              out[0]->get_element_count());
@@ -150,7 +150,7 @@ namespace ngraph
                 }
                 else if (node_op == "Multiply")
                 {
-                    eigen::MultiplyInstruction<T>(reinterpret_cast<T*>(args[0].get()),
+                    kernel::MultiplyInstruction<T>(reinterpret_cast<T*>(args[0].get()),
                                                   reinterpret_cast<T*>(args[1].get()),
                                                   reinterpret_cast<T*>(out[0].get()),
                                                   out[0]->get_element_count());
