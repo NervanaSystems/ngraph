@@ -28,6 +28,7 @@
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -1459,6 +1460,86 @@ void Emitter::EmitPower(const ngraph::Node* n,
     TU << emit_array1d(inputs[1]) << ");\n";
     TU.indent -= 2;
     TU << "}\n";
+}
+
+void Emitter::EmitReplaceSlice(const ngraph::Node* n,
+                               const std::vector<TensorViewInfo>& inputs,
+                               const std::vector<TensorViewInfo>& outputs)
+{
+    auto replace_slice = static_cast<const op::Slice*>(n);
+
+    for (auto d : replace_slice->get_step())
+    {
+        if (1 != d)
+        {
+            throw ngraph_error("Replace-slice does not support non-unit step yet");
+        }
+    }
+
+    auto arg0_type = replace_slice->get_arguments().at(0)->get_value_type();
+    auto arg0_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg0_type);
+    assert(arg0_tensor_view_type);
+    auto arg0_shape = arg0_tensor_view_type->get_shape();
+    auto arg0_rank = arg0_shape.size();
+
+    auto arg1_type = replace_slice->get_arguments().at(1)->get_value_type();
+    auto arg1_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg1_type);
+    assert(arg1_tensor_view_type);
+    auto arg1_shape = arg1_tensor_view_type->get_shape();
+    auto arg1_rank = arg1_shape.size();
+
+    auto& lower_bounds = replace_slice->get_lower_bounds();
+    auto& upper_bounds = replace_slice->get_upper_bounds();
+
+    // Scalar slice is necessarily just a copy.
+    if (arg0_rank == 0)
+    {
+        TU << "{   // " << n->get_name() << " 1\n";
+        TU.indent++;
+        TU << "memcpy(" << outputs[0].get_tensor().get_name() << ", "
+           << inputs[1].get_tensor().get_name() << ", "
+           << outputs[0].get_tensor_view_layout()->get_size() *
+                  outputs[0].get_tensor_view_layout()->get_element_type().size()
+           << ");\n";
+        TU.indent--;
+        TU << "}\n";
+    }
+    else if (arg0_rank == 1)
+    {
+        TU << "{   // " << n->get_name() << " 2\n";
+        TU.indent++;
+        TU << "" << emit_vector(outputs[0]) << " =\n"
+           << "    " << emit_vector(inputs[0]) << ";\n"
+           << "" << emit_vector(outputs[0]) << ".segment(\n"
+           << "    " << to_string(lower_bounds[0]) << ", "
+           << to_string(upper_bounds[0] - lower_bounds[0]) << ") =\n"
+           << "    " << emit_vector(inputs[1]) << ";\n";
+        TU.indent--;
+        TU << "}\n";
+    }
+    else if (arg0_rank == 2)
+    {
+        auto arg0_layout = inputs[0].get_layout<DenseTensorViewLayout>();
+        auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
+
+        TU << "{   // " << n->get_name() << " 3\n";
+        TU.indent++;
+        TU << "" << emit_matrix(outputs[0]) << " =\n"
+           << "    " << emit_matrix(inputs[0]) << ";\n"
+           << "" << emit_matrix(outputs[0]) << ".block(\n"
+           << "        " << to_string(lower_bounds[0]) << ",\n"
+           << "        " << to_string(lower_bounds[1]) << ",\n"
+           << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
+           << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ") =\n"
+           << "    " << emit_matrix(inputs[1]) << ";\n";
+        TU.indent--;
+        TU << "}\n";
+    }
+    // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
+    else
+    {
+        throw ngraph_error("Replace-slice is not implemented yet for tensors with rank>2");
+    }
 }
 
 //------------------------------------------------------------------------------------------------

@@ -44,7 +44,8 @@ namespace ngraph
             backprop_derivative(const std::shared_ptr<runtime::Manager>& manager,
                                 const std::shared_ptr<runtime::Backend>& backend,
                                 const std::shared_ptr<Function>& f,
-                                const std::vector<std::shared_ptr<runtime::TensorView>>& args)
+                                const std::vector<std::shared_ptr<runtime::TensorView>>& args,
+                                const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
             auto y = f->get_result();
             Shape y_shape =
@@ -57,7 +58,8 @@ namespace ngraph
             std::vector<std::shared_ptr<Node>> deriv_nodes;
             std::vector<std::shared_ptr<runtime::TensorView>> bprops;
             std::vector<std::shared_ptr<runtime::TensorView>> results;
-            for (auto param : params)
+
+            for (auto param : indep_params)
             {
                 Shape s = y_shape;
                 auto param_shape =

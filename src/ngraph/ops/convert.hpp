@@ -68,6 +68,8 @@ namespace ngraph
             const element::Type& get_convert_element_type() const { return m_element_type; }
         protected:
             const ngraph::element::Type& m_element_type;
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
         };
     }
 }

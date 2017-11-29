@@ -17,6 +17,8 @@
 #include <memory>
 #include <unordered_map>
 
+#include "ngraph/common.hpp"
+
 namespace ngraph
 {
     class Node;
@@ -53,6 +55,19 @@ namespace ngraph
             /// @param x The adjoint node
             /// @param delta A backprop contribution
             void add_delta(const std::shared_ptr<Node>& x, const std::shared_ptr<Node>& delta);
+
+            /// @brief Add a backprop contribution to a slice of x's adjoint
+            ///
+            /// @param x The adjoint node
+            /// @param delta A backprop contribution
+            /// @param lower_bounds Lower bounds of slice to add to
+            /// @param upper_bounds Upper bounds of slice to add to
+            /// @param step Step (or stride) of slice to add to
+            void add_delta_to_slice(const std::shared_ptr<Node>& x,
+                                    const std::shared_ptr<Node>& delta,
+                                    const Coordinate& lower_bounds,
+                                    const Coordinate& upper_bounds,
+                                    const Shape& step);
 
         protected:
             std::unordered_map<Node*, std::shared_ptr<Node>> m_adjoint_map;

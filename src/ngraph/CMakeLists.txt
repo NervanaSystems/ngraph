@@ -27,6 +27,7 @@ set (SRC
     function.cpp
     log.cpp
     node.cpp
+    ops/abs.cpp
     ops/add.cpp
     ops/binary_elementwise_arithmetic.cpp
     ops/binary_elementwise_comparison.cpp
@@ -35,6 +36,8 @@ set (SRC
     ops/concatenate.cpp
     ops/constant.cpp
     ops/convert.cpp
+    ops/cos.cpp
+    ops/cosh.cpp
     ops/divide.cpp
     ops/dot.cpp
     ops/exp.cpp
@@ -45,19 +48,27 @@ set (SRC
     ops/minimum.cpp
     ops/multiply.cpp
     ops/negative.cpp
+    ops/not.cpp
     ops/op.cpp
     ops/parameter.cpp
     ops/power.cpp
     ops/reduce.cpp
+    ops/replace_slice.cpp
     ops/reshape.cpp
     ops/select.cpp
+    ops/sin.cpp
+    ops/sinh.cpp
     ops/slice.cpp
+    ops/sqrt.cpp
     ops/subtract.cpp
     ops/sum.cpp
+    ops/tan.cpp
+    ops/tanh.cpp
     ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise.cpp
     pass/dump_sorted.cpp
+    pass/graph_rewrite.cpp
     pass/liveness.cpp
     pass/manager.cpp
     pass/manager_state.cpp
@@ -67,6 +78,7 @@ set (SRC
     pass/topological_sort.cpp
     pass/visualize_tree.cpp
     runtime/aligned_buffer.cpp
+    pattern/matcher.cpp
     runtime/backend.cpp
     runtime/manager.cpp
     runtime/ngvm/call_frame.cpp
