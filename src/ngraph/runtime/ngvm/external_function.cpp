@@ -89,13 +89,13 @@
 #include "ngraph/runtime/ngvm/instruction/cosh.hpp"
 #include "ngraph/runtime/ngvm/instruction/divide.hpp"
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
-#include "ngraph/runtime/ngvm/eigen/equal.hpp"
+#include "ngraph/runtime/ngvm/instruction/equal.hpp"
 #include "ngraph/runtime/ngvm/instruction/exp.hpp"
 #include "ngraph/runtime/ngvm/instruction/floor.hpp"
-#include "ngraph/runtime/ngvm/eigen/greater_eq.hpp"
-#include "ngraph/runtime/ngvm/eigen/greater_than.hpp"
-#include "ngraph/runtime/ngvm/eigen/less_eq.hpp"
-#include "ngraph/runtime/ngvm/eigen/less_than.hpp"
+#include "ngraph/runtime/ngvm/instruction/greater_eq.hpp"
+#include "ngraph/runtime/ngvm/instruction/greater.hpp"
+#include "ngraph/runtime/ngvm/instruction/less_eq.hpp"
+#include "ngraph/runtime/ngvm/instruction/less.hpp"
 #include "ngraph/runtime/ngvm/instruction/log.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_mult.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_slice.hpp"
@@ -106,7 +106,7 @@
 #include "ngraph/runtime/ngvm/instruction/multiply.hpp"
 #include "ngraph/runtime/ngvm/instruction/negate.hpp"
 #include "ngraph/runtime/ngvm/eigen/not.hpp"
-#include "ngraph/runtime/ngvm/eigen/not_equal.hpp"
+#include "ngraph/runtime/ngvm/instruction/not_equal.hpp"
 #include "ngraph/runtime/ngvm/instruction/power.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_rows.hpp"
@@ -392,12 +392,12 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                M_REGISTER_POLYMORPHIC_CONSTANT);
         };
 
-        REGISTER_POLYMORPHIC_BINOP(op::Equal, eigen::EqualInstruction);
-        REGISTER_POLYMORPHIC_BINOP(op::NotEqual, eigen::NotEqualInstruction);
-        REGISTER_POLYMORPHIC_BINOP(op::Greater, eigen::GreaterThanInstruction);
-        REGISTER_POLYMORPHIC_BINOP(op::GreaterEq, eigen::GreaterEqInstruction);
-        REGISTER_POLYMORPHIC_BINOP(op::Less, eigen::LessThanInstruction);
-        REGISTER_POLYMORPHIC_BINOP(op::LessEq, eigen::LessEqInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::Equal, instruction::EqualInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::NotEqual, instruction::NotEqualInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::Greater, instruction::GreaterInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::GreaterEq, instruction::GreaterEqInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::Less, instruction::LessInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::LessEq, instruction::LessEqInstruction);
 
         REGISTER_POLYMORPHIC_TERNOP(op::Select, eigen::SelectInstruction);
 
