@@ -84,7 +84,8 @@
 #include "ngraph/runtime/ngvm/eigen/concat_vector.hpp"
 #include "ngraph/runtime/ngvm/eigen/constant.hpp"
 #include "ngraph/runtime/ngvm/eigen/convert.hpp"
-#include "ngraph/runtime/ngvm/eigen/copy.hpp"
+#include "ngraph/runtime/ngvm/instruction/copy.hpp"
+#include "ngraph/runtime/ngvm/instruction/copy_by_index.hpp"
 #include "ngraph/runtime/ngvm/instruction/cos.hpp"
 #include "ngraph/runtime/ngvm/instruction/cosh.hpp"
 #include "ngraph/runtime/ngvm/instruction/divide.hpp"
@@ -432,9 +433,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
                                              "Broadcast has unhandled element type",
-                                             eigen::CopyInstruction,
-                                             in[0].get_index(),
-                                             out[0].get_index());
+                                             instruction::CopyInstruction,
+                                             in[0],
+                                             out[0]);
             }
             else if (arg_shape.size() == 0)
             {
@@ -657,9 +658,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
             PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
                                          "GetTupleElement has unhandled element type",
-                                         eigen::CopyInstruction,
-                                         in.at(get_tuple_element->get_n()).get_index(),
-                                         out.at(0).get_index());
+                                         instruction::CopyInstruction,
+                                         in[get_tuple_element->get_n()],
+                                         out[0]);
         };
 
         // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
@@ -670,9 +671,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 auto& et = in.at(i).get_tensor_view_layout()->get_element_type();
                 PUSH_POLYMORPHIC_INSTRUCTION(et,
                                              "Tuple has unhandled element type",
-                                             eigen::CopyInstruction,
-                                             in.at(i).get_index(),
-                                             out.at(i).get_index());
+                                             instruction::CopyInstruction,
+                                             in[i],
+                                             out[i]);
             }
         };
 
@@ -738,9 +739,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
                                              "Reduce has unhandled element type",
-                                             runtime::ngvm::eigen::CopyInstruction,
-                                             in.at(0).get_index(),
-                                             out.at(0).get_index());
+                                             runtime::ngvm::instruction::CopyInstruction,
+                                             in[0],
+                                             out[0]);
             }
             // Behavior for zero-size axes bears some explanation here. XLA's reduce
             // operator provides an "base" element (usually, but not necessarily,
@@ -775,9 +776,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 {
                     PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
                                                  "Reduce has unhandled element type",
-                                                 runtime::ngvm::eigen::CopyInstruction,
-                                                 in.at(1).get_index(),
-                                                 out.at(0).get_index());
+                                                 runtime::ngvm::instruction::CopyInstruction,
+                                                 in[1],
+                                                 out[0]);
                 }
                 else
                 {
@@ -862,9 +863,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
                                              "Sum has unhandled element type",
-                                             runtime::ngvm::eigen::CopyInstruction,
-                                             in.at(0).get_index(),
-                                             out.at(0).get_index());
+                                             runtime::ngvm::instruction::CopyInstruction,
+                                             in[0],
+                                             out[0]);
             }
             // Full reduction? Then sum to scalar.
             else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
@@ -929,9 +930,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
                                              "Reshape has unhandled element type",
-                                             runtime::ngvm::eigen::CopyInstruction,
-                                             in.at(0).get_index(),
-                                             out.at(0).get_index());
+                                             runtime::ngvm::instruction::CopyInstruction,
+                                             in[0],
+                                             out[0]);
             }
             // If there *is* a layout change in the 2D case, we transpose the input.
             else if (arg_rank == 2)
@@ -978,9 +979,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
                                              "Slice has unhandled element type",
-                                             runtime::ngvm::eigen::CopyInstruction,
-                                             in.at(0).get_index(),
-                                             out.at(0).get_index());
+                                             runtime::ngvm::instruction::CopyInstruction,
+                                             in[0],
+                                             out[0]);
             }
             else if (arg_rank == 1)
             {
@@ -1045,9 +1046,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
                                              "Replace-slice has unhandled element type",
-                                             runtime::ngvm::eigen::CopyInstruction,
-                                             in.at(1).get_index(),
-                                             out.at(0).get_index());
+                                             runtime::ngvm::instruction::CopyInstruction,
+                                             in[1],
+                                             out[0]);
             }
             else if (arg0_rank == 1)
             {
@@ -1142,9 +1143,10 @@ void ExternalFunction::compile(FunctionMap& function_map)
             assert(nullptr != result_tensor_type);
             auto& result_element_type = result_tensor_type->get_element_type();
             auto ef = this;
+            // TODO: This is the one case where we can't use the new CopyInstruction that takes in a TensorViewInfo. (At least, I can't figure out how to do it.)
             PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
                                          "Copy has unhandled element type",
-                                         eigen::CopyInstruction,
+                                         instruction::CopyByIndexInstruction,
                                          prev_index_it->second,
                                          index);
         }

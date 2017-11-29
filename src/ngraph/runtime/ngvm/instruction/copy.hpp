@@ -14,10 +14,9 @@
 
 #pragma once
 
-#include <cassert>
-
+#include "ngraph/runtime/kernel/copy.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/eigen/utils.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
@@ -27,30 +26,32 @@ namespace ngraph
     {
         namespace ngvm
         {
-            namespace eigen
+            namespace instruction
             {
-                /// @brief Copies a tensor from in to out.
                 template <typename ET>
                 class CopyInstruction : public Instruction
                 {
                 public:
-                    /// @param in Index of input tensor in call frame.
-                    /// @param out Index of output tensor in call frame.
-                    CopyInstruction(size_t in, size_t out)
-                        : m_in(in)
+                    CopyInstruction(const TensorViewInfo& arg,
+                                   const TensorViewInfo& out)
+                        : m_arg(arg)
                         , m_out(out)
                     {
                     }
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        call_frame.get_parameterized_tensor_view<ET>(m_out)->write(
-                            call_frame.get_parameterized_tensor_view<ET>(m_in)->get_vector());
+                        typename ET::type* arg = get_tensor_data_ptr<ET>(call_frame, m_arg);
+                        typename ET::type* out = get_tensor_data_ptr<ET>(call_frame, m_out);
+
+                        size_t count = get_tensor_element_count(call_frame, m_arg);
+
+                        kernel::copy<typename ET::type>(arg, out, count);
                     }
 
                 protected:
-                    size_t m_in;
-                    size_t m_out;
+                    TensorViewInfo m_arg;
+                    TensorViewInfo m_out;
                 };
             }
         }
