@@ -78,7 +78,7 @@
 #include "ngraph/runtime/ngvm/eigen/broadcast_scalar.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_vector_colwise.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_vector_rowwise.hpp"
-#include "ngraph/runtime/ngvm/eigen/call.hpp"
+#include "ngraph/runtime/ngvm/instruction/call.hpp"
 #include "ngraph/runtime/ngvm/instruction/ceiling.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_vector.hpp"
@@ -114,7 +114,7 @@
 #include "ngraph/runtime/ngvm/eigen/reduce_to_scalar.hpp"
 #include "ngraph/runtime/ngvm/eigen/replace_matrix_slice.hpp"
 #include "ngraph/runtime/ngvm/eigen/replace_vector_slice.hpp"
-#include "ngraph/runtime/ngvm/eigen/return.hpp"
+#include "ngraph/runtime/ngvm/instruction/return.hpp"
 #include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/instruction/select.hpp"
 #include "ngraph/runtime/ngvm/instruction/sign.hpp"
@@ -695,7 +695,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
 
             ef->get_instructions()->push_back(
-                make_shared<eigen::CallInstruction>(external, in, out));
+                make_shared<instruction::CallInstruction>(external, in, out));
         };
 
         REGISTER_TO_OP_MAP(op::Reduce)
@@ -1202,7 +1202,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
     }
     m_instructions->insert(
         m_instructions->end(), input_output_copies.begin(), input_output_copies.end());
-    m_instructions->push_back(make_shared<eigen::ReturnInstruction>());
+    m_instructions->push_back(make_shared<instruction::ReturnInstruction>());
     m_is_compiled = true;
     if (m_release_function)
     {

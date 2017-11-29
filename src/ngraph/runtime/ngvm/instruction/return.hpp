@@ -23,7 +23,7 @@ namespace ngraph
     {
         namespace ngvm
         {
-            namespace eigen
+            namespace instruction
             {
                 class ReturnInstruction : public Instruction
                 {

@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/eigen/utils.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
@@ -28,7 +27,7 @@ namespace ngraph
     {
         namespace ngvm
         {
-            namespace eigen
+            namespace instruction
             {
                 class CallInstruction : public Instruction
                 {
