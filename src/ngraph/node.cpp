@@ -181,6 +181,11 @@ std::shared_ptr<Node> Node::backprop_node(const std::shared_ptr<Node>& x,
     return adjoints_it->second.get(x);
 }
 
+std::shared_ptr<Function> Node::get_function() const
+{
+    return nullptr;
+}
+
 namespace ngraph
 {
     ostream& operator<<(ostream& out, const Node& node)

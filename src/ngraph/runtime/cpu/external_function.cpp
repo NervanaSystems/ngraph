@@ -248,9 +248,9 @@ using namespace ngraph::runtime::cpu::eigen;
             {
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
-                    TU << tensor->get_element_type() << "* " << tensor->get_name() << " = ("
-                       << tensor->get_element_type() << "*)(memory_handler.get_ptr("
-                       << tensor->get_pool_offset() << "));\n";
+                    TU << tensor->get_element_type().c_type_string() << "* " << tensor->get_name()
+                       << " = (" << tensor->get_element_type().c_type_string()
+                       << "*)(memory_handler.get_ptr(" << tensor->get_pool_offset() << "));\n";
                 }
             }
             TU << "\n";

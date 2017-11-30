@@ -21,7 +21,7 @@
 
 using namespace ngraph;
 
-const element::Type element::boolean(8, false, false, "bool");
+const element::Type element::boolean(8, false, false, "char");
 const element::Type element::f32(32, true, true, "float");
 const element::Type element::f64(64, true, true, "double");
 const element::Type element::i8(8, false, true, "int8_t");
@@ -39,7 +39,6 @@ element::Type::Type(size_t bitwidth, bool is_real, bool is_signed, const std::st
     , m_is_signed{is_signed}
     , m_cname{cname}
 {
-    assert(m_bitwidth % 8 == 0);
 }
 
 const std::string& element::Type::c_type_string() const
@@ -53,13 +52,35 @@ bool element::Type::operator==(const element::Type& other) const
            m_is_signed == other.m_is_signed && m_cname == other.m_cname;
 }
 
+bool element::Type::operator<(const Type& other) const
+{
+    size_t v1 = m_bitwidth << 2;
+    v1 |= (m_is_real ? 2 : 0);
+    v1 |= (m_is_signed ? 1 : 0);
+
+    size_t v2 = other.m_bitwidth << 2;
+    v2 |= (other.m_is_real ? 2 : 0);
+    v2 |= (other.m_is_signed ? 1 : 0);
+
+    return v1 < v2;
+}
+
 size_t element::Type::size() const
 {
     return std::ceil(static_cast<float>(m_bitwidth) / 8.0f);
 }
 
+size_t element::Type::hash() const
+{
+    size_t h1 = std::hash<size_t>{}(m_bitwidth);
+    size_t h2 = std::hash<bool>{}(m_is_real);
+    size_t h3 = std::hash<bool>{}(m_is_signed);
+    return h1 ^ ((h2 ^ (h3 << 1)) << 1);
+}
+
 std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
 {
-    out << obj.m_cname;
+    out << "element::Type(" << obj.m_bitwidth << ", " << obj.m_is_real << ", " << obj.m_is_signed
+        << ")";
     return out;
 }
