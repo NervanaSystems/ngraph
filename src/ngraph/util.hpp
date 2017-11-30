@@ -46,6 +46,14 @@ namespace ngraph
         return ss.str();
     }
 
+    template <typename T>
+    static std::string vector_to_string(const std::vector<T>& v)
+    {
+        std::ostringstream os;
+        os << "[ " << ngraph::join(v) << " ]";
+        return os.str();
+    }
+
     template <typename U, typename T>
     bool contains(const U& container, const T& obj)
     {

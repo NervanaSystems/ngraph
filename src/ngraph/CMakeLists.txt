@@ -13,6 +13,7 @@
 
 set (SRC
     autodiff/adjoints.cpp
+    builder/autobroadcast.cpp
     builder/reduce_ops.cpp
     builder/numpy_transpose.cpp
     descriptor/input.cpp
