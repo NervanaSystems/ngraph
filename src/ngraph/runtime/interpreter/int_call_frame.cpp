@@ -34,7 +34,6 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
     const vector<shared_ptr<runtime::TensorView>>& output_tvs)
 {
     NGRAPH_INFO << "----------------------------------";
-    unordered_map<string, shared_ptr<Node>> node_map;
     unordered_map<string, shared_ptr<runtime::interpreter::INT_TensorView>> tensor_map;
     const std::vector<std::shared_ptr<op::Parameter>>& params = m_function->get_parameters();
 
@@ -50,7 +49,7 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
     {
         shared_ptr<runtime::interpreter::INT_TensorView> tv =
             static_pointer_cast<runtime::interpreter::INT_TensorView>(output_tvs[i]);
-        string name = m_function->get_name();
+        string name = m_function->get_result()->get_name();
         NGRAPH_INFO << "Funtion Outputs " << name;
         tensor_map.insert({name, tv});
     }
@@ -74,18 +73,28 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
             string name = input.get_output().get_node()->get_name();
             shared_ptr<runtime::interpreter::INT_TensorView> tv = tensor_map.at(name);
             inputs.push_back(tv);
-            NGRAPH_INFO << name;
+            NGRAPH_INFO << "Op Inputs " << name;
         }
         for (descriptor::Output& output : op->get_outputs())
         {
             string name = output.get_node()->get_name();
-            const Shape& shape = output.get_tensor_view_type()->get_shape();
-            element::Type element_type = output.get_tensor_view_type()->get_element_type();
-            // make the output tensor;
-            auto tv = make_shared<runtime::interpreter::INT_TensorView>(element_type, shape);
+            shared_ptr<runtime::interpreter::INT_TensorView> tv;
+            if (!contains_key(tensor_map, name))
+            {
+                const Shape& shape = output.get_tensor_view_type()->get_shape();
+                element::Type element_type = output.get_tensor_view_type()->get_element_type();
+                // make the output tensor;
+                tv = make_shared<runtime::interpreter::INT_TensorView>(element_type, shape);
+                tensor_map.insert({name, tv});
+            }
+            else
+            {
+                tv = tensor_map.at(name);
+            }
             outputs.push_back(tv);
-            tensor_map.insert({name, tv});
-            NGRAPH_INFO << name;
+            NGRAPH_INFO << "Op Outputs " << name;
+            NGRAPH_INFO << output.get_tensor_view()->get_name();
+            NGRAPH_INFO << output.get_tensor().get_name();
         }
 
         if (op->get_element_type() == element::boolean)
@@ -134,17 +143,17 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
         }
 
         // Delete any obsolete tensors
-        for (const descriptor::Tensor* t : op->liveness_free_list)
-        {
-            NGRAPH_INFO << "free " << *t;
-        }
+        // for (const descriptor::Tensor* t : op->liveness_free_list)
+        // {
+        //     NGRAPH_INFO << "free " << *t;
+        // }
     }
+    NGRAPH_INFO << "----------------------------------";
 }
 
 void runtime::interpreter::INT_CallFrame::call(const vector<shared_ptr<runtime::Value>>& arguments,
                                                const vector<shared_ptr<runtime::Value>>& results)
 {
-    NGRAPH_INFO;
     // TODO: Check types of args and result
     vector<shared_ptr<runtime::TensorView>> inputs;
     for (shared_ptr<runtime::Value> argument : arguments)
@@ -158,5 +167,7 @@ void runtime::interpreter::INT_CallFrame::call(const vector<shared_ptr<runtime::
         result->collect_tensor_views(outputs, result);
     }
 
+    NGRAPH_INFO;
     tensor_call(inputs, outputs);
+    NGRAPH_INFO;
 }
