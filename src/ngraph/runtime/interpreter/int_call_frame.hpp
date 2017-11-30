@@ -21,6 +21,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 
 namespace ngraph
 {
@@ -37,7 +38,8 @@ namespace ngraph
             {
             public:
                 INT_CallFrame(std::shared_ptr<ExternalFunction> external_function,
-                              std::shared_ptr<Function> func);
+                              std::shared_ptr<Function> func,
+                              std::shared_ptr<INT_Backend> backend);
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
@@ -53,6 +55,7 @@ namespace ngraph
             protected:
                 std::shared_ptr<ExternalFunction> m_external_function;
                 std::shared_ptr<Function> m_function;
+                std::shared_ptr<INT_Backend> m_backend;
             };
         }
     }

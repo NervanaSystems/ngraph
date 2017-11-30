@@ -22,9 +22,11 @@ using namespace std;
 using namespace ngraph;
 
 runtime::interpreter::INT_CallFrame::INT_CallFrame(shared_ptr<ExternalFunction> external_function,
-                                                   shared_ptr<Function> func)
+                                                   shared_ptr<Function> func,
+                              shared_ptr<INT_Backend> backend)
     : m_external_function(external_function)
     , m_function(func)
+    , m_backend(backend)
 {
     NGRAPH_INFO;
 }
@@ -35,8 +37,6 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
 {
     NGRAPH_INFO << "----------------------------------";
     unordered_map<string, shared_ptr<Node>> node_map;
-    vector<shared_ptr<runtime::interpreter::INT_TensorView>> inputs;
-    vector<shared_ptr<runtime::interpreter::INT_TensorView>> outputs;
     unordered_map<string, shared_ptr<runtime::interpreter::INT_TensorView>> tensor_map;
     const std::vector<std::shared_ptr<op::Parameter>>& params = m_function->get_parameters();
 
@@ -47,7 +47,6 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
         string name = params[i]->get_name();
         NGRAPH_INFO << "Funtion Inputs " << name;
         tensor_map.insert({name, tv});
-        inputs.push_back(tv);
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
@@ -56,7 +55,6 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
         string name = m_function->get_name();
         NGRAPH_INFO << "Funtion Outputs " << name;
         tensor_map.insert({name, tv});
-        outputs.push_back(tv);
     }
 
     // Invoke computation
@@ -65,14 +63,21 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
         NGRAPH_INFO << *op;
         NGRAPH_INFO << op->get_element_type();
 
+        vector<shared_ptr<runtime::interpreter::INT_TensorView>> inputs;
+        vector<shared_ptr<runtime::interpreter::INT_TensorView>> outputs;
+
         for (const descriptor::Input& input : op->get_inputs())
         {
-            NGRAPH_INFO << input.get_output().get_node()->get_name();
-            NGRAPH_INFO << input.get_output().get_node()->get_name();
+            string name = input.get_output().get_node()->get_name();
+            shared_ptr<runtime::interpreter::INT_TensorView> tv = tensor_map.at(name);
+            inputs.push_back(tv);
+            NGRAPH_INFO << name;
         }
         for (descriptor::Output& output : op->get_outputs())
         {
-            NGRAPH_INFO << output.get_node()->get_name();
+            string name = output.get_node()->get_name();
+            // make the output tensor;
+            NGRAPH_INFO << name;
         }
 
         if (op->get_element_type() == element::boolean)
