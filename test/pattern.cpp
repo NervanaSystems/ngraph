@@ -27,6 +27,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -35,22 +36,37 @@ using namespace std;
 class TestMatcher : public pattern::Matcher
 {
     using pattern::Matcher::Matcher;
-    void virtual match_class(const std::shared_ptr<Node>& pattern_node,
-                             const std::shared_ptr<Node>& graph_node) override
+    bool virtual match_node(const std::shared_ptr<Node>& pattern_node,
+                            const std::shared_ptr<Node>& graph_node,
+                            PatternMap& pattern_map) override
     {
-        static const auto parameter_type = std::type_index(typeid(::ngraph::op::Parameter));
-        const auto pattern_type = std::type_index(typeid(*&*pattern_node));
-
-        if (pattern_type == parameter_type)
+        if (std::dynamic_pointer_cast<::ngraph::op::Parameter>(pattern_node))
         {
-            on_match_class(pattern_node,
-                           graph_node,
-                           pattern_node.get() ==
-                               dynamic_cast<::ngraph::op::Parameter*>(graph_node.get()));
-            return;
+            return pattern_node.get() == dynamic_cast<::ngraph::op::Parameter*>(graph_node.get());
         }
 
-        this->pattern::Matcher::match_class(pattern_node, graph_node);
+        return this->pattern::Matcher::match_node(pattern_node, graph_node, pattern_map);
+    }
+
+public:
+    bool match(const std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node)
+    {
+        assert(
+            pattern_node &&
+            graph_node); //the same condition throws an exception in the non-test version of `match`
+        NGRAPH_DEBUG << "Starting match pattern = " << pattern_node << " , "
+                     << pattern_node->get_name() << " , graph_node = " << graph_node << " , "
+                     << graph_node->get_name();
+
+        m_pattern_map.clear();
+        m_match_root.reset();
+
+        bool is_match = match_node(pattern_node, graph_node, m_pattern_map);
+        if (is_match)
+        {
+            m_match_root = graph_node;
+        }
+        return is_match;
     }
 };
 
@@ -75,18 +91,19 @@ public:
             NGRAPH_DEBUG << "IN CALLBACK";
             assert(m.match_root()->get_arguments().size() == 2);
 
-            size_t const_node_index =
-                m.match_root()->get_arguments().at(0) == pattern->get_bound_node();
+            auto pattern_map = m.get_pattern_map();
+
+            size_t const_node_index = m.match_root()->get_arguments().at(0) == pattern_map[pattern];
             auto const_node = dynamic_pointer_cast<op::ParameterizedConstant<element::Int32>>(
                 m.match_root()->get_arguments().at(const_node_index));
             auto second_node = m.match_root()->get_arguments().at(const_node_index);
             NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node;
-            NGRAPH_DEBUG << "pattern " << pattern->get_bound_node()->description() << " , "
-                         << pattern->get_bound_node();
+            NGRAPH_DEBUG << "pattern " << pattern_map[pattern]->description() << " , "
+                         << pattern_map[pattern];
             assert(const_node);
 
-            auto pattern_value_type = dynamic_pointer_cast<const TensorViewType>(
-                pattern->get_bound_node()->get_value_type());
+            auto pattern_value_type =
+                dynamic_pointer_cast<const TensorViewType>(pattern_map[pattern]->get_value_type());
             auto const_node_value_type =
                 dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
             assert(pattern_value_type && const_node);
@@ -110,7 +127,7 @@ public:
             }
 
             NGRAPH_DEBUG << "BEFORE REPLACE";
-            ngraph::pass::GraphRewrite::replace_node(m.match_root(), pattern->get_bound_node());
+            ngraph::replace_node(m.match_root(), pattern_map[pattern]);
         };
 
         auto m = make_shared<TestMatcher>(pattern * iconst1, callback);
@@ -129,18 +146,19 @@ public:
             NGRAPH_DEBUG << "IN CALLBACK";
             assert(m.match_root()->get_arguments().size() == 2);
 
-            size_t const_node_index =
-                m.match_root()->get_arguments().at(0) == pattern->get_bound_node();
+            auto pattern_map = m.get_pattern_map();
+
+            size_t const_node_index = m.match_root()->get_arguments().at(0) == pattern_map[pattern];
             auto const_node = dynamic_pointer_cast<op::ParameterizedConstant<element::Int32>>(
                 m.match_root()->get_arguments().at(const_node_index));
             auto second_node = m.match_root()->get_arguments().at(const_node_index);
             NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node;
-            NGRAPH_DEBUG << "pattern " << pattern->get_bound_node()->description() << " , "
-                         << pattern->get_bound_node();
+            NGRAPH_DEBUG << "pattern " << pattern_map[pattern]->description() << " , "
+                         << pattern_map[pattern];
             assert(const_node);
 
-            auto pattern_value_type = dynamic_pointer_cast<const TensorViewType>(
-                pattern->get_bound_node()->get_value_type());
+            auto pattern_value_type =
+                dynamic_pointer_cast<const TensorViewType>(pattern_map[pattern]->get_value_type());
             auto const_node_value_type =
                 dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
             assert(pattern_value_type && const_node);
@@ -164,7 +182,7 @@ public:
             }
 
             NGRAPH_DEBUG << "BEFORE REPLACE";
-            ngraph::pass::GraphRewrite::replace_node(m.match_root(), pattern->get_bound_node());
+            ngraph::replace_node(m.match_root(), pattern_map[pattern]);
         };
 
         auto m = make_shared<TestMatcher>(pattern + iconst0, callback);
@@ -292,7 +310,7 @@ TEST(pattern, matcher)
 
     auto pattern = pattern::op::Label::make_from_node(a);
     ASSERT_TRUE(n.match(pattern, a));
-    ASSERT_EQ(pattern->get_bound_node(), a);
+    ASSERT_EQ(n.get_pattern_map()[pattern], a);
 
     auto pattern_false =
         pattern::op::Label::make_from_node(a, [](std::shared_ptr<Node> no) { return false; });
@@ -306,14 +324,14 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(any + b, abs + b));
 
     ASSERT_TRUE(n.match(pattern + b, abs + b));
-    ASSERT_EQ(pattern->get_bound_node(), abs);
+    ASSERT_EQ(n.get_pattern_map()[pattern], abs);
 
     ASSERT_TRUE(n.match(b + pattern, abs + b));
-    ASSERT_EQ(pattern->get_bound_node(), abs);
+    ASSERT_EQ(n.get_pattern_map()[pattern], abs);
 
     auto c = make_shared<op::Parameter>(element::Int32::element_type(), shape);
     ASSERT_TRUE(n.match(c * (b + pattern), c * (abs + b)));
-    ASSERT_EQ(pattern->get_bound_node(), abs);
+    ASSERT_EQ(n.get_pattern_map()[pattern], abs);
 
     ASSERT_TRUE(n.match(c * (any + b), c * (abs + b)));     //nested any
     ASSERT_TRUE(n.match(c * (any + b), (b + abs) * c));     //permutations w/ any
@@ -323,7 +341,7 @@ TEST(pattern, matcher)
     auto iconst1_0 = construct_constant_node(1);
     auto iconst1_1 = construct_constant_node(1);
     ASSERT_TRUE(n.match(pattern * iconst1_0, a * iconst1_1)); //different iconst
-    ASSERT_EQ(pattern->get_bound_node(), a);
+    ASSERT_EQ(n.get_pattern_map()[pattern], a);
     auto fconst1_0 =
         make_shared<op::Constant>(element::Float32::element_type(), Shape{1}, std::to_string(1));
     auto patternf = pattern::op::Label::make_from_node(fconst1_0);
