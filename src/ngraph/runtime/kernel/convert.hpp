@@ -25,7 +25,7 @@ namespace ngraph
             {
                 for (size_t i = 0; i < count; i++)
                 {
-                    out[i] = TO(arg[i]);
+                    out[i] = static_cast<TO>(arg[i]);
                 }
             }
         }

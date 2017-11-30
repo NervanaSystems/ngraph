@@ -24,7 +24,7 @@ namespace ngraph
             void less_eq(T* arg0,
                          T* arg1,
                          char* out,
-                         size_t count) // FIXME: temporarily char not bool
+                         size_t count) // TODO: using char for bool, is this right?
             {
                 for (size_t i = 0; i < count; i++)
                 {

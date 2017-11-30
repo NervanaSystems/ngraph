@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <cassert>
 #include <cstdio>
 #include <iostream>
 #include <vector>
@@ -33,9 +32,20 @@ CoordinateIterator::CoordinateIterator(const Shape& space_shape,
     , m_window_inner_corner(window_inner_corner)
     , m_current_coordinate(window_inner_corner)
 {
-    assert(space_shape.size() == window_inner_corner.size());
-    assert(space_shape.size() == window_outer_corner.size());
-    assert(space_shape.size() == strides.size());
+    if (space_shape.size() != window_inner_corner.size())
+    {
+        throw ngraph_error("Coordinate iterator inner corner rank does not make space shape rank");
+    }
+
+    if (space_shape.size() != window_outer_corner.size())
+    {
+        throw ngraph_error("Coordinate iterator outer corner rank does not make space shape rank");
+    }
+
+    if (space_shape.size() != strides.size())
+    {
+        throw ngraph_error("Coordinate iterator stride rank does not make space shape rank");
+    }
 
     for (size_t i = 0; i < space_shape.size(); i++)
     {

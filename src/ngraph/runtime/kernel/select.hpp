@@ -25,7 +25,7 @@ namespace ngraph
                         T* arg1,
                         T* arg2,
                         T* out,
-                        size_t count) // FIXME: temporararily char not bool
+                        size_t count) // TODO: using char for bool, is this right?
             {
                 for (size_t i = 0; i < count; i++)
                 {
