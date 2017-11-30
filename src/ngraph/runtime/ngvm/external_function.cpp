@@ -257,7 +257,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
     REGISTER_TO_OP_MAP(op_class)                                                                   \
     {                                                                                              \
         const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
-                                       n->get_arguments().at(0)->get_value_type()))                \
+                                       n->get_inputs().at(0).get_tensor_view_type()))              \
                                       ->get_element_type();                                        \
         DO_ON_SIGNED_NUMERIC_TYPE(                                                                 \
             et,                                                                                    \
@@ -272,7 +272,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
     REGISTER_TO_OP_MAP(op_class)                                                                   \
     {                                                                                              \
         const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
-                                       n->get_arguments().at(0)->get_value_type()))                \
+                                       n->get_inputs().at(0).get_tensor_view_type()))              \
                                       ->get_element_type();                                        \
         DO_ON_NUMERIC_TYPE(et,                                                                     \
                            "Internal error: numeric unop has unhandled element type",              \
@@ -286,7 +286,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
     REGISTER_TO_OP_MAP(op_class)                                                                   \
     {                                                                                              \
         const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
-                                       n->get_arguments().at(0)->get_value_type()))                \
+                                       n->get_inputs().at(0).get_tensor_view_type()))              \
                                       ->get_element_type();                                        \
         DO_ON_NUMERIC_TYPE(et,                                                                     \
                            "Internal error: numeric binop has unhandled element type",             \
@@ -300,7 +300,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
     REGISTER_TO_OP_MAP(op_class)                                                                   \
     {                                                                                              \
         const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
-                                       n->get_arguments().at(0)->get_value_type()))                \
+                                       n->get_inputs().at(0).get_tensor_view_type()))              \
                                       ->get_element_type();                                        \
         DO_ON_ELEMENT_TYPE(et,                                                                     \
                            "Internal error: polymorphic binop has unhandled element type",         \
@@ -309,13 +309,14 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
     }
 
 // Something sneaky here: note the at(1) instead of at(0).
+//TODO: An even sneakier question is this thing even used?
 #define M_REGISTER_POLYMORPHIC_TERNOP(T, instr_class)                                              \
     ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], in[1], in[2], out[0]));
 #define REGISTER_POLYMORPHIC_TERNOP(op_class, instr_class)                                         \
     REGISTER_TO_OP_MAP(op_class)                                                                   \
     {                                                                                              \
         const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
-                                       n->get_arguments().at(1)->get_value_type()))                \
+                                       n->get_inputs().at(1).get_tensor_view_type()))              \
                                       ->get_element_type();                                        \
         DO_ON_ELEMENT_TYPE(et,                                                                     \
                            "Internal error: polymorphic ternop has unhandled element type",        \
@@ -427,7 +428,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto broadcast = static_cast<const op::Broadcast*>(n);
 
             auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
-                n->get_arguments().at(0)->get_value_type());
+                n->get_inputs().at(0).get_tensor_view_type());
             assert(nullptr != arg_tensor_type);
 
             auto result_tensor_type =
@@ -520,10 +521,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_TO_OP_MAP(op::Convert)
         {
-            auto arg = n->get_arguments().at(0);
-
             auto arg_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(arg->get_value_type());
+                dynamic_pointer_cast<const TensorViewType>(n->get_inputs().at(0).get_tensor_view_type());
             assert(nullptr != arg_tensor_type);
 
             auto& arg_element_type = arg_tensor_type->get_element_type();
@@ -576,16 +575,15 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_TO_OP_MAP(op::Dot)
         {
-            auto& arg_nodes = n->get_arguments();
 
-            assert(arg_nodes.size() == 2);
+            assert(n->get_inputs().size() == 2);
 
             auto arg0_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(arg_nodes.at(0)->get_value_type());
+                dynamic_pointer_cast<const TensorViewType>(n->get_inputs().at(0).get_tensor_view_type());
             assert(nullptr != arg0_tensor_type);
 
             auto arg1_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(arg_nodes.at(1)->get_value_type());
+                dynamic_pointer_cast<const TensorViewType>(n->get_inputs().at(1).get_tensor_view_type());
             assert(nullptr != arg1_tensor_type);
 
             auto arg0_shape = arg0_tensor_type->get_shape();
@@ -742,7 +740,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 function_map.insert({reduction_function, external});
             }
 
-            auto reductee_type = reduce->get_arguments().at(0)->get_value_type();
+            auto reductee_type = reduce->get_inputs().at(0).get_tensor_view_type();
             auto reductee_tensor_view_type =
                 dynamic_pointer_cast<const TensorViewType>(reductee_type);
             assert(nullptr != reductee_tensor_view_type);
@@ -876,8 +874,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto& s_element_type = s_tensor_view_type->get_element_type();
             auto s_shape = s_tensor_view_type->get_shape();
 
-            auto arg = s->get_arguments().at(0);
-            auto arg_type = arg->get_value_type();
+            auto arg_type = n->get_inputs().at(0).get_tensor_view_type();
             auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
             assert(nullptr != arg_tensor_view_type);
             auto arg_shape = arg_tensor_view_type->get_shape();
@@ -930,7 +927,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto reshape = static_cast<const op::Reshape*>(n);
 
-            auto arg_type = reshape->get_arguments().at(0)->get_value_type();
+            auto arg_type = reshape->get_inputs().at(0).get_tensor_view_type();
             auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
             assert(nullptr != arg_tensor_view_type);
             auto arg_shape = arg_tensor_view_type->get_shape();
@@ -991,7 +988,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 }
             }
 
-            auto arg_type = slice->get_arguments().at(0)->get_value_type();
+            auto arg_type = slice->get_inputs().at(0).get_tensor_view_type();
             auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
             assert(nullptr != arg_tensor_view_type);
             auto arg_shape = arg_tensor_view_type->get_shape();

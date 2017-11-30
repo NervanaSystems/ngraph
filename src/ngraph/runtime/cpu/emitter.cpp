@@ -80,15 +80,14 @@ void Emitter::EmitDot(const ngraph::Node* n,
                       const std::vector<TensorViewInfo>& inputs,
                       const std::vector<TensorViewInfo>& outputs)
 {
-    auto& arg_nodes = n->get_arguments();
-    assert(arg_nodes.size() == 2);
+    assert(n->get_inputs().size() == 2);
 
     auto arg0_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(arg_nodes.at(0)->get_value_type());
+        dynamic_pointer_cast<const TensorViewType>(n->get_inputs().at(0).get_tensor_view_type());
     assert(arg0_tensor_type);
 
     auto arg1_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(arg_nodes.at(1)->get_value_type());
+        dynamic_pointer_cast<const TensorViewType>(n->get_inputs().at(1).get_tensor_view_type());
     assert(arg1_tensor_type);
 
     auto arg0_shape = arg0_tensor_type->get_shape();
@@ -174,7 +173,7 @@ void Emitter::EmitMultiply(const ngraph::Node* n,
                            const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
-        (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
+        (dynamic_pointer_cast<const TensorViewType>(n->get_inputs().at(0).get_tensor_view_type()))
             ->get_element_type();
     string type = et.c_type_string();
 
@@ -804,7 +803,7 @@ void Emitter::EmitBroadcast(const ngraph::Node* n,
     auto broadcast = static_cast<const op::Broadcast*>(n);
 
     auto arg_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type());
+        dynamic_pointer_cast<const TensorViewType>(n->get_inputs().at(0).get_tensor_view_type());
     assert(arg_tensor_type);
 
     auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
@@ -875,9 +874,7 @@ void Emitter::EmitConvert(const ngraph::Node* n,
                           const std::vector<TensorViewInfo>& inputs,
                           const std::vector<TensorViewInfo>& outputs)
 {
-    auto arg = n->get_arguments().at(0);
-
-    auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(arg->get_value_type());
+    auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_inputs().at(0).get_tensor_view_type());
     assert(arg_tensor_type);
 
     auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
@@ -921,7 +918,7 @@ void Emitter::EmitReshape(const ngraph::Node* n,
 {
     auto reshape = static_cast<const op::Reshape*>(n);
 
-    auto arg_type = reshape->get_arguments().at(0)->get_value_type();
+    auto arg_type = reshape->get_inputs().at(0).get_tensor_view_type();
     auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
     assert(arg_tensor_view_type);
     auto arg_shape = arg_tensor_view_type->get_shape();
@@ -1024,7 +1021,7 @@ void Emitter::EmitReduce(const ngraph::Node* n,
     auto reduce = static_cast<const op::Reduce*>(n);
     auto reduction_function = reduce->get_reduction_function();
 
-    auto reductee_type = reduce->get_arguments().at(0)->get_value_type();
+    auto reductee_type = reduce->get_inputs().at(0).get_tensor_view_type();
     auto reductee_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(reductee_type);
     assert(reductee_tensor_view_type);
     auto reductee_shape = reductee_tensor_view_type->get_shape();
@@ -1217,7 +1214,7 @@ void Emitter::EmitSlice(const ngraph::Node* n,
         }
     }
 
-    auto arg_type = slice->get_arguments().at(0)->get_value_type();
+    auto arg_type = slice->get_inputs().at(0).get_tensor_view_type();
     auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
     assert(arg_tensor_view_type);
     auto arg_shape = arg_tensor_view_type->get_shape();
@@ -1281,8 +1278,7 @@ void Emitter::EmitSum(const ngraph::Node* n,
     assert(s_tensor_view_type);
     auto s_shape = s_tensor_view_type->get_shape();
 
-    auto arg = s->get_arguments().at(0);
-    auto arg_type = arg->get_value_type();
+    auto arg_type = s->get_inputs().at(0).get_tensor_view_type();
     auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
     assert(arg_tensor_view_type);
     auto arg_shape = arg_tensor_view_type->get_shape();
