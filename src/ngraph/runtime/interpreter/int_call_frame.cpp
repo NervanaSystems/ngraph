@@ -45,6 +45,7 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
         shared_ptr<runtime::interpreter::INT_TensorView> tv =
             static_pointer_cast<runtime::interpreter::INT_TensorView>(input_tvs[i]);
         string name = params[i]->get_name();
+        NGRAPH_INFO << "Funtion Inputs " << name;
         tensor_map.insert({name, tv});
         inputs.push_back(tv);
     }
@@ -52,7 +53,8 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
     {
         shared_ptr<runtime::interpreter::INT_TensorView> tv =
             static_pointer_cast<runtime::interpreter::INT_TensorView>(output_tvs[i]);
-        string name = m_function->get_result()->get_name();
+        string name = m_function->get_name();
+        NGRAPH_INFO << "Funtion Outputs " << name;
         tensor_map.insert({name, tv});
         outputs.push_back(tv);
     }
@@ -65,10 +67,14 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
 
         for (const descriptor::Input& input : op->get_inputs())
         {
+            NGRAPH_INFO << input.get_output().get_node()->get_name();
+            NGRAPH_INFO << input.get_output().get_node()->get_name();
         }
         for (descriptor::Output& output : op->get_outputs())
         {
+            NGRAPH_INFO << output.get_node()->get_name();
         }
+
         if (op->get_element_type() == element::boolean)
         {
             op_engine<char>(*op, inputs, outputs);
