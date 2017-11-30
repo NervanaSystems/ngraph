@@ -113,6 +113,16 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     MKLDNN_INCLUDE_DIR)
     find_package(ZLIB REQUIRED)
 
+    include(${TBB_ROOT}/cmake/TBBBuild.cmake)
+    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS compiler=clang tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
+              tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
+    find_package(TBB REQUIRED tbb)
+    if (NOT TBB_FOUND)
+      message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
+    else()
+      message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
+    endif()
+
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${MKLDNN_INCLUDE_DIR})
     link_directories(${LLVM_LIB_DIR} ${MKLDNN_LIB_DIR})
 
@@ -190,6 +200,10 @@ if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
     target_link_libraries(ngraph PRIVATE mkldnn)
 endif()
 
+if(NGRAPH_CPU_ENABLE AND TBB_FOUND)
+    target_link_libraries(ngraph PRIVATE ${TBB_IMPORTED_TARGETS})
+endif()
+
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
     target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
@@ -251,4 +265,8 @@ endif()
 
 if(NGRAPH_CPU_ENABLE AND MKLDNN_INCLUDE_DIR)
     add_dependencies(ngraph ext_mkldnn)
+endif()
+
+if(NGRAPH_CPU_ENABLE AND TBB_FOUND)
+    add_dependencies(ngraph ${TBB_IMPORTED_TARGETS})
 endif()
