@@ -169,7 +169,7 @@ void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<N
             f(n);
         }
         stack.pop_front();
-        for (auto arg : n->get_arguments_DEPRECATED())
+        for (auto arg : n->get_arguments_via_inputs())
         {
             stack.push_front(arg);
         }

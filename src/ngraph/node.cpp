@@ -16,6 +16,8 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -163,6 +165,53 @@ void Node::set_name(const string& name)
     {
         throw ngraph_error("Node name may be set exactly once");
     }
+}
+
+void Node::assert_argument_list_equivalency(const Nodes& b)
+{
+    bool arguments_equal = true;
+    auto& a = this->m_arguments;
+    if (a.size() == b.size())
+    {
+        for (size_t i = 0; i < a.size(); i++)
+        {
+            arguments_equal = arguments_equal && a.at(i) == b.at(i);
+        }
+    }
+    else
+    {
+        arguments_equal = false;
+    }
+
+    if (!arguments_equal)
+    {
+        std::cout << "node = " << this->get_name() << std::endl;
+        std::cout << "m_arguments" << std::endl;
+        for (auto arg : a)
+        {
+            std::cout << "arg = " << arg->get_name() << std::endl;
+        }
+        std::cout << "results" << std::endl;
+        for (auto arg : b)
+        {
+            std::cout << "arg = " << arg->get_name() << std::endl;
+        }
+    }
+    assert(arguments_equal);
+}
+
+Nodes Node::get_arguments_via_inputs() //const
+{
+    Nodes result;
+    std::set<shared_ptr<op::XLATuple>> seen_tuples;
+    for (auto& i : get_inputs())
+    {
+        {
+            result.push_back(i.get_output().get_node());
+        }
+    }
+    assert_argument_list_equivalency(result);
+    return result;
 }
 
 std::shared_ptr<Node> Node::backprop_node(const std::shared_ptr<Node>& x,

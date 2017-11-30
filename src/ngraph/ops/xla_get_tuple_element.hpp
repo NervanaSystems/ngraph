@@ -64,6 +64,8 @@ namespace ngraph
                 return std::make_shared<XLAGetTupleElement>(new_args.at(0), m_n);
             }
 
+            virtual Nodes get_arguments_via_inputs() override; //const;
+
             /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }
         protected:

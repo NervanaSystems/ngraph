@@ -57,9 +57,6 @@ namespace ngraph
         std::string description() const { return m_node_type; }
         std::string get_name() const;
         void set_name(const std::string& name);
-
-        //@deprecated you should be using @get_outputs wherever possible
-        const Nodes& get_arguments_DEPRECATED() const { return m_arguments; }
         void clear_arguments() { m_arguments.clear(); }
         const std::multiset<Node*>& users() const { return m_users; }
         std::string get_node_id() const;
@@ -106,6 +103,8 @@ namespace ngraph
         std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
                                             const std::shared_ptr<Node>& c);
 
+        virtual Nodes get_arguments_via_inputs(); //const;
+
         std::shared_ptr<Node> get_input_argument(size_t index)
         {
             for (auto arg : m_arguments)
@@ -122,6 +121,8 @@ namespace ngraph
             copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const = 0;
 
     protected:
+        void assert_argument_list_equivalency(const Nodes& b);
+
         std::string m_node_type;
         std::shared_ptr<const ValueType> m_value_type;
         std::multiset<Node*> m_users;
