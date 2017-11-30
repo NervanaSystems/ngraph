@@ -39,7 +39,7 @@ namespace ngraph
         /// | Backend | Status             |
         /// | ------- | ------------------ |
         /// | NGVM    | Fully implemented. |
-        class Tuple : public ngraph::Node
+        class Tuple : public Node
         {
         public:
             /// \brief Constructs a tuple construction operation.

@@ -14,9 +14,10 @@
 
 #include <algorithm>
 #include <cinttypes>
+#include <cmath>
+
 #include "gtest/gtest.h"
 
-#include <cmath>
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 

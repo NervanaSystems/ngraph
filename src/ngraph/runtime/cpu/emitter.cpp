@@ -1001,7 +1001,7 @@ void Emitter::EmitReduce(const ngraph::Node* n,
                          const std::vector<TensorViewInfo>& outputs)
 {
     auto reduce = static_cast<const op::Reduce*>(n);
-    auto reduction_function = reduce->get_reduction_function();
+    auto reduction_function = reduce->get_function();
 
     auto reductee_type = reduce->get_arguments().at(0)->get_value_type();
     auto reductee_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(reductee_type);
