@@ -16,12 +16,12 @@
 #include <memory>
 
 #include "ngraph/function.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -38,30 +38,11 @@ void ngraph::pass::Manager::initialize_default_passes()
 {
 }
 
-static void find_functions(shared_ptr<Function> f, set<shared_ptr<Function>>& funcs)
-{
-    funcs.insert(f);
-
-    for (shared_ptr<Node> node : f->get_ops())
-    {
-        shared_ptr<op::FunctionCall> fc = dynamic_pointer_cast<op::FunctionCall>(node);
-        if (fc)
-        {
-            find_functions(fc->get_function(), funcs);
-        }
-        shared_ptr<op::Reduce> reduce = dynamic_pointer_cast<op::Reduce>(node);
-        if (reduce)
-        {
-            find_functions(reduce->get_reduction_function(), funcs);
-        }
-    }
-}
-
 void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 {
     // find all functions
     set<shared_ptr<Function>> tfs;
-    find_functions(func, tfs);
+    traverse_functions(func, [&](shared_ptr<Function> f) { tfs.insert(f); });
     get_state().set_functions(tfs);
 
     vector<shared_ptr<Function>> fs;
