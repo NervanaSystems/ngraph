@@ -250,9 +250,6 @@ if (NOT APPLE)
         install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
           DESTINATION ${NGRAPH_INSTALL_LIB}
           FILES_MATCHING PATTERN "libtbb.so.*")
-        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
-          DESTINATION ${NGRAPH_INSTALL_LIB}
-          FILES_MATCHING PATTERN "libtbb.so.*")
     endif()
 endif()
 
