@@ -874,7 +874,8 @@ void Emitter::EmitConvert(const ngraph::Node* n,
                           const std::vector<TensorViewInfo>& inputs,
                           const std::vector<TensorViewInfo>& outputs)
 {
-    auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_inputs().at(0).get_tensor_view_type());
+    auto arg_tensor_type =
+        dynamic_pointer_cast<const TensorViewType>(n->get_inputs().at(0).get_tensor_view_type());
     assert(arg_tensor_type);
 
     auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());

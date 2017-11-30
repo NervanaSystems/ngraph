@@ -521,8 +521,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_TO_OP_MAP(op::Convert)
         {
-            auto arg_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(n->get_inputs().at(0).get_tensor_view_type());
+            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_inputs().at(0).get_tensor_view_type());
             assert(nullptr != arg_tensor_type);
 
             auto& arg_element_type = arg_tensor_type->get_element_type();
@@ -575,15 +575,14 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_TO_OP_MAP(op::Dot)
         {
-
             assert(n->get_inputs().size() == 2);
 
-            auto arg0_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(n->get_inputs().at(0).get_tensor_view_type());
+            auto arg0_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_inputs().at(0).get_tensor_view_type());
             assert(nullptr != arg0_tensor_type);
 
-            auto arg1_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(n->get_inputs().at(1).get_tensor_view_type());
+            auto arg1_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_inputs().at(1).get_tensor_view_type());
             assert(nullptr != arg1_tensor_type);
 
             auto arg0_shape = arg0_tensor_type->get_shape();
