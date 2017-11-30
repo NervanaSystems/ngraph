@@ -154,7 +154,7 @@ void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<N
     {
         stack.push_front(r);
     }
-    
+
     for (auto param : p->get_parameters())
     {
         stack.push_front(param);

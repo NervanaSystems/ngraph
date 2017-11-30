@@ -73,7 +73,7 @@ namespace ngraph
             df_params.push_back(c_param);
             //auto df_result = std::make_shared<op::XLATuple>(deriv_nodes);
             std::vector<std::shared_ptr<const ValueType>> types;
-            for (auto dn : deriv_nodes) 
+            for (auto dn : deriv_nodes)
             {
                 types.push_back(dn->get_value_type());
             }

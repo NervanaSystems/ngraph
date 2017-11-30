@@ -27,11 +27,11 @@
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
-#include "ngraph/ops/xla_get_tuple_element.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
 #include "ngraph/runtime/cpu/call_frame.hpp"
 #include "ngraph/runtime/cpu/emitter.hpp"
 #include "ngraph/runtime/cpu/external_function.hpp"
@@ -209,8 +209,8 @@ void Emitter::EmitGetTupleElement(const ngraph::Node* n,
 }
 
 void Emitter::EmitXLAGetTupleElement(const ngraph::Node* n,
-                                  const std::vector<TensorViewInfo>& inputs,
-                                  const std::vector<TensorViewInfo>& outputs)
+                                     const std::vector<TensorViewInfo>& inputs,
+                                     const std::vector<TensorViewInfo>& outputs)
 {
     auto get_tuple_element = static_cast<const op::XLAGetTupleElement*>(n);
     auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());

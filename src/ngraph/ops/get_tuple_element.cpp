@@ -23,11 +23,10 @@ op::GetTupleElement::GetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
     : Node("GetTupleElement", {arg})
     , m_n{n}
 {
-
-	if (arg->get_outputs().size() > 1) 
-	{
-		throw ngraph_error("Argument must have multiple output tensors");
-	}
+    if (arg->get_outputs().size() > 1)
+    {
+        throw ngraph_error("Argument must have multiple output tensors");
+    }
 
     if (m_n >= arg->get_outputs().size())
     {
@@ -36,4 +35,3 @@ op::GetTupleElement::GetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
 
     set_value_type_checked(arg->get_outputs().at(n).get_tensor_view_type());
 }
-

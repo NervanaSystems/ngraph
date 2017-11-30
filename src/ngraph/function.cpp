@@ -15,19 +15,18 @@
 #include <memory>
 
 #include "ngraph/function.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/ops/xla_tuple.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 atomic<size_t> Function::m_next_instance_id(0);
 
-
 Function::Function(const Nodes& results,
-                 const std::vector<std::shared_ptr<const ValueType>>& result_types,
-                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                 const std::string& name)
+                   const std::vector<std::shared_ptr<const ValueType>>& result_types,
+                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                   const std::string& name)
     : m_results(results)
     , m_parameters(parameters)
     , m_name(name)
@@ -40,19 +39,25 @@ Function::Function(const Nodes& results,
 }
 
 Function::Function(const std::shared_ptr<Node>& result,
-                 const std::shared_ptr<const ValueType>& result_type,
-                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                 const std::string& name): Function (Nodes {result}, std::vector<std::shared_ptr<const ValueType>> {result_type}, parameters, name) 
-                 {
-                     assert(!std::dynamic_pointer_cast<op::XLATuple>(result));
-                 };
+                   const std::shared_ptr<const ValueType>& result_type,
+                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                   const std::string& name)
+    : Function(Nodes{result},
+               std::vector<std::shared_ptr<const ValueType>>{result_type},
+               parameters,
+               name)
+{
+    assert(!std::dynamic_pointer_cast<op::XLATuple>(result));
+};
 
 XLAFunction::XLAFunction(const std::shared_ptr<Node>& result,
-                 const std::shared_ptr<const ValueType>& result_type,
-                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                 const std::string& name): Function (Nodes {result},  std::vector<std::shared_ptr<const ValueType>> {result_type}, parameters, name) {};
-
-
+                         const std::shared_ptr<const ValueType>& result_type,
+                         const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                         const std::string& name)
+    : Function(Nodes{result},
+               std::vector<std::shared_ptr<const ValueType>>{result_type},
+               parameters,
+               name){};
 
 void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)
 {
@@ -63,14 +68,14 @@ void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)
 std::vector<descriptor::Output*> Function::get_outputs()
 {
     std::vector<descriptor::Output*> outputs;
-    for (auto rn : m_results) 
+    for (auto rn : m_results)
     {
         for (auto& output : rn->get_outputs())
         {
             outputs.push_back(&output);
         }
     }
-    return outputs;    
+    return outputs;
 }
 
 std::list<shared_ptr<Node>>& Function::get_ops()

@@ -15,20 +15,20 @@
 #pragma once
 
 #include <atomic>
+#include <cassert>
 #include <initializer_list>
 #include <list>
 #include <memory>
 #include <string>
 #include <vector>
-#include <cassert>
 
+#include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/op.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/types/type.hpp"
-#include "ngraph/descriptor/output.hpp"
 
 namespace ngraph
 {
@@ -36,7 +36,6 @@ namespace ngraph
     class Function
     {
     public:
-
         Function(const Nodes& results,
                  const std::vector<std::shared_ptr<const ValueType>>& result_types,
                  const std::vector<std::shared_ptr<op::Parameter>>& parameters,
@@ -48,16 +47,12 @@ namespace ngraph
                  const std::string& name = "");
 
         std::shared_ptr<Node> get_result() //TODO: push up to XLAFunction
-        { 
-            assert (m_results.size() < 2); 
-            return m_results[0]; 
+        {
+            assert(m_results.size() < 2);
+            return m_results[0];
         }
 
-        const Nodes& get_results()
-        { 
-            return m_results; 
-        }
-
+        const Nodes& get_results() { return m_results; }
         std::vector<descriptor::Output*> get_outputs();
 
         const std::vector<std::shared_ptr<op::Parameter>>& get_parameters() const
@@ -65,14 +60,20 @@ namespace ngraph
             return m_parameters;
         }
         std::shared_ptr<const ValueType> get_result_type() const //TODO: push up to XLAFunction
-        { 
-            assert (m_result_types.size() < 2); 
-            return m_result_types[0]; 
+        {
+            assert(m_result_types.size() < 2);
+            return m_result_types[0];
         }
-        const std::vector<std::shared_ptr<const ValueType>>& get_result_types() const { return m_result_types; } //TODO: switch ValueType to TensorViewType
+        const std::vector<std::shared_ptr<const ValueType>>& get_result_types() const
+        {
+            return m_result_types;
+        } //TODO: switch ValueType to TensorViewType
         std::string get_name() const;
-        virtual void set_name(const std::string& name); //so we can check if we are dealing with XLA or regular function
-        std::list<std::shared_ptr<Node>>& get_ops();    //overriding get_result_type doesn't work because we would like different behaviours(checks) depending on a caller
+        virtual void
+            set_name(const std::string&
+                         name); //so we can check if we are dealing with XLA or regular function
+        std::list<std::shared_ptr<Node>>&
+            get_ops(); //overriding get_result_type doesn't work because we would like different behaviours(checks) depending on a caller
         const std::list<std::shared_ptr<Node>>& get_ops() const;
         std::list<std::shared_ptr<Node>>& get_ordered_ops();
         const std::list<std::shared_ptr<Node>>& get_ordered_ops() const;
@@ -102,12 +103,13 @@ namespace ngraph
         size_t m_instance_id;
     };
 
-    class XLAFunction : public Function //TODO: at this point this doesn't to warrant a separate file
+    class XLAFunction
+        : public Function //TODO: at this point this doesn't to warrant a separate file
     {
     public:
         XLAFunction(const std::shared_ptr<Node>& result,
-                 const std::shared_ptr<const ValueType>& result_type,
-                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                 const std::string& name = "");
+                    const std::shared_ptr<const ValueType>& result_type,
+                    const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                    const std::string& name = "");
     };
 }
