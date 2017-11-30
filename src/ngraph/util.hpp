@@ -18,6 +18,7 @@
 #include <chrono>
 #include <functional>
 #include <iostream>
+#include <list>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -44,6 +45,14 @@ namespace ngraph
             ss << x;
         }
         return ss.str();
+    }
+
+    template <typename T>
+    static std::string vector_to_string(const std::vector<T>& v)
+    {
+        std::ostringstream os;
+        os << "[ " << ngraph::join(v) << " ]";
+        return os.str();
     }
 
     template <typename U, typename T>
@@ -231,8 +240,9 @@ namespace ngraph
     }
 
     void traverse_nodes(Function* p, std::function<void(std::shared_ptr<Node>)> f);
-
     void traverse_nodes(std::shared_ptr<Function> p, std::function<void(std::shared_ptr<Node>)> f);
+    void traverse_functions(std::shared_ptr<Function> p,
+                            std::function<void(std::shared_ptr<Function>)> f);
 
     void free_nodes(std::shared_ptr<Function>);
 

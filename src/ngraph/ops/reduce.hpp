@@ -111,10 +111,7 @@ namespace ngraph
             }
 
             /// \return The function to use for reduction.
-            std::shared_ptr<Function> get_reduction_function() const
-            {
-                return m_reduction_function;
-            }
+            std::shared_ptr<Function> get_function() const override { return m_reduction_function; }
             /// \return The axis positions (0-based) to be eliminated through reduction.
             const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
         protected:

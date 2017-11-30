@@ -740,7 +740,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_TO_OP_MAP(op::Reduce)
         {
             auto reduce = static_cast<const op::Reduce*>(n);
-            auto reduction_function = reduce->get_reduction_function();
+            auto reduction_function = reduce->get_function();
 
             std::shared_ptr<ExternalFunction> external;
 
