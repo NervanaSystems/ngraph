@@ -55,12 +55,6 @@ namespace ngraph
             {
             }
             virtual ~Matcher() {}
-            // Called when the pattern node matches a graph node.
-            virtual void on_match_class(const std::shared_ptr<Node>& pattern_node,
-                                        const std::shared_ptr<Node>& graph_node,
-                                        PatternMap& pattern_map,
-                                        bool is_match);
-
             /// \brief Matches a pattern to \p graph_node
             ///
             /// \param graph_node is an input graph to be matched against
@@ -69,16 +63,19 @@ namespace ngraph
             void process_match(gr_callback_fn callback = nullptr);
 
             void reset() {}
-            bool is_match() { return m_match_root != nullptr; }
             std::shared_ptr<Node> pattern_node() { return m_pattern_node; }
             std::shared_ptr<Node> match_root();
             PatternMap get_pattern_map() { return PatternMap{m_pattern_map}; }
             friend op::Label; //TODO: refine to match_class
 
         protected:
-            void virtual match_class(const std::shared_ptr<Node>& pattern_node,
-                                     const std::shared_ptr<Node>& graph_node,
-                                     PatternMap& pattern_map);
+            bool virtual match_node(const std::shared_ptr<Node>& pattern_node,
+                                    const std::shared_ptr<Node>& graph_node,
+                                    PatternMap& pattern_map);
+
+            virtual bool match_arguments(const std::shared_ptr<Node>& pattern_node,
+                                         const std::shared_ptr<Node>& graph_node,
+                                         PatternMap& pattern_map);
 
             std::shared_ptr<Node> m_match_root;
             std::shared_ptr<Node> m_pattern_node;
@@ -86,13 +83,13 @@ namespace ngraph
 
         private:
             static std::string pad(size_t num) { return std::string(num, ' '); }
-            void match_arguments(const Nodes& pattern_args,
-                                 const Nodes& args,
-                                 PatternMap& pattern_map);
-            void match_pattern(const std::shared_ptr<op::Label>& pattern_node,
+            bool match_permutation(const Nodes& pattern_args,
+                                   const Nodes& args,
+                                   PatternMap& pattern_map);
+            bool match_pattern(const std::shared_ptr<op::Label>& pattern_node,
                                const std::shared_ptr<Node>& graph_node,
                                PatternMap& pattern_map);
-            void match_any(const std::shared_ptr<op::Any>& pattern_node,
+            bool match_any(const std::shared_ptr<op::Any>& pattern_node,
                            const std::shared_ptr<Node>& graph_node,
                            PatternMap& pattern_map);
 

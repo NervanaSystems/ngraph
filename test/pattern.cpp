@@ -36,36 +36,37 @@ using namespace std;
 class TestMatcher : public pattern::Matcher
 {
     using pattern::Matcher::Matcher;
-    void virtual match_class(const std::shared_ptr<Node>& pattern_node,
-                             const std::shared_ptr<Node>& graph_node,
-                             PatternMap& pattern_map) override
+    bool virtual match_node(const std::shared_ptr<Node>& pattern_node,
+                            const std::shared_ptr<Node>& graph_node,
+                            PatternMap& pattern_map) override
     {
         if (std::dynamic_pointer_cast<::ngraph::op::Parameter>(pattern_node))
         {
-            on_match_class(pattern_node,
-                           graph_node,
-                           pattern_map,
-                           pattern_node.get() ==
-                               dynamic_cast<::ngraph::op::Parameter*>(graph_node.get()));
-            return;
+            return pattern_node.get() == dynamic_cast<::ngraph::op::Parameter*>(graph_node.get());
         }
 
-        this->pattern::Matcher::match_class(pattern_node, graph_node, pattern_map);
+        return this->pattern::Matcher::match_node(pattern_node, graph_node, pattern_map);
     }
 
 public:
     bool match(const std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node)
     {
+        assert(
+            pattern_node &&
+            graph_node); //the same condition throws an exception in the non-test version of `match`
         NGRAPH_DEBUG << "Starting match pattern = " << pattern_node << " , "
                      << pattern_node->get_name() << " , graph_node = " << graph_node << " , "
                      << graph_node->get_name();
 
-        //reset_pattern_nodes(pattern_node);
         m_pattern_map.clear();
-        m_match_root = graph_node;
-        match_class(pattern_node, graph_node, m_pattern_map);
-        //NGRAPH_DEBUG << pad(2 * m_depth) << "is_match() " << is_match();
-        return is_match();
+        m_match_root.reset();
+
+        bool is_match = match_node(pattern_node, graph_node, m_pattern_map);
+        if (is_match)
+        {
+            m_match_root = graph_node;
+        }
+        return is_match;
     }
 };
 
