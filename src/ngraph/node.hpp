@@ -15,7 +15,9 @@
 #pragma once
 
 #include <atomic>
+#include <cassert>
 #include <deque>
+#include <iostream>
 #include <memory>
 #include <set>
 #include <string>
@@ -23,8 +25,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include <iostream>
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/common.hpp"
@@ -58,6 +58,7 @@ namespace ngraph
         std::string get_name() const;
         void set_name(const std::string& name);
 
+        //@deprecated you should be using @get_outputs wherever possible
         const Nodes& get_arguments() const { return m_arguments; }
         void clear_arguments() { m_arguments.clear(); }
         const std::multiset<Node*>& users() const { return m_users; }
@@ -105,6 +106,15 @@ namespace ngraph
         std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
                                             const std::shared_ptr<Node>& c);
 
+        std::shared_ptr<Node> get_input_argument(size_t index)
+        {
+            for (auto arg : m_arguments)
+            {
+                assert(arg->get_outputs().size() == 1); //to avoid subtle logical errors w/ tuples
+            }
+            return m_inputs.at(index).get_output().get_node();
+        }
+
         /// Returns the shape if this node has tensor type, otherwise an ngraph-error is thrown.
         const Shape& get_shape() const { return m_value_type->get_shape(); }
         const element::Type& get_element_type() const { return m_value_type->get_element_type(); }
@@ -113,7 +123,6 @@ namespace ngraph
 
     protected:
         std::string m_node_type;
-        Nodes m_arguments;
         std::shared_ptr<const ValueType> m_value_type;
         std::multiset<Node*> m_users;
         std::string m_name;
@@ -123,5 +132,8 @@ namespace ngraph
         std::deque<descriptor::Output> m_outputs;
         bool m_is_output;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
+
+    private:
+        Nodes m_arguments;
     };
 }

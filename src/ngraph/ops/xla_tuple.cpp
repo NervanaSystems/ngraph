@@ -24,7 +24,7 @@ op::XLATuple::XLATuple(const Nodes& args)
     : Node("XLATuple", args)
 {
     vector<shared_ptr<const ValueType>> element_types;
-    for (auto argument : m_arguments)
+    for (auto argument : get_arguments())
     {
         element_types.push_back(argument->get_value_type());
     }

@@ -26,14 +26,15 @@ op::FunctionCall::FunctionCall(std::shared_ptr<Function> function,
 {
     auto& function_params = m_function->get_parameters();
 
-    if (m_arguments.size() != function_params.size())
+    //TODO : [nikolayk] rewrite this in terms of outputs
+    if (get_arguments().size() != function_params.size())
     {
         throw ngraph_error("Wrong number of arguments.");
     }
 
-    for (size_t i = 0; i < m_arguments.size(); i++)
+    for (size_t i = 0; i < get_arguments().size(); i++)
     {
-        if (nullptr == m_arguments.at(i)->get_value_type())
+        if (nullptr == get_arguments().at(i)->get_value_type())
         {
             throw ngraph_error("Function call argument is missing type.");
         }
@@ -43,7 +44,8 @@ op::FunctionCall::FunctionCall(std::shared_ptr<Function> function,
             throw ngraph_error("Function parameter is missing type.");
         }
 
-        if (*(m_arguments.at(i)->get_value_type()) != *(function_params.at(i)->get_value_type()))
+        if (*(get_arguments().at(i)->get_value_type()) !=
+            *(function_params.at(i)->get_value_type()))
         {
             throw ngraph_error("Function argument type mismatch.");
         }
