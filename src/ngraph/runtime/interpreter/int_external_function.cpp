@@ -93,11 +93,9 @@ static StaticInitializers s_static_initializers;
 using descriptor::layout::DenseTensorViewLayout;
 
 runtime::interpreter::ExternalFunction::ExternalFunction(const shared_ptr<Function>& function,
-shared_ptr<INT_Backend> backend,
                                                          bool release_function)
     : runtime::ExternalFunction(function, release_function)
     , m_function(function)
-    , m_backend(backend)
 {
 }
 
@@ -115,6 +113,7 @@ void runtime::interpreter::ExternalFunction::compile()
     pass_manager.register_pass<pass::TopologicalSort>();
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
+    pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(m_function);
 
     m_is_compiled = true;
@@ -131,5 +130,5 @@ shared_ptr<runtime::CallFrame> runtime::interpreter::ExternalFunction::make_call
         compile();
     }
 
-    return make_shared<runtime::interpreter::INT_CallFrame>(shared_from_this(), m_function, m_backend);
+    return make_shared<runtime::interpreter::INT_CallFrame>(shared_from_this(), m_function);
 }

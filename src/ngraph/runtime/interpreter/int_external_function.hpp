@@ -22,9 +22,9 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/external_function.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
 
 namespace ngraph
 {
@@ -37,13 +37,11 @@ namespace ngraph
             {
             public:
                 ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                std::shared_ptr<INT_Backend> backend,
                                  bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
             protected:
                 std::shared_ptr<ngraph::Function> m_function;
-                std::shared_ptr<INT_Backend> m_backend;
                 void compile();
             };
         }

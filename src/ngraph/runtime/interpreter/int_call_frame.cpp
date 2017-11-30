@@ -22,11 +22,9 @@ using namespace std;
 using namespace ngraph;
 
 runtime::interpreter::INT_CallFrame::INT_CallFrame(shared_ptr<ExternalFunction> external_function,
-                                                   shared_ptr<Function> func,
-                              shared_ptr<INT_Backend> backend)
+                                                   shared_ptr<Function> func)
     : m_external_function(external_function)
     , m_function(func)
-    , m_backend(backend)
 {
     NGRAPH_INFO;
 }
@@ -60,11 +58,16 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
     // Invoke computation
     for (shared_ptr<Node> op : m_function->get_ordered_ops())
     {
-        NGRAPH_INFO << *op;
-        NGRAPH_INFO << op->get_element_type();
+        NGRAPH_INFO << "op " << *op;
 
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> inputs;
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> outputs;
+
+        // Allocate any new tensors
+        for (const descriptor::Tensor* t : op->liveness_new_list)
+        {
+            NGRAPH_INFO << "new " << *t;
+        }
 
         for (const descriptor::Input& input : op->get_inputs())
         {
@@ -76,7 +79,12 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
         for (descriptor::Output& output : op->get_outputs())
         {
             string name = output.get_node()->get_name();
+            const Shape& shape = output.get_tensor_view_type()->get_shape();
+            element::Type element_type = output.get_tensor_view_type()->get_element_type();
             // make the output tensor;
+            auto tv = make_shared<runtime::interpreter::INT_TensorView>(element_type, shape);
+            outputs.push_back(tv);
+            tensor_map.insert({name, tv});
             NGRAPH_INFO << name;
         }
 
@@ -123,6 +131,12 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
         else if (op->get_element_type() == element::u64)
         {
             op_engine<uint64_t>(*op, inputs, outputs);
+        }
+
+        // Delete any obsolete tensors
+        for (const descriptor::Tensor* t : op->liveness_free_list)
+        {
+            NGRAPH_INFO << "free " << *t;
         }
     }
 }

@@ -53,6 +53,5 @@ size_t TensorView::get_element_count() const
     {
         rc *= s;
     }
-    NGRAPH_INFO << rc;
     return rc;
 }
