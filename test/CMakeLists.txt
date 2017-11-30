@@ -23,8 +23,8 @@ include_directories(
 
 set (SRC
     autodiff.cpp
+    builder.cpp
     builder_autobroadcast.cpp
-    builder_reduce_ops.cpp
     build_graph.cpp
     coordinate_iterator.cpp
     copy.cpp

@@ -90,20 +90,20 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_false(
     return result;
 }
 
-TEST(builder_reduce_ops, l2_norm)
+TEST(builder, l2_norm)
 {
     auto result = make_reduce_result(builder::l2_norm);
     ASSERT_TRUE(
         all_close((vector<float>{5.9160797831f, 7.48331477355f}), result->get_vector<float>()));
 }
 
-TEST(builder_reduce_ops, mean)
+TEST(builder, mean)
 {
     auto result = make_reduce_result(builder::mean);
     ASSERT_TRUE(all_close((vector<float>{3, 4}), result->get_vector<float>()));
 }
 
-TEST(builder_reduce_ops, std_dev)
+TEST(builder, std_dev)
 {
     auto result = make_reduce_result_false(builder::std_dev);
     ASSERT_TRUE(
@@ -112,11 +112,39 @@ TEST(builder_reduce_ops, std_dev)
     ASSERT_TRUE(all_close((vector<float>{2, 2}), result->get_vector<float>()));
 }
 
-TEST(builder_reduce_ops, variance)
+TEST(builder, variance)
 {
     auto result = make_reduce_result_false(builder::variance);
     ASSERT_TRUE(
         all_close((vector<float>{2.66666666666f, 2.66666666666f}), result->get_vector<float>()));
     result = make_reduce_result_true(builder::variance);
     ASSERT_TRUE(all_close((vector<float>{4, 4}), result->get_vector<float>()));
+}
+
+TEST(builder, numpy_transpose)
+{
+    // 2D Transpose
+    Shape shape{2, 4};
+    auto param = std::make_shared<op::Parameter>(ngraph::element::Float32::element_type(), shape);
+    auto transposed = std::dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param));
+    EXPECT_EQ(Shape({4, 2}), transposed->get_output_shape());
+
+    // Multidimensional Transpose
+    shape = Shape{2, 4, 8};
+    param = std::make_shared<op::Parameter>(ngraph::element::Float32::element_type(), shape);
+    transposed = std::dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param));
+    EXPECT_EQ(Shape({8, 4, 2}), transposed->get_output_shape());
+
+    // Dimshuffle
+    shape = Shape{2, 4, 8};
+    param = std::make_shared<op::Parameter>(ngraph::element::Float32::element_type(), shape);
+    transposed = std::dynamic_pointer_cast<op::Reshape>(
+        builder::numpy_transpose(param, AxisVector{2, 0, 1}));
+    EXPECT_EQ(Shape({8, 2, 4}), transposed->get_output_shape());
+
+    // Bad Orders
+    EXPECT_ANY_THROW(
+        std::dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2})));
+    EXPECT_ANY_THROW(std::dynamic_pointer_cast<op::Reshape>(
+        builder::numpy_transpose(param, AxisVector{2, 2, 1})));
 }

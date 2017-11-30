@@ -14,6 +14,7 @@
 set (SRC
     autodiff/adjoints.cpp
     builder/autobroadcast.cpp
+    builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
     coordinate_iterator.cpp
     descriptor/input.cpp
