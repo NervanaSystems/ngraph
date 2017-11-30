@@ -433,6 +433,69 @@ TEST(${BACKEND_NAME}, divide)
     ASSERT_EQ((vector<float>{2, 2, 2, 2}), result->get_vector<float>());
 }
 
+TEST(${BACKEND_NAME}, divide_by_zero_float32)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    auto shape = Shape{2, 2};
+
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), rt, op::Parameters{A, B});
+
+        auto external = manager->compile(f);
+        return external;
+    };
+
+    auto cf = backend->make_call_frame(make_external());
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{2, 4, 8, 16});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{0, 0, 0, 0});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{std::numeric_limits<float>::infinity(),
+                             std::numeric_limits<float>::infinity(),
+                             std::numeric_limits<float>::infinity(),
+                             std::numeric_limits<float>::infinity()}),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, divide_by_zero_int32)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    auto shape = Shape{2, 2};
+
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+        auto B = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+        auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape);
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), rt, op::Parameters{A, B});
+
+        auto external = manager->compile(f);
+        return external;
+    };
+
+    auto cf = backend->make_call_frame(make_external());
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape);
+    copy_data(a, vector<int>{2, 4, 8, 16});
+    auto b = backend->make_primary_tensor_view(element::Int32::element_type(), shape);
+    copy_data(b, vector<int>{0, 0, 0, 0});
+    auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape);
+
+    EXPECT_ANY_THROW({ cf->call({a, b}, {result}); });
+}
+
 TEST(${BACKEND_NAME}, equal)
 {
     auto shape = Shape{2, 2, 2};
@@ -2510,6 +2573,120 @@ TEST(${BACKEND_NAME}, slice_vector)
 
     cf->call({a}, {result});
     ASSERT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, slice_matrix_strided)
+{
+    auto shape_a = Shape{4, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{1, 0}, Coordinate{4, 4}, Strides{2, 3});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{4, 7, 12, 15}), result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, slice_3d)
+{
+    auto shape_a = Shape{4, 4, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{2, 2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{1, 1, 1}, Coordinate{3, 3, 3});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                               32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                               48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{21, 22, 25, 26, 37, 38, 41, 42}), result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, slice_3d_strided)
+{
+    auto shape_a = Shape{4, 4, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{2, 2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 2});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                               32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                               48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{0, 2, 8, 10, 32, 34, 40, 42}), result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, slice_3d_strided_different)
+{
+    auto shape_a = Shape{4, 4, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{2, 2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                               32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                               48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{0, 3, 8, 11, 32, 35, 40, 43}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, scalar_constant_float32)

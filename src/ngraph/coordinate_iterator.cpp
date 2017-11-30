@@ -118,3 +118,37 @@ bool CoordinateIterator::increment()
 
     return !overflow;
 }
+
+// TODO: this function should be moved for re-use.
+Coordinate ngraph::project_coordinate(const Coordinate& coord, const AxisSet& deleted_axes)
+{
+    Coordinate result;
+
+    for (size_t i = 0; i < coord.size(); i++)
+    {
+        if (deleted_axes.find(i) == deleted_axes.end())
+        {
+            result.push_back(coord[i]);
+        }
+    }
+
+    return result;
+}
+
+// TODO: this function should be moved for re-use.
+size_t ngraph::index_in_dense_tensor(const Shape& tensor_shape, const Coordinate& coord)
+{
+    size_t index = 0;
+    size_t stride = 1;
+
+    assert(tensor_shape.size() == coord.size()); // FIXME: don't use assert
+
+    for (size_t i = tensor_shape.size(); i-- > 0;)
+    {
+        assert(coord[i] <= tensor_shape[i]); // FIXME: don't use assert
+        index += coord[i] * stride;
+        stride *= tensor_shape[i];
+    }
+
+    return index;
+}

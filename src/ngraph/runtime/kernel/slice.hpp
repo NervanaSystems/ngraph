@@ -14,7 +14,10 @@
 
 #pragma once
 
-#include <type_traits>
+#include <cmath>
+
+#include "ngraph/common.hpp"
+#include "ngraph/coordinate_iterator.hpp"
 
 namespace ngraph
 {
@@ -23,19 +26,24 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void divide(T* arg0, T* arg1, T* out, size_t count)
+            void slice(T* arg,
+                       T* out,
+                       const Shape& arg_shape,
+                       const Coordinate& lower_bounds,
+                       const Coordinate& upper_bounds,
+                       const Strides& strides,
+                       const Shape& out_shape)
             {
-                for (size_t i = 0; i < count; i++)
+                CoordinateIterator in_iter(arg_shape, strides, upper_bounds, lower_bounds);
+                CoordinateIterator out_iter(out_shape);
+
+                do
                 {
-                    // The slightly odd way of testing arg1[i] == 0 is because this template is
-                    // instantiated at both integral and floating-point types, and == on floating
-                    // point will trigger a warning even if it's never actually evaluated.
-                    if (!std::is_floating_point<T>::value && (arg1[i] >= 0 && arg1[i] <= 0))
-                    {
-                        throw std::domain_error("integer division by zero");
-                    }
-                    out[i] = arg0[i] / arg1[i];
-                }
+                    auto out_index = out_iter.get_current_index();
+                    auto in_index = in_iter.get_current_index();
+
+                    out[out_index] = arg[in_index];
+                } while (out_iter.increment() && in_iter.increment());
             }
         }
     }

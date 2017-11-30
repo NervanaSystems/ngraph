@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <cstdio>
 #include <iostream>
 #include <vector>
@@ -46,4 +47,10 @@ namespace ngraph
 
         Coordinate m_current_coordinate;
     };
+
+    // TODO: this function should be moved for re-use.
+    Coordinate project_coordinate(const Coordinate& coord, const AxisSet& deleted_axes);
+
+    // TODO: this function should be moved for re-use.
+    size_t index_in_dense_tensor(const Shape& tensor_shape, const Coordinate& coord);
 }
