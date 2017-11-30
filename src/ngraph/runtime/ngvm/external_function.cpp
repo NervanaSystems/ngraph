@@ -71,8 +71,6 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/ngvm/eigen/broadcast_scalar.hpp"
-#include "ngraph/runtime/ngvm/eigen/broadcast_vector_colwise.hpp"
-#include "ngraph/runtime/ngvm/eigen/broadcast_vector_rowwise.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_vector.hpp"
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
@@ -437,52 +435,6 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                          arg_shape,
                                          result_shape,
                                          broadcast->get_broadcast_axes());
-            /*
-            if (broadcast->get_broadcast_axes().empty())
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                             "Broadcast has unhandled element type",
-                                             instruction::CopyInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            else if (arg_shape.size() == 0)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                             "Broadcast has unhandled element type",
-                                             eigen::BroadcastScalarInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            else if (arg_shape.size() == 1 && result_shape.size() == 2)
-            {
-                if (broadcast->get_broadcast_axes() == AxisSet{1})
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                                 "Broadcast has unhandled element type",
-                                                 eigen::BroadcastVectorColwiseInstruction,
-                                                 in[0],
-                                                 out[0]);
-                }
-                else if (broadcast->get_broadcast_axes() == AxisSet{0})
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                                 "Broadcast has unhandled element type",
-                                                 eigen::BroadcastVectorRowwiseInstruction,
-                                                 in[0],
-                                                 out[0]);
-                }
-                else
-                {
-                    throw ngraph_error(
-                        "Internal error: axis set for vector-matrix broadcast is neither {0} nor "
-                        "{1}");
-                }
-            }
-            else
-            {
-                throw ngraph_error("Broadcast not implemented for rank>2 in VM yet");
-            }*/
         };
 
         REGISTER_TO_OP_MAP(op::Concat)
