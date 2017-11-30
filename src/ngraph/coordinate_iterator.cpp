@@ -34,17 +34,17 @@ CoordinateIterator::CoordinateIterator(const Shape& space_shape,
 {
     if (space_shape.size() != window_inner_corner.size())
     {
-        throw ngraph_error("Coordinate iterator inner corner rank does not make space shape rank");
+        throw ngraph_error("Coordinate iterator inner corner rank does not match space shape rank");
     }
 
     if (space_shape.size() != window_outer_corner.size())
     {
-        throw ngraph_error("Coordinate iterator outer corner rank does not make space shape rank");
+        throw ngraph_error("Coordinate iterator outer corner rank does not match space shape rank");
     }
 
     if (space_shape.size() != strides.size())
     {
-        throw ngraph_error("Coordinate iterator stride rank does not make space shape rank");
+        throw ngraph_error("Coordinate iterator stride rank does not match space shape rank");
     }
 
     for (size_t i = 0; i < space_shape.size(); i++)
