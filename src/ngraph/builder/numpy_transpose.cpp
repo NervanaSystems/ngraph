@@ -28,7 +28,7 @@ namespace ngraph
         os << " is incompatible with the input shape ";
         os << "[ " << ngraph::join(in_shape) << " ]";
         os << " during numpy_transpose.";
-        ngraph_error(os.str());
+        throw ngraph_error(os.str());
     }
 
     namespace builder
