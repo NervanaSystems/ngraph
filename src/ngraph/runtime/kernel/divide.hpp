@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 namespace ngraph
 {
     namespace runtime
@@ -25,6 +27,13 @@ namespace ngraph
             {
                 for (size_t i = 0; i < count; i++)
                 {
+                    // The slightly odd way of testing arg1[i] == 0 is because this template is
+                    // instantiated at both integral and floating-point types, and == on floating
+                    // point will trigger a warning even if it's never actually evaluated.
+                    if (!std::is_floating_point<T>::value && (arg1[i] >= 0 && arg1[i] <= 0))
+                    {
+                        throw std::domain_error("integer division by zero");
+                    }
                     out[i] = arg0[i] / arg1[i];
                 }
             }
