@@ -33,7 +33,7 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
     const vector<shared_ptr<runtime::TensorView>>& input_tvs,
     const vector<shared_ptr<runtime::TensorView>>& output_tvs)
 {
-    NGRAPH_INFO << "----------------------------------";
+    NGRAPH_INFO << "===============================================================";
     unordered_map<string, shared_ptr<runtime::interpreter::INT_TensorView>> tensor_map;
     const std::vector<std::shared_ptr<op::Parameter>>& params = m_function->get_parameters();
 
@@ -62,12 +62,6 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> inputs;
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> outputs;
 
-        // Allocate any new tensors
-        for (const descriptor::Tensor* t : op->liveness_new_list)
-        {
-            NGRAPH_INFO << "new " << *t;
-        }
-
         for (const descriptor::Input& input : op->get_inputs())
         {
             string name = input.get_output().get_node()->get_name();
@@ -81,10 +75,13 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
             shared_ptr<runtime::interpreter::INT_TensorView> tv;
             if (!contains_key(tensor_map, name))
             {
+                // The output tensor is not in the tensor map so create a new tensor
                 const Shape& shape = output.get_tensor_view_type()->get_shape();
                 element::Type element_type = output.get_tensor_view_type()->get_element_type();
-                // make the output tensor;
-                tv = make_shared<runtime::interpreter::INT_TensorView>(element_type, shape);
+                string tensor_name = output.get_tensor().get_name();
+                NGRAPH_INFO << tensor_name;
+                tv = make_shared<runtime::interpreter::INT_TensorView>(
+                    element_type, shape, tensor_name);
                 tensor_map.insert({name, tv});
             }
             else
@@ -93,8 +90,6 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
             }
             outputs.push_back(tv);
             NGRAPH_INFO << "Op Outputs " << name;
-            NGRAPH_INFO << output.get_tensor_view()->get_name();
-            NGRAPH_INFO << output.get_tensor().get_name();
         }
 
         if (op->get_element_type() == element::boolean)
@@ -143,12 +138,26 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
         }
 
         // Delete any obsolete tensors
-        // for (const descriptor::Tensor* t : op->liveness_free_list)
-        // {
-        //     NGRAPH_INFO << "free " << *t;
-        // }
+        for (const auto& p : tensor_map)
+        {
+            NGRAPH_INFO << "before " << p.first;
+        }
+        for (const descriptor::Tensor* t : op->liveness_free_list)
+        {
+            for (auto it = tensor_map.begin(); it != tensor_map.end(); ++it)
+            {
+                if (it->second->get_tensor().get_name() == t->get_name())
+                {
+                    tensor_map.erase(it);
+                    break;
+                }
+            }
+        }
+        for (const auto& p : tensor_map)
+        {
+            NGRAPH_INFO << "after " << p.first;
+        }
     }
-    NGRAPH_INFO << "----------------------------------";
 }
 
 void runtime::interpreter::INT_CallFrame::call(const vector<shared_ptr<runtime::Value>>& arguments,
@@ -167,7 +176,5 @@ void runtime::interpreter::INT_CallFrame::call(const vector<shared_ptr<runtime::
         result->collect_tensor_views(outputs, result);
     }
 
-    NGRAPH_INFO;
     tensor_call(inputs, outputs);
-    NGRAPH_INFO;
 }

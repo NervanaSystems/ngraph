@@ -57,7 +57,6 @@ TEST(${BACKEND_NAME}, ab)
     copy_data(a, runtime::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, runtime::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
-    NGRAPH_INFO << a->get_element_count();
     cf->call({a, b}, {result});
     EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{6, 8}, {10, 12}})));
 }
@@ -92,19 +91,13 @@ TEST(${BACKEND_NAME}, abc)
     copy_data(b, runtime::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, runtime::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    NGRAPH_INFO;
     cf->call({a, b, c}, {result});
-    NGRAPH_INFO;
     EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
 
-    NGRAPH_INFO;
     cf->call({b, a, c}, {result});
-    NGRAPH_INFO;
     EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
 
-    NGRAPH_INFO;
     cf->call({a, c, b}, {result});
-    NGRAPH_INFO;
     EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{50, 72}, {98, 128}})));
 }
 

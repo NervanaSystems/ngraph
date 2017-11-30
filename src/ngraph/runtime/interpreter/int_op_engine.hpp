@@ -165,7 +165,6 @@ namespace ngraph
                 }
                 else if (node_op == "Parameter")
                 {
-                    NGRAPH_INFO << node_op;
                     // const op::Parameter* param = dynamic_cast<const op::Parameter*>(&n);
                     // auto shape = param->get_shape();
                 }

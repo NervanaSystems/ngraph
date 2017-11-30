@@ -33,7 +33,9 @@ namespace ngraph
 class ngraph::runtime::interpreter::INT_TensorView : public ngraph::runtime::TensorView
 {
 public:
-    INT_TensorView(const ngraph::element::Type& element_type, const Shape& shape);
+    INT_TensorView(const ngraph::element::Type& element_type,
+                   const Shape& shape,
+                   const std::string& name);
     virtual ~INT_TensorView();
 
     char* get_data_ptr();

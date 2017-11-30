@@ -55,3 +55,8 @@ size_t TensorView::get_element_count() const
     }
     return rc;
 }
+
+const ngraph::descriptor::Tensor& TensorView::get_tensor() const
+{
+    return get_tensor_view_descriptor()->get_tensor();
+}

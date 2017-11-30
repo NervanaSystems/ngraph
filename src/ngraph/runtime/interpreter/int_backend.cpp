@@ -31,6 +31,6 @@ shared_ptr<runtime::TensorView>
     runtime::interpreter::INT_Backend::make_primary_tensor_view(const element::Type& element_type,
                                                                 const Shape& shape)
 {
-    auto rc = make_shared<runtime::interpreter::INT_TensorView>(element_type, shape);
+    auto rc = make_shared<runtime::interpreter::INT_TensorView>(element_type, shape, "external");
     return static_pointer_cast<runtime::TensorView>(rc);
 }

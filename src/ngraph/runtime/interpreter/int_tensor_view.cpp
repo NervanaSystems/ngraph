@@ -24,9 +24,10 @@ using namespace ngraph;
 using namespace std;
 
 runtime::interpreter::INT_TensorView::INT_TensorView(const element::Type& element_type,
-                                                     const Shape& shape)
+                                                     const Shape& shape,
+                                                     const string& name)
     : runtime::TensorView(std::make_shared<descriptor::PrimaryTensorView>(
-          std::make_shared<TensorViewType>(element_type, shape), "external", true, true, false))
+          std::make_shared<TensorViewType>(element_type, shape), name, true, true, false))
     , m_allocated_buffer_pool(nullptr)
     , m_aligned_buffer_pool(nullptr)
 
