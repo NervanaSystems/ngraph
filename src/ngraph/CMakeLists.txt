@@ -13,6 +13,7 @@
 
 set (SRC
     autodiff/adjoints.cpp
+    builder/autobroadcast.cpp
     builder/reduce_ops.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
