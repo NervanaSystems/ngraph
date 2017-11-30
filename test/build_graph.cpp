@@ -30,8 +30,8 @@ TEST(build_graph, build_simple)
     auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto dot = make_shared<op::Dot>(arg2, arg0);
-    ASSERT_EQ(dot->get_arguments()[0], arg2);
-    ASSERT_EQ(dot->get_arguments()[1], arg0);
+    ASSERT_EQ(dot->get_arguments_DEPRECATED()[0], arg2);
+    ASSERT_EQ(dot->get_arguments_DEPRECATED()[1], arg0);
 
     auto result_type =
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{10, 32, 7});
@@ -87,8 +87,8 @@ TEST(build_graph, literal)
     ASSERT_EQ(float0->get_value()->get_vector(), std::vector<float>{3.0});
     ASSERT_EQ(*float0->get_value_type(), *float_scalar_type);
     auto d = make_shared<op::Dot>(float0, float0);
-    ASSERT_EQ(d->get_arguments().at(0), float0);
-    ASSERT_EQ(d->get_arguments().at(1), float0);
+    ASSERT_EQ(d->get_arguments_DEPRECATED().at(0), float0);
+    ASSERT_EQ(d->get_arguments_DEPRECATED().at(1), float0);
 
     auto int32_t = ngraph::runtime::make_tensor<element::Int32>(Shape{}, {3});
     auto int32_0 = make_shared<op::Int32Constant>(Shape{}, int32_t);
@@ -108,8 +108,8 @@ TEST(build_graph, tensor)
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 3});
     ASSERT_EQ(*float0->get_value_type(), *float_tensor_type);
     auto d = make_shared<op::Add>(float0, float0);
-    ASSERT_EQ(d->get_arguments().at(0), float0);
-    ASSERT_EQ(d->get_arguments().at(1), float0);
+    ASSERT_EQ(d->get_arguments_DEPRECATED().at(0), float0);
+    ASSERT_EQ(d->get_arguments_DEPRECATED().at(1), float0);
 
     auto int32_t = ngraph::runtime::make_tensor<element::Int32>(Shape{3, 5});
     auto int32_0 = make_shared<op::Int32Constant>(Shape{3, 5}, int32_t);

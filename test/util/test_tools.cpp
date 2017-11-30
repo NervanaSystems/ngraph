@@ -29,7 +29,7 @@ bool validate_list(const list<shared_ptr<Node>>& nodes)
     for (auto it = nodes.rbegin(); it != nodes.rend(); it++)
     {
         auto node_tmp = *it;
-        auto dependencies_tmp = node_tmp->get_arguments();
+        auto dependencies_tmp = node_tmp->get_arguments_DEPRECATED();
         vector<Node*> dependencies;
         for (shared_ptr<Node> n : dependencies_tmp)
         {
