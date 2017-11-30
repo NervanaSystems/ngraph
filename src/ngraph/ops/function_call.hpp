@@ -15,6 +15,7 @@
 #pragma once
 
 #include "ngraph/node.hpp"
+#include "ngraph/ops/function_provider.hpp"
 
 namespace ngraph
 {

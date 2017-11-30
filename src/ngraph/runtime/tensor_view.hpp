@@ -54,6 +54,8 @@ namespace ngraph
                                               const std::shared_ptr<Value>& value) const override;
 
             const ngraph::Shape& get_shape() const;
+            size_t get_element_count() const;
+            const ngraph::descriptor::Tensor& get_tensor() const;
 
             std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout>
                 get_tensor_view_layout() const;

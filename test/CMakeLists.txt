@@ -54,7 +54,7 @@ set (SRC
 # and replace BACKEND_NAME_GOES_HERE with your backend name.
 # The code for the unit test suite is in test/backend_test.in.cpp
 #================================================================================================
-set(BACKEND_NAMES ${BACKEND_NAMES} "NGVM")
+set(BACKEND_NAMES ${BACKEND_NAMES} "NGVM" "INTERPRETER")
 
 if(MKLDNN_INCLUDE_DIR)
     include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})

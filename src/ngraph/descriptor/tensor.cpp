@@ -14,6 +14,7 @@
 
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 
 using namespace ngraph;
@@ -34,12 +35,12 @@ Tensor::Tensor(const element::Type& element_type,
     , m_name{name}
     , m_next_view_id{0}
 {
-    size_t size = 1;
+    size_t m_element_count = 1;
     for (size_t s : primary_tensor_view->get_tensor_view_type()->get_shape())
     {
-        size *= s;
+        m_element_count *= s;
     }
-    m_size = size * m_element_type.size();
+    m_size = m_element_count * m_element_type.size();
 }
 
 std::string Tensor::make_tensor_name(const Node* node, size_t value_index)
@@ -55,6 +56,12 @@ std::string Tensor::get_next_view_name()
 size_t Tensor::size() const
 {
     return m_size;
+}
+
+size_t Tensor::get_element_count() const
+{
+    NGRAPH_INFO << m_element_count;
+    return m_element_count;
 }
 
 void Tensor::set_pool_offset(size_t offset)
