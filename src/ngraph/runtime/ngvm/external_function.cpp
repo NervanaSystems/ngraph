@@ -75,7 +75,6 @@
 #include "ngraph/runtime/ngvm/eigen/concat_vector.hpp"
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_mult.hpp"
-#include "ngraph/runtime/ngvm/eigen/matrix_slice.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_transpose.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_vector_product.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
@@ -87,7 +86,6 @@
 #include "ngraph/runtime/ngvm/eigen/sum_matrix_columns.hpp"
 #include "ngraph/runtime/ngvm/eigen/sum_matrix_rows.hpp"
 #include "ngraph/runtime/ngvm/eigen/sum_to_scalar.hpp"
-#include "ngraph/runtime/ngvm/eigen/vector_slice.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/ngvm/instruction/abs.hpp"
 #include "ngraph/runtime/ngvm/instruction/acos.hpp"
@@ -124,6 +122,7 @@
 #include "ngraph/runtime/ngvm/instruction/sign.hpp"
 #include "ngraph/runtime/ngvm/instruction/sin.hpp"
 #include "ngraph/runtime/ngvm/instruction/sinh.hpp"
+#include "ngraph/runtime/ngvm/instruction/slice.hpp"
 #include "ngraph/runtime/ngvm/instruction/sqrt.hpp"
 #include "ngraph/runtime/ngvm/instruction/subtract.hpp"
 #include "ngraph/runtime/ngvm/instruction/tan.hpp"
@@ -917,61 +916,32 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto slice = static_cast<const op::Slice*>(n);
 
-            for (auto d : slice->get_step())
-            {
-                if (1 != d)
-                {
-                    throw ngraph_error("Slice does not support non-unit step yet in the VM");
-                }
-            }
-
             auto arg_type = slice->get_arguments().at(0)->get_value_type();
             auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
             assert(nullptr != arg_tensor_view_type);
             auto arg_shape = arg_tensor_view_type->get_shape();
-            auto arg_rank = arg_shape.size();
             auto& arg_element_type = arg_tensor_view_type->get_element_type();
+
+            auto result_type = slice->get_value_type();
+            auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
+            assert(nullptr != result_tensor_view_type);
+            auto result_shape = result_tensor_view_type->get_shape();
 
             auto& lower_bounds = slice->get_lower_bounds();
             auto& upper_bounds = slice->get_upper_bounds();
 
-            // Scalar slice is necessarily just a copy.
-            if (arg_rank == 0)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
-                                             "Slice has unhandled element type",
-                                             runtime::ngvm::instruction::CopyInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            else if (arg_rank == 1)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
-                                             "Slice has unhandled element type",
-                                             runtime::ngvm::eigen::VectorSliceInstruction,
-                                             in[0],
-                                             out[0],
-                                             lower_bounds[0],
-                                             upper_bounds[0]);
-            }
-            else if (arg_rank == 2)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
-                                             "Slice has unhandled element type",
-                                             runtime::ngvm::eigen::MatrixSliceInstruction,
-                                             in[0],
-                                             out[0],
-                                             lower_bounds[0],
-                                             lower_bounds[1],
-                                             upper_bounds[0],
-                                             upper_bounds[1]);
-            }
+            auto& strides = slice->get_step();
 
-            // Other cases (slicing for tensors with rank>2) are not handled yet.
-            else
-            {
-                throw ngraph_error("Slice is not implemented yet for tensors with rank>2 in VM");
-            }
+            PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
+                                         "Slice has unhandled element type",
+                                         runtime::ngvm::instruction::SliceInstruction,
+                                         in[0],
+                                         out[0],
+                                         arg_shape,
+                                         lower_bounds,
+                                         upper_bounds,
+                                         strides,
+                                         result_shape);
         };
 
         REGISTER_TO_OP_MAP(op::ReplaceSlice)

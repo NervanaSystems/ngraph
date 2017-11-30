@@ -20,7 +20,7 @@ using namespace ngraph;
 op::Slice::Slice(const std::shared_ptr<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds,
-                 const Shape& step)
+                 const Strides& step)
     : RequiresTensorViewArgs("Slice", {arg})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
@@ -35,7 +35,7 @@ op::Slice::Slice(const std::shared_ptr<Node>& arg,
     : RequiresTensorViewArgs("Slice", {arg})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
-    , m_step(Shape(lower_bounds.size(), 1))
+    , m_step(Strides(lower_bounds.size(), 1))
 {
     check_args();
 }

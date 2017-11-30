@@ -26,23 +26,24 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void broadcast(T* arg,
-                           T* out,
-                           const Shape& in_shape,
-                           const Shape& out_shape,
-                           const AxisSet& broadcast_axes)
+            void slice(T* arg,
+                       T* out,
+                       const Shape& arg_shape,
+                       const Coordinate& lower_bounds,
+                       const Coordinate& upper_bounds,
+                       const Strides& strides,
+                       const Shape& out_shape)
             {
+                CoordinateIterator in_iter(arg_shape, strides, upper_bounds, lower_bounds);
                 CoordinateIterator out_iter(out_shape);
 
                 do
                 {
-                    auto out_coord = out_iter.get_current_coordinate();
                     auto out_index = out_iter.get_current_index();
-                    auto in_coord = project_coordinate(out_coord, broadcast_axes);
-                    auto in_index = index_in_dense_tensor(in_shape, in_coord);
+                    auto in_index = in_iter.get_current_index();
 
                     out[out_index] = arg[in_index];
-                } while (out_iter.increment());
+                } while (out_iter.increment() && in_iter.increment());
             }
         }
     }
