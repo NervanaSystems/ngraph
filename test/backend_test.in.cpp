@@ -2980,6 +2980,122 @@ TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
     ASSERT_EQ((vector<float>{}), a->get_vector<float>());
 }
 
+TEST(${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
+{
+    auto shape_a = Shape{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{3, 3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{1 + 10 + 19,
+                             2 + 11 + 20,
+                             3 + 12 + 21,
+                             4 + 13 + 22,
+                             5 + 14 + 23,
+                             6 + 15 + 24,
+                             7 + 16 + 25,
+                             8 + 17 + 26,
+                             9 + 18 + 27}),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
+{
+    auto shape_a = Shape{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{3, 3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{2}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{1 + 2 + 3,
+                             4 + 5 + 6,
+                             7 + 8 + 9,
+                             10 + 11 + 12,
+                             13 + 14 + 15,
+                             16 + 17 + 18,
+                             19 + 20 + 21,
+                             22 + 23 + 24,
+                             25 + 26 + 27}),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, sum_3d_to_vector)
+{
+    auto shape_a = Shape{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{1 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25,
+                             2 + 11 + 20 + 5 + 14 + 23 + 8 + 17 + 26,
+                             3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, sum_3d_to_scalar)
+{
+    auto shape_a = Shape{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f =
+        make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{1 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25 + 2 + 11 + 20 + 5 + 14 + 23 +
+                             8 + 17 + 26 + 3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
+              result->get_vector<float>());
+}
+
 TEST(${BACKEND_NAME}, sign)
 {
     auto shape = Shape{2, 3};

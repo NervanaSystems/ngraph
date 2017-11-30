@@ -83,9 +83,6 @@
 #include "ngraph/runtime/ngvm/eigen/replace_matrix_slice.hpp"
 #include "ngraph/runtime/ngvm/eigen/replace_vector_slice.hpp"
 #include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
-#include "ngraph/runtime/ngvm/eigen/sum_matrix_columns.hpp"
-#include "ngraph/runtime/ngvm/eigen/sum_matrix_rows.hpp"
-#include "ngraph/runtime/ngvm/eigen/sum_to_scalar.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/ngvm/instruction/abs.hpp"
 #include "ngraph/runtime/ngvm/instruction/acos.hpp"
@@ -125,6 +122,7 @@
 #include "ngraph/runtime/ngvm/instruction/slice.hpp"
 #include "ngraph/runtime/ngvm/instruction/sqrt.hpp"
 #include "ngraph/runtime/ngvm/instruction/subtract.hpp"
+#include "ngraph/runtime/ngvm/instruction/sum.hpp"
 #include "ngraph/runtime/ngvm/instruction/tan.hpp"
 #include "ngraph/runtime/ngvm/instruction/tanh.hpp"
 #include "ngraph/runtime/utils.hpp"
@@ -802,61 +800,27 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_TO_OP_MAP(op::Sum)
         {
-            auto s = static_cast<const op::Sum*>(n);
-            auto s_tensor_view_type =
-                dynamic_pointer_cast<const TensorViewType>(s->get_value_type());
-            assert(nullptr != s_tensor_view_type);
-            auto& s_element_type = s_tensor_view_type->get_element_type();
-            auto s_shape = s_tensor_view_type->get_shape();
+            auto sum = static_cast<const op::Sum*>(n);
 
-            auto arg = s->get_arguments().at(0);
-            auto arg_type = arg->get_value_type();
-            auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
-            assert(nullptr != arg_tensor_view_type);
-            auto arg_shape = arg_tensor_view_type->get_shape();
-            auto arg_rank = arg_shape.size();
+            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_arguments().at(0)->get_value_type());
+            assert(nullptr != arg_tensor_type);
+            auto arg_shape = arg_tensor_type->get_shape();
 
-            auto& reduction_axes = s->get_reduction_axes();
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+            auto result_shape = result_tensor_type->get_shape();
+            auto& result_element_type = result_tensor_type->get_element_type();
 
-            // Trivial case: no reduction axes.
-            if (reduction_axes.size() == 0)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
-                                             "Sum has unhandled element type",
-                                             runtime::ngvm::instruction::CopyInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            // Full reduction? Then sum to scalar.
-            else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
-                     (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
-                                             "Sum has unhandled element type",
-                                             runtime::ngvm::eigen::SumToScalarInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            else if (arg_rank == 2 && reduction_axes == AxisSet{1})
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
-                                             "Sum has unhandled element type",
-                                             runtime::ngvm::eigen::SumMatrixRowsInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            else if (arg_rank == 2 && reduction_axes == AxisSet{0})
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
-                                             "Sum has unhandled element type",
-                                             runtime::ngvm::eigen::SumMatrixColumnsInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            else
-            {
-                throw ngraph_error("Sum: only vectors and matrices are currently supported");
-            }
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "Sum has unhandled element type",
+                                         instruction::SumInstruction,
+                                         in[0],
+                                         out[0],
+                                         arg_shape,
+                                         result_shape,
+                                         sum->get_reduction_axes());
         };
 
         REGISTER_TO_OP_MAP(op::Reshape)
