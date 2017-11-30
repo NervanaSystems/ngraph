@@ -34,8 +34,8 @@ bool ngraph::pass::TopologicalSort::run_on_function(shared_ptr<ngraph::Function>
 
     traverse_nodes(func, [&](shared_ptr<Node> node) {
         node_map[node.get()] = node;
-        node_depencency_count[node.get()] = node->get_arguments().size();
-        if (node->get_arguments().size() == 0)
+        node_depencency_count[node.get()] = node->get_arguments_DEPRECATED().size();
+        if (node->get_arguments_DEPRECATED().size() == 0)
         {
             independent_nodes.push_back(node.get());
         }

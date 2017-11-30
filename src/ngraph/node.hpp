@@ -59,7 +59,7 @@ namespace ngraph
         void set_name(const std::string& name);
 
         //@deprecated you should be using @get_outputs wherever possible
-        const Nodes& get_arguments() const { return m_arguments; }
+        const Nodes& get_arguments_DEPRECATED() const { return m_arguments; }
         void clear_arguments() { m_arguments.clear(); }
         const std::multiset<Node*>& users() const { return m_users; }
         std::string get_node_id() const;
