@@ -15,6 +15,7 @@ set (SRC
     autodiff/adjoints.cpp
     builder/autobroadcast.cpp
     builder/reduce_ops.cpp
+    coordinate_iterator.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
     descriptor/layout/tensor_view_layout.cpp

@@ -1512,6 +1512,78 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
               result->get_vector<element::Int64::type>());
 }
 
+TEST(${BACKEND_NAME}, broadcast_matrix_0)
+{
+    auto shape_a = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_r = Shape{2, 2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<element::Float32::type>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<element::Float32::type>{1, 2, 3, 4, 1, 2, 3, 4}),
+              result->get_vector<element::Float32::type>());
+}
+
+TEST(${BACKEND_NAME}, broadcast_matrix_1)
+{
+    auto shape_a = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_r = Shape{2, 2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(A, shape_r, AxisSet{1}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<element::Float32::type>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<element::Float32::type>{1, 2, 1, 2, 3, 4, 3, 4}),
+              result->get_vector<element::Float32::type>());
+}
+
+TEST(${BACKEND_NAME}, broadcast_matrix_2)
+{
+    auto shape_a = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_r = Shape{2, 2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(A, shape_r, AxisSet{2}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<element::Float32::type>{1, 2, 3, 4});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<element::Float32::type>{1, 1, 2, 2, 3, 3, 4, 4}),
+              result->get_vector<element::Float32::type>());
+}
+
 TEST(${BACKEND_NAME}, convert_int32_float32)
 {
     auto shape = Shape{2, 2};

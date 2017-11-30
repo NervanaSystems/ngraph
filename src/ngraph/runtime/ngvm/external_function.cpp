@@ -96,6 +96,7 @@
 #include "ngraph/runtime/ngvm/instruction/add.hpp"
 #include "ngraph/runtime/ngvm/instruction/asin.hpp"
 #include "ngraph/runtime/ngvm/instruction/atan.hpp"
+#include "ngraph/runtime/ngvm/instruction/broadcast.hpp"
 #include "ngraph/runtime/ngvm/instruction/call.hpp"
 #include "ngraph/runtime/ngvm/instruction/ceiling.hpp"
 #include "ngraph/runtime/ngvm/instruction/constant.hpp"
@@ -420,15 +421,23 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
                 n->get_arguments().at(0)->get_value_type());
             assert(nullptr != arg_tensor_type);
+            auto arg_shape = arg_tensor_type->get_shape();
 
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
-
-            auto arg_shape = arg_tensor_type->get_shape();
             auto result_shape = result_tensor_type->get_shape();
             auto& result_element_type = result_tensor_type->get_element_type();
 
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "Broadcast has unhandled element type",
+                                         instruction::BroadcastInstruction,
+                                         in[0],
+                                         out[0],
+                                         arg_shape,
+                                         result_shape,
+                                         broadcast->get_broadcast_axes());
+            /*
             if (broadcast->get_broadcast_axes().empty())
             {
                 PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
@@ -473,7 +482,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             else
             {
                 throw ngraph_error("Broadcast not implemented for rank>2 in VM yet");
-            }
+            }*/
         };
 
         REGISTER_TO_OP_MAP(op::Concat)

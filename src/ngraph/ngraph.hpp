@@ -44,6 +44,7 @@
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/common.hpp"
+#include "ngraph/coordinate_iterator.hpp"
 #include "ngraph/descriptor/buffer.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
