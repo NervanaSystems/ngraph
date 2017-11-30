@@ -234,15 +234,28 @@ install(DIRECTORY
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}"
 )
 if (NOT APPLE)
-install(DIRECTORY
-    ${MKLDNN_INCLUDE_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_INCLUDE}"
-)
-install(DIRECTORY
-    ${MKLDNN_LIB_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_LIB}"
-)
+    install(DIRECTORY
+        ${MKLDNN_INCLUDE_DIR}/
+        DESTINATION "${NGRAPH_INSTALL_INCLUDE}"
+    )
+    install(DIRECTORY
+        ${MKLDNN_LIB_DIR}/
+        DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
+    if (NGRAPH_CPU_ENABLE AND TBB_FOUND)
+        install(DIRECTORY
+            ${TBB_ROOT}/include/tbb
+            DESTINATION "${NGRAPH_INSTALL_INCLUDE}"
+        )
+        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
+          DESTINATION ${NGRAPH_INSTALL_LIB}
+          FILES_MATCHING PATTERN "libtbb.so.*")
+        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
+          DESTINATION ${NGRAPH_INSTALL_LIB}
+          FILES_MATCHING PATTERN "libtbb.so.*")
+    endif()
 endif()
+
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     MKLDNN_INCLUDE_DIR)
     # Currently this is required for Argon codegen. To avoid this, we'll need to decouple LLVM from
