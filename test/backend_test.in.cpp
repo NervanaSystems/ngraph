@@ -1512,7 +1512,7 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
               result->get_vector<element::Int64::type>());
 }
 
-TEST(${BACKEND_NAME}, broadcast_matrix_0)
+TEST(DISABLED_${BACKEND_NAME}, broadcast_matrix_0)
 {
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -1536,7 +1536,7 @@ TEST(${BACKEND_NAME}, broadcast_matrix_0)
               result->get_vector<element::Float32::type>());
 }
 
-TEST(${BACKEND_NAME}, broadcast_matrix_1)
+TEST(DISABLED_${BACKEND_NAME}, broadcast_matrix_1)
 {
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -1560,7 +1560,7 @@ TEST(${BACKEND_NAME}, broadcast_matrix_1)
               result->get_vector<element::Float32::type>());
 }
 
-TEST(${BACKEND_NAME}, broadcast_matrix_2)
+TEST(DISABLED_${BACKEND_NAME}, broadcast_matrix_2)
 {
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
