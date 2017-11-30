@@ -32,7 +32,8 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             UPDATE_COMMAND ""
             # Uncomment below with any in-flight MKL-DNN patches
             # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
-            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR}
+            CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                       -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR}
             )
     else()
         ExternalProject_Add(
@@ -42,7 +43,8 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             UPDATE_COMMAND ""
             # Uncomment below with any in-flight MKL-DNN patches
             # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
-            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR}
+            CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                       -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR}
             BUILD_BYPRODUCTS "${MKLDNN_INSTALL_DIR}/include/mkldnn.hpp"
             )
     endif()
