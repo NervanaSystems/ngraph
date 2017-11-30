@@ -13,14 +13,15 @@
  limitations under the License.
 */
 
-#include "ngraph/builder/numpy_transpose.hpp"
 #include <sstream>
+
+#include "ngraph/builder/numpy_transpose.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/ops/reshape.hpp"
 
 namespace ngraph
 {
-    void numpy_transpose_error(const AxisVector& order, const Shape& in_shape)
+    [[noreturn]] void numpy_transpose_error(const AxisVector& order, const Shape& in_shape)
     {
         std::ostringstream os;
         os << "The axes order ";
@@ -49,7 +50,7 @@ namespace ngraph
                 std::unordered_set<ngraph::AxisVector::value_type> axes;
                 for (auto o : order)
                 {
-                    if (o >= 0 && o < in_shape.size() && !axes.count(o))
+                    if (o < in_shape.size() && !axes.count(o))
                     {
                         axes.insert(o);
                     }
