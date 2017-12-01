@@ -77,9 +77,6 @@
 #include "ngraph/runtime/ngvm/eigen/matrix_mult.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_transpose.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_vector_product.hpp"
-#include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
-#include "ngraph/runtime/ngvm/eigen/reduce_matrix_rows.hpp"
-#include "ngraph/runtime/ngvm/eigen/reduce_to_scalar.hpp"
 #include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/ngvm/instruction/abs.hpp"
@@ -112,6 +109,7 @@
 #include "ngraph/runtime/ngvm/instruction/not.hpp"
 #include "ngraph/runtime/ngvm/instruction/not_equal.hpp"
 #include "ngraph/runtime/ngvm/instruction/power.hpp"
+#include "ngraph/runtime/ngvm/instruction/reduce.hpp"
 #include "ngraph/runtime/ngvm/instruction/replace_slice.hpp"
 #include "ngraph/runtime/ngvm/instruction/return.hpp"
 #include "ngraph/runtime/ngvm/instruction/select.hpp"
@@ -658,8 +656,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_TO_OP_MAP(op::Reduce)
         {
             auto reduce = static_cast<const op::Reduce*>(n);
-            auto reduction_function = reduce->get_function();
 
+            auto reduction_function = reduce->get_function();
             std::shared_ptr<ExternalFunction> external;
 
             try
@@ -672,129 +670,49 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 function_map.insert({reduction_function, external});
             }
 
-            auto reductee_type = reduce->get_arguments().at(0)->get_value_type();
-            auto reductee_tensor_view_type =
-                dynamic_pointer_cast<const TensorViewType>(reductee_type);
-            assert(nullptr != reductee_tensor_view_type);
-            auto reductee_shape = reductee_tensor_view_type->get_shape();
+            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_arguments().at(0)->get_value_type());
+            assert(nullptr != arg_tensor_type);
+            auto arg_shape = arg_tensor_type->get_shape();
 
-            auto f_result_type = reduction_function->get_result_type();
-            auto f_result_tensor_view_type =
-                dynamic_pointer_cast<const TensorViewType>(f_result_type);
-            assert(nullptr != f_result_tensor_view_type);
-            auto& f_result_element_type = f_result_tensor_view_type->get_element_type();
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+            auto result_shape = result_tensor_type->get_shape();
+            auto& result_element_type = result_tensor_type->get_element_type();
 
-            auto result_type = reduce->get_value_type();
-            auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
-            assert(nullptr != result_tensor_view_type);
-            auto result_shape = result_tensor_view_type->get_shape();
+#define M(ET)                                                                                      \
+    {                                                                                              \
+        auto reduce_handler = [external](typename ET::type x, typename ET::type y) ->              \
+            typename ET::type                                                                      \
+        {                                                                                          \
+            std::shared_ptr<CallFrame> cf =                                                        \
+                std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());                 \
+                                                                                                   \
+            auto tx = ngraph::runtime::make_tensor<ET>(Shape{}, {x});                              \
+            auto ty = ngraph::runtime::make_tensor<ET>(Shape{}, {y});                              \
+            auto tr = ngraph::runtime::make_tensor<ET>(Shape{});                                   \
+                                                                                                   \
+            cf->call({tx, ty}, {tr});                                                              \
+            return tr->get_vector()[0];                                                            \
+        };                                                                                         \
+                                                                                                   \
+        PUSH_INSTRUCTION(ET,                                                                       \
+                         instruction::ReduceInstruction,                                           \
+                         in[0],                                                                    \
+                         in[1],                                                                    \
+                         out[0],                                                                   \
+                         arg_shape,                                                                \
+                         result_shape,                                                             \
+                         reduce->get_reduction_axes(),                                             \
+                         reduce_handler);                                                          \
+    }
 
-            auto& reduction_axes = reduce->get_reduction_axes();
-
-            // Trivial case: no reduction axes (this includes the scalar-reductee case).
-            if (reduction_axes.empty())
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
-                                             "Reduce has unhandled element type",
-                                             runtime::ngvm::instruction::CopyInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            // Behavior for zero-size axes bears some explanation here. XLA's reduce
-            // operator provides an "base" element (usually, but not necessarily,
-            // an identity element) that it apparently *may* choose to insert anywhere
-            // in the reduction any number of times. For example, given:
-            //
-            //   reduce{{1,2,3},b,+)
-            //
-            // any of the following are valid reductions (I think!):
-            //
-            //   b+(b+1+2)+3
-            //   b+(1+(2+3))
-            //   (1+2)+3 (I think!)
-            //
-            // etc. Here we will choose never to instantiate the base element, which
-            // works well with Eigen's default behavior for non-zero-length axes. The
-            // exceptional case is when we reduce on a zero-length axis. In this case,
-            // Eigen's default behavior is to put a zero in the output,  which is not
-            // what we want, so we detect that case here and override with a copy
-            // instruction (for reduce-to-scalar) or a broadcast (for reduce-to-vector)
-            // from the base element.
-            //
-            // What I'm actually not sure about is whether the identity element is
-            // required to appear at least once. If so, this will need to be reworked,
-            // assuming we actually want to mimic XLA's semantics that closely, which
-            // we may not.
-            else if ((reductee_shape.size() == 1 && reduction_axes == AxisSet{0}) ||
-                     (reductee_shape.size() == 2 && reduction_axes == AxisSet{0, 1}))
-            {
-                if (reductee_shape.at(0) == 0 ||
-                    (reductee_shape.size() == 2 && reductee_shape.at(1) == 0))
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
-                                                 "Reduce has unhandled element type",
-                                                 runtime::ngvm::instruction::CopyInstruction,
-                                                 in[1],
-                                                 out[0]);
-                }
-                else
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
-                                                 "Reduce has unhandled element type",
-                                                 runtime::ngvm::eigen::ReduceToScalarInstruction,
-                                                 external,
-                                                 in[0],
-                                                 in[1],
-                                                 out[0]);
-                }
-            }
-            else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{1})
-            {
-                if (reductee_shape.at(1) == 0)
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
-                                                 "Reduce has unhandled element type",
-                                                 runtime::ngvm::eigen::BroadcastScalarInstruction,
-                                                 in[1],
-                                                 out[0]);
-                }
-                else
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
-                                                 "Reduce has unhandled element type",
-                                                 runtime::ngvm::eigen::ReduceMatrixRowsInstruction,
-                                                 external,
-                                                 in[0],
-                                                 in[1],
-                                                 out[0]);
-                }
-            }
-            else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{0})
-            {
-                if (reductee_shape.at(0) == 0)
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
-                                                 "Reduce has unhandled element type",
-                                                 runtime::ngvm::eigen::BroadcastScalarInstruction,
-                                                 in[1],
-                                                 out[0]);
-                }
-                else
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(
-                        f_result_element_type,
-                        "Reduce has unhandled element type",
-                        runtime::ngvm::eigen::ReduceMatrixColumnsInstruction,
-                        external,
-                        in[0],
-                        in[1],
-                        out[0]);
-                }
-            }
-            else
-            {
-                throw ngraph_error("Reduce: only vectors and matrices are currently supported");
-            }
+            DO_ON_ELEMENT_TYPE(
+                result_element_type,
+                "Internal error: tried to create reduction handler for unhandled element type",
+                M);
+#undef M
         };
 
         REGISTER_TO_OP_MAP(op::Sum)

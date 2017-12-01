@@ -2024,6 +2024,44 @@ TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
     ASSERT_EQ((vector<float>{99}), b->get_vector<float>());
 }
 
+TEST(${BACKEND_NAME}, reduce_3d_to_vector)
+{
+    // First, the reduction function (f(x:float32[],y:float32[]) = x*y).
+    auto f_A = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto f_B = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto f_rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto f =
+        make_shared<Function>(make_shared<op::Multiply>(f_A, f_B), f_rt, op::Parameters{f_A, f_B});
+
+    auto shape_a = Shape{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_b = Shape{};
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto shape_rt = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto g = make_shared<Function>(
+        make_shared<op::Reduce>(A, B, f, AxisSet{0, 1}), rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(g);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{1});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{1.0f * 10.0f * 19.0f * 4.0f * 13.0f * 22.0f * 7.0f * 16.0f * 25.0f,
+                             2.0f * 11.0f * 20.0f * 5.0f * 14.0f * 23.0f * 8.0f * 17.0f * 26.0f,
+                             3.0f * 12.0f * 21.0f * 6.0f * 15.0f * 24.0f * 9.0f * 18.0f * 27.0f}),
+              result->get_vector<float>());
+}
+
 TEST(${BACKEND_NAME}, reshape_t2v_012)
 {
     auto shape_a = Shape{2, 2, 3};
