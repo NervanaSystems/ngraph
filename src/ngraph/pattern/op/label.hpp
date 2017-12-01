@@ -34,13 +34,21 @@ namespace ngraph
                     make_from_node(const std::shared_ptr<ngraph::Node>& node,
                                    Predicate pred = nullptr)
                 {
-                    auto label = std::make_shared<Label>(pred);
+                    auto label = std::make_shared<Label>(Nodes{}, pred);
                     label->set_value_type_checked(node->get_value_type());
                     return label;
                 }
 
-                Label(Predicate pred = nullptr)
-                    : Pattern("Label", Nodes{}, pred)
+                static std::shared_ptr<Label> wrap(const std::shared_ptr<ngraph::Node>& node,
+                                                   Predicate pred = nullptr)
+                {
+                    auto label = std::make_shared<Label>(Nodes{node}, pred);
+                    label->set_value_type_checked(node->get_value_type());
+                    return label;
+                }
+
+                Label(const Nodes& subgraph, Predicate pred)
+                    : Pattern("Label", Nodes{subgraph}, pred)
                 {
                 }
             };
