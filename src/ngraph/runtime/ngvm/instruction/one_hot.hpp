@@ -14,9 +14,10 @@
 
 #pragma once
 
+#include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/eigen/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
@@ -25,56 +26,40 @@ namespace ngraph
     {
         namespace ngvm
         {
-            namespace eigen
+            namespace instruction
             {
                 template <typename ET>
-                class OneHotVectorInstruction : public Instruction
+                class OneHotInstruction : public Instruction
                 {
                 public:
-                    OneHotVectorInstruction(const TensorViewInfo& arg,
-                                            const TensorViewInfo& out,
-                                            size_t one_hot_axis,
-                                            size_t vector_length,
-                                            size_t bounds)
+                    OneHotInstruction(const TensorViewInfo& arg,
+                                      const TensorViewInfo& out,
+                                      const Shape& arg_shape,
+                                      const Shape& out_shape,
+                                      size_t one_hot_axis)
                         : m_arg(arg)
                         , m_out(out)
+                        , m_arg_shape(arg_shape)
+                        , m_out_shape(out_shape)
                         , m_one_hot_axis(one_hot_axis)
-                        , m_vector_length(vector_length)
-                        , m_bounds(bounds)
                     {
                     }
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        EigenArray1d<ET> arg(call_frame, m_arg);
+                        typename ET::type* arg = get_tensor_data_ptr<ET>(call_frame, m_arg);
+                        typename ET::type* out = get_tensor_data_ptr<ET>(call_frame, m_out);
 
-                        EigenArray2d<ET> out(call_frame, m_out);
-                        out.setZero();
-
-                        for (size_t i = 0; i < m_vector_length; i++)
-                        {
-                            size_t pos = arg(i, 0);
-
-                            if (pos < m_bounds)
-                            {
-                                if (m_one_hot_axis == 0)
-                                {
-                                    out(pos, i) = 1;
-                                }
-                                else
-                                {
-                                    out(i, pos) = 1;
-                                }
-                            }
-                        }
+                        kernel::one_hot<typename ET::type>(
+                            arg, out, m_arg_shape, m_out_shape, m_one_hot_axis);
                     }
 
                 protected:
                     TensorViewInfo m_arg;
                     TensorViewInfo m_out;
+                    Shape m_arg_shape;
+                    Shape m_out_shape;
                     size_t m_one_hot_axis;
-                    size_t m_vector_length;
-                    size_t m_bounds;
                 };
             }
         }

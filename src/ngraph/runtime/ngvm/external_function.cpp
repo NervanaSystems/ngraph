@@ -79,8 +79,6 @@
 #include "ngraph/runtime/ngvm/eigen/matrix_slice.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_transpose.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_vector_product.hpp"
-#include "ngraph/runtime/ngvm/eigen/one_hot_scalar.hpp"
-#include "ngraph/runtime/ngvm/eigen/one_hot_vector.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_matrix_rows.hpp"
 #include "ngraph/runtime/ngvm/eigen/reduce_to_scalar.hpp"
@@ -121,6 +119,7 @@
 #include "ngraph/runtime/ngvm/instruction/negate.hpp"
 #include "ngraph/runtime/ngvm/instruction/not.hpp"
 #include "ngraph/runtime/ngvm/instruction/not_equal.hpp"
+#include "ngraph/runtime/ngvm/instruction/one_hot.hpp"
 #include "ngraph/runtime/ngvm/instruction/power.hpp"
 #include "ngraph/runtime/ngvm/instruction/return.hpp"
 #include "ngraph/runtime/ngvm/instruction/select.hpp"
@@ -202,42 +201,6 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         if (et == element::Float32::element_type())                                                \
         {                                                                                          \
             macro(element::Float32, ##__VA_ARGS__);                                                \
-        }                                                                                          \
-        else if (et == element::Int8::element_type())                                              \
-        {                                                                                          \
-            macro(element::Int8, ##__VA_ARGS__);                                                   \
-        }                                                                                          \
-        else if (et == element::Int32::element_type())                                             \
-        {                                                                                          \
-            macro(element::Int32, ##__VA_ARGS__);                                                  \
-        }                                                                                          \
-        else if (et == element::Int64::element_type())                                             \
-        {                                                                                          \
-            macro(element::Int64, ##__VA_ARGS__);                                                  \
-        }                                                                                          \
-        else if (et == element::UInt8::element_type())                                             \
-        {                                                                                          \
-            macro(element::UInt8, ##__VA_ARGS__);                                                  \
-        }                                                                                          \
-        else if (et == element::UInt32::element_type())                                            \
-        {                                                                                          \
-            macro(element::UInt32, ##__VA_ARGS__);                                                 \
-        }                                                                                          \
-        else if (et == element::UInt64::element_type())                                            \
-        {                                                                                          \
-            macro(element::UInt64, ##__VA_ARGS__);                                                 \
-        }                                                                                          \
-        else                                                                                       \
-        {                                                                                          \
-            throw ngraph_error(err_msg);                                                           \
-        }                                                                                          \
-    }
-
-#define DO_ON_INTEGRAL_TYPE(et, err_msg, macro, ...)                                               \
-    {                                                                                              \
-        if (et == element::Bool::element_type())                                                   \
-        {                                                                                          \
-            macro(element::Bool, ##__VA_ARGS__);                                                   \
         }                                                                                          \
         else if (et == element::Int8::element_type())                                              \
         {                                                                                          \
@@ -377,8 +340,6 @@ std::vector<typename ET::type>
     DO_ON_ELEMENT_TYPE(et, err_msg, PUSH_INSTRUCTION, instr, __VA_ARGS__)
 #define PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(et, err_msg, instr, ...)                              \
     DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_INSTRUCTION, instr, __VA_ARGS__)
-#define PUSH_INTEGRAL_POLYMORPHIC_INSTRUCTION(et, err_msg, instr, ...)                             \
-    DO_ON_INTEGRAL_TYPE(et, err_msg, PUSH_INSTRUCTION, instr, __VA_ARGS__)
 
 // Turn off complaint suppression (see above)
 #pragma clang diagnostic pop
@@ -1087,46 +1048,27 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_TO_OP_MAP(op::OneHot)
         {
-            auto oh = static_cast<const op::OneHot*>(n);
+            auto one_hot = static_cast<const op::OneHot*>(n);
 
-            auto arg_type = oh->get_arguments().at(0)->get_value_type();
-            auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
-            assert(nullptr != arg_tensor_view_type);
-            auto arg_shape = arg_tensor_view_type->get_shape();
-            auto arg_rank = arg_shape.size();
-            auto& arg_element_type = arg_tensor_view_type->get_element_type();
+            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_arguments().at(0)->get_value_type());
+            assert(nullptr != arg_tensor_type);
+            auto arg_shape = arg_tensor_type->get_shape();
 
-            auto result_type = oh->get_value_type();
-            auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
-            assert(nullptr != result_tensor_view_type);
-            auto result_shape = result_tensor_view_type->get_shape();
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+            auto result_shape = result_tensor_type->get_shape();
+            auto& result_element_type = result_tensor_type->get_element_type();
 
-            if (arg_rank == 0)
-            {
-                PUSH_INTEGRAL_POLYMORPHIC_INSTRUCTION(arg_element_type,
-                                                      "One-hot has unhandled element type",
-                                                      runtime::ngvm::eigen::OneHotScalarInstruction,
-                                                      in[0],
-                                                      out[0],
-                                                      result_shape[oh->get_one_hot_axis()]);
-            }
-            else if (arg_rank == 1)
-            {
-                PUSH_INTEGRAL_POLYMORPHIC_INSTRUCTION(arg_element_type,
-                                                      "One-hot has unhandled element type",
-                                                      runtime::ngvm::eigen::OneHotVectorInstruction,
-                                                      in[0],
-                                                      out[0],
-                                                      oh->get_one_hot_axis(),
-                                                      arg_shape[0],
-                                                      result_shape[oh->get_one_hot_axis()]);
-            }
-            // Other cases are not handled yet.
-            else
-            {
-                throw ngraph_error(
-                    "One-hot is not implemented yet for input tensors with rank>1 in VM");
-            }
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "One-hot has unhandled element type",
+                                         instruction::OneHotInstruction,
+                                         in[0],
+                                         out[0],
+                                         arg_shape,
+                                         result_shape,
+                                         one_hot->get_one_hot_axis());
         };
 
         initialized = true;
