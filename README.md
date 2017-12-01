@@ -10,7 +10,6 @@ Download the required version of pybind and install it.
 ```
 git clone -b allow-nonconstructible-holders https://github.com/jagerman/pybind11
 cd pybind11
-git checkout 53be81931f35313f70affc9826bdfed9820cce2c
 mkdir build && cd build
 cmake ..
 make -j4
