@@ -13,5 +13,8 @@ cd pybind11
 git checkout 53be81931f35313f70affc9826bdfed9820cce2c
 mkdir build && cd build
 cmake ..
-make check -j 4
+make -j4
+make install
+cd ../
+pip install -e .
 ```
