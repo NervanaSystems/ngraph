@@ -49,48 +49,218 @@ TEST(cudnn, loadBackend)
 
 TEST(cudnn, compileTest)
 {
-  // constexpr auto name = "test.cpp";
-  const auto source = R"(
-  #include <iostream>
+  const auto source = R"###(
+#include <iostream>
+#include <fstream>
+#include <cassert>
+#include "cuda.h"
 
-    __global__ void axpy(float a, float* x, float* y) {
-      y[threadIdx.x] = a * x[threadIdx.x];
-    }
 
-    int main(int argc, char* argv[]) {
-      const int kDataLen = 4;
+void checkCudaErrors(CUresult err) {
+  assert(err == CUDA_SUCCESS);
+}
 
-      float a = 2.0f;
-      float host_x[kDataLen] = {1.0f, 2.0f, 3.0f, 4.0f};
-      float host_y[kDataLen];
+/// main - Program entry point
+int main(int argc, char **argv) {
+  CUdevice    device;
+  CUmodule    cudaModule;
+  CUcontext   context;
+  CUfunction  function;
+  CUlinkState linker;
+  int         devCount;
 
-      // Copy input data to device.
-      float* device_x;
-      float* device_y;
-      cudaMalloc(&device_x, kDataLen * sizeof(float));
-      cudaMalloc(&device_y, kDataLen * sizeof(float));
-      cudaMemcpy(device_x, host_x, kDataLen * sizeof(float),
-                cudaMemcpyHostToDevice);
+  // CUDA initialization
+  checkCudaErrors(cuInit(0));
+  checkCudaErrors(cuDeviceGetCount(&devCount));
+  checkCudaErrors(cuDeviceGet(&device, 0));
 
-      // Launch the kernel.
-      axpy<<<1, kDataLen>>>(a, device_x, device_y);
+  char name[128];
+  checkCudaErrors(cuDeviceGetName(name, 128, device));
+  std::cout << "Using CUDA Device [0]: " << name << "\n";
 
-      // Copy output data to host.
-      cudaDeviceSynchronize();
-      cudaMemcpy(host_y, device_y, kDataLen * sizeof(float),
-                cudaMemcpyDeviceToHost);
+  int devMajor, devMinor;
+  checkCudaErrors(cuDeviceComputeCapability(&devMajor, &devMinor, device));
+  std::cout << "Device Compute Capability: "
+            << devMajor << "." << devMinor << "\n";
+  if (devMajor < 2) {
+    std::cerr << "ERROR: Device 0 is not SM 2.0 or greater\n";
+    return 1;
+  }
 
-      // Print the results.
-      for (int i = 0; i < kDataLen; ++i) {
-        std::cout << "y[" << i << "] = " << host_y[i] << "\n";
-      }
+const auto str = R"(
+  .version 5.0
+  .target sm_60
+  .address_size 64
 
-      cudaDeviceReset();
-      return 0;
-    })";
+    // .globl	_Z7ew_multPfS_S_ // -- Begin function _Z7ew_multPfS_S_
+  .global .align 1 .b8 threadIdx[1];
+                                          // @_Z7ew_multPfS_S_
+  .visible .entry _Z7ew_multPfS_S_(
+    .param .u64 _Z7ew_multPfS_S__param_0,
+    .param .u64 _Z7ew_multPfS_S__param_1,
+    .param .u64 _Z7ew_multPfS_S__param_2
+  )
+  {
+    .local .align 8 .b8 	__local_depot0[24];
+    .reg .b64 	%SP;
+    .reg .b64 	%SPL;
+    .reg .f32 	%f<4>;
+    .reg .b32 	%r<2>;
+    .reg .b64 	%rd<17>;
+
+  // BB#0:
+    mov.u64 	%SPL, __local_depot0;
+    cvta.local.u64 	%SP, %SPL;
+    ld.param.u64 	%rd3, [_Z7ew_multPfS_S__param_2];
+    ld.param.u64 	%rd2, [_Z7ew_multPfS_S__param_1];
+    ld.param.u64 	%rd1, [_Z7ew_multPfS_S__param_0];
+    cvta.to.global.u64 	%rd4, %rd3;
+    cvta.global.u64 	%rd5, %rd4;
+    cvta.to.global.u64 	%rd6, %rd2;
+    cvta.global.u64 	%rd7, %rd6;
+    cvta.to.global.u64 	%rd8, %rd1;
+    cvta.global.u64 	%rd9, %rd8;
+    st.u64 	[%SP+0], %rd9;
+    st.u64 	[%SP+8], %rd7;
+    st.u64 	[%SP+16], %rd5;
+    ld.u64 	%rd10, [%SP+0];
+    mov.u32 	%r1, %tid.x;
+    mul.wide.u32 	%rd11, %r1, 4;
+    add.s64 	%rd12, %rd10, %rd11;
+    ld.f32 	%f1, [%rd12];
+    ld.u64 	%rd13, [%SP+8];
+    add.s64 	%rd14, %rd13, %rd11;
+    ld.f32 	%f2, [%rd14];
+    mul.rn.f32 	%f3, %f1, %f2;
+    ld.u64 	%rd15, [%SP+16];
+    add.s64 	%rd16, %rd15, %rd11;
+    st.f32 	[%rd16], %f3;
+    ret;
+  }
+                                          // -- End function
+    // .globl	_Z6ew_addPfS_S_ // -- Begin function _Z6ew_addPfS_S_
+  .visible .entry _Z6ew_addPfS_S_(
+    .param .u64 _Z6ew_addPfS_S__param_0,
+    .param .u64 _Z6ew_addPfS_S__param_1,
+    .param .u64 _Z6ew_addPfS_S__param_2
+  )                                       // @_Z6ew_addPfS_S_
+  {
+    .local .align 8 .b8 	__local_depot1[24];
+    .reg .b64 	%SP;
+    .reg .b64 	%SPL;
+    .reg .f32 	%f<4>;
+    .reg .b32 	%r<2>;
+    .reg .b64 	%rd<17>;
+
+  // BB#0:
+    mov.u64 	%SPL, __local_depot1;
+    cvta.local.u64 	%SP, %SPL;
+    ld.param.u64 	%rd3, [_Z6ew_addPfS_S__param_2];
+    ld.param.u64 	%rd2, [_Z6ew_addPfS_S__param_1];
+    ld.param.u64 	%rd1, [_Z6ew_addPfS_S__param_0];
+    cvta.to.global.u64 	%rd4, %rd3;
+    cvta.global.u64 	%rd5, %rd4;
+    cvta.to.global.u64 	%rd6, %rd2;
+    cvta.global.u64 	%rd7, %rd6;
+    cvta.to.global.u64 	%rd8, %rd1;
+    cvta.global.u64 	%rd9, %rd8;
+    st.u64 	[%SP+0], %rd9;
+    st.u64 	[%SP+8], %rd7;
+    st.u64 	[%SP+16], %rd5;
+    ld.u64 	%rd10, [%SP+0];
+    mov.u32 	%r1, %tid.x;
+    mul.wide.u32 	%rd11, %r1, 4;
+    add.s64 	%rd12, %rd10, %rd11;
+    ld.f32 	%f1, [%rd12];
+    ld.u64 	%rd13, [%SP+8];
+    add.s64 	%rd14, %rd13, %rd11;
+    ld.f32 	%f2, [%rd14];
+    add.rn.f32 	%f3, %f1, %f2;
+    ld.u64 	%rd15, [%SP+16];
+    add.s64 	%rd16, %rd15, %rd11;
+    st.f32 	[%rd16], %f3;
+    ret;
+  }
+                                          // -- End function
+)";
+
+  // Create driver context
+  checkCudaErrors(cuCtxCreate(&context, 0, device));
+
+  // Create module for object
+  checkCudaErrors(cuModuleLoadDataEx(&cudaModule, str, 0, 0, 0));
+
+  // Get kernel function
+  checkCudaErrors(cuModuleGetFunction(&function, cudaModule, "_Z7ew_multPfS_S_"));
+
+  // Device data
+  CUdeviceptr devBufferA;
+  CUdeviceptr devBufferB;
+  CUdeviceptr devBufferC;
+
+  checkCudaErrors(cuMemAlloc(&devBufferA, sizeof(float)*16));
+  checkCudaErrors(cuMemAlloc(&devBufferB, sizeof(float)*16));
+  checkCudaErrors(cuMemAlloc(&devBufferC, sizeof(float)*16));
+
+  float* hostA = new float[16];
+  float* hostB = new float[16];
+  float* hostC = new float[16];
+
+  // Populate input
+  for (unsigned i = 0; i != 16; ++i) {
+    hostA[i] = (float)i;
+    hostB[i] = (float)(2*i);
+    hostC[i] = 0.0f;
+  }
+
+  checkCudaErrors(cuMemcpyHtoD(devBufferA, &hostA[0], sizeof(float)*16));
+  checkCudaErrors(cuMemcpyHtoD(devBufferB, &hostB[0], sizeof(float)*16));
+
+
+  unsigned blockSizeX = 16;
+  unsigned blockSizeY = 1;
+  unsigned blockSizeZ = 1;
+  unsigned gridSizeX  = 1;
+  unsigned gridSizeY  = 1;
+  unsigned gridSizeZ  = 1;
+
+  // Kernel parameters
+  void *KernelParams[] = { &devBufferA, &devBufferB, &devBufferC };
+
+  std::cout << "Launching kernel\n";
+
+  // Kernel launch
+  checkCudaErrors(cuLaunchKernel(function, gridSizeX, gridSizeY, gridSizeZ,
+                                 blockSizeX, blockSizeY, blockSizeZ,
+                                 0, NULL, KernelParams, NULL));
+
+  // Retrieve device data
+  checkCudaErrors(cuMemcpyDtoH(&hostC[0], devBufferC, sizeof(float)*16));
+
+
+  std::cout << "Results:\n";
+  for (unsigned i = 0; i != 16; ++i) {
+    std::cout << hostA[i] << " + " << hostB[i] << " = " << hostC[i] << "\n";
+  }
+
+
+  // Clean up after ourselves
+  delete [] hostA;
+  delete [] hostB;
+  delete [] hostC;
+
+  // Clean-up
+  checkCudaErrors(cuMemFree(devBufferA));
+  checkCudaErrors(cuMemFree(devBufferB));
+  checkCudaErrors(cuMemFree(devBufferC));
+  checkCudaErrors(cuModuleUnload(cudaModule));
+  checkCudaErrors(cuCtxDestroy(context));
+
+  return 0;
+})###";
   // codegen::Compiler compiler;
   codegen::NVPTXCompiler compiler;
-  codegen::NVPTXExecutionEngine execution_engine;
+  // codegen::NVPTXExecutionEngine execution_engine;
 
   auto module = compiler.compile(source);
   EXPECT_EQ(source,source);
