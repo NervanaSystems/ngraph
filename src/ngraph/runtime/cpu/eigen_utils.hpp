@@ -34,7 +34,8 @@ namespace ngraph
                 using VectorStrides = Eigen::Stride<Eigen::Dynamic, 1>;
 
                 template <typename T>
-                using DynamicArray = Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>;
+                using DynamicArray =
+                    Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
                 template <typename T>
                 using EigenArrayBase = Eigen::Map<DynamicArray<T>, 0, DynamicStrides>;
