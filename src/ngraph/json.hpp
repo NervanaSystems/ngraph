@@ -1,4 +1,6 @@
 // clang-format off
+#pragma clang diagnostic ignored "-Weverything"
+
 /*
     __ _____ _____ _____
  __|  |   __|     |   | |  JSON for Modern C++

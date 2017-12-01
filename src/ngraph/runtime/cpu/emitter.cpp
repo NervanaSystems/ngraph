@@ -1002,7 +1002,7 @@ void Emitter::EmitReduce(const ngraph::Node* n,
                          const std::vector<TensorViewInfo>& outputs)
 {
     auto reduce = static_cast<const op::Reduce*>(n);
-    auto reduction_function = reduce->get_reduction_function();
+    auto reduction_function = reduce->get_function();
 
     auto reductee_type = reduce->get_arguments().at(0)->get_value_type();
     auto reductee_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(reductee_type);
@@ -1487,7 +1487,6 @@ void Emitter::EmitReplaceSlice(const ngraph::Node* n,
     auto arg1_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg1_type);
     assert(arg1_tensor_view_type);
     auto arg1_shape = arg1_tensor_view_type->get_shape();
-    auto arg1_rank = arg1_shape.size();
 
     auto& lower_bounds = replace_slice->get_lower_bounds();
     auto& upper_bounds = replace_slice->get_upper_bounds();
