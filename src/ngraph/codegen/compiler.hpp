@@ -54,6 +54,7 @@ public:
     Compiler();
     ~Compiler();
     void set_precompiled_header_source(const std::string& source);
+    void add_header_search_path(const std::string& path);
     std::unique_ptr<llvm::Module> compile(const std::string& source);
     std::unique_ptr<clang::CodeGenAction>& get_compiler_action() { return compiler_action; }
 private:

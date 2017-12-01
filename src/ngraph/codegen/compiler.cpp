@@ -79,6 +79,11 @@ void Compiler::set_precompiled_header_source(const std::string& source)
     s_static_compiler.set_precompiled_header_source(source);
 }
 
+void Compiler::add_header_search_path(const std::string& path)
+{
+    s_static_compiler.add_header_search_path(path);
+}
+
 std::unique_ptr<llvm::Module> Compiler::compile(const std::string& source)
 {
     lock_guard<mutex> lock(m_mutex);
