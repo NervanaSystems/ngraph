@@ -1486,7 +1486,6 @@ void Emitter::EmitReplaceSlice(const ngraph::Node* n,
     auto arg1_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg1_type);
     assert(arg1_tensor_view_type);
     auto arg1_shape = arg1_tensor_view_type->get_shape();
-    auto arg1_rank = arg1_shape.size();
 
     auto& lower_bounds = replace_slice->get_lower_bounds();
     auto& upper_bounds = replace_slice->get_upper_bounds();
