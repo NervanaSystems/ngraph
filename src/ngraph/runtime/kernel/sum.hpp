@@ -32,16 +32,33 @@ namespace ngraph
                      const Shape& out_shape,
                      const AxisSet& reduction_axes)
             {
+                // General TODO: the special casing here is a bit goofy, and it's mostly a consequence of the
+                // fact that a CoordinateIterator can't handle zero-length axes. (Do-while loops are a code
+                // smell...) When we turn it into a proper iterator, that should go away.
+
                 // Special case when the input has zero elements.
                 for (size_t i = 0; i < in_shape.size(); i++)
                 {
                     if (in_shape[i] == 0)
                     {
-                        // Extra-special case when the output is a scalar.
-                        if (out_shape.size() == 0)
+                        // Some input axis is zero-length; zero out the output if it is not also zero-sized.
+                        for (size_t j = 0; j < out_shape.size(); j++)
                         {
-                            *out = 0;
+                            if (out_shape[j] == 0)
+                            {
+                                // Some output-axis is zero length, so we don't need to do anything.
+                                return;
+                            }
                         }
+
+                        // If we are still here, we need to zero out the output.
+                        CoordinateIterator out_iter(out_shape);
+
+                        do
+                        {
+                            out[out_iter.get_current_index()] = 0;
+                        } while (out_iter.increment());
+
                         return;
                     }
                 }
