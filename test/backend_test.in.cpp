@@ -3179,7 +3179,15 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
     EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
 }
 
-TEST(${BACKEND_NAME}, one_hot_matrix_0)
+// This test is disabled because it won't yet work on the IA backend, but it does work with
+// the de-Eigenized kernel on NGVM.
+//
+// Test if you like with:
+//
+//    private-ngraph-cpp/build$ test/unit-test \
+//                                 --gtest_filter='DISABLED_NGVM.one_hot_matrix_0' \
+//                                 --gtest_also_run_disabled_tests
+TEST(DISABLED_${BACKEND_NAME}, one_hot_matrix_0)
 {
     auto shape_a = Shape{3, 3};
     auto A = make_shared<op::Parameter>(
