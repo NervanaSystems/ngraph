@@ -26,7 +26,7 @@ PYBIND11_MODULE(Broadcast, mod) {
     py::module::import("wrapper.ngraph.ops.Op");
     using AxisSet = std::set<size_t>;
  
-    py::class_<Broadcast, std::shared_ptr<Broadcast>, Builtin> broadcast(mod, "Broadcast");
+    py::class_<Broadcast, std::shared_ptr<Broadcast>, RequiresTensorViewArgs> broadcast(mod, "Broadcast");
     broadcast.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&,
                            const AxisSet& >());
 }

@@ -29,16 +29,15 @@ static void declareParameterizedTensorView(py::module & mod, std::string const &
     using PyClass = py::class_<Class, std::shared_ptr<Class>, TensorView>;
 
     PyClass cls(mod, ("ParameterizedTensorView" + suffix).c_str());
-    cls.def("write", &Class::write);
+    cls.def("write", (void (Class::*) (const void*, size_t, size_t)) &Class::write);
     cls.def("read", &Class::read);
 }
 
 }
 
 PYBIND11_MODULE(ParameterizedTensorView, mod) {
-    py::class_<Value, std::shared_ptr<Value>> value(mod, "Value");
 
-    py::class_<TensorView, std::shared_ptr<TensorView>, Value> tensorView(mod, "TensorView");
+    py::module::import("wrapper.ngraph.runtime.TensorView");
 
     py::module::import("wrapper.ngraph.types.TraitedType");
 

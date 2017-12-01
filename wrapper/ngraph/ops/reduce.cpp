@@ -27,7 +27,7 @@ PYBIND11_MODULE(Reduce, mod) {
     py::module::import("wrapper.ngraph.ops.Op");
     using AxisSet = std::set<size_t>;
  
-    py::class_<Reduce, std::shared_ptr<Reduce>, Builtin> reduce(mod, "Reduce");
+    py::class_<Reduce, std::shared_ptr<Reduce>, RequiresTensorViewArgs> reduce(mod, "Reduce");
     reduce.def(py::init<const std::shared_ptr<ngraph::Node>&,
                            const std::shared_ptr<ngraph::Node>&,
                            const std::shared_ptr<ngraph::Function>&,

@@ -18,7 +18,7 @@ import numpy as np
 import wrapper.ngraph.Util as Util
 import wrapper.ngraph.types.TraitedType as TraitedType
 import wrapper.ngraph.ops.Parameter as Parameter
-import wrapper.ngraph.runtime.TensorViewType as TensorViewType
+import wrapper.ngraph.types.TensorViewType as TensorViewType
 import wrapper.ngraph.Function as Function
 import wrapper.ngraph.runtime.Manager as Manager
 import wrapper.ngraph.runtime.ParameterizedTensorView as ParameterizedTensorView

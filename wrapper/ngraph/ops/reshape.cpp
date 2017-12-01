@@ -27,7 +27,7 @@ PYBIND11_MODULE(Reshape, mod) {
 
     using AxisVector = std::vector<size_t>;
 
-    py::class_<Reshape, std::shared_ptr<Reshape>, Builtin> reshape(mod, "Reshape");
+    py::class_<Reshape, std::shared_ptr<Reshape>, RequiresTensorViewArgs> reshape(mod, "Reshape");
     reshape.def(py::init<const std::shared_ptr<ngraph::Node>&, const AxisVector&,
                          const ngraph::Shape& >());
 }

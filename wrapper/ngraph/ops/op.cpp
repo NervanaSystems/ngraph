@@ -25,17 +25,17 @@ PYBIND11_MODULE(Op, mod) {
 
     py::module::import("wrapper.ngraph.Node");
 
-    py::class_<Builtin, std::shared_ptr<Builtin>, Node> builtin(mod, "Builtin");
-    py::class_<UnaryElementwiseBuiltin, std::shared_ptr<UnaryElementwiseBuiltin>,
-        Builtin> unaryElementwiseBuiltin(mod, "UnaryElementwiseBuiltin");
+    py::class_<RequiresTensorViewArgs, std::shared_ptr<RequiresTensorViewArgs>, Node> requiresTensorViewArgs(mod, "RequiresTensorViewArgs");
+    py::class_<UnaryElementwise, std::shared_ptr<UnaryElementwise>,
+        RequiresTensorViewArgs> unaryElementwise(mod, "UnaryElementwise");
     py::class_<UnaryElementwiseArithmetic, std::shared_ptr<UnaryElementwiseArithmetic>, 
-        UnaryElementwiseBuiltin> unaryElementwiseArithmetic(mod, "UnaryElementwiseArithmetic"); 
-    py::class_<BinaryElementwiseBuiltin, std::shared_ptr<BinaryElementwiseBuiltin>,
-        Builtin> binaryElementwiseBuiltin(mod, "BinaryElementwiseBuiltin");
+        UnaryElementwise> unaryElementwiseArithmetic(mod, "UnaryElementwiseArithmetic"); 
+    py::class_<BinaryElementwise, std::shared_ptr<BinaryElementwise>,
+        RequiresTensorViewArgs> binaryElementwise(mod, "BinaryElementwise");
     py::class_<BinaryElementwiseComparison, std::shared_ptr<BinaryElementwiseComparison>,
-        BinaryElementwiseBuiltin> binaryElementwiseComparison(mod, "BinaryElementwiseComparison");
+        BinaryElementwise> binaryElementwiseComparison(mod, "BinaryElementwiseComparison");
     py::class_<BinaryElementwiseArithmetic, std::shared_ptr<BinaryElementwiseArithmetic>,
-        BinaryElementwiseBuiltin> binaryElementwiseArithmetic(mod, "BinaryElementwiseArithmetic");    
+        BinaryElementwise> binaryElementwiseArithmetic(mod, "BinaryElementwiseArithmetic");    
 
 }
 

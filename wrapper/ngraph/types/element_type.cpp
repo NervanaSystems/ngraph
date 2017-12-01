@@ -33,9 +33,9 @@ static void declareTraitedType(py::module & mod, std::string const & suffix) {
     //cls.def(py::init<>());
     cls.def_static("element_type", &Class::element_type,
                    py::return_value_policy::reference);
-    cls.def_static("read", (T (*) (const std::string&)) &Class::read);
-    cls.def_static("read", (std::vector<T> (*) (const std::vector<std::string>&)) &Class::read);
-    cls.def("make_primary_tensor_view", &Class::make_primary_tensor_view);
+//    cls.def_static("read", (T (*) (const std::string&)) &Class::read);
+//    cls.def_static("read", (std::vector<T> (*) (const std::vector<std::string>&)) &Class::read);
+//    cls.def("make_primary_tensor_view", &Class::make_primary_tensor_view);
 }
 
 }

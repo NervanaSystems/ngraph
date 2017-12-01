@@ -25,7 +25,7 @@ PYBIND11_MODULE(Dot, mod) {
 
     py::module::import("wrapper.ngraph.ops.Op");
 
-    py::class_<Dot, std::shared_ptr<Dot>, Builtin> dot(mod, "Dot");
+    py::class_<Dot, std::shared_ptr<Dot>, RequiresTensorViewArgs> dot(mod, "Dot");
     dot.def(py::init<const std::shared_ptr<ngraph::Node>&,
                      const std::shared_ptr<ngraph::Node>& >());
 }

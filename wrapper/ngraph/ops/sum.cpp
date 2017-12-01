@@ -27,7 +27,7 @@ PYBIND11_MODULE(Sum, mod) {
 
     using AxisSet = std::set<size_t>;
 
-    py::class_<Sum, std::shared_ptr<Sum>, Builtin> sum(mod, "Sum");
+    py::class_<Sum, std::shared_ptr<Sum>, RequiresTensorViewArgs> sum(mod, "Sum");
     sum.def(py::init<const std::shared_ptr<ngraph::Node>&,
                      const AxisSet& >());
 }

@@ -16,6 +16,7 @@
 #include <pybind11/stl.h>
 #include <string>
 #include "ngraph/function.hpp"
+#include "ngraph/types/type.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
@@ -23,12 +24,12 @@ namespace ngraph {
 PYBIND11_MODULE(Function, mod) {
 
     py::module::import("wrapper.ngraph.ops.Parameter");
-    py::module::import("wrapper.ngraph.runtime.TensorViewType");
+    py::module::import("wrapper.ngraph.types.TensorViewType");
 
     py::class_<Function, std::shared_ptr<Function>> function(mod, "Function");
 
     function.def(py::init<const std::shared_ptr<Node>&, const std::shared_ptr<const TensorViewType>&,
-                             const std::vector<std::shared_ptr<op::Parameter>>&, const std::string&>());
+                          const std::vector<std::shared_ptr<op::Parameter>>&, const std::string&>());
     function.def("get_result_type", &Function::get_result_type);
 }
 

@@ -26,7 +26,8 @@ PYBIND11_MODULE(Utils, mod) {
     py::module::import("wrapper.ngraph.runtime.ParameterizedTensorView");
     using ET = ngraph::element::TraitedType<float>;    
 
-    mod.def("make_tensor", &make_tensor<ET>);
+    mod.def("make_tensor", (std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>> (*) (const ngraph::Shape&)) &make_tensor);
+    mod.def("make_tensor", (std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>> (*) (const Shape& , const std::vector<typename ET::type>& )) &make_tensor);
 }
 
 }}  // ngraph

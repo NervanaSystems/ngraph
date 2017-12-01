@@ -25,7 +25,7 @@ PYBIND11_MODULE(Convert, mod) {
 
     py::module::import("wrapper.ngraph.ops.Op");
 
-    py::class_<Convert, std::shared_ptr<Convert>, UnaryElementwiseBuiltin> convert(mod, "Convert");
+    py::class_<Convert, std::shared_ptr<Convert>, UnaryElementwise> convert(mod, "Convert");
     convert.def(py::init<const std::shared_ptr<ngraph::Node>&,
                          const ngraph::element::Type&>());
 }

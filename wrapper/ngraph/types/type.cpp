@@ -15,17 +15,18 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/runtime/value.hpp"
+#include "ngraph/types/type.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
-namespace runtime {
 
-PYBIND11_MODULE(TensorView, mod) {
+PYBIND11_MODULE(TensorViewType, mod) {
 
-    py::class_<Value, std::shared_ptr<Value>> value(mod, "Value");
-    py::class_<TensorView, std::shared_ptr<TensorView>, Value> tensorView(mod, "TensorView");
+    py::class_<ValueType, std::shared_ptr<ValueType>> valueType(mod, "ValueType"); 
+    py::class_<TensorViewType, std::shared_ptr<TensorViewType>, ValueType> tensorViewType(mod, "TensorViewType");
+
+    tensorViewType.def(py::init<const element::Type&, const Shape&>());
+    tensorViewType.def("get_shape", &TensorViewType::get_shape);
 }
 
-}}  // ngraph
+}  // ngraph

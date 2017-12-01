@@ -17,7 +17,7 @@ import numpy as np
 
 import wrapper.ngraph.types.TraitedType as TraitedType
 import wrapper.ngraph.ops.Parameter as Parameter
-import wrapper.ngraph.runtime.TensorViewType as TensorViewType
+import wrapper.ngraph.types.TensorViewType as TensorViewType
 import wrapper.ngraph.Function as Function
 import wrapper.ngraph.ops.Maximum as Maximum
 import wrapper.ngraph.ops.Reshape as Reshape
@@ -59,15 +59,15 @@ def makeFloat32Constant(scalar, shape=[], axis_set={}):
 
 def makeFloat32ConstantLike(scalar, op):
     v = set()
-    shape = (op.get_value_type()).get_shape()
+    shape = op.get_shape()
     for i in range (len(shape)):
         v.add(i)
-    return makeFloat32Constant(scalar, shape, v)  
+    return makeFloat32Constant(scalar, shape, v)
 
 def transpose(op, order):
     v = []
     for i in range (len(order)):
-        v.append((op.get_value_type()).get_shape()[order[i]])    
+        v.append(op.get_shape()[order[i]])    
     new_shape = v
     return Reshape.Reshape(op, order, new_shape)    
 
@@ -94,13 +94,14 @@ X5 = Dot.Dot(X4, W2) + Broadcast.Broadcast(b2, [bz, 10], {0})
 # Softmax
 Logits = X5
 Exp = Exp.Exp(Logits) 
-Max = Reduce.Reduce(Exp, makeFloat32Constant(0., [0], {0}), MaxFn, {1}) #TODO: Pass empty list and set 
+a = makeFloat32Constant(0., [0], {0}) 
+Max = Reduce.Reduce(Exp, a, MaxFn, {1}) #TODO: Pass empty list and set 
 MaxBroadcast = Broadcast.Broadcast(Max, [bz, 10], {1})
 Softmax = Exp / MaxBroadcast
 
 # Loss
 LogSoftmax = Log.Log(Softmax)
-Loss = Sum.Sum(LogSoftmax * LabelOneHot, {0, 1})/makeFloat32Constant(float(bz), [0], {0}) #TODO: Pass empty list and set
+Loss = Sum.Sum(LogSoftmax * LabelOneHot, {0, 1})/makeFloat32Constant(float(bz), [1], {1}) #TODO: Pass empty list and set
 
 # Derivatives
 dLogits = Softmax - LabelOneHot
