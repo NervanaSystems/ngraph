@@ -1974,20 +1974,9 @@ TEST(type_prop, one_hot_deduce_matrix_2)
 TEST(type_prop, one_hot_deduce_floating_point)
 {
     auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{12, 24});
-    try
-    {
-        auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 8}, 2);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Floating-point argument to one-hot not detected.";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(), std::string("One-hot argument has floating-point element type"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
+    auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 8}, 2);
+    auto oh_vt = oh->get_value_type();
+    ASSERT_EQ(*oh_vt, TensorViewType(element::Float32::element_type(), Shape{12, 24, 8}));
 }
 
 TEST(type_prop, one_hot_deduce_axis_oob)

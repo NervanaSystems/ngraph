@@ -26,11 +26,6 @@ op::OneHot::OneHot(const std::shared_ptr<Node>& arg, const Shape& shape, size_t 
     auto arg_tensor_view_type = m_inputs.at(0).get_tensor_view_type();
     auto& arg_element_type = arg_tensor_view_type->get_element_type();
 
-    if (arg_element_type.get_is_real())
-    {
-        throw ngraph_error("One-hot argument has floating-point element type");
-    }
-
     if (one_hot_axis >= shape.size())
     {
         throw ngraph_error("One-hot axis is out of bounds");

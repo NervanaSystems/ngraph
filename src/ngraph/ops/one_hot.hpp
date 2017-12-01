@@ -31,21 +31,21 @@ namespace ngraph
         ///
         /// ## Inputs
         ///
-        /// |       | Type                                                    | Description                                         |
-        /// | ----- | ------------------------------------------------------- | --------------------------------------------------- |
-        /// | `arg` | \f$I[d_1,\dots,d_{m-1},d_{m+1},\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and any integer element type. |
+        /// |       | Type                                                    | Description                                 |
+        /// | ----- | ------------------------------------------------------- | ------------------------------------------- |
+        /// | `arg` | \f$E[d_1,\dots,d_{m-1},d_{m+1},\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and any element type. |
         ///
         /// ## Output
         ///
-        /// | Type                   | Description                                                                                                                                         |
-        /// | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | \f$I[d_1,\dots,d_n]\f$ | The tensor \f$T'\f$, where \f$T'[i_1,\dots,i_{m-1},i_m,i_{m+1},\dots,i_n] = 1\f$ if \f$T[i_1,\dots,i_{m-1},i_{m+1},\dots,i_n] = i_m\f$, else \f$0\f$. |
+        /// | Type                   | Description                                                                                                                                                                                                                                                                |
+        /// | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------------------------------------------------------------------------------------------- |
+        /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T'\f$, where \f$T'[i_1,\dots,i_{m-1},i_m,i_{m+1},\dots,i_n] = 1\f$ if \f$T[i_1,\dots,i_{m-1},i_{m+1},\dots,i_n] = i_m\f$, else \f$0\f$. However, \f$T'\f$ is undefined if any non-integral value or any out-of-bounds value is detected in the input tensor. |
         ///
         /// ## Implementation Status
         ///
-        /// | Backend | Status           |
-        /// | ------- | ---------------- |
-        /// | NGVM    | Not implemented. |
+        /// | Backend | Status                                                                                                                                                 |
+        /// | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+        /// | NGVM    | Fully implemented. NOTE: Execution throws `std::range_error` if either a non-integral value or an out-of-bounds value is detected in the input tensor. |
 
         class OneHot : public RequiresTensorViewArgs
         {
