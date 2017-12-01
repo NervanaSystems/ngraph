@@ -2848,6 +2848,31 @@ TEST(${BACKEND_NAME}, sum_trivial)
     ASSERT_EQ((vector<float>{1, 2, 3, 4}), result->get_vector<float>());
 }
 
+// Failure has been reported at 5D for some reason
+TEST(${BACKEND_NAME}, sum_trivial_5d)
+{
+    auto shape = Shape{2, 2, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
+              result->get_vector<float>());
+}
+
 TEST(${BACKEND_NAME}, sum_to_scalar)
 {
     auto shape = Shape{2, 2};
