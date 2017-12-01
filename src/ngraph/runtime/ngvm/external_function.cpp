@@ -70,7 +70,6 @@
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/runtime/ngvm/eigen/broadcast_scalar.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_matrix.hpp"
 #include "ngraph/runtime/ngvm/eigen/concat_vector.hpp"
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
