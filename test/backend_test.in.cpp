@@ -3058,6 +3058,29 @@ TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
     ASSERT_EQ((vector<int32_t>{1, 0, 0}), result->get_vector<int32_t>());
 }
 
+TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
+{
+    auto shape_a = Shape{};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1.1f});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+}
+
 TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
 {
     auto shape_a = Shape{};

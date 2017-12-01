@@ -1571,14 +1571,24 @@ void Emitter::EmitOneHot(const ngraph::Node* n,
 
         TU << "out_vector.setZero();\n"
            << ""
-           << "size_t pos = " << emit_vector(inputs[0]) << "(0, 0);\n"
-           << "if (pos < " << bounds << ")\n";
+           << "auto pos_raw = " << emit_vector(inputs[0]) << "(0, 0);\n"
+           << "if (std::floor(pos_raw) != pos_raw)\n"
+           << "{\n";
+        TU.indent++;
+        TU << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
+        TU.indent--;
+        TU << "}\n";
+
+        TU << "size_t pos = pos_raw;\n"
+           << "if (pos >= " << bounds << ")\n";
 
         TU << "{\n";
         TU.indent++;
-        TU << "out_vector(pos, 0) = 1;\n";
+        TU << "throw(std::range_error(\"One-hot: value is out of category range\"));\n";
         TU.indent--;
         TU << "}\n";
+
+        TU << "out_vector(pos, 0) = 1;\n";
 
         TU.indent--;
         TU << "}\n";
@@ -1597,13 +1607,26 @@ void Emitter::EmitOneHot(const ngraph::Node* n,
            << "{\n";
         TU.indent++;
 
-        TU << "size_t pos = arg_vector(i, 0);\n";
-        TU << "if (pos < " << bounds << ")\n"
+        TU << "auto pos_raw = arg_vector(i, 0);\n";
+
+        TU << "if (std::floor(pos_raw) != pos_raw)\n"
            << "{\n";
         TU.indent++;
-        TU << "out_vector" << (oh->get_one_hot_axis() == 0 ? "(pos, i)" : "(i, pos)") << " = 1;\n";
+        TU << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
         TU.indent--;
         TU << "}\n";
+
+        TU << "size_t pos = pos_raw;\n";
+        TU << "bool found = false;\n";
+
+        TU << "if (pos >= " << bounds << ")\n"
+           << "{\n";
+        TU.indent++;
+        TU << "throw(std::range_error(\"One-hot: value is out of category range\"));\n";
+        TU.indent--;
+        TU << "}\n";
+
+        TU << "out_vector" << (oh->get_one_hot_axis() == 0 ? "(pos, i)" : "(i, pos)") << " = 1;\n";
 
         TU.indent--;
         TU << "}\n";
