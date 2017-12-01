@@ -65,7 +65,7 @@ namespace ngraph
                          const std::shared_ptr<Node>& arg1,
                          const Coordinate& lower_bounds,
                          const Coordinate& upper_bounds,
-                         const Shape& step);
+                         const Strides& step);
 
             /// \brief Constructs a tensor slice replacement operation with unit step; i.e., every element inside the bounding box will be overwritten.
             ///
@@ -92,7 +92,7 @@ namespace ngraph
             /// \return The exclusive upper-bound coordinates.
             const Coordinate& get_upper_bounds() const { return m_upper_bounds; }
             /// \return The slicing step.
-            const Shape& get_step() const { return m_step; }
+            const Strides& get_step() const { return m_step; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
@@ -100,7 +100,7 @@ namespace ngraph
 
             const Coordinate m_lower_bounds;
             const Coordinate m_upper_bounds;
-            const Shape m_step;
+            const Strides m_step;
         };
     }
 }
