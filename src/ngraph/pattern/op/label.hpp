@@ -30,6 +30,15 @@ namespace ngraph
             class Label : public Pattern
             {
             public:
+                /// \brief creates a Label node from \sa node.
+                ///
+                /// this Label node can be bound to arbitrary nodes in an input graph
+                /// as long as provided \sa pred is satisfied and the node hasn't been previously bound to
+                /// the different node in the input graph
+                /// \code{.cpp}
+                /// auto pattern = pattern::op::Label::make_from_node(a); //a is op::Parameter
+                /// matcher.match(pattern, a));
+                /// \endcode
                 static std::shared_ptr<Label>
                     make_from_node(const std::shared_ptr<ngraph::Node>& node,
                                    Predicate pred = nullptr)
@@ -39,6 +48,15 @@ namespace ngraph
                     return label;
                 }
 
+                /// \brief creates a Label node containing a sub-pattern described by \sa node.
+                ///
+                /// this Label node can be bound only to the nodes in the input graph
+                /// that match the pattern specified by \sa node
+                /// Example:
+                /// \code{.cpp}
+                /// auto add = a + b; //a and b are op::Parameter in this example
+                /// auto label = pattern::op::Label::wrap(add);
+                /// \endcode
                 static std::shared_ptr<Label> wrap(const std::shared_ptr<ngraph::Node>& node,
                                                    Predicate pred = nullptr)
                 {
