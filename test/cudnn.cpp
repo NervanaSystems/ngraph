@@ -29,6 +29,8 @@
 #include "ngraph/runtime/gpu/external_function.hpp"
 #include "ngraph/runtime/gpu/manager.hpp"
 
+#include "ngraph/ngraph.hpp"
+
 using namespace ngraph::runtime::gpu;
 using namespace ngraph;
 using namespace std;
@@ -264,4 +266,51 @@ const auto str = R"(
 
   auto module = compiler.compile(source);
   EXPECT_EQ(source,source);
+}
+
+template <typename T>
+static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
+{
+    size_t data_size = data.size() * sizeof(T);
+    tv->write(data.data(), 0, data_size);
+}
+
+TEST(cudnn, abc)
+{
+    using f32 = element::Float32;
+
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(f32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(f32::element_type(), shape);
+    auto C = make_shared<op::Parameter>(f32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(f32::element_type(), shape);
+    auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
+
+    auto manager = runtime::Manager::get("GPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+    shared_ptr<runtime::TensorView> b =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+    shared_ptr<runtime::TensorView> c =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+    shared_ptr<runtime::TensorView> result =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+
+    copy_data(a, runtime::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, runtime::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+    copy_data(c, runtime::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
+
+    cf->call({a, b, c}, {result});
+    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
+
+    cf->call({b, a, c}, {result});
+    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
+
+    cf->call({a, c, b}, {result});
+    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{50, 72}, {98, 128}})));
 }
