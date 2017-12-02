@@ -37,6 +37,7 @@
 #include "ngraph/runtime/kernel/ceiling.hpp"
 #include "ngraph/runtime/kernel/constant.hpp"
 #include "ngraph/runtime/kernel/convert.hpp"
+#include "ngraph/runtime/kernel/copy.hpp"
 #include "ngraph/runtime/kernel/cos.hpp"
 #include "ngraph/runtime/kernel/cosh.hpp"
 #include "ngraph/runtime/kernel/divide.hpp"
@@ -54,7 +55,6 @@
 #include "ngraph/runtime/kernel/negate.hpp"
 #include "ngraph/runtime/kernel/not_equal.hpp"
 #include "ngraph/runtime/kernel/one_hot.hpp"
-#include "ngraph/runtime/kernel/parameterized_constant.hpp"
 #include "ngraph/runtime/kernel/power.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
@@ -463,9 +463,9 @@ private:
                 ss << "unsupported element type " << type << " op " << node.get_name();
                 throw std::runtime_error(ss.str());
             }
-            kernel::parameterized_constant<T>(reinterpret_cast<const T*>(data),
-                                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                              out[0]->get_element_count());
+            kernel::copy<T>(reinterpret_cast<const T*>(data),
+                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                            out[0]->get_element_count());
         }
         else if (node_op == "Power")
         {
