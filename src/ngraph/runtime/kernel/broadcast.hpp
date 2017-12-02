@@ -36,10 +36,10 @@ namespace ngraph
 
                 do
                 {
-                    auto out_coord = out_iter.get_current_coordinate();
-                    auto out_index = out_iter.get_current_index();
-                    auto in_coord = project_coordinate(out_coord, broadcast_axes);
-                    auto in_index = index_in_dense_tensor(in_shape, in_coord);
+                    Coordinate out_coord = out_iter.get_current_coordinate();
+                    size_t out_index = out_iter.get_current_index();
+                    Coordinate in_coord = project_coordinate(out_coord, broadcast_axes);
+                    size_t in_index = index_in_dense_tensor(in_shape, in_coord);
 
                     out[out_index] = arg[in_index];
                 } while (out_iter.increment());

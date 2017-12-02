@@ -74,11 +74,11 @@ namespace ngraph
 
                 do
                 {
-                    auto in_coord = in_iter.get_current_coordinate();
-                    auto in_index = in_iter.get_current_index();
+                    Coordinate in_coord = in_iter.get_current_coordinate();
+                    size_t in_index = in_iter.get_current_index();
 
-                    auto out_coord = project_coordinate(in_coord, reduction_axes);
-                    auto out_index = index_in_dense_tensor(out_shape, out_coord);
+                    Coordinate out_coord = project_coordinate(in_coord, reduction_axes);
+                    size_t out_index = index_in_dense_tensor(out_shape, out_coord);
 
                     out[out_index] += arg[in_index];
                 } while (in_iter.increment());

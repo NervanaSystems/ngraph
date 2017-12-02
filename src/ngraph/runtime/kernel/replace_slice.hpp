@@ -49,8 +49,8 @@ namespace ngraph
 
                 do
                 {
-                    auto out_index = out_iter.get_current_index();
-                    auto in_index = in_iter.get_current_index();
+                    size_t out_index = out_iter.get_current_index();
+                    size_t in_index = in_iter.get_current_index();
 
                     out[out_index] = arg1[in_index];
                 } while (out_iter.increment() && in_iter.increment());
