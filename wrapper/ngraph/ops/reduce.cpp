@@ -29,9 +29,9 @@ PYBIND11_MODULE(Reduce, mod) {
  
     py::class_<Reduce, std::shared_ptr<Reduce>, RequiresTensorViewArgs> reduce(mod, "Reduce");
     reduce.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                           const std::shared_ptr<ngraph::Node>&,
-                           const std::shared_ptr<ngraph::Function>&,
-                           const AxisSet& >());
+                        const std::shared_ptr<ngraph::Node>&,
+                        const std::shared_ptr<ngraph::Function>&,
+                        const AxisSet& >());
 }
 
 }}  // ngraph

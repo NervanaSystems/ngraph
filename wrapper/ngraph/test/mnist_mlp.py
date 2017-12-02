@@ -94,14 +94,13 @@ X5 = Dot.Dot(X4, W2) + Broadcast.Broadcast(b2, [bz, 10], {0})
 # Softmax
 Logits = X5
 Exp = Exp.Exp(Logits) 
-a = makeFloat32Constant(0., [0], {0}) 
-Max = Reduce.Reduce(Exp, a, MaxFn, {1}) #TODO: Pass empty list and set 
+Max = Reduce.Reduce(Exp, makeFloat32Constant(0., [], set()), MaxFn, {1})
 MaxBroadcast = Broadcast.Broadcast(Max, [bz, 10], {1})
 Softmax = Exp / MaxBroadcast
 
 # Loss
 LogSoftmax = Log.Log(Softmax)
-Loss = Sum.Sum(LogSoftmax * LabelOneHot, {0, 1})/makeFloat32Constant(float(bz), [1], {1}) #TODO: Pass empty list and set
+Loss = Sum.Sum(LogSoftmax * LabelOneHot, {0, 1})/makeFloat32Constant(float(bz), [], set())
 
 # Derivatives
 dLogits = Softmax - LabelOneHot
