@@ -12,12 +12,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <fstream>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
+
 #include "ngraph/runtime/gpu/external_function.hpp"
+#include "ngraph/function.hpp"
 
 using namespace std;
 using namespace ngraph::runtime::gpu;
 
 GPUExternalFunction::GPUExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                   bool release_function)
-  : ngraph::runtime::ExternalFunction(function, release_function) {
+                                         bool release_function)
+    : ngraph::runtime::ExternalFunction(function, release_function)
+  , m_compiled_function(nullptr)
+{
 }

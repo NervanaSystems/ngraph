@@ -13,5 +13,22 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/runtime/gpu/backend.hpp"
+#include "ngraph/runtime/gpu/tensor_view.hpp"
+#include "ngraph/runtime/external_function.hpp"
 
-using namespace ngraph::runtime::gpu;
+using namespace ngraph;
+using namespace std;
+
+std::shared_ptr<ngraph::runtime::CallFrame> runtime::gpu::GPUBackend::make_call_frame(
+                                                                                      const std::shared_ptr<ExternalFunction>& external_function)
+{
+  return external_function->make_call_frame();
+}
+
+std::shared_ptr<ngraph::runtime::TensorView>
+runtime::gpu::GPUBackend::make_primary_tensor_view(const ngraph::element::Type& element_type,
+                                                   const Shape& shape)
+{
+  auto rc = make_shared<runtime::gpu::GPUTensorView>(element_type, shape);
+  return dynamic_pointer_cast<runtime::TensorView>(rc);
+}

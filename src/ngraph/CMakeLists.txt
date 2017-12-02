@@ -170,6 +170,11 @@ if (NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
     set(SRC ${SRC}
         codegen/nvptx_compiler.cpp
         codegen/nvptx_execution_engine.cpp
+        runtime/gpu/call_frame.cpp
+        runtime/gpu/backend.cpp
+        runtime/gpu/manager.cpp
+        runtime/gpu/external_function.cpp
+        runtime/gpu/tensor_view.cpp
         )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
