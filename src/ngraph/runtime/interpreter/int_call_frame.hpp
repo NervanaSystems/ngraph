@@ -40,7 +40,6 @@
 #include "ngraph/runtime/kernel/cos.hpp"
 #include "ngraph/runtime/kernel/cosh.hpp"
 #include "ngraph/runtime/kernel/divide.hpp"
-#include "ngraph/runtime/kernel/dot.hpp"
 #include "ngraph/runtime/kernel/equal.hpp"
 #include "ngraph/runtime/kernel/exp.hpp"
 #include "ngraph/runtime/kernel/floor.hpp"
@@ -409,13 +408,13 @@ private:
                            ->get_vector()
                            .data();
             }
-            // else if (type == element::i16)
-            // {
-            //     data = dynamic_cast<const op::ParameterizedConstant<element::Int16>*>(&node)
-            //                ->get_value()
-            //                ->get_vector()
-            //                .data();
-            // }
+            else if (type == element::i16)
+            {
+                data = dynamic_cast<const op::ParameterizedConstant<element::Int16>*>(&node)
+                           ->get_value()
+                           ->get_vector()
+                           .data();
+            }
             else if (type == element::i32)
             {
                 data = dynamic_cast<const op::ParameterizedConstant<element::Int32>*>(&node)
@@ -437,14 +436,13 @@ private:
                            ->get_vector()
                            .data();
             }
-            // else if (type == element::u16)
-            // {
-            //     data =
-            //         dynamic_cast<const op::ParameterizedConstant<element::UInt16>*>(&node)
-            //             ->get_value()
-            //             ->get_vector()
-            //             .data();
-            // }
+            else if (type == element::u16)
+            {
+                data = dynamic_cast<const op::ParameterizedConstant<element::UInt16>*>(&node)
+                           ->get_value()
+                           ->get_vector()
+                           .data();
+            }
             else if (type == element::u32)
             {
                 data = dynamic_cast<const op::ParameterizedConstant<element::UInt32>*>(&node)

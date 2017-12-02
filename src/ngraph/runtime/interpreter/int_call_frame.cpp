@@ -192,7 +192,6 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
 void runtime::interpreter::INT_CallFrame::call(const vector<shared_ptr<runtime::Value>>& arguments,
                                                const vector<shared_ptr<runtime::Value>>& results)
 {
-    // TODO: Check types of args and result
     vector<shared_ptr<runtime::TensorView>> inputs;
     for (shared_ptr<runtime::Value> argument : arguments)
     {
