@@ -24,6 +24,13 @@ namespace ngraph
         {
             class GPUManager : public Manager
             {
+            public:
+              virtual std::shared_ptr<Backend> allocate_backend() override;
+
+              virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
+              compile(const std::shared_ptr<ngraph::Function>& fun) override;
+
+              static Factory factory;
             };
         };
     }
