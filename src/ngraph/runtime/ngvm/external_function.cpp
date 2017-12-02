@@ -70,8 +70,6 @@
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/runtime/ngvm/eigen/concat_matrix.hpp"
-#include "ngraph/runtime/ngvm/eigen/concat_vector.hpp"
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_mult.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_transpose.hpp"
@@ -86,6 +84,7 @@
 #include "ngraph/runtime/ngvm/instruction/broadcast.hpp"
 #include "ngraph/runtime/ngvm/instruction/call.hpp"
 #include "ngraph/runtime/ngvm/instruction/ceiling.hpp"
+#include "ngraph/runtime/ngvm/instruction/concat.hpp"
 #include "ngraph/runtime/ngvm/instruction/constant.hpp"
 #include "ngraph/runtime/ngvm/instruction/convert.hpp"
 #include "ngraph/runtime/ngvm/instruction/copy.hpp"
@@ -432,35 +431,32 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_TO_OP_MAP(op::Concat)
         {
+            auto concat = static_cast<const op::Concat*>(n);
+
+            std::vector<Shape> arg_shapes;
+
+            for (auto arg : n->get_arguments())
+            {
+                auto arg_tensor_type =
+                    dynamic_pointer_cast<const TensorViewType>(arg->get_value_type());
+                assert(nullptr != arg_tensor_type);
+                arg_shapes.push_back(arg_tensor_type->get_shape());
+            }
+
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
-
             auto result_shape = result_tensor_type->get_shape();
             auto& result_element_type = result_tensor_type->get_element_type();
 
-            if (result_shape.size() == 1)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                             "Concat has unhandled element type",
-                                             eigen::ConcatVectorInstruction,
-                                             in,
-                                             out[0]);
-            }
-            else if (result_shape.size() == 2)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(
-                    result_element_type,
-                    "Concat has unhandled element type",
-                    eigen::ConcatMatrixInstruction,
-                    in,
-                    (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis(),
-                    out[0]);
-            }
-            else
-            {
-                throw ngraph_error("Concat not implemented for rank>2 in VM yet");
-            }
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "Concat has unhandled element type",
+                                         instruction::ConcatInstruction,
+                                         in,
+                                         out[0],
+                                         arg_shapes,
+                                         result_shape,
+                                         concat->get_concatenation_axis());
         };
 
         REGISTER_TO_OP_MAP(op::Convert)
