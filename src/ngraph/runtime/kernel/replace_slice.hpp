@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/common.hpp"
-#include "ngraph/coordinate_iterator.hpp"
+#include "ngraph/view.hpp"
 
 namespace ngraph
 {
@@ -36,24 +36,26 @@ namespace ngraph
                                const Shape& out_shape)
             {
                 // Step 1: Copy the entire replacement context to the output.
-                CoordinateIterator copy_iter(out_shape);
+                View copy_view(out_shape);
 
-                do
+                for (Coordinate copy_coord : copy_view)
                 {
-                    out[copy_iter.get_current_index()] = arg0[copy_iter.get_current_index()];
-                } while (copy_iter.increment());
+                    out[copy_view.index(copy_coord)] = arg0[copy_view.index(copy_coord)];
+                }
 
                 // Step 2: Overwrite the slice for replacement.
-                CoordinateIterator out_iter(out_shape, strides, upper_bounds, lower_bounds);
-                CoordinateIterator in_iter(arg1_shape);
+                View input_view(arg1_shape);
+                View output_view(out_shape, lower_bounds, upper_bounds, strides);
 
-                do
+                View::Iterator output_it = output_view.begin();
+
+                for (Coordinate input_coord : input_view)
                 {
-                    size_t out_index = out_iter.get_current_index();
-                    size_t in_index = in_iter.get_current_index();
+                    Coordinate output_coord = *output_it;
+                    ++output_it;
 
-                    out[out_index] = arg1[in_index];
-                } while (out_iter.increment() && in_iter.increment());
+                    out[output_view.index(output_coord)] = arg1[input_view.index(input_coord)];
+                }
             }
         }
     }

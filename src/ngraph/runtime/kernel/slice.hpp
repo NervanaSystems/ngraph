@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/common.hpp"
-#include "ngraph/coordinate_iterator.hpp"
+#include "ngraph/view.hpp"
 
 namespace ngraph
 {
@@ -34,16 +34,18 @@ namespace ngraph
                        const Strides& strides,
                        const Shape& out_shape)
             {
-                CoordinateIterator in_iter(arg_shape, strides, upper_bounds, lower_bounds);
-                CoordinateIterator out_iter(out_shape);
+                View input_view(arg_shape, lower_bounds, upper_bounds, strides);
+                View output_view(out_shape);
 
-                do
+                View::Iterator output_it = output_view.begin();
+
+                for (Coordinate in_coord : input_view)
                 {
-                    size_t out_index = out_iter.get_current_index();
-                    size_t in_index = in_iter.get_current_index();
+                    Coordinate out_coord = *output_it;
+                    ++output_it;
 
-                    out[out_index] = arg[in_index];
-                } while (out_iter.increment() && in_iter.increment());
+                    out[output_view.index(out_coord)] = arg[input_view.index(in_coord)];
+                }
             }
         }
     }

@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/common.hpp"
-#include "ngraph/coordinate_iterator.hpp"
+#include "ngraph/view.hpp"
 
 namespace ngraph
 {
@@ -32,17 +32,15 @@ namespace ngraph
                            const Shape& out_shape,
                            const AxisSet& broadcast_axes)
             {
-                CoordinateIterator out_iter(out_shape);
+                View input_view(in_shape);
+                View output_view(out_shape);
 
-                do
+                for (Coordinate output_coord : output_view)
                 {
-                    Coordinate out_coord = out_iter.get_current_coordinate();
-                    size_t out_index = out_iter.get_current_index();
-                    Coordinate in_coord = project_coordinate(out_coord, broadcast_axes);
-                    size_t in_index = index_in_dense_tensor(in_shape, in_coord);
+                    Coordinate input_coord = project_coordinate(output_coord, broadcast_axes);
 
-                    out[out_index] = arg[in_index];
-                } while (out_iter.increment());
+                    out[output_view.index(output_coord)] = arg[input_view.index(input_coord)];
+                }
             }
         }
     }

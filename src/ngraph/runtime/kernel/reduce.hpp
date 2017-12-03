@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/common.hpp"
-#include "ngraph/coordinate_iterator.hpp"
+#include "ngraph/view.hpp"
 
 namespace ngraph
 {
@@ -27,63 +27,30 @@ namespace ngraph
         {
             template <typename T>
             void reduce(T* arg0,
-                        T* arg1,
+                        T* arg1, // TODO: really we should just pass a T here.
                         T* out,
                         const Shape& in_shape,
                         const Shape& out_shape,
                         const AxisSet& reduction_axes,
                         std::function<T(T, T)> reduction_function)
             {
-                // General TODO: the special casing here is a bit goofy, and it's mostly a consequence of the
-                // fact that a CoordinateIterator can't handle zero-length axes. (Do-while loops are a code
-                // smell...) When we turn it into a proper iterator, that should go away.
+                View output_view(out_shape);
 
-                // Special case when the input has zero elements.
-                for (size_t i = 0; i < in_shape.size(); i++)
+                for (Coordinate output_coord : output_view)
                 {
-                    if (in_shape[i] == 0)
-                    {
-                        // Some input axis is zero-length; zero out the output if it is not also zero-sized.
-                        for (size_t j = 0; j < out_shape.size(); j++)
-                        {
-                            if (out_shape[j] == 0)
-                            {
-                                // Some output-axis is zero length, so we don't need to do anything.
-                                return;
-                            }
-                        }
-
-                        // If we are still here, we need to zero out the output.
-                        CoordinateIterator out_iter(out_shape);
-
-                        do
-                        {
-                            out[out_iter.get_current_index()] = *arg1;
-                        } while (out_iter.increment());
-
-                        return;
-                    }
+                    out[output_view.index(output_coord)] = *arg1;
                 }
 
-                CoordinateIterator out_iter(out_shape);
+                View input_view(in_shape);
 
-                do
+                for (Coordinate input_coord : input_view)
                 {
-                    out[out_iter.get_current_index()] = *arg1;
-                } while (out_iter.increment());
+                    Coordinate output_coord = project_coordinate(input_coord, reduction_axes);
+                    size_t input_index = input_view.index(input_coord);
+                    size_t output_index = output_view.index(output_coord);
 
-                CoordinateIterator in_iter(in_shape);
-
-                do
-                {
-                    Coordinate in_coord = in_iter.get_current_coordinate();
-                    size_t in_index = in_iter.get_current_index();
-
-                    Coordinate out_coord = project_coordinate(in_coord, reduction_axes);
-                    size_t out_index = index_in_dense_tensor(out_shape, out_coord);
-
-                    out[out_index] = reduction_function(out[out_index], arg0[in_index]);
-                } while (in_iter.increment());
+                    out[output_index] = reduction_function(out[output_index], arg0[input_index]);
+                }
             }
         }
     }

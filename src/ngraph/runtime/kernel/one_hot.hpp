@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/common.hpp"
-#include "ngraph/coordinate_iterator.hpp"
+#include "ngraph/view.hpp"
 
 namespace ngraph
 {
@@ -29,67 +29,39 @@ namespace ngraph
             void one_hot(
                 T* arg, T* out, const Shape& in_shape, const Shape& out_shape, size_t one_hot_axis)
             {
-                // For the outer loop we will walk over the entire input shape.
-                CoordinateIterator arg_iter(in_shape);
+                // Step 1: Zero out the output.
+                View output_view(out_shape);
 
-                do
+                for (Coordinate output_coord : output_view)
                 {
-                    // For the inner loop we will walk across the entire axis for the one-hot axis, and stay put at the current arg position for the existing axes.
-                    Coordinate arg_coordinate = arg_iter.get_current_coordinate();
+                    out[output_view.index(output_coord)] = 0;
+                }
 
-                    Strides out_strides(out_shape.size(), 1);
-                    Coordinate out_outer_corner(out_shape.size());
-                    Coordinate out_inner_corner(out_shape.size());
+                // Step 2: Write ones at needed positions, throwing exceptions when invalid conditions
+                // are encountered.
+                View input_view(in_shape);
 
-                    size_t arg_pos = 0;
+                for (Coordinate input_coord : input_view)
+                {
+                    T val = arg[input_view.index(input_coord)];
 
-                    for (size_t i = 0; i < out_shape.size(); i++)
+                    if (std::floor(val) < val || std::floor(val) > val)
                     {
-                        if (i != one_hot_axis)
-                        {
-                            // This is an existing axis.
-                            out_outer_corner[i] = arg_coordinate[arg_pos];
-                            out_inner_corner[i] = arg_coordinate[arg_pos];
-                            arg_pos++;
-                        }
-                        else
-                        {
-                            // This is the one-hot axis.
-                            out_outer_corner[i] = out_shape[i];
-                            out_inner_corner[i] = 0;
-                        }
+                        throw(std::range_error("One-hot: non-integral value in input"));
                     }
 
-                    CoordinateIterator out_iter(
-                        out_shape, out_strides, out_outer_corner, out_inner_corner);
+                    size_t one_hot_pos = static_cast<size_t>(val);
 
-                    bool found = false;
-
-                    do
+                    if (one_hot_pos >= out_shape[one_hot_axis])
                     {
-                        auto out_index = out_iter.get_current_index();
-                        auto one_hot_pos = out_iter.get_current_coordinate()[one_hot_axis];
-                        auto in_index = arg_iter.get_current_index();
-
-                        // The weird test for equality here is because this template winds up being
-                        // instantiated for floating-point types, and clang complains if you try to
-                        // == on a float.
-                        if (arg[in_index] <= one_hot_pos && arg[in_index] >= one_hot_pos)
-                        {
-                            out[out_index] = 1;
-                            found = true;
-                        }
-                        else
-                        {
-                            out[out_index] = 0;
-                        }
-                    } while (out_iter.increment());
-
-                    if (!found)
-                    {
-                        throw std::range_error("One-hot: value is out of category range");
+                        throw(std::range_error("One-hot: value is out of category range"));
                     }
-                } while (arg_iter.increment());
+
+                    Coordinate one_hot_coord =
+                        inject_coordinate(input_coord, one_hot_axis, one_hot_pos);
+
+                    out[output_view.index(one_hot_coord)] = 1;
+                }
             }
         }
     }
