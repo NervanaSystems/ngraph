@@ -14,9 +14,10 @@
 
 #pragma once
 
+#include "ngraph/runtime/kernel/reshape.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/eigen/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
@@ -25,27 +26,40 @@ namespace ngraph
     {
         namespace ngvm
         {
-            namespace eigen
+            namespace instruction
             {
                 template <typename ET>
-                class MatrixTransposeInstruction : public Instruction
+                class ReshapeInstruction : public Instruction
                 {
                 public:
-                    MatrixTransposeInstruction(const TensorViewInfo& arg, const TensorViewInfo& out)
+                    ReshapeInstruction(const TensorViewInfo& arg,
+                                       const TensorViewInfo& out,
+                                       const Shape& arg_shape,
+                                       const AxisVector& arg_axis_order,
+                                       const Shape& out_shape)
                         : m_arg(arg)
                         , m_out(out)
+                        , m_arg_shape(arg_shape)
+                        , m_arg_axis_order(arg_axis_order)
+                        , m_out_shape(out_shape)
                     {
                     }
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        EigenMatrix<ET>(call_frame, m_out) =
-                            EigenMatrix<ET>(call_frame, m_arg).transpose();
+                        typename ET::type* arg = get_tensor_data_ptr<ET>(call_frame, m_arg);
+                        typename ET::type* out = get_tensor_data_ptr<ET>(call_frame, m_out);
+
+                        kernel::reshape<typename ET::type>(
+                            arg, out, m_arg_shape, m_arg_axis_order, m_out_shape);
                     }
 
                 protected:
                     TensorViewInfo m_arg;
                     TensorViewInfo m_out;
+                    Shape m_arg_shape;
+                    AxisVector m_arg_axis_order;
+                    Shape m_out_shape;
                 };
             }
         }

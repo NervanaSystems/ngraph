@@ -73,7 +73,6 @@
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_mult.hpp"
-#include "ngraph/runtime/ngvm/eigen/matrix_transpose.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_vector_product.hpp"
 #include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
@@ -111,6 +110,7 @@
 #include "ngraph/runtime/ngvm/instruction/power.hpp"
 #include "ngraph/runtime/ngvm/instruction/reduce.hpp"
 #include "ngraph/runtime/ngvm/instruction/replace_slice.hpp"
+#include "ngraph/runtime/ngvm/instruction/reshape.hpp"
 #include "ngraph/runtime/ngvm/instruction/return.hpp"
 #include "ngraph/runtime/ngvm/instruction/select.hpp"
 #include "ngraph/runtime/ngvm/instruction/sign.hpp"
@@ -741,53 +741,25 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto reshape = static_cast<const op::Reshape*>(n);
 
-            auto arg_type = reshape->get_arguments().at(0)->get_value_type();
-            auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
-            assert(nullptr != arg_tensor_view_type);
-            auto arg_shape = arg_tensor_view_type->get_shape();
-            auto arg_rank = arg_shape.size();
+            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_arguments().at(0)->get_value_type());
+            assert(nullptr != arg_tensor_type);
+            auto arg_shape = arg_tensor_type->get_shape();
 
-            auto result_type = reshape->get_value_type();
-            auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
-            assert(nullptr != result_tensor_view_type);
-            auto result_shape = result_tensor_view_type->get_shape();
-            auto& result_element_type = result_tensor_view_type->get_element_type();
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+            auto result_shape = result_tensor_type->get_shape();
+            auto& result_element_type = result_tensor_type->get_element_type();
 
-            auto input_order = reshape->get_input_order();
-
-            bool same_layout = std::is_sorted(input_order.begin(), input_order.end());
-
-            size_t result_shape_product = 1;
-            for (auto i : result_shape)
-            {
-                result_shape_product *= i;
-            }
-
-            // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor, we can just copy.
-            if (same_layout || result_shape_product < 2)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                             "Reshape has unhandled element type",
-                                             runtime::ngvm::instruction::CopyInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            // If there *is* a layout change in the 2D case, we transpose the input.
-            else if (arg_rank == 2)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                             "Reshape has unhandled element type",
-                                             runtime::ngvm::eigen::MatrixTransposeInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
-            else
-            {
-                throw ngraph_error(
-                    "Axis permutation in reshape is not implemented yet for tensors with rank>2 in "
-                    "VM");
-            }
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "Reshape has unhandled element type",
+                                         instruction::ReshapeInstruction,
+                                         in[0],
+                                         out[0],
+                                         arg_shape,
+                                         reshape->get_input_order(),
+                                         result_shape);
         };
 
         REGISTER_TO_OP_MAP(op::Slice)
