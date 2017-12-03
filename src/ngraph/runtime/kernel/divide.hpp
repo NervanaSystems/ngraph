@@ -22,18 +22,30 @@ namespace ngraph
     {
         namespace kernel
         {
+            // In English: return type is void and T must be an integral type.
             template <typename T>
-            void divide(T* arg0, T* arg1, T* out, size_t count)
+            typename std::enable_if<std::is_integral<T>::value>::type
+                divide(T* arg0, T* arg1, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {
-                    // The slightly odd way of testing arg1[i] == 0 is because this template is
-                    // instantiated at both integral and floating-point types, and == on floating
-                    // point will trigger a warning even if it's never actually evaluated.
-                    if (!std::is_floating_point<T>::value && (arg1[i] >= 0 && arg1[i] <= 0))
+                    if (arg1[i] == 0)
                     {
                         throw std::domain_error("integer division by zero");
                     }
+                    out[i] = arg0[i] / arg1[i];
+                }
+            }
+
+            // In English: return type is void and T must be a floating point type.
+            template <typename T>
+            typename std::enable_if<std::is_floating_point<T>::value>::type
+                divide(T* arg0, T* arg1, T* out, size_t count)
+            {
+                for (size_t i = 0; i < count; i++)
+                {
+                    // TODO: Here we do not check for div by zero, so we'll get +-inf here
+                    // if arg1[i] == 0. Is that the right thing to do? Jury's still out.
                     out[i] = arg0[i] / arg1[i];
                 }
             }
