@@ -60,9 +60,9 @@ namespace ngraph
         ///
         /// ## Implementation Status
         ///
-        /// | Backend | Status                                |
-        /// | ------- | ------------------------------------- |
-        /// | NGVM    | Implemented for vectors and matrices. |
+        /// | Backend | Status             |
+        /// | ------- | ------------------ |
+        /// | NGVM    | Fully implemented. |
         class Concat : public RequiresTensorViewArgs
         {
         public:

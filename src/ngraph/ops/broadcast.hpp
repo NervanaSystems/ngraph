@@ -52,9 +52,9 @@ namespace ngraph
         ///
         /// ## Implementation Status
         ///
-        /// | Backend | Status                                          |
-        /// | ------- | ----------------------------------------------- |
-        /// | NGVM    | Implemented for scalars, matrices, and vectors. |
+        /// | Backend | Status             |
+        /// | ------- | ------------------ |
+        /// | NGVM    | Fully implemented. |
 
         class Broadcast : public RequiresTensorViewArgs
         {

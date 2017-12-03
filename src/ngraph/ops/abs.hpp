@@ -38,9 +38,9 @@ namespace ngraph
         ///
         /// ## Implementation Status
         ///
-        /// | Backend | Status                             |
-        /// | ------- | ---------------------------------- |
-        /// | NGVM    | Implemented for signed types only. |
+        /// | Backend | Status             |
+        /// | ------- | ------------------ |
+        /// | NGVM    | Fully implemented. |
         class Abs : public UnaryElementwiseArithmetic
         {
         public:
