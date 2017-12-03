@@ -1553,7 +1553,6 @@ void Emitter::EmitOneHot(const ngraph::Node* n,
     assert(nullptr != arg_tensor_view_type);
     auto arg_shape = arg_tensor_view_type->get_shape();
     auto arg_rank = arg_shape.size();
-    auto& arg_element_type = arg_tensor_view_type->get_element_type();
 
     auto result_type = oh->get_value_type();
     auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
