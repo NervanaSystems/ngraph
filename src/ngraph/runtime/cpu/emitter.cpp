@@ -27,6 +27,7 @@
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
@@ -1486,7 +1487,6 @@ void Emitter::EmitReplaceSlice(const ngraph::Node* n,
     auto arg1_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg1_type);
     assert(arg1_tensor_view_type);
     auto arg1_shape = arg1_tensor_view_type->get_shape();
-    auto arg1_rank = arg1_shape.size();
 
     auto& lower_bounds = replace_slice->get_lower_bounds();
     auto& upper_bounds = replace_slice->get_upper_bounds();
@@ -1539,6 +1539,105 @@ void Emitter::EmitReplaceSlice(const ngraph::Node* n,
     else
     {
         throw ngraph_error("Replace-slice is not implemented yet for tensors with rank>2");
+    }
+}
+
+void Emitter::EmitOneHot(const ngraph::Node* n,
+                         const std::vector<TensorViewInfo>& inputs,
+                         const std::vector<TensorViewInfo>& outputs)
+{
+    auto oh = static_cast<const op::OneHot*>(n);
+
+    auto arg_type = oh->get_arguments().at(0)->get_value_type();
+    auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
+    assert(nullptr != arg_tensor_view_type);
+    auto arg_shape = arg_tensor_view_type->get_shape();
+    auto arg_rank = arg_shape.size();
+    auto& arg_element_type = arg_tensor_view_type->get_element_type();
+
+    auto result_type = oh->get_value_type();
+    auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
+    assert(nullptr != result_tensor_view_type);
+    auto result_shape = result_tensor_view_type->get_shape();
+
+    size_t bounds = result_shape[oh->get_one_hot_axis()];
+
+    if (arg_rank == 0)
+    {
+        TU << "{   // " << n->get_name() << " 1\n";
+        TU.indent++;
+
+        TU << "" << emit_vector(outputs[0], "out_vector") << ";\n";
+
+        TU << "out_vector.setZero();\n"
+           << ""
+           << "auto pos_raw = " << emit_vector(inputs[0]) << "(0, 0);\n"
+           << "if (std::floor(pos_raw) != pos_raw)\n"
+           << "{\n";
+        TU.indent++;
+        TU << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
+        TU.indent--;
+        TU << "}\n";
+
+        TU << "size_t pos = pos_raw;\n"
+           << "if (pos >= " << bounds << ")\n";
+
+        TU << "{\n";
+        TU.indent++;
+        TU << "throw(std::range_error(\"One-hot: value is out of category range\"));\n";
+        TU.indent--;
+        TU << "}\n";
+
+        TU << "out_vector(pos, 0) = 1;\n";
+
+        TU.indent--;
+        TU << "}\n";
+    }
+    else if (arg_rank == 1)
+    {
+        TU << "{   // " << n->get_name() << " 1\n";
+        TU.indent++;
+
+        TU << "" << emit_vector(inputs[0], "arg_vector") << ";\n";
+
+        TU << "" << emit_matrix(outputs[0], "out_vector") << ";\n";
+        TU << "out_vector.setZero();\n";
+
+        TU << "for (size_t i = 0; i < " << arg_shape[0] << "; i++)\n"
+           << "{\n";
+        TU.indent++;
+
+        TU << "auto pos_raw = arg_vector(i, 0);\n";
+
+        TU << "if (std::floor(pos_raw) != pos_raw)\n"
+           << "{\n";
+        TU.indent++;
+        TU << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
+        TU.indent--;
+        TU << "}\n";
+
+        TU << "size_t pos = pos_raw;\n";
+        TU << "bool found = false;\n";
+
+        TU << "if (pos >= " << bounds << ")\n"
+           << "{\n";
+        TU.indent++;
+        TU << "throw(std::range_error(\"One-hot: value is out of category range\"));\n";
+        TU.indent--;
+        TU << "}\n";
+
+        TU << "out_vector" << (oh->get_one_hot_axis() == 0 ? "(pos, i)" : "(i, pos)") << " = 1;\n";
+
+        TU.indent--;
+        TU << "}\n";
+
+        TU.indent--;
+        TU << "}\n";
+    }
+    // Other cases are not handled yet.
+    else
+    {
+        throw ngraph_error("One-hot is not implemented yet for tensors with rank>1");
     }
 }
 

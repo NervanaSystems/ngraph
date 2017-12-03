@@ -53,6 +53,7 @@
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not.hpp"
 #include "ngraph/ops/not_equal.hpp"
+#include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -106,6 +107,7 @@
 #include "ngraph/runtime/ngvm/instruction/negate.hpp"
 #include "ngraph/runtime/ngvm/instruction/not.hpp"
 #include "ngraph/runtime/ngvm/instruction/not_equal.hpp"
+#include "ngraph/runtime/ngvm/instruction/one_hot.hpp"
 #include "ngraph/runtime/ngvm/instruction/power.hpp"
 #include "ngraph/runtime/ngvm/instruction/reduce.hpp"
 #include "ngraph/runtime/ngvm/instruction/replace_slice.hpp"
@@ -855,6 +857,31 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                          upper_bounds,
                                          strides,
                                          result_shape);
+        };
+
+        REGISTER_TO_OP_MAP(op::OneHot)
+        {
+            auto one_hot = static_cast<const op::OneHot*>(n);
+
+            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_arguments().at(0)->get_value_type());
+            assert(nullptr != arg_tensor_type);
+            auto arg_shape = arg_tensor_type->get_shape();
+
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+            auto result_shape = result_tensor_type->get_shape();
+            auto& result_element_type = result_tensor_type->get_element_type();
+
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "One-hot has unhandled element type",
+                                         instruction::OneHotInstruction,
+                                         in[0],
+                                         out[0],
+                                         arg_shape,
+                                         result_shape,
+                                         one_hot->get_one_hot_axis());
         };
 
         initialized = true;

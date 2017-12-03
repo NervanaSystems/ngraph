@@ -3378,3 +3378,308 @@ TEST(${BACKEND_NAME}, replace_slice_vector)
         (vector<float>{0, 1, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 14, 15}),
         result->get_vector<float>());
 }
+
+TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
+{
+    auto shape_a = Shape{};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Int32::element_type(), shape_a));
+    auto shape_r = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape_r);
+    auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape_a);
+    copy_data(a, vector<int32_t>{2});
+    auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<int32_t>{0, 0, 1}), result->get_vector<int32_t>());
+}
+
+TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
+{
+    auto shape_a = Shape{};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Int32::element_type(), shape_a));
+    auto shape_r = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape_r);
+    auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape_a);
+    copy_data(a, vector<int32_t>{1});
+    auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<int32_t>{0, 1, 0}), result->get_vector<int32_t>());
+}
+
+TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
+{
+    auto shape_a = Shape{};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Int32::element_type(), shape_a));
+    auto shape_r = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape_r);
+    auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape_a);
+    copy_data(a, vector<int32_t>{0});
+    auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<int32_t>{1, 0, 0}), result->get_vector<int32_t>());
+}
+
+TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
+{
+    auto shape_a = Shape{};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1.1f});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+}
+
+TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
+{
+    auto shape_a = Shape{};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Int32::element_type(), shape_a));
+    auto shape_r = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape_r);
+    auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape_a);
+    copy_data(a, vector<int32_t>{3000000});
+    auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape_r);
+
+    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+}
+
+TEST(${BACKEND_NAME}, one_hot_vector_0)
+{
+    auto shape_a = Shape{8};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Int32::element_type(), shape_a));
+    auto shape_r = Shape{3, 8};
+    auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape_r);
+    auto r = make_shared<op::OneHot>(A, Shape{3, 8}, 0);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape_a);
+    copy_data(a, vector<int32_t>{2, 1, 0, 0, 2, 2, 1, 0});
+    auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ(
+        (vector<int32_t>{0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0}),
+        result->get_vector<int32_t>());
+}
+
+TEST(${BACKEND_NAME}, one_hot_vector_1)
+{
+    auto shape_a = Shape{8};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Int32::element_type(), shape_a));
+    auto shape_r = Shape{8, 3};
+    auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape_r);
+    auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape_a);
+    copy_data(a, vector<int32_t>{2, 1, 0, 0, 2, 2, 1, 0});
+    auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ(
+        (vector<int32_t>{0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0}),
+        result->get_vector<int32_t>());
+}
+
+TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
+{
+    auto shape_a = Shape{8};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Int32::element_type(), shape_a));
+    auto shape_r = Shape{8, 3};
+    auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape_r);
+    auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape_a);
+    copy_data(a, vector<int32_t>{2, 1, 0, 0, 3, 2, 1, 0});
+    auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape_r);
+
+    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+}
+
+TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
+{
+    auto shape_a = Shape{8};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Int32::element_type(), shape_a));
+    auto shape_r = Shape{8, 3};
+    auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape_r);
+    auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape_a);
+    copy_data(a, vector<int32_t>{2, 1, 0, 0, 3000000, 2, 1, 0});
+    auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape_r);
+
+    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+}
+
+// This test is disabled because it won't yet work on the IA backend, but it does work with
+// the de-Eigenized kernel on NGVM.
+//
+// Test if you like with:
+//
+//    private-ngraph-cpp/build$ test/unit-test \
+//                                 --gtest_filter='DISABLED_NGVM.one_hot_matrix_0' \
+//                                 --gtest_also_run_disabled_tests
+TEST(DISABLED_${BACKEND_NAME}, one_hot_matrix_0)
+{
+    auto shape_a = Shape{3, 3};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Int32::element_type(), shape_a));
+    auto shape_r = Shape{3, 3, 3};
+    auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape_r);
+    auto r = make_shared<op::OneHot>(A, Shape{3, 3, 3}, 0);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape_a);
+    copy_data(a,
+              vector<int32_t>{
+                  0, 1, 1, 2, 1, 0, 0, 2, 1,
+              });
+    auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<int32_t>{1, 0, 0, 0, 0, 1, 1, 0, 0,
+
+                               0, 1, 1, 0, 1, 0, 0, 0, 1,
+
+                               0, 0, 0, 1, 0, 0, 0, 1, 0}),
+              result->get_vector<int32_t>());
+}
+
+TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
+{
+    auto shape_a = Shape{8};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{8, 3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{2, 1, 0, 0, 2, 2, 1, 0});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ(
+        (vector<float>{0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0}),
+        result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
+{
+    auto shape_a = Shape{8};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{8, 3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{2, 1, 0, 0, 2, 2, 1.01f, 0});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+}
