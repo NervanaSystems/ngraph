@@ -310,7 +310,12 @@ std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>
     {
         if (mapping.count(node.get()) == 0)
         {
-            mapping[node.get()] = node->copy_with_new_args(node->get_arguments());
+            Nodes new_args;
+            for (auto old_arg : node->get_arguments())
+            {
+                new_args.push_back(mapping[old_arg.get()]);
+            }
+            mapping[node.get()] = node->copy_with_new_args(new_args);
         }
     }
     return mapping;
