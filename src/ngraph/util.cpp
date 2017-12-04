@@ -301,9 +301,9 @@ std::list<std::shared_ptr<ngraph::Node>>
     return result_list;
 }
 
-std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>
+std::unordered_map<ngraph::Node*, std::weak_ptr<ngraph::Node>>
     ngraph::clone_graph(const std::list<std::shared_ptr<ngraph::Node>>& nodes,
-                        std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> mapping)
+                        std::unordered_map<ngraph::Node*, std::weak_ptr<ngraph::Node>> mapping)
 {
     auto sorted_list = topological_sort(nodes);
     for (auto node : sorted_list)
@@ -313,8 +313,10 @@ std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>
             Nodes new_args;
             for (auto old_arg : node->get_arguments())
             {
-                new_args.push_back(mapping[old_arg.get()]);
+                assert(mapping.count(old_arg.get()));
+                new_args.push_back(mapping[old_arg.get()].lock());
             }
+            assert(mapping.count(node.get()));
             mapping[node.get()] = node->copy_with_new_args(new_args);
         }
     }
@@ -324,8 +326,9 @@ std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>
 std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph::Function> func)
 {
     auto cloned_graph = clone_graph(
-        func->get_ops(), std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>());
+        func->get_ops(), std::unordered_map<ngraph::Node*, std::weak_ptr<ngraph::Node>>());
+    assert(cloned_graph.count(func->get_result().get()));
     auto cloned_result = cloned_graph[func->get_result().get()];
     return std::make_shared<ngraph::Function>(
-        cloned_result, func->get_result_type(), func->get_parameters());
+        cloned_result.lock(), func->get_result_type(), func->get_parameters());
 }
