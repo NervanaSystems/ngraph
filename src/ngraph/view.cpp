@@ -43,7 +43,7 @@ View::View(const Shape& source_space_shape,
 {
     m_n_axes = source_space_shape.size();
 
-    // In the real thing we won't use assert.
+    // TODO: Replace asserts with exceptions?
     assert(m_n_axes == source_start_corner.size());
     assert(m_n_axes == source_end_corner.size());
     assert(m_n_axes == source_strides.size());
@@ -72,9 +72,9 @@ View::View(const Shape& source_space_shape,
 
     for (size_t axis = 0; axis < m_n_axes; axis++)
     {
-        m_virtual_shape.push_back(ceil_div(source_end_corner[source_axis_order[axis]] -
-                                               source_start_corner[source_axis_order[axis]],
-                                           source_strides[source_axis_order[axis]]));
+        m_target_shape.push_back(ceil_div(source_end_corner[source_axis_order[axis]] -
+                                              source_start_corner[source_axis_order[axis]],
+                                          source_strides[source_axis_order[axis]]));
     }
 }
 
@@ -134,7 +134,8 @@ View::View(const Shape& source_space_shape)
 {
 }
 
-size_t View::index_raw(const Coordinate& c) const
+// Compute the index of a source-space coordinate in the buffer.
+size_t View::index_source(const Coordinate& c) const
 {
     size_t index = 0;
     size_t stride = 1;
@@ -148,12 +149,14 @@ size_t View::index_raw(const Coordinate& c) const
     return index;
 }
 
+// Compute the index of a target-space coordinate in thebuffer.
 size_t View::index(const Coordinate& c) const
 {
-    return index_raw(to_raw(c));
+    return index_source(to_source_coordinate(c));
 }
 
-Coordinate View::to_raw(const Coordinate& c) const
+// Convert a target-space coordinate to a source-space coordinate.
+Coordinate View::to_source_coordinate(const Coordinate& c) const
 {
     assert(c.size() == m_n_axes);
 
@@ -168,6 +171,7 @@ Coordinate View::to_raw(const Coordinate& c) const
     return result;
 }
 
+// Check if a coordinate is in bounds of the target space.
 bool View::in_bounds(const Coordinate& c) const
 {
     if (c.size() != m_n_axes)
@@ -177,7 +181,7 @@ bool View::in_bounds(const Coordinate& c) const
 
     for (size_t axis = 0; axis < m_n_axes; axis++)
     {
-        if (c[axis] < m_virtual_shape[axis] || c[axis] >= m_virtual_shape[axis])
+        if (c[axis] < m_target_shape[axis] || c[axis] >= m_target_shape[axis])
         {
             return false;
         }
@@ -186,20 +190,23 @@ bool View::in_bounds(const Coordinate& c) const
     return true;
 }
 
-Coordinate View::get_virtual_shape() const
+Coordinate View::get_target_shape() const
 {
-    return m_virtual_shape;
+    return m_target_shape;
 }
 
-View::Iterator::Iterator(const Shape& virtual_shape, bool is_end)
-    : m_virtual_shape(virtual_shape)
-    , m_oob(is_end)
+// The "is_end" parameter is true if we want the "end()" iterator.
+View::Iterator::Iterator(const Shape& target_shape, bool is_end)
+    : m_target_shape(target_shape)
 {
-    m_coordinate = Coordinate(virtual_shape.size(), 0);
+    // Initial coordinate is (0,...,0) in the target space.
+    m_coordinate = Coordinate(target_shape.size(), 0);
 
+    // The case where we have a zero-length axis is a bit special, in that
+    // the iterator always starts out of bounds.
     m_empty = false;
 
-    for (auto s : virtual_shape)
+    for (auto s : target_shape)
     {
         if (s == 0)
         {
@@ -208,11 +215,12 @@ View::Iterator::Iterator(const Shape& virtual_shape, bool is_end)
         }
     }
 
-    m_oob = m_oob || m_empty;
+    m_oob = is_end || m_empty;
 }
 
 void View::Iterator::operator++()
 {
+    // If we are out of bounds, start over at (0,...0). (TODO: not sure if that's what we want. It might be best to stay put?)
     if (m_oob)
     {
         std::fill(m_coordinate.begin(), m_coordinate.end(), 0);
@@ -220,12 +228,14 @@ void View::Iterator::operator++()
         return;
     }
 
-    for (size_t axis = m_virtual_shape.size(); axis-- > 0;)
+    // Increment the target coordinate.
+    for (size_t axis = m_target_shape.size(); axis-- > 0;)
     {
         m_coordinate[axis]++;
 
-        if (m_coordinate[axis] < m_virtual_shape[axis])
+        if (m_coordinate[axis] < m_target_shape[axis])
         {
+            // No carry-out, so we are done.
             return;
         }
         else
@@ -234,6 +244,7 @@ void View::Iterator::operator++()
         }
     }
 
+    // If we are still here there was carry-out from the most significant axis. We are now out of bounds.
     m_oob = true;
 }
 
@@ -249,22 +260,26 @@ bool View::Iterator::operator!=(const Iterator& it)
 
 bool View::Iterator::operator==(const Iterator& it)
 {
-    if (m_virtual_shape != it.m_virtual_shape)
+    if (m_target_shape != it.m_target_shape)
     {
         return false;
     }
 
+    // Out-of-bounds iterators are always equal.
     if (m_oob && it.m_oob)
     {
         return true;
     }
 
+    // If one iterator is out of bounds and the other is not, they are unequal even if their target
+    // coordinates happen to match.
     if (m_oob != it.m_oob)
     {
         return false;
     }
 
-    for (size_t axis = 0; axis < m_virtual_shape.size(); axis++)
+    // Check axis-wise if the iterators are on the same target coordinate.
+    for (size_t axis = 0; axis < m_target_shape.size(); axis++)
     {
         if (m_coordinate[axis] != it.m_coordinate[axis])
         {
@@ -291,6 +306,11 @@ Coordinate ngraph::project_coordinate(const Coordinate& coord, const AxisSet& de
     return result;
 }
 
+Shape ngraph::project_shape(const Shape& shape, const AxisSet& deleted_axes)
+{
+    return project_coordinate(shape, deleted_axes);
+}
+
 // TODO: for the moment, just one axis at a time, please. Later could pass in an std::map from axis positions to axis lengths.
 // TODO: check validity, i.e. that the new axis is < coord_size+1.
 Coordinate
@@ -313,4 +333,9 @@ Coordinate
     }
 
     return result;
+}
+
+Shape ngraph::inject_shape(const Shape& shape, size_t new_axis_pos, size_t new_axis_length)
+{
+    return inject_coordinate(shape, new_axis_pos, new_axis_length);
 }
