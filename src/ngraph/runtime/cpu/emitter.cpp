@@ -1189,7 +1189,7 @@ void Emitter::EmitSlice(const ngraph::Node* n,
 {
     auto slice = static_cast<const op::Slice*>(n);
 
-    for (auto d : slice->get_srides())
+    for (auto d : slice->get_strides())
     {
         if (1 != d)
         {
