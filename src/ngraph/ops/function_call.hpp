@@ -39,12 +39,6 @@ namespace ngraph
         /// | Type      | Description                                              |
         /// | --------- | -------------------------------------------------------- |
         /// | \f$T_R\f$ | The tensor returned by `function` when called on `args`. |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
         class FunctionCall : public Node
         {
         public:

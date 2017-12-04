@@ -14,17 +14,41 @@
 
 #pragma once
 
+#include <type_traits>
+
 namespace ngraph
 {
     namespace runtime
     {
         namespace kernel
         {
+            // NOTE: Execution throws `std::domain_error` if either a non-integral value or an out-of-bounds
+            // value is detected in the input tensor.
+
+            // In English: return type is void and T must be an integral type.
             template <typename T>
-            void divide(T* arg0, T* arg1, T* out, size_t count)
+            typename std::enable_if<std::is_integral<T>::value>::type
+                divide(T* arg0, T* arg1, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {
+                    if (arg1[i] == 0)
+                    {
+                        throw std::domain_error("integer division by zero");
+                    }
+                    out[i] = arg0[i] / arg1[i];
+                }
+            }
+
+            // In English: return type is void and T must be a floating point type.
+            template <typename T>
+            typename std::enable_if<std::is_floating_point<T>::value>::type
+                divide(T* arg0, T* arg1, T* out, size_t count)
+            {
+                for (size_t i = 0; i < count; i++)
+                {
+                    // TODO: Here we do not check for div by zero, so we'll get +-inf here
+                    // if arg1[i] == 0. Is that the right thing to do? Jury's still out.
                     out[i] = arg0[i] / arg1[i];
                 }
             }

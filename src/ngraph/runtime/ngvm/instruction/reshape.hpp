@@ -14,13 +14,11 @@
 
 #pragma once
 
-#include <vector>
-
+#include "ngraph/runtime/kernel/reshape.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/eigen/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
 
 namespace ngraph
 {
@@ -28,41 +26,40 @@ namespace ngraph
     {
         namespace ngvm
         {
-            namespace eigen
+            namespace instruction
             {
-                // Would be better to just generate a sequence of copy into slice of output instructions
                 template <typename ET>
-                class ConcatVectorInstruction : public Instruction
+                class ReshapeInstruction : public Instruction
                 {
                 public:
-                    ConcatVectorInstruction(const std::vector<TensorViewInfo>& args,
-                                            const TensorViewInfo& out)
-                        : m_args(args)
+                    ReshapeInstruction(const TensorViewInfo& arg,
+                                       const TensorViewInfo& out,
+                                       const Shape& arg_shape,
+                                       const AxisVector& arg_axis_order,
+                                       const Shape& out_shape)
+                        : m_arg(arg)
                         , m_out(out)
+                        , m_arg_shape(arg_shape)
+                        , m_arg_axis_order(arg_axis_order)
+                        , m_out_shape(out_shape)
                     {
-                        for (auto arg : args)
-                        {
-                            auto& arg_shape = arg.get_tensor_view_layout()->get_shape();
-                            m_sizes.push_back(arg_shape.at(0));
-                        }
                     }
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        EigenVector<ET> out(call_frame, m_out);
-                        size_t concat_pos = 0;
-                        for (size_t i = 0; i < m_args.size(); i++)
-                        {
-                            out.segment(concat_pos, m_sizes[i])
-                                << EigenVector<ET>(call_frame, m_args.at(i));
-                            concat_pos += m_sizes[i];
-                        }
+                        typename ET::type* arg = get_tensor_data_ptr<ET>(call_frame, m_arg);
+                        typename ET::type* out = get_tensor_data_ptr<ET>(call_frame, m_out);
+
+                        kernel::reshape<typename ET::type>(
+                            arg, out, m_arg_shape, m_arg_axis_order, m_out_shape);
                     }
 
                 protected:
-                    std::vector<TensorViewInfo> m_args;
+                    TensorViewInfo m_arg;
                     TensorViewInfo m_out;
-                    std::vector<size_t> m_sizes;
+                    Shape m_arg_shape;
+                    AxisVector m_arg_axis_order;
+                    Shape m_out_shape;
                 };
             }
         }

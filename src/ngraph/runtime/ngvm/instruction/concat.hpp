@@ -14,11 +14,13 @@
 
 #pragma once
 
+#include <vector>
+
+#include "ngraph/runtime/kernel/concat.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/eigen/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
 
 namespace ngraph
 {
@@ -26,45 +28,46 @@ namespace ngraph
     {
         namespace ngvm
         {
-            namespace eigen
+            namespace instruction
             {
                 template <typename ET>
-                class ConcatMatrixInstruction : public Instruction
+                class ConcatInstruction : public Instruction
                 {
                 public:
-                    ConcatMatrixInstruction(const std::vector<TensorViewInfo>& args,
-                                            size_t axis,
-                                            const TensorViewInfo& out)
+                    ConcatInstruction(const std::vector<TensorViewInfo>& args,
+                                      const TensorViewInfo& out,
+                                      const std::vector<Shape>& arg_shapes,
+                                      const Shape& out_shape,
+                                      size_t concatenation_axis)
                         : m_args(args)
-                        , m_axis(axis)
                         , m_out(out)
+                        , m_arg_shapes(arg_shapes)
+                        , m_out_shape(out_shape)
+                        , m_concatenation_axis(concatenation_axis)
                     {
-                        size_t concat_pos[2]{0, 0};
-                        for (auto arg : args)
-                        {
-                            auto& arg_shape = arg.get_tensor_view_layout()->get_shape();
-                            m_blocks.push_back(
-                                {concat_pos[0], concat_pos[1], arg_shape.at(0), arg_shape.at(1)});
-                            concat_pos[axis] += arg_shape.at(axis);
-                        }
                     }
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        EigenMatrix<ET> out(call_frame, m_out);
-                        for (size_t i = 0; i < m_args.size(); i++)
+                        std::vector<typename ET::type*> args;
+
+                        for (auto arg_tv : m_args)
                         {
-                            auto& b = m_blocks[i];
-                            out.block(b[0], b[1], b[2], b[3])
-                                << EigenMatrix<ET>(call_frame, m_args.at(i));
+                            args.push_back(get_tensor_data_ptr<ET>(call_frame, arg_tv));
                         }
+
+                        typename ET::type* out = get_tensor_data_ptr<ET>(call_frame, m_out);
+
+                        kernel::concat<typename ET::type>(
+                            args, out, m_arg_shapes, m_out_shape, m_concatenation_axis);
                     }
 
                 protected:
                     std::vector<TensorViewInfo> m_args;
-                    size_t m_axis;
                     TensorViewInfo m_out;
-                    std::vector<std::vector<size_t>> m_blocks;
+                    std::vector<Shape> m_arg_shapes;
+                    Shape m_out_shape;
+                    size_t m_concatenation_axis;
                 };
             }
         }

@@ -23,11 +23,11 @@ op::ReplaceSlice::ReplaceSlice(const std::shared_ptr<Node>& arg0,
                                const std::shared_ptr<Node>& arg1,
                                const Coordinate& lower_bounds,
                                const Coordinate& upper_bounds,
-                               const Shape& step)
+                               const Strides& strides)
     : RequiresTensorViewArgs("ReplaceSlice", {arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
-    , m_step(step)
+    , m_strides(strides)
 {
     check_args();
 }
@@ -39,7 +39,7 @@ op::ReplaceSlice::ReplaceSlice(const std::shared_ptr<Node>& arg0,
     : RequiresTensorViewArgs("ReplaceSlice", {arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
-    , m_step(Shape(lower_bounds.size(), 1))
+    , m_strides(Shape(lower_bounds.size(), 1))
 {
     check_args();
 }
@@ -76,10 +76,10 @@ void op::ReplaceSlice::check_args()
             "Number of upper bounds provided for slice does not match number of input axes");
     }
 
-    if (m_step.size() != arg0_shape.size())
+    if (m_strides.size() != arg0_shape.size())
     {
         throw ngraph_error(
-            "Number of step axes provided for slice does not match number of input axes");
+            "Number of strides provided for slice does not match number of input axes");
     }
 
     Shape slice_shape;
@@ -96,14 +96,14 @@ void op::ReplaceSlice::check_args()
             throw ngraph_error("Lower bound for slice is greater than upper bound");
         }
 
-        if (0 == m_step[i])
+        if (0 == m_strides[i])
         {
-            throw ngraph_error("Step distance for slice is zero");
+            throw ngraph_error("Stride for slice is zero");
         }
 
         size_t slice_axis_size = m_upper_bounds[i] - m_lower_bounds[i];
         slice_axis_size =
-            slice_axis_size / m_step[i] + ((slice_axis_size % m_step[i] == 0) ? 0 : 1);
+            slice_axis_size / m_strides[i] + ((slice_axis_size % m_strides[i] == 0) ? 0 : 1);
         slice_shape.push_back(slice_axis_size);
     }
 
@@ -128,7 +128,7 @@ void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints,
 
     adjoints.add_delta(x,
                        std::make_shared<op::ReplaceSlice>(
-                           delta, zeros_shaped_like_y, m_lower_bounds, m_upper_bounds, m_step));
-    adjoints.add_delta(y,
-                       std::make_shared<op::Slice>(delta, m_lower_bounds, m_upper_bounds, m_step));
+                           delta, zeros_shaped_like_y, m_lower_bounds, m_upper_bounds, m_strides));
+    adjoints.add_delta(
+        y, std::make_shared<op::Slice>(delta, m_lower_bounds, m_upper_bounds, m_strides));
 }

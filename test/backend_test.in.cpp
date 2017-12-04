@@ -433,6 +433,69 @@ TEST(${BACKEND_NAME}, divide)
     ASSERT_EQ((vector<float>{2, 2, 2, 2}), result->get_vector<float>());
 }
 
+TEST(${BACKEND_NAME}, divide_by_zero_float32)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    auto shape = Shape{2, 2};
+
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), rt, op::Parameters{A, B});
+
+        auto external = manager->compile(f);
+        return external;
+    };
+
+    auto cf = backend->make_call_frame(make_external());
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{2, 4, 8, 16});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{0, 0, 0, 0});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{std::numeric_limits<float>::infinity(),
+                             std::numeric_limits<float>::infinity(),
+                             std::numeric_limits<float>::infinity(),
+                             std::numeric_limits<float>::infinity()}),
+              result->get_vector<float>());
+}
+
+TEST(DISABLED_${BACKEND_NAME}, divide_by_zero_int32)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    auto shape = Shape{2, 2};
+
+    auto make_external = [&]() {
+        auto A = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+        auto B = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+        auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape);
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), rt, op::Parameters{A, B});
+
+        auto external = manager->compile(f);
+        return external;
+    };
+
+    auto cf = backend->make_call_frame(make_external());
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Int32::element_type(), shape);
+    copy_data(a, vector<int>{2, 4, 8, 16});
+    auto b = backend->make_primary_tensor_view(element::Int32::element_type(), shape);
+    copy_data(b, vector<int>{0, 0, 0, 0});
+    auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape);
+
+    EXPECT_ANY_THROW({ cf->call({a, b}, {result}); });
+}
+
 TEST(${BACKEND_NAME}, equal)
 {
     auto shape = Shape{2, 2, 2};
@@ -499,6 +562,9 @@ TEST(${BACKEND_NAME}, dot_0_0)
     copy_data(b, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    copy_data(result, vector<float>{2112});
+
     cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{0}), result->get_vector<float>());
 }
@@ -530,6 +596,9 @@ TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
     copy_data(b, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    copy_data(result, vector<float>{2112, 2112, 2112, 2112});
 
     cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{0, 0, 0, 0}), result->get_vector<float>());
@@ -635,6 +704,9 @@ TEST(${BACKEND_NAME}, dot_2x0_0)
     copy_data(b, vector<float>{});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    copy_data(result, vector<float>{2112, 2112});
+
     cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{0, 0}), result->get_vector<float>());
 }
@@ -644,8 +716,8 @@ TEST(${BACKEND_NAME}, dot1d)
     auto shape = Shape{4};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto shape_r = Shape{1};
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto shape_r = Shape{};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -687,6 +759,108 @@ TEST(${BACKEND_NAME}, dot2d)
 
     cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{19, 22, 43, 50}), result->get_vector<float>());
+}
+
+//
+// Here is what numpy does:
+//
+// >>> a = linspace(1,2*2*2,2*2*2)
+// >>> b = linspace(1,2*2*2,2*2*2)
+//
+// >>> a.shape=(2,2,2)
+// >>> b.shape=(2,2,2)
+//
+// >>> tensordot(a,b,axes=([2],[1]))
+// array([[[[   7.,   10.],
+//          [  19.,   22.]],
+//
+//         [[  15.,   22.],
+//          [  43.,   50.]]],
+//
+//
+//        [[[  23.,   34.],
+//          [  67.,   78.]],
+//
+//         [[  31.,   46.],
+//          [  91.,  106.]]]])
+//
+TEST(DISABLED_${BACKEND_NAME}, dot3d_3d)
+{
+    auto shape = Shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto shape_r = Shape{2, 2, 2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{7, 10, 19, 22, 15, 22, 43, 50, 23, 34, 67, 78, 31, 46, 91, 106}),
+              result->get_vector<float>());
+}
+
+//
+// Here is what numpy does:
+//
+// >>> from numpy import *
+// >>> a = linspace(0,4*2*3-1,4*2*3)
+// >>> b = linspace(0,3*4-1,3*4)
+//
+// >>> a.shape=(4,2,3)
+// >>> b.shape=(3,4)
+//
+// >>> tensordot(a,b,axes=([2],[0]))
+// array([[[  20.,   23.,   26.,   29.],
+//         [  56.,   68.,   80.,   92.]],
+//
+//        [[  92.,  113.,  134.,  155.],
+//         [ 128.,  158.,  188.,  218.]],
+//
+//        [[ 164.,  203.,  242.,  281.],
+//         [ 200.,  248.,  296.,  344.]],
+//
+//        [[ 236.,  293.,  350.,  407.],
+//         [ 272.,  338.,  404.,  470.]]])
+//
+TEST(DISABLED_${BACKEND_NAME}, dot3d_2d)
+{
+    auto shape_a = Shape{4, 2, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_b = Shape{3, 4};
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto shape_r = Shape{4, 2, 4};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                               12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{20,  23,  26,  29,  56,  68,  80,  92,  92,  113, 134,
+                             155, 128, 158, 188, 218, 164, 203, 242, 281, 200, 248,
+                             296, 344, 236, 293, 350, 407, 272, 338, 404, 470}),
+              result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
@@ -932,6 +1106,9 @@ TEST(${BACKEND_NAME}, lesseq_bool)
     auto b = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
     copy_data(b, vector<char>{0, 0, 0, 0, 0, 0, 0, 0});
     auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
+
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    copy_data(result, vector<char>{1, 1, 1, 1, 1, 1, 1, 1});
 
     cf->call({a, b}, {result});
     ASSERT_EQ((vector<char>{0, 0, 0, 0, 0, 0, 0, 0}), result->get_vector<char>());
@@ -1949,6 +2126,44 @@ TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
     ASSERT_EQ((vector<float>{99}), b->get_vector<float>());
 }
 
+TEST(DISABLED_${BACKEND_NAME}, reduce_3d_to_vector)
+{
+    // First, the reduction function (f(x:float32[],y:float32[]) = x*y).
+    auto f_A = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto f_B = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto f_rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto f =
+        make_shared<Function>(make_shared<op::Multiply>(f_A, f_B), f_rt, op::Parameters{f_A, f_B});
+
+    auto shape_a = Shape{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_b = Shape{};
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto shape_rt = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto g = make_shared<Function>(
+        make_shared<op::Reduce>(A, B, f, AxisSet{0, 1}), rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(g);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{1});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{1.0f * 10.0f * 19.0f * 4.0f * 13.0f * 22.0f * 7.0f * 16.0f * 25.0f,
+                             2.0f * 11.0f * 20.0f * 5.0f * 14.0f * 23.0f * 8.0f * 17.0f * 26.0f,
+                             3.0f * 12.0f * 21.0f * 6.0f * 15.0f * 24.0f * 9.0f * 18.0f * 27.0f}),
+              result->get_vector<float>());
+}
+
 TEST(${BACKEND_NAME}, reshape_t2v_012)
 {
     auto shape_a = Shape{2, 2, 3};
@@ -2512,6 +2727,120 @@ TEST(${BACKEND_NAME}, slice_vector)
     ASSERT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), result->get_vector<float>());
 }
 
+TEST(DISABLED_${BACKEND_NAME}, slice_matrix_strided)
+{
+    auto shape_a = Shape{4, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{1, 0}, Coordinate{4, 4}, Strides{2, 3});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{4, 7, 12, 15}), result->get_vector<float>());
+}
+
+TEST(DISABLED_${BACKEND_NAME}, slice_3d)
+{
+    auto shape_a = Shape{4, 4, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{2, 2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{1, 1, 1}, Coordinate{3, 3, 3});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                               32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                               48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{21, 22, 25, 26, 37, 38, 41, 42}), result->get_vector<float>());
+}
+
+TEST(DISABLED_${BACKEND_NAME}, slice_3d_strided)
+{
+    auto shape_a = Shape{4, 4, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{2, 2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 2});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                               32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                               48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{0, 2, 8, 10, 32, 34, 40, 42}), result->get_vector<float>());
+}
+
+TEST(DISABLED_${BACKEND_NAME}, slice_3d_strided_different_strides)
+{
+    auto shape_a = Shape{4, 4, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{2, 2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                               32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                               48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{0, 3, 8, 11, 32, 35, 40, 43}), result->get_vector<float>());
+}
+
 TEST(${BACKEND_NAME}, scalar_constant_float32)
 {
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
@@ -2619,6 +2948,31 @@ TEST(${BACKEND_NAME}, sum_trivial)
 
     cf->call({a}, {result});
     ASSERT_EQ((vector<float>{1, 2, 3, 4}), result->get_vector<float>());
+}
+
+// Failure has been reported at 5D for some reason
+TEST(${BACKEND_NAME}, sum_trivial_5d)
+{
+    auto shape = Shape{2, 2, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
+              result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, sum_to_scalar)
@@ -2801,6 +3155,147 @@ TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
     ASSERT_EQ((vector<float>{}), a->get_vector<float>());
+}
+
+TEST(DISABLED_${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
+{
+    auto shape_a = Shape{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{3, 3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{1 + 10 + 19,
+                             2 + 11 + 20,
+                             3 + 12 + 21,
+                             4 + 13 + 22,
+                             5 + 14 + 23,
+                             6 + 15 + 24,
+                             7 + 16 + 25,
+                             8 + 17 + 26,
+                             9 + 18 + 27}),
+              result->get_vector<float>());
+}
+
+TEST(DISABLED_${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
+{
+    auto shape_a = Shape{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{3, 3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{2}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{1 + 2 + 3,
+                             4 + 5 + 6,
+                             7 + 8 + 9,
+                             10 + 11 + 12,
+                             13 + 14 + 15,
+                             16 + 17 + 18,
+                             19 + 20 + 21,
+                             22 + 23 + 24,
+                             25 + 26 + 27}),
+              result->get_vector<float>());
+}
+
+TEST(DISABLED_${BACKEND_NAME}, sum_3d_to_vector)
+{
+    auto shape_a = Shape{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{3};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{1 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25,
+                             2 + 11 + 20 + 5 + 14 + 23 + 8 + 17 + 26,
+                             3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
+              result->get_vector<float>());
+}
+
+TEST(DISABLED_${BACKEND_NAME}, sum_3d_to_scalar)
+{
+    auto shape_a = Shape{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f =
+        make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+                               15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{1 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25 + 2 + 11 + 20 + 5 + 14 + 23 +
+                             8 + 17 + 26 + 3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
+              result->get_vector<float>());
+}
+
+TEST(DISABLED_${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
+{
+    auto shape_a = Shape{3, 0, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_rt = Shape{3, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
+
+    cf->call({a}, {result});
+    ASSERT_EQ((vector<float>{0, 0, 0, 0, 0, 0}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, sign)
@@ -3289,4 +3784,132 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+}
+
+TEST(DISABLED_${BACKEND_NAME}, replace_slice_3d)
+{
+    auto shape_a = Shape{4, 4, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_b = Shape{2, 2, 2};
+    auto B = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_b));
+    auto shape_r = Shape{4, 4, 4};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{1, 1, 1}, Coordinate{3, 3, 3});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                               32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                               48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{921, 922, 925, 926, 937, 938, 941, 942});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{0,  1,  2,  3,  4,  5,   6,   7,  8,  9,   10,  11, 12, 13, 14, 15,
+
+                             16, 17, 18, 19, 20, 921, 922, 23, 24, 925, 926, 27, 28, 29, 30, 31,
+
+                             32, 33, 34, 35, 36, 937, 938, 39, 40, 941, 942, 43, 44, 45, 46, 47,
+
+                             48, 49, 50, 51, 52, 53,  54,  55, 56, 57,  58,  59, 60, 61, 62, 63}),
+              result->get_vector<float>());
+}
+
+TEST(DISABLED_${BACKEND_NAME}, replace_slice_3d_strided)
+{
+    auto shape_a = Shape{4, 4, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_b = Shape{2, 2, 2};
+    auto B = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_b));
+    auto shape_r = Shape{4, 4, 4};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::ReplaceSlice>(
+        A, B, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 2});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                               32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                               48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{900, 902, 908, 910, 932, 934, 940, 942});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{900, 1,  902, 3,  4,  5,  6,  7,  908, 9,  910, 11, 12, 13, 14, 15,
+
+                             16,  17, 18,  19, 20, 21, 22, 23, 24,  25, 26,  27, 28, 29, 30, 31,
+
+                             932, 33, 934, 35, 36, 37, 38, 39, 940, 41, 942, 43, 44, 45, 46, 47,
+
+                             48,  49, 50,  51, 52, 53, 54, 55, 56,  57, 58,  59, 60, 61, 62, 63}),
+              result->get_vector<float>());
+}
+
+TEST(DISABLED_${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
+{
+    auto shape_a = Shape{4, 4, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_b = Shape{2, 2, 2};
+    auto B = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_b));
+    auto shape_r = Shape{4, 4, 4};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::ReplaceSlice>(
+        A, B, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+
+                               16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+
+                               32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+                               48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{900, 903, 908, 911, 932, 935, 940, 943});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{900, 1,  2,  903, 4,  5,  6,  7,  908, 9,  10, 911, 12, 13, 14, 15,
+
+                             16,  17, 18, 19,  20, 21, 22, 23, 24,  25, 26, 27,  28, 29, 30, 31,
+
+                             932, 33, 34, 935, 36, 37, 38, 39, 940, 41, 42, 943, 44, 45, 46, 47,
+
+                             48,  49, 50, 51,  52, 53, 54, 55, 56,  57, 58, 59,  60, 61, 62, 63}),
+              result->get_vector<float>());
 }

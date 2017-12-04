@@ -33,12 +33,6 @@ namespace ngraph
         /// | Type                   | Description                                                                                    |
         /// | ---------------------- | ---------------------------------------------------------------------------------------------- |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \lfloor \texttt{arg}[i_1,\dots,i_n] \rfloor\f$ |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
         class Floor : public UnaryElementwiseArithmetic
         {
         public:
