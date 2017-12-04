@@ -167,7 +167,8 @@ void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<N
         stack.pop_front();
         for (auto arg : n->get_arguments())
         {
-            if (!instances_seen.count(arg)){
+            if (!instances_seen.count(arg))
+            {
                 stack.push_front(arg);
             }
         }
