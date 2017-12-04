@@ -56,9 +56,9 @@ namespace ngraph
         ///
         /// ## Implementation Status
         ///
-        /// | Backend | Status                                                                                                                                                                            |
-        /// | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | NGVM    | Fully implemented for scalars, vectors, and matrices. Implemented for other shapes only when there is no reordering of the input axes, i.e. `input_order` is \f$(0,\dots,n-1)\f$. |
+        /// | Backend | Status             |
+        /// | ------- | ------------------ |
+        /// | NGVM    | Fully implemented. |
         class Reshape : public RequiresTensorViewArgs
         {
         public:

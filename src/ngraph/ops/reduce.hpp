@@ -83,9 +83,9 @@ namespace ngraph
         ///
         /// ## Implementation Status
         ///
-        /// | Backend | Status                                                |
-        /// | ------- | ----------------------------------------------------- |
-        /// | NGVM    | Fully implemented for scalars, vectors, and matrices. |
+        /// | Backend | Status             |
+        /// | ------- | ------------------ |
+        /// | NGVM    | Fully implemented. |
 
         class Reduce : public RequiresTensorViewArgs
         {
