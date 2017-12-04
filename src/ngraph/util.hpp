@@ -24,6 +24,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <list>
 
 namespace ngraph
 {
@@ -250,4 +252,13 @@ namespace ngraph
 
     void replace_node_users_arguments(std::shared_ptr<Node> target,
                                       std::shared_ptr<Node> replacement);
+
+    std::list<std::shared_ptr<Node>>
+        topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
+
+    std::unordered_map<Node*, std::shared_ptr<Node>>
+        clone_graph(const std::list<std::shared_ptr<Node>>& nodes,
+                    std::unordered_map<Node*, std::shared_ptr<Node>> mapping);
+
+    std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func);
 } // end namespace ngraph

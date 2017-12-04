@@ -261,3 +261,66 @@ void ngraph::replace_node_users_arguments(std::shared_ptr<Node> target,
     }
     const_cast<std::multiset<Node*>&>(target->users()).clear();
 }
+
+// TODO:  Is this an ideal topological sort?  If not, we should change it.
+std::list<std::shared_ptr<ngraph::Node>>
+    ngraph::topological_sort(const std::list<std::shared_ptr<Node>>& nodes)
+{
+    deque<ngraph::Node*> independent_nodes;
+    unordered_map<const ngraph::Node*, size_t> node_depencency_count;
+    unordered_map<ngraph::Node*, shared_ptr<ngraph::Node>> node_map;
+
+    for (auto node : nodes)
+    {
+        node_map[node.get()] = node;
+        node_depencency_count[node.get()] = node->get_arguments().size();
+        if (node->get_arguments().size() == 0)
+        {
+            independent_nodes.push_back(node.get());
+        }
+    }
+
+    list<shared_ptr<ngraph::Node>> result_list;
+    while (independent_nodes.size() > 0)
+    {
+        auto independent_node = independent_nodes.front();
+        result_list.push_back(node_map[independent_node]);
+        independent_nodes.pop_front();
+
+        for (auto user : independent_node->users())
+        {
+            node_depencency_count[user] -= 1;
+            size_t count = node_depencency_count[user];
+            if (count == 0)
+            {
+                independent_nodes.push_back(user);
+            }
+        }
+    }
+
+    return result_list;
+}
+
+std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>
+    ngraph::clone_graph(const std::list<std::shared_ptr<ngraph::Node>>& nodes,
+                        std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> mapping)
+{
+    auto sorted_list = topological_sort(nodes);
+    for (auto node : sorted_list)
+    {
+        if (mapping.count(node.get()) == 0)
+        {
+            mapping[node.get()] = node->copy_with_new_args(node->get_arguments());
+        }
+    }
+    return mapping;
+}
+
+std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph::Function> func)
+{
+    auto cloned_graph = clone_graph(
+        func->get_ops(), std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>());
+    auto cloned_result = cloned_graph[func->get_result().get()];
+    return std::make_shared<ngraph::Function>(
+        cloned_result, func->get_result_type(), func->get_parameters());
+}
