@@ -796,7 +796,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto& lower_bounds = slice->get_lower_bounds();
             auto& upper_bounds = slice->get_upper_bounds();
 
-            auto& strides = slice->get_step();
+            auto& strides = slice->get_strides();
 
             PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
                                          "Slice has unhandled element type",
@@ -832,7 +832,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto& lower_bounds = replace_slice->get_lower_bounds();
             auto& upper_bounds = replace_slice->get_upper_bounds();
 
-            auto& strides = replace_slice->get_step();
+            auto& strides = replace_slice->get_strides();
 
             PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
                                          "Replace-slice has unhandled element type",

@@ -1189,11 +1189,11 @@ void Emitter::EmitSlice(const ngraph::Node* n,
 {
     auto slice = static_cast<const op::Slice*>(n);
 
-    for (auto d : slice->get_step())
+    for (auto d : slice->get_srides())
     {
         if (1 != d)
         {
-            throw ngraph_error("Slice does not support non-unit step yet");
+            throw ngraph_error("Slice does not support non-unit strides yet");
         }
     }
 
@@ -1469,11 +1469,11 @@ void Emitter::EmitReplaceSlice(const ngraph::Node* n,
 {
     auto replace_slice = static_cast<const op::Slice*>(n);
 
-    for (auto d : replace_slice->get_step())
+    for (auto d : replace_slice->get_strides())
     {
         if (1 != d)
         {
-            throw ngraph_error("Replace-slice does not support non-unit step yet");
+            throw ngraph_error("Replace-slice does not support non-unit strides yet");
         }
     }
 

@@ -428,13 +428,13 @@ TEST(copy, slice)
     Shape shape_in{2, 3, 4};
     Coordinate lower{0, 0, 0};
     Coordinate upper{2, 3, 4};
-    Coordinate step{1, 1, 1};
+    Strides strides{1, 1, 1};
 
     auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), shape_in);
     std::vector<std::shared_ptr<Node>> new_args{
         make_shared<op::Parameter>(element::Float32::element_type(), shape_in)};
 
-    auto node = make_shared<op::Slice>(arg0, lower, upper, step);
+    auto node = make_shared<op::Slice>(arg0, lower, upper, strides);
     auto new_node = node->copy_with_new_args(new_args);
     auto node_cast = dynamic_pointer_cast<op::Slice>(new_node);
     ASSERT_NE(node_cast, nullptr);
@@ -443,7 +443,7 @@ TEST(copy, slice)
     ASSERT_TRUE(new_args == new_node->get_arguments());
     ASSERT_TRUE(lower == node_cast->get_lower_bounds());
     ASSERT_TRUE(upper == node_cast->get_upper_bounds());
-    ASSERT_TRUE(step == node_cast->get_step());
+    ASSERT_TRUE(strides == node_cast->get_strides());
 }
 
 TEST(copy, subtract)

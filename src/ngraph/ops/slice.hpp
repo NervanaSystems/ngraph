@@ -29,11 +29,11 @@ namespace ngraph
         ///
         /// ## Parameters
         ///
-        /// |                | Description                                                                                                                                                                |
-        /// | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | `lower_bounds` | The (inclusive) lower-bound coordinates \f$l_i\f$ for the tensor slice. For example, a lower-bound of \f$(1,2)\f$ means to start the slice at row 1 and column 2.          |
-        /// | `upper_bounds` | The (non-inclusive) upper-bound coordinates \f$u_i\f$ for the tensor slice. For example, an upper-bound of \f$(5,4)\f$ means to end the slice before row 4 and column 3.   |
-        /// | `step`         | The "step" or "stride" \f$s_i\f$ for the tensor slice. For example, a stride of \f$(1,3)\f$ means to take every row, and every third column (starting at the lower bound). |
+        /// |                | Description                                                                                                                                                                        |
+        /// | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+        /// | `lower_bounds` | The (inclusive) lower-bound coordinates \f$l_i\f$ for the tensor slice. For example, a lower-bound of \f$(1,2)\f$ means to start the slice at row 1 and column 2.                  |
+        /// | `upper_bounds` | The (non-inclusive) upper-bound coordinates \f$u_i\f$ for the tensor slice. For example, an upper-bound of \f$(5,4)\f$ means to end the slice before row 4 and column 3.           |
+        /// | `strides`      | The strides \f$s_i\f$ for the tensor slice. For example, in the matrix case, strides of \f$(1,3)\f$ means to take every row, and every third column (starting at the lower bound). |
         ///
         /// ## Inputs
         ///
@@ -54,14 +54,14 @@ namespace ngraph
             /// \param arg The tensor view to be sliced.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
-            /// \param step The slicing step; for example, step of `{n,m}` means to take
-            ///             every nth row and every mth column of the input matrix.
+            /// \param strides The slicing strides; for example, strides of `{n,m}` means to take
+            ///                every nth row and every mth column of the input matrix.
             Slice(const std::shared_ptr<Node>& arg,
                   const Coordinate& lower_bounds,
                   const Coordinate& upper_bounds,
-                  const Strides& step);
+                  const Strides& strides);
 
-            /// \brief Constructs a tensor slice operation with unit step; i.e., every element inside the bounding box will be copied to the output slice.
+            /// \brief Constructs a tensor slice operation with unit strides; i.e., every element inside the bounding box will be copied to the output slice.
             ///
             /// \param arg The tensor view to be sliced.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
@@ -76,15 +76,15 @@ namespace ngraph
                 if (new_args.size() != 1)
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<Slice>(
-                    new_args.at(0), m_lower_bounds, m_upper_bounds, m_step);
+                    new_args.at(0), m_lower_bounds, m_upper_bounds, m_strides);
             }
 
             /// \return The inclusive lower-bound coordinates.
             const Coordinate& get_lower_bounds() const { return m_lower_bounds; }
             /// \return The exclusive upper-bound coordinates.
             const Coordinate& get_upper_bounds() const { return m_upper_bounds; }
-            /// \return The slicing step.
-            const Strides& get_step() const { return m_step; }
+            /// \return The slicing strides.
+            const Strides& get_strides() const { return m_strides; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
@@ -92,7 +92,7 @@ namespace ngraph
 
             const Coordinate m_lower_bounds;
             const Coordinate m_upper_bounds;
-            const Strides m_step;
+            const Strides m_strides;
         };
     }
 }

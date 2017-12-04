@@ -139,7 +139,7 @@ void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
                                             const std::shared_ptr<Node>& delta,
                                             const Coordinate& lower_bounds,
                                             const Coordinate& upper_bounds,
-                                            const Shape& step)
+                                            const Strides& strides)
 {
     auto x_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(x->get_value_type());
     auto delta_tensor_view_type =
@@ -155,16 +155,16 @@ void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
         auto zeros = make_zero(x->get_outputs().at(0).get_tensor_view_type());
         m_adjoint_map.insert(
             {x.get(),
-             std::make_shared<op::ReplaceSlice>(zeros, delta, lower_bounds, upper_bounds, step)});
+             std::make_shared<op::ReplaceSlice>(zeros, delta, lower_bounds, upper_bounds, strides)});
     }
     else
     {
         adjoint_it->second = std::make_shared<op::ReplaceSlice>(
             adjoint_it->second,
-            std::make_shared<op::Slice>(adjoint_it->second, lower_bounds, upper_bounds, step) +
+            std::make_shared<op::Slice>(adjoint_it->second, lower_bounds, upper_bounds, strides) +
                 delta,
             lower_bounds,
             upper_bounds,
-            step);
+            strides);
     }
 }

@@ -427,8 +427,8 @@ shared_ptr<ngraph::Function>
         {
             auto lower_bounds = node_js.at("lower_bounds").get<vector<size_t>>();
             auto upper_bounds = node_js.at("upper_bounds").get<vector<size_t>>();
-            auto step = node_js.at("step").get<vector<size_t>>();
-            node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, step);
+            auto strides = node_js.at("strides").get<vector<size_t>>();
+            node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
         }
         else if (node_op == "Subtract")
         {
@@ -631,7 +631,7 @@ json write(const Node& n)
         auto tmp = dynamic_cast<const op::Slice*>(&n);
         node["lower_bounds"] = tmp->get_lower_bounds();
         node["upper_bounds"] = tmp->get_upper_bounds();
-        node["step"] = tmp->get_step();
+        node["strides"] = tmp->get_strides();
     }
     else if (node_op == "Subtract")
     {
