@@ -15,20 +15,19 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/divide.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_MODULE(Maximum, mod) {
+PYBIND11_MODULE(Divide, mod) {
 
-    py::module::import("wrapper.ngraph.ops.Op");
+    py::module::import("nwrapper.ngraph.ops.Op");
 
-    py::class_<Maximum, std::shared_ptr<Maximum>, BinaryElementwiseArithmetic> maximum(mod, "Maximum");
-    maximum.def(py::init<const std::shared_ptr<ngraph::Node>&,
+    py::class_<Divide, std::shared_ptr<Divide>, BinaryElementwiseArithmetic> divide(mod, "Divide");
+    divide.def(py::init<const std::shared_ptr<ngraph::Node>&,
                         const std::shared_ptr<ngraph::Node>& >());
-
 }
 
 }}  // ngraph

@@ -15,18 +15,18 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/ops/subtract.hpp"
+#include "ngraph/ops/multiply.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_MODULE(Subtract, mod) {
+PYBIND11_MODULE(Multiply, mod) {
 
-    py::module::import("wrapper.ngraph.ops.Op");
+    py::module::import("nwrapper.ngraph.ops.Op");
 
-    py::class_<Subtract, std::shared_ptr<Subtract>, BinaryElementwiseArithmetic> subtract(mod, "Subtract");
-    subtract.def(py::init<const std::shared_ptr<ngraph::Node>&,
+    py::class_<Multiply, std::shared_ptr<Multiply>, BinaryElementwiseArithmetic> multiply(mod, "Multiply");
+    multiply.def(py::init<const std::shared_ptr<ngraph::Node>&,
                              const std::shared_ptr<ngraph::Node>& >());
 }
 

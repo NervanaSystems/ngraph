@@ -14,22 +14,22 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/operators.h>
 #include <string>
-#include "ngraph/ops/sum.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/ops/parameter.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
-namespace op {
 
-PYBIND11_MODULE(Sum, mod) {
+PYBIND11_MODULE(Parameter, mod) {
 
-    py::module::import("wrapper.ngraph.ops.Op");
+    py::module::import("nwrapper.ngraph.types.TraitedType");
+    py::module::import("nwrapper.ngraph.Node");
+    py::class_<op::Parameter, std::shared_ptr<op::Parameter>, Node> parameter(mod, "Parameter");
 
-    using AxisSet = std::set<size_t>;
-
-    py::class_<Sum, std::shared_ptr<Sum>, RequiresTensorViewArgs> sum(mod, "Sum");
-    sum.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                     const AxisSet& >());
+    parameter.def(py::init<const ngraph::element::Type&, const ngraph::Shape& >());
+    parameter.def("description", &op::Parameter::description);
 }
 
-}}  // ngraph
+}  // ngraph

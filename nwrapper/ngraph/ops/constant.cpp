@@ -15,18 +15,35 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/ops/exp.hpp"
+#include "ngraph/ops/constant.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
 namespace op {
+namespace {
 
-PYBIND11_MODULE(Exp, mod) {
+template <typename T>
+static void declareParameterizedConstant(py::module & mod, std::string const & suffix) {
+    using Class = ParameterizedConstant<T>;
+    using PyClass = py::class_<Class, std::shared_ptr<Class>, ConstantBase>;
 
-    py::module::import("wrapper.ngraph.ops.Op");
+    PyClass cls(mod, ("ParameterizedConstant" + suffix).c_str());
+    cls.def(py::init<const ngraph::Shape&, std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>>& >());
 
-    py::class_<Exp, std::shared_ptr<Exp>, UnaryElementwiseArithmetic> exp(mod, "Exp");
-    exp.def(py::init<const std::shared_ptr<ngraph::Node>& >());
+}
+
+}
+
+PYBIND11_MODULE(ParameterizedConstant, mod) {
+
+    py::module::import("nwrapper.ngraph.Node");
+    py::module::import("nwrapper.ngraph.runtime.ParameterizedTensorView");
+    using ET = ngraph::element::TraitedType<float>;
+
+    py::class_<ConstantBase, std::shared_ptr<ConstantBase>, Node> constantBase(mod, "ConstantBase");
+
+    declareParameterizedConstant<ET>(mod, "F");
 }
 
 }}  // ngraph
+

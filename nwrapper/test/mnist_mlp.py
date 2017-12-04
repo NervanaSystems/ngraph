@@ -15,23 +15,23 @@
 # ----------------------------------------------------------------------------
 import numpy as np
 
-import wrapper.ngraph.types.TraitedType as TraitedType
-import wrapper.ngraph.ops.Parameter as Parameter
-import wrapper.ngraph.types.TensorViewType as TensorViewType
-import wrapper.ngraph.Function as Function
-import wrapper.ngraph.ops.Maximum as Maximum
-import wrapper.ngraph.ops.Reshape as Reshape
-import wrapper.ngraph.ops.Dot as Dot
-import wrapper.ngraph.ops.Broadcast as Broadcast
-import wrapper.ngraph.runtime.Utils as Utils
-import wrapper.ngraph.ops.ParameterizedConstant as ParameterizedConstant
-import wrapper.ngraph.ops.Exp as Exp
-import wrapper.ngraph.ops.Log as Log
-import wrapper.ngraph.ops.Sum as Sum
-import wrapper.ngraph.ops.Greater as Greater
-import wrapper.ngraph.ops.Convert as Convert
-import wrapper.ngraph.ops.Reduce as Reduce
-import wrapper.ngraph.Util as Util
+import nwrapper.ngraph.types.TraitedType as TraitedType
+import nwrapper.ngraph.ops.Parameter as Parameter
+import nwrapper.ngraph.types.TensorViewType as TensorViewType
+import nwrapper.ngraph.Function as Function
+import nwrapper.ngraph.ops.Maximum as Maximum
+import nwrapper.ngraph.ops.Reshape as Reshape
+import nwrapper.ngraph.ops.Dot as Dot
+import nwrapper.ngraph.ops.Broadcast as Broadcast
+import nwrapper.ngraph.runtime.Utils as Utils
+import nwrapper.ngraph.ops.ParameterizedConstant as ParameterizedConstant
+import nwrapper.ngraph.ops.Exp as Exp
+import nwrapper.ngraph.ops.Log as Log
+import nwrapper.ngraph.ops.Sum as Sum
+import nwrapper.ngraph.ops.Greater as Greater
+import nwrapper.ngraph.ops.Convert as Convert
+import nwrapper.ngraph.ops.Reduce as Reduce
+import nwrapper.ngraph.Util as Util
 
 float_element_type = TraitedType.TraitedTypeF.element_type()
 int_element_type = TraitedType.TraitedTypeI.element_type()

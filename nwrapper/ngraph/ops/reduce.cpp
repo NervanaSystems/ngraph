@@ -15,22 +15,23 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
+#include "ngraph/ops/reduce.hpp"
 #include "ngraph/function.hpp"
-#include "ngraph/types/type.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
+namespace op {
 
-PYBIND11_MODULE(Function, mod) {
+PYBIND11_MODULE(Reduce, mod) {
 
-    py::module::import("wrapper.ngraph.ops.Parameter");
-    py::module::import("wrapper.ngraph.types.TensorViewType");
-
-    py::class_<Function, std::shared_ptr<Function>> function(mod, "Function");
-
-    function.def(py::init<const std::shared_ptr<Node>&, const std::shared_ptr<const TensorViewType>&,
-                          const std::vector<std::shared_ptr<op::Parameter>>&, const std::string&>());
-    function.def("get_result_type", &Function::get_result_type);
+    py::module::import("nwrapper.ngraph.ops.Op");
+    using AxisSet = std::set<size_t>;
+ 
+    py::class_<Reduce, std::shared_ptr<Reduce>, RequiresTensorViewArgs> reduce(mod, "Reduce");
+    reduce.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                        const std::shared_ptr<ngraph::Node>&,
+                        const std::shared_ptr<ngraph::Function>&,
+                        const AxisSet& >());
 }
 
-}  // ngraph
+}}  // ngraph

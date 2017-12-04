@@ -15,19 +15,20 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/runtime/utils.hpp"
+#include "ngraph/ops/maximum.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
-namespace runtime{
+namespace op {
 
-PYBIND11_MODULE(Utils, mod) {
+PYBIND11_MODULE(Maximum, mod) {
 
-    py::module::import("wrapper.ngraph.runtime.ParameterizedTensorView");
-    using ET = ngraph::element::TraitedType<float>;    
+    py::module::import("nwrapper.ngraph.ops.Op");
 
-    mod.def("make_tensor", (std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>> (*) (const ngraph::Shape&)) &make_tensor);
-    mod.def("make_tensor", (std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>> (*) (const Shape& , const std::vector<typename ET::type>& )) &make_tensor);
+    py::class_<Maximum, std::shared_ptr<Maximum>, BinaryElementwiseArithmetic> maximum(mod, "Maximum");
+    maximum.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                        const std::shared_ptr<ngraph::Node>& >());
+
 }
 
 }}  // ngraph

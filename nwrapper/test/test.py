@@ -15,13 +15,13 @@
 # ----------------------------------------------------------------------------
 import numpy as np
 
-import wrapper.ngraph.Util as Util
-import wrapper.ngraph.types.TraitedType as TraitedType
-import wrapper.ngraph.ops.Parameter as Parameter
-import wrapper.ngraph.types.TensorViewType as TensorViewType
-import wrapper.ngraph.Function as Function
-import wrapper.ngraph.runtime.Manager as Manager
-import wrapper.ngraph.runtime.ParameterizedTensorView as ParameterizedTensorView
+import nwrapper.ngraph.Util as Util
+import nwrapper.ngraph.types.TraitedType as TraitedType
+import nwrapper.ngraph.ops.Parameter as Parameter
+import nwrapper.ngraph.types.TensorViewType as TensorViewType
+import nwrapper.ngraph.Function as Function
+import nwrapper.ngraph.runtime.Manager as Manager
+import nwrapper.ngraph.runtime.ParameterizedTensorView as ParameterizedTensorView
 
 element_type = TraitedType.TraitedTypeF.element_type()
 shape = [2,2]

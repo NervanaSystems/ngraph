@@ -15,28 +15,19 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/runtime/manager.hpp"
-#include "ngraph/runtime/ngvm/ngvm_manager.hpp"
-#include "ngraph/function.hpp"
-#include "ngraph/runtime/external_function.hpp"
-#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/utils.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
-namespace runtime {
+namespace runtime{
 
-PYBIND11_MODULE(Manager, mod) {
+PYBIND11_MODULE(Utils, mod) {
 
-    py::module::import("wrapper.ngraph.Function");
-    py::module::import("wrapper.ngraph.runtime.ExternalFunction");
-    py::module::import("wrapper.ngraph.runtime.Backend");
+    py::module::import("nwrapper.ngraph.runtime.ParameterizedTensorView");
+    using ET = ngraph::element::TraitedType<float>;    
 
-    py::class_<Manager, std::shared_ptr<Manager>> manager(mod, "Manager");
-    py::class_<ngvm::NGVMManager, std::shared_ptr<ngvm::NGVMManager>, Manager> ngvmManager(mod, "NGVMManager");
-
-    manager.def_static("get", &Manager::get);
-    manager.def("compile", &Manager::compile);
-    manager.def("allocate_backend", &Manager::allocate_backend);
+    mod.def("make_tensor", (std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>> (*) (const ngraph::Shape&)) &make_tensor);
+    mod.def("make_tensor", (std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>> (*) (const Shape& , const std::vector<typename ET::type>& )) &make_tensor);
 }
 
 }}  // ngraph

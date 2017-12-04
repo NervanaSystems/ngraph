@@ -23,7 +23,7 @@ namespace op {
 
 PYBIND11_MODULE(Op, mod) {
 
-    py::module::import("wrapper.ngraph.Node");
+    py::module::import("nwrapper.ngraph.Node");
 
     py::class_<RequiresTensorViewArgs, std::shared_ptr<RequiresTensorViewArgs>, Node> requiresTensorViewArgs(mod, "RequiresTensorViewArgs");
     py::class_<UnaryElementwise, std::shared_ptr<UnaryElementwise>,

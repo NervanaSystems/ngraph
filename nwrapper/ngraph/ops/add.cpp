@@ -15,19 +15,19 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/ops/dot.hpp"
+#include "ngraph/ops/add.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_MODULE(Dot, mod) {
+PYBIND11_MODULE(Add, mod) {
 
-    py::module::import("wrapper.ngraph.ops.Op");
+    py::module::import("nwrapper.ngraph.ops.Op");
 
-    py::class_<Dot, std::shared_ptr<Dot>, RequiresTensorViewArgs> dot(mod, "Dot");
-    dot.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                     const std::shared_ptr<ngraph::Node>& >());
+    py::class_<Add, std::shared_ptr<Add>, BinaryElementwiseArithmetic> add(mod, "Add");
+    add.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                        const std::shared_ptr<ngraph::Node>& >());
 }
 
 }}  // ngraph

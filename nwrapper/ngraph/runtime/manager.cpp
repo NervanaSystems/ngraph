@@ -15,19 +15,28 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/ops/greater.hpp"
+#include "ngraph/runtime/manager.hpp"
+#include "ngraph/runtime/ngvm/ngvm_manager.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/runtime/external_function.hpp"
+#include "ngraph/runtime/backend.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
-namespace op {
+namespace runtime {
 
-PYBIND11_MODULE(Greater, mod) {
+PYBIND11_MODULE(Manager, mod) {
 
-    py::module::import("wrapper.ngraph.ops.Op");
+    py::module::import("nwrapper.ngraph.Function");
+    py::module::import("nwrapper.ngraph.runtime.ExternalFunction");
+    py::module::import("nwrapper.ngraph.runtime.Backend");
 
-    py::class_<Greater, std::shared_ptr<Greater>, BinaryElementwiseComparison> greater(mod, "Greater");
-    greater.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                         const std::shared_ptr<ngraph::Node>& >());
+    py::class_<Manager, std::shared_ptr<Manager>> manager(mod, "Manager");
+    py::class_<ngvm::NGVMManager, std::shared_ptr<ngvm::NGVMManager>, Manager> ngvmManager(mod, "NGVMManager");
+
+    manager.def_static("get", &Manager::get);
+    manager.def("compile", &Manager::compile);
+    manager.def("allocate_backend", &Manager::allocate_backend);
 }
 
 }}  // ngraph

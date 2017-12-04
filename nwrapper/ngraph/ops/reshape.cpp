@@ -14,22 +14,22 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/operators.h>
 #include <string>
-#include "ngraph/node.hpp"
-#include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/reshape.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
+namespace op {
 
-PYBIND11_MODULE(Parameter, mod) {
+PYBIND11_MODULE(Reshape, mod) {
 
-    py::module::import("wrapper.ngraph.types.TraitedType");
-    py::module::import("wrapper.ngraph.Node");
-    py::class_<op::Parameter, std::shared_ptr<op::Parameter>, Node> parameter(mod, "Parameter");
+    py::module::import("nwrapper.ngraph.ops.Op");
 
-    parameter.def(py::init<const ngraph::element::Type&, const ngraph::Shape& >());
-    parameter.def("description", &op::Parameter::description);
+    using AxisVector = std::vector<size_t>;
+
+    py::class_<Reshape, std::shared_ptr<Reshape>, RequiresTensorViewArgs> reshape(mod, "Reshape");
+    reshape.def(py::init<const std::shared_ptr<ngraph::Node>&, const AxisVector&,
+                         const ngraph::Shape& >());
 }
 
-}  // ngraph
+}}  // ngraph

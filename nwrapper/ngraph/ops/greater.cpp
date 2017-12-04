@@ -15,19 +15,19 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/ops/add.hpp"
+#include "ngraph/ops/greater.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_MODULE(Add, mod) {
+PYBIND11_MODULE(Greater, mod) {
 
-    py::module::import("wrapper.ngraph.ops.Op");
+    py::module::import("nwrapper.ngraph.ops.Op");
 
-    py::class_<Add, std::shared_ptr<Add>, BinaryElementwiseArithmetic> add(mod, "Add");
-    add.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                        const std::shared_ptr<ngraph::Node>& >());
+    py::class_<Greater, std::shared_ptr<Greater>, BinaryElementwiseComparison> greater(mod, "Greater");
+    greater.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                         const std::shared_ptr<ngraph::Node>& >());
 }
 
 }}  // ngraph

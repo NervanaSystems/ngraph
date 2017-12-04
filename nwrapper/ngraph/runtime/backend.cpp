@@ -29,9 +29,9 @@ namespace runtime {
 
 PYBIND11_MODULE(Backend, mod) {
 
-    py::module::import("wrapper.ngraph.runtime.CallFrame");
-//    py::module::import("wrapper.ngraph.runtime.ParameterizedTensorView");
-    py::module::import("wrapper.ngraph.runtime.TensorView");
+    py::module::import("nwrapper.ngraph.runtime.CallFrame");
+//    py::module::import("nwrapper.ngraph.runtime.ParameterizedTensorView");
+    py::module::import("nwrapper.ngraph.runtime.TensorView");
 
     using ET = ngraph::element::TraitedType<float>;
 

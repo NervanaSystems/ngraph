@@ -15,23 +15,20 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/ops/reduce.hpp"
-#include "ngraph/function.hpp"
+#include "ngraph/ops/broadcast.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_MODULE(Reduce, mod) {
+PYBIND11_MODULE(Broadcast, mod) {
 
-    py::module::import("wrapper.ngraph.ops.Op");
+    py::module::import("nwrapper.ngraph.ops.Op");
     using AxisSet = std::set<size_t>;
  
-    py::class_<Reduce, std::shared_ptr<Reduce>, RequiresTensorViewArgs> reduce(mod, "Reduce");
-    reduce.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                        const std::shared_ptr<ngraph::Node>&,
-                        const std::shared_ptr<ngraph::Function>&,
-                        const AxisSet& >());
+    py::class_<Broadcast, std::shared_ptr<Broadcast>, RequiresTensorViewArgs> broadcast(mod, "Broadcast");
+    broadcast.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&,
+                           const AxisSet& >());
 }
 
 }}  // ngraph

@@ -15,19 +15,19 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/ops/minimum.hpp"
+#include "ngraph/ops/dot.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_MODULE(Minimum, mod) {
+PYBIND11_MODULE(Dot, mod) {
 
-    py::module::import("wrapper.ngraph.ops.Op");
+    py::module::import("nwrapper.ngraph.ops.Op");
 
-    py::class_<Minimum, std::shared_ptr<Minimum>, BinaryElementwiseArithmetic> minimum(mod, "Minimum");
-    minimum.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                            const std::shared_ptr<ngraph::Node>& >());    
+    py::class_<Dot, std::shared_ptr<Dot>, RequiresTensorViewArgs> dot(mod, "Dot");
+    dot.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                     const std::shared_ptr<ngraph::Node>& >());
 }
 
 }}  // ngraph

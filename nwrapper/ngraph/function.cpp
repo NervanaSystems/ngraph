@@ -15,19 +15,22 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/ops/divide.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/types/type.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
-namespace op {
 
-PYBIND11_MODULE(Divide, mod) {
+PYBIND11_MODULE(Function, mod) {
 
-    py::module::import("wrapper.ngraph.ops.Op");
+    py::module::import("nwrapper.ngraph.ops.Parameter");
+    py::module::import("nwrapper.ngraph.types.TensorViewType");
 
-    py::class_<Divide, std::shared_ptr<Divide>, BinaryElementwiseArithmetic> divide(mod, "Divide");
-    divide.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                        const std::shared_ptr<ngraph::Node>& >());
+    py::class_<Function, std::shared_ptr<Function>> function(mod, "Function");
+
+    function.def(py::init<const std::shared_ptr<Node>&, const std::shared_ptr<const TensorViewType>&,
+                          const std::vector<std::shared_ptr<op::Parameter>>&, const std::string&>());
+    function.def("get_result_type", &Function::get_result_type);
 }
 
-}}  // ngraph
+}  // ngraph

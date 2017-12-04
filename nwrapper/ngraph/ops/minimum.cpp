@@ -15,19 +15,19 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/ops/convert.hpp"
+#include "ngraph/ops/minimum.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_MODULE(Convert, mod) {
+PYBIND11_MODULE(Minimum, mod) {
 
-    py::module::import("wrapper.ngraph.ops.Op");
+    py::module::import("nwrapper.ngraph.ops.Op");
 
-    py::class_<Convert, std::shared_ptr<Convert>, UnaryElementwise> convert(mod, "Convert");
-    convert.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                         const ngraph::element::Type&>());
+    py::class_<Minimum, std::shared_ptr<Minimum>, BinaryElementwiseArithmetic> minimum(mod, "Minimum");
+    minimum.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                            const std::shared_ptr<ngraph::Node>& >());    
 }
 
 }}  // ngraph

@@ -15,35 +15,19 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/subtract.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
 namespace op {
-namespace {
 
-template <typename T>
-static void declareParameterizedConstant(py::module & mod, std::string const & suffix) {
-    using Class = ParameterizedConstant<T>;
-    using PyClass = py::class_<Class, std::shared_ptr<Class>, ConstantBase>;
+PYBIND11_MODULE(Subtract, mod) {
 
-    PyClass cls(mod, ("ParameterizedConstant" + suffix).c_str());
-    cls.def(py::init<const ngraph::Shape&, std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>>& >());
+    py::module::import("nwrapper.ngraph.ops.Op");
 
-}
-
-}
-
-PYBIND11_MODULE(ParameterizedConstant, mod) {
-
-    py::module::import("wrapper.ngraph.Node");
-    py::module::import("wrapper.ngraph.runtime.ParameterizedTensorView");
-    using ET = ngraph::element::TraitedType<float>;
-
-    py::class_<ConstantBase, std::shared_ptr<ConstantBase>, Node> constantBase(mod, "ConstantBase");
-
-    declareParameterizedConstant<ET>(mod, "F");
+    py::class_<Subtract, std::shared_ptr<Subtract>, BinaryElementwiseArithmetic> subtract(mod, "Subtract");
+    subtract.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                             const std::shared_ptr<ngraph::Node>& >());
 }
 
 }}  // ngraph
-

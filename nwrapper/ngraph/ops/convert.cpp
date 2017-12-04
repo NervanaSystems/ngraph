@@ -14,34 +14,20 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/numpy.h>
 #include <string>
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
+#include "ngraph/ops/convert.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
-namespace runtime {
-namespace {
+namespace op {
 
-template <typename ET>
-static void declareParameterizedTensorView(py::module & mod, std::string const & suffix) {
-    using Class = ParameterizedTensorView<ET>;
-    using PyClass = py::class_<Class, std::shared_ptr<Class>, TensorView>;
+PYBIND11_MODULE(Convert, mod) {
 
-    PyClass cls(mod, ("ParameterizedTensorView" + suffix).c_str());
-    cls.def("write", (void (Class::*) (const void*, size_t, size_t)) &Class::write);
-    cls.def("read", &Class::read);
-}
+    py::module::import("nwrapper.ngraph.ops.Op");
 
-}
-
-PYBIND11_MODULE(ParameterizedTensorView, mod) {
-
-    py::module::import("wrapper.ngraph.runtime.TensorView");
-
-    py::module::import("wrapper.ngraph.types.TraitedType");
-
-    declareParameterizedTensorView<ngraph::element::TraitedType<float>>(mod, "F");
+    py::class_<Convert, std::shared_ptr<Convert>, UnaryElementwise> convert(mod, "Convert");
+    convert.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                         const ngraph::element::Type&>());
 }
 
 }}  // ngraph

@@ -14,22 +14,34 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 #include <string>
-#include "ngraph/ops/reshape.hpp"
+#include "ngraph/runtime/parameterized_tensor_view.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
-namespace op {
+namespace runtime {
+namespace {
 
-PYBIND11_MODULE(Reshape, mod) {
+template <typename ET>
+static void declareParameterizedTensorView(py::module & mod, std::string const & suffix) {
+    using Class = ParameterizedTensorView<ET>;
+    using PyClass = py::class_<Class, std::shared_ptr<Class>, TensorView>;
 
-    py::module::import("wrapper.ngraph.ops.Op");
+    PyClass cls(mod, ("ParameterizedTensorView" + suffix).c_str());
+    cls.def("write", (void (Class::*) (const void*, size_t, size_t)) &Class::write);
+    cls.def("read", &Class::read);
+}
 
-    using AxisVector = std::vector<size_t>;
+}
 
-    py::class_<Reshape, std::shared_ptr<Reshape>, RequiresTensorViewArgs> reshape(mod, "Reshape");
-    reshape.def(py::init<const std::shared_ptr<ngraph::Node>&, const AxisVector&,
-                         const ngraph::Shape& >());
+PYBIND11_MODULE(ParameterizedTensorView, mod) {
+
+    py::module::import("nwrapper.ngraph.runtime.TensorView");
+
+    py::module::import("nwrapper.ngraph.types.TraitedType");
+
+    declareParameterizedTensorView<ngraph::element::TraitedType<float>>(mod, "F");
 }
 
 }}  // ngraph

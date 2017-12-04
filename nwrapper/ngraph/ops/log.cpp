@@ -8,27 +8,25 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either logress or implied.
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
-#include "ngraph/ops/broadcast.hpp"
+#include "ngraph/ops/log.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
 namespace op {
 
-PYBIND11_MODULE(Broadcast, mod) {
+PYBIND11_MODULE(Log, mod) {
 
-    py::module::import("wrapper.ngraph.ops.Op");
-    using AxisSet = std::set<size_t>;
- 
-    py::class_<Broadcast, std::shared_ptr<Broadcast>, RequiresTensorViewArgs> broadcast(mod, "Broadcast");
-    broadcast.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&,
-                           const AxisSet& >());
+    py::module::import("nwrapper.ngraph.ops.Op");
+
+    py::class_<Log, std::shared_ptr<Log>, UnaryElementwiseArithmetic> log(mod, "Log");
+    log.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 
 }}  // ngraph
