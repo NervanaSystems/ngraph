@@ -129,6 +129,6 @@ void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints,
     adjoints.add_delta(x,
                        std::make_shared<op::ReplaceSlice>(
                            delta, zeros_shaped_like_y, m_lower_bounds, m_upper_bounds, m_strides));
-    adjoints.add_delta(y,
-                       std::make_shared<op::Slice>(delta, m_lower_bounds, m_upper_bounds, m_strides));
+    adjoints.add_delta(
+        y, std::make_shared<op::Slice>(delta, m_lower_bounds, m_upper_bounds, m_strides));
 }

@@ -153,9 +153,9 @@ void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
     if (m_adjoint_map.end() == adjoint_it)
     {
         auto zeros = make_zero(x->get_outputs().at(0).get_tensor_view_type());
-        m_adjoint_map.insert(
-            {x.get(),
-             std::make_shared<op::ReplaceSlice>(zeros, delta, lower_bounds, upper_bounds, strides)});
+        m_adjoint_map.insert({x.get(),
+                              std::make_shared<op::ReplaceSlice>(
+                                  zeros, delta, lower_bounds, upper_bounds, strides)});
     }
     else
     {

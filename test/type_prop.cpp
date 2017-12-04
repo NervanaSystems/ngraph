@@ -1251,10 +1251,9 @@ TEST(type_prop, slice_deduce_vector_invalid_strides)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Number of strides provided for slice does not match number of input axes"));
+        EXPECT_EQ(error.what(),
+                  std::string(
+                      "Number of strides provided for slice does not match number of input axes"));
     }
     catch (...)
     {
@@ -1625,10 +1624,9 @@ TEST(type_prop, replace_slice_deduce_vector_invalid_strides)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Number of strides provided for slice does not match number of input axes"));
+        EXPECT_EQ(error.what(),
+                  std::string(
+                      "Number of strides provided for slice does not match number of input axes"));
     }
     catch (...)
     {
