@@ -716,8 +716,8 @@ TEST(${BACKEND_NAME}, dot1d)
     auto shape = Shape{4};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
     auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto shape_r = Shape{1};
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto shape_r = Shape{};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
