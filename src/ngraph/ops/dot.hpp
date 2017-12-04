@@ -51,12 +51,6 @@ namespace ngraph
         /// | ---------------------- | ---------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathtt{arg0} \cdot \mathtt{arg1}[i_1,\dots,i_n]\f$. |
         ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
-        ///
         /// # Case 2: Vector-tensor product
         ///
         /// ## Inputs
@@ -74,12 +68,6 @@ namespace ngraph
         /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \Sigma_{0 \le k < d}(\mathtt{arg0}[k] \cdot \mathtt{arg1}[i_1,\dots,i_n,k])\f$. |
         ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
-        ///
         /// # Case 3: Tensor-tensor product
         ///
         /// ## Inputs
@@ -96,12 +84,6 @@ namespace ngraph
         /// | Type                                                  | Description                                                                                                                                                                          |
         /// | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
         /// | \f$E[d_1,\dots,d_{n-1},d'_1,\dots,d'_{m-2},d'_{m}]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_{n-1},j_1,\dots,j_{m-2},j_m] = \Sigma_{0 \le k < d_n}(\texttt{arg0}[i_1,\dots,i_{n-1},k] \cdot \texttt{arg1}[j_1,\dots,j_{n-2},k,j_n])\f$ |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
         class Dot : public RequiresTensorViewArgs
         {
         public:

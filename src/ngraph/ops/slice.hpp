@@ -46,12 +46,6 @@ namespace ngraph
         /// | Type                                                                           | Description                       |
         /// | ------------------------------------------------------------------------------ | --------------------------------- |
         /// | \f$E[d'_1,\dots,d'_n]\f$ where \f$d'_i = \lceil(u_i - l_i)\, /\, s_i\rceil\f$. | The tensor sliced from the input. |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
         class Slice : public RequiresTensorViewArgs
         {
         public:

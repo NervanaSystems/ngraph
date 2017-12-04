@@ -25,6 +25,8 @@ namespace ngraph
     {
         namespace kernel
         {
+            // NOTE: Execution throws `std::range_error` if either a non-integral value or an out-of-bounds
+            // value is detected in the input tensor.
             template <typename T>
             void one_hot(
                 T* arg, T* out, const Shape& in_shape, const Shape& out_shape, size_t one_hot_axis)

@@ -62,12 +62,6 @@ namespace ngraph
         /// | Type                   | Description                                                           |
         /// | ---------------------- | --------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | A constant tensor with the specified element type, shape, and values. |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
         template <typename T>
         class ParameterizedConstant : public ConstantBase
         {
@@ -140,12 +134,6 @@ namespace ngraph
         /// | Type                   | Description                                                           |
         /// | ---------------------- | --------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | A constant tensor with the specified element type, shape, and values. |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
         class Constant : public ConstantBase
         {
         public:

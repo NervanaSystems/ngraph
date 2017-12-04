@@ -57,12 +57,6 @@ namespace ngraph
         /// | Type                                                         | Description                                                                                     |
         /// | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_{a-1},\Sigma_i(d^i_a),d_{a+1},\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T\f$ is the concatenation of the input tensors along axis \f$a\f$. |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
         class Concat : public RequiresTensorViewArgs
         {
         public:

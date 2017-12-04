@@ -39,12 +39,6 @@ namespace ngraph
         /// | Type    | Description                                                                                                                 |
         /// | ------- | --------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$T\f$ | The value of the parameter, supplied by the `FunctionCall` to this function or in the initial `ngraph::runtime::CallFrame`. |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
         class Parameter : public Node
         {
         protected:
