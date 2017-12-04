@@ -761,6 +761,108 @@ TEST(${BACKEND_NAME}, dot2d)
     ASSERT_EQ((vector<float>{19, 22, 43, 50}), result->get_vector<float>());
 }
 
+//
+// Here is what numpy does:
+//
+// >>> a = linspace(1,2*2*2,2*2*2)
+// >>> b = linspace(1,2*2*2,2*2*2)
+//
+// >>> a.shape=(2,2,2)
+// >>> b.shape=(2,2,2)
+//
+// >>> tensordot(a,b,axes=([2],[1]))
+// array([[[[   7.,   10.],
+//          [  19.,   22.]],
+//
+//         [[  15.,   22.],
+//          [  43.,   50.]]],
+//
+//
+//        [[[  23.,   34.],
+//          [  67.,   78.]],
+//
+//         [[  31.,   46.],
+//          [  91.,  106.]]]])
+//
+TEST(${BACKEND_NAME}, dot3d_3d)
+{
+    auto shape = Shape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto shape_r = Shape{2, 2, 2, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(b, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{7, 10, 19, 22, 15, 22, 43, 50, 23, 34, 67, 78, 31, 46, 91, 106}),
+              result->get_vector<float>());
+}
+
+//
+// Here is what numpy does:
+//
+// >>> from numpy import *
+// >>> a = linspace(0,4*2*3-1,4*2*3)
+// >>> b = linspace(0,3*4-1,3*4)
+//
+// >>> a.shape=(4,2,3)
+// >>> b.shape=(3,4)
+//
+// >>> tensordot(a,b,axes=([2],[0]))
+// array([[[  20.,   23.,   26.,   29.],
+//         [  56.,   68.,   80.,   92.]],
+//
+//        [[  92.,  113.,  134.,  155.],
+//         [ 128.,  158.,  188.,  218.]],
+//
+//        [[ 164.,  203.,  242.,  281.],
+//         [ 200.,  248.,  296.,  344.]],
+//
+//        [[ 236.,  293.,  350.,  407.],
+//         [ 272.,  338.,  404.,  470.]]])
+//
+TEST(${BACKEND_NAME}, dot3d_2d)
+{
+    auto shape_a = Shape{4, 2, 3};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto shape_b = Shape{3, 4};
+    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto shape_r = Shape{4, 2, 4};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, vector<float>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                               12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23});
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{20,  23,  26,  29,  56,  68,  80,  92,  92,  113, 134,
+                             155, 128, 158, 188, 218, 164, 203, 242, 281, 200, 248,
+                             296, 344, 236, 293, 350, 407, 272, 338, 404, 470}),
+              result->get_vector<float>());
+}
+
 TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
 {
     auto shape_a = Shape{};

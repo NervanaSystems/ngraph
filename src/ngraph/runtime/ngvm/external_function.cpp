@@ -71,9 +71,6 @@
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/runtime/ngvm/eigen/dot.hpp"
-#include "ngraph/runtime/ngvm/eigen/matrix_mult.hpp"
-#include "ngraph/runtime/ngvm/eigen/matrix_vector_product.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/ngvm/instruction/abs.hpp"
 #include "ngraph/runtime/ngvm/instruction/acos.hpp"
@@ -91,6 +88,7 @@
 #include "ngraph/runtime/ngvm/instruction/cos.hpp"
 #include "ngraph/runtime/ngvm/instruction/cosh.hpp"
 #include "ngraph/runtime/ngvm/instruction/divide.hpp"
+#include "ngraph/runtime/ngvm/instruction/dot.hpp"
 #include "ngraph/runtime/ngvm/instruction/equal.hpp"
 #include "ngraph/runtime/ngvm/instruction/exp.hpp"
 #include "ngraph/runtime/ngvm/instruction/floor.hpp"
@@ -535,6 +533,12 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto arg1_shape = arg1_tensor_type->get_shape();
             auto& arg0_element_type = arg0_tensor_type->get_element_type();
 
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+
+            auto result_shape = result_tensor_type->get_shape();
+
             // If arg0 or arg1 is a scalar, emit a scalar-tensor product.
             if (arg0_shape.size() == 0)
             {
@@ -555,42 +559,54 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                                      out[0]);
             }
 
-            // If arg0 and arg1 are both vectors, emit a dot product.
+            // If arg0 and arg1 are both vectors, dot both on axis 0.
             else if (arg0_shape.size() == 1 && arg1_shape.size() == 1)
             {
                 PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
                                                      "Dot has unhandled element type",
-                                                     eigen::DotInstruction,
+                                                     instruction::DotInstruction,
                                                      in[0],
                                                      in[1],
-                                                     out[0]);
+                                                     out[0],
+                                                     arg0_shape,
+                                                     arg1_shape,
+                                                     result_shape,
+                                                     0,
+                                                     0);
             }
 
-            // If arg0 is a matrix and arg1 is a vector, emit a matrix-vector product.
+            // If arg0 is a matrix and arg1 is a vector, dot on axes 1 and 0 respectively.
             else if (arg0_shape.size() == 2 && arg1_shape.size() == 1)
             {
                 PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
                                                      "Dot has unhandled element type",
-                                                     eigen::MatrixVectorProductInstruction,
+                                                     instruction::DotInstruction,
                                                      in[0],
                                                      in[1],
-                                                     out[0]);
+                                                     out[0],
+                                                     arg0_shape,
+                                                     arg1_shape,
+                                                     result_shape,
+                                                     1,
+                                                     0);
             }
 
-            // If arg0 and arg1 are both matrices, emit a matrix product.
-            else if (arg0_shape.size() == 2 && arg1_shape.size() == 2)
+            // If arg0 is rank n and arg1 is rank m, dot on axes n-1 and m-2, respectively.
+            //
+            // Note that this happens to handle the vector-matrix and matrix-matrix cases.
+            else
             {
                 PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
                                                      "Dot has unhandled element type",
-                                                     eigen::MatrixMultInstruction,
+                                                     instruction::DotInstruction,
                                                      in[0],
                                                      in[1],
-                                                     out[0]);
-            }
-
-            else
-            {
-                throw ngraph_error("Dot product for tensors with rank>2 not implemented yet.");
+                                                     out[0],
+                                                     arg0_shape,
+                                                     arg1_shape,
+                                                     result_shape,
+                                                     arg0_shape.size() - 1,
+                                                     arg1_shape.size() - 2);
             }
         };
 
