@@ -25,6 +25,7 @@
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -62,6 +63,7 @@
 #include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/kernel/power.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
+#include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
 #include "ngraph/runtime/kernel/scalar_tensor_product.hpp"
 #include "ngraph/runtime/kernel/select.hpp"
@@ -581,6 +583,18 @@ private:
         // {
         //     // node = make_shared<op::Remainder>(args[0], args[1]);
         // }
+        else if (node_op == "ReplaceSlice")
+        {
+            const op::ReplaceSlice* slice = static_cast<const op::ReplaceSlice*>(&node);
+            kernel::replace_slice<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                     reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                     reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                     args[1]->get_shape(),
+                                     slice->get_lower_bounds(),
+                                     slice->get_upper_bounds(),
+                                     slice->get_strides(),
+                                     out[0]->get_shape());
+        }
         else if (node_op == "Reshape")
         {
             ngraph::op::Reshape* reshape = dynamic_cast<ngraph::op::Reshape*>(&node);
@@ -619,23 +633,6 @@ private:
         else if (node_op == "Slice")
         {
             const op::Slice* slice = static_cast<const op::Slice*>(&node);
-
-            // auto arg_type = slice->get_arguments().at(0)->get_value_type();
-            // auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
-            // assert(nullptr != arg_tensor_view_type);
-            // auto arg_shape = arg_tensor_view_type->get_shape();
-            // auto& arg_element_type = arg_tensor_view_type->get_element_type();
-
-            // auto result_type = slice->get_value_type();
-            // auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
-            // assert(nullptr != result_tensor_view_type);
-            // auto result_shape = result_tensor_view_type->get_shape();
-
-            // auto& lower_bounds = slice->get_lower_bounds();
-            // auto& upper_bounds = slice->get_upper_bounds();
-
-            // auto& strides = slice->get_strides();
-
             kernel::slice<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
                              args[0]->get_shape(),
