@@ -21,13 +21,15 @@ pip install -e .
 
 Download the required version of private-ngraph-cpp and install it.
 ```
-Clone the private-ngraph-cpp repo
-Checkout the commit 3a59991eb6c84572284b2aa444d89877b7b690b0
-Installing it : https://github.com/NervanaSystems/private-ngraph-cpp 
+git clone https://github.com/NervanaSystems/private-ngraph-cpp.git
+cd private-ngraph-cpp
+git checkout 3a59991eb6c84572284b2aa444d89877b7b690b0 -b "local branch name"
+Build and Install it : https://github.com/NervanaSystems/private-ngraph-cpp#steps
 ```
 
 ###ngraph-neon
-After installing pybind and private-ngraph-cpp, follow the steps below to install ngraph-neon
+
+After installing pybind and private-ngraph-cpp, follow the steps below to install ngraph-neon.
 The NGRAPH_CPP_BUILD_PATH is set to default installation location of private-ngraph-cpp.
 ```
 git clone https://github.com/NervanaSystems/ngraph-neon.git
