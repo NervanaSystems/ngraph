@@ -54,20 +54,27 @@ View::View(const Shape& source_space_shape,
     std::generate(all_axes.begin(), all_axes.end(), [&n]() -> size_t { return n++; });
     assert(std::is_permutation(all_axes.begin(), all_axes.end(), source_axis_order.begin()));
 
-    assert(std::all_of(all_axes.begin(), all_axes.end(), [source_space_shape, source_start_corner](size_t i) {
-        return (source_start_corner[i] < source_space_shape[i] || (source_start_corner[i] == 0 && source_space_shape[i] == 0));
-    }));
-    assert(std::all_of(all_axes.begin(), all_axes.end(), [source_space_shape, source_end_corner](size_t i) {
-        return (source_end_corner[i] <= source_space_shape[i]);
-    }));
-    assert(std::all_of(all_axes.begin(), all_axes.end(), [source_start_corner, source_end_corner](size_t i) {
-        return (source_start_corner[i] <= source_end_corner[i]);
-    }));
-    assert(std::all_of(source_strides.begin(), source_strides.end(), [](size_t x) { return x > 0; }));
+    assert(std::all_of(
+        all_axes.begin(), all_axes.end(), [source_space_shape, source_start_corner](size_t i) {
+            return (source_start_corner[i] < source_space_shape[i] ||
+                    (source_start_corner[i] == 0 && source_space_shape[i] == 0));
+        }));
+    assert(std::all_of(
+        all_axes.begin(), all_axes.end(), [source_space_shape, source_end_corner](size_t i) {
+            return (source_end_corner[i] <= source_space_shape[i]);
+        }));
+    assert(std::all_of(
+        all_axes.begin(), all_axes.end(), [source_start_corner, source_end_corner](size_t i) {
+            return (source_start_corner[i] <= source_end_corner[i]);
+        }));
+    assert(
+        std::all_of(source_strides.begin(), source_strides.end(), [](size_t x) { return x > 0; }));
 
     for (size_t axis = 0; axis < m_n_axes; axis++)
     {
-        m_virtual_shape.push_back(ceil_div(source_end_corner[source_axis_order[axis]] - source_start_corner[source_axis_order[axis]], source_strides[source_axis_order[axis]]));
+        m_virtual_shape.push_back(ceil_div(source_end_corner[source_axis_order[axis]] -
+                                               source_start_corner[source_axis_order[axis]],
+                                           source_strides[source_axis_order[axis]]));
     }
 }
 
@@ -97,7 +104,9 @@ Strides default_source_strides(size_t n_axes)
     return AxisVector(n_axes, 1);
 }
 
-View::View(const Shape& source_space_shape, const Coordinate& source_start_corner, const Coordinate& source_end_corner)
+View::View(const Shape& source_space_shape,
+           const Coordinate& source_start_corner,
+           const Coordinate& source_end_corner)
     : View(source_space_shape,
            source_start_corner,
            source_end_corner,

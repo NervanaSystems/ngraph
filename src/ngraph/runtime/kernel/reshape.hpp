@@ -37,11 +37,7 @@ namespace ngraph
                 Shape in_start_corner(in_shape.size(), 0); // (0,...0)
                 Shape in_strides(in_shape.size(), 1);      // (1,...,1)
 
-                View input_view(in_shape,
-                                in_start_corner,
-                                in_shape,
-                                in_strides,
-                                in_axis_order);
+                View input_view(in_shape, in_start_corner, in_shape, in_strides, in_axis_order);
 
                 View output_view(out_shape);
                 View::Iterator output_it = output_view.begin();
