@@ -17,6 +17,7 @@ set (SRC
     builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
     common.cpp
+    coordinate_transform.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
     descriptor/layout/tensor_view_layout.cpp
@@ -96,7 +97,6 @@ set (SRC
     types/element_type.cpp
     types/type.cpp
     util.cpp
-    view.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)

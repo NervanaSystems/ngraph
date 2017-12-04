@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/common.hpp"
-#include "ngraph/view.hpp"
+#include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
 {
@@ -32,22 +32,24 @@ namespace ngraph
                          const AxisVector& in_axis_order,
                          const Shape& out_shape)
             {
-                // Unfortunately we don't yet have a constructor for View that lets us pass only source_space_shape
+                // Unfortunately we don't yet have a constructor for CoordinateTransform that lets us pass only source_space_shape
                 // and source_axis_order so we have to construct the defaults here.
                 Shape in_start_corner(in_shape.size(), 0); // (0,...0)
                 Shape in_strides(in_shape.size(), 1);      // (1,...,1)
 
-                View input_view(in_shape, in_start_corner, in_shape, in_strides, in_axis_order);
+                CoordinateTransform input_transform(
+                    in_shape, in_start_corner, in_shape, in_strides, in_axis_order);
 
-                View output_view(out_shape);
-                View::Iterator output_it = output_view.begin();
+                CoordinateTransform output_transform(out_shape);
+                CoordinateTransform::Iterator output_it = output_transform.begin();
 
-                for (Coordinate input_coord : input_view)
+                for (Coordinate input_coord : input_transform)
                 {
                     Coordinate output_coord = *output_it;
                     ++output_it;
 
-                    out[output_view.index(output_coord)] = arg[input_view.index(input_coord)];
+                    out[output_transform.index(output_coord)] =
+                        arg[input_transform.index(input_coord)];
                 }
             }
         }

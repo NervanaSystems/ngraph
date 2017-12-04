@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/common.hpp"
-#include "ngraph/view.hpp"
+#include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
 {
@@ -34,17 +34,17 @@ namespace ngraph
                        const Strides& strides,
                        const Shape& out_shape)
             {
-                View input_view(arg_shape, lower_bounds, upper_bounds, strides);
-                View output_view(out_shape);
+                CoordinateTransform input_transform(arg_shape, lower_bounds, upper_bounds, strides);
+                CoordinateTransform output_transform(out_shape);
 
-                View::Iterator output_it = output_view.begin();
+                CoordinateTransform::Iterator output_it = output_transform.begin();
 
-                for (Coordinate in_coord : input_view)
+                for (Coordinate in_coord : input_transform)
                 {
                     Coordinate out_coord = *output_it;
                     ++output_it;
 
-                    out[output_view.index(out_coord)] = arg[input_view.index(in_coord)];
+                    out[output_transform.index(out_coord)] = arg[input_transform.index(in_coord)];
                 }
             }
         }

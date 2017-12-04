@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/common.hpp"
-#include "ngraph/view.hpp"
+#include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
 {
@@ -34,20 +34,20 @@ namespace ngraph
                         const AxisSet& reduction_axes,
                         std::function<T(T, T)> reduction_function)
             {
-                View output_view(out_shape);
+                CoordinateTransform output_transform(out_shape);
 
-                for (Coordinate output_coord : output_view)
+                for (Coordinate output_coord : output_transform)
                 {
-                    out[output_view.index(output_coord)] = *arg1;
+                    out[output_transform.index(output_coord)] = *arg1;
                 }
 
-                View input_view(in_shape);
+                CoordinateTransform input_transform(in_shape);
 
-                for (Coordinate input_coord : input_view)
+                for (Coordinate input_coord : input_transform)
                 {
                     Coordinate output_coord = project_coordinate(input_coord, reduction_axes);
-                    size_t input_index = input_view.index(input_coord);
-                    size_t output_index = output_view.index(output_coord);
+                    size_t input_index = input_transform.index(input_coord);
+                    size_t output_index = output_transform.index(output_coord);
 
                     out[output_index] = reduction_function(out[output_index], arg0[input_index]);
                 }

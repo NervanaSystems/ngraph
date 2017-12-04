@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/common.hpp"
-#include "ngraph/view.hpp"
+#include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
 {
@@ -32,20 +32,20 @@ namespace ngraph
                 T* arg, T* out, const Shape& in_shape, const Shape& out_shape, size_t one_hot_axis)
             {
                 // Step 1: Zero out the output.
-                View output_view(out_shape);
+                CoordinateTransform output_transform(out_shape);
 
-                for (Coordinate output_coord : output_view)
+                for (Coordinate output_coord : output_transform)
                 {
-                    out[output_view.index(output_coord)] = 0;
+                    out[output_transform.index(output_coord)] = 0;
                 }
 
                 // Step 2: Write ones at needed positions, throwing exceptions when invalid conditions
                 // are encountered.
-                View input_view(in_shape);
+                CoordinateTransform input_transform(in_shape);
 
-                for (Coordinate input_coord : input_view)
+                for (Coordinate input_coord : input_transform)
                 {
-                    T val = arg[input_view.index(input_coord)];
+                    T val = arg[input_transform.index(input_coord)];
 
                     if (std::floor(val) < val || std::floor(val) > val)
                     {
@@ -62,7 +62,7 @@ namespace ngraph
                     Coordinate one_hot_coord =
                         inject_coordinate(input_coord, one_hot_axis, one_hot_pos);
 
-                    out[output_view.index(one_hot_coord)] = 1;
+                    out[output_transform.index(one_hot_coord)] = 1;
                 }
             }
         }

@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/common.hpp"
-#include "ngraph/view.hpp"
+#include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
 {
@@ -32,14 +32,15 @@ namespace ngraph
                            const Shape& out_shape,
                            const AxisSet& broadcast_axes)
             {
-                View input_view(in_shape);
-                View output_view(out_shape);
+                CoordinateTransform input_transform(in_shape);
+                CoordinateTransform output_transform(out_shape);
 
-                for (Coordinate output_coord : output_view)
+                for (Coordinate output_coord : output_transform)
                 {
                     Coordinate input_coord = project_coordinate(output_coord, broadcast_axes);
 
-                    out[output_view.index(output_coord)] = arg[input_view.index(input_coord)];
+                    out[output_transform.index(output_coord)] =
+                        arg[input_transform.index(input_coord)];
                 }
             }
         }

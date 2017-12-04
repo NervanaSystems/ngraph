@@ -13,7 +13,6 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/common.hpp"
-#include "ngraph/view.hpp"
 
 using namespace ngraph;
 

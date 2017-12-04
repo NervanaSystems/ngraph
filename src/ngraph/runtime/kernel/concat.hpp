@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/common.hpp"
-#include "ngraph/view.hpp"
+#include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
 {
@@ -48,15 +48,16 @@ namespace ngraph
                     out_end_coord[concatenation_axis] =
                         concatenation_pos + in_shapes[i][concatenation_axis];
 
-                    View input_view(in_shapes[i]);
-                    View output_chunk_view(out_shape, out_start_coord, out_end_coord);
+                    CoordinateTransform input_transform(in_shapes[i]);
+                    CoordinateTransform output_chunk_transform(
+                        out_shape, out_start_coord, out_end_coord);
 
-                    View::Iterator output_chunk_it = output_chunk_view.begin();
+                    CoordinateTransform::Iterator output_chunk_it = output_chunk_transform.begin();
 
-                    for (Coordinate input_coord : input_view)
+                    for (Coordinate input_coord : input_transform)
                     {
-                        size_t input_index = input_view.index(input_coord);
-                        size_t output_chunk_index = output_chunk_view.index(*output_chunk_it);
+                        size_t input_index = input_transform.index(input_coord);
+                        size_t output_chunk_index = output_chunk_transform.index(*output_chunk_it);
                         ++output_chunk_it;
 
                         out[output_chunk_index] = args[i][input_index];

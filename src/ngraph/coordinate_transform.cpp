@@ -19,8 +19,8 @@
 #include <vector>
 
 #include "ngraph/common.hpp"
+#include "ngraph/coordinate_transform.hpp"
 #include "ngraph/except.hpp"
-#include "ngraph/view.hpp"
 
 using namespace ngraph;
 
@@ -30,11 +30,11 @@ inline T ceil_div(T x, T y)
     return (x == 0 ? 0 : (1 + (x - 1) / y));
 }
 
-View::View(const Shape& source_space_shape,
-           const Coordinate& source_start_corner,
-           const Coordinate& source_end_corner,
-           const Strides& source_strides,
-           const AxisVector& source_axis_order)
+CoordinateTransform::CoordinateTransform(const Shape& source_space_shape,
+                                         const Coordinate& source_start_corner,
+                                         const Coordinate& source_end_corner,
+                                         const Strides& source_strides,
+                                         const AxisVector& source_axis_order)
     : m_source_space_shape(source_space_shape)
     , m_source_start_corner(source_start_corner)
     , m_source_end_corner(source_end_corner)
@@ -129,15 +129,15 @@ AxisVector default_axis_order(size_t n_axes)
     return result;
 }
 
-View::View(const Shape& source_space_shape,
-           const Coordinate& source_start_corner,
-           const Coordinate& source_end_corner,
-           const Strides& source_strides)
-    : View(source_space_shape,
-           source_start_corner,
-           source_end_corner,
-           source_strides,
-           default_axis_order(source_space_shape.size()))
+CoordinateTransform::CoordinateTransform(const Shape& source_space_shape,
+                                         const Coordinate& source_start_corner,
+                                         const Coordinate& source_end_corner,
+                                         const Strides& source_strides)
+    : CoordinateTransform(source_space_shape,
+                          source_start_corner,
+                          source_end_corner,
+                          source_strides,
+                          default_axis_order(source_space_shape.size()))
 {
 }
 
@@ -146,14 +146,14 @@ Strides default_source_strides(size_t n_axes)
     return AxisVector(n_axes, 1);
 }
 
-View::View(const Shape& source_space_shape,
-           const Coordinate& source_start_corner,
-           const Coordinate& source_end_corner)
-    : View(source_space_shape,
-           source_start_corner,
-           source_end_corner,
-           default_source_strides(source_space_shape.size()),
-           default_axis_order(source_space_shape.size()))
+CoordinateTransform::CoordinateTransform(const Shape& source_space_shape,
+                                         const Coordinate& source_start_corner,
+                                         const Coordinate& source_end_corner)
+    : CoordinateTransform(source_space_shape,
+                          source_start_corner,
+                          source_end_corner,
+                          default_source_strides(source_space_shape.size()),
+                          default_axis_order(source_space_shape.size()))
 {
 }
 
@@ -167,17 +167,17 @@ Coordinate default_source_end_corner(const Shape& source_space_shape)
     return source_space_shape;
 }
 
-View::View(const Shape& source_space_shape)
-    : View(source_space_shape,
-           default_source_start_corner(source_space_shape.size()),
-           default_source_end_corner(source_space_shape),
-           default_source_strides(source_space_shape.size()),
-           default_axis_order(source_space_shape.size()))
+CoordinateTransform::CoordinateTransform(const Shape& source_space_shape)
+    : CoordinateTransform(source_space_shape,
+                          default_source_start_corner(source_space_shape.size()),
+                          default_source_end_corner(source_space_shape),
+                          default_source_strides(source_space_shape.size()),
+                          default_axis_order(source_space_shape.size()))
 {
 }
 
 // Compute the index of a source-space coordinate in the buffer.
-size_t View::index_source(const Coordinate& c) const
+size_t CoordinateTransform::index_source(const Coordinate& c) const
 {
     size_t index = 0;
     size_t stride = 1;
@@ -192,17 +192,17 @@ size_t View::index_source(const Coordinate& c) const
 }
 
 // Compute the index of a target-space coordinate in thebuffer.
-size_t View::index(const Coordinate& c) const
+size_t CoordinateTransform::index(const Coordinate& c) const
 {
     return index_source(to_source_coordinate(c));
 }
 
 // Convert a target-space coordinate to a source-space coordinate.
-Coordinate View::to_source_coordinate(const Coordinate& c) const
+Coordinate CoordinateTransform::to_source_coordinate(const Coordinate& c) const
 {
     if (c.size() != m_n_axes)
     {
-        throw std::domain_error("Coordinate rank does not match the view rank");
+        throw std::domain_error("Coordinate rank does not match the coordinate transform rank");
     }
 
     Coordinate result(c.size());
@@ -217,7 +217,7 @@ Coordinate View::to_source_coordinate(const Coordinate& c) const
 }
 
 // Check if a coordinate is in bounds of the target space.
-bool View::in_bounds(const Coordinate& c) const
+bool CoordinateTransform::in_bounds(const Coordinate& c) const
 {
     if (c.size() != m_n_axes)
     {
@@ -235,13 +235,13 @@ bool View::in_bounds(const Coordinate& c) const
     return true;
 }
 
-Coordinate View::get_target_shape() const
+Coordinate CoordinateTransform::get_target_shape() const
 {
     return m_target_shape;
 }
 
 // The "is_end" parameter is true if we want the "end()" iterator.
-View::Iterator::Iterator(const Shape& target_shape, bool is_end)
+CoordinateTransform::Iterator::Iterator(const Shape& target_shape, bool is_end)
     : m_target_shape(target_shape)
 {
     // Initial coordinate is (0,...,0) in the target space.
@@ -263,7 +263,7 @@ View::Iterator::Iterator(const Shape& target_shape, bool is_end)
     m_oob = is_end || m_empty;
 }
 
-void View::Iterator::operator++()
+void CoordinateTransform::Iterator::operator++()
 {
     // If we are out of bounds, start over at (0,...0). (TODO: not sure if that's what we want. It might be best to stay put?)
     if (m_oob)
@@ -293,17 +293,17 @@ void View::Iterator::operator++()
     m_oob = true;
 }
 
-Coordinate View::Iterator::operator*()
+Coordinate CoordinateTransform::Iterator::operator*()
 {
     return m_coordinate;
 }
 
-bool View::Iterator::operator!=(const Iterator& it)
+bool CoordinateTransform::Iterator::operator!=(const Iterator& it)
 {
     return !(*this == it);
 }
 
-bool View::Iterator::operator==(const Iterator& it)
+bool CoordinateTransform::Iterator::operator==(const Iterator& it)
 {
     if (m_target_shape != it.m_target_shape)
     {

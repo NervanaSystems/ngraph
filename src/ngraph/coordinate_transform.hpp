@@ -23,25 +23,25 @@
 
 namespace ngraph
 {
-    class View
+    class CoordinateTransform
     {
     public:
-        View(const Shape& source_shape,
-             const Coordinate& source_start_corner,
-             const Coordinate& source_end_corner,
-             const Strides& source_strides,
-             const AxisVector& source_axis_order);
+        CoordinateTransform(const Shape& source_shape,
+                            const Coordinate& source_start_corner,
+                            const Coordinate& source_end_corner,
+                            const Strides& source_strides,
+                            const AxisVector& source_axis_order);
 
-        View(const Shape& source_shape,
-             const Coordinate& source_start_corner,
-             const Coordinate& source_end_corner,
-             const Strides& source_strides);
+        CoordinateTransform(const Shape& source_shape,
+                            const Coordinate& source_start_corner,
+                            const Coordinate& source_end_corner,
+                            const Strides& source_strides);
 
-        View(const Shape& source_shape,
-             const Coordinate& source_start_corner,
-             const Coordinate& source_end_corner);
+        CoordinateTransform(const Shape& source_shape,
+                            const Coordinate& source_start_corner,
+                            const Coordinate& source_end_corner);
 
-        View(const Shape& source_space_shape);
+        CoordinateTransform(const Shape& source_space_shape);
 
         size_t index(const Coordinate& c) const;
         bool in_bounds(const Coordinate& c) const;

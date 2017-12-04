@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/common.hpp"
-#include "ngraph/view.hpp"
+#include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
 {
@@ -35,22 +35,24 @@ namespace ngraph
                      size_t arg0_dot_axis,
                      size_t arg1_dot_axis)
             {
-                View output_view(out_shape);
+                CoordinateTransform output_transform(out_shape);
 
-                for (Coordinate out_coord : output_view)
+                for (Coordinate out_coord : output_transform)
                 {
-                    out[output_view.index(out_coord)] = 0;
+                    out[output_transform.index(out_coord)] = 0;
                 }
 
-                View arg0_view(arg0_shape);
-                View arg1_view(arg1_shape);
+                CoordinateTransform arg0_transform(arg0_shape);
+                CoordinateTransform arg1_transform(arg1_shape);
 
-                View arg0_projected_view(project_shape(arg0_shape, AxisSet{arg0_dot_axis}));
-                View arg1_projected_view(project_shape(arg1_shape, AxisSet{arg1_dot_axis}));
+                CoordinateTransform arg0_projected_transform(
+                    project_shape(arg0_shape, AxisSet{arg0_dot_axis}));
+                CoordinateTransform arg1_projected_transform(
+                    project_shape(arg1_shape, AxisSet{arg1_dot_axis}));
 
-                for (Coordinate arg0_projected_coord : arg0_projected_view)
+                for (Coordinate arg0_projected_coord : arg0_projected_transform)
                 {
-                    for (Coordinate arg1_projected_coord : arg1_projected_view)
+                    for (Coordinate arg1_projected_coord : arg1_projected_transform)
                     {
                         for (size_t i = 0; i < arg0_shape[arg0_dot_axis]; i++)
                         {
@@ -69,8 +71,9 @@ namespace ngraph
                                       arg1_projected_coord.end(),
                                       out_coord.begin() + arg0_projected_coord.size());
 
-                            out[output_view.index(out_coord)] += arg0[arg0_view.index(arg0_coord)] *
-                                                                 arg1[arg1_view.index(arg1_coord)];
+                            out[output_transform.index(out_coord)] +=
+                                arg0[arg0_transform.index(arg0_coord)] *
+                                arg1[arg1_transform.index(arg1_coord)];
                         }
                     }
                 }
