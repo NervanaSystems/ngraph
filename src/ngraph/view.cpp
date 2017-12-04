@@ -13,9 +13,9 @@
 // ----------------------------------------------------------------------------
 
 #include <algorithm>
-#include <cassert>
 #include <cstdio>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 #include "ngraph/common.hpp"
@@ -43,32 +43,74 @@ View::View(const Shape& source_space_shape,
 {
     m_n_axes = source_space_shape.size();
 
-    // TODO: Replace asserts with exceptions?
-    assert(m_n_axes == source_start_corner.size());
-    assert(m_n_axes == source_end_corner.size());
-    assert(m_n_axes == source_strides.size());
-    assert(m_n_axes == source_axis_order.size());
+    if (m_n_axes != source_start_corner.size())
+    {
+        throw std::domain_error(
+            "Source start corner does not have the same number of axes as the source space shape");
+    }
+    if (m_n_axes != source_end_corner.size())
+    {
+        throw std::domain_error(
+            "Source end corner does not have the same number of axes as the source space shape");
+    }
+    if (m_n_axes != source_strides.size())
+    {
+        throw std::domain_error(
+            "Source strides do not have the same number of axes as the source space shape");
+    }
+    if (m_n_axes != source_axis_order.size())
+    {
+        // Note: this check is NOT redundant with the is_permutation check below, though you might think it is.
+        // If the lengths don't match then is_permutation won't catch that; it'll either stop short or walk off
+        // the end of source_axis_order.
+        throw std::domain_error(
+            "Source axis order does not have the same number of axes as the source space shape");
+    }
 
     AxisVector all_axes(m_n_axes);
     size_t n = 0;
     std::generate(all_axes.begin(), all_axes.end(), [&n]() -> size_t { return n++; });
-    assert(std::is_permutation(all_axes.begin(), all_axes.end(), source_axis_order.begin()));
 
-    assert(std::all_of(
-        all_axes.begin(), all_axes.end(), [source_space_shape, source_start_corner](size_t i) {
-            return (source_start_corner[i] < source_space_shape[i] ||
-                    (source_start_corner[i] == 0 && source_space_shape[i] == 0));
-        }));
-    assert(std::all_of(
-        all_axes.begin(), all_axes.end(), [source_space_shape, source_end_corner](size_t i) {
-            return (source_end_corner[i] <= source_space_shape[i]);
-        }));
-    assert(std::all_of(
-        all_axes.begin(), all_axes.end(), [source_start_corner, source_end_corner](size_t i) {
-            return (source_start_corner[i] <= source_end_corner[i]);
-        }));
-    assert(
-        std::all_of(source_strides.begin(), source_strides.end(), [](size_t x) { return x > 0; }));
+    if (!std::is_permutation(all_axes.begin(), all_axes.end(), source_axis_order.begin()))
+    {
+        throw std::domain_error(
+            "Source axis order is not a permutation of {0,...,n-1} where n is the number of axes "
+            "in the source space shape");
+    }
+
+    for (size_t i = 0; i < m_n_axes; i++)
+    {
+        if (source_start_corner[i] >= source_space_shape[i] &&
+            !(source_start_corner[i] == 0 && source_space_shape[i] == 0))
+        {
+            std::stringstream ss;
+
+            ss << "The start corner is out of bounds at axis " << i;
+            throw std::domain_error(ss.str());
+        }
+    }
+
+    for (size_t i = 0; i < m_n_axes; i++)
+    {
+        if (source_end_corner[i] > source_space_shape[i])
+        {
+            std::stringstream ss;
+
+            ss << "The end corner is out of bounds at axis " << i;
+            throw std::domain_error(ss.str());
+        }
+    }
+
+    for (size_t i = 0; i < m_n_axes; i++)
+    {
+        if (source_strides[i] == 0)
+        {
+            std::stringstream ss;
+
+            ss << "The source stride is 0 at axis " << i;
+            throw std::domain_error(ss.str());
+        }
+    }
 
     for (size_t axis = 0; axis < m_n_axes; axis++)
     {
@@ -158,7 +200,10 @@ size_t View::index(const Coordinate& c) const
 // Convert a target-space coordinate to a source-space coordinate.
 Coordinate View::to_source_coordinate(const Coordinate& c) const
 {
-    assert(c.size() == m_n_axes); // TODO: replace with exception
+    if (c.size() != m_n_axes)
+    {
+        throw std::domain_error("Coordinate rank does not match the view rank");
+    }
 
     Coordinate result(c.size());
 
