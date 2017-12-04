@@ -156,6 +156,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         {                                                                                          \
             macro(element::Float32, ##__VA_ARGS__);                                                \
         }                                                                                          \
+        else if (et == element::Float64::element_type())                                           \
+        {                                                                                          \
+            macro(element::Float64, ##__VA_ARGS__);                                                \
+        }                                                                                          \
         else if (et == element::Int8::element_type())                                              \
         {                                                                                          \
             macro(element::Int8, ##__VA_ARGS__);                                                   \
@@ -191,6 +195,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         if (et == element::Float32::element_type())                                                \
         {                                                                                          \
             macro(element::Float32, ##__VA_ARGS__);                                                \
+        }                                                                                          \
+        else if (et == element::Float64::element_type())                                           \
+        {                                                                                          \
+            macro(element::Float64, ##__VA_ARGS__);                                                \
         }                                                                                          \
         else if (et == element::Int8::element_type())                                              \
         {                                                                                          \
@@ -397,6 +405,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_CONSTANT_INSTRUCTIONS(element::Bool);
         REGISTER_CONSTANT_INSTRUCTIONS(element::Float32);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::Float64);
         REGISTER_CONSTANT_INSTRUCTIONS(element::Int8);
         REGISTER_CONSTANT_INSTRUCTIONS(element::Int32);
         REGISTER_CONSTANT_INSTRUCTIONS(element::Int64);
@@ -491,6 +500,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 #define REGISTER_CONVERTS(TI)                                                                      \
     REGISTER_CONVERT(TI, element::Bool)                                                            \
     REGISTER_CONVERT(TI, element::Float32)                                                         \
+    REGISTER_CONVERT(TI, element::Float64)                                                         \
     REGISTER_CONVERT(TI, element::Int8)                                                            \
     REGISTER_CONVERT(TI, element::Int32)                                                           \
     REGISTER_CONVERT(TI, element::Int64)                                                           \
@@ -504,6 +514,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
             REGISTER_CONVERTS(element::Bool)
             REGISTER_CONVERTS(element::Float32)
+            REGISTER_CONVERTS(element::Float64)
             REGISTER_CONVERTS(element::Int8)
             REGISTER_CONVERTS(element::Int32)
             REGISTER_CONVERTS(element::Int64)
