@@ -164,6 +164,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         {                                                                                          \
             macro(element::Int8, ##__VA_ARGS__);                                                   \
         }                                                                                          \
+        else if (et == element::Int16::element_type())                                             \
+        {                                                                                          \
+            macro(element::Int16, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
         else if (et == element::Int32::element_type())                                             \
         {                                                                                          \
             macro(element::Int32, ##__VA_ARGS__);                                                  \
@@ -175,6 +179,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         else if (et == element::UInt8::element_type())                                             \
         {                                                                                          \
             macro(element::UInt8, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
+        else if (et == element::UInt16::element_type())                                            \
+        {                                                                                          \
+            macro(element::UInt16, ##__VA_ARGS__);                                                 \
         }                                                                                          \
         else if (et == element::UInt32::element_type())                                            \
         {                                                                                          \
@@ -204,6 +212,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         {                                                                                          \
             macro(element::Int8, ##__VA_ARGS__);                                                   \
         }                                                                                          \
+        else if (et == element::Int16::element_type())                                             \
+        {                                                                                          \
+            macro(element::Int16, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
         else if (et == element::Int32::element_type())                                             \
         {                                                                                          \
             macro(element::Int32, ##__VA_ARGS__);                                                  \
@@ -215,6 +227,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         else if (et == element::UInt8::element_type())                                             \
         {                                                                                          \
             macro(element::UInt8, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
+        else if (et == element::UInt16::element_type())                                            \
+        {                                                                                          \
+            macro(element::UInt16, ##__VA_ARGS__);                                                 \
         }                                                                                          \
         else if (et == element::UInt32::element_type())                                            \
         {                                                                                          \
@@ -407,9 +423,11 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_CONSTANT_INSTRUCTIONS(element::Float32);
         REGISTER_CONSTANT_INSTRUCTIONS(element::Float64);
         REGISTER_CONSTANT_INSTRUCTIONS(element::Int8);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::Int16);
         REGISTER_CONSTANT_INSTRUCTIONS(element::Int32);
         REGISTER_CONSTANT_INSTRUCTIONS(element::Int64);
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt8);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::UInt16);
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt32);
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt64);
 
@@ -502,9 +520,11 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
     REGISTER_CONVERT(TI, element::Float32)                                                         \
     REGISTER_CONVERT(TI, element::Float64)                                                         \
     REGISTER_CONVERT(TI, element::Int8)                                                            \
+    REGISTER_CONVERT(TI, element::Int16)                                                           \
     REGISTER_CONVERT(TI, element::Int32)                                                           \
     REGISTER_CONVERT(TI, element::Int64)                                                           \
     REGISTER_CONVERT(TI, element::UInt8)                                                           \
+    REGISTER_CONVERT(TI, element::UInt16)                                                          \
     REGISTER_CONVERT(TI, element::UInt32)                                                          \
     REGISTER_CONVERT(TI, element::UInt64)
             // End hacky macro
@@ -516,9 +536,11 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             REGISTER_CONVERTS(element::Float32)
             REGISTER_CONVERTS(element::Float64)
             REGISTER_CONVERTS(element::Int8)
+            REGISTER_CONVERTS(element::Int16)
             REGISTER_CONVERTS(element::Int32)
             REGISTER_CONVERTS(element::Int64)
             REGISTER_CONVERTS(element::UInt8)
+            REGISTER_CONVERTS(element::UInt16)
             REGISTER_CONVERTS(element::UInt32)
             REGISTER_CONVERTS(element::UInt64)
             else { throw ngraph_error("Internal error: cannot convert between element types"); }
