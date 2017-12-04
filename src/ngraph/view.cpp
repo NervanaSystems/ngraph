@@ -158,7 +158,7 @@ size_t View::index(const Coordinate& c) const
 // Convert a target-space coordinate to a source-space coordinate.
 Coordinate View::to_source_coordinate(const Coordinate& c) const
 {
-    assert(c.size() == m_n_axes);
+    assert(c.size() == m_n_axes); // TODO: replace with exception
 
     Coordinate result(c.size());
 
@@ -265,7 +265,8 @@ bool View::Iterator::operator==(const Iterator& it)
         return false;
     }
 
-    // Out-of-bounds iterators are always equal.
+    // Out-of-bounds iterators are always equal; in other words, an iterator is always equal to
+    // end() even if the internally stored coordinates are different.
     if (m_oob && it.m_oob)
     {
         return true;

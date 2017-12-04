@@ -14,9 +14,10 @@
 
 #pragma once
 
+#include "ngraph/runtime/kernel/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/ngvm/eigen/utils.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/ngvm/utils.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
@@ -25,7 +26,7 @@ namespace ngraph
     {
         namespace ngvm
         {
-            namespace eigen
+            namespace instruction
             {
                 template <typename ET>
                 class ScalarTensorProductInstruction : public Instruction
@@ -42,13 +43,13 @@ namespace ngraph
 
                     virtual void execute(CallFrame& call_frame) const override
                     {
-                        // This is a bit hacky: regardless of the tensor rank we
-                        // pull it out as a vector. This works because of the way
-                        // fmt::V computes sizes---it lumps together any higher
-                        // dimensions---while fmt::M ignores them.
-                        EigenVector<ET>(call_frame, m_out) =
-                            call_frame.get_tensor_view_data<ET>(m_arg0.get_index())[0] *
-                            EigenVector<ET>(call_frame, m_arg1);
+                        typename ET::type* arg0 = get_tensor_data_ptr<ET>(call_frame, m_arg0);
+                        typename ET::type* arg1 = get_tensor_data_ptr<ET>(call_frame, m_arg1);
+                        typename ET::type* out = get_tensor_data_ptr<ET>(call_frame, m_out);
+
+                        size_t count = get_tensor_element_count(call_frame, m_arg1);
+
+                        kernel::scalar_tensor_product<typename ET::type>(arg0, arg1, out, count);
                     }
 
                 protected:

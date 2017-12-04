@@ -74,7 +74,6 @@
 #include "ngraph/runtime/ngvm/eigen/dot.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_mult.hpp"
 #include "ngraph/runtime/ngvm/eigen/matrix_vector_product.hpp"
-#include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
 #include "ngraph/runtime/ngvm/instruction/abs.hpp"
 #include "ngraph/runtime/ngvm/instruction/acos.hpp"
@@ -112,6 +111,7 @@
 #include "ngraph/runtime/ngvm/instruction/replace_slice.hpp"
 #include "ngraph/runtime/ngvm/instruction/reshape.hpp"
 #include "ngraph/runtime/ngvm/instruction/return.hpp"
+#include "ngraph/runtime/ngvm/instruction/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/instruction/select.hpp"
 #include "ngraph/runtime/ngvm/instruction/sign.hpp"
 #include "ngraph/runtime/ngvm/instruction/sin.hpp"
@@ -540,7 +540,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
                                                      "Dot has unhandled element type",
-                                                     eigen::ScalarTensorProductInstruction,
+                                                     instruction::ScalarTensorProductInstruction,
                                                      in[0],
                                                      in[1],
                                                      out[0]);
@@ -549,7 +549,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
                                                      "Dot has unhandled element type",
-                                                     eigen::ScalarTensorProductInstruction,
+                                                     instruction::ScalarTensorProductInstruction,
                                                      in[1],
                                                      in[0],
                                                      out[0]);
@@ -947,7 +947,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
         }
     }
 
-    // Now we build the eigen-VM instructions
+    // Now we build the VM instructions
     auto op_map = get_op_map();
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
