@@ -198,6 +198,7 @@ namespace ngraph
         NGRAPH_DEFINE_TRAITED_TYPE_NAME(uint8_t)
         using UInt8 = TraitedType<uint8_t>;
 
+        // x
         NGRAPH_DEFINE_TRAITED_TYPE_NAME(uint16_t)
         using UInt16 = TraitedType<uint16_t>;
 
