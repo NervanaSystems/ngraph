@@ -293,6 +293,21 @@ void CoordinateTransform::Iterator::operator++()
     m_oob = true;
 }
 
+CoordinateTransform::Iterator CoordinateTransform::Iterator::operator++(int)
+{
+    CoordinateTransform::Iterator temp = *this;
+    ++(*this);
+    return temp;
+}
+
+void CoordinateTransform::Iterator::operator+=(size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+    {
+        ++(*this);
+    }
+}
+
 Coordinate CoordinateTransform::Iterator::operator*()
 {
     return m_coordinate;

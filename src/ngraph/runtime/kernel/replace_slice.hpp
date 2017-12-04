@@ -52,8 +52,7 @@ namespace ngraph
 
                 for (Coordinate input_coord : input_transform)
                 {
-                    Coordinate output_coord = *output_it;
-                    ++output_it;
+                    Coordinate output_coord = *output_it++;
 
                     out[output_transform.index(output_coord)] =
                         arg1[input_transform.index(input_coord)];

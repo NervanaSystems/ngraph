@@ -53,6 +53,8 @@ namespace ngraph
             Iterator(const Shape& target_shape, bool is_end = false);
 
             void operator++();
+            Iterator operator++(int);
+            void operator+=(size_t n);
             Coordinate operator*();
             bool operator!=(const Iterator& it);
             bool operator==(const Iterator& it);
