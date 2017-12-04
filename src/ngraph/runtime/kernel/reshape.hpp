@@ -32,21 +32,15 @@ namespace ngraph
                          const AxisVector& in_axis_order,
                          const Shape& out_shape)
             {
-                // Unfortunately we don't yet have a constructor for View that lets us pass only space_shape
-                // and axis_walk_order so we have to construct the defaults here.
+                // Unfortunately we don't yet have a constructor for View that lets us pass only source_space_shape
+                // and source_axis_order so we have to construct the defaults here.
                 Shape in_start_corner(in_shape.size(), 0); // (0,...0)
                 Shape in_strides(in_shape.size(), 1);      // (1,...,1)
-
-                Shape in_storage_order(in_shape.size()); // (0,...,rank-1)
-                size_t n = 0;
-                std::generate(
-                    in_storage_order.begin(), in_storage_order.end(), [&n]() { return n++; });
 
                 View input_view(in_shape,
                                 in_start_corner,
                                 in_shape,
                                 in_strides,
-                                in_storage_order,
                                 in_axis_order);
 
                 View output_view(out_shape);

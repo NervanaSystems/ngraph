@@ -30,48 +30,44 @@ inline T ceil_div(T x, T y)
     return (x == 0 ? 0 : (1 + (x - 1) / y));
 }
 
-View::View(const Shape& space_shape,
-           const Coordinate& start_corner,
-           const Coordinate& end_corner,
-           const Strides& strides,
-           const AxisVector& axis_storage_order,
-           const AxisVector& axis_walk_order)
-    : m_space_shape(space_shape)
-    , m_start_corner(start_corner)
-    , m_end_corner(end_corner)
-    , m_strides(strides)
-    , m_axis_storage_order(axis_storage_order)
-    , m_axis_walk_order(axis_walk_order)
+View::View(const Shape& source_space_shape,
+           const Coordinate& source_start_corner,
+           const Coordinate& source_end_corner,
+           const Strides& source_strides,
+           const AxisVector& source_axis_order)
+    : m_source_space_shape(source_space_shape)
+    , m_source_start_corner(source_start_corner)
+    , m_source_end_corner(source_end_corner)
+    , m_source_strides(source_strides)
+    , m_source_axis_order(source_axis_order)
 {
-    m_n_axes = space_shape.size();
+    m_n_axes = source_space_shape.size();
 
     // In the real thing we won't use assert.
-    assert(m_n_axes == start_corner.size());
-    assert(m_n_axes == end_corner.size());
-    assert(m_n_axes == strides.size());
-    assert(m_n_axes == axis_storage_order.size());
-    assert(m_n_axes == axis_walk_order.size());
+    assert(m_n_axes == source_start_corner.size());
+    assert(m_n_axes == source_end_corner.size());
+    assert(m_n_axes == source_strides.size());
+    assert(m_n_axes == source_axis_order.size());
 
     AxisVector all_axes(m_n_axes);
     size_t n = 0;
     std::generate(all_axes.begin(), all_axes.end(), [&n]() -> size_t { return n++; });
-    assert(std::is_permutation(all_axes.begin(), all_axes.end(), axis_storage_order.begin()));
-    assert(std::is_permutation(all_axes.begin(), all_axes.end(), axis_walk_order.begin()));
+    assert(std::is_permutation(all_axes.begin(), all_axes.end(), source_axis_order.begin()));
 
-    assert(std::all_of(all_axes.begin(), all_axes.end(), [space_shape, start_corner](size_t i) {
-        return (start_corner[i] < space_shape[i] || (start_corner[i] == 0 && space_shape[i] == 0));
+    assert(std::all_of(all_axes.begin(), all_axes.end(), [source_space_shape, source_start_corner](size_t i) {
+        return (source_start_corner[i] < source_space_shape[i] || (source_start_corner[i] == 0 && source_space_shape[i] == 0));
     }));
-    assert(std::all_of(all_axes.begin(), all_axes.end(), [space_shape, end_corner](size_t i) {
-        return (end_corner[i] <= space_shape[i]);
+    assert(std::all_of(all_axes.begin(), all_axes.end(), [source_space_shape, source_end_corner](size_t i) {
+        return (source_end_corner[i] <= source_space_shape[i]);
     }));
-    assert(std::all_of(all_axes.begin(), all_axes.end(), [start_corner, end_corner](size_t i) {
-        return (start_corner[i] <= end_corner[i]);
+    assert(std::all_of(all_axes.begin(), all_axes.end(), [source_start_corner, source_end_corner](size_t i) {
+        return (source_start_corner[i] <= source_end_corner[i]);
     }));
-    assert(std::all_of(strides.begin(), strides.end(), [](size_t x) { return x > 0; }));
+    assert(std::all_of(source_strides.begin(), source_strides.end(), [](size_t x) { return x > 0; }));
 
     for (size_t axis = 0; axis < m_n_axes; axis++)
     {
-        m_virtual_shape.push_back(ceil_div(end_corner[axis] - start_corner[axis], strides[axis]));
+        m_virtual_shape.push_back(ceil_div(source_end_corner[source_axis_order[axis]] - source_start_corner[source_axis_order[axis]], source_strides[source_axis_order[axis]]));
     }
 }
 
@@ -84,51 +80,48 @@ AxisVector default_axis_order(size_t n_axes)
     return result;
 }
 
-View::View(const Shape& space_shape,
-           const Coordinate& start_corner,
-           const Coordinate& end_corner,
-           const Strides& strides)
-    : View(space_shape,
-           start_corner,
-           end_corner,
-           strides,
-           default_axis_order(space_shape.size()),
-           default_axis_order(space_shape.size()))
+View::View(const Shape& source_space_shape,
+           const Coordinate& source_start_corner,
+           const Coordinate& source_end_corner,
+           const Strides& source_strides)
+    : View(source_space_shape,
+           source_start_corner,
+           source_end_corner,
+           source_strides,
+           default_axis_order(source_space_shape.size()))
 {
 }
 
-Strides default_strides(size_t n_axes)
+Strides default_source_strides(size_t n_axes)
 {
     return AxisVector(n_axes, 1);
 }
 
-View::View(const Shape& space_shape, const Coordinate& start_corner, const Coordinate& end_corner)
-    : View(space_shape,
-           start_corner,
-           end_corner,
-           default_strides(space_shape.size()),
-           default_axis_order(space_shape.size()),
-           default_axis_order(space_shape.size()))
+View::View(const Shape& source_space_shape, const Coordinate& source_start_corner, const Coordinate& source_end_corner)
+    : View(source_space_shape,
+           source_start_corner,
+           source_end_corner,
+           default_source_strides(source_space_shape.size()),
+           default_axis_order(source_space_shape.size()))
 {
 }
 
-Coordinate default_start_corner(size_t n_axes)
+Coordinate default_source_start_corner(size_t n_axes)
 {
     return Coordinate(n_axes, 0);
 }
 
-Coordinate default_end_corner(const Shape& space_shape)
+Coordinate default_source_end_corner(const Shape& source_space_shape)
 {
-    return space_shape;
+    return source_space_shape;
 }
 
-View::View(const Shape& space_shape)
-    : View(space_shape,
-           default_start_corner(space_shape.size()),
-           default_end_corner(space_shape),
-           default_strides(space_shape.size()),
-           default_axis_order(space_shape.size()),
-           default_axis_order(space_shape.size()))
+View::View(const Shape& source_space_shape)
+    : View(source_space_shape,
+           default_source_start_corner(source_space_shape.size()),
+           default_source_end_corner(source_space_shape),
+           default_source_strides(source_space_shape.size()),
+           default_axis_order(source_space_shape.size()))
 {
 }
 
@@ -140,7 +133,7 @@ size_t View::index_raw(const Coordinate& c) const
     for (size_t axis = m_n_axes; axis-- > 0;)
     {
         index += c[axis] * stride;
-        stride *= m_space_shape[axis];
+        stride *= m_source_space_shape[axis];
     }
 
     return index;
@@ -159,8 +152,8 @@ Coordinate View::to_raw(const Coordinate& c) const
 
     for (size_t axis = 0; axis < m_n_axes; axis++)
     {
-        result[axis] = c[m_axis_storage_order[axis]] * m_strides[m_axis_storage_order[axis]] +
-                       m_start_corner[m_axis_storage_order[axis]];
+        result[axis] = c[m_source_axis_order[axis]] * m_source_strides[m_source_axis_order[axis]] +
+                       m_source_start_corner[m_source_axis_order[axis]];
     }
 
     return result;
@@ -189,9 +182,8 @@ Coordinate View::get_virtual_shape() const
     return m_virtual_shape;
 }
 
-View::Iterator::Iterator(const Shape& virtual_shape, const Shape& axis_walk_order, bool is_end)
+View::Iterator::Iterator(const Shape& virtual_shape, bool is_end)
     : m_virtual_shape(virtual_shape)
-    , m_axis_walk_order(axis_walk_order)
     , m_oob(is_end)
 {
     m_coordinate = Coordinate(virtual_shape.size(), 0);
@@ -221,15 +213,15 @@ void View::Iterator::operator++()
 
     for (size_t axis = m_virtual_shape.size(); axis-- > 0;)
     {
-        m_coordinate[m_axis_walk_order[axis]]++;
+        m_coordinate[axis]++;
 
-        if (m_coordinate[m_axis_walk_order[axis]] < m_virtual_shape[m_axis_walk_order[axis]])
+        if (m_coordinate[axis] < m_virtual_shape[axis])
         {
             return;
         }
         else
         {
-            m_coordinate[m_axis_walk_order[axis]] = 0;
+            m_coordinate[axis] = 0;
         }
     }
 
@@ -249,11 +241,6 @@ bool View::Iterator::operator!=(const Iterator& it)
 bool View::Iterator::operator==(const Iterator& it)
 {
     if (m_virtual_shape != it.m_virtual_shape)
-    {
-        return false;
-    }
-
-    if (m_axis_walk_order != it.m_axis_walk_order)
     {
         return false;
     }
