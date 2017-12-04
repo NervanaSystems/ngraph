@@ -26,6 +26,7 @@
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
@@ -67,6 +68,7 @@
 #include "ngraph/runtime/kernel/sign.hpp"
 #include "ngraph/runtime/kernel/sin.hpp"
 #include "ngraph/runtime/kernel/sinh.hpp"
+#include "ngraph/runtime/kernel/slice.hpp"
 #include "ngraph/runtime/kernel/sqrt.hpp"
 #include "ngraph/runtime/kernel/subtract.hpp"
 #include "ngraph/runtime/kernel/sum.hpp"
@@ -614,13 +616,34 @@ private:
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
         }
-        // else if (node_op == "Slice")
-        // {
-        //     // auto lower_bounds = node_js.at("lower_bounds").get<vector<size_t>>();
-        //     // auto upper_bounds = node_js.at("upper_bounds").get<vector<size_t>>();
-        //     // auto step = node_js.at("step").get<vector<size_t>>();
-        //     // node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, step);
-        // }
+        else if (node_op == "Slice")
+        {
+            const op::Slice* slice = static_cast<const op::Slice*>(&node);
+
+            // auto arg_type = slice->get_arguments().at(0)->get_value_type();
+            // auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
+            // assert(nullptr != arg_tensor_view_type);
+            // auto arg_shape = arg_tensor_view_type->get_shape();
+            // auto& arg_element_type = arg_tensor_view_type->get_element_type();
+
+            // auto result_type = slice->get_value_type();
+            // auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
+            // assert(nullptr != result_tensor_view_type);
+            // auto result_shape = result_tensor_view_type->get_shape();
+
+            // auto& lower_bounds = slice->get_lower_bounds();
+            // auto& upper_bounds = slice->get_upper_bounds();
+
+            // auto& strides = slice->get_strides();
+
+            kernel::slice<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                             args[0]->get_shape(),
+                             slice->get_lower_bounds(),
+                             slice->get_upper_bounds(),
+                             slice->get_strides(),
+                             out[0]->get_shape());
+        }
         else if (node_op == "Sqrt")
         {
             kernel::sqrt<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
