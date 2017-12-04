@@ -80,10 +80,4 @@ namespace ngraph
         Shape m_target_shape;
         size_t m_n_axes;
     };
-
-    Coordinate project_coordinate(const Coordinate& coord, const AxisSet& deleted_axes);
-    Shape project_shape(const Shape& shape, const AxisSet& deleted_axes);
-
-    Coordinate inject_coordinate(const Coordinate& coord, size_t new_axis_pos, size_t new_axis_val);
-    Shape inject_shape(const Shape& shape, size_t new_axis_pos, size_t new_axis_length);
 }

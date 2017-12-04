@@ -16,6 +16,7 @@ set (SRC
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
+    common.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
     descriptor/layout/tensor_view_layout.cpp
