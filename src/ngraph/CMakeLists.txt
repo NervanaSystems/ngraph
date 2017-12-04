@@ -103,6 +103,7 @@ set (SRC
     types/element_type.cpp
     types/type.cpp
     util.cpp
+    view.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)

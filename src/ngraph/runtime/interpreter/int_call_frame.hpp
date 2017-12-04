@@ -24,6 +24,7 @@
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
@@ -463,7 +464,7 @@ private:
                 ss << "unsupported element type " << type << " op " << node.get_name();
                 throw std::runtime_error(ss.str());
             }
-            kernel::copy<T>(reinterpret_cast<const T*>(data),
+            kernel::copy<T>(reinterpret_cast<T*>(const_cast<void*>(data)),
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
         }
@@ -522,9 +523,12 @@ private:
         // }
         else if (node_op == "Reshape")
         {
+            ngraph::op::Reshape* reshape = dynamic_cast<ngraph::op::Reshape*>(&node);
             kernel::reshape(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
+                            args[0]->get_shape(),
+                            reshape->get_input_order(),
+                            out[0]->get_shape());
         }
         else if (node_op == "Select")
         {
@@ -574,14 +578,12 @@ private:
         }
         else if (node_op == "Sum")
         {
-            auto s = static_cast<const op::Sum*>(&node);
+            const op::Sum* sum = static_cast<const op::Sum*>(&node);
             kernel::sum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                           args[0]->get_shape(),
-                           args[0]->get_strides(),
                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                           args[0]->get_shape(),
                            out[0]->get_shape(),
-                           out[0]->get_strides(),
-                           s->get_reduction_axes());
+                           sum->get_reduction_axes());
         }
         else if (node_op == "Tan")
         {
