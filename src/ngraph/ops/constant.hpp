@@ -104,8 +104,12 @@ namespace ngraph
 
         /// \brief A 32-bit floating-point tensor constant.
         using Float32Constant = ParameterizedConstant<element::Float32>;
+        /// \brief A 64-bit floating-point tensor constant.
+        using Float64Constant = ParameterizedConstant<element::Float64>;
         /// \brief An 8-bit signed integer tensor constant.
         using Int8Constant = ParameterizedConstant<element::Int8>;
+        /// \brief A 16-bit signed integer tensor constant.
+        using Int16Constant = ParameterizedConstant<element::Int16>;
         /// \brief A 32-bit signed integer tensor constant.
         using Int32Constant = ParameterizedConstant<element::Int32>;
         /// \brief A 64-bit signed integer tensor constant.
@@ -113,6 +117,8 @@ namespace ngraph
         /// \brief An 8-bit unsigned integer tensor constant.
         using UInt8Constant = ParameterizedConstant<element::UInt8>;
         /// \brief A 16-bit unsigned integer tensor constant.
+        using UInt16Constant = ParameterizedConstant<element::UInt16>;
+        /// \brief A 32-bit unsigned integer tensor constant.
         using UInt32Constant = ParameterizedConstant<element::UInt32>;
         /// \brief A 64-bit unsigned integer tensor constant.
         using UInt64Constant = ParameterizedConstant<element::UInt64>;
