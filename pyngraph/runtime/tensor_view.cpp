@@ -13,19 +13,13 @@
 // ----------------------------------------------------------------------------
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <string>
+//#include <pybind11/stl.h>
+//#include <string>
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/runtime/value.hpp"
+#include "pyngraph/runtime/tensor_view.hpp"
 
 namespace py = pybind11;
-namespace ngraph {
-namespace runtime {
 
-PYBIND11_MODULE(TensorView, mod) {
-
-    py::class_<Value, std::shared_ptr<Value>> value(mod, "Value");
-    py::class_<TensorView, std::shared_ptr<TensorView>, Value> tensorView(mod, "TensorView");
+void regclass_pyngraph_runtime_TensorView(py::module m) {
+    py::class_<ngraph::runtime::TensorView, std::shared_ptr<ngraph::runtime::TensorView>, ngraph::runtime::Value> tensorView(m, "TensorView");
 }
-
-}}  // ngraph

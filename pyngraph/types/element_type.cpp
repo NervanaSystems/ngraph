@@ -47,12 +47,14 @@ void regclass_pyngraph_Int8(py::module m)
     tint8.def_static("element_type", &ngraph::element::Int8::element_type,
                      py::return_value_policy::reference);
 }
+/*
 void regclass_pyngraph_Int16(py::module m)
 {
     py::class_<ngraph::element::Int16, std::shared_ptr<ngraph::element::Int16>> tint16(m, "Int16");
     tint16.def_static("element_type", &ngraph::element::Int16::element_type,
                      py::return_value_policy::reference);
 }
+*/
 void regclass_pyngraph_Int32(py::module m)
 {
     py::class_<ngraph::element::Int32, std::shared_ptr<ngraph::element::Int32>> tint32(m, "Int32");
@@ -71,12 +73,14 @@ void regclass_pyngraph_UInt8(py::module m)
     tuint8.def_static("element_type", &ngraph::element::UInt8::element_type,
                      py::return_value_policy::reference);
 }
+/*
 void regclass_pyngraph_UInt16(py::module m)
 {
     py::class_<ngraph::element::UInt16, std::shared_ptr<ngraph::element::UInt16>> tuint16(m, "UInt16");
     tuint16.def_static("element_type", &ngraph::element::UInt16::element_type,
                      py::return_value_policy::reference);
 }
+*/
 void regclass_pyngraph_UInt32(py::module m)
 {
     py::class_<ngraph::element::UInt32, std::shared_ptr<ngraph::element::UInt32>> tuint32(m, "UInt32");

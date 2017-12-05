@@ -17,15 +17,12 @@
 
 namespace py = pybind11;
 
-class Util {
-    void* numpy_to_c(py::array a) {
-        py::buffer_info info = a.request();
-        return info.ptr;
-    }
+void* numpy_to_c(py::array a) {
+    py::buffer_info info = a.request();
+    return info.ptr;
 }
 
-void regclass_pyngraph_Util(py::module m) {
-    py::class_<Util, std::shared_ptr<Util>> util(m, "Util");
-    module mod = m.def_submodule("Util", "pyngraph.Util")
-    util.def("numpy_to_c", &Util::numpy_to_c);
+void regmodule_pyngraph_Util(py::module m) {
+    py::module mod = m.def_submodule("Util", "pyngraph.Util");
+    mod.def("numpy_to_c", &numpy_to_c);
 }

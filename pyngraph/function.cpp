@@ -22,7 +22,7 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_Function(py:module m) {
+void regclass_pyngraph_Function(py::module m) {
 
     //py::module::import("pyngraph.ops.Parameter");
     //py::module::import("pyngraph.types.TensorViewType");

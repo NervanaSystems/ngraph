@@ -13,9 +13,10 @@
 // ----------------------------------------------------------------------------
 
 #include <pybind11/pybind11.h>
+#include "pyngraph/runtime/regmodule_pyngraph_runtime.hpp"
 
 namespace py = pybind11;
 
 void regmodule_pyngraph_runtime(py::module m){
-    m_runtime = m.def_submodule("runtime", "module pyngraph.runtime");
+    py::module m_runtime = m.def_submodule("runtime", "module pyngraph.runtime");
 }

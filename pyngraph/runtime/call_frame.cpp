@@ -13,24 +13,14 @@
 // ----------------------------------------------------------------------------
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <string>
+//#include <pybind11/stl.h>
+//#include <string>
 #include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/ngvm/call_frame.hpp" 
+#include "pyngraph/runtime/call_frame.hpp"
 
 namespace py = pybind11;
-namespace ngraph {
-namespace runtime {
 
-PYBIND11_MODULE(CallFrame, mod) {
-
-    py::class_<CallFrame, std::shared_ptr<CallFrame>> callFrame(mod, "CallFrame");
-    py::class_<ngvm::CallFrame, std::shared_ptr<ngvm::CallFrame>, CallFrame> ngvmCallFrame(mod, "NGVMCallFrame");
-
-    callFrame.def("call", &CallFrame::call);
-    ngvmCallFrame.def("call", &ngvm::CallFrame::call);
+void regclass_pyngraph_runtime_CallFrame(py::module m){
+    py::class_<ngraph::runtime::CallFrame, std::shared_ptr<ngraph::runtime::CallFrame>> callFrame(m, "CallFrame");
+    callFrame.def("call", &ngraph::runtime::CallFrame::call);
 }
-
-
-}}  // ngraph
-

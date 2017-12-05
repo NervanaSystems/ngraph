@@ -13,13 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/stl.h>
-//#include <string>
-#include "ngraph/runtime/external_function.hpp"
-#include "pyngraph/runtime/external_function.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_runtime_ExternalFunction(py::module m){
-    py::class_<ngraph::runtime::ExternalFunction, std::shared_ptr<ngraph::runtime::ExternalFunction>> externalFunction(m, "ExternalFunction");
-}
+void regclass_pyngraph_runtime_CallFrame(py::module m);

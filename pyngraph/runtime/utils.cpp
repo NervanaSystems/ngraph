@@ -13,21 +13,17 @@
 // ----------------------------------------------------------------------------
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <string>
+//#include <pybind11/stl.h>
+//#include <string>
 #include "ngraph/runtime/utils.hpp"
+#include "pyngraph/runtime/utils.hpp"
 
 namespace py = pybind11;
-namespace ngraph {
-namespace runtime{
 
-PYBIND11_MODULE(Utils, mod) {
+void regmodule_pyngraph_runtime_Utils(py::module m) {
+    py::module mod = m.def_submodule("Utils", "module pyngraph.runtime.Utils");
+    using PTVFloat32 = ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>;    
 
-    py::module::import("wrapper.ngraph.runtime.ParameterizedTensorView");
-    using ET = ngraph::element::TraitedType<float>;    
-
-    mod.def("make_tensor", (std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>> (*) (const ngraph::Shape&)) &make_tensor);
-    mod.def("make_tensor", (std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>> (*) (const Shape& , const std::vector<typename ET::type>& )) &make_tensor);
+    mod.def("make_tensor", (std::shared_ptr<PTVFloat32> (*) (const ngraph::Shape&)) &make_tensor);
+    mod.def("make_tensor", (std::shared_ptr<PTVFloat32> (*) (const ngraph::Shape& , const std::vector<typename ngraph::element::Float32::type>& )) &make_tensor);
 }
-
-}}  // ngraph

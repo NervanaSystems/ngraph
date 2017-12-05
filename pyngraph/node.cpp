@@ -25,7 +25,7 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_Node(py:module m){
+void regclass_pyngraph_Node(py::module m){
 
     py::class_<ngraph::Node, std::shared_ptr<ngraph::Node>> node(m, "Node");
 
