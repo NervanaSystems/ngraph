@@ -316,7 +316,6 @@ std::unordered_map<ngraph::Node*, std::weak_ptr<ngraph::Node>>
                 assert(mapping.count(old_arg.get()));
                 new_args.push_back(mapping[old_arg.get()].lock());
             }
-            assert(mapping.count(node.get()));
             mapping[node.get()] = node->copy_with_new_args(new_args);
         }
     }
