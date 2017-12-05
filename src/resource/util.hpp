@@ -52,3 +52,18 @@ bool contains(const U& container, const T& obj)
     }
     return rc;
 }
+
+template <typename T>
+std::string join(const T& v, const std::string& sep = ", ")
+{
+    std::ostringstream ss;
+    for (const auto& x : v)
+    {
+        if (&x != &*(v.begin()))
+        {
+            ss << sep;
+        }
+        ss << x;
+    }
+    return ss.str();
+}

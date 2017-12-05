@@ -58,6 +58,33 @@ using namespace std;
 
 using namespace ngraph::codegen;
 
+// Standard compile
+// #include "..." search starts here:
+// #include <...> search starts here:
+//  /mnt/c/dev/private-ngraph-cpp/src
+//  /mnt/c/dev/private-ngraph-cpp/build
+//  /mnt/c/dev/private-ngraph-cpp/build/external/eigen/include/eigen3
+//  /mnt/c/dev/private-ngraph-cpp/build/third-party/ext_llvm-prefix/src/ext_llvm/include
+//  /mnt/c/dev/private-ngraph-cpp/build/external/mkldnn/include
+//  /usr/bin/../lib/gcc/x86_64-linux-gnu/4.8/../../../../include/c++/4.8
+//  /usr/bin/../lib/gcc/x86_64-linux-gnu/4.8/../../../../include/x86_64-linux-gnu/c++/4.8
+//  /usr/bin/../lib/gcc/x86_64-linux-gnu/4.8/../../../../include/c++/4.8/backward
+//  /usr/local/include
+//  /usr/lib/llvm-3.9/bin/../lib/clang/3.9.1/include
+//  /usr/include/x86_64-linux-gnu
+//  /usr/include
+
+// codegen compile
+// #include "..." search starts here:
+// #include <...> search starts here:
+//  /mnt/c/dev/private-ngraph-cpp/build/third-party/ext_llvm-prefix/src/ext_llvm/lib/clang/5.0.0/include
+//  /usr/include/x86_64-linux-gnu
+//  /usr/include
+//  /usr/include/x86_64-linux-gnu/c++/4.8
+//  /usr/include/c++/4.8
+//  /mnt/c/dev/private-ngraph-cpp/build/external/eigen/include/eigen3
+//  /mnt/c/dev/private-ngraph-cpp/src
+
 static std::string GetExecutablePath(const char* Argv0)
 {
     // This just needs to be some symbol in the binary; C++ doesn't
@@ -82,6 +109,9 @@ Compiler::Compiler()
     // Prepare compilation arguments
     vector<const char*> args;
     args.push_back(m_source_name.c_str());
+    // args.push_back("-M");
+    args.push_back("-H");
+    args.push_back("-v");
 
     // Prepare DiagnosticEngine
     DiagnosticOptions DiagOpts;
