@@ -20,7 +20,7 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise remainder operation.
+        /// \brief (NOT IMPLEMENTED) Elementwise remainder operation.
         ///
         /// (TODO: Get a bit more clarity on this: is it just "mod"? What about negative numbers and floats?)
         ///
@@ -36,12 +36,6 @@ namespace ngraph
         /// | Type                   | Description                                                                                                       |
         /// | ---------------------- | ----------------------------------------------------------------------------------------------------------------- |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg0}[i_1,\dots,i_n] \mod \texttt{arg1}[i_1,\dots,i_n]\f$ |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status           |
-        /// | ------- | ---------------- |
-        /// | NGVM    | Not implemented. |
         class Remainder : public BinaryElementwiseArithmetic
         {
         public:

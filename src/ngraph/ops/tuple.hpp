@@ -33,12 +33,6 @@ namespace ngraph
         /// | Type                  | Description                                                |
         /// | --------------------- | ---------------------------------------------------------- |
         /// | \f$(T_1,\dots,T_n)\f$ | The tuple \f$(\texttt{args}[0],\dots,\texttt{args}[n])\f$. |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
         class Tuple : public Node
         {
         public:

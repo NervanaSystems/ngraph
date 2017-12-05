@@ -20,11 +20,11 @@ using namespace ngraph;
 op::Slice::Slice(const std::shared_ptr<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds,
-                 const Shape& step)
+                 const Strides& strides)
     : RequiresTensorViewArgs("Slice", {arg})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
-    , m_step(step)
+    , m_strides(strides)
 {
     check_args();
 }
@@ -35,7 +35,7 @@ op::Slice::Slice(const std::shared_ptr<Node>& arg,
     : RequiresTensorViewArgs("Slice", {arg})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
-    , m_step(Shape(lower_bounds.size(), 1))
+    , m_strides(Strides(lower_bounds.size(), 1))
 {
     check_args();
 }
@@ -57,10 +57,10 @@ void op::Slice::check_args()
             "Number of upper bounds provided for slice does not match number of input axes");
     }
 
-    if (m_step.size() != arg_shape.size())
+    if (m_strides.size() != arg_shape.size())
     {
         throw ngraph_error(
-            "Number of step axes provided for slice does not match number of input axes");
+            "Number of strides provided for slice does not match number of input axes");
     }
 
     Shape result_shape;
@@ -77,14 +77,14 @@ void op::Slice::check_args()
             throw ngraph_error("Lower bound for slice is greater than upper bound");
         }
 
-        if (0 == m_step[i])
+        if (0 == m_strides[i])
         {
-            throw ngraph_error("Step distance for slice is zero");
+            throw ngraph_error("Strides distance for slice is zero");
         }
 
         size_t result_axis_size = m_upper_bounds[i] - m_lower_bounds[i];
         result_axis_size =
-            result_axis_size / m_step[i] + ((result_axis_size % m_step[i] == 0) ? 0 : 1);
+            result_axis_size / m_strides[i] + ((result_axis_size % m_strides[i] == 0) ? 0 : 1);
         result_shape.push_back(result_axis_size);
     }
 
@@ -96,5 +96,5 @@ void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const std::share
 {
     auto x = get_inputs().at(0).get_output().get_node();
 
-    adjoints.add_delta_to_slice(x, delta, m_lower_bounds, m_upper_bounds, m_step);
+    adjoints.add_delta_to_slice(x, delta, m_lower_bounds, m_upper_bounds, m_strides);
 }

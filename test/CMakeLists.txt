@@ -26,7 +26,6 @@ set (SRC
     builder.cpp
     builder_autobroadcast.cpp
     build_graph.cpp
-    coordinate_iterator.cpp
     copy.cpp
     eigen.cpp
     element_type.cpp

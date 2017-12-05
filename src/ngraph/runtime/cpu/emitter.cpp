@@ -1189,11 +1189,11 @@ void Emitter::EmitSlice(const ngraph::Node* n,
 {
     auto slice = static_cast<const op::Slice*>(n);
 
-    for (auto d : slice->get_step())
+    for (auto d : slice->get_strides())
     {
         if (1 != d)
         {
-            throw ngraph_error("Slice does not support non-unit step yet");
+            throw ngraph_error("Slice does not support non-unit strides yet");
         }
     }
 
@@ -1469,11 +1469,11 @@ void Emitter::EmitReplaceSlice(const ngraph::Node* n,
 {
     auto replace_slice = static_cast<const op::Slice*>(n);
 
-    for (auto d : replace_slice->get_step())
+    for (auto d : replace_slice->get_strides())
     {
         if (1 != d)
         {
-            throw ngraph_error("Replace-slice does not support non-unit step yet");
+            throw ngraph_error("Replace-slice does not support non-unit strides yet");
         }
     }
 
@@ -1553,7 +1553,6 @@ void Emitter::EmitOneHot(const ngraph::Node* n,
     assert(nullptr != arg_tensor_view_type);
     auto arg_shape = arg_tensor_view_type->get_shape();
     auto arg_rank = arg_shape.size();
-    auto& arg_element_type = arg_tensor_view_type->get_element_type();
 
     auto result_type = oh->get_value_type();
     auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
