@@ -27,7 +27,7 @@ git checkout 3a59991eb6c84572284b2aa444d89877b7b690b0 -b "local branch name"
 Build and Install it : https://github.com/NervanaSystems/private-ngraph-cpp#steps
 ```
 
-###ngraph-neon
+### ngraph-neon
 
 After installing pybind and private-ngraph-cpp, follow the steps below to install ngraph-neon.
 The NGRAPH_CPP_BUILD_PATH is set to default installation location of private-ngraph-cpp.
