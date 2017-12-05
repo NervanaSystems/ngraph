@@ -13,8 +13,8 @@
 // ----------------------------------------------------------------------------
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <string>
+//#include <pybind11/stl.h>
+//#include <string>
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/external_function.hpp"
@@ -22,16 +22,15 @@
 #include "ngraph/runtime/ngvm/ngvm_backend.hpp"
 //#include "ngraph/runtime/parameterized_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
+#include "pyngraph/runtime/backend.hpp"
 
 namespace py = pybind11;
-namespace ngraph {
-namespace runtime {
 
-PYBIND11_MODULE(Backend, mod) {
+void regclass_pyngraph_runtime_Backend(py::module m) {
 
-    py::module::import("wrapper.ngraph.runtime.CallFrame");
+    //py::module::import("wrapper.ngraph.runtime.CallFrame");
 //    py::module::import("wrapper.ngraph.runtime.ParameterizedTensorView");
-    py::module::import("wrapper.ngraph.runtime.TensorView");
+    //py::module::import("wrapper.ngraph.runtime.TensorView");
 
     using ET = ngraph::element::TraitedType<float>;
 
@@ -44,4 +43,3 @@ PYBIND11_MODULE(Backend, mod) {
     //backend.def("make_parameterized_tensor_view", (std::shared_ptr<ParameterizedTensorView<ET>> (Backend::*) (const NDArrayBase<ET::type>& )) &Backend::make_parameterized_tensor_view);
 }
 
-}}  // ngraph
