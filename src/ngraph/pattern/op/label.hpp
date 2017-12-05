@@ -34,7 +34,7 @@ namespace ngraph
                 ///
                 /// this Label node can be bound to arbitrary nodes in an input graph
                 /// as long as provided \sa pred is satisfied and the node hasn't been previously bound to
-                /// the different node in the input graph
+                /// a different node in the input graph
                 /// \code{.cpp}
                 /// auto pattern = pattern::op::Label::make_from_node(a); //a is op::Parameter
                 /// matcher.match(pattern, a));

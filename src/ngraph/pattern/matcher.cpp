@@ -61,7 +61,7 @@ namespace ngraph
             if (is_match) //in case label was already bound this rebinds it to the same node (harmless; and the logic seems cleaner)
             {
                 auto args = get_arguments(label);
-                if (args.size())
+                if (args.size() > 0)
                 {
                     assert(args.size() ==
                            1); //it should be impossible to construct labels w/ more than one arg
