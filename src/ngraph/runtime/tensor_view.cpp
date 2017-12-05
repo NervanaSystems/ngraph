@@ -14,6 +14,7 @@
 
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/common.hpp"
+#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/types/type.hpp"
 
@@ -40,8 +41,28 @@ const ngraph::Shape& TensorView::get_shape() const
     return m_descriptor->get_tensor_view_type()->get_shape();
 }
 
+const ngraph::Strides& TensorView::get_strides() const
+{
+    return m_descriptor->get_tensor_view_layout()->get_strides();
+}
+
 std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout>
     TensorView::get_tensor_view_layout() const
 {
     return m_descriptor->get_tensor_view_layout();
+}
+
+size_t TensorView::get_element_count() const
+{
+    size_t rc = 1;
+    for (size_t s : get_shape())
+    {
+        rc *= s;
+    }
+    return rc;
+}
+
+const ngraph::descriptor::Tensor& TensorView::get_tensor() const
+{
+    return get_tensor_view_descriptor()->get_tensor();
 }
