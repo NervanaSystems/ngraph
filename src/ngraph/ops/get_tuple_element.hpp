@@ -39,12 +39,6 @@ namespace ngraph
         /// | Type      | Description                           |
         /// | --------- | ------------------------------------- |
         /// | \f$T_n\f$ | The `n`th element of the input tuple. |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
         class GetTupleElement : public Node
         {
         public:

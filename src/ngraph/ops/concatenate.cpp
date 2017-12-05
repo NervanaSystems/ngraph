@@ -84,7 +84,7 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const std::shar
 
     Coordinate arg_delta_slice_lower = Coordinate(concat_result_shape.size(), 0);
     Coordinate arg_delta_slice_upper = concat_result_shape;
-    Coordinate arg_delta_slice_step = Coordinate(concat_result_shape.size(), 1);
+    Coordinate arg_delta_slice_strides = Coordinate(concat_result_shape.size(), 1);
 
     size_t pos = 0;
 
@@ -105,7 +105,7 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const std::shar
         adjoints.add_delta(
             arg,
             make_shared<op::Slice>(
-                delta, arg_delta_slice_lower, arg_delta_slice_upper, arg_delta_slice_step));
+                delta, arg_delta_slice_lower, arg_delta_slice_upper, arg_delta_slice_strides));
 
         pos = next_pos;
     }

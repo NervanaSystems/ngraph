@@ -33,12 +33,6 @@ namespace ngraph
         /// | Type                               | Description                                                                                                    |
         /// | ---------------------------------- | -------------------------------------------------------------------------------------------------------------- |
         /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = 1\text{ if }\texttt{arg}[i_1,\dots,i_n] = 0\text{, else } 0\f$ |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
         class Not : public UnaryElementwise
         {
         public:
