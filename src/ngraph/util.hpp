@@ -256,9 +256,9 @@ namespace ngraph
     std::list<std::shared_ptr<Node>>
         topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
 
-    std::unordered_map<Node*, std::weak_ptr<Node>>
+    std::unordered_map<Node*, std::shared_ptr<Node>>
         clone_graph(const std::list<std::shared_ptr<Node>>& nodes,
-                    std::unordered_map<Node*, std::weak_ptr<Node>> mapping);
+                    std::unordered_map<Node*, std::shared_ptr<Node>> mapping);
 
     std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func);
 } // end namespace ngraph
