@@ -4166,3 +4166,83 @@ TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
     cf->call({a, b}, {result});
     ASSERT_EQ((vector<float>{173070., 220374.}), result->get_vector<float>());
 }
+
+//
+// Numpy test:
+//
+// > from numpy import *
+// > x = linspace(1,20*30*30*40,20*30*30*40)
+// > y = linspace(1,40*20*30*30*20,40*20*30*20*30)
+// > x.shape=(20,30,30,40)
+// > y.shape=(40,20,30,30,20)
+// > z = tensordot(x,y,([3,1,2,0],[0,3,2,4]))
+// > set_printoptions(precision=20)
+// > z
+// array([  1.82195744940012697600e+18,   1.82662305588011315200e+18,
+//          1.83128866236014540800e+18,   1.83595426884013721600e+18,
+//          1.84061987532013670400e+18,   1.84528548180012953600e+18,
+//          1.84995108828012902400e+18,   1.85461669476011827200e+18,
+//          1.85928230124010444800e+18,   1.86394790772011468800e+18,
+//          1.86861351420012902400e+18,   1.87327912068011110400e+18,
+//          1.87794472716010905600e+18,   1.88261033364010240000e+18,
+//          1.88727594012011212800e+18,   1.89194154660009369600e+18,
+//          1.89660715308010137600e+18,   1.90127275956010188800e+18,
+//          1.90593836604010854400e+18,   1.91060397252010700800e+18])
+//
+TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64)
+{
+    vector<double> a_data(20 * 30 * 30 * 40);
+    for (int i = 0; i < 20 * 30 * 30 * 40; i++)
+    {
+        a_data[i] = double(i + 1);
+    }
+
+    vector<double> b_data(40 * 20 * 30 * 30 * 20);
+    for (int i = 0; i < 40 * 20 * 30 * 30 * 20; i++)
+    {
+        b_data[i] = double(i + 1);
+    }
+
+    auto shape_a = Shape{20, 30, 30, 40};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float64::element_type(), shape_a));
+    auto shape_b = Shape{40, 20, 30, 30, 20};
+    auto B = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float64::element_type(), shape_b));
+    auto shape_r = Shape{20};
+
+    auto rt = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
+    auto r = make_shared<op::Dot>(
+        A,
+        B,
+        std::vector<std::pair<size_t, size_t>>{std::pair<size_t, size_t>(3, 0),
+                                               std::pair<size_t, size_t>(1, 3),
+                                               std::pair<size_t, size_t>(2, 2),
+                                               std::pair<size_t, size_t>(0, 4)});
+    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    copy_data(a, a_data);
+    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    copy_data(b, b_data);
+
+    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ(
+        (vector<double>{
+            1.82195744940012697600e+18, 1.82662305588011315200e+18, 1.83128866236014540800e+18,
+            1.83595426884013721600e+18, 1.84061987532013670400e+18, 1.84528548180012953600e+18,
+            1.84995108828012902400e+18, 1.85461669476011827200e+18, 1.85928230124010444800e+18,
+            1.86394790772011468800e+18, 1.86861351420012902400e+18, 1.87327912068011110400e+18,
+            1.87794472716010905600e+18, 1.88261033364010240000e+18, 1.88727594012011212800e+18,
+            1.89194154660009369600e+18, 1.89660715308010137600e+18, 1.90127275956010188800e+18,
+            1.90593836604010854400e+18, 1.91060397252010700800e+18}),
+        result->get_vector<double>());
+}
