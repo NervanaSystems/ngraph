@@ -37,8 +37,8 @@ namespace ng = ngraph;
 TEST(liveness, constant)
 {
     auto shape = Shape{1};
-    auto c = make_shared<op::Constant>(element::i32, Shape{}, "5");
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto c = make_shared<op::Constant>(element::i32, shape, "5");
+    auto rt = make_shared<TensorViewType>(element::i32, shape);
     auto f = make_shared<Function>(make_shared<op::Negative>(c), rt, op::Parameters{});
 
     pass::Manager pass_manager;

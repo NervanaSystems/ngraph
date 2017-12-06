@@ -537,7 +537,7 @@ TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
     auto shape_b = Shape{2, 0};
     auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
-    auto shape_r = Shape{0, 0};
+    auto shape_r = Shape{3, 0};
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
 
