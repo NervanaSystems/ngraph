@@ -46,9 +46,9 @@ namespace ngraph
             {
                 if (pattern_map[label] != graph_node)
                 {
-                    NGRAPH_DEBUG << "get_bound_node " << pattern_map[label]->get_name() << " , "
-                                 << pattern_map[label] << " NOT match " << graph_node->get_name()
-                                 << " , " << graph_node;
+                    NGRAPH_DEBUG << "[MATCHER] get_bound_node " << pattern_map[label]->get_name()
+                                 << " , " << pattern_map[label] << " NOT match "
+                                 << graph_node->get_name() << " , " << graph_node;
                     is_match = false;
                 }
             }
@@ -60,11 +60,23 @@ namespace ngraph
 
             if (is_match) //in case label was already bound this rebinds it to the same node (harmless; and the logic seems cleaner)
             {
-                NGRAPH_DEBUG << "(Re)binding get_bound_node " << graph_node->get_name() << " , "
-                             << graph_node << " , " << graph_node->get_name();
-                pattern_map[label] = graph_node;
-            }
+                auto args = get_arguments(label);
+                if (args.size() > 0)
+                {
+                    assert(args.size() ==
+                           1); //it should be impossible to construct labels w/ more than one arg
+                    NGRAPH_DEBUG << "[MATCHER] Label describes a sub graph in the pattern";
+                    is_match = match_node(args.at(0), graph_node, pattern_map);
+                }
 
+                if (is_match)
+                {
+                    NGRAPH_DEBUG << "[MATCHER] (Re)binding get_bound_node "
+                                 << graph_node->get_name() << " , " << graph_node << " , "
+                                 << graph_node->get_name();
+                    pattern_map[label] = graph_node;
+                }
+            }
             return is_match;
         }
 
@@ -91,6 +103,11 @@ namespace ngraph
                                  PatternMap& pattern_map)
         {
             assert(pattern_node && graph_node);
+
+            NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] in match_node : "
+                         << "pattern = " << pattern_node << " , " << pattern_node->get_name() << " "
+                         << "matched " << graph_node << " , " << graph_node->get_name();
+
             if (auto label_node = std::dynamic_pointer_cast<op::Label>(pattern_node))
             {
                 return match_pattern(label_node, graph_node, pattern_map);
