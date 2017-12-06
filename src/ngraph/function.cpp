@@ -35,7 +35,7 @@ Function::Function(const std::shared_ptr<Node>& result,
 {
     if (nullptr == result->get_value_type())
     {
-        throw ngraph_error("Function result node has nullptr for value type");
+        throw ngraph_error("Internal nGraph error: result->get_value_type() == nullptr");
     }
 
     if (nullptr != result_type && (*result_type != *(result->get_value_type())))
@@ -58,6 +58,13 @@ Function::Function(const std::shared_ptr<Node>& result,
             }
         }
     });
+}
+
+Function::Function(const std::shared_ptr<Node>& result,
+                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                   const std::string& name)
+    : Function(result, nullptr, parameters, name)
+{
 }
 
 void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)
