@@ -16,7 +16,6 @@
 
 #include <memory>
 
-#include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/runtime/manager.hpp"
 
 namespace ngraph
@@ -32,9 +31,6 @@ namespace ngraph
             /// @brief Transformer for the interpreted backend
             class INT_Manager : public Manager
             {
-            protected:
-                ngraph::codegen::ExecutionEngine exec_state;
-
             public:
                 virtual std::shared_ptr<Backend> allocate_backend() override;
 
