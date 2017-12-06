@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <set>
+#include <utility>
 #include <vector>
 
 // Names for types that aren't worth giving their own classes
@@ -56,5 +57,9 @@ namespace ngraph
     Shape project_shape(const Shape& shape, const AxisSet& deleted_axes);
 
     Coordinate inject_coordinate(const Coordinate& coord, size_t new_axis_pos, size_t new_axis_val);
+    Coordinate inject_coordinate(const Coordinate& coord,
+                                 std::vector<std::pair<size_t, size_t>> new_axis_pos_val_pairs);
     Shape inject_shape(const Shape& shape, size_t new_axis_pos, size_t new_axis_length);
+    Shape inject_shape(const Shape& shape,
+                       std::vector<std::pair<size_t, size_t>> new_axis_pos_length_pairs);
 }

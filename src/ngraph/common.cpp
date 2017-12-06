@@ -37,31 +37,50 @@ Shape ngraph::project_shape(const Shape& shape, const AxisSet& deleted_axes)
     return project_coordinate(shape, deleted_axes);
 }
 
-// TODO: for the moment, just one axis at a time, please. Later could pass in an std::map from axis positions to axis lengths.
-// TODO: check validity, i.e. that the new axis is < coord_size+1.
-Coordinate
-    ngraph::inject_coordinate(const Coordinate& coord, size_t new_axis_pos, size_t new_axis_val)
+// TODO: check validity, i.e. that the new axis indices are all < coord_size+num_new_axes.
+Coordinate ngraph::inject_coordinate(const Coordinate& coord,
+                                     std::vector<std::pair<size_t, size_t>> new_axis_pos_val_pairs)
 {
     Coordinate result;
 
     size_t original_pos = 0;
 
-    for (size_t result_pos = 0; result_pos < coord.size() + 1; result_pos++)
+    for (size_t result_pos = 0; result_pos < coord.size() + new_axis_pos_val_pairs.size();
+         result_pos++)
     {
-        if (result_pos == new_axis_pos)
+        auto search_it = std::find_if(
+            new_axis_pos_val_pairs.begin(),
+            new_axis_pos_val_pairs.end(),
+            [result_pos](std::pair<size_t, size_t> p) { return p.first == result_pos; });
+
+        if (search_it == new_axis_pos_val_pairs.end())
         {
-            result.push_back(new_axis_val);
+            result.push_back(coord[original_pos++]);
         }
         else
         {
-            result.push_back(coord[original_pos++]);
+            result.push_back(search_it->second);
         }
     }
 
     return result;
 }
 
+Coordinate
+    ngraph::inject_coordinate(const Coordinate& coord, size_t new_axis_pos, size_t new_axis_val)
+{
+    return inject_coordinate(coord,
+                             std::vector<std::pair<size_t, size_t>>{
+                                 std::pair<size_t, size_t>(new_axis_pos, new_axis_val)});
+}
+
 Shape ngraph::inject_shape(const Shape& shape, size_t new_axis_pos, size_t new_axis_length)
 {
     return inject_coordinate(shape, new_axis_pos, new_axis_length);
+}
+
+Shape inject_shape(const Shape& shape,
+                   std::vector<std::pair<size_t, size_t>> new_axis_pos_length_pairs)
+{
+    return inject_coordinate(shape, new_axis_pos_length_pairs);
 }

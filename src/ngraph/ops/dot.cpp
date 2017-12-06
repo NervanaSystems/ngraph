@@ -14,6 +14,7 @@
 
 #include <functional>
 #include <memory>
+#include <utility>
 
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/dot.hpp"
@@ -25,8 +26,52 @@
 using namespace std;
 using namespace ngraph;
 
+std::vector<std::pair<size_t, size_t>> default_dot_axis_pairs(const std::shared_ptr<Node>& arg0,
+                                                              const std::shared_ptr<Node>& arg1)
+{
+    auto arg0_value_type = arg0->get_value_type();
+    auto arg0_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(arg0_value_type);
+    if (nullptr == arg0_tensor_view_type)
+    {
+        throw ngraph_error("Dot arg0 does not have tensor view type");
+    }
+    auto arg0_shape = arg0_tensor_view_type->get_shape();
+
+    auto arg1_value_type = arg1->get_value_type();
+    auto arg1_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(arg1_value_type);
+    if (nullptr == arg1_tensor_view_type)
+    {
+        throw ngraph_error("Dot arg1 does not have tensor view type");
+    }
+    auto arg1_shape = arg1_tensor_view_type->get_shape();
+
+    if (arg0_shape.size() == 0 || arg1_shape.size() == 0)
+    {
+        return std::vector<std::pair<size_t, size_t>>{};
+    }
+    else if (arg1_shape.size() == 1)
+    {
+        return std::vector<std::pair<size_t, size_t>>{
+            std::pair<size_t, size_t>(arg0_shape.size() - 1, arg1_shape.size() - 1)};
+    }
+    // This is a bit subtle: here we know that arg0_shape.size != 0 and arg1_shape.size != 0 and != 1. So it's safe to subtract 1 and 2 from them, respectively.
+    else
+    {
+        return std::vector<std::pair<size_t, size_t>>{
+            std::pair<size_t, size_t>(arg0_shape.size() - 1, arg1_shape.size() - 2)};
+    }
+}
+
 op::Dot::Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+    : Dot(arg0, arg1, default_dot_axis_pairs(arg0, arg1))
+{
+}
+
+op::Dot::Dot(const std::shared_ptr<Node>& arg0,
+             const std::shared_ptr<Node>& arg1,
+             const std::vector<std::pair<size_t, size_t>>& dot_axis_pairs)
     : RequiresTensorViewArgs("Dot", {arg0, arg1})
+    , m_dot_axis_pairs(dot_axis_pairs)
 {
     auto arg0_tensor_type = get_inputs().at(0).get_tensor_view_type();
     auto arg1_tensor_type = get_inputs().at(1).get_tensor_view_type();
@@ -38,37 +83,57 @@ op::Dot::Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg
 
     vector<size_t> arg0_shape = arg0_tensor_type->get_shape();
     vector<size_t> arg1_shape = arg1_tensor_type->get_shape();
-    size_t arg0_reduction = arg0_shape.size() - 1;
-    size_t arg1_reduction;
-    const bool is_scalar_mult = arg0_shape.size() == 0 || arg1_shape.size() == 0;
 
-    if (arg1_shape.size() > 1)
+    vector<bool> arg0_seen(arg0_shape.size(), false);
+    vector<bool> arg1_seen(arg1_shape.size(), false);
+
+    for (auto axis_pair : dot_axis_pairs)
     {
-        arg1_reduction = arg1_shape.size() - 2;
-    }
-    else
-    {
-        arg1_reduction = arg1_shape.size() - 1;
-    }
-    if (!is_scalar_mult && (arg0_shape.at(arg0_reduction) != arg1_shape.at(arg1_reduction)))
-    {
-        throw ngraph_error("Dot reduction axes not compatible");
+        size_t arg0_axis = axis_pair.first;
+        size_t arg1_axis = axis_pair.second;
+
+        if (arg0_axis >= arg0_shape.size())
+        {
+            throw ngraph_error("Dot axis for arg0 out of bounds");
+        }
+
+        if (arg1_axis >= arg1_shape.size())
+        {
+            throw ngraph_error("Dot axis for arg1 out of bounds");
+        }
+
+        if (arg0_seen[arg0_axis])
+        {
+            throw ngraph_error("Dot axis for arg0 appears more than once");
+        }
+
+        if (arg1_seen[arg1_axis])
+        {
+            throw ngraph_error("Dot axis for arg1 appears more than once");
+        }
+
+        if (arg0_shape[arg0_axis] != arg1_shape[arg1_axis])
+        {
+            throw ngraph_error("Dot axes do not have same length");
+        }
+
+        arg0_seen[arg0_axis] = true;
+        arg1_seen[arg1_axis] = true;
     }
 
     vector<size_t> result_shape;
-    result_shape.reserve(arg0_shape.size() + arg1_shape.size() - (is_scalar_mult ? 0 : 2));
 
-    for (auto i = 0; i < arg0_shape.size(); i++)
+    for (size_t i = 0; i < arg0_shape.size(); i++)
     {
-        if (is_scalar_mult || i != arg0_reduction)
+        if (!arg0_seen[i])
         {
             result_shape.push_back(arg0_shape[i]);
         }
     }
 
-    for (auto i = 0; i < arg1_shape.size(); i++)
+    for (size_t i = 0; i < arg1_shape.size(); i++)
     {
-        if (is_scalar_mult || i != arg1_reduction)
+        if (!arg1_seen[i])
         {
             result_shape.push_back(arg1_shape[i]);
         }
@@ -106,6 +171,7 @@ ngraph::AxisVector range<ngraph::AxisVector>(size_t n)
 
 void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {
+    /*
     auto x = m_arguments[0];
     auto y = m_arguments[1];
 
@@ -239,4 +305,5 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_
     idx_Kjl.push_back(y_shape.size() - 1);
     auto Klj = make_shared<Reshape>(jKl, idx_Kjl, shape_Kjl);
     adjoints.add_delta(y, Klj);
+*/
 }

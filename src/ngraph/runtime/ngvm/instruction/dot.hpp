@@ -38,16 +38,14 @@ namespace ngraph
                                    const Shape& arg0_shape,
                                    const Shape& arg1_shape,
                                    const Shape& out_shape,
-                                   size_t arg0_dot_axis,
-                                   size_t arg1_dot_axis)
+                                   const std::vector<std::pair<size_t, size_t>>& dot_axis_pairs)
                         : m_arg0(arg0)
                         , m_arg1(arg1)
                         , m_out(out)
                         , m_arg0_shape(arg0_shape)
                         , m_arg1_shape(arg1_shape)
                         , m_out_shape(out_shape)
-                        , m_arg0_dot_axis(arg0_dot_axis)
-                        , m_arg1_dot_axis(arg1_dot_axis)
+                        , m_dot_axis_pairs(dot_axis_pairs)
                     {
                     }
 
@@ -63,8 +61,7 @@ namespace ngraph
                                                        m_arg0_shape,
                                                        m_arg1_shape,
                                                        m_out_shape,
-                                                       m_arg0_dot_axis,
-                                                       m_arg1_dot_axis);
+                                                       m_dot_axis_pairs);
                     }
 
                 protected:
@@ -74,8 +71,7 @@ namespace ngraph
                     Shape m_arg0_shape;
                     Shape m_arg1_shape;
                     Shape m_out_shape;
-                    size_t m_arg0_dot_axis;
-                    size_t m_arg1_dot_axis;
+                    std::vector<std::pair<size_t, size_t>> m_dot_axis_pairs;
                 };
             }
         }

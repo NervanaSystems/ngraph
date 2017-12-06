@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include "ngraph/ops/op.hpp"
 
 namespace ngraph
@@ -21,6 +23,8 @@ namespace ngraph
     namespace op
     {
         /// \brief Inner product/dot product/matrix product/tensor contraction operation.
+        ///
+        /// # (FIXME: DETAILS ARE OUT OF DATE)
         ///
         /// Takes two arguments `arg0` and `arg1`. There are three possible cases:
         ///
@@ -91,17 +95,42 @@ namespace ngraph
             ///
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
+            /// \param dot_axis_pairs A set of pairs of axes to dot.
+            Dot(const std::shared_ptr<Node>& arg0,
+                const std::shared_ptr<Node>& arg1,
+                const std::vector<std::pair<size_t, size_t>>& dot_axis_pairs);
+
+            /// \brief Constructs a dot product operation with default dot-axis selection depending on the inputs.
+            ///
+            /// Conventions are borrows from numpy's `dot` operator:
+            ///
+            /// If `arg0` or `arg1` is a scalar, there are no dot-axes. (This results in a scalar-tensor product.)
+            ///
+            /// Else if `arg1` is a vector, the rightmost axis of `arg0` is dotted with arg1's only axis.
+            ///
+            /// Else, the rightmost axis of `arg0` is dotted with `arg1`'s next-to-rightmost axis. (This includes matrix-matrix product.)
+            ///
+            /// \param arg0 The node producing the first argument.
+            /// \param arg1 The node producing the second argument.
             Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+
+            std::vector<std::pair<size_t, size_t>> get_dot_axis_pairs() const
+            {
+                return m_dot_axis_pairs;
+            }
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 2)
                     throw ngraph_error("Incorrect number of new arguments");
-                return std::make_shared<Dot>(new_args.at(0), new_args.at(1));
+                return std::make_shared<Dot>(new_args.at(0), new_args.at(1), m_dot_axis_pairs);
             }
 
         protected:
+            // It would be nice to use unordered_set here but there's no hash for pair and I don't want to write one.
+            std::vector<std::pair<size_t, size_t>> m_dot_axis_pairs;
+
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
         };

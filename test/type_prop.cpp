@@ -372,7 +372,7 @@ TEST(type_prop, dot_deduce_reduction_axes_size_mismatch)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Dot reduction axes not compatible"));
+        EXPECT_EQ(error.what(), std::string("Dot axes do not have same length"));
     }
     catch (...)
     {
