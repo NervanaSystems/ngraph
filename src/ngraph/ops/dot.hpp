@@ -34,7 +34,7 @@ namespace ngraph
         ///         (Example: arg0 has shape {3,4} and arg1 has shape {4,3}; then the result will have shape {3,3}.)
         ///
         ///
-        /// = Case 1: Scalar-tensor product =
+        /// # Case 1: Scalar-tensor product
         ///
         /// ## Inputs
         ///
@@ -51,13 +51,7 @@ namespace ngraph
         /// | ---------------------- | ---------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathtt{arg0} \cdot \mathtt{arg1}[i_1,\dots,i_n]\f$. |
         ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status             |
-        /// | ------- | ------------------ |
-        /// | NGVM    | Fully implemented. |
-        ///
-        /// = Case 2: Vector-tensor product =
+        /// # Case 2: Vector-tensor product
         ///
         /// ## Inputs
         ///
@@ -67,20 +61,14 @@ namespace ngraph
         /// | `arg1` | \f$E[d_1,\dots,d_n,d]~(n \geq 0)\f$ | A tensor of any shape whose innermost dimension matches `arg0`'s size, with the same element type as `arg0`. |
         ///
         /// <i>(Note: in the particular case where \f$n = 0\f$, this is a vector dot product; when \f$n = 1\f$, this is a vector-matrix product.)</i>
-        //
+        ///
         /// ## Output
         ///
-        /// | Type                                                          | Description                                                   |
-        /// | ---------------------- | ---------------------------------------------------------------------------------------------------- |
-        /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathtt{arg0} \cdot \mathtt{arg1}[i_1,\dots,i_n]\f$. |
+        /// | Type                   | Description                                                                                                                     |
+        /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+        /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \Sigma_{0 \le k < d}(\mathtt{arg0}[k] \cdot \mathtt{arg1}[i_1,\dots,i_n,k])\f$. |
         ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status                                      |
-        /// | ------- | ------------------------------------------- |
-        /// | NGVM    | Implemented for `arg1` with rank 2 or less. |
-        ///
-        /// = Case 3: Tensor-tensor product =
+        /// # Case 3: Tensor-tensor product
         ///
         /// ## Inputs
         ///
@@ -93,15 +81,9 @@ namespace ngraph
         ///
         /// ## Output
         ///
-        /// | Type                                                  | Description                                                                                                                       |
-        /// | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------|
-        /// | \f$E[d_1,\dots,d_{n-1},d'_1,\dots,d'_{m-2},d'_{m}]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_{n-1},j_1,\dots,j_{m-2},j_m] = \dots\f$ TODO: FIXME: finish this; but it's like numpy. |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status                                         |
-        /// | ------- | ---------------------------------------------- |
-        /// | NGVM    | Implemented for `arg1` with rank of exactly 2. |
+        /// | Type                                                  | Description                                                                                                                                                                          |
+        /// | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+        /// | \f$E[d_1,\dots,d_{n-1},d'_1,\dots,d'_{m-2},d'_{m}]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_{n-1},j_1,\dots,j_{m-2},j_m] = \Sigma_{0 \le k < d_n}(\texttt{arg0}[i_1,\dots,i_{n-1},k] \cdot \texttt{arg1}[j_1,\dots,j_{n-2},k,j_n])\f$ |
         class Dot : public RequiresTensorViewArgs
         {
         public:

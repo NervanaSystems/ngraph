@@ -1239,7 +1239,7 @@ TEST(type_prop, slice_deduce_matrix_zero_zero)
               TensorViewType(element::Float32::element_type(), Shape{0, 0}));
 }
 
-TEST(type_prop, slice_deduce_vector_invalid_step)
+TEST(type_prop, slice_deduce_vector_invalid_strides)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
@@ -1247,14 +1247,13 @@ TEST(type_prop, slice_deduce_vector_invalid_step)
     {
         auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{7}, Shape{1, 2});
         // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid slice step not detected";
+        FAIL() << "Invalid slice strides not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Number of step axes provided for slice does not match number of input axes"));
+        EXPECT_EQ(error.what(),
+                  std::string(
+                      "Number of strides provided for slice does not match number of input axes"));
     }
     catch (...)
     {
@@ -1610,7 +1609,7 @@ TEST(type_prop, replace_slice_deduce_matrix_zero_zero)
               TensorViewType(element::Float32::element_type(), Shape{6, 8}));
 }
 
-TEST(type_prop, replace_slice_deduce_vector_invalid_step)
+TEST(type_prop, replace_slice_deduce_vector_invalid_strides)
 {
     auto param0 = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{6}));
@@ -1621,14 +1620,13 @@ TEST(type_prop, replace_slice_deduce_vector_invalid_step)
         auto sl = make_shared<op::ReplaceSlice>(
             param0, param1, Coordinate{0}, Coordinate{7}, Shape{1, 2});
         // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid slice step not detected";
+        FAIL() << "Invalid slice strides not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Number of step axes provided for slice does not match number of input axes"));
+        EXPECT_EQ(error.what(),
+                  std::string(
+                      "Number of strides provided for slice does not match number of input axes"));
     }
     catch (...)
     {
@@ -1916,6 +1914,102 @@ TEST(type_prop, replace_slice_deduce_matrix_upper_extra)
             error.what(),
             std::string(
                 "Number of upper bounds provided for slice does not match number of input axes"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, one_hot_deduce_scalar)
+{
+    auto param = make_shared<op::Parameter>(element::Int32::element_type(), Shape{});
+    auto oh = make_shared<op::OneHot>(param, Shape{9}, 0);
+    auto oh_vt = oh->get_value_type();
+    ASSERT_EQ(*oh_vt, TensorViewType(element::Int32::element_type(), Shape{9}));
+}
+
+TEST(type_prop, one_hot_deduce_vector_0)
+{
+    auto param = make_shared<op::Parameter>(element::Int32::element_type(), Shape{8});
+    auto oh = make_shared<op::OneHot>(param, Shape{9, 8}, 0);
+    auto oh_vt = oh->get_value_type();
+    ASSERT_EQ(*oh_vt, TensorViewType(element::Int32::element_type(), Shape{9, 8}));
+}
+
+TEST(type_prop, one_hot_deduce_vector_1)
+{
+    auto param = make_shared<op::Parameter>(element::Int32::element_type(), Shape{8});
+    auto oh = make_shared<op::OneHot>(param, Shape{8, 9}, 1);
+    auto oh_vt = oh->get_value_type();
+    ASSERT_EQ(*oh_vt, TensorViewType(element::Int32::element_type(), Shape{8, 9}));
+}
+
+TEST(type_prop, one_hot_deduce_matrix_0)
+{
+    auto param = make_shared<op::Parameter>(element::Int32::element_type(), Shape{12, 24});
+    auto oh = make_shared<op::OneHot>(param, Shape{2, 12, 24}, 0);
+    auto oh_vt = oh->get_value_type();
+    ASSERT_EQ(*oh_vt, TensorViewType(element::Int32::element_type(), Shape{2, 12, 24}));
+}
+
+TEST(type_prop, one_hot_deduce_matrix_1)
+{
+    auto param = make_shared<op::Parameter>(element::Int32::element_type(), Shape{12, 24});
+    auto oh = make_shared<op::OneHot>(param, Shape{12, 2, 24}, 1);
+    auto oh_vt = oh->get_value_type();
+    ASSERT_EQ(*oh_vt, TensorViewType(element::Int32::element_type(), Shape{12, 2, 24}));
+}
+
+TEST(type_prop, one_hot_deduce_matrix_2)
+{
+    auto param = make_shared<op::Parameter>(element::Int32::element_type(), Shape{12, 24});
+    auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 2}, 2);
+    auto oh_vt = oh->get_value_type();
+    ASSERT_EQ(*oh_vt, TensorViewType(element::Int32::element_type(), Shape{12, 24, 2}));
+}
+
+TEST(type_prop, one_hot_deduce_floating_point)
+{
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{12, 24});
+    auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 8}, 2);
+    auto oh_vt = oh->get_value_type();
+    ASSERT_EQ(*oh_vt, TensorViewType(element::Float32::element_type(), Shape{12, 24, 8}));
+}
+
+TEST(type_prop, one_hot_deduce_axis_oob)
+{
+    auto param = make_shared<op::Parameter>(element::Int32::element_type(), Shape{12, 24});
+    try
+    {
+        auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 8}, 3);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "One-hot axis out of bounds not detected.";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("One-hot axis is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, one_hot_deduce_shape_incompatible)
+{
+    auto param = make_shared<op::Parameter>(element::Int32::element_type(), Shape{12, 24});
+    try
+    {
+        auto oh = make_shared<op::OneHot>(param, Shape{12, 22, 8}, 2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incompatible one-hot output shape not detected.";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("One-hot argument shape is not compatible with desired output shape"));
     }
     catch (...)
     {

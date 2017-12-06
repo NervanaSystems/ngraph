@@ -53,6 +53,7 @@
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not.hpp"
 #include "ngraph/ops/not_equal.hpp"
+#include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -70,64 +71,55 @@
 #include "ngraph/ops/tuple.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/runtime/ngvm/eigen/abs.hpp"
-#include "ngraph/runtime/ngvm/eigen/acos.hpp"
-#include "ngraph/runtime/ngvm/eigen/add.hpp"
-#include "ngraph/runtime/ngvm/eigen/asin.hpp"
-#include "ngraph/runtime/ngvm/eigen/atan.hpp"
-#include "ngraph/runtime/ngvm/eigen/broadcast_scalar.hpp"
-#include "ngraph/runtime/ngvm/eigen/broadcast_vector_colwise.hpp"
-#include "ngraph/runtime/ngvm/eigen/broadcast_vector_rowwise.hpp"
-#include "ngraph/runtime/ngvm/eigen/call.hpp"
-#include "ngraph/runtime/ngvm/eigen/ceiling.hpp"
-#include "ngraph/runtime/ngvm/eigen/concat_matrix.hpp"
-#include "ngraph/runtime/ngvm/eigen/concat_vector.hpp"
-#include "ngraph/runtime/ngvm/eigen/constant.hpp"
-#include "ngraph/runtime/ngvm/eigen/convert.hpp"
-#include "ngraph/runtime/ngvm/eigen/copy.hpp"
-#include "ngraph/runtime/ngvm/eigen/cos.hpp"
-#include "ngraph/runtime/ngvm/eigen/cosh.hpp"
-#include "ngraph/runtime/ngvm/eigen/divide.hpp"
-#include "ngraph/runtime/ngvm/eigen/dot.hpp"
-#include "ngraph/runtime/ngvm/eigen/equal.hpp"
-#include "ngraph/runtime/ngvm/eigen/exp.hpp"
-#include "ngraph/runtime/ngvm/eigen/floor.hpp"
-#include "ngraph/runtime/ngvm/eigen/greater_eq.hpp"
-#include "ngraph/runtime/ngvm/eigen/greater_than.hpp"
-#include "ngraph/runtime/ngvm/eigen/less_eq.hpp"
-#include "ngraph/runtime/ngvm/eigen/less_than.hpp"
-#include "ngraph/runtime/ngvm/eigen/log.hpp"
-#include "ngraph/runtime/ngvm/eigen/matrix_mult.hpp"
-#include "ngraph/runtime/ngvm/eigen/matrix_slice.hpp"
-#include "ngraph/runtime/ngvm/eigen/matrix_transpose.hpp"
-#include "ngraph/runtime/ngvm/eigen/matrix_vector_product.hpp"
-#include "ngraph/runtime/ngvm/eigen/maximum.hpp"
-#include "ngraph/runtime/ngvm/eigen/minimum.hpp"
-#include "ngraph/runtime/ngvm/eigen/multiply.hpp"
-#include "ngraph/runtime/ngvm/eigen/negate.hpp"
-#include "ngraph/runtime/ngvm/eigen/not.hpp"
-#include "ngraph/runtime/ngvm/eigen/not_equal.hpp"
-#include "ngraph/runtime/ngvm/eigen/power.hpp"
-#include "ngraph/runtime/ngvm/eigen/reduce_matrix_columns.hpp"
-#include "ngraph/runtime/ngvm/eigen/reduce_matrix_rows.hpp"
-#include "ngraph/runtime/ngvm/eigen/reduce_to_scalar.hpp"
-#include "ngraph/runtime/ngvm/eigen/replace_matrix_slice.hpp"
-#include "ngraph/runtime/ngvm/eigen/replace_vector_slice.hpp"
-#include "ngraph/runtime/ngvm/eigen/return.hpp"
-#include "ngraph/runtime/ngvm/eigen/scalar_tensor_product.hpp"
-#include "ngraph/runtime/ngvm/eigen/select.hpp"
-#include "ngraph/runtime/ngvm/eigen/sign.hpp"
-#include "ngraph/runtime/ngvm/eigen/sin.hpp"
-#include "ngraph/runtime/ngvm/eigen/sinh.hpp"
-#include "ngraph/runtime/ngvm/eigen/sqrt.hpp"
-#include "ngraph/runtime/ngvm/eigen/subtract.hpp"
-#include "ngraph/runtime/ngvm/eigen/sum_matrix_columns.hpp"
-#include "ngraph/runtime/ngvm/eigen/sum_matrix_rows.hpp"
-#include "ngraph/runtime/ngvm/eigen/sum_to_scalar.hpp"
-#include "ngraph/runtime/ngvm/eigen/tan.hpp"
-#include "ngraph/runtime/ngvm/eigen/tanh.hpp"
-#include "ngraph/runtime/ngvm/eigen/vector_slice.hpp"
 #include "ngraph/runtime/ngvm/external_function.hpp"
+#include "ngraph/runtime/ngvm/instruction/abs.hpp"
+#include "ngraph/runtime/ngvm/instruction/acos.hpp"
+#include "ngraph/runtime/ngvm/instruction/add.hpp"
+#include "ngraph/runtime/ngvm/instruction/asin.hpp"
+#include "ngraph/runtime/ngvm/instruction/atan.hpp"
+#include "ngraph/runtime/ngvm/instruction/broadcast.hpp"
+#include "ngraph/runtime/ngvm/instruction/call.hpp"
+#include "ngraph/runtime/ngvm/instruction/ceiling.hpp"
+#include "ngraph/runtime/ngvm/instruction/concat.hpp"
+#include "ngraph/runtime/ngvm/instruction/constant.hpp"
+#include "ngraph/runtime/ngvm/instruction/convert.hpp"
+#include "ngraph/runtime/ngvm/instruction/copy.hpp"
+#include "ngraph/runtime/ngvm/instruction/copy_by_index.hpp"
+#include "ngraph/runtime/ngvm/instruction/cos.hpp"
+#include "ngraph/runtime/ngvm/instruction/cosh.hpp"
+#include "ngraph/runtime/ngvm/instruction/divide.hpp"
+#include "ngraph/runtime/ngvm/instruction/dot.hpp"
+#include "ngraph/runtime/ngvm/instruction/equal.hpp"
+#include "ngraph/runtime/ngvm/instruction/exp.hpp"
+#include "ngraph/runtime/ngvm/instruction/floor.hpp"
+#include "ngraph/runtime/ngvm/instruction/greater.hpp"
+#include "ngraph/runtime/ngvm/instruction/greater_eq.hpp"
+#include "ngraph/runtime/ngvm/instruction/less.hpp"
+#include "ngraph/runtime/ngvm/instruction/less_eq.hpp"
+#include "ngraph/runtime/ngvm/instruction/log.hpp"
+#include "ngraph/runtime/ngvm/instruction/maximum.hpp"
+#include "ngraph/runtime/ngvm/instruction/minimum.hpp"
+#include "ngraph/runtime/ngvm/instruction/multiply.hpp"
+#include "ngraph/runtime/ngvm/instruction/negate.hpp"
+#include "ngraph/runtime/ngvm/instruction/not.hpp"
+#include "ngraph/runtime/ngvm/instruction/not_equal.hpp"
+#include "ngraph/runtime/ngvm/instruction/one_hot.hpp"
+#include "ngraph/runtime/ngvm/instruction/power.hpp"
+#include "ngraph/runtime/ngvm/instruction/reduce.hpp"
+#include "ngraph/runtime/ngvm/instruction/replace_slice.hpp"
+#include "ngraph/runtime/ngvm/instruction/reshape.hpp"
+#include "ngraph/runtime/ngvm/instruction/return.hpp"
+#include "ngraph/runtime/ngvm/instruction/scalar_tensor_product.hpp"
+#include "ngraph/runtime/ngvm/instruction/select.hpp"
+#include "ngraph/runtime/ngvm/instruction/sign.hpp"
+#include "ngraph/runtime/ngvm/instruction/sin.hpp"
+#include "ngraph/runtime/ngvm/instruction/sinh.hpp"
+#include "ngraph/runtime/ngvm/instruction/slice.hpp"
+#include "ngraph/runtime/ngvm/instruction/sqrt.hpp"
+#include "ngraph/runtime/ngvm/instruction/subtract.hpp"
+#include "ngraph/runtime/ngvm/instruction/sum.hpp"
+#include "ngraph/runtime/ngvm/instruction/tan.hpp"
+#include "ngraph/runtime/ngvm/instruction/tanh.hpp"
 #include "ngraph/runtime/utils.hpp"
 #include "ngraph/util.hpp"
 
@@ -164,9 +156,17 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         {                                                                                          \
             macro(element::Float32, ##__VA_ARGS__);                                                \
         }                                                                                          \
+        else if (et == element::Float64::element_type())                                           \
+        {                                                                                          \
+            macro(element::Float64, ##__VA_ARGS__);                                                \
+        }                                                                                          \
         else if (et == element::Int8::element_type())                                              \
         {                                                                                          \
             macro(element::Int8, ##__VA_ARGS__);                                                   \
+        }                                                                                          \
+        else if (et == element::Int16::element_type())                                             \
+        {                                                                                          \
+            macro(element::Int16, ##__VA_ARGS__);                                                  \
         }                                                                                          \
         else if (et == element::Int32::element_type())                                             \
         {                                                                                          \
@@ -179,6 +179,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         else if (et == element::UInt8::element_type())                                             \
         {                                                                                          \
             macro(element::UInt8, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
+        else if (et == element::UInt16::element_type())                                            \
+        {                                                                                          \
+            macro(element::UInt16, ##__VA_ARGS__);                                                 \
         }                                                                                          \
         else if (et == element::UInt32::element_type())                                            \
         {                                                                                          \
@@ -200,9 +204,17 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         {                                                                                          \
             macro(element::Float32, ##__VA_ARGS__);                                                \
         }                                                                                          \
+        else if (et == element::Float64::element_type())                                           \
+        {                                                                                          \
+            macro(element::Float64, ##__VA_ARGS__);                                                \
+        }                                                                                          \
         else if (et == element::Int8::element_type())                                              \
         {                                                                                          \
             macro(element::Int8, ##__VA_ARGS__);                                                   \
+        }                                                                                          \
+        else if (et == element::Int16::element_type())                                             \
+        {                                                                                          \
+            macro(element::Int16, ##__VA_ARGS__);                                                  \
         }                                                                                          \
         else if (et == element::Int32::element_type())                                             \
         {                                                                                          \
@@ -215,6 +227,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         else if (et == element::UInt8::element_type())                                             \
         {                                                                                          \
             macro(element::UInt8, ##__VA_ARGS__);                                                  \
+        }                                                                                          \
+        else if (et == element::UInt16::element_type())                                            \
+        {                                                                                          \
+            macro(element::UInt16, ##__VA_ARGS__);                                                 \
         }                                                                                          \
         else if (et == element::UInt32::element_type())                                            \
         {                                                                                          \
@@ -230,49 +246,10 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         }                                                                                          \
     }
 
-#define DO_ON_SIGNED_NUMERIC_TYPE(et, err_msg, macro, ...)                                         \
-    {                                                                                              \
-        if (et == element::Float32::element_type())                                                \
-        {                                                                                          \
-            macro(element::Float32, ##__VA_ARGS__);                                                \
-        }                                                                                          \
-        else if (et == element::Int8::element_type())                                              \
-        {                                                                                          \
-            macro(element::Int8, ##__VA_ARGS__);                                                   \
-        }                                                                                          \
-        else if (et == element::Int32::element_type())                                             \
-        {                                                                                          \
-            macro(element::Int32, ##__VA_ARGS__);                                                  \
-        }                                                                                          \
-        else if (et == element::Int64::element_type())                                             \
-        {                                                                                          \
-            macro(element::Int64, ##__VA_ARGS__);                                                  \
-        }                                                                                          \
-        else                                                                                       \
-        {                                                                                          \
-            throw ngraph_error(err_msg);                                                           \
-        }                                                                                          \
-    }
-
 #define REGISTER_INSTRUCTION(op_class, instr_class, ...)                                           \
     REGISTER_TO_OP_MAP(op_class)                                                                   \
     {                                                                                              \
         ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__));                  \
-    }
-
-#define M_REGISTER_SIGNED_NUMERIC_UNOP(T, instr_class)                                             \
-    ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], out[0]));
-#define REGISTER_SIGNED_NUMERIC_UNOP(op_class, instr_class)                                        \
-    REGISTER_TO_OP_MAP(op_class)                                                                   \
-    {                                                                                              \
-        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
-                                       n->get_arguments().at(0)->get_value_type()))                \
-                                      ->get_element_type();                                        \
-        DO_ON_SIGNED_NUMERIC_TYPE(                                                                 \
-            et,                                                                                    \
-            "Internal error: signed numeric unop has unhandled element type",                      \
-            M_REGISTER_SIGNED_NUMERIC_UNOP,                                                        \
-            instr_class);                                                                          \
     }
 
 #define M_REGISTER_NUMERIC_UNOP(T, instr_class)                                                    \
@@ -363,7 +340,7 @@ std::vector<typename ET::type>
     {                                                                                              \
         REGISTER_INSTRUCTION(                                                                      \
             op::ParameterizedConstant<T>,                                                          \
-            eigen::ConstantInstruction<T>,                                                         \
+            instruction::ConstantInstruction<T>,                                                   \
             std::vector<T::type>{                                                                  \
                 get_vector<T>(dynamic_cast<const op::ParameterizedConstant<T>*>(n)->get_value())}, \
             out[0]);                                                                               \
@@ -388,32 +365,31 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
     static OpMap op_map;
     if (!initialized)
     {
-        REGISTER_NUMERIC_UNOP(op::Acos, eigen::AcosInstruction);
-        REGISTER_NUMERIC_UNOP(op::Asin, eigen::AsinInstruction);
-        REGISTER_NUMERIC_UNOP(op::Atan, eigen::AtanInstruction);
-        REGISTER_NUMERIC_UNOP(op::Ceiling, eigen::CeilingInstruction);
-        REGISTER_NUMERIC_UNOP(op::Cos, eigen::CosInstruction);
-        REGISTER_NUMERIC_UNOP(op::Cosh, eigen::CoshInstruction);
-        REGISTER_NUMERIC_UNOP(op::Exp, eigen::ExpInstruction);
-        REGISTER_NUMERIC_UNOP(op::Floor, eigen::FloorInstruction);
-        REGISTER_NUMERIC_UNOP(op::Log, eigen::LogInstruction);
-        REGISTER_NUMERIC_UNOP(op::Negative, eigen::NegateInstruction);
-        REGISTER_NUMERIC_UNOP(op::Sign, eigen::SignInstruction);
-        REGISTER_NUMERIC_UNOP(op::Sin, eigen::SinInstruction);
-        REGISTER_NUMERIC_UNOP(op::Sinh, eigen::SinhInstruction);
-        REGISTER_NUMERIC_UNOP(op::Sqrt, eigen::SqrtInstruction);
-        REGISTER_NUMERIC_UNOP(op::Tan, eigen::TanInstruction);
-        REGISTER_NUMERIC_UNOP(op::Tanh, eigen::TanhInstruction);
+        REGISTER_NUMERIC_UNOP(op::Abs, instruction::AbsInstruction);
+        REGISTER_NUMERIC_UNOP(op::Acos, instruction::AcosInstruction);
+        REGISTER_NUMERIC_UNOP(op::Asin, instruction::AsinInstruction);
+        REGISTER_NUMERIC_UNOP(op::Atan, instruction::AtanInstruction);
+        REGISTER_NUMERIC_UNOP(op::Ceiling, instruction::CeilingInstruction);
+        REGISTER_NUMERIC_UNOP(op::Cos, instruction::CosInstruction);
+        REGISTER_NUMERIC_UNOP(op::Cosh, instruction::CoshInstruction);
+        REGISTER_NUMERIC_UNOP(op::Exp, instruction::ExpInstruction);
+        REGISTER_NUMERIC_UNOP(op::Floor, instruction::FloorInstruction);
+        REGISTER_NUMERIC_UNOP(op::Log, instruction::LogInstruction);
+        REGISTER_NUMERIC_UNOP(op::Negative, instruction::NegateInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sign, instruction::SignInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sin, instruction::SinInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sinh, instruction::SinhInstruction);
+        REGISTER_NUMERIC_UNOP(op::Sqrt, instruction::SqrtInstruction);
+        REGISTER_NUMERIC_UNOP(op::Tan, instruction::TanInstruction);
+        REGISTER_NUMERIC_UNOP(op::Tanh, instruction::TanhInstruction);
 
-        REGISTER_SIGNED_NUMERIC_UNOP(op::Abs, eigen::AbsInstruction);
-
-        REGISTER_NUMERIC_BINOP(op::Add, eigen::AddInstruction);
-        REGISTER_NUMERIC_BINOP(op::Divide, eigen::DivideInstruction);
-        REGISTER_NUMERIC_BINOP(op::Maximum, eigen::MaximumInstruction);
-        REGISTER_NUMERIC_BINOP(op::Minimum, eigen::MinimumInstruction);
-        REGISTER_NUMERIC_BINOP(op::Multiply, eigen::MultiplyInstruction);
-        REGISTER_NUMERIC_BINOP(op::Power, eigen::PowerInstruction);
-        REGISTER_NUMERIC_BINOP(op::Subtract, eigen::SubtractInstruction);
+        REGISTER_NUMERIC_BINOP(op::Add, instruction::AddInstruction);
+        REGISTER_NUMERIC_BINOP(op::Divide, instruction::DivideInstruction);
+        REGISTER_NUMERIC_BINOP(op::Maximum, instruction::MaximumInstruction);
+        REGISTER_NUMERIC_BINOP(op::Minimum, instruction::MinimumInstruction);
+        REGISTER_NUMERIC_BINOP(op::Multiply, instruction::MultiplyInstruction);
+        REGISTER_NUMERIC_BINOP(op::Power, instruction::PowerInstruction);
+        REGISTER_NUMERIC_BINOP(op::Subtract, instruction::SubtractInstruction);
 
         REGISTER_TO_OP_MAP(op::Constant)
         {
@@ -424,7 +400,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto c_value_strings = c->get_value_strings();
 
 #define M_REGISTER_POLYMORPHIC_CONSTANT(ET)                                                        \
-    ef->get_instructions()->push_back(make_shared<eigen::ConstantInstruction<ET>>(                 \
+    ef->get_instructions()->push_back(make_shared<instruction::ConstantInstruction<ET>>(           \
         parse_string<typename ET::type>(c_value_strings), out[0]));
 
             DO_ON_ELEMENT_TYPE(c_element_type,
@@ -432,25 +408,28 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                M_REGISTER_POLYMORPHIC_CONSTANT);
         };
 
-        REGISTER_POLYMORPHIC_BINOP(op::Equal, eigen::EqualInstruction);
-        REGISTER_POLYMORPHIC_BINOP(op::NotEqual, eigen::NotEqualInstruction);
-        REGISTER_POLYMORPHIC_BINOP(op::Greater, eigen::GreaterThanInstruction);
-        REGISTER_POLYMORPHIC_BINOP(op::GreaterEq, eigen::GreaterEqInstruction);
-        REGISTER_POLYMORPHIC_BINOP(op::Less, eigen::LessThanInstruction);
-        REGISTER_POLYMORPHIC_BINOP(op::LessEq, eigen::LessEqInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::Equal, instruction::EqualInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::NotEqual, instruction::NotEqualInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::Greater, instruction::GreaterInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::GreaterEq, instruction::GreaterEqInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::Less, instruction::LessInstruction);
+        REGISTER_POLYMORPHIC_BINOP(op::LessEq, instruction::LessEqInstruction);
 
-        REGISTER_POLYMORPHIC_TERNOP(op::Select, eigen::SelectInstruction);
+        REGISTER_LOGICAL_UNOP(op::Not, instruction::NotInstruction);
+
+        REGISTER_POLYMORPHIC_TERNOP(op::Select, instruction::SelectInstruction);
 
         REGISTER_CONSTANT_INSTRUCTIONS(element::Bool);
         REGISTER_CONSTANT_INSTRUCTIONS(element::Float32);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::Float64);
         REGISTER_CONSTANT_INSTRUCTIONS(element::Int8);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::Int16);
         REGISTER_CONSTANT_INSTRUCTIONS(element::Int32);
         REGISTER_CONSTANT_INSTRUCTIONS(element::Int64);
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt8);
+        REGISTER_CONSTANT_INSTRUCTIONS(element::UInt16);
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt32);
         REGISTER_CONSTANT_INSTRUCTIONS(element::UInt64);
-
-        REGISTER_LOGICAL_UNOP(op::Not, eigen::NotInstruction);
 
         REGISTER_TO_OP_MAP(op::Broadcast)
         {
@@ -459,93 +438,52 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
                 n->get_arguments().at(0)->get_value_type());
             assert(nullptr != arg_tensor_type);
+            auto arg_shape = arg_tensor_type->get_shape();
 
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
-
-            auto arg_shape = arg_tensor_type->get_shape();
             auto result_shape = result_tensor_type->get_shape();
             auto& result_element_type = result_tensor_type->get_element_type();
 
-            if (broadcast->get_broadcast_axes().empty())
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                             "Broadcast has unhandled element type",
-                                             eigen::CopyInstruction,
-                                             in[0].get_index(),
-                                             out[0].get_index());
-            }
-            else if (arg_shape.size() == 0)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                             "Broadcast has unhandled element type",
-                                             eigen::BroadcastScalarInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            else if (arg_shape.size() == 1 && result_shape.size() == 2)
-            {
-                if (broadcast->get_broadcast_axes() == AxisSet{1})
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                                 "Broadcast has unhandled element type",
-                                                 eigen::BroadcastVectorColwiseInstruction,
-                                                 in[0],
-                                                 out[0]);
-                }
-                else if (broadcast->get_broadcast_axes() == AxisSet{0})
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                                 "Broadcast has unhandled element type",
-                                                 eigen::BroadcastVectorRowwiseInstruction,
-                                                 in[0],
-                                                 out[0]);
-                }
-                else
-                {
-                    throw ngraph_error(
-                        "Internal error: axis set for vector-matrix broadcast is neither {0} nor "
-                        "{1}");
-                }
-            }
-            else
-            {
-                throw ngraph_error("Broadcast not implemented for rank>2 in VM yet");
-            }
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "Broadcast has unhandled element type",
+                                         instruction::BroadcastInstruction,
+                                         in[0],
+                                         out[0],
+                                         arg_shape,
+                                         result_shape,
+                                         broadcast->get_broadcast_axes());
         };
 
         REGISTER_TO_OP_MAP(op::Concat)
         {
+            auto concat = static_cast<const op::Concat*>(n);
+
+            std::vector<Shape> arg_shapes;
+
+            for (auto arg : n->get_arguments())
+            {
+                auto arg_tensor_type =
+                    dynamic_pointer_cast<const TensorViewType>(arg->get_value_type());
+                assert(nullptr != arg_tensor_type);
+                arg_shapes.push_back(arg_tensor_type->get_shape());
+            }
+
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
-
             auto result_shape = result_tensor_type->get_shape();
             auto& result_element_type = result_tensor_type->get_element_type();
 
-            if (result_shape.size() == 1)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                             "Concat has unhandled element type",
-                                             eigen::ConcatVectorInstruction,
-                                             in,
-                                             out[0]);
-            }
-            else if (result_shape.size() == 2)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(
-                    result_element_type,
-                    "Concat has unhandled element type",
-                    eigen::ConcatMatrixInstruction,
-                    in,
-                    (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis(),
-                    out[0]);
-            }
-            else
-            {
-                throw ngraph_error("Concat not implemented for rank>2 in VM yet");
-            }
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "Concat has unhandled element type",
+                                         instruction::ConcatInstruction,
+                                         in,
+                                         out[0],
+                                         arg_shapes,
+                                         result_shape,
+                                         concat->get_concatenation_axis());
         };
 
         REGISTER_TO_OP_MAP(op::Convert)
@@ -571,7 +509,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
              result_element_type == (TO::element_type()))                                          \
     {                                                                                              \
         ef->get_instructions()->push_back(                                                         \
-            make_shared<eigen::ConvertInstruction<TI, TO>>(in[0], out[0]));                        \
+            make_shared<instruction::ConvertInstruction<TI, TO>>(in[0], out[0]));                  \
     }
 // End hacky macro
 
@@ -580,10 +518,13 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 #define REGISTER_CONVERTS(TI)                                                                      \
     REGISTER_CONVERT(TI, element::Bool)                                                            \
     REGISTER_CONVERT(TI, element::Float32)                                                         \
+    REGISTER_CONVERT(TI, element::Float64)                                                         \
     REGISTER_CONVERT(TI, element::Int8)                                                            \
+    REGISTER_CONVERT(TI, element::Int16)                                                           \
     REGISTER_CONVERT(TI, element::Int32)                                                           \
     REGISTER_CONVERT(TI, element::Int64)                                                           \
     REGISTER_CONVERT(TI, element::UInt8)                                                           \
+    REGISTER_CONVERT(TI, element::UInt16)                                                          \
     REGISTER_CONVERT(TI, element::UInt32)                                                          \
     REGISTER_CONVERT(TI, element::UInt64)
             // End hacky macro
@@ -593,10 +534,13 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
             REGISTER_CONVERTS(element::Bool)
             REGISTER_CONVERTS(element::Float32)
+            REGISTER_CONVERTS(element::Float64)
             REGISTER_CONVERTS(element::Int8)
+            REGISTER_CONVERTS(element::Int16)
             REGISTER_CONVERTS(element::Int32)
             REGISTER_CONVERTS(element::Int64)
             REGISTER_CONVERTS(element::UInt8)
+            REGISTER_CONVERTS(element::UInt16)
             REGISTER_CONVERTS(element::UInt32)
             REGISTER_CONVERTS(element::UInt64)
             else { throw ngraph_error("Internal error: cannot convert between element types"); }
@@ -622,12 +566,18 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto arg1_shape = arg1_tensor_type->get_shape();
             auto& arg0_element_type = arg0_tensor_type->get_element_type();
 
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+
+            auto result_shape = result_tensor_type->get_shape();
+
             // If arg0 or arg1 is a scalar, emit a scalar-tensor product.
             if (arg0_shape.size() == 0)
             {
                 PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
                                                      "Dot has unhandled element type",
-                                                     eigen::ScalarTensorProductInstruction,
+                                                     instruction::ScalarTensorProductInstruction,
                                                      in[0],
                                                      in[1],
                                                      out[0]);
@@ -636,48 +586,60 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             {
                 PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
                                                      "Dot has unhandled element type",
-                                                     eigen::ScalarTensorProductInstruction,
+                                                     instruction::ScalarTensorProductInstruction,
                                                      in[1],
                                                      in[0],
                                                      out[0]);
             }
 
-            // If arg0 and arg1 are both vectors, emit a dot product.
+            // If arg0 and arg1 are both vectors, dot both on axis 0.
             else if (arg0_shape.size() == 1 && arg1_shape.size() == 1)
             {
                 PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
                                                      "Dot has unhandled element type",
-                                                     eigen::DotInstruction,
+                                                     instruction::DotInstruction,
                                                      in[0],
                                                      in[1],
-                                                     out[0]);
+                                                     out[0],
+                                                     arg0_shape,
+                                                     arg1_shape,
+                                                     result_shape,
+                                                     0,
+                                                     0);
             }
 
-            // If arg0 is a matrix and arg1 is a vector, emit a matrix-vector product.
+            // If arg0 is a matrix and arg1 is a vector, dot on axes 1 and 0 respectively.
             else if (arg0_shape.size() == 2 && arg1_shape.size() == 1)
             {
                 PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
                                                      "Dot has unhandled element type",
-                                                     eigen::MatrixVectorProductInstruction,
+                                                     instruction::DotInstruction,
                                                      in[0],
                                                      in[1],
-                                                     out[0]);
+                                                     out[0],
+                                                     arg0_shape,
+                                                     arg1_shape,
+                                                     result_shape,
+                                                     1,
+                                                     0);
             }
 
-            // If arg0 and arg1 are both matrices, emit a matrix product.
-            else if (arg0_shape.size() == 2 && arg1_shape.size() == 2)
+            // If arg0 is rank n and arg1 is rank m, dot on axes n-1 and m-2, respectively.
+            //
+            // Note that this happens to handle the vector-matrix and matrix-matrix cases.
+            else
             {
                 PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
                                                      "Dot has unhandled element type",
-                                                     eigen::MatrixMultInstruction,
+                                                     instruction::DotInstruction,
                                                      in[0],
                                                      in[1],
-                                                     out[0]);
-            }
-
-            else
-            {
-                throw ngraph_error("Dot product for tensors with rank>2 not implemented yet.");
+                                                     out[0],
+                                                     arg0_shape,
+                                                     arg1_shape,
+                                                     result_shape,
+                                                     arg0_shape.size() - 1,
+                                                     arg1_shape.size() - 2);
             }
         };
 
@@ -697,9 +659,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
             PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
                                          "GetTupleElement has unhandled element type",
-                                         eigen::CopyInstruction,
-                                         in.at(get_tuple_element->get_n()).get_index(),
-                                         out.at(0).get_index());
+                                         instruction::CopyInstruction,
+                                         in[get_tuple_element->get_n()],
+                                         out[0]);
         };
 
         // Tuple will be spliced out, with the users of out connected to the corresponding in's source, but, for now, we need to copy.
@@ -710,9 +672,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 auto& et = in.at(i).get_tensor_view_layout()->get_element_type();
                 PUSH_POLYMORPHIC_INSTRUCTION(et,
                                              "Tuple has unhandled element type",
-                                             eigen::CopyInstruction,
-                                             in.at(i).get_index(),
-                                             out.at(i).get_index());
+                                             instruction::CopyInstruction,
+                                             in[i],
+                                             out[i]);
             }
         };
 
@@ -734,14 +696,14 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             }
 
             ef->get_instructions()->push_back(
-                make_shared<eigen::CallInstruction>(external, in, out));
+                make_shared<instruction::CallInstruction>(external, in, out));
         };
 
         REGISTER_TO_OP_MAP(op::Reduce)
         {
             auto reduce = static_cast<const op::Reduce*>(n);
-            auto reduction_function = reduce->get_function();
 
+            auto reduction_function = reduce->get_function();
             std::shared_ptr<ExternalFunction> external;
 
             try
@@ -754,322 +716,140 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 function_map.insert({reduction_function, external});
             }
 
-            auto reductee_type = reduce->get_arguments().at(0)->get_value_type();
-            auto reductee_tensor_view_type =
-                dynamic_pointer_cast<const TensorViewType>(reductee_type);
-            assert(nullptr != reductee_tensor_view_type);
-            auto reductee_shape = reductee_tensor_view_type->get_shape();
+            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_arguments().at(0)->get_value_type());
+            assert(nullptr != arg_tensor_type);
+            auto arg_shape = arg_tensor_type->get_shape();
 
-            auto f_result_type = reduction_function->get_result_type();
-            auto f_result_tensor_view_type =
-                dynamic_pointer_cast<const TensorViewType>(f_result_type);
-            assert(nullptr != f_result_tensor_view_type);
-            auto& f_result_element_type = f_result_tensor_view_type->get_element_type();
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+            auto result_shape = result_tensor_type->get_shape();
+            auto& result_element_type = result_tensor_type->get_element_type();
 
-            auto result_type = reduce->get_value_type();
-            auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
-            assert(nullptr != result_tensor_view_type);
-            auto result_shape = result_tensor_view_type->get_shape();
+#define M(ET)                                                                                      \
+    {                                                                                              \
+        auto reduce_handler = [external](typename ET::type x, typename ET::type y) ->              \
+            typename ET::type                                                                      \
+        {                                                                                          \
+            std::shared_ptr<CallFrame> cf =                                                        \
+                std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());                 \
+                                                                                                   \
+            auto tx = ngraph::runtime::make_tensor<ET>(Shape{}, {x});                              \
+            auto ty = ngraph::runtime::make_tensor<ET>(Shape{}, {y});                              \
+            auto tr = ngraph::runtime::make_tensor<ET>(Shape{});                                   \
+                                                                                                   \
+            cf->call({tx, ty}, {tr});                                                              \
+            return tr->get_vector()[0];                                                            \
+        };                                                                                         \
+                                                                                                   \
+        PUSH_INSTRUCTION(ET,                                                                       \
+                         instruction::ReduceInstruction,                                           \
+                         in[0],                                                                    \
+                         in[1],                                                                    \
+                         out[0],                                                                   \
+                         arg_shape,                                                                \
+                         result_shape,                                                             \
+                         reduce->get_reduction_axes(),                                             \
+                         reduce_handler);                                                          \
+    }
 
-            auto& reduction_axes = reduce->get_reduction_axes();
-
-            // Trivial case: no reduction axes (this includes the scalar-reductee case).
-            if (reduction_axes.empty())
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
-                                             "Reduce has unhandled element type",
-                                             runtime::ngvm::eigen::CopyInstruction,
-                                             in.at(0).get_index(),
-                                             out.at(0).get_index());
-            }
-            // Behavior for zero-size axes bears some explanation here. XLA's reduce
-            // operator provides an "base" element (usually, but not necessarily,
-            // an identity element) that it apparently *may* choose to insert anywhere
-            // in the reduction any number of times. For example, given:
-            //
-            //   reduce{{1,2,3},b,+)
-            //
-            // any of the following are valid reductions (I think!):
-            //
-            //   b+(b+1+2)+3
-            //   b+(1+(2+3))
-            //   (1+2)+3 (I think!)
-            //
-            // etc. Here we will choose never to instantiate the base element, which
-            // works well with Eigen's default behavior for non-zero-length axes. The
-            // exceptional case is when we reduce on a zero-length axis. In this case,
-            // Eigen's default behavior is to put a zero in the output,  which is not
-            // what we want, so we detect that case here and override with a copy
-            // instruction (for reduce-to-scalar) or a broadcast (for reduce-to-vector)
-            // from the base element.
-            //
-            // What I'm actually not sure about is whether the identity element is
-            // required to appear at least once. If so, this will need to be reworked,
-            // assuming we actually want to mimic XLA's semantics that closely, which
-            // we may not.
-            else if ((reductee_shape.size() == 1 && reduction_axes == AxisSet{0}) ||
-                     (reductee_shape.size() == 2 && reduction_axes == AxisSet{0, 1}))
-            {
-                if (reductee_shape.at(0) == 0 ||
-                    (reductee_shape.size() == 2 && reductee_shape.at(1) == 0))
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
-                                                 "Reduce has unhandled element type",
-                                                 runtime::ngvm::eigen::CopyInstruction,
-                                                 in.at(1).get_index(),
-                                                 out.at(0).get_index());
-                }
-                else
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
-                                                 "Reduce has unhandled element type",
-                                                 runtime::ngvm::eigen::ReduceToScalarInstruction,
-                                                 external,
-                                                 in[0],
-                                                 in[1],
-                                                 out[0]);
-                }
-            }
-            else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{1})
-            {
-                if (reductee_shape.at(1) == 0)
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
-                                                 "Reduce has unhandled element type",
-                                                 runtime::ngvm::eigen::BroadcastScalarInstruction,
-                                                 in[1],
-                                                 out[0]);
-                }
-                else
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
-                                                 "Reduce has unhandled element type",
-                                                 runtime::ngvm::eigen::ReduceMatrixRowsInstruction,
-                                                 external,
-                                                 in[0],
-                                                 in[1],
-                                                 out[0]);
-                }
-            }
-            else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{0})
-            {
-                if (reductee_shape.at(0) == 0)
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(f_result_element_type,
-                                                 "Reduce has unhandled element type",
-                                                 runtime::ngvm::eigen::BroadcastScalarInstruction,
-                                                 in[1],
-                                                 out[0]);
-                }
-                else
-                {
-                    PUSH_POLYMORPHIC_INSTRUCTION(
-                        f_result_element_type,
-                        "Reduce has unhandled element type",
-                        runtime::ngvm::eigen::ReduceMatrixColumnsInstruction,
-                        external,
-                        in[0],
-                        in[1],
-                        out[0]);
-                }
-            }
-            else
-            {
-                throw ngraph_error("Reduce: only vectors and matrices are currently supported");
-            }
+            DO_ON_ELEMENT_TYPE(
+                result_element_type,
+                "Internal error: tried to create reduction handler for unhandled element type",
+                M);
+#undef M
         };
 
         REGISTER_TO_OP_MAP(op::Sum)
         {
-            auto s = static_cast<const op::Sum*>(n);
-            auto s_tensor_view_type =
-                dynamic_pointer_cast<const TensorViewType>(s->get_value_type());
-            assert(nullptr != s_tensor_view_type);
-            auto& s_element_type = s_tensor_view_type->get_element_type();
-            auto s_shape = s_tensor_view_type->get_shape();
+            auto sum = static_cast<const op::Sum*>(n);
 
-            auto arg = s->get_arguments().at(0);
-            auto arg_type = arg->get_value_type();
-            auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
-            assert(nullptr != arg_tensor_view_type);
-            auto arg_shape = arg_tensor_view_type->get_shape();
-            auto arg_rank = arg_shape.size();
+            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_arguments().at(0)->get_value_type());
+            assert(nullptr != arg_tensor_type);
+            auto arg_shape = arg_tensor_type->get_shape();
 
-            auto& reduction_axes = s->get_reduction_axes();
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+            auto result_shape = result_tensor_type->get_shape();
+            auto& result_element_type = result_tensor_type->get_element_type();
 
-            // Trivial case: no reduction axes.
-            if (reduction_axes.size() == 0)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
-                                             "Sum has unhandled element type",
-                                             runtime::ngvm::eigen::CopyInstruction,
-                                             in.at(0).get_index(),
-                                             out.at(0).get_index());
-            }
-            // Full reduction? Then sum to scalar.
-            else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
-                     (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
-                                             "Sum has unhandled element type",
-                                             runtime::ngvm::eigen::SumToScalarInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            else if (arg_rank == 2 && reduction_axes == AxisSet{1})
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
-                                             "Sum has unhandled element type",
-                                             runtime::ngvm::eigen::SumMatrixRowsInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            else if (arg_rank == 2 && reduction_axes == AxisSet{0})
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(s_element_type,
-                                             "Sum has unhandled element type",
-                                             runtime::ngvm::eigen::SumMatrixColumnsInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            else
-            {
-                throw ngraph_error("Sum: only vectors and matrices are currently supported");
-            }
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "Sum has unhandled element type",
+                                         instruction::SumInstruction,
+                                         in[0],
+                                         out[0],
+                                         arg_shape,
+                                         result_shape,
+                                         sum->get_reduction_axes());
         };
 
         REGISTER_TO_OP_MAP(op::Reshape)
         {
             auto reshape = static_cast<const op::Reshape*>(n);
 
-            auto arg_type = reshape->get_arguments().at(0)->get_value_type();
-            auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
-            assert(nullptr != arg_tensor_view_type);
-            auto arg_shape = arg_tensor_view_type->get_shape();
-            auto arg_rank = arg_shape.size();
+            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_arguments().at(0)->get_value_type());
+            assert(nullptr != arg_tensor_type);
+            auto arg_shape = arg_tensor_type->get_shape();
 
-            auto result_type = reshape->get_value_type();
-            auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
-            assert(nullptr != result_tensor_view_type);
-            auto result_shape = result_tensor_view_type->get_shape();
-            auto& result_element_type = result_tensor_view_type->get_element_type();
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+            auto result_shape = result_tensor_type->get_shape();
+            auto& result_element_type = result_tensor_type->get_element_type();
 
-            auto input_order = reshape->get_input_order();
-
-            bool same_layout = std::is_sorted(input_order.begin(), input_order.end());
-
-            size_t result_shape_product = 1;
-            for (auto i : result_shape)
-            {
-                result_shape_product *= i;
-            }
-
-            // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor, we can just copy.
-            if (same_layout || result_shape_product < 2)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                             "Reshape has unhandled element type",
-                                             runtime::ngvm::eigen::CopyInstruction,
-                                             in.at(0).get_index(),
-                                             out.at(0).get_index());
-            }
-            // If there *is* a layout change in the 2D case, we transpose the input.
-            else if (arg_rank == 2)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
-                                             "Reshape has unhandled element type",
-                                             runtime::ngvm::eigen::MatrixTransposeInstruction,
-                                             in[0],
-                                             out[0]);
-            }
-            // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
-            else
-            {
-                throw ngraph_error(
-                    "Axis permutation in reshape is not implemented yet for tensors with rank>2 in "
-                    "VM");
-            }
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "Reshape has unhandled element type",
+                                         instruction::ReshapeInstruction,
+                                         in[0],
+                                         out[0],
+                                         arg_shape,
+                                         reshape->get_input_order(),
+                                         result_shape);
         };
 
         REGISTER_TO_OP_MAP(op::Slice)
         {
             auto slice = static_cast<const op::Slice*>(n);
 
-            for (auto d : slice->get_step())
-            {
-                if (1 != d)
-                {
-                    throw ngraph_error("Slice does not support non-unit step yet in the VM");
-                }
-            }
-
             auto arg_type = slice->get_arguments().at(0)->get_value_type();
             auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
             assert(nullptr != arg_tensor_view_type);
             auto arg_shape = arg_tensor_view_type->get_shape();
-            auto arg_rank = arg_shape.size();
             auto& arg_element_type = arg_tensor_view_type->get_element_type();
+
+            auto result_type = slice->get_value_type();
+            auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
+            assert(nullptr != result_tensor_view_type);
+            auto result_shape = result_tensor_view_type->get_shape();
 
             auto& lower_bounds = slice->get_lower_bounds();
             auto& upper_bounds = slice->get_upper_bounds();
 
-            // Scalar slice is necessarily just a copy.
-            if (arg_rank == 0)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
-                                             "Slice has unhandled element type",
-                                             runtime::ngvm::eigen::CopyInstruction,
-                                             in.at(0).get_index(),
-                                             out.at(0).get_index());
-            }
-            else if (arg_rank == 1)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
-                                             "Slice has unhandled element type",
-                                             runtime::ngvm::eigen::VectorSliceInstruction,
-                                             in[0],
-                                             out[0],
-                                             lower_bounds[0],
-                                             upper_bounds[0]);
-            }
-            else if (arg_rank == 2)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
-                                             "Slice has unhandled element type",
-                                             runtime::ngvm::eigen::MatrixSliceInstruction,
-                                             in[0],
-                                             out[0],
-                                             lower_bounds[0],
-                                             lower_bounds[1],
-                                             upper_bounds[0],
-                                             upper_bounds[1]);
-            }
+            auto& strides = slice->get_strides();
 
-            // Other cases (slicing for tensors with rank>2) are not handled yet.
-            else
-            {
-                throw ngraph_error("Slice is not implemented yet for tensors with rank>2 in VM");
-            }
+            PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
+                                         "Slice has unhandled element type",
+                                         runtime::ngvm::instruction::SliceInstruction,
+                                         in[0],
+                                         out[0],
+                                         arg_shape,
+                                         lower_bounds,
+                                         upper_bounds,
+                                         strides,
+                                         result_shape);
         };
 
         REGISTER_TO_OP_MAP(op::ReplaceSlice)
         {
             auto replace_slice = static_cast<const op::ReplaceSlice*>(n);
 
-            for (auto d : replace_slice->get_step())
-            {
-                if (1 != d)
-                {
-                    throw ngraph_error(
-                        "Replace-slice does not support non-unit step yet in the VM");
-                }
-            }
-
             auto arg0_type = replace_slice->get_arguments().at(0)->get_value_type();
             auto arg0_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg0_type);
             assert(nullptr != arg0_tensor_view_type);
-            auto arg0_shape = arg0_tensor_view_type->get_shape();
-            auto arg0_rank = arg0_shape.size();
             auto& arg0_element_type = arg0_tensor_view_type->get_element_type();
 
             auto arg1_type = replace_slice->get_arguments().at(1)->get_value_type();
@@ -1077,49 +857,52 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             assert(nullptr != arg1_tensor_view_type);
             auto arg1_shape = arg1_tensor_view_type->get_shape();
 
+            auto result_type = replace_slice->get_value_type();
+            auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
+            assert(nullptr != result_tensor_view_type);
+            auto result_shape = result_tensor_view_type->get_shape();
+
             auto& lower_bounds = replace_slice->get_lower_bounds();
             auto& upper_bounds = replace_slice->get_upper_bounds();
 
-            // Scalar slice necessarily just overwrites.
-            if (arg0_rank == 0)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
-                                             "Replace-slice has unhandled element type",
-                                             runtime::ngvm::eigen::CopyInstruction,
-                                             in.at(1).get_index(),
-                                             out.at(0).get_index());
-            }
-            else if (arg0_rank == 1)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
-                                             "Replace-slice has unhandled element type",
-                                             runtime::ngvm::eigen::ReplaceVectorSliceInstruction,
-                                             in[0],
-                                             in[1],
-                                             out[0],
-                                             lower_bounds[0],
-                                             upper_bounds[0]);
-            }
-            else if (arg0_rank == 2)
-            {
-                PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
-                                             "Replace-slice has unhandled element type",
-                                             runtime::ngvm::eigen::ReplaceMatrixSliceInstruction,
-                                             in[0],
-                                             in[1],
-                                             out[0],
-                                             lower_bounds[0],
-                                             lower_bounds[1],
-                                             upper_bounds[0],
-                                             upper_bounds[1]);
-            }
+            auto& strides = replace_slice->get_strides();
 
-            // Other cases (slicing for tensors with rank>2) are not handled yet.
-            else
-            {
-                throw ngraph_error(
-                    "Replace-slice is not implemented yet for tensors with rank>2 in VM");
-            }
+            PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+                                         "Replace-slice has unhandled element type",
+                                         runtime::ngvm::instruction::ReplaceSliceInstruction,
+                                         in[0],
+                                         in[1],
+                                         out[0],
+                                         arg1_shape,
+                                         lower_bounds,
+                                         upper_bounds,
+                                         strides,
+                                         result_shape);
+        };
+
+        REGISTER_TO_OP_MAP(op::OneHot)
+        {
+            auto one_hot = static_cast<const op::OneHot*>(n);
+
+            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
+                n->get_arguments().at(0)->get_value_type());
+            assert(nullptr != arg_tensor_type);
+            auto arg_shape = arg_tensor_type->get_shape();
+
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+            auto result_shape = result_tensor_type->get_shape();
+            auto& result_element_type = result_tensor_type->get_element_type();
+
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "One-hot has unhandled element type",
+                                         instruction::OneHotInstruction,
+                                         in[0],
+                                         out[0],
+                                         arg_shape,
+                                         result_shape,
+                                         one_hot->get_one_hot_axis());
         };
 
         initialized = true;
@@ -1182,9 +965,10 @@ void ExternalFunction::compile(FunctionMap& function_map)
             assert(nullptr != result_tensor_type);
             auto& result_element_type = result_tensor_type->get_element_type();
             auto ef = this;
+            // TODO: This is the one case where we can't use the new CopyInstruction that takes in a TensorViewInfo. (At least, I can't figure out how to do it.)
             PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
                                          "Copy has unhandled element type",
-                                         eigen::CopyInstruction,
+                                         instruction::CopyByIndexInstruction,
                                          prev_index_it->second,
                                          index);
         }
@@ -1212,7 +996,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
         }
     }
 
-    // Now we build the eigen-VM instructions
+    // Now we build the VM instructions
     auto op_map = get_op_map();
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {
@@ -1240,7 +1024,7 @@ void ExternalFunction::compile(FunctionMap& function_map)
     }
     m_instructions->insert(
         m_instructions->end(), input_output_copies.begin(), input_output_copies.end());
-    m_instructions->push_back(make_shared<eigen::ReturnInstruction>());
+    m_instructions->push_back(make_shared<instruction::ReturnInstruction>());
     m_is_compiled = true;
     if (m_release_function)
     {

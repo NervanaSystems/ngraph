@@ -56,6 +56,7 @@ namespace ngraph
 
                 const element::Type& get_element_type() const;
                 const Shape& get_shape() const;
+                virtual const Strides& get_strides() const = 0;
                 /// Where this view is located in the buffer.
                 const BufferPos& get_buffer_pos() const { return m_buffer_pos; }
                 BufferPos& get_buffer_pos() { return m_buffer_pos; }

@@ -49,13 +49,6 @@ namespace ngraph
         /// | Type                   | Description                                                                     |
         /// | ---------------------- | ------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T'\f$, where \f$T'[i_1,\dots,i_n] = T[del([i_1,\dots,i_n],A)]\f$. |
-        ///
-        /// ## Implementation Status
-        ///
-        /// | Backend | Status                                          |
-        /// | ------- | ----------------------------------------------- |
-        /// | NGVM    | Implemented for scalars, matrices, and vectors. |
-
         class Broadcast : public RequiresTensorViewArgs
         {
         public:

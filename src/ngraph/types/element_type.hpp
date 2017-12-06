@@ -48,9 +48,10 @@ namespace ngraph
         class Type
         {
         public:
-            Type() = delete;
+            Type();
             Type(const Type&) = default;
             Type(size_t bitwidth, bool is_real, bool is_signed, const std::string& cname);
+            Type& operator=(const Type&) = default;
             virtual ~Type() {}
             const std::string& c_type_string() const;
             size_t size() const;
@@ -63,12 +64,13 @@ namespace ngraph
             bool operator<(const Type& other) const;
             friend std::ostream& operator<<(std::ostream&, const Type&);
 
+            /// Returns true if the type is floating point, else false.
+            bool get_is_real() const { return m_is_real; }
         private:
-            static std::map<std::string, Type> m_element_list;
             size_t m_bitwidth;
             bool m_is_real;
             bool m_is_signed;
-            const std::string m_cname;
+            std::string m_cname;
         };
 
         template <typename T>
@@ -184,6 +186,9 @@ namespace ngraph
         NGRAPH_DEFINE_TRAITED_TYPE_NAME(int8_t)
         using Int8 = TraitedType<int8_t>;
 
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(int16_t)
+        using Int16 = TraitedType<int16_t>;
+
         NGRAPH_DEFINE_TRAITED_TYPE_NAME(int32_t)
         using Int32 = TraitedType<int32_t>;
 
@@ -192,6 +197,9 @@ namespace ngraph
 
         NGRAPH_DEFINE_TRAITED_TYPE_NAME(uint8_t)
         using UInt8 = TraitedType<uint8_t>;
+
+        NGRAPH_DEFINE_TRAITED_TYPE_NAME(uint16_t)
+        using UInt16 = TraitedType<uint16_t>;
 
         NGRAPH_DEFINE_TRAITED_TYPE_NAME(uint32_t)
         using UInt32 = TraitedType<uint32_t>;

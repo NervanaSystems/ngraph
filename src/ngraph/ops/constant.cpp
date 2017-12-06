@@ -37,9 +37,11 @@ namespace
         ((et) == element::Bool::element_type()) ? (f<element::Bool>(__VA_ARGS__)) :       \
         ((et) == element::Float32::element_type()) ? (f<element::Float32>(__VA_ARGS__)) : \
         ((et) == element::Int8::element_type()) ? (f<element::Int8>(__VA_ARGS__)) :       \
+        ((et) == element::Int16::element_type()) ? (f<element::Int16>(__VA_ARGS__)) :     \
         ((et) == element::Int32::element_type()) ? (f<element::Int32>(__VA_ARGS__)) :     \
         ((et) == element::Int64::element_type()) ? (f<element::Int64>(__VA_ARGS__)) :     \
         ((et) == element::UInt8::element_type()) ? (f<element::UInt8>(__VA_ARGS__)) :     \
+        ((et) == element::UInt16::element_type()) ? (f<element::UInt16>(__VA_ARGS__)) :   \
         ((et) == element::UInt32::element_type()) ? (f<element::UInt32>(__VA_ARGS__)) :   \
         ((et) == element::UInt64::element_type()) ? (f<element::UInt64>(__VA_ARGS__)) :   \
         (throw ngraph_error(err_msg))                                                     \

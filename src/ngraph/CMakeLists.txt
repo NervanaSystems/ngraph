@@ -14,8 +14,10 @@
 set (SRC
     autodiff/adjoints.cpp
     builder/autobroadcast.cpp
-    builder/reduce_ops.cpp
     builder/numpy_transpose.cpp
+    builder/reduce_ops.cpp
+    common.cpp
+    coordinate_transform.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_view_layout.cpp
     descriptor/layout/tensor_view_layout.cpp
@@ -50,6 +52,7 @@ set (SRC
     ops/multiply.cpp
     ops/negative.cpp
     ops/not.cpp
+    ops/one_hot.cpp
     ops/op.cpp
     ops/parameter.cpp
     ops/power.cpp
@@ -82,6 +85,12 @@ set (SRC
     pattern/matcher.cpp
     runtime/backend.cpp
     runtime/manager.cpp
+    runtime/interpreter/int_call_frame.cpp
+    runtime/interpreter/int_backend.cpp
+    runtime/interpreter/int_manager.cpp
+    runtime/interpreter/int_kernels.cpp
+    runtime/interpreter/int_external_function.cpp
+    runtime/interpreter/int_tensor_view.cpp
     runtime/ngvm/call_frame.cpp
     runtime/ngvm/external_function.cpp
     runtime/ngvm/ngvm_backend.cpp

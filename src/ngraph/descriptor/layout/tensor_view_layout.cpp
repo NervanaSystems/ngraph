@@ -28,6 +28,7 @@ const ngraph::element::Type& TensorViewLayout::get_element_type() const
 {
     return m_tensor_view_type->get_element_type();
 }
+
 const ngraph::Shape& TensorViewLayout::get_shape() const
 {
     return m_tensor_view_type->get_shape();

@@ -35,6 +35,7 @@
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/broadcast.hpp"
+#include "ngraph/ops/ceiling.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
@@ -44,6 +45,7 @@
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/equal.hpp"
 #include "ngraph/ops/exp.hpp"
+#include "ngraph/ops/floor.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
@@ -56,6 +58,7 @@
 #include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/negative.hpp"
 #include "ngraph/ops/not_equal.hpp"
+#include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -65,6 +68,7 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
@@ -158,6 +162,10 @@ static const OpMap dispatcher{
     {TI(ngraph::op::Acos), &Emitter::EmitAcos},
     {TI(ngraph::op::Atan), &Emitter::EmitAtan},
     {TI(ngraph::op::ReplaceSlice), &Emitter::EmitReplaceSlice},
+    {TI(ngraph::op::OneHot), &Emitter::EmitOneHot},
+    {TI(ngraph::op::Floor), &Emitter::EmitFloor},
+    {TI(ngraph::op::Ceiling), &Emitter::EmitCeiling},
+    {TI(ngraph::op::Sqrt), &Emitter::EmitSqrt},
 };
 
 ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
