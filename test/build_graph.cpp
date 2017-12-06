@@ -33,8 +33,7 @@ TEST(build_graph, build_simple)
     ASSERT_EQ(dot->get_arguments()[0], arg2);
     ASSERT_EQ(dot->get_arguments()[1], arg0);
 
-    auto result_type =
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{10, 32, 7});
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), Shape{32, 3});
     auto cluster_0 =
         make_shared<Function>(dot, result_type, op::Parameters{arg0, arg1, arg2, arg3});
 
@@ -118,4 +117,68 @@ TEST(build_graph, tensor)
 // Check argument inverses
 TEST(build_graph, arg_inverse)
 {
+}
+
+// Check functions with undeclared parameters
+TEST(build_graph, function_undeclared_parameters)
+{
+    // Function with 4 parameters
+    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{7, 3});
+    auto arg1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{3});
+    auto arg2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
+    auto arg3 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
+    auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
+    auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
+    auto dot = make_shared<op::Dot>(arg2, arg0);
+    ASSERT_EQ(dot->get_arguments()[0], arg2);
+    ASSERT_EQ(dot->get_arguments()[1], arg0);
+
+    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), Shape{32, 3});
+
+    try
+    {
+        auto f = make_shared<Function>(dot, result_type, op::Parameters{arg0, arg1, arg3});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Undeclared parameter not detected.";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Function references undeclared parameter"));
+    }
+    catch (...)
+    {
+        FAIL() << "Function construction failed for unexpected reason";
+    }
+}
+
+// Check functions with incorrect declared return types
+TEST(build_graph, function_incorrect_return_type)
+{
+    // Function with 4 parameters
+    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{7, 3});
+    auto arg1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{3});
+    auto arg2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
+    auto arg3 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
+    auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
+    auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
+    auto dot = make_shared<op::Dot>(arg2, arg0);
+    ASSERT_EQ(dot->get_arguments()[0], arg2);
+    ASSERT_EQ(dot->get_arguments()[1], arg0);
+
+    auto incorrect_result_type = make_shared<TensorViewType>(element::Int32::element_type(), Shape{32, 3});
+
+    try
+    {
+        auto f = make_shared<Function>(dot, incorrect_result_type, op::Parameters{arg0, arg1, arg2, arg3});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect result type not detected.";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Function result node's value type does not match declared return type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Function construction failed for unexpected reason";
+    }
 }
