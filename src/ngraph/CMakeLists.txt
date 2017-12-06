@@ -248,48 +248,9 @@ install(DIRECTORY
     FILES_MATCHING PATTERN "*.hpp"
 )
 
-# External
-# Requirements:
-# - In NGraph, there are multiple include paths set for different external projects.
-# - However, we want one single include path for external projects from the TF bridge side, while
-#   making sure that the `#include` files can still be resolved.
-# - Therefore, when `make install`, the include directory will be "flattened" for each external
-#   projects respectively.
-
-install(DIRECTORY
-    ${EIGEN_INCLUDE_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_INCLUDE}"
-)
 if (NOT APPLE)
-install(DIRECTORY
-    ${MKLDNN_INCLUDE_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_INCLUDE}"
-)
 install(DIRECTORY
     ${MKLDNN_LIB_DIR}/
     DESTINATION "${NGRAPH_INSTALL_LIB}"
 )
-endif()
-if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
-    MKLDNN_INCLUDE_DIR)
-    # Currently this is required for Argon codegen. To avoid this, we'll need to decouple LLVM from
-    # compiler.hpp
-    install(DIRECTORY
-        ${LLVM_INCLUDE_DIR}/
-        DESTINATION "${NGRAPH_INSTALL_INCLUDE}"
-    )
-    install(DIRECTORY
-        ${LLVM_LIB_DIR}/
-        DESTINATION "${NGRAPH_INSTALL_LIB}"
-)
-endif()
-
-add_dependencies(ngraph eigen)
-
-if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_INCLUDE_DIR)
-    add_dependencies(ngraph ext_llvm)
-endif()
-
-if(NGRAPH_CPU_ENABLE AND MKLDNN_INCLUDE_DIR)
-    add_dependencies(ngraph ext_mkldnn)
 endif()

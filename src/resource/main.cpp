@@ -20,69 +20,11 @@
 #include <string>
 #include <vector>
 
+#include "header_rewrite.hpp"
+#include "uncomment.hpp"
 #include "util.hpp"
 
 using namespace std;
-
-const string rewrite_header(const string& s, const string& path)
-{
-    stringstream ss(s);
-    stringstream out;
-    for (string line; ss; getline(ss, line))
-    {
-        // only interested in lines starging with '#include' so 8 chars minimum
-        if (line.size() > 8 && line.substr(0, 8) == "#include")
-        {
-            auto line_offset = line.find_first_of("\"<");
-            if (line_offset != string::npos)
-            {
-                string include = line.substr(line_offset);
-                string contents = include.substr(1, include.size() - 2);
-                if (include[1] == '.')
-                {
-                    if (include[2] == '/')
-                    {
-                        // include starts with './'
-                        // rewrite "./blah.h" to "blah.h"
-                        contents = contents.substr(2);
-                    }
-                    else
-                    {
-                        // include starts with '../'
-                        // count number of '../' in string
-                        size_t offset = 0;
-                        size_t depth = 0;
-                        while (contents.substr(offset, 3) == "../")
-                        {
-                            depth++;
-                            offset += 3;
-                        }
-                        string trimmed = contents.substr(offset);
-                        vector<string> parts = split(path, '/');
-                        parts.pop_back();
-                        size_t result_depth = parts.size() - depth;
-                        string added_path;
-                        for (size_t i = 0; i < result_depth; i++)
-                        {
-                            added_path += parts[i] + "/";
-                        }
-                        contents = added_path + trimmed;
-                    }
-                    if (include[0] == '<')
-                    {
-                        line = "#include <" + contents + ">";
-                    }
-                    else
-                    {
-                        line = "#include \"" + contents + "\"";
-                    }
-                }
-            }
-        }
-        out << line << "\n";
-    }
-    return out.str();
-}
 
 class ResourceInfo
 {
@@ -122,6 +64,7 @@ string find_path(const string& path)
 
 int main(int argc, char** argv)
 {
+    time_t main_timestamp = get_timestamp(argv[0]);
     static vector<string> valid_ext = {".h", ".hpp", ".tcc", ""};
     string output_path;
     string base_name;
@@ -141,9 +84,6 @@ int main(int argc, char** argv)
     string cpp0 = find_path("/usr/include/x86_64-linux-gnu/c++/");
     string cpp1 = find_path("/usr/include/c++/");
 
-    cout << "Eigen path " << EIGEN_HEADERS_PATH << endl;
-    cout << "ngraph path " << NGRAPH_HEADERS_PATH << endl;
-
     vector<ResourceInfo> include_paths;
     include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
     include_paths.push_back({"/usr/include/x86_64-linux-gnu", {"asm", "sys", "bits", "gnu"}});
@@ -159,7 +99,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    auto output_timestamp = get_timestamp(output_path);
+    time_t output_timestamp = get_timestamp(output_path);
 
     for (ResourceInfo& path : include_paths)
     {
@@ -189,16 +129,19 @@ int main(int argc, char** argv)
     }
 
     // test for changes to any headers
-    bool update_needed = true;
-    for (ResourceInfo& path : include_paths)
+    bool update_needed = main_timestamp > output_timestamp;
+    if (!update_needed)
     {
-        for (const string& header_file : path.files)
+        for (ResourceInfo& path : include_paths)
         {
-            auto file_timestamp = get_timestamp(header_file);
-            if (file_timestamp > output_timestamp)
+            for (const string& header_file : path.files)
             {
-                update_needed = true;
-                break;
+                time_t file_timestamp = get_timestamp(header_file);
+                if (file_timestamp > output_timestamp)
+                {
+                    update_needed = true;
+                    break;
+                }
             }
         }
     }
@@ -214,17 +157,18 @@ int main(int argc, char** argv)
         out << "    {\n";
         vector<pair<size_t, size_t>> offset_size_list;
         size_t offset = 0;
+        size_t total_size = 0;
+        size_t total_count = 0;
         for (const ResourceInfo& path : include_paths)
         {
             for (const string& header_file : path.files)
             {
-                // string search_path =
-                //     path.target_path.substr(0, path.target_path.find_first_of("/", 1));
-                // string source_full_path = path_join(header_file.first, header_file.second);
                 string header_data = read_file_to_string(header_file);
                 string base_path = header_file.substr(path.search_path.size() + 1);
-                // header_data = rewrite_header(header_data, base_path);
-                // string target_path = path_join(path.target_path, header_file.second);
+                header_data = rewrite_header(header_data, base_path);
+                // header_data = uncomment(header_data);
+                total_size += header_data.size();
+                total_count++;
 
                 // data layout is triplet of strings containing:
                 // 1) search path
@@ -232,7 +176,6 @@ int main(int argc, char** argv)
                 // 3) header data
                 // all strings are null terminated and the length includes the null
                 // The + 1 below is to account for the null terminator
-
                 dump(out, path.search_path.c_str(), path.search_path.size() + 1);
                 offset_size_list.push_back({offset, path.search_path.size() + 1});
                 offset += path.search_path.size() + 1;
@@ -263,5 +206,7 @@ int main(int argc, char** argv)
         }
         out << "    };\n";
         out << "}\n";
+        cout.imbue(locale(""));
+        cout << "Total size " << total_size << " in " << total_count << " files\n";
     }
 }

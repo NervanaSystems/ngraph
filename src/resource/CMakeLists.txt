@@ -14,6 +14,8 @@
 set (SRC
     main.cpp
     util.cpp
+    uncomment.cpp
+    header_rewrite.cpp
 )
 
 add_executable(resource_generator ${SRC})
