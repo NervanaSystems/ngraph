@@ -328,6 +328,12 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
         func->get_ops(), std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>());
     assert(cloned_graph.count(func->get_result().get()));
     auto cloned_result = cloned_graph[func->get_result().get()];
+
+    std::vector<std::shared_ptr<op::Parameter>> new_params;
+    for (auto param : func->get_parameters()) {
+        assert(cloned_graph.count(param.get()));
+        new_params.push_back(std::dynamic_pointer_cast<op::Parameter>(cloned_graph[param.get()]));
+    }
     return std::make_shared<ngraph::Function>(
-        cloned_result, func->get_result_type(), func->get_parameters());
+        cloned_result, func->get_result_type(), new_params);
 }
