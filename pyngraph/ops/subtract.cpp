@@ -24,7 +24,7 @@ void regclass_pyngraph_op_Subtract(py::module m) {
 
     //py::module::import("wrapper.ngraph.ops.Op");
 
-    py::class_<ngraph::op::Subtract, std::shared_ptr<ngraph::op::Subtract>, ngraph::op::BinaryElementwiseArithmetic> subtract(mod, "Subtract");
+    py::class_<ngraph::op::Subtract, std::shared_ptr<ngraph::op::Subtract>, ngraph::op::BinaryElementwiseArithmetic> subtract(m, "Subtract");
     subtract.def(py::init<const std::shared_ptr<ngraph::Node>&,
                              const std::shared_ptr<ngraph::Node>& >());
 }

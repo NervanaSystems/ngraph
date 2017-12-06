@@ -16,4 +16,4 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Convert(py:module m);
+void regclass_pyngraph_op_Convert(py::module m);

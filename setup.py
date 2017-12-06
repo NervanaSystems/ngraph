@@ -21,23 +21,8 @@ import os
 __version__ = '0.0.1'
 
 
-class get_pybind_include(object):
-    """Helper class to determine the pybind11 include path
-
-    The purpose of this class is to postpone importing pybind11
-    until it is actually installed, so that the ``get_include()``
-    method can be invoked. """
-
-    def __init__(self, user=False):
-        self.user = user
-
-    def __str__(self):
-        import pybind11
-        return pybind11.get_include(self.user)
-
 requirements = [
     "numpy",
-    "pybind11",
 ]
 
 sources = ['pyngraph/function.cpp',
@@ -46,7 +31,7 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/util.cpp',
            'pyngraph/ops/add.cpp',
            'pyngraph/ops/broadcast.cpp',
-           'pyngraph/ops/constant.cpp'
+           'pyngraph/ops/constant.cpp',
            'pyngraph/ops/convert.cpp',
            'pyngraph/ops/divide.cpp',
            'pyngraph/ops/dot.cpp',
@@ -54,10 +39,10 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/ops/greater.cpp',
            'pyngraph/ops/log.cpp',
            'pyngraph/ops/maximum.cpp',
-           'pyngraph/minimun.cpp',
+           'pyngraph/ops/minimum.cpp',
            'pyngraph/ops/multiply.cpp',
            'pyngraph/ops/op.cpp',
-           'pyngraph/ops,parameter.cpp',
+           'pyngraph/ops/parameter.cpp',
            'pyngraph/ops/reduce.cpp',
            'pyngraph/ops/regmodule_pyngraph_op.cpp',
            'pyngraph/ops/reshape.cpp',
@@ -75,14 +60,13 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/runtime/value.cpp',
            'pyngraph/types/element_type.cpp',
            'pyngraph/types/regmodule_pyngraph_types.cpp',
-           'pyngraph/types/type.cpp']
+           'pyngraph/types/type.cpp',
+           ]
 
 include_dirs = [# Path to pybind11 headers
                 os.environ["PYBIND_HEADERS_PATH"],
                 # os.environ["NGRAPH_CPP_BUILD_PATH"] + "/include",
                 ".",
-                get_pybind_include(),
-                get_pybind_include(user=True)
                ]
 ext_modules = [Extension(
                    'pyngraph',
@@ -148,7 +132,7 @@ class BuildExt(build_ext):
             for ext in self.extensions:
                 ext.library_dirs = ['%s/lib'%(NGRAPH_CPP_INSTALL_PATH)]
                 ext.extra_compile_args = opts
-                ext.extra_link_args = ["-shared", "-lngraph", "-Wl,-rpath,%s/lib"%(NGRAPH_CPP_INSTALL_PATH)]
+                ext.extra_link_args = ["-lngraph"]
             build_ext.build_extensions(self)
         else:
             print("NGRAPH_CPP_BUILD_PATH, not defined")

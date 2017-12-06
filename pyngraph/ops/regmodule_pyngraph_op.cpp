@@ -13,23 +13,43 @@
 // ----------------------------------------------------------------------------
 
 #include <pybind11/pybind11.h>
-#include "pyngraph/types/regmodule_pyngraph_types.hpp"
+#include "pyngraph/ops/regmodule_pyngraph_op.hpp"
 
 namespace py = pybind11;
 
-void regmodule_pyngraph_types(py::module m){
-    regclass_pyngraph_ValueType(m);
-    regclass_pyngraph_TensorViewType(m);
-    regclass_pyngraph_Type(m);
-    regclass_pyngraph_Bool(m);
-    regclass_pyngraph_Float32(m);
-    regclass_pyngraph_Float64(m);
-    regclass_pyngraph_Int8(m);
-    regclass_pyngraph_Int16(m);
-    regclass_pyngraph_Int32(m);
-    regclass_pyngraph_Int64(m);
-    regclass_pyngraph_UInt8(m);
-    regclass_pyngraph_UInt16(m);
-    regclass_pyngraph_UInt32(m);
-    regclass_pyngraph_UInt64(m);
+void regmodule_pyngraph_op(py::module m){
+    py::module m_op = m.def_submodule("op", "module pyngraph.op");
+    regclass_pyngraph_op_Add(m_op);
+    regclass_pyngraph_op_Broadcast(m_op);
+    regclass_pyngraph_op_ConstantBase(m_op);
+    regclass_pyngraph_op_Float32Constant(m_op);
+    regclass_pyngraph_op_Float64Constant(m_op);
+    regclass_pyngraph_op_Int8Constant(m_op);
+    regclass_pyngraph_op_Int16Constant(m_op);
+    regclass_pyngraph_op_Int32Constant(m_op);
+    regclass_pyngraph_op_Int64Constant(m_op);
+    regclass_pyngraph_op_UInt8Constant(m_op);
+    regclass_pyngraph_op_UInt16Constant(m_op);
+    regclass_pyngraph_op_UInt32Constant(m_op);
+    regclass_pyngraph_op_UInt64Constant(m_op);
+    regclass_pyngraph_op_Convert(m_op);
+    regclass_pyngraph_op_Divide(m_op);
+    regclass_pyngraph_op_Dot(m_op);
+    regclass_pyngraph_op_Exp(m_op);
+    regclass_pyngraph_op_Greater(m_op);
+    regclass_pyngraph_op_Log(m_op);
+    regclass_pyngraph_op_Maximum(m_op);
+    regclass_pyngraph_op_Minimum(m_op);
+    regclass_pyngraph_op_Multiply(m_op);
+    regclass_pyngraph_op_RequiresTensorViewArgs(m_op);
+    regclass_pyngraph_op_UnaryElementwise(m_op);
+    regclass_pyngraph_op_UnaryElementwiseArithmetic(m_op);
+    regclass_pyngraph_op_BinaryElementwise(m_op);
+    regclass_pyngraph_op_BinaryElementwiseComparison(m_op);
+    regclass_pyngraph_op_BinaryElementwiseArithmetic(m_op);
+    regclass_pyngraph_op_Parameter(m_op);
+    regclass_pyngraph_op_Reduce(m_op);
+    regclass_pyngraph_op_Reshape(m_op);
+    regclass_pyngraph_op_Subtract(m_op);
+    regclass_pyngraph_op_Sum(m_op);
 }

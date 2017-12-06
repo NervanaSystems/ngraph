@@ -30,7 +30,7 @@ void regclass_pyngraph_op_RequiresTensorViewArgs(py::module m){
 
 void regclass_pyngraph_op_UnaryElementwise(py::module m){
     py::class_<ngraph::op::UnaryElementwise, std::shared_ptr<ngraph::op::UnaryElementwise>,
-        ngraph::op::RequiresTensorViewArgs> unaryElementwise(mod, "UnaryElementwise");
+        ngraph::op::RequiresTensorViewArgs> unaryElementwise(m, "UnaryElementwise");
 }
 void regclass_pyngraph_op_UnaryElementwiseArithmetic(py::module m){
     py::class_<ngraph::op::UnaryElementwiseArithmetic, std::shared_ptr<ngraph::op::UnaryElementwiseArithmetic>,

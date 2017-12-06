@@ -24,7 +24,7 @@ void regclass_pyngraph_op_Log(py::module m){
 
     //py::module::import("wrapper.ngraph.ops.Op");
 
-    py::class_<ngraph:op::Log, std::shared_ptr<ngraph::op::Log>, ngraph::op::UnaryElementwiseArithmetic> log(m, "Log");
+    py::class_<ngraph::op::Log, std::shared_ptr<ngraph::op::Log>, ngraph::op::UnaryElementwiseArithmetic> log(m, "Log");
     log.def(py::init<const std::shared_ptr<ngraph::Node>& >());
 }
 
