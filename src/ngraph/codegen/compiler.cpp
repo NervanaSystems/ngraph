@@ -12,15 +12,22 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <dlfcn.h>
 #include <iostream>
 
+#include <clang/Basic/DiagnosticOptions.h>
+#include <clang/Basic/TargetInfo.h>
+#include <clang/CodeGen/CodeGenAction.h>
 #include <clang/CodeGen/ObjectFilePCHContainerOperations.h>
 #include <clang/Driver/DriverDiagnostic.h>
 #include <clang/Driver/Options.h>
 #include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/CompilerInvocation.h>
+#include <clang/Frontend/FrontendActions.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
 #include <clang/Frontend/TextDiagnosticBuffer.h>
+#include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/Frontend/Utils.h>
 #include <clang/FrontendTool/Utils.h>
@@ -35,16 +42,9 @@
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/Signals.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/Timer.h>
 #include <llvm/Support/raw_ostream.h>
-
-#include <clang/Basic/DiagnosticOptions.h>
-#include <clang/Basic/TargetInfo.h>
-#include <clang/CodeGen/CodeGenAction.h>
-#include <clang/Frontend/CompilerInstance.h>
-#include <clang/Frontend/FrontendActions.h>
-#include <clang/Frontend/TextDiagnosticPrinter.h>
-#include <llvm/Support/TargetSelect.h>
 
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/file_util.hpp"
@@ -65,6 +65,19 @@ using namespace ngraph::codegen;
 static HeaderCache s_header_cache;
 static StaticCompiler s_static_compiler;
 static std::mutex m_mutex;
+
+std::string get_install_dir()
+{
+    Dl_info dlInfo;
+    string rc;
+    dladdr(reinterpret_cast<void*>(get_install_dir), &dlInfo);
+    if (dlInfo.dli_sname != nullptr && dlInfo.dli_saddr != nullptr)
+    {
+        rc = dlInfo.dli_fname;
+        rc = rc.substr(0, rc.find_last_of('/'));
+    }
+    return rc;
+}
 
 Compiler::Compiler()
 {
@@ -106,7 +119,6 @@ StaticCompiler::StaticCompiler()
 #if NGCPU_DEBUGINFO
     m_debuginfo_enabled = true;
 #endif
-
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
@@ -147,6 +159,14 @@ StaticCompiler::StaticCompiler()
         // Instead of re-implementing all of that functionality in a custom toolchain
         // just hardcode the paths relevant to frequently used build/test machines for now
         add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+        add_header_search_path(
+            file_util::path_join(CLANG_BUILTIN_HEADERS_PATH, "../lib/clang/5.0.0/include"));
+        string install_path = file_util::path_join(get_install_dir(), "../include");
+        string install_path2 =
+            file_util::path_join(get_install_dir(), "../lib/clang/5.0.0/include");
+        add_header_search_path(install_path);
+        add_header_search_path(install_path2);
+
         add_header_search_path("/usr/include/x86_64-linux-gnu");
         add_header_search_path("/usr/include");
 
@@ -180,6 +200,7 @@ StaticCompiler::StaticCompiler()
 
         add_header_search_path(EIGEN_HEADERS_PATH);
         add_header_search_path(NGRAPH_HEADERS_PATH);
+
 #ifdef USE_CACHE
         s_header_cache.set_valid();
 #endif
@@ -259,6 +280,7 @@ bool StaticCompiler::is_version_number(const string& path)
 
 void StaticCompiler::add_header_search_path(const string& path)
 {
+    NGRAPH_INFO << path;
     if (!contains(m_extra_search_path_list, path))
     {
         m_extra_search_path_list.push_back(path);
