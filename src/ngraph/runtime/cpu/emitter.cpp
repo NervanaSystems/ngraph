@@ -94,6 +94,7 @@ void Emitter::EmitDot(const ngraph::Node* n,
 
     auto arg0_shape = arg0_tensor_type->get_shape();
     auto arg1_shape = arg1_tensor_type->get_shape();
+
     auto& arg0_element_type = arg0_tensor_type->get_element_type();
 
     if (arg0_shape.empty() || arg1_shape.empty())
@@ -166,7 +167,42 @@ void Emitter::EmitDot(const ngraph::Node* n,
     }
     else
     {
-        throw ngraph_error("Dot product not implemented for given inputs");
+        auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+        assert(result_tensor_type);
+        auto out0_shape = result_tensor_type->get_shape();
+
+        size_t arg0_dot_axis;
+        size_t arg1_dot_axis;
+        if (arg0_shape.size() == 1 && arg1_shape.size() == 1)
+        {
+            arg0_dot_axis = 0;
+            arg1_dot_axis = 0;
+        }
+
+        // If arg0 is a matrix and arg1 is a vector, dot on axes 1 and 0 respectively.
+        else if (arg0_shape.size() == 2 && arg1_shape.size() == 1)
+        {
+            arg0_dot_axis = 1;
+            arg1_dot_axis = 0;
+        }
+
+        // If arg0 is rank n and arg1 is rank m, dot on axes n-1 and m-2, respectively.
+        //
+        // Note that this happens to handle the vector-matrix and matrix-matrix cases.
+        else
+        {
+            arg0_dot_axis = arg0_shape.size() - 1;
+            arg1_dot_axis = arg1_shape.size() - 2;
+        }
+
+        TU << "kernel::dot(" << inputs[0].get_tensor().get_name() << ",\n";
+        TU << "            " << inputs[1].get_tensor().get_name() << ",\n";
+        TU << "            " << outputs[0].get_tensor().get_name() << ",\n";
+        TU << "            {" << join(get_shape(inputs[0])) << "},\n";
+        TU << "            {" << join(arg1_shape) << "},\n";
+        TU << "            {" << join(out0_shape) << "},\n";
+        TU << "            " << arg0_dot_axis << ",\n";
+        TU << "            " << arg1_dot_axis << ");\n";
     }
 }
 
@@ -219,11 +255,6 @@ void Emitter::EmitTuple(const ngraph::Node* n,
     TU.indent++;
     for (size_t i = 0; i < inputs.size(); ++i)
     {
-        auto& et = inputs.at(i).get_tensor_view_layout()->get_element_type();
-        TU << "// call_frame->get_parameterized_tensor_view<" << et.c_type_string() << ">("
-           << outputs.at(i).get_index() << ")->get_vector() =\n"
-           << "//     call_frame->get_parameterized_tensor_view<" << et.c_type_string() << ">("
-           << inputs.at(i).get_index() << ")->get_vector();\n";
         TU << "memcpy(" << outputs.at(i).get_tensor().get_name() << ", "
            << inputs.at(i).get_tensor().get_name() << ", "
            << outputs[i].get_tensor_view_layout()->get_size() *
@@ -305,6 +336,16 @@ void Emitter::EmitDivide(const ngraph::Node* n,
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
+    if (n->get_element_type().is_real() == false)
+    {
+        // Check for divide by zero for integer types only
+        size_t element_count = inputs[1].get_tensor_view_layout()->get_size();
+        TU << "for (size_t i=0; i<" << element_count << "; i++)\n";
+        TU << "{\n";
+        TU << "    if (" << inputs.at(1).get_tensor().get_name()
+           << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
+        TU << "}\n";
+    }
     TU << emit_array1d(outputs[0]) << " =\n"
        << "    " << emit_array1d(inputs[0]) << " /\n"
        << "    " << emit_array1d(inputs[1]) << ";\n";
@@ -847,7 +888,12 @@ void Emitter::EmitBroadcast(const ngraph::Node* n,
     }
     else
     {
-        throw ngraph_error("Broadcast not implemented for given inputs");
+        TU << "kernel::broadcast<" << result_tensor_type->get_element_type().c_type_string() << ">("
+           << inputs[0].get_tensor().get_name() << ",\n";
+        TU << "                         " << outputs[0].get_tensor().get_name() << ",\n";
+        TU << "                         {" << join(arg_shape) << "},\n";
+        TU << "                         {" << join(result_shape) << "},\n";
+        TU << "                         {" << join(broadcast->get_broadcast_axes()) << "});\n";
     }
 }
 
@@ -1167,7 +1213,40 @@ void Emitter::EmitReduce(const ngraph::Node* n,
     }
     else
     {
-        throw ngraph_error("Reduce: only vectors and matrices are currently supported");
+        auto in_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(
+            n->get_arguments().at(0)->get_value_type());
+        if (in_tensor_view_type == nullptr)
+        {
+            throw std::runtime_error("encountered non-tensor view type as input to reduce");
+        }
+
+        auto out_tensor_view_type =
+            std::dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+        if (out_tensor_view_type == nullptr)
+        {
+            throw std::runtime_error("reduce has non-tensor view output type");
+        }
+
+        string type = f_result_element_type.c_type_string();
+        TU << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+        TU.indent++;
+        TU << "\n";
+        TU << type << " result;\n";
+        TU << "void* inputs[] = {&x, &y};\n";
+        TU << "void* outputs[] = {&result};\n";
+        TU << reduction_function->get_name() << "(inputs, outputs);\n";
+        TU << "return result;\n";
+        TU.indent--;
+        TU << "};\n";
+
+        TU << "kernel::reduce<" << out_tensor_view_type->get_element_type().c_type_string() << ">("
+           << inputs[0].get_tensor().get_name() << ",\n";
+        TU << "               " << inputs[1].get_tensor().get_name() << ",\n";
+        TU << "               " << outputs[0].get_tensor().get_name() << ",\n";
+        TU << "               {" << join(in_tensor_view_type->get_shape()) << "},\n";
+        TU << "               {" << join(out_tensor_view_type->get_shape()) << "},\n";
+        TU << "               {" << join(reduce->get_reduction_axes()) << "},\n";
+        TU << "               f);\n";
     }
 }
 
@@ -1189,25 +1268,31 @@ void Emitter::EmitSlice(const ngraph::Node* n,
 {
     auto slice = static_cast<const op::Slice*>(n);
 
-    for (auto d : slice->get_strides())
-    {
-        if (1 != d)
-        {
-            throw ngraph_error("Slice does not support non-unit strides yet");
-        }
-    }
-
     auto arg_type = slice->get_arguments().at(0)->get_value_type();
     auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
     assert(arg_tensor_view_type);
     auto arg_shape = arg_tensor_view_type->get_shape();
     auto arg_rank = arg_shape.size();
 
+    auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+    assert(result_tensor_type);
+    auto out0_shape = result_tensor_type->get_shape();
+
     auto& lower_bounds = slice->get_lower_bounds();
     auto& upper_bounds = slice->get_upper_bounds();
 
+    bool strided = false;
+    for (auto d : slice->get_strides())
+    {
+        if (1 != d)
+        {
+            strided = true;
+            break;
+        }
+    }
+
     // Scalar slice is necessarily just a copy.
-    if (arg_rank == 0)
+    if (!strided && arg_rank == 0)
     {
         TU << "{   // " << n->get_name() << " 1\n";
         TU.indent++;
@@ -1219,7 +1304,7 @@ void Emitter::EmitSlice(const ngraph::Node* n,
         TU.indent--;
         TU << "}\n";
     }
-    else if (arg_rank == 1)
+    else if (!strided && arg_rank == 1)
     {
         TU << "{   // " << n->get_name() << " 2\n";
         TU.indent++;
@@ -1230,7 +1315,7 @@ void Emitter::EmitSlice(const ngraph::Node* n,
         TU.indent--;
         TU << "}\n";
     }
-    else if (arg_rank == 2)
+    else if (!strided && arg_rank == 2)
     {
         auto arg0_layout = inputs[0].get_layout<DenseTensorViewLayout>();
         auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
@@ -1248,7 +1333,14 @@ void Emitter::EmitSlice(const ngraph::Node* n,
     // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
     else
     {
-        throw ngraph_error("Slice is not implemented yet for tensors with rank>2");
+        TU << "kernel::slice<" << result_tensor_type->get_element_type().c_type_string() << ">("
+           << inputs[0].get_tensor().get_name() << ",\n";
+        TU << "                         " << outputs[0].get_tensor().get_name() << ",\n";
+        TU << "                         {" << join(arg_shape) << "},\n";
+        TU << "                         {" << join(slice->get_lower_bounds()) << "},\n";
+        TU << "                         {" << join(slice->get_upper_bounds()) << "},\n";
+        TU << "                         {" << join(slice->get_strides()) << "},\n";
+        TU << "                         {" << join(out0_shape) << "});\n";
     }
 }
 
@@ -1318,7 +1410,22 @@ void Emitter::EmitSum(const ngraph::Node* n,
     }
     else
     {
-        throw ngraph_error("Sum: only vectors and matrices are currently supported");
+        auto arg0_type = s->get_arguments().at(0)->get_value_type();
+        auto arg0_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg0_type);
+        assert(arg0_tensor_view_type);
+        auto arg0_shape = arg0_tensor_view_type->get_shape();
+
+        auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+        assert(result_tensor_type);
+        auto out0_shape = result_tensor_type->get_shape();
+
+        const op::Sum* sum = static_cast<const op::Sum*>(n);
+        TU << "kernel::sum<" << result_tensor_type->get_element_type().c_type_string() << ">("
+           << inputs[0].get_tensor().get_name() << ",\n";
+        TU << "                         " << outputs[0].get_tensor().get_name() << ",\n";
+        TU << "                         {" << join(arg0_shape) << "},\n";
+        TU << "                         {" << join(out0_shape) << "},\n";
+        TU << "                         {" << join(sum->get_reduction_axes()) << "});\n";
     }
 }
 
@@ -1469,14 +1576,6 @@ void Emitter::EmitReplaceSlice(const ngraph::Node* n,
 {
     auto replace_slice = static_cast<const op::Slice*>(n);
 
-    for (auto d : replace_slice->get_strides())
-    {
-        if (1 != d)
-        {
-            throw ngraph_error("Replace-slice does not support non-unit strides yet");
-        }
-    }
-
     auto arg0_type = replace_slice->get_arguments().at(0)->get_value_type();
     auto arg0_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg0_type);
     assert(arg0_tensor_view_type);
@@ -1491,8 +1590,18 @@ void Emitter::EmitReplaceSlice(const ngraph::Node* n,
     auto& lower_bounds = replace_slice->get_lower_bounds();
     auto& upper_bounds = replace_slice->get_upper_bounds();
 
+    bool strided = false;
+    for (auto d : replace_slice->get_strides())
+    {
+        if (1 != d)
+        {
+            strided = true;
+            break;
+        }
+    }
+
     // Scalar slice is necessarily just a copy.
-    if (arg0_rank == 0)
+    if (!strided && arg0_rank == 0)
     {
         TU << "{   // " << n->get_name() << " 1\n";
         TU.indent++;
@@ -1504,7 +1613,7 @@ void Emitter::EmitReplaceSlice(const ngraph::Node* n,
         TU.indent--;
         TU << "}\n";
     }
-    else if (arg0_rank == 1)
+    else if (!strided && arg0_rank == 1)
     {
         TU << "{   // " << n->get_name() << " 2\n";
         TU.indent++;
@@ -1517,7 +1626,7 @@ void Emitter::EmitReplaceSlice(const ngraph::Node* n,
         TU.indent--;
         TU << "}\n";
     }
-    else if (arg0_rank == 2)
+    else if (!strided && arg0_rank == 2)
     {
         auto arg0_layout = inputs[0].get_layout<DenseTensorViewLayout>();
         auto out_layout = outputs[0].get_layout<DenseTensorViewLayout>();
@@ -1538,7 +1647,23 @@ void Emitter::EmitReplaceSlice(const ngraph::Node* n,
     // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
     else
     {
-        throw ngraph_error("Replace-slice is not implemented yet for tensors with rank>2");
+        const op::ReplaceSlice* slice = static_cast<const op::ReplaceSlice*>(n);
+        auto& arg_nodes = n->get_arguments();
+        assert(arg_nodes.size() == 2);
+
+        auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+        assert(result_tensor_type);
+        auto out0_shape = result_tensor_type->get_shape();
+
+        TU << "kernel::replace_slice<" << result_tensor_type->get_element_type().c_type_string()
+           << ">(" << inputs[0].get_tensor().get_name() << ",\n";
+        TU << "                         " << inputs[1].get_tensor().get_name() << ",\n";
+        TU << "                         " << outputs[0].get_tensor().get_name() << ",\n";
+        TU << "                         {" << join(arg1_shape) << "},\n";
+        TU << "                         {" << join(slice->get_lower_bounds()) << "},\n";
+        TU << "                         {" << join(slice->get_upper_bounds()) << "},\n";
+        TU << "                         {" << join(slice->get_strides()) << "},\n";
+        TU << "                         {" << join(out0_shape) << "});\n";
     }
 }
 
@@ -1636,7 +1761,21 @@ void Emitter::EmitOneHot(const ngraph::Node* n,
     // Other cases are not handled yet.
     else
     {
-        throw ngraph_error("One-hot is not implemented yet for tensors with rank>1");
+        auto arg0_type = oh->get_arguments().at(0)->get_value_type();
+        auto arg0_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg0_type);
+        assert(arg0_tensor_view_type);
+        auto arg0_shape = arg0_tensor_view_type->get_shape();
+
+        auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+        assert(result_tensor_type);
+        auto out0_shape = result_tensor_type->get_shape();
+
+        TU << "kernel::one_hot<" << result_tensor_type->get_element_type().c_type_string() << ">("
+           << inputs[0].get_tensor().get_name() << ",\n";
+        TU << "                   " << outputs[0].get_tensor().get_name() << ",\n";
+        TU << "                   {" << join(arg0_shape) << "},\n";
+        TU << "                   {" << join(out0_shape) << "},\n";
+        TU << "                   " << oh->get_one_hot_axis() << ");\n";
     }
 }
 
@@ -1765,4 +1904,9 @@ string Emitter::emit_matrix(const TensorViewInfo& tvi, const string& name)
        << tvi.get_tensor().get_name() << ", "
        << eigen_matrix_format(layout->get_shape(), layout->get_strides()) << ")";
     return ss.str();
+}
+
+std::vector<size_t> Emitter::get_shape(const TensorViewInfo& tvi) const
+{
+    return tvi.get_tensor_view()->get_tensor_view_type()->get_shape();
 }

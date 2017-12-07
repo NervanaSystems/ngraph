@@ -20,6 +20,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/serializer.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -368,7 +369,7 @@ TEST(${BACKEND_NAME}, divide_by_zero_float32)
               result->get_vector<float>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, divide_by_zero_int32)
+TEST(${BACKEND_NAME}, divide_by_zero_int32)
 {
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
@@ -685,7 +686,7 @@ TEST(${BACKEND_NAME}, dot2d)
 //         [[  31.,   46.],
 //          [  91.,  106.]]]])
 //
-TEST(DISABLED_${BACKEND_NAME}, dot3d_3d)
+TEST(${BACKEND_NAME}, dot3d_3d)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
@@ -734,7 +735,7 @@ TEST(DISABLED_${BACKEND_NAME}, dot3d_3d)
 //        [[ 236.,  293.,  350.,  407.],
 //         [ 272.,  338.,  404.,  470.]]])
 //
-TEST(DISABLED_${BACKEND_NAME}, dot3d_2d)
+TEST(${BACKEND_NAME}, dot3d_2d)
 {
     auto shape_a = Shape{4, 2, 3};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -1386,6 +1387,86 @@ TEST(${BACKEND_NAME}, tensor_constant_with_op)
     ASSERT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), result->get_vector<float>());
 }
 
+TEST(${BACKEND_NAME}, constant_broadcast)
+{
+    const string js =
+        R"([{
+       "name" : "Function_0",
+       "ops" : [
+           {
+             "element_type" :
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+             "inputs" : [],
+             "name" : "Parameter_4",
+             "op" : "Parameter",
+             "outputs" : ["Parameter_4"],
+             "shape" : [ 3, 4 ]
+           },
+           {
+             "element_type" :
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+             "inputs" : [],
+             "name" : "Parameter_0",
+             "op" : "Parameter",
+             "outputs" : ["Parameter_0"],
+             "shape" : [ 3, 4 ]
+           },
+           {
+             "element_type" :
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+             "inputs" : [],
+             "name" : "Constant_1",
+             "op" : "Constant",
+             "outputs" : ["Constant_1"],
+             "shape" : [],
+             "value" : ["0"]
+           },
+           {
+             "axes" : [ 0, 1 ],
+             "element_type" :
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+             "inputs" : ["Constant_1"],
+             "name" : "Broadcast_2",
+             "op" : "Broadcast",
+             "outputs" : ["Broadcast_2"],
+             "shape" : [ 3, 4 ]
+           },
+           {
+             "element_type" :
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+             "inputs" : [ "Parameter_0", "Broadcast_2" ],
+             "name" : "Maximum_3",
+             "op" : "Maximum",
+             "outputs" : ["Maximum_3"]
+           },
+           {
+             "element_type" :
+                 {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true},
+             "inputs" : [ "Maximum_3", "Parameter_4" ],
+             "name" : "Multiply_5",
+             "op" : "Multiply",
+             "outputs" : ["Multiply_5"]
+           }
+       ],
+       "parameters" : [ "Parameter_0", "Parameter_4" ],
+       "result" : ["Multiply_5"],
+       "result_shape" : [ 3, 4 ],
+       "result_type" :
+           {"bitwidth" : 32, "c_type_string" : "float", "is_real" : true, "is_signed" : true}
+    }])";
+    stringstream ss(js);
+
+    shared_ptr<Function> f = ngraph::deserialize(ss);
+
+    // max(x,broadcast(Constant(0)))
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // If this compiles it works
+}
+
 TEST(${BACKEND_NAME}, function_call)
 {
     // First create "f(A,B,C) = (A+B)*C".
@@ -1591,7 +1672,7 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
               result->get_vector<element::Int64::type>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, broadcast_matrix_0)
+TEST(${BACKEND_NAME}, broadcast_matrix_0)
 {
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -1615,7 +1696,7 @@ TEST(DISABLED_${BACKEND_NAME}, broadcast_matrix_0)
               result->get_vector<element::Float32::type>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, broadcast_matrix_1)
+TEST(${BACKEND_NAME}, broadcast_matrix_1)
 {
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -1639,7 +1720,7 @@ TEST(DISABLED_${BACKEND_NAME}, broadcast_matrix_1)
               result->get_vector<element::Float32::type>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, broadcast_matrix_2)
+TEST(${BACKEND_NAME}, broadcast_matrix_2)
 {
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -2027,7 +2108,7 @@ TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
     ASSERT_EQ((vector<float>{99}), b->get_vector<float>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, reduce_3d_to_vector)
+TEST(${BACKEND_NAME}, reduce_3d_to_vector)
 {
     // First, the reduction function (f(x:float32[],y:float32[]) = x*y).
     auto f_A = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
@@ -2628,7 +2709,7 @@ TEST(${BACKEND_NAME}, slice_vector)
     ASSERT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), result->get_vector<float>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, slice_matrix_strided)
+TEST(${BACKEND_NAME}, slice_matrix_strided)
 {
     auto shape_a = Shape{4, 4};
     auto A = make_shared<op::Parameter>(
@@ -2652,7 +2733,7 @@ TEST(DISABLED_${BACKEND_NAME}, slice_matrix_strided)
     ASSERT_EQ((vector<float>{4, 7, 12, 15}), result->get_vector<float>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, slice_3d)
+TEST(${BACKEND_NAME}, slice_3d)
 {
     auto shape_a = Shape{4, 4, 4};
     auto A = make_shared<op::Parameter>(
@@ -2682,7 +2763,7 @@ TEST(DISABLED_${BACKEND_NAME}, slice_3d)
     ASSERT_EQ((vector<float>{21, 22, 25, 26, 37, 38, 41, 42}), result->get_vector<float>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, slice_3d_strided)
+TEST(${BACKEND_NAME}, slice_3d_strided)
 {
     auto shape_a = Shape{4, 4, 4};
     auto A = make_shared<op::Parameter>(
@@ -2712,7 +2793,7 @@ TEST(DISABLED_${BACKEND_NAME}, slice_3d_strided)
     ASSERT_EQ((vector<float>{0, 2, 8, 10, 32, 34, 40, 42}), result->get_vector<float>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, slice_3d_strided_different_strides)
+TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
 {
     auto shape_a = Shape{4, 4, 4};
     auto A = make_shared<op::Parameter>(
@@ -3062,7 +3143,7 @@ TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
     ASSERT_EQ((vector<float>{}), a->get_vector<float>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
+TEST(${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
 {
     auto shape_a = Shape{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -3094,7 +3175,7 @@ TEST(DISABLED_${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
               result->get_vector<float>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
+TEST(${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
 {
     auto shape_a = Shape{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -3126,7 +3207,7 @@ TEST(DISABLED_${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
               result->get_vector<float>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, sum_3d_to_vector)
+TEST(${BACKEND_NAME}, sum_3d_to_vector)
 {
     auto shape_a = Shape{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -3152,7 +3233,7 @@ TEST(DISABLED_${BACKEND_NAME}, sum_3d_to_vector)
               result->get_vector<float>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, sum_3d_to_scalar)
+TEST(${BACKEND_NAME}, sum_3d_to_scalar)
 {
     auto shape_a = Shape{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -3178,7 +3259,7 @@ TEST(DISABLED_${BACKEND_NAME}, sum_3d_to_scalar)
               result->get_vector<float>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
+TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
 {
     auto shape_a = Shape{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
@@ -3608,9 +3689,9 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
 // Test if you like with:
 //
 //    private-ngraph-cpp/build$ test/unit-test \
-//                                 --gtest_filter='DISABLED_NGVM.one_hot_matrix_0' \
+//                                 --gtest_filter='NGVM.one_hot_matrix_0' \
 //                                 --gtest_also_run_disabled_tests
-TEST(DISABLED_${BACKEND_NAME}, one_hot_matrix_0)
+TEST(${BACKEND_NAME}, one_hot_matrix_0)
 {
     auto shape_a = Shape{3, 3};
     auto A = make_shared<op::Parameter>(
@@ -3691,7 +3772,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
     EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
 }
 
-TEST(DISABLED_${BACKEND_NAME}, replace_slice_3d)
+TEST(${BACKEND_NAME}, replace_slice_3d)
 {
     auto shape_a = Shape{4, 4, 4};
     auto A = make_shared<op::Parameter>(
@@ -3733,7 +3814,7 @@ TEST(DISABLED_${BACKEND_NAME}, replace_slice_3d)
               result->get_vector<float>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, replace_slice_3d_strided)
+TEST(${BACKEND_NAME}, replace_slice_3d_strided)
 {
     auto shape_a = Shape{4, 4, 4};
     auto A = make_shared<op::Parameter>(
@@ -3776,7 +3857,7 @@ TEST(DISABLED_${BACKEND_NAME}, replace_slice_3d_strided)
               result->get_vector<float>());
 }
 
-TEST(DISABLED_${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
+TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
 {
     auto shape_a = Shape{4, 4, 4};
     auto A = make_shared<op::Parameter>(

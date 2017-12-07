@@ -108,6 +108,8 @@ namespace ngraph
                 std::string emit_vector(const TensorViewInfo&, const std::string& name = "");
                 std::string emit_array1d(const TensorViewInfo&, const std::string& name = "");
                 std::string emit_matrix(const TensorViewInfo&, const std::string& name = "");
+
+                std::vector<size_t> get_shape(const TensorViewInfo&) const;
             };
         }
     }

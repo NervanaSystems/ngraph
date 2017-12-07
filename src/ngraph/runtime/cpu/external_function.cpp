@@ -207,8 +207,16 @@ void ExternalFunction::compile()
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/eigen_utils.hpp"
+#include "ngraph/runtime/kernel/broadcast.hpp"
+#include "ngraph/runtime/kernel/dot.hpp"
+#include "ngraph/runtime/kernel/one_hot.hpp"
+#include "ngraph/runtime/kernel/reduce.hpp"
+#include "ngraph/runtime/kernel/replace_slice.hpp"
+#include "ngraph/runtime/kernel/slice.hpp"
+#include "ngraph/runtime/kernel/sum.hpp"
 
 using namespace ngraph::runtime::cpu::eigen;
+using namespace ngraph::runtime;
 
 )";
     string pch_header_source = TU.get_code();
@@ -282,6 +290,7 @@ using namespace ngraph::runtime::cpu::eigen;
 
         TU << "// Define outputs\n";
         size_t output_index = 0;
+        set<string> output_names;
         for (const descriptor::Output& output : current_function->get_result()->get_outputs())
         {
             shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
@@ -289,7 +298,23 @@ using namespace ngraph::runtime::cpu::eigen;
             string type = et.c_type_string();
             TU << type << "* " << tv->get_tensor().get_name() << " = static_cast<" << type
                << "*>(outputs[" << output_index << "]);\n";
+            output_names.insert(tv->get_tensor().get_name());
             output_index++;
+        }
+        TU << "\n";
+
+        TU << "// Define constants\n";
+        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        {
+            if (dynamic_cast<op::Constant*>(node.get()))
+            {
+                shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
+                if (!contains(output_names, tv->get_tensor().get_name()))
+                {
+                    TU << tv->get_tensor().get_element_type().c_type_string() << " "
+                       << tv->get_tensor().get_name() << "[" << tv->get_tensor().size() << "];\n";
+                }
+            }
         }
         TU << "\n";
 
