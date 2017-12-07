@@ -27,5 +27,5 @@ void regmodule_pyngraph_runtime(py::module m){
     regclass_pyngraph_runtime_CallFrame(m_runtime);
     regclass_pyngraph_runtime_ExternalFunction(m_runtime);
     regclass_pyngraph_runtime_Manager(m_runtime);
-    regmodule_pyngraph_runtime_Utils(m_runtime);
+    regmodule_pyngraph_runtime_utils(m_runtime);
 }

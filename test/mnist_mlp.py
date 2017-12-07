@@ -19,8 +19,9 @@ import pyngraph.util as util
 import pyngraph.runtime.utils as utils
 from pyngraph import Float32, Int32, Function, TensorViewType
 from pyngraph.op import Parameter, Maximum, Reshape, Dot, Broadcast
-from pyngraph.op import ParameterizedConstant, Exp, Log, Sum
+from pyngraph.op import Float32Constant, Exp, Log, Sum
 from pyngraph.op import Greater, Convert, Reduce
+from pyngraph.op import Add, Multiply, Subtract, Divide
 
 
 float_element_type = Float32.element_type()
@@ -35,77 +36,87 @@ LabelOneHot = Parameter(float_element_type, [bz, 10])
 MaxParam1 = Parameter(float_element_type, [])
 MaxParam2 = Parameter(float_element_type, [])
 MaxOutput = TensorViewType(float_element_type, []) 
-MaxFn = Function(Maximum(MaxParam1, MaxParam2), MaxOutput, [MaxParam1, MaxParam2], 'mnist')
+MaxFn = Function(Maximum(MaxParam1, MaxParam2),
+                 MaxOutput,
+                 [MaxParam1, MaxParam2],
+                 'mnist')
+
 
 def makeScalarConstant(scalar, shape=[], axis_set={}):
     constant_tensor = utils.make_tensor([])
-    constant_tensor.write(Util.numpy_to_c(np.array([scalar], dtype=np.float32)), 0, 4)
-    constant_op = ParameterizedConstantF([], constant_tensor)
+    constant_tensor.write(util.numpy_to_c(np.array([scalar], dtype=np.float32)), 0, 4)
+    constant_op = Float32Constant([], constant_tensor)
     constant_broadcast = Broadcast(constant_op, shape, axis_set)
     return constant_broadcast
+
 
 def makeFloat32Constant(scalar, shape=[], axis_set={}):
     return makeScalarConstant(scalar, shape, axis_set)
 
+
 def makeFloat32ConstantLike(scalar, op):
     v = set()
     shape = op.get_shape()
-    for i in range (len(shape)):
+    for i in range(len(shape)):
         v.add(i)
     return makeFloat32Constant(scalar, shape, v)
 
+
 def transpose(op, order):
     v = []
-    for i in range (len(order)):
-        v.append(op.get_shape()[order[i]])    
+    for i in range(len(order)):
+        v.append(op.get_shape()[order[i]])
     new_shape = v
-    return Reshape(op, order, new_shape)    
+    return Reshape(op, order, new_shape)
+
 
 def relu(op):
-    return Maximum(op, makeFloat32ConstantLike(0., op))  
+    return Maximum(op, makeFloat32ConstantLike(0., op))
 
 # Flatten
 X1 = Reshape(Input, [0, 1, 2], [bz, 784])
 
 # Normalize
-X2 = X1 / makeFloat32ConstantLike(255., X1) 
+X2 = Divide(X1, makeFloat32ConstantLike(255., X1))
 
 # Affine 1
 W1 = Parameter(float_element_type, [784, 100])
 b1 = Parameter(float_element_type, [100])
-X3 = Dot(X2, W1) + Broadcast(b1, [bz, 100], {0}) 
+X3 = Add(Dot(X2, W1), Broadcast(b1, [bz, 100], {0}))
 X4 = relu(X3)
 
-#Affine 2
+# Affine 2
 W2 = Parameter(float_element_type, [100, 10])
 b2 = Parameter(float_element_type, [10])
-X5 = Dot(X4, W2) + Broadcast(b2, [bz, 10], {0})
+X5 = Add(Dot(X4, W2), Broadcast(b2, [bz, 10], {0}))
 
 # Softmax
 Logits = X5
 Exp = Exp(Logits) 
 Max = Reduce(Exp, makeFloat32Constant(0., [], set()), MaxFn, {1})
 MaxBroadcast = Broadcast(Max, [bz, 10], {1})
-Softmax = Exp / MaxBroadcast
+Softmax = Divide(Exp, MaxBroadcast)
 
 # Loss
 LogSoftmax = Log(Softmax)
-Loss = Sum(LogSoftmax * LabelOneHot, {0, 1})/makeFloat32Constant(float(bz), [], set())
+Loss = Divide(Sum(Multiply(LogSoftmax, LabelOneHot), {0, 1}),
+              makeFloat32Constant(float(bz), [], set()))
 
 # Derivatives
-dLogits = Softmax - LabelOneHot
+dLogits = Subtract(Softmax, LabelOneHot)
 dX5 = dLogits
 
 dX4 = Dot(dX5, transpose(W2, [1, 0]))
 dW2 = Dot(transpose(X4, [1, 0]), dX5)
 db2 = Sum(dX5, {0})
 
-dX3 = Convert((Greater(X3, makeFloat32Constant(0., [bz, 100], {0, 1}))), float_element_type) * dX4
+dX3 = Multiply(Convert((Greater(X3, makeFloat32Constant(0., [bz, 100], {0, 1}))), float_element_type),
+               dX4)
 dX2 = Dot(dX3, transpose(W1, [1, 0]))
 dW1 = Dot(transpose(X2, [1, 0]), dX3)
 db1 = Sum(dX3, {0})
 
-nW1 = W1 - makeFloat32ConstantLike(lr, dW1) * dW1
-nb1 = b1 - makeFloat32ConstantLike(lr, db1) * db1
-nW2 = W2 - makeFloat32ConstantLike(lr, dW2) * dW2
-nb2 = b2 - makeFloat32ConstantLike(lr, db2) * db2
+nW1 = Subtract(W1, Multiply(makeFloat32ConstantLike(lr, dW1), dW1))
+nb1 = Subtract(b1, Multiply(makeFloat32ConstantLike(lr, db1), db1))
+nW2 = Subtract(W2, Multiply(makeFloat32ConstantLike(lr, dW2), dW2))
+nb2 = Subtract(b2, Multiply(makeFloat32ConstantLike(lr, db2), db2))
