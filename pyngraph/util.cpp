@@ -22,7 +22,7 @@ void* numpy_to_c(py::array a) {
     return info.ptr;
 }
 
-void regmodule_pyngraph_Util(py::module m) {
-    py::module mod = m.def_submodule("Util", "pyngraph.Util");
+void regmodule_pyngraph_util(py::module m) {
+    py::module mod = m.def_submodule("util", "pyngraph.util");
     mod.def("numpy_to_c", &numpy_to_c);
 }

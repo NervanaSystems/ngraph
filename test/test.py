@@ -15,23 +15,22 @@
 # ----------------------------------------------------------------------------
 import numpy as np
 
-import wrapper.ngraph.Util as Util
-import wrapper.ngraph.types.TraitedType as TraitedType
-import wrapper.ngraph.ops.Parameter as Parameter
-import wrapper.ngraph.types.TensorViewType as TensorViewType
-import wrapper.ngraph.Function as Function
-import wrapper.ngraph.runtime.Manager as Manager
-import wrapper.ngraph.runtime.ParameterizedTensorView as ParameterizedTensorView
+import pyngraph.util as util
+from pyngraph import Float32, TensorViewType, Function
+from pyngraph.op import Parameter, Add, Multiply
+from pyngraph.runtime import Manager
+from pyngraph.runtime import ParameterizedTensorViewFloat32
 
-element_type = TraitedType.TraitedTypeF.element_type()
+element_type = Float32.element_type()
+print(type(element_type))
 shape = [2,2]
-A = Parameter.Parameter(element_type, shape)
-B = Parameter.Parameter(element_type, shape)
-C = Parameter.Parameter(element_type, shape)
-value_type = TensorViewType.TensorViewType(element_type, shape)
+A = Parameter(element_type, shape)
+B = Parameter(element_type, shape)
+C = Parameter(element_type, shape)
+value_type = TensorViewType(element_type, shape)
 parameter_list = [A, B, C]
-function = Function.Function((A + B) * C, value_type, parameter_list, 'test')
-manager = Manager.Manager.get('NGVM');
+function = Function(Multiply(Add(A, B), C), value_type, parameter_list, 'test')
+manager = Manager.get('NGVM');
 external = manager.compile(function)
 backend = manager.allocate_backend()
 cf = backend.make_call_frame(external)

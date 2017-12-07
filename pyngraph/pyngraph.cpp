@@ -16,5 +16,5 @@ PYBIND11_MODULE(pyngraph, m){
     regclass_pyngraph_Function(m);
     regmodule_pyngraph_op(m);
     regmodule_pyngraph_runtime(m);
-    regmodule_pyngraph_Util(m);
+    regmodule_pyngraph_util(m);
 }
