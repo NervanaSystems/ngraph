@@ -26,6 +26,8 @@ PYBIND11_MODULE(TensorView, mod) {
 
     py::class_<Value, std::shared_ptr<Value>> value(mod, "Value");
     py::class_<TensorView, std::shared_ptr<TensorView>, Value> tensorView(mod, "TensorView");
+    tensorView.def("write", (void (TensorView::*) (const void*, size_t, size_t)) &TensorView::write);
+    tensorView.def("read", &TensorView::read);
 }
 
 }}  // ngraph

@@ -29,8 +29,6 @@ static void declareParameterizedTensorView(py::module & mod, std::string const &
     using PyClass = py::class_<Class, std::shared_ptr<Class>, TensorView>;
 
     PyClass cls(mod, ("ParameterizedTensorView" + suffix).c_str());
-    cls.def("write", (void (Class::*) (const void*, size_t, size_t)) &Class::write);
-    cls.def("read", &Class::read);
 }
 
 }
