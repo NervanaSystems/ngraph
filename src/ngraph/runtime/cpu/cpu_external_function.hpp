@@ -20,6 +20,7 @@
 #include <typeinfo>
 #include <unordered_map>
 
+#include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
@@ -47,6 +48,8 @@ namespace ngraph
             class CPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
                                          public std::enable_shared_from_this<CPU_ExternalFunction>
             {
+                friend class CPU_CallFrame;
+
             public:
                 CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
@@ -58,8 +61,18 @@ namespace ngraph
                 EntryPoint m_compiled_function;
 
             private:
-                std::unique_ptr<codegen::Compiler> compiler;
-                std::unique_ptr<codegen::ExecutionEngine> execution_engine;
+                void emit_debug_function_entry(codegen::CodeWriter& writer,
+                                               Node* node,
+                                               const std::vector<TensorViewWrapper>& in,
+                                               const std::vector<TensorViewWrapper>& out);
+                void emit_debug_function_exit(codegen::CodeWriter& writer,
+                                              Node* node,
+                                              const std::vector<TensorViewWrapper>& in,
+                                              const std::vector<TensorViewWrapper>& out);
+
+                std::unique_ptr<codegen::Compiler> m_compiler;
+                std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
+                bool m_emit_debug;
             };
         }
     }

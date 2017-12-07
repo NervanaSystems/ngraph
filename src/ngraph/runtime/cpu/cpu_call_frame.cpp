@@ -15,6 +15,7 @@
 #include <algorithm>
 
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 
 using namespace std;
@@ -68,4 +69,41 @@ void runtime::cpu::CPU_CallFrame::call(
     }
 
     tensor_call(inputs, outputs);
+}
+
+vector<runtime::cpu::PerformanceCounter> runtime::cpu::CPU_CallFrame::get_performance_data() const
+{
+    auto* engine = m_external_function->m_execution_engine.get();
+    auto get_count = engine->find_function<size_t()>("get_debug_timer_count");
+    auto get_name = engine->find_function<const char*(size_t)>("get_debug_timer_name");
+    auto get_microseconds = engine->find_function<size_t(size_t)>("get_debug_timer_microseconds");
+    auto get_call_count = engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
+
+    if (!get_count)
+    {
+        throw runtime_error("failed to find accessor function 'get_debug_timer_count'");
+    }
+
+    if (!get_name)
+    {
+        throw runtime_error("failed to find accessor function 'get_debug_timer_name'");
+    }
+
+    if (!get_microseconds)
+    {
+        throw runtime_error("failed to find accessor function 'get_debug_timer_microseconds'");
+    }
+
+    if (!get_call_count)
+    {
+        throw runtime_error("failed to find accessor function 'get_debug_timer_call_count'");
+    }
+
+    vector<runtime::cpu::PerformanceCounter> rc;
+    size_t count = get_count();
+    for (size_t i = 0; i < count; i++)
+    {
+        rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
+    }
+    return rc;
 }

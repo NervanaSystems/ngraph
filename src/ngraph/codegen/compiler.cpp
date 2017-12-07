@@ -14,13 +14,19 @@
 
 #include <iostream>
 
+#include <clang/Basic/DiagnosticOptions.h>
+#include <clang/Basic/TargetInfo.h>
+#include <clang/CodeGen/CodeGenAction.h>
 #include <clang/CodeGen/ObjectFilePCHContainerOperations.h>
 #include <clang/Driver/DriverDiagnostic.h>
 #include <clang/Driver/Options.h>
 #include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/CompilerInvocation.h>
+#include <clang/Frontend/FrontendActions.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
 #include <clang/Frontend/TextDiagnosticBuffer.h>
+#include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/Frontend/Utils.h>
 #include <clang/FrontendTool/Utils.h>
@@ -35,16 +41,9 @@
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/Signals.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/Timer.h>
 #include <llvm/Support/raw_ostream.h>
-
-#include <clang/Basic/DiagnosticOptions.h>
-#include <clang/Basic/TargetInfo.h>
-#include <clang/CodeGen/CodeGenAction.h>
-#include <clang/Frontend/CompilerInstance.h>
-#include <clang/Frontend/FrontendActions.h>
-#include <clang/Frontend/TextDiagnosticPrinter.h>
-#include <llvm/Support/TargetSelect.h>
 
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/file_util.hpp"
@@ -65,6 +64,12 @@ using namespace ngraph::codegen;
 static HeaderCache s_header_cache;
 static StaticCompiler s_static_compiler;
 static std::mutex m_mutex;
+
+shared_ptr<SectionMemoryManager> get_mm()
+{
+    NGRAPH_INFO;
+    return std::make_shared<SectionMemoryManager>();
+}
 
 Compiler::Compiler()
 {
@@ -107,10 +112,9 @@ StaticCompiler::StaticCompiler()
     m_debuginfo_enabled = true;
 #endif
 
-    llvm::InitializeAllTargets();
-    llvm::InitializeAllTargetMCs();
-    llvm::InitializeAllAsmPrinters();
-    llvm::InitializeAllAsmParsers();
+    InitializeNativeTarget();
+    LLVMInitializeNativeAsmPrinter();
+    LLVMInitializeNativeAsmParser();
 
     // Prepare compilation arguments
     vector<const char*> args;
