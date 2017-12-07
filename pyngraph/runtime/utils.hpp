@@ -16,4 +16,4 @@
 
 namespace py = pybind11;
 
-void regmodule_pyngraph_runtime_Utils(py::module m);
+void regmodule_pyngraph_runtime_utils(py::module m);

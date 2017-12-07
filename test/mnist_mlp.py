@@ -15,43 +15,33 @@
 # ----------------------------------------------------------------------------
 import numpy as np
 
-import wrapper.ngraph.types.TraitedType as TraitedType
-import wrapper.ngraph.ops.Parameter as Parameter
-import wrapper.ngraph.types.TensorViewType as TensorViewType
-import wrapper.ngraph.Function as Function
-import wrapper.ngraph.ops.Maximum as Maximum
-import wrapper.ngraph.ops.Reshape as Reshape
-import wrapper.ngraph.ops.Dot as Dot
-import wrapper.ngraph.ops.Broadcast as Broadcast
-import wrapper.ngraph.runtime.Utils as Utils
-import wrapper.ngraph.ops.ParameterizedConstant as ParameterizedConstant
-import wrapper.ngraph.ops.Exp as Exp
-import wrapper.ngraph.ops.Log as Log
-import wrapper.ngraph.ops.Sum as Sum
-import wrapper.ngraph.ops.Greater as Greater
-import wrapper.ngraph.ops.Convert as Convert
-import wrapper.ngraph.ops.Reduce as Reduce
-import wrapper.ngraph.Util as Util
+import pyngraph.util as util
+import pyngraph.runtime.utils as utils
+from pyngraph import Float32, Int32, Function, TensorViewType
+from pyngraph.op import Parameter, Maximum, Reshape, Dot, Broadcast
+from pyngraph.op import ParameterizedConstant, Exp, Log, Sum
+from pyngraph.op import Greater, Convert, Reduce
 
-float_element_type = TraitedType.TraitedTypeF.element_type()
-int_element_type = TraitedType.TraitedTypeI.element_type()
+
+float_element_type = Float32.element_type()
+int_element_type = Int32.element_type()
 bz = 53
 lr = 0.2
 
-Input = Parameter.Parameter(float_element_type, [bz, 28, 28])
-Label = Parameter.Parameter(int_element_type, [bz])
-LabelOneHot = Parameter.Parameter(float_element_type, [bz, 10])
+Input = Parameter(float_element_type, [bz, 28, 28])
+Label = Parameter(int_element_type, [bz])
+LabelOneHot = Parameter(float_element_type, [bz, 10])
 
-MaxParam1 = Parameter.Parameter(float_element_type, [])
-MaxParam2 = Parameter.Parameter(float_element_type, [])
-MaxOutput = TensorViewType.TensorViewType(float_element_type, []) 
-MaxFn = Function.Function(Maximum.Maximum(MaxParam1, MaxParam2), MaxOutput, [MaxParam1, MaxParam2], 'mnist')
+MaxParam1 = Parameter(float_element_type, [])
+MaxParam2 = Parameter(float_element_type, [])
+MaxOutput = TensorViewType(float_element_type, []) 
+MaxFn = Function(Maximum(MaxParam1, MaxParam2), MaxOutput, [MaxParam1, MaxParam2], 'mnist')
 
 def makeScalarConstant(scalar, shape=[], axis_set={}):
-    constant_tensor = Utils.make_tensor([])
+    constant_tensor = utils.make_tensor([])
     constant_tensor.write(Util.numpy_to_c(np.array([scalar], dtype=np.float32)), 0, 4)
-    constant_op = ParameterizedConstant.ParameterizedConstantF([], constant_tensor)
-    constant_broadcast = Broadcast.Broadcast(constant_op, shape, axis_set)
+    constant_op = ParameterizedConstantF([], constant_tensor)
+    constant_broadcast = Broadcast(constant_op, shape, axis_set)
     return constant_broadcast
 
 def makeFloat32Constant(scalar, shape=[], axis_set={}):
@@ -69,51 +59,51 @@ def transpose(op, order):
     for i in range (len(order)):
         v.append(op.get_shape()[order[i]])    
     new_shape = v
-    return Reshape.Reshape(op, order, new_shape)    
+    return Reshape(op, order, new_shape)    
 
 def relu(op):
-    return Maximum.Maximum(op, makeFloat32ConstantLike(0., op))  
+    return Maximum(op, makeFloat32ConstantLike(0., op))  
 
 # Flatten
-X1 = Reshape.Reshape(Input, [0, 1, 2], [bz, 784])
+X1 = Reshape(Input, [0, 1, 2], [bz, 784])
 
 # Normalize
 X2 = X1 / makeFloat32ConstantLike(255., X1) 
 
 # Affine 1
-W1 = Parameter.Parameter(float_element_type, [784, 100])
-b1 = Parameter.Parameter(float_element_type, [100])
-X3 = Dot.Dot(X2, W1) + Broadcast.Broadcast(b1, [bz, 100], {0}) 
+W1 = Parameter(float_element_type, [784, 100])
+b1 = Parameter(float_element_type, [100])
+X3 = Dot(X2, W1) + Broadcast(b1, [bz, 100], {0}) 
 X4 = relu(X3)
 
 #Affine 2
-W2 = Parameter.Parameter(float_element_type, [100, 10])
-b2 = Parameter.Parameter(float_element_type, [10])
-X5 = Dot.Dot(X4, W2) + Broadcast.Broadcast(b2, [bz, 10], {0})
+W2 = Parameter(float_element_type, [100, 10])
+b2 = Parameter(float_element_type, [10])
+X5 = Dot(X4, W2) + Broadcast(b2, [bz, 10], {0})
 
 # Softmax
 Logits = X5
-Exp = Exp.Exp(Logits) 
-Max = Reduce.Reduce(Exp, makeFloat32Constant(0., [], set()), MaxFn, {1})
-MaxBroadcast = Broadcast.Broadcast(Max, [bz, 10], {1})
+Exp = Exp(Logits) 
+Max = Reduce(Exp, makeFloat32Constant(0., [], set()), MaxFn, {1})
+MaxBroadcast = Broadcast(Max, [bz, 10], {1})
 Softmax = Exp / MaxBroadcast
 
 # Loss
-LogSoftmax = Log.Log(Softmax)
-Loss = Sum.Sum(LogSoftmax * LabelOneHot, {0, 1})/makeFloat32Constant(float(bz), [], set())
+LogSoftmax = Log(Softmax)
+Loss = Sum(LogSoftmax * LabelOneHot, {0, 1})/makeFloat32Constant(float(bz), [], set())
 
 # Derivatives
 dLogits = Softmax - LabelOneHot
 dX5 = dLogits
 
-dX4 = Dot.Dot(dX5, transpose(W2, [1, 0]))
-dW2 = Dot.Dot(transpose(X4, [1, 0]), dX5)
-db2 = Sum.Sum(dX5, {0})
+dX4 = Dot(dX5, transpose(W2, [1, 0]))
+dW2 = Dot(transpose(X4, [1, 0]), dX5)
+db2 = Sum(dX5, {0})
 
-dX3 = Convert.Convert((Greater.Greater(X3, makeFloat32Constant(0., [bz, 100], {0, 1}))), float_element_type) * dX4
-dX2 = Dot.Dot(dX3, transpose(W1, [1, 0]))
-dW1 = Dot.Dot(transpose(X2, [1, 0]), dX3)
-db1 = Sum.Sum(dX3, {0})
+dX3 = Convert((Greater(X3, makeFloat32Constant(0., [bz, 100], {0, 1}))), float_element_type) * dX4
+dX2 = Dot(dX3, transpose(W1, [1, 0]))
+dW1 = Dot(transpose(X2, [1, 0]), dX3)
+db1 = Sum(dX3, {0})
 
 nW1 = W1 - makeFloat32ConstantLike(lr, dW1) * dW1
 nb1 = b1 - makeFloat32ConstantLike(lr, db1) * db1

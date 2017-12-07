@@ -20,8 +20,8 @@
 
 namespace py = pybind11;
 
-void regmodule_pyngraph_runtime_Utils(py::module m) {
-    py::module mod = m.def_submodule("Utils", "module pyngraph.runtime.Utils");
+void regmodule_pyngraph_runtime_utils(py::module m) {
+    py::module mod = m.def_submodule("utils", "module pyngraph.runtime.Utils");
     using PTVFloat32 = ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>;    
 
     mod.def("make_tensor", (std::shared_ptr<PTVFloat32> (*) (const ngraph::Shape&)) &ngraph::runtime::make_tensor);
