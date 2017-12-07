@@ -12,24 +12,33 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
-#include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/types/element_type.hpp"
-#include "ngraph/types/type.hpp"
+#pragma once
 
-using namespace ngraph::descriptor::layout;
+#include <memory>
 
-TensorViewLayout::TensorViewLayout(const ngraph::descriptor::TensorView& tensor_view)
-    : m_tensor_view_type(tensor_view.get_tensor_view_type())
+#include "ngraph/runtime/manager.hpp"
+
+namespace ngraph
 {
-}
+    class Function;
 
-const ngraph::element::Type& TensorViewLayout::get_element_type() const
-{
-    return m_tensor_view_type->get_element_type();
-}
+    namespace runtime
+    {
+        class ExternalFunction;
 
-const ngraph::Shape& TensorViewLayout::get_shape() const
-{
-    return m_tensor_view_type->get_shape();
+        namespace interpreter
+        {
+            /// @brief Transformer for the interpreted backend
+            class INT_Manager : public Manager
+            {
+            public:
+                virtual std::shared_ptr<Backend> allocate_backend() override;
+
+                virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
+                    compile(const std::shared_ptr<ngraph::Function>& fun) override;
+
+                static Factory factory;
+            };
+        };
+    }
 }

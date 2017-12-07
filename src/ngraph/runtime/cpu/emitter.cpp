@@ -1640,6 +1640,54 @@ void Emitter::EmitOneHot(const ngraph::Node* n,
     }
 }
 
+void Emitter::EmitCeiling(const ngraph::Node* n,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
+{
+    TU << "{   // " << n->get_name() << "\n";
+    TU.indent++;
+    size_t element_count = outputs[0].get_tensor_view_layout()->get_size();
+    TU << "for (size_t i = 0; i < " << element_count << "; i++)\n";
+    TU << "{\n";
+    TU << "    " << outputs[0].get_tensor().get_name() << "[i] = std::ceil("
+       << inputs[0].get_tensor().get_name() << "[i]);\n";
+    TU << "}\n";
+    TU.indent--;
+    TU << "}\n";
+}
+
+void Emitter::EmitFloor(const ngraph::Node* n,
+                        const std::vector<TensorViewInfo>& inputs,
+                        const std::vector<TensorViewInfo>& outputs)
+{
+    TU << "{   // " << n->get_name() << "\n";
+    TU.indent++;
+    size_t element_count = outputs[0].get_tensor_view_layout()->get_size();
+    TU << "for (size_t i = 0; i < " << element_count << "; i++)\n";
+    TU << "{\n";
+    TU << "    " << outputs[0].get_tensor().get_name() << "[i] = std::floor("
+       << inputs[0].get_tensor().get_name() << "[i]);\n";
+    TU << "}\n";
+    TU.indent--;
+    TU << "}\n";
+}
+
+void Emitter::EmitSqrt(const ngraph::Node* n,
+                       const std::vector<TensorViewInfo>& inputs,
+                       const std::vector<TensorViewInfo>& outputs)
+{
+    TU << "{   // " << n->get_name() << "\n";
+    TU.indent++;
+    size_t element_count = outputs[0].get_tensor_view_layout()->get_size();
+    TU << "for (size_t i = 0; i < " << element_count << "; i++)\n";
+    TU << "{\n";
+    TU << "    " << outputs[0].get_tensor().get_name() << "[i] = std::sqrt("
+       << inputs[0].get_tensor().get_name() << "[i]);\n";
+    TU << "}\n";
+    TU.indent--;
+    TU << "}\n";
+}
+
 //------------------------------------------------------------------------------------------------
 // Utility methods
 //------------------------------------------------------------------------------------------------

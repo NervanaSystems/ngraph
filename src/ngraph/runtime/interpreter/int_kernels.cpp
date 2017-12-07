@@ -12,24 +12,4 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
-#include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/types/element_type.hpp"
-#include "ngraph/types/type.hpp"
-
-using namespace ngraph::descriptor::layout;
-
-TensorViewLayout::TensorViewLayout(const ngraph::descriptor::TensorView& tensor_view)
-    : m_tensor_view_type(tensor_view.get_tensor_view_type())
-{
-}
-
-const ngraph::element::Type& TensorViewLayout::get_element_type() const
-{
-    return m_tensor_view_type->get_element_type();
-}
-
-const ngraph::Shape& TensorViewLayout::get_shape() const
-{
-    return m_tensor_view_type->get_shape();
-}
+#include "ngraph/runtime/interpreter/int_kernels.hpp"
