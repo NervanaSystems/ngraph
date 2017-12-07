@@ -13,7 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
 //#include <string>
 #include "ngraph/runtime/external_function.hpp"
 #include "pyngraph/runtime/external_function.hpp"

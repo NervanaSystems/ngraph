@@ -13,7 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
 //#include <string>
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/call_frame.hpp"
