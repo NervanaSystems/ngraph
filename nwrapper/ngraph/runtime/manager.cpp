@@ -16,7 +16,6 @@
 #include <pybind11/stl.h>
 #include <string>
 #include "ngraph/runtime/manager.hpp"
-#include "ngraph/runtime/ngvm/ngvm_manager.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/backend.hpp"
@@ -32,7 +31,6 @@ PYBIND11_MODULE(Manager, mod) {
     py::module::import("nwrapper.ngraph.runtime.Backend");
 
     py::class_<Manager, std::shared_ptr<Manager>> manager(mod, "Manager");
-    py::class_<ngvm::NGVMManager, std::shared_ptr<ngvm::NGVMManager>, Manager> ngvmManager(mod, "NGVMManager");
 
     manager.def_static("get", &Manager::get);
     manager.def("compile", &Manager::compile);
