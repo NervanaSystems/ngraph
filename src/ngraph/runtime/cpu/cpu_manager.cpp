@@ -15,23 +15,23 @@
 #include <memory>
 
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_manager.hpp"
-#include "ngraph/runtime/cpu/external_function.hpp"
 
 using namespace ngraph::runtime::cpu;
 
-std::shared_ptr<ngraph::runtime::Backend> CPUManager::allocate_backend()
+std::shared_ptr<ngraph::runtime::Backend> CPU_Manager::allocate_backend()
 {
-    return std::make_shared<CPUBackend>();
+    return std::make_shared<CPU_Backend>();
 }
 
 std::shared_ptr<ngraph::runtime::ExternalFunction>
-    CPUManager::compile(const std::shared_ptr<ngraph::Function>& fun)
+    CPU_Manager::compile(const std::shared_ptr<ngraph::Function>& fun)
 {
-    return std::make_shared<ExternalFunction>(fun);
+    return std::make_shared<CPU_ExternalFunction>(fun);
 }
 
-ngraph::runtime::Manager::Factory CPUManager::factory = ngraph::runtime::Manager::register_factory(
+ngraph::runtime::Manager::Factory CPU_Manager::factory = ngraph::runtime::Manager::register_factory(
     "CPU", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
-        return std::make_shared<CPUManager>();
+        return std::make_shared<CPU_Manager>();
     });

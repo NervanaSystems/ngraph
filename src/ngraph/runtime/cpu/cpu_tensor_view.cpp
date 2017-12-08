@@ -17,13 +17,13 @@
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
-#include "ngraph/runtime/cpu/tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
-                                           const Shape& shape)
+runtime::cpu::CPU_TensorView::CPU_TensorView(const ngraph::element::Type& element_type,
+                                             const Shape& shape)
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
           std::make_shared<ngraph::TensorViewType>(element_type, shape),
           "external",
@@ -51,7 +51,7 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     }
 }
 
-runtime::cpu::CPUTensorView::~CPUTensorView()
+runtime::cpu::CPU_TensorView::~CPU_TensorView()
 {
     if (m_allocated_buffer_pool != nullptr)
     {
@@ -59,17 +59,17 @@ runtime::cpu::CPUTensorView::~CPUTensorView()
     }
 }
 
-char* runtime::cpu::CPUTensorView::get_data_ptr()
+char* runtime::cpu::CPU_TensorView::get_data_ptr()
 {
     return m_aligned_buffer_pool;
 }
 
-const char* runtime::cpu::CPUTensorView::get_data_ptr() const
+const char* runtime::cpu::CPU_TensorView::get_data_ptr() const
 {
     return m_aligned_buffer_pool;
 }
 
-void runtime::cpu::CPUTensorView::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::cpu::CPU_TensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
     if (tensor_offset + n > m_buffer_size)
     {
@@ -79,7 +79,7 @@ void runtime::cpu::CPUTensorView::write(const void* source, size_t tensor_offset
     memcpy(&target[tensor_offset], source, n);
 }
 
-void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::cpu::CPU_TensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
     if (tensor_offset + n > m_buffer_size)
     {

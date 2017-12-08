@@ -33,9 +33,9 @@
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
-#include "ngraph/runtime/cpu/call_frame.hpp"
-#include "ngraph/runtime/cpu/emitter.hpp"
-#include "ngraph/runtime/cpu/external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_emitter.hpp"
+#include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
 #include "ngraph/util.hpp"
 
@@ -57,15 +57,15 @@ static std::string eigen_matrix_format(const ngraph::Shape& shape, const ngraph:
     return ss.str();
 }
 
-void Emitter::EmitNop(const ngraph::Node* n,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitNop(const ngraph::Node* n,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
 }
 
-void Emitter::EmitAdd(const ngraph::Node* n,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitAdd(const ngraph::Node* n,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -77,9 +77,9 @@ void Emitter::EmitAdd(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitDot(const ngraph::Node* n,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitDot(const ngraph::Node* n,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     auto& arg_nodes = n->get_arguments();
     assert(arg_nodes.size() == 2);
@@ -206,9 +206,9 @@ void Emitter::EmitDot(const ngraph::Node* n,
     }
 }
 
-void Emitter::EmitMultiply(const ngraph::Node* n,
-                           const std::vector<TensorViewInfo>& inputs,
-                           const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitMultiply(const ngraph::Node* n,
+                               const std::vector<TensorViewInfo>& inputs,
+                               const std::vector<TensorViewInfo>& outputs)
 {
     const element::Type& et =
         (dynamic_pointer_cast<const TensorViewType>(n->get_arguments().at(0)->get_value_type()))
@@ -224,9 +224,9 @@ void Emitter::EmitMultiply(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitGetTupleElement(const ngraph::Node* n,
-                                  const std::vector<TensorViewInfo>& inputs,
-                                  const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitGetTupleElement(const ngraph::Node* n,
+                                      const std::vector<TensorViewInfo>& inputs,
+                                      const std::vector<TensorViewInfo>& outputs)
 {
     auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
     auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
@@ -245,9 +245,9 @@ void Emitter::EmitGetTupleElement(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitTuple(const ngraph::Node* n,
-                        const std::vector<TensorViewInfo>& inputs,
-                        const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitTuple(const ngraph::Node* n,
+                            const std::vector<TensorViewInfo>& inputs,
+                            const std::vector<TensorViewInfo>& outputs)
 {
     assert(inputs.size() == outputs.size());
 
@@ -265,9 +265,9 @@ void Emitter::EmitTuple(const ngraph::Node* n,
     TU += "}\n";
 }
 
-void Emitter::EmitAbs(const ngraph::Node* n,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitAbs(const ngraph::Node* n,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -277,9 +277,9 @@ void Emitter::EmitAbs(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitConcat(const ngraph::Node* n,
-                         const std::vector<TensorViewInfo>& inputs,
-                         const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitConcat(const ngraph::Node* n,
+                             const std::vector<TensorViewInfo>& inputs,
+                             const std::vector<TensorViewInfo>& outputs)
 {
     auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
     assert(result_tensor_type);
@@ -330,9 +330,9 @@ void Emitter::EmitConcat(const ngraph::Node* n,
     }
 }
 
-void Emitter::EmitDivide(const ngraph::Node* n,
-                         const std::vector<TensorViewInfo>& inputs,
-                         const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitDivide(const ngraph::Node* n,
+                             const std::vector<TensorViewInfo>& inputs,
+                             const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -353,9 +353,9 @@ void Emitter::EmitDivide(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitEqual(const ngraph::Node* n,
-                        const std::vector<TensorViewInfo>& inputs,
-                        const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitEqual(const ngraph::Node* n,
+                            const std::vector<TensorViewInfo>& inputs,
+                            const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -366,9 +366,9 @@ void Emitter::EmitEqual(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitGreater(const ngraph::Node* n,
-                          const std::vector<TensorViewInfo>& inputs,
-                          const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitGreater(const ngraph::Node* n,
+                              const std::vector<TensorViewInfo>& inputs,
+                              const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << " xxx\n";
     TU.indent++;
@@ -379,9 +379,9 @@ void Emitter::EmitGreater(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitGreaterEq(const ngraph::Node* n,
-                            const std::vector<TensorViewInfo>& inputs,
-                            const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitGreaterEq(const ngraph::Node* n,
+                                const std::vector<TensorViewInfo>& inputs,
+                                const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -392,9 +392,9 @@ void Emitter::EmitGreaterEq(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitLess(const ngraph::Node* n,
-                       const std::vector<TensorViewInfo>& inputs,
-                       const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitLess(const ngraph::Node* n,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -405,9 +405,9 @@ void Emitter::EmitLess(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitLessEq(const ngraph::Node* n,
-                         const std::vector<TensorViewInfo>& inputs,
-                         const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitLessEq(const ngraph::Node* n,
+                             const std::vector<TensorViewInfo>& inputs,
+                             const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -418,9 +418,9 @@ void Emitter::EmitLessEq(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitLog(const ngraph::Node* n,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitLog(const ngraph::Node* n,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -430,9 +430,9 @@ void Emitter::EmitLog(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitMaximum(const ngraph::Node* n,
-                          const std::vector<TensorViewInfo>& inputs,
-                          const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitMaximum(const ngraph::Node* n,
+                              const std::vector<TensorViewInfo>& inputs,
+                              const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -443,9 +443,9 @@ void Emitter::EmitMaximum(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitMinimum(const ngraph::Node* n,
-                          const std::vector<TensorViewInfo>& inputs,
-                          const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitMinimum(const ngraph::Node* n,
+                              const std::vector<TensorViewInfo>& inputs,
+                              const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -456,9 +456,9 @@ void Emitter::EmitMinimum(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitNegative(const ngraph::Node* n,
-                           const std::vector<TensorViewInfo>& inputs,
-                           const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitNegative(const ngraph::Node* n,
+                               const std::vector<TensorViewInfo>& inputs,
+                               const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -468,9 +468,9 @@ void Emitter::EmitNegative(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitNotEqual(const ngraph::Node* n,
-                           const std::vector<TensorViewInfo>& inputs,
-                           const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitNotEqual(const ngraph::Node* n,
+                               const std::vector<TensorViewInfo>& inputs,
+                               const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -481,9 +481,9 @@ void Emitter::EmitNotEqual(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitSelect(const ngraph::Node* n,
-                         const std::vector<TensorViewInfo>& inputs,
-                         const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitSelect(const ngraph::Node* n,
+                             const std::vector<TensorViewInfo>& inputs,
+                             const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -495,9 +495,9 @@ void Emitter::EmitSelect(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitSubtract(const ngraph::Node* n,
-                           const std::vector<TensorViewInfo>& inputs,
-                           const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitSubtract(const ngraph::Node* n,
+                               const std::vector<TensorViewInfo>& inputs,
+                               const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -508,9 +508,9 @@ void Emitter::EmitSubtract(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitParameterizedConstantBool(const ngraph::Node* n,
-                                            const std::vector<TensorViewInfo>& inputs,
-                                            const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitParameterizedConstantBool(const ngraph::Node* n,
+                                                const std::vector<TensorViewInfo>& inputs,
+                                                const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Bool>*>(n)
                      ->get_value()
@@ -566,9 +566,9 @@ static string format_float_as_string(float value)
     }
 }
 
-void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
-                                               const std::vector<TensorViewInfo>& inputs,
-                                               const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
+                                                   const std::vector<TensorViewInfo>& inputs,
+                                                   const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Float32>*>(n)
                      ->get_value()
@@ -602,9 +602,9 @@ void Emitter::EmitParameterizedConstantFloat32(const ngraph::Node* n,
     TU << "\n";
 }
 
-void Emitter::EmitParameterizedConstantInt8(const ngraph::Node* n,
-                                            const std::vector<TensorViewInfo>& inputs,
-                                            const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitParameterizedConstantInt8(const ngraph::Node* n,
+                                                const std::vector<TensorViewInfo>& inputs,
+                                                const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int8>*>(n)
                      ->get_value()
@@ -638,9 +638,9 @@ void Emitter::EmitParameterizedConstantInt8(const ngraph::Node* n,
     TU << "\n";
 }
 
-void Emitter::EmitParameterizedConstantInt32(const ngraph::Node* n,
-                                             const std::vector<TensorViewInfo>& inputs,
-                                             const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitParameterizedConstantInt32(const ngraph::Node* n,
+                                                 const std::vector<TensorViewInfo>& inputs,
+                                                 const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int32>*>(n)
                      ->get_value()
@@ -674,9 +674,9 @@ void Emitter::EmitParameterizedConstantInt32(const ngraph::Node* n,
     TU << "\n";
 }
 
-void Emitter::EmitParameterizedConstantInt64(const ngraph::Node* n,
-                                             const std::vector<TensorViewInfo>& inputs,
-                                             const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitParameterizedConstantInt64(const ngraph::Node* n,
+                                                 const std::vector<TensorViewInfo>& inputs,
+                                                 const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int64>*>(n)
                      ->get_value()
@@ -710,9 +710,9 @@ void Emitter::EmitParameterizedConstantInt64(const ngraph::Node* n,
     TU << "\n";
 }
 
-void Emitter::EmitParameterizedConstantUInt8(const ngraph::Node* n,
-                                             const std::vector<TensorViewInfo>& inputs,
-                                             const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitParameterizedConstantUInt8(const ngraph::Node* n,
+                                                 const std::vector<TensorViewInfo>& inputs,
+                                                 const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt8>*>(n)
                      ->get_value()
@@ -746,9 +746,9 @@ void Emitter::EmitParameterizedConstantUInt8(const ngraph::Node* n,
     TU << "\n";
 }
 
-void Emitter::EmitParameterizedConstantUInt32(const ngraph::Node* n,
-                                              const std::vector<TensorViewInfo>& inputs,
-                                              const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitParameterizedConstantUInt32(const ngraph::Node* n,
+                                                  const std::vector<TensorViewInfo>& inputs,
+                                                  const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt32>*>(n)
                      ->get_value()
@@ -782,9 +782,9 @@ void Emitter::EmitParameterizedConstantUInt32(const ngraph::Node* n,
     TU << "\n";
 }
 
-void Emitter::EmitParameterizedConstantUInt64(const ngraph::Node* n,
-                                              const std::vector<TensorViewInfo>& inputs,
-                                              const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitParameterizedConstantUInt64(const ngraph::Node* n,
+                                                  const std::vector<TensorViewInfo>& inputs,
+                                                  const std::vector<TensorViewInfo>& outputs)
 {
     auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt64>*>(n)
                      ->get_value()
@@ -818,9 +818,9 @@ void Emitter::EmitParameterizedConstantUInt64(const ngraph::Node* n,
     TU << "\n";
 }
 
-void Emitter::EmitBroadcast(const ngraph::Node* n,
-                            const std::vector<TensorViewInfo>& inputs,
-                            const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
+                                const std::vector<TensorViewInfo>& inputs,
+                                const std::vector<TensorViewInfo>& outputs)
 {
     auto broadcast = static_cast<const op::Broadcast*>(n);
 
@@ -897,9 +897,9 @@ void Emitter::EmitBroadcast(const ngraph::Node* n,
     }
 }
 
-void Emitter::EmitConvert(const ngraph::Node* n,
-                          const std::vector<TensorViewInfo>& inputs,
-                          const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitConvert(const ngraph::Node* n,
+                              const std::vector<TensorViewInfo>& inputs,
+                              const std::vector<TensorViewInfo>& outputs)
 {
     auto arg = n->get_arguments().at(0);
 
@@ -920,9 +920,9 @@ void Emitter::EmitConvert(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitConstant(const ngraph::Node* n,
-                           const std::vector<TensorViewInfo>& inputs,
-                           const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitConstant(const ngraph::Node* n,
+                               const std::vector<TensorViewInfo>& inputs,
+                               const std::vector<TensorViewInfo>& outputs)
 {
     auto c = static_cast<const op::Constant*>(n);
     auto c_tensor_type = dynamic_pointer_cast<const TensorViewType>(c->get_value_type());
@@ -941,9 +941,9 @@ void Emitter::EmitConstant(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitReshape(const ngraph::Node* n,
-                          const std::vector<TensorViewInfo>& inputs,
-                          const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitReshape(const ngraph::Node* n,
+                              const std::vector<TensorViewInfo>& inputs,
+                              const std::vector<TensorViewInfo>& outputs)
 {
     auto reshape = static_cast<const op::Reshape*>(n);
 
@@ -1023,9 +1023,9 @@ void Emitter::EmitReshape(const ngraph::Node* n,
     }
 }
 
-void Emitter::EmitFunctionCall(const ngraph::Node* n,
-                               const std::vector<TensorViewInfo>& inputs,
-                               const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitFunctionCall(const ngraph::Node* n,
+                                   const std::vector<TensorViewInfo>& inputs,
+                                   const std::vector<TensorViewInfo>& outputs)
 {
     auto function_call = static_cast<const op::FunctionCall*>(n);
     shared_ptr<Function> function = function_call->get_function();
@@ -1043,9 +1043,9 @@ void Emitter::EmitFunctionCall(const ngraph::Node* n,
 // the compiled version of these ops is intended to have semantics identical
 // to what's seen there (for now atleast)
 
-void Emitter::EmitReduce(const ngraph::Node* n,
-                         const std::vector<TensorViewInfo>& inputs,
-                         const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitReduce(const ngraph::Node* n,
+                             const std::vector<TensorViewInfo>& inputs,
+                             const std::vector<TensorViewInfo>& outputs)
 {
     auto reduce = static_cast<const op::Reduce*>(n);
     auto reduction_function = reduce->get_function();
@@ -1250,9 +1250,9 @@ void Emitter::EmitReduce(const ngraph::Node* n,
     }
 }
 
-void Emitter::EmitSign(const ngraph::Node* n,
-                       const std::vector<TensorViewInfo>& inputs,
-                       const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitSign(const ngraph::Node* n,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1262,9 +1262,9 @@ void Emitter::EmitSign(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitSlice(const ngraph::Node* n,
-                        const std::vector<TensorViewInfo>& inputs,
-                        const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitSlice(const ngraph::Node* n,
+                            const std::vector<TensorViewInfo>& inputs,
+                            const std::vector<TensorViewInfo>& outputs)
 {
     auto slice = static_cast<const op::Slice*>(n);
 
@@ -1344,9 +1344,9 @@ void Emitter::EmitSlice(const ngraph::Node* n,
     }
 }
 
-void Emitter::EmitSum(const ngraph::Node* n,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitSum(const ngraph::Node* n,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     auto s = static_cast<const op::Sum*>(n);
     auto s_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(s->get_value_type());
@@ -1429,9 +1429,9 @@ void Emitter::EmitSum(const ngraph::Node* n,
     }
 }
 
-void Emitter::EmitExp(const ngraph::Node* n,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitExp(const ngraph::Node* n,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1441,9 +1441,9 @@ void Emitter::EmitExp(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitSin(const ngraph::Node* n,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitSin(const ngraph::Node* n,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1453,9 +1453,9 @@ void Emitter::EmitSin(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitSinh(const ngraph::Node* n,
-                       const std::vector<TensorViewInfo>& inputs,
-                       const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitSinh(const ngraph::Node* n,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1465,9 +1465,9 @@ void Emitter::EmitSinh(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitCos(const ngraph::Node* n,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitCos(const ngraph::Node* n,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1477,9 +1477,9 @@ void Emitter::EmitCos(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitCosh(const ngraph::Node* n,
-                       const std::vector<TensorViewInfo>& inputs,
-                       const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitCosh(const ngraph::Node* n,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1489,9 +1489,9 @@ void Emitter::EmitCosh(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitTan(const ngraph::Node* n,
-                      const std::vector<TensorViewInfo>& inputs,
-                      const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitTan(const ngraph::Node* n,
+                          const std::vector<TensorViewInfo>& inputs,
+                          const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1501,9 +1501,9 @@ void Emitter::EmitTan(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitTanh(const ngraph::Node* n,
-                       const std::vector<TensorViewInfo>& inputs,
-                       const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitTanh(const ngraph::Node* n,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     // Eigen's generic_fast_tanh_float<float> is currently miscompiled by Clang/LLVM
     // so we fall-back to std::tanh
@@ -1520,9 +1520,9 @@ void Emitter::EmitTanh(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitAsin(const ngraph::Node* n,
-                       const std::vector<TensorViewInfo>& inputs,
-                       const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitAsin(const ngraph::Node* n,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1532,9 +1532,9 @@ void Emitter::EmitAsin(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitAcos(const ngraph::Node* n,
-                       const std::vector<TensorViewInfo>& inputs,
-                       const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitAcos(const ngraph::Node* n,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1544,9 +1544,9 @@ void Emitter::EmitAcos(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitAtan(const ngraph::Node* n,
-                       const std::vector<TensorViewInfo>& inputs,
-                       const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitAtan(const ngraph::Node* n,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1556,9 +1556,9 @@ void Emitter::EmitAtan(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitPower(const ngraph::Node* n,
-                        const std::vector<TensorViewInfo>& inputs,
-                        const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitPower(const ngraph::Node* n,
+                            const std::vector<TensorViewInfo>& inputs,
+                            const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1570,9 +1570,9 @@ void Emitter::EmitPower(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitReplaceSlice(const ngraph::Node* n,
-                               const std::vector<TensorViewInfo>& inputs,
-                               const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitReplaceSlice(const ngraph::Node* n,
+                                   const std::vector<TensorViewInfo>& inputs,
+                                   const std::vector<TensorViewInfo>& outputs)
 {
     auto replace_slice = static_cast<const op::Slice*>(n);
 
@@ -1667,9 +1667,9 @@ void Emitter::EmitReplaceSlice(const ngraph::Node* n,
     }
 }
 
-void Emitter::EmitOneHot(const ngraph::Node* n,
-                         const std::vector<TensorViewInfo>& inputs,
-                         const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitOneHot(const ngraph::Node* n,
+                             const std::vector<TensorViewInfo>& inputs,
+                             const std::vector<TensorViewInfo>& outputs)
 {
     auto oh = static_cast<const op::OneHot*>(n);
 
@@ -1779,9 +1779,9 @@ void Emitter::EmitOneHot(const ngraph::Node* n,
     }
 }
 
-void Emitter::EmitCeiling(const ngraph::Node* n,
-                          const std::vector<TensorViewInfo>& inputs,
-                          const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitCeiling(const ngraph::Node* n,
+                              const std::vector<TensorViewInfo>& inputs,
+                              const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1795,9 +1795,9 @@ void Emitter::EmitCeiling(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitFloor(const ngraph::Node* n,
-                        const std::vector<TensorViewInfo>& inputs,
-                        const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitFloor(const ngraph::Node* n,
+                            const std::vector<TensorViewInfo>& inputs,
+                            const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1811,9 +1811,9 @@ void Emitter::EmitFloor(const ngraph::Node* n,
     TU << "}\n";
 }
 
-void Emitter::EmitSqrt(const ngraph::Node* n,
-                       const std::vector<TensorViewInfo>& inputs,
-                       const std::vector<TensorViewInfo>& outputs)
+void CPU_Emitter::EmitSqrt(const ngraph::Node* n,
+                           const std::vector<TensorViewInfo>& inputs,
+                           const std::vector<TensorViewInfo>& outputs)
 {
     TU << "{   // " << n->get_name() << "\n";
     TU.indent++;
@@ -1831,9 +1831,9 @@ void Emitter::EmitSqrt(const ngraph::Node* n,
 // Utility methods
 //------------------------------------------------------------------------------------------------
 
-void Emitter::generate_call(const std::vector<TensorViewInfo>& inputs,
-                            const std::vector<TensorViewInfo>& outputs,
-                            shared_ptr<Function> function)
+void CPU_Emitter::generate_call(const std::vector<TensorViewInfo>& inputs,
+                                const std::vector<TensorViewInfo>& outputs,
+                                shared_ptr<Function> function)
 {
     vector<string> input_names;
     vector<string> output_names;
@@ -1874,7 +1874,7 @@ static string format_name(const string& name)
     return rc;
 }
 
-string Emitter::emit_vector(const TensorViewInfo& tvi, const string& name)
+string CPU_Emitter::emit_vector(const TensorViewInfo& tvi, const string& name)
 {
     stringstream ss;
 
@@ -1884,7 +1884,7 @@ string Emitter::emit_vector(const TensorViewInfo& tvi, const string& name)
     return ss.str();
 }
 
-string Emitter::emit_array1d(const TensorViewInfo& tvi, const string& name)
+string CPU_Emitter::emit_array1d(const TensorViewInfo& tvi, const string& name)
 {
     stringstream ss;
 
@@ -1894,7 +1894,7 @@ string Emitter::emit_array1d(const TensorViewInfo& tvi, const string& name)
     return ss.str();
 }
 
-string Emitter::emit_matrix(const TensorViewInfo& tvi, const string& name)
+string CPU_Emitter::emit_matrix(const TensorViewInfo& tvi, const string& name)
 {
     stringstream ss;
     auto layout = tvi.get_layout<DenseTensorViewLayout>();
@@ -1906,7 +1906,7 @@ string Emitter::emit_matrix(const TensorViewInfo& tvi, const string& name)
     return ss.str();
 }
 
-std::vector<size_t> Emitter::get_shape(const TensorViewInfo& tvi) const
+std::vector<size_t> CPU_Emitter::get_shape(const TensorViewInfo& tvi) const
 {
     return tvi.get_tensor_view()->get_tensor_view_type()->get_shape();
 }

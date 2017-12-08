@@ -19,7 +19,7 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/cpu/external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/tensor_view_info.hpp"
 
 #define EMITTER_DECL(E)                                                                            \
@@ -33,13 +33,13 @@ namespace ngraph
     {
         namespace cpu
         {
-            class Emitter
+            class CPU_Emitter
             {
             protected:
                 codegen::CodeWriter TU;
 
             public:
-                Emitter()
+                CPU_Emitter()
                     : TU()
                 {
                 }
