@@ -66,7 +66,6 @@
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
-#include "ngraph/runtime/kernel/scalar_tensor_product.hpp"
 #include "ngraph/runtime/kernel/select.hpp"
 #include "ngraph/runtime/kernel/sign.hpp"
 #include "ngraph/runtime/kernel/sin.hpp"

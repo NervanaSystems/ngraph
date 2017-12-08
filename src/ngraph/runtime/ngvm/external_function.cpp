@@ -109,7 +109,6 @@
 #include "ngraph/runtime/ngvm/instruction/replace_slice.hpp"
 #include "ngraph/runtime/ngvm/instruction/reshape.hpp"
 #include "ngraph/runtime/ngvm/instruction/return.hpp"
-#include "ngraph/runtime/ngvm/instruction/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/instruction/select.hpp"
 #include "ngraph/runtime/ngvm/instruction/sign.hpp"
 #include "ngraph/runtime/ngvm/instruction/sin.hpp"
