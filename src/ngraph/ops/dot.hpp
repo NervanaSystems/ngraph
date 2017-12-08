@@ -35,9 +35,9 @@ namespace ngraph
         ///
         /// ## Parameters
         ///
-        /// |                  | Description                                                                                      |
-        /// | ---------------- | ------------------------------------------------------------------------------------------------ |
-        /// | `dot_axis_count` | The number of axes to reduce through dot-product (corresponds to \f$m\f$ in the formulas above). |
+        /// |                        | Description                                                                                      |
+        /// | ---------------------- | ------------------------------------------------------------------------------------------------ |
+        /// | `reduction_axes_count` | The number of axes to reduce through dot-product (corresponds to \f$m\f$ in the formulas above). |
         ///
         /// ## Inputs
         ///
@@ -59,10 +59,10 @@ namespace ngraph
             ///
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
-            /// \param dot_axis_count The number of axes to dot.
+            /// \param reduction_axes_count The number of axes to dot.
             Dot(const std::shared_ptr<Node>& arg0,
                 const std::shared_ptr<Node>& arg1,
-                size_t dot_axis_count);
+                size_t reduction_axes_count);
 
             /// \brief Constructs a dot product operation with default dot-axis selection depending on the inputs.
             ///
@@ -76,17 +76,18 @@ namespace ngraph
             /// \param arg1 The node producing the second argument.
             Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
 
-            size_t get_dot_axis_count() const { return m_dot_axis_count; }
+            size_t get_reduction_axes_count() const { return m_reduction_axes_count; }
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 2)
                     throw ngraph_error("Incorrect number of new arguments");
-                return std::make_shared<Dot>(new_args.at(0), new_args.at(1), m_dot_axis_count);
+                return std::make_shared<Dot>(
+                    new_args.at(0), new_args.at(1), m_reduction_axes_count);
             }
 
         protected:
-            size_t m_dot_axis_count;
+            size_t m_reduction_axes_count;
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
