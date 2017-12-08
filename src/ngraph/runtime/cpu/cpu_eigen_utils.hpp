@@ -22,8 +22,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        class TensorViewInfo;
-
         namespace cpu
         {
             class CallFrame;

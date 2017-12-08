@@ -14,23 +14,35 @@
 
 #pragma once
 
-#include "ngraph/log.hpp"
+#include <memory>
+
+#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/types/element_type.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace cpu
         {
-            template <typename T>
-            void copy(T* arg, T* out, size_t count)
-            {
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = arg[i];
-                    NGRAPH_INFO << "out[" << i << "] = " << arg[i];
-                }
-            }
+            class TensorViewWrapper;
         }
     }
 }
+
+class ngraph::runtime::cpu::TensorViewWrapper
+{
+public:
+    TensorViewWrapper(const std::shared_ptr<descriptor::TensorView>&);
+
+    size_t get_size() const;
+    const std::vector<size_t>& get_shape() const;
+    const std::vector<size_t>& get_strides() const;
+    const element::Type& get_element_type() const;
+    const std::string& get_name() const;
+    const std::string& get_type() const;
+    bool is_output() const;
+
+private:
+    std::shared_ptr<descriptor::TensorView> m_tensor_view;
+};

@@ -88,3 +88,13 @@ void runtime::cpu::CPU_TensorView::read(void* target, size_t tensor_offset, size
     const char* source = get_data_ptr();
     memcpy(target, &source[tensor_offset], n);
 }
+
+size_t runtime::cpu::CPU_TensorView::get_size() const
+{
+    return get_tensor_view_layout()->get_size();
+}
+
+const element::Type& runtime::cpu::CPU_TensorView::get_element_type() const
+{
+    return get_tensor_view_layout()->get_element_type();
+}

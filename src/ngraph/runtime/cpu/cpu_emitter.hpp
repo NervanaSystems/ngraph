@@ -20,12 +20,12 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
 #define EMITTER_DECL(E)                                                                            \
     E(const ngraph::Node* n,                                                                       \
-      const std::vector<TensorViewInfo>& inputs,                                                   \
-      const std::vector<TensorViewInfo>& outputs)
+      const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& args,                            \
+      const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& out)
 
 namespace ngraph
 {
@@ -101,15 +101,15 @@ namespace ngraph
                 void EMITTER_DECL(EmitSqrt);
 
             private:
-                void generate_call(const std::vector<TensorViewInfo>& inputs,
-                                   const std::vector<TensorViewInfo>& outputs,
+                void generate_call(const std::vector<TensorViewWrapper>& args,
+                                   const std::vector<TensorViewWrapper>& out,
                                    std::shared_ptr<Function> function);
 
-                std::string emit_vector(const TensorViewInfo&, const std::string& name = "");
-                std::string emit_array1d(const TensorViewInfo&, const std::string& name = "");
-                std::string emit_matrix(const TensorViewInfo&, const std::string& name = "");
+                std::string emit_vector(const TensorViewWrapper&, const std::string& name = "");
+                std::string emit_array1d(const TensorViewWrapper&, const std::string& name = "");
+                std::string emit_matrix(const TensorViewWrapper&, const std::string& name = "");
 
-                std::vector<size_t> get_shape(const TensorViewInfo&) const;
+                std::vector<size_t> get_shape(const TensorViewWrapper&) const;
             };
         }
     }

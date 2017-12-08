@@ -18,16 +18,16 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 
 using namespace std;
-using namespace ngraph::runtime::cpu;
+using namespace ngraph;
 
-CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
-                             EntryPoint compiled_function)
+runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
+                                           EntryPoint compiled_function)
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
 {
 }
 
-void CPU_CallFrame::tensor_call(
+void runtime::cpu::CPU_CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& input_tvs,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
 {
@@ -50,8 +50,9 @@ void CPU_CallFrame::tensor_call(
     m_compiled_function(inputs.data(), outputs.data());
 }
 
-void CPU_CallFrame::call(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,
-                         const std::vector<std::shared_ptr<ngraph::runtime::Value>>& results)
+void runtime::cpu::CPU_CallFrame::call(
+    const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,
+    const std::vector<std::shared_ptr<ngraph::runtime::Value>>& results)
 {
     // TODO: Check types of args and result
     vector<shared_ptr<ngraph::runtime::TensorView>> inputs;

@@ -87,9 +87,9 @@
 #include "ngraph/runtime/utils.hpp"
 
 using namespace std;
-using namespace ngraph::runtime::cpu;
+using namespace ngraph;
 
-static const std::string s_output_dir = "cpu_codegen";
+static const string s_output_dir = "cpu_codegen";
 
 class StaticInitializers
 {
@@ -103,79 +103,79 @@ using ngraph::descriptor::layout::DenseTensorViewLayout;
 
 #define TI(x) type_index(typeid(x))
 
-static const OpMap dispatcher{
-    {TI(ngraph::op::Add), &CPU_Emitter::EmitAdd},
-    {TI(ngraph::op::Dot), &CPU_Emitter::EmitDot},
-    {TI(ngraph::op::Multiply), &CPU_Emitter::EmitMultiply},
-    {TI(ngraph::op::Parameter), &CPU_Emitter::EmitNop},
-    {TI(ngraph::op::GetTupleElement), &CPU_Emitter::EmitGetTupleElement},
-    {TI(ngraph::op::Tuple), &CPU_Emitter::EmitTuple},
-    {TI(ngraph::op::Abs), &CPU_Emitter::EmitAbs},
-    {TI(ngraph::op::Concat), &CPU_Emitter::EmitConcat},
-    {TI(ngraph::op::Divide), &CPU_Emitter::EmitDivide},
-    {TI(ngraph::op::Equal), &CPU_Emitter::EmitEqual},
-    {TI(ngraph::op::Greater), &CPU_Emitter::EmitGreater},
-    {TI(ngraph::op::GreaterEq), &CPU_Emitter::EmitGreaterEq},
-    {TI(ngraph::op::Less), &CPU_Emitter::EmitLess},
-    {TI(ngraph::op::LessEq), &CPU_Emitter::EmitLessEq},
-    {TI(ngraph::op::Log), &CPU_Emitter::EmitLog},
-    {TI(ngraph::op::Maximum), &CPU_Emitter::EmitMaximum},
-    {TI(ngraph::op::Minimum), &CPU_Emitter::EmitMinimum},
-    {TI(ngraph::op::Negative), &CPU_Emitter::EmitNegative},
-    {TI(ngraph::op::NotEqual), &CPU_Emitter::EmitNotEqual},
-    {TI(ngraph::op::Power), &CPU_Emitter::EmitPower},
-    {TI(ngraph::op::Select), &CPU_Emitter::EmitSelect},
-    {TI(ngraph::op::Subtract), &CPU_Emitter::EmitSubtract},
+static const runtime::cpu::OpMap dispatcher{
+    {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::EmitAdd},
+    {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::EmitDot},
+    {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::EmitMultiply},
+    {TI(ngraph::op::Parameter), &runtime::cpu::CPU_Emitter::EmitNop},
+    {TI(ngraph::op::GetTupleElement), &runtime::cpu::CPU_Emitter::EmitGetTupleElement},
+    {TI(ngraph::op::Tuple), &runtime::cpu::CPU_Emitter::EmitTuple},
+    {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::EmitAbs},
+    {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::EmitConcat},
+    {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::EmitDivide},
+    {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::EmitEqual},
+    {TI(ngraph::op::Greater), &runtime::cpu::CPU_Emitter::EmitGreater},
+    {TI(ngraph::op::GreaterEq), &runtime::cpu::CPU_Emitter::EmitGreaterEq},
+    {TI(ngraph::op::Less), &runtime::cpu::CPU_Emitter::EmitLess},
+    {TI(ngraph::op::LessEq), &runtime::cpu::CPU_Emitter::EmitLessEq},
+    {TI(ngraph::op::Log), &runtime::cpu::CPU_Emitter::EmitLog},
+    {TI(ngraph::op::Maximum), &runtime::cpu::CPU_Emitter::EmitMaximum},
+    {TI(ngraph::op::Minimum), &runtime::cpu::CPU_Emitter::EmitMinimum},
+    {TI(ngraph::op::Negative), &runtime::cpu::CPU_Emitter::EmitNegative},
+    {TI(ngraph::op::NotEqual), &runtime::cpu::CPU_Emitter::EmitNotEqual},
+    {TI(ngraph::op::Power), &runtime::cpu::CPU_Emitter::EmitPower},
+    {TI(ngraph::op::Select), &runtime::cpu::CPU_Emitter::EmitSelect},
+    {TI(ngraph::op::Subtract), &runtime::cpu::CPU_Emitter::EmitSubtract},
     {TI(ngraph::op::ParameterizedConstant<ngraph::element::Bool>),
-     &CPU_Emitter::EmitParameterizedConstantBool},
+     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantBool},
     {TI(ngraph::op::ParameterizedConstant<ngraph::element::Float32>),
-     &CPU_Emitter::EmitParameterizedConstantFloat32},
+     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantFloat32},
     {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int8>),
-     &CPU_Emitter::EmitParameterizedConstantInt8},
+     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt8},
     {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int32>),
-     &CPU_Emitter::EmitParameterizedConstantInt32},
+     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt32},
     {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int64>),
-     &CPU_Emitter::EmitParameterizedConstantInt64},
+     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt64},
     {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt8>),
-     &CPU_Emitter::EmitParameterizedConstantUInt8},
+     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt8},
     {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt32>),
-     &CPU_Emitter::EmitParameterizedConstantUInt32},
+     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt32},
     {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt64>),
-     &CPU_Emitter::EmitParameterizedConstantUInt64},
-    {TI(ngraph::op::Broadcast), &CPU_Emitter::EmitBroadcast},
-    {TI(ngraph::op::Convert), &CPU_Emitter::EmitConvert},
-    {TI(ngraph::op::Constant), &CPU_Emitter::EmitConstant},
-    {TI(ngraph::op::Reshape), &CPU_Emitter::EmitReshape},
-    {TI(ngraph::op::FunctionCall), &CPU_Emitter::EmitFunctionCall},
-    {TI(ngraph::op::Reduce), &CPU_Emitter::EmitReduce},
-    {TI(ngraph::op::Sign), &CPU_Emitter::EmitSign},
-    {TI(ngraph::op::Slice), &CPU_Emitter::EmitSlice},
-    {TI(ngraph::op::Sum), &CPU_Emitter::EmitSum},
-    {TI(ngraph::op::Exp), &CPU_Emitter::EmitExp},
-    {TI(ngraph::op::Sin), &CPU_Emitter::EmitSin},
-    {TI(ngraph::op::Sinh), &CPU_Emitter::EmitSinh},
-    {TI(ngraph::op::Cos), &CPU_Emitter::EmitCos},
-    {TI(ngraph::op::Cosh), &CPU_Emitter::EmitCosh},
-    {TI(ngraph::op::Tan), &CPU_Emitter::EmitTan},
-    {TI(ngraph::op::Tanh), &CPU_Emitter::EmitTanh},
-    {TI(ngraph::op::Asin), &CPU_Emitter::EmitAsin},
-    {TI(ngraph::op::Acos), &CPU_Emitter::EmitAcos},
-    {TI(ngraph::op::Atan), &CPU_Emitter::EmitAtan},
-    {TI(ngraph::op::ReplaceSlice), &CPU_Emitter::EmitReplaceSlice},
-    {TI(ngraph::op::OneHot), &CPU_Emitter::EmitOneHot},
-    {TI(ngraph::op::Floor), &CPU_Emitter::EmitFloor},
-    {TI(ngraph::op::Ceiling), &CPU_Emitter::EmitCeiling},
-    {TI(ngraph::op::Sqrt), &CPU_Emitter::EmitSqrt},
+     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt64},
+    {TI(ngraph::op::Broadcast), &runtime::cpu::CPU_Emitter::EmitBroadcast},
+    {TI(ngraph::op::Convert), &runtime::cpu::CPU_Emitter::EmitConvert},
+    {TI(ngraph::op::Constant), &runtime::cpu::CPU_Emitter::EmitConstant},
+    {TI(ngraph::op::Reshape), &runtime::cpu::CPU_Emitter::EmitReshape},
+    {TI(ngraph::op::FunctionCall), &runtime::cpu::CPU_Emitter::EmitFunctionCall},
+    {TI(ngraph::op::Reduce), &runtime::cpu::CPU_Emitter::EmitReduce},
+    {TI(ngraph::op::Sign), &runtime::cpu::CPU_Emitter::EmitSign},
+    {TI(ngraph::op::Slice), &runtime::cpu::CPU_Emitter::EmitSlice},
+    {TI(ngraph::op::Sum), &runtime::cpu::CPU_Emitter::EmitSum},
+    {TI(ngraph::op::Exp), &runtime::cpu::CPU_Emitter::EmitExp},
+    {TI(ngraph::op::Sin), &runtime::cpu::CPU_Emitter::EmitSin},
+    {TI(ngraph::op::Sinh), &runtime::cpu::CPU_Emitter::EmitSinh},
+    {TI(ngraph::op::Cos), &runtime::cpu::CPU_Emitter::EmitCos},
+    {TI(ngraph::op::Cosh), &runtime::cpu::CPU_Emitter::EmitCosh},
+    {TI(ngraph::op::Tan), &runtime::cpu::CPU_Emitter::EmitTan},
+    {TI(ngraph::op::Tanh), &runtime::cpu::CPU_Emitter::EmitTanh},
+    {TI(ngraph::op::Asin), &runtime::cpu::CPU_Emitter::EmitAsin},
+    {TI(ngraph::op::Acos), &runtime::cpu::CPU_Emitter::EmitAcos},
+    {TI(ngraph::op::Atan), &runtime::cpu::CPU_Emitter::EmitAtan},
+    {TI(ngraph::op::ReplaceSlice), &runtime::cpu::CPU_Emitter::EmitReplaceSlice},
+    {TI(ngraph::op::OneHot), &runtime::cpu::CPU_Emitter::EmitOneHot},
+    {TI(ngraph::op::Floor), &runtime::cpu::CPU_Emitter::EmitFloor},
+    {TI(ngraph::op::Ceiling), &runtime::cpu::CPU_Emitter::EmitCeiling},
+    {TI(ngraph::op::Sqrt), &runtime::cpu::CPU_Emitter::EmitSqrt},
 };
 
-CPU_ExternalFunction::CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                           bool release_function)
+runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
+    const shared_ptr<ngraph::Function>& function, bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
     , m_compiled_function(nullptr)
 {
 }
 
-void CPU_ExternalFunction::compile()
+void runtime::cpu::CPU_ExternalFunction::compile()
 {
     if (m_is_compiled)
     {
@@ -327,18 +327,18 @@ using namespace ngraph::runtime;
             {
                 throw ngraph_error("Unhandled op during code generation : " + node->description());
             }
-            std::vector<TensorViewInfo> in;
+            vector<TensorViewWrapper> in;
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
                 auto tv = output.get_tensor_view();
-                in.push_back({0, tv});
+                in.push_back(TensorViewWrapper(tv));
             }
-            std::vector<TensorViewInfo> out;
+            vector<TensorViewWrapper> out;
             for (const descriptor::Output& output : node->get_outputs())
             {
                 auto tv = output.get_tensor_view();
-                out.push_back({0, tv});
+                out.push_back(TensorViewWrapper(tv));
             }
             handler->second(&emitter, node.get(), in, out);
         }
@@ -381,7 +381,7 @@ using namespace ngraph::runtime;
     }
 }
 
-shared_ptr<ngraph::runtime::CallFrame> CPU_ExternalFunction::make_call_frame()
+shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPU_ExternalFunction::make_call_frame()
 {
     if (!m_is_compiled)
     {

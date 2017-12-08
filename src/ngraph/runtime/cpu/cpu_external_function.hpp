@@ -24,8 +24,8 @@
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/external_function.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
 
 namespace ngraph
 {
@@ -39,8 +39,8 @@ namespace ngraph
 
             using OpFunction = std::function<void(CPU_Emitter*,
                                                   const ngraph::Node*,
-                                                  const std::vector<TensorViewInfo>& inputs,
-                                                  const std::vector<TensorViewInfo>& outputs)>;
+                                                  const std::vector<TensorViewWrapper>& inputs,
+                                                  const std::vector<TensorViewWrapper>& outputs)>;
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 

@@ -22,22 +22,33 @@
 using namespace std;
 using namespace ngraph;
 
+bool ValueType::operator!=(const ValueType& that) const
+{
+    return !(*this == that);
+}
+
 bool TensorViewType::operator==(const ValueType& that) const
 {
+    bool rc = true;
     auto that_tvt = dynamic_cast<const TensorViewType*>(&that);
-    if (nullptr == that_tvt)
+    auto that_tt = dynamic_cast<const TupleType*>(&that);
+    if (that_tvt != nullptr)
     {
-        return false;
+        rc = true;
+        if (that_tvt->get_element_type() != m_element_type)
+        {
+            rc = false;
+        }
+        if (that_tvt->get_shape() != m_shape)
+        {
+            rc = false;
+        }
     }
-    if (that_tvt->get_element_type() != m_element_type)
+    else if (that_tt != nullptr)
     {
-        return false;
+        rc = *that_tt == *this;
     }
-    if (that_tvt->get_shape() != m_shape)
-    {
-        return false;
-    }
-    return true;
+    return rc;
 }
 
 void TensorViewType::collect_tensor_views(
@@ -49,11 +60,23 @@ void TensorViewType::collect_tensor_views(
 bool TupleType::operator==(const ValueType& that) const
 {
     auto that_tvt = dynamic_cast<const TupleType*>(&that);
-    if (nullptr == that_tvt)
+    if (that_tvt == nullptr)
     {
         return false;
     }
-    return that_tvt->get_element_types() == get_element_types();
+
+    vector<shared_ptr<const ValueType>> this_values = this->get_element_types();
+    vector<shared_ptr<const ValueType>> that_values = that_tvt->get_element_types();
+    bool rc = this_values.size() == that_values.size();
+    if (rc)
+    {
+        for (size_t i = 0; i < this_values.size(); i++)
+        {
+            rc &= this_values[i]->get_element_type() == that_values[i]->get_element_type();
+        }
+    }
+
+    return rc;
 }
 
 void TupleType::collect_tensor_views(

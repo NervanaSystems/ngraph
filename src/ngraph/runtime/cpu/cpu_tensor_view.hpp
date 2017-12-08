@@ -39,6 +39,9 @@ public:
     char* get_data_ptr();
     const char* get_data_ptr() const;
 
+    size_t get_size() const;
+    const element::Type& get_element_type() const;
+
     /// @brief Write bytes directly into the tensor
     /// @param p Pointer to source of data
     /// @param tensor_offset Offset into tensor storage to begin writing. Must be element-aligned.
