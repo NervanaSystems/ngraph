@@ -671,19 +671,19 @@ TEST(${BACKEND_NAME}, dot2d)
 // >>> a.shape=(2,2,2)
 // >>> b.shape=(2,2,2)
 //
-// >>> tensordot(a,b,axes=([2],[1]))
-// array([[[[   7.,   10.],
-//          [  19.,   22.]],
+// >>> tensordot(a,b,axes=([2],[0]))
+// array([[[[ 11.,  14.],
+//          [ 17.,  20.]],
 //
-//         [[  15.,   22.],
-//          [  43.,   50.]]],
+//         [[ 23.,  30.],
+//          [ 37.,  44.]]],
 //
 //
-//        [[[  23.,   34.],
-//          [  67.,   78.]],
+//        [[[ 35.,  46.],
+//          [ 57.,  68.]],
 //
-//         [[  31.,   46.],
-//          [  91.,  106.]]]])
+//         [[ 47.,  62.],
+//          [ 77.,  92.]]]])
 //
 TEST(DISABLED_${BACKEND_NAME}, dot3d_3d)
 {
@@ -707,7 +707,7 @@ TEST(DISABLED_${BACKEND_NAME}, dot3d_3d)
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     cf->call({a, b}, {result});
-    ASSERT_EQ((vector<float>{7, 10, 19, 22, 15, 22, 43, 50, 23, 34, 67, 78, 31, 46, 91, 106}),
+    ASSERT_EQ((vector<float>{11, 14, 17, 20, 23, 30, 37, 44, 35, 46, 57, 68, 47, 62, 77, 92}),
               result->get_vector<float>());
 }
 
