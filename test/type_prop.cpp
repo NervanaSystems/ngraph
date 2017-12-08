@@ -2016,3 +2016,161 @@ TEST(type_prop, one_hot_deduce_shape_incompatible)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, conv_1d_deduce)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 10});
+    auto conv = make_shared<op::Convolution>(param0,param1);
+    auto conv_vt = conv->get_value_type();
+    ASSERT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 91}));
+
+    ASSERT_EQ(conv->get_window_movement_strides(),Strides{1});
+    ASSERT_EQ(conv->get_window_dilation_strides(),Strides{1});
+
+    ASSERT_EQ(conv->get_n_input_channels(),3);
+    ASSERT_EQ(conv->get_n_output_channels(),128);
+
+    ASSERT_EQ(conv->get_input_image_shape(),Shape{100});
+    ASSERT_EQ(conv->get_output_image_shape(),Shape{91});
+
+    ASSERT_EQ(conv->get_window_physical_shape(),Shape{10});
+    ASSERT_EQ(conv->get_window_virtual_shape(),Shape{10});
+
+    ASSERT_EQ(conv->get_batch_size(),64);
+    ASSERT_EQ(conv->get_n_image_dimensions(),1);
+}
+
+TEST(type_prop, conv_1d_deduce_strided)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 10});
+    auto move_strides = Strides{2};
+    auto conv = make_shared<op::Convolution>(param0,param1,move_strides);
+    auto conv_vt = conv->get_value_type();
+    ASSERT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 46}));
+
+    ASSERT_EQ(conv->get_window_movement_strides(),Strides{2});
+    ASSERT_EQ(conv->get_window_dilation_strides(),Strides{1});
+
+    ASSERT_EQ(conv->get_n_input_channels(),3);
+    ASSERT_EQ(conv->get_n_output_channels(),128);
+
+    ASSERT_EQ(conv->get_input_image_shape(),Shape{100});
+    ASSERT_EQ(conv->get_output_image_shape(),Shape{46});
+
+    ASSERT_EQ(conv->get_window_physical_shape(),Shape{10});
+    ASSERT_EQ(conv->get_window_virtual_shape(),Shape{10});
+
+    ASSERT_EQ(conv->get_batch_size(),64);
+    ASSERT_EQ(conv->get_n_image_dimensions(),1);
+}
+
+TEST(type_prop, conv_1d_deduce_dilated)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 10});
+    auto move_strides = Strides{1};
+    auto dilate_strides = Strides{2};
+    auto conv = make_shared<op::Convolution>(param0,param1,move_strides,dilate_strides);
+    auto conv_vt = conv->get_value_type();
+    ASSERT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 82}));
+
+    ASSERT_EQ(conv->get_window_movement_strides(),Strides{1});
+    ASSERT_EQ(conv->get_window_dilation_strides(),Strides{2});
+
+    ASSERT_EQ(conv->get_n_input_channels(),3);
+    ASSERT_EQ(conv->get_n_output_channels(),128);
+
+    ASSERT_EQ(conv->get_input_image_shape(),Shape{100});
+    ASSERT_EQ(conv->get_output_image_shape(),Shape{82});
+
+    ASSERT_EQ(conv->get_window_physical_shape(),Shape{19});
+    ASSERT_EQ(conv->get_window_virtual_shape(),Shape{10});
+
+    ASSERT_EQ(conv->get_batch_size(),64);
+    ASSERT_EQ(conv->get_n_image_dimensions(),1);
+}
+
+TEST(type_prop, conv_2d_deduce)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 10, 20});
+    auto conv = make_shared<op::Convolution>(param0,param1);
+    auto conv_vt = conv->get_value_type();
+    ASSERT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 91, 131}));
+
+    ASSERT_EQ(conv->get_window_movement_strides(),(Strides{1,1}));
+    ASSERT_EQ(conv->get_window_dilation_strides(),(Strides{1,1}));
+
+    ASSERT_EQ(conv->get_n_input_channels(),3);
+    ASSERT_EQ(conv->get_n_output_channels(),128);
+
+    ASSERT_EQ(conv->get_input_image_shape(),(Shape{100,150}));
+    ASSERT_EQ(conv->get_output_image_shape(),(Shape{91,131}));
+
+    ASSERT_EQ(conv->get_window_physical_shape(),(Shape{10,20}));
+    ASSERT_EQ(conv->get_window_virtual_shape(),(Shape{10,20}));
+
+    ASSERT_EQ(conv->get_batch_size(),64);
+    ASSERT_EQ(conv->get_n_image_dimensions(),2);
+}
+
+TEST(type_prop, conv_2d_deduce_strided)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 10, 20});
+    auto move_strides = Strides{2,3};
+    auto conv = make_shared<op::Convolution>(param0,param1,move_strides);
+    auto conv_vt = conv->get_value_type();
+    ASSERT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 46, 44}));
+
+    ASSERT_EQ(conv->get_window_movement_strides(),(Strides{2,3}));
+    ASSERT_EQ(conv->get_window_dilation_strides(),(Strides{1,1}));
+
+    ASSERT_EQ(conv->get_n_input_channels(),3);
+    ASSERT_EQ(conv->get_n_output_channels(),128);
+
+    ASSERT_EQ(conv->get_input_image_shape(),(Shape{100,150}));
+    ASSERT_EQ(conv->get_output_image_shape(),(Shape{46,44}));
+
+    ASSERT_EQ(conv->get_window_physical_shape(),(Shape{10,20}));
+    ASSERT_EQ(conv->get_window_virtual_shape(),(Shape{10,20}));
+
+    ASSERT_EQ(conv->get_batch_size(),64);
+    ASSERT_EQ(conv->get_n_image_dimensions(),2);
+}
+
+/*
+TEST(type_prop, conv_1d_deduce_dilated)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 10});
+    auto move_strides = Strides{1};
+    auto dilate_strides = Strides{2};
+    auto conv = make_shared<op::Convolution>(param0,param1,move_strides,dilate_strides);
+    auto conv_vt = conv->get_value_type();
+    ASSERT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 82}));
+
+    ASSERT_EQ(conv->get_window_movement_strides(),Strides{1});
+    ASSERT_EQ(conv->get_window_dilation_strides(),Strides{2});
+
+    ASSERT_EQ(conv->get_n_input_channels(),3);
+    ASSERT_EQ(conv->get_n_output_channels(),128);
+
+    ASSERT_EQ(conv->get_input_image_shape(),Shape{100});
+    ASSERT_EQ(conv->get_output_image_shape(),Shape{82});
+
+    ASSERT_EQ(conv->get_window_physical_shape(),Shape{19});
+    ASSERT_EQ(conv->get_window_virtual_shape(),Shape{10});
+
+    ASSERT_EQ(conv->get_batch_size(),64);
+    ASSERT_EQ(conv->get_n_image_dimensions(),1);
+}
+*/

@@ -20,29 +20,7 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Takes two input tensors of identical rank, with the second tensor no larger than the first in any dimension, and returns a copy of
-        ///        the first input tensor with the specified slice overwritten by the second input tensor.
-        ///
-        /// ## Parameters
-        ///
-        /// |                | Description                                                                                                                                                                                          |
-        /// | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | `lower_bounds` | The (inclusive) lower-bound coordinates \f$l_i\f$ for the tensor slice to be overwritten. For example, a lower-bound of \f$(1,2)\f$ means to start the slice at row 1 and column 2.                  |
-        /// | `upper_bounds` | The (non-inclusive) upper-bound coordinates \f$u_i\f$ for the tensor slice to be overwritten. For example, an upper-bound of \f$(5,4)\f$ means to end the slice before row 4 and column 3.           |
-        /// | `strides`      | The strides \f$s_i\f$ for the tensor slice to be overwritten. For example, in the matrix case, strides of \f$(1,3)\f$ means to take every row, and every third column (starting at the lower bound). |
-        ///
-        /// ## Inputs
-        ///
-        /// |        | Type                                                                           | Description                                                                                                                            |
-        /// | ------ | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | `arg0` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$                                              | A tensor of any shape and element type.                                                                                                |
-        /// | `arg1` | \f$E[d'_1,\dots,d'_n]\f$ where \f$(d'_i = \lceil(u_i - l_i)\, /\, s_i\rceil\f$ | A tensor of the same element type and rank as `arg0`, whose shape is determined by the lower and upper slice bounds and slice strides. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                   | Description                                                                                                                                                                                                                 |
-        /// | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$ where \f$T[i_1,\dots,i_n] = \texttt{arg1}[j_1,\dots,j_n]\f$ if \f$j_1,\dots,j_n\f$ is in bounds for `arg1` and for all \f$m\f$, \f$i_m = l_m + j_m s_m\f$, otherwise \f$\texttt{arg0}[i_1,\dots,i_n]\f$. |
+        /// \brief Batched convolution op.
         class Convolution : public RequiresTensorViewArgs
         {
         public:
@@ -50,36 +28,68 @@ namespace ngraph
             ///
             /// \param arg0 XXX
             /// \param arg1 XXX
-            /// \param 
+            /// \param window_movement_strides XXX
+            /// \param window_dilation_strides XXX
             Convolution(const std::shared_ptr<Node>& arg0,
                         const std::shared_ptr<Node>& arg1,
-                        const Shape& window_size,
-                        const Strides& window_dilation_strides,
+                        const Strides& window_movement_strides,
+                        const Strides& window_dilation_strides);
+
+            // Undilated.
+            Convolution(const std::shared_ptr<Node>& arg0,
+                        const std::shared_ptr<Node>& arg1,
                         const Strides& window_movement_strides);
+
+            // Undilated, unit stride.
+            Convolution(const std::shared_ptr<Node>& arg0,
+                        const std::shared_ptr<Node>& arg1);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 2)
                     throw ngraph_error("Incorrect number of new arguments");
-                return std::make_shared<ReplaceSlice>(
-                    new_args.at(0), new_args.at(1), m_lower_bounds, m_upper_bounds, m_strides);
+                return std::make_shared<Convolution>(
+                    new_args.at(0), new_args.at(1), m_window_movement_strides, m_window_dilation_strides);
             }
 
-            /// \return The inclusive lower-bound coordinates.
-            const Coordinate& get_lower_bounds() const { return m_lower_bounds; }
-            /// \return The exclusive upper-bound coordinates.
-            const Coordinate& get_upper_bounds() const { return m_upper_bounds; }
-            /// \return The slicing strides.
-            const Strides& get_strides() const { return m_strides; }
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const std::shared_ptr<Node>& delta) override;
-            void check_args();
+            /// \return The window movement strides.
+            const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
+            /// \return The window dilation strides.
+            const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
 
-            const Coordinate m_lower_bounds;
-            const Coordinate m_upper_bounds;
-            const Strides m_strides;
+            /// \return The number of input channels.
+            size_t get_n_input_channels() const { return m_n_input_channels; }
+            /// \return The number of output channels.
+            size_t get_n_output_channels() const { return m_n_output_channels; }
+            /// \return The input image shape.
+            Shape get_input_image_shape() const { return m_input_image_shape; }
+            /// \return The output image shape.
+            Shape get_output_image_shape() const { return m_output_image_shape; }
+            /// \return The physical window shape.
+            Shape get_window_physical_shape() const { return m_window_physical_shape; }
+            /// \return The virtual window shape.
+            Shape get_window_virtual_shape() const { return m_window_virtual_shape; }
+            /// \return The batch size.
+            size_t get_batch_size() const { return m_batch_size; }
+            /// \return The number of image dimensions.
+            size_t get_n_image_dimensions() const { return m_n_image_dimensions; }
+        protected:
+//            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+//                                           const std::shared_ptr<Node>& delta) override;
+//            void check_args();
+
+            Strides m_window_movement_strides;
+            Strides m_window_dilation_strides;
+
+            size_t m_n_input_channels;
+            size_t m_n_output_channels;
+            Shape m_input_image_shape;
+            Shape m_output_image_shape;
+            Shape m_window_physical_shape;
+            Shape m_window_virtual_shape;
+            size_t m_batch_size;
+            size_t m_n_image_dimensions;
         };
     }
 }

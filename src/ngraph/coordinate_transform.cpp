@@ -21,14 +21,9 @@
 #include "ngraph/common.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
-
-template <typename T>
-inline T ceil_div(T x, T y)
-{
-    return (x == 0 ? 0 : (1 + (x - 1) / y));
-}
 
 CoordinateTransform::CoordinateTransform(const Shape& source_space_shape,
                                          const Coordinate& source_start_corner,
