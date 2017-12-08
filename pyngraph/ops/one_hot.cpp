@@ -13,26 +13,21 @@
 // ----------------------------------------------------------------------------
 
 #include <pybind11/pybind11.h>
-#include "pyngraph/ops/add.hpp"
-#include "pyngraph/ops/broadcast.hpp"
-#include "pyngraph/ops/constant.hpp"
-#include "pyngraph/ops/convert.hpp"
-#include "pyngraph/ops/divide.hpp"
-#include "pyngraph/ops/dot.hpp"
-#include "pyngraph/ops/exp.hpp"
-#include "pyngraph/ops/greater.hpp"
-#include "pyngraph/ops/log.hpp"
-#include "pyngraph/ops/maximum.hpp"
-#include "pyngraph/ops/minimum.hpp"
-#include "pyngraph/ops/multiply.hpp"
-#include "pyngraph/ops/op.hpp"
+#include <pybind11/stl.h>
+//#include <string>
+#include "ngraph/common.hpp"
+#include "ngraph/ops/one_hot.hpp" // ngraph::op::OneHot
 #include "pyngraph/ops/one_hot.hpp"
-#include "pyngraph/ops/parameter.hpp"
-#include "pyngraph/ops/reduce.hpp"
-#include "pyngraph/ops/reshape.hpp"
-#include "pyngraph/ops/subtract.hpp"
-#include "pyngraph/ops/sum.hpp"
 
 namespace py = pybind11;
 
-void regmodule_pyngraph_op(py::module m);
+void regclass_pyngraph_op_OneHot(py::module m) {
+
+    //py::module::import("wrapper.ngraph.ops.Op");
+
+    py::class_<ngraph::op::OneHot, std::shared_ptr<ngraph::op::OneHot>, ngraph::op::RequiresTensorViewArgs> onehot(m, "OneHot");
+    onehot.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::Shape&, size_t>());
+    onehot.def("get_one_hot_axis", &ngraph::op::OneHot::get_one_hot_axis);
+
+}
+
