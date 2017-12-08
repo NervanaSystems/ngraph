@@ -40,7 +40,7 @@ namespace ngraph
                 size_t get_offset() const { return m_offset; }
                 virtual size_t get_index_offset(const std::vector<size_t>& indices) override;
 
-                const Strides& get_strides() const { return m_strides; }
+                const Strides& get_strides() const override { return m_strides; }
                 virtual bool operator==(const TensorViewLayout& other) const override;
 
             protected:

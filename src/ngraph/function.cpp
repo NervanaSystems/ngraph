@@ -29,12 +29,42 @@ Function::Function(const std::shared_ptr<Node>& result,
     : m_result(result)
     , m_parameters(parameters)
     , m_name(name)
-    , m_result_type(result_type)
     , m_ordered_ops_valid(false)
     , m_temporary_pool_size(0)
     , m_instance_id(m_next_instance_id.fetch_add(1))
 {
-    traverse_nodes(this, [&](shared_ptr<Node> node) { m_ops.push_back(node); });
+    if (nullptr == result->get_value_type())
+    {
+        throw ngraph_error("Internal nGraph error: result->get_value_type() == nullptr");
+    }
+
+    if (nullptr != result_type && (*result_type != *(result->get_value_type())))
+    {
+        throw ngraph_error("Function result node's value type does not match declared return type");
+    }
+
+    traverse_nodes(this, [&](shared_ptr<Node> node) {
+        m_ops.push_back(node);
+
+        std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
+        if (nullptr != p)
+        {
+            auto it = std::find_if(parameters.begin(),
+                                   parameters.end(),
+                                   [p](std::shared_ptr<op::Parameter> q) { return (p == q); });
+            if (it == parameters.end())
+            {
+                throw ngraph_error("Function references undeclared parameter");
+            }
+        }
+    });
+}
+
+Function::Function(const std::shared_ptr<Node>& result,
+                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                   const std::string& name)
+    : Function(result, nullptr, parameters, name)
+{
 }
 
 void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)

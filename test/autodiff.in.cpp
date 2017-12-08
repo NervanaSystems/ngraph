@@ -94,9 +94,9 @@ bool autodiff_numeric_compare_selective(
     return test::all_close(results_num, results_sym, rtol, atol);
 }
 
-TEST(backwards, abs)
+TEST(${BACKEND_NAME}, backwards_abs)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     // The numeric derivative and the symbolic one may disagree around 0, so we will dance around
@@ -125,9 +125,9 @@ TEST(backwards, abs)
     }
 }
 
-TEST(backwards, add)
+TEST(${BACKEND_NAME}, backwards_add)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -145,9 +145,9 @@ TEST(backwards, add)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, add_nested)
+TEST(${BACKEND_NAME}, backwards_add_nested)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -165,9 +165,9 @@ TEST(backwards, add_nested)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, broadcast0)
+TEST(${BACKEND_NAME}, backwards_broadcast0)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -183,9 +183,9 @@ TEST(backwards, broadcast0)
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(backwards, broadcast1)
+TEST(${BACKEND_NAME}, backwards_broadcast1)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -201,9 +201,9 @@ TEST(backwards, broadcast1)
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(backwards, concat_vector)
+TEST(${BACKEND_NAME}, backwards_concat_vector)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -229,9 +229,9 @@ TEST(backwards, concat_vector)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
-TEST(backwards, concat_axis_0)
+TEST(${BACKEND_NAME}, backwards_concat_axis_0)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -257,9 +257,9 @@ TEST(backwards, concat_axis_0)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
-TEST(backwards, concat_axis_1)
+TEST(${BACKEND_NAME}, backwards_concat_axis_1)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -285,9 +285,9 @@ TEST(backwards, concat_axis_1)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
-TEST(backwards, ceiling)
+TEST(${BACKEND_NAME}, backwards_ceiling)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     // The numeric derivative and the symbolic one may disagree near integers, so we will dance around
@@ -322,9 +322,9 @@ TEST(backwards, ceiling)
     }
 }
 
-TEST(backwards, cos)
+TEST(${BACKEND_NAME}, backwards_cos)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -343,9 +343,9 @@ TEST(backwards, cos)
     }
 }
 
-TEST(backwards, cosh)
+TEST(${BACKEND_NAME}, backwards_cosh)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -364,9 +364,9 @@ TEST(backwards, cosh)
     }
 }
 
-TEST(backwards, divide)
+TEST(${BACKEND_NAME}, backwards_divide)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -389,9 +389,9 @@ TEST(backwards, divide)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x2}, .01f, .01f));
 }
 
-TEST(backwards, dot_scalar_scalar)
+TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -411,9 +411,9 @@ TEST(backwards, dot_scalar_scalar)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, dot_scalar_tensor)
+TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -433,9 +433,9 @@ TEST(backwards, dot_scalar_tensor)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, dot_tensor_scalar)
+TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -455,9 +455,9 @@ TEST(backwards, dot_tensor_scalar)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, dot_vector_vector)
+TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -477,9 +477,9 @@ TEST(backwards, dot_vector_vector)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, dot_tensor_vector)
+TEST(${BACKEND_NAME}, backwards_dot_tensor_vector)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -499,9 +499,9 @@ TEST(backwards, dot_tensor_vector)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, dot_tensor2_tensor2)
+TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -521,7 +521,7 @@ TEST(backwards, dot_tensor2_tensor2)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, dot_tensor3_tensor3)
+TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
 {
     auto manager = runtime::Manager::get("NGVM");
     auto backend = manager->allocate_backend();
@@ -543,9 +543,8 @@ TEST(backwards, dot_tensor3_tensor3)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, exp)
-{
-    auto manager = runtime::Manager::get("NGVM");
+TEST(${BACKEND_NAME}, backwards_exp)
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -560,9 +559,9 @@ TEST(backwards, exp)
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(backwards, floor)
+TEST(${BACKEND_NAME}, backwards_floor)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     // The numeric derivative and the symbolic one may disagree near integers, so we will dance around
@@ -597,9 +596,9 @@ TEST(backwards, floor)
     }
 }
 
-TEST(backwards, log)
+TEST(${BACKEND_NAME}, backwards_log)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(1.0f, 2.0f);
@@ -614,9 +613,9 @@ TEST(backwards, log)
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(backwards, maximum)
+TEST(${BACKEND_NAME}, backwards_maximum)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -635,9 +634,9 @@ TEST(backwards, maximum)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, minimum)
+TEST(${BACKEND_NAME}, backwards_minimum)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -656,9 +655,9 @@ TEST(backwards, minimum)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, multiply)
+TEST(${BACKEND_NAME}, backwards_multiply)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -676,9 +675,9 @@ TEST(backwards, multiply)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, negative)
+TEST(${BACKEND_NAME}, backwards_negative)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -692,9 +691,9 @@ TEST(backwards, negative)
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(backwards, parameter)
+TEST(${BACKEND_NAME}, backwards_parameter)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -707,9 +706,9 @@ TEST(backwards, parameter)
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(backwards, power)
+TEST(${BACKEND_NAME}, backwards_power)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng_neg(-5.0f, -0.5f);
@@ -749,9 +748,9 @@ TEST(backwards, power)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, replace_slice)
+TEST(${BACKEND_NAME}, backwards_replace_slice)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -776,9 +775,9 @@ TEST(backwards, replace_slice)
     }
 }
 
-TEST(backwards, reshape)
+TEST(${BACKEND_NAME}, backwards_reshape)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -794,9 +793,9 @@ TEST(backwards, reshape)
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
 
-TEST(backwards, select)
+TEST(${BACKEND_NAME}, backwards_select)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -828,9 +827,9 @@ TEST(backwards, select)
     }
 }
 
-TEST(backwards, select_nested)
+TEST(${BACKEND_NAME}, backwards_select_nested)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -862,9 +861,9 @@ TEST(backwards, select_nested)
     }
 }
 
-TEST(backwards, sign)
+TEST(${BACKEND_NAME}, backwards_sign)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     // The numeric derivative and the symbolic one may disagree around 0, so we will dance around
@@ -893,9 +892,9 @@ TEST(backwards, sign)
     }
 }
 
-TEST(backwards, sin)
+TEST(${BACKEND_NAME}, backwards_sin)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -914,9 +913,9 @@ TEST(backwards, sin)
     }
 }
 
-TEST(backwards, sinh)
+TEST(${BACKEND_NAME}, backwards_sinh)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -935,9 +934,9 @@ TEST(backwards, sinh)
     }
 }
 
-TEST(backwards, slice)
+TEST(${BACKEND_NAME}, backwards_slice)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -957,9 +956,9 @@ TEST(backwards, slice)
     }
 }
 
-TEST(backwards, sqrt)
+TEST(${BACKEND_NAME}, backwards_sqrt)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     // Deriv has an asymptote at 0 so we'll stay away from there.
@@ -979,9 +978,9 @@ TEST(backwards, sqrt)
     }
 }
 
-TEST(backwards, subtract)
+TEST(${BACKEND_NAME}, backwards_subtract)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -999,9 +998,9 @@ TEST(backwards, subtract)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
-TEST(backwards, sum_v2s)
+TEST(${BACKEND_NAME}, backwards_sum_v2s)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1017,9 +1016,9 @@ TEST(backwards, sum_v2s)
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
 }
 
-TEST(backwards, sum_m2s)
+TEST(${BACKEND_NAME}, backwards_sum_m2s)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1035,9 +1034,9 @@ TEST(backwards, sum_m2s)
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
 }
 
-TEST(backwards, sum_m2v_0)
+TEST(${BACKEND_NAME}, backwards_sum_m2v_0)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1053,9 +1052,9 @@ TEST(backwards, sum_m2v_0)
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
 }
 
-TEST(backwards, sum_m2v_1)
+TEST(${BACKEND_NAME}, backwards_sum_m2v_1)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -1071,9 +1070,9 @@ TEST(backwards, sum_m2v_1)
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
 }
 
-TEST(backwards, tan)
+TEST(${BACKEND_NAME}, backwards_tan)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     auto pi = 3.14159f;
@@ -1105,9 +1104,9 @@ TEST(backwards, tan)
     }
 }
 
-TEST(backwards, tanh)
+TEST(${BACKEND_NAME}, backwards_tanh)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
@@ -1126,9 +1125,9 @@ TEST(backwards, tanh)
     }
 }
 
-TEST(backwards, abc)
+TEST(${BACKEND_NAME}, backwards_abc)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);

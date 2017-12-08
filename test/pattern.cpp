@@ -346,4 +346,30 @@ TEST(pattern, matcher)
         make_shared<op::Constant>(element::Float32::element_type(), Shape{1}, std::to_string(1));
     auto patternf = pattern::op::Label::make_from_node(fconst1_0);
     ASSERT_FALSE(n.match(patternf * fconst1_0, a * iconst1_1)); //different iconst
+
+    //Subgraph labels
+    auto add = a + b;
+    auto label = pattern::op::Label::wrap(add);
+    ASSERT_TRUE(n.match(label, add));
+    ASSERT_EQ(n.get_pattern_map()[label], add);
+
+    ASSERT_FALSE(n.match(label, a - b));
+
+    ASSERT_TRUE(n.match(make_shared<op::Abs>(label), make_shared<op::Abs>(add)));
+    ASSERT_EQ(n.get_pattern_map()[label], add);
+
+    //Correlations
+    auto label1 = pattern::op::Label::make_from_node(a);
+    auto label2 = pattern::op::Label::wrap(label1 + b);
+    auto sub_label1 = label1 - label2;
+    ASSERT_TRUE(n.match(sub_label1, a - add));
+    ASSERT_EQ(n.get_pattern_map()[label1], a);
+    ASSERT_EQ(n.get_pattern_map()[label2], add);
+
+    ASSERT_FALSE(n.match(sub_label1, add - a));
+
+    auto add_label1 = label1 + label2;
+    ASSERT_TRUE(n.match(add_label1, add + a));
+    ASSERT_EQ(n.get_pattern_map()[label1], a);
+    ASSERT_EQ(n.get_pattern_map()[label2], add);
 }

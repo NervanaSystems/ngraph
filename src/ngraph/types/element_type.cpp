@@ -21,7 +21,7 @@
 
 using namespace ngraph;
 
-const element::Type element::boolean(8, false, false, "char");
+const element::Type element::boolean(8, false, true, "char");
 const element::Type element::f32(32, true, true, "float");
 const element::Type element::f64(64, true, true, "double");
 const element::Type element::i8(8, false, true, "int8_t");
@@ -32,6 +32,14 @@ const element::Type element::u8(8, false, false, "uint8_t");
 const element::Type element::u16(16, false, false, "uint16_t");
 const element::Type element::u32(32, false, false, "uint32_t");
 const element::Type element::u64(64, false, false, "uint64_t");
+
+element::Type::Type()
+    : m_bitwidth{0}
+    , m_is_real{0}
+    , m_is_signed{0}
+    , m_cname{}
+{
+}
 
 element::Type::Type(size_t bitwidth, bool is_real, bool is_signed, const std::string& cname)
     : m_bitwidth{bitwidth}
