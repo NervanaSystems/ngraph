@@ -133,7 +133,10 @@ class BuildExt(build_ext):
             for ext in self.extensions:
                 ext.library_dirs = ['%s/lib'%(NGRAPH_CPP_INSTALL_PATH)]
                 ext.extra_compile_args = opts
-                ext.extra_link_args = ["-lngraph"]
+                if sys.platform == 'darwin':
+                    ext.extra_link_args = ["-lngraph", "-Wl,-rpath,%s/lib"%(NGRAPH_CPP_INSTALL_PATH)]
+                else:
+                    ext.extra_link_args = ["-shared", "-lngraph", "-Wl,-rpath,%s/lib"%(NGRAPH_CPP_INSTALL_PATH)]
             build_ext.build_extensions(self)
         else:
             print("NGRAPH_CPP_BUILD_PATH, not defined")
