@@ -26,6 +26,10 @@
 using namespace std;
 using namespace ngraph;
 
+//
+// Helper function to compute the number of dot axes according to default behavior when
+// they are not specified.
+//
 size_t default_n_dot_axes(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     auto arg0_value_type = arg0->get_value_type();
