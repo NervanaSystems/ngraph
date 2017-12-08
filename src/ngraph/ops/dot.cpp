@@ -30,7 +30,7 @@ using namespace ngraph;
 // Helper function to compute the number of dot axes according to default behavior when
 // they are not specified.
 //
-size_t default_n_dot_axes(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+size_t default_dot_axis_count(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     auto arg0_value_type = arg0->get_value_type();
     auto arg0_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(arg0_value_type);
@@ -59,15 +59,15 @@ size_t default_n_dot_axes(const std::shared_ptr<Node>& arg0, const std::shared_p
 }
 
 op::Dot::Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-    : Dot(arg0, arg1, default_n_dot_axes(arg0, arg1))
+    : Dot(arg0, arg1, default_dot_axis_count(arg0, arg1))
 {
 }
 
 op::Dot::Dot(const std::shared_ptr<Node>& arg0,
              const std::shared_ptr<Node>& arg1,
-             size_t n_dot_axes)
+             size_t dot_axis_count)
     : RequiresTensorViewArgs("Dot", {arg0, arg1})
-    , m_n_dot_axes(n_dot_axes)
+    , m_dot_axis_count(dot_axis_count)
 {
     auto arg0_tensor_type = get_inputs().at(0).get_tensor_view_type();
     auto arg1_tensor_type = get_inputs().at(1).get_tensor_view_type();
@@ -80,30 +80,30 @@ op::Dot::Dot(const std::shared_ptr<Node>& arg0,
     vector<size_t> arg0_shape = arg0_tensor_type->get_shape();
     vector<size_t> arg1_shape = arg1_tensor_type->get_shape();
 
-    if (n_dot_axes > arg0_shape.size())
+    if (dot_axis_count > arg0_shape.size())
     {
         throw ngraph_error("Dot has too many axes for arg0");
     }
 
-    if (n_dot_axes > arg1_shape.size())
+    if (dot_axis_count > arg1_shape.size())
     {
         throw ngraph_error("Dot has too many axes for arg1");
     }
 
-    for (size_t i = 0; i < n_dot_axes; i++)
+    for (size_t i = 0; i < dot_axis_count; i++)
     {
-        if (arg0_shape[arg0_shape.size() - n_dot_axes + i] != arg1_shape[i])
+        if (arg0_shape[arg0_shape.size() - dot_axis_count + i] != arg1_shape[i])
         {
             throw ngraph_error("Dot axes do not have same length");
         }
     }
 
-    vector<size_t> result_shape(arg0_shape.size() + arg1_shape.size() - 2 * n_dot_axes);
+    vector<size_t> result_shape(arg0_shape.size() + arg1_shape.size() - 2 * dot_axis_count);
 
-    std::copy(arg0_shape.begin(), arg0_shape.end() - n_dot_axes, result_shape.begin());
-    std::copy(arg1_shape.begin() + n_dot_axes,
+    std::copy(arg0_shape.begin(), arg0_shape.end() - dot_axis_count, result_shape.begin());
+    std::copy(arg1_shape.begin() + dot_axis_count,
               arg1_shape.end(),
-              result_shape.begin() + (arg0_shape.size() - n_dot_axes));
+              result_shape.begin() + (arg0_shape.size() - dot_axis_count));
 
     auto result_type =
         make_shared<TensorViewType>(arg0_tensor_type->get_element_type(), result_shape);
@@ -144,8 +144,8 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_
     Shape I_shape;
     Shape J_shape;
     Shape K_shape;
-    I_shape.insert(I_shape.begin(), x_shape.begin(), x_shape.end() - m_n_dot_axes);
-    J_shape.insert(J_shape.begin(), y_shape.begin(), y_shape.begin() + m_n_dot_axes);
+    I_shape.insert(I_shape.begin(), x_shape.begin(), x_shape.end() - m_dot_axis_count);
+    J_shape.insert(J_shape.begin(), y_shape.begin(), y_shape.begin() + m_dot_axis_count);
     K_shape.insert(K_shape.begin(), y_shape.begin() + J_shape.size(), y_shape.end());
 
     auto delta_reshaped = make_reshape_axes_to_front(delta, I_shape, K_shape);       // KI

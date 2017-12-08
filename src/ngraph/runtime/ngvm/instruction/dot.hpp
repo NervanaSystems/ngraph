@@ -38,14 +38,14 @@ namespace ngraph
                                    const Shape& arg0_shape,
                                    const Shape& arg1_shape,
                                    const Shape& out_shape,
-                                   size_t n_dot_axes)
+                                   size_t dot_axis_count)
                         : m_arg0(arg0)
                         , m_arg1(arg1)
                         , m_out(out)
                         , m_arg0_shape(arg0_shape)
                         , m_arg1_shape(arg1_shape)
                         , m_out_shape(out_shape)
-                        , m_n_dot_axes(n_dot_axes)
+                        , m_dot_axis_count(dot_axis_count)
                     {
                     }
 
@@ -55,8 +55,13 @@ namespace ngraph
                         typename ET::type* arg1 = get_tensor_data_ptr<ET>(call_frame, m_arg1);
                         typename ET::type* out = get_tensor_data_ptr<ET>(call_frame, m_out);
 
-                        kernel::dot<typename ET::type>(
-                            arg0, arg1, out, m_arg0_shape, m_arg1_shape, m_out_shape, m_n_dot_axes);
+                        kernel::dot<typename ET::type>(arg0,
+                                                       arg1,
+                                                       out,
+                                                       m_arg0_shape,
+                                                       m_arg1_shape,
+                                                       m_out_shape,
+                                                       m_dot_axis_count);
                     }
 
                 protected:
@@ -66,7 +71,7 @@ namespace ngraph
                     Shape m_arg0_shape;
                     Shape m_arg1_shape;
                     Shape m_out_shape;
-                    size_t m_n_dot_axes;
+                    size_t m_dot_axis_count;
                 };
             }
         }

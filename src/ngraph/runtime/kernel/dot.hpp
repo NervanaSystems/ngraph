@@ -33,21 +33,22 @@ namespace ngraph
                      const Shape& arg0_shape,
                      const Shape& arg1_shape,
                      const Shape& out_shape,
-                     size_t n_dot_axes)
+                     size_t dot_axis_count)
             {
                 // Get the sizes of the dot axes. It's easiest to pull them from arg1 because they're
                 // right up front.
-                Shape dot_axis_sizes(n_dot_axes);
-                std::copy(
-                    arg1_shape.begin(), arg1_shape.begin() + n_dot_axes, dot_axis_sizes.begin());
+                Shape dot_axis_sizes(dot_axis_count);
+                std::copy(arg1_shape.begin(),
+                          arg1_shape.begin() + dot_axis_count,
+                          dot_axis_sizes.begin());
 
                 CoordinateTransform arg0_transform(arg0_shape);
                 CoordinateTransform arg1_transform(arg1_shape);
                 CoordinateTransform output_transform(out_shape);
 
                 // Create coordinate transforms for arg0 and arg1 that throw away the dotted axes.
-                size_t arg0_projected_rank = arg0_shape.size() - n_dot_axes;
-                size_t arg1_projected_rank = arg1_shape.size() - n_dot_axes;
+                size_t arg0_projected_rank = arg0_shape.size() - dot_axis_count;
+                size_t arg1_projected_rank = arg1_shape.size() - dot_axis_count;
 
                 Shape arg0_projected_shape(arg0_projected_rank);
                 std::copy(arg0_shape.begin(),
@@ -55,7 +56,7 @@ namespace ngraph
                           arg0_projected_shape.begin());
 
                 Shape arg1_projected_shape(arg1_projected_rank);
-                std::copy(arg1_shape.begin() + n_dot_axes,
+                std::copy(arg1_shape.begin() + dot_axis_count,
                           arg1_shape.end(),
                           arg1_projected_shape.begin());
 

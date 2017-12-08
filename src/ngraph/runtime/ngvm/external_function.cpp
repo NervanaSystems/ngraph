@@ -565,7 +565,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto arg1_shape = arg1_tensor_type->get_shape();
             auto& arg0_element_type = arg0_tensor_type->get_element_type();
 
-            auto n_dot_axes = dot->get_n_dot_axes();
+            auto dot_axis_count = dot->get_dot_axis_count();
 
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
@@ -582,7 +582,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                          arg0_shape,
                                          arg1_shape,
                                          result_shape,
-                                         n_dot_axes);
+                                         dot_axis_count);
         };
 
         // Parameter is a "runtime no-op" because the output tensor has already been filled.

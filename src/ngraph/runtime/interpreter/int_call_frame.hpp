@@ -292,7 +292,7 @@ private:
                         args[0]->get_shape(),
                         args[1]->get_shape(),
                         out[0]->get_shape(),
-                        dot->get_n_dot_axes());
+                        dot->get_dot_axis_count());
         }
 
         else if (node_op == "Equal")
