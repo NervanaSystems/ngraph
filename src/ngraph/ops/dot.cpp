@@ -26,8 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-std::vector<std::pair<size_t, size_t>> default_dot_axis_pairs(const std::shared_ptr<Node>& arg0,
-                                                              const std::shared_ptr<Node>& arg1)
+size_t default_n_dot_axes(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
 {
     auto arg0_value_type = arg0->get_value_type();
     auto arg0_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(arg0_value_type);
@@ -47,31 +46,24 @@ std::vector<std::pair<size_t, size_t>> default_dot_axis_pairs(const std::shared_
 
     if (arg0_shape.size() == 0 || arg1_shape.size() == 0)
     {
-        return std::vector<std::pair<size_t, size_t>>{};
+        return 0;
     }
-    else if (arg1_shape.size() == 1)
-    {
-        return std::vector<std::pair<size_t, size_t>>{
-            std::pair<size_t, size_t>(arg0_shape.size() - 1, arg1_shape.size() - 1)};
-    }
-    // This is a bit subtle: here we know that arg0_shape.size != 0 and arg1_shape.size != 0 and != 1. So it's safe to subtract 1 and 2 from them, respectively.
     else
     {
-        return std::vector<std::pair<size_t, size_t>>{
-            std::pair<size_t, size_t>(arg0_shape.size() - 1, arg1_shape.size() - 2)};
+        return 1;
     }
 }
 
 op::Dot::Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-    : Dot(arg0, arg1, default_dot_axis_pairs(arg0, arg1))
+    : Dot(arg0, arg1, default_n_dot_axes(arg0, arg1))
 {
 }
 
 op::Dot::Dot(const std::shared_ptr<Node>& arg0,
              const std::shared_ptr<Node>& arg1,
-             const std::vector<std::pair<size_t, size_t>>& dot_axis_pairs)
+             size_t n_dot_axes)
     : RequiresTensorViewArgs("Dot", {arg0, arg1})
-    , m_dot_axis_pairs(dot_axis_pairs)
+    , m_n_dot_axes(n_dot_axes)
 {
     auto arg0_tensor_type = get_inputs().at(0).get_tensor_view_type();
     auto arg1_tensor_type = get_inputs().at(1).get_tensor_view_type();
@@ -84,60 +76,30 @@ op::Dot::Dot(const std::shared_ptr<Node>& arg0,
     vector<size_t> arg0_shape = arg0_tensor_type->get_shape();
     vector<size_t> arg1_shape = arg1_tensor_type->get_shape();
 
-    vector<bool> arg0_seen(arg0_shape.size(), false);
-    vector<bool> arg1_seen(arg1_shape.size(), false);
-
-    for (auto axis_pair : dot_axis_pairs)
+    if (n_dot_axes > arg0_shape.size())
     {
-        size_t arg0_axis = axis_pair.first;
-        size_t arg1_axis = axis_pair.second;
+        throw ngraph_error("Dot has too many axes for arg0");
+    }
 
-        if (arg0_axis >= arg0_shape.size())
-        {
-            throw ngraph_error("Dot axis for arg0 out of bounds");
-        }
+    if (n_dot_axes > arg1_shape.size())
+    {
+        throw ngraph_error("Dot has too many axes for arg1");
+    }
 
-        if (arg1_axis >= arg1_shape.size())
-        {
-            throw ngraph_error("Dot axis for arg1 out of bounds");
-        }
-
-        if (arg0_seen[arg0_axis])
-        {
-            throw ngraph_error("Dot axis for arg0 appears more than once");
-        }
-
-        if (arg1_seen[arg1_axis])
-        {
-            throw ngraph_error("Dot axis for arg1 appears more than once");
-        }
-
-        if (arg0_shape[arg0_axis] != arg1_shape[arg1_axis])
+    for (size_t i = 0; i < n_dot_axes; i++)
+    {
+        if (arg0_shape[arg0_shape.size() - n_dot_axes + i] != arg1_shape[i])
         {
             throw ngraph_error("Dot axes do not have same length");
         }
-
-        arg0_seen[arg0_axis] = true;
-        arg1_seen[arg1_axis] = true;
     }
 
-    vector<size_t> result_shape;
+    vector<size_t> result_shape(arg0_shape.size() + arg1_shape.size() - 2 * n_dot_axes);
 
-    for (size_t i = 0; i < arg0_shape.size(); i++)
-    {
-        if (!arg0_seen[i])
-        {
-            result_shape.push_back(arg0_shape[i]);
-        }
-    }
-
-    for (size_t i = 0; i < arg1_shape.size(); i++)
-    {
-        if (!arg1_seen[i])
-        {
-            result_shape.push_back(arg1_shape[i]);
-        }
-    }
+    std::copy(arg0_shape.begin(), arg0_shape.end() - n_dot_axes, result_shape.begin());
+    std::copy(arg1_shape.begin() + n_dot_axes,
+              arg1_shape.end(),
+              result_shape.begin() + (arg0_shape.size() - n_dot_axes));
 
     auto result_type =
         make_shared<TensorViewType>(arg0_tensor_type->get_element_type(), result_shape);
