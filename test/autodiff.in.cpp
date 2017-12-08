@@ -544,6 +544,7 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
 }
 
 TEST(${BACKEND_NAME}, backwards_exp)
+{
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 

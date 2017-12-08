@@ -23,6 +23,7 @@
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -284,54 +285,15 @@ private:
         }
         else if (node_op == "Dot")
         {
-            if (args[0]->get_shape().size() == 0)
-            {
-                kernel::scalar_tensor_product(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                              reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                              out[0]->get_element_count());
-            }
-            else if (args[1]->get_shape().size() == 0)
-            {
-                kernel::scalar_tensor_product(reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                                              reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                              reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                              out[0]->get_element_count());
-            }
-            else
-            {
-                size_t arg0_dot_axis;
-                size_t arg1_dot_axis;
-                if (args[0]->get_shape().size() == 1 && args[1]->get_shape().size() == 1)
-                {
-                    arg0_dot_axis = 0;
-                    arg1_dot_axis = 0;
-                }
+            ngraph::op::Dot* dot = dynamic_cast<ngraph::op::Dot*>(&node);
 
-                // If arg0 is a matrix and arg1 is a vector, dot on axes 1 and 0 respectively.
-                else if (args[0]->get_shape().size() == 2 && args[1]->get_shape().size() == 1)
-                {
-                    arg0_dot_axis = 1;
-                    arg1_dot_axis = 0;
-                }
-
-                // If arg0 is rank n and arg1 is rank m, dot on axes n-1 and m-2, respectively.
-                //
-                // Note that this happens to handle the vector-matrix and matrix-matrix cases.
-                else
-                {
-                    arg0_dot_axis = args[0]->get_shape().size() - 1;
-                    arg1_dot_axis = args[1]->get_shape().size() - 2;
-                }
-                kernel::dot(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(args[1]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            args[0]->get_shape(),
-                            args[1]->get_shape(),
-                            out[0]->get_shape(),
-                            arg0_dot_axis,
-                            arg1_dot_axis);
-            }
+            kernel::dot(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                        reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                        reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                        args[0]->get_shape(),
+                        args[1]->get_shape(),
+                        out[0]->get_shape(),
+                        dot->get_n_dot_axes());
         }
 
         else if (node_op == "Equal")

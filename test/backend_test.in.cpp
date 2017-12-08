@@ -4076,7 +4076,7 @@ TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis)
     auto shape_b = Shape{3, 4, 2, 3, 2};
     auto B = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), shape_b));
-    auto shape_r = Shape{2, 3, 2, 2, 3};
+    auto shape_r = Shape{2, 3, 2, 3, 2};
 
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
     auto r = make_shared<op::Dot>(A, B, 2);
@@ -4188,7 +4188,9 @@ TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
 //          2.48832440640101478400e+18,   2.48832466560109772800e+18,
 //          2.48832492480234188800e+18,   2.48832518400031897600e+18])
 //
-TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
+// Disabled because this test is very slow.
+//
+TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
 {
     vector<double> a_data(20 * 30 * 30 * 40);
     for (int i = 0; i < 20 * 30 * 30 * 40; i++)
