@@ -41,23 +41,23 @@ namespace ngraph
                         const Strides& window_movement_strides);
 
             // Undilated, unit stride.
-            Convolution(const std::shared_ptr<Node>& arg0,
-                        const std::shared_ptr<Node>& arg1);
+            Convolution(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 2)
                     throw ngraph_error("Incorrect number of new arguments");
-                return std::make_shared<Convolution>(
-                    new_args.at(0), new_args.at(1), m_window_movement_strides, m_window_dilation_strides);
+                return std::make_shared<Convolution>(new_args.at(0),
+                                                     new_args.at(1),
+                                                     m_window_movement_strides,
+                                                     m_window_dilation_strides);
             }
 
             /// \return The window movement strides.
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             /// \return The window dilation strides.
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
-
             /// \return The number of input channels.
             size_t get_n_input_channels() const { return m_n_input_channels; }
             /// \return The number of output channels.
@@ -75,10 +75,6 @@ namespace ngraph
             /// \return The number of image dimensions.
             size_t get_n_image_dimensions() const { return m_n_image_dimensions; }
         protected:
-//            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-//                                           const std::shared_ptr<Node>& delta) override;
-//            void check_args();
-
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;
 

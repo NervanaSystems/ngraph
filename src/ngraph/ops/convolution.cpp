@@ -22,7 +22,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& arg0,
                              const std::shared_ptr<Node>& arg1,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides)
-    : RequiresTensorViewArgs("Convolution", {arg0,arg1})
+    : RequiresTensorViewArgs("Convolution", {arg0, arg1})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
 {
@@ -37,7 +37,9 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& arg0,
     //
     if (arg0_shape.size() < 3)
     {
-        throw ngraph_error("Convolution image batch input must have rank of at least 3 (one batch axis, one input-channel axis, at least one image dimension).");
+        throw ngraph_error(
+            "Convolution image batch input must have rank of at least 3 (one batch axis, one "
+            "input-channel axis, at least one image dimension).");
     }
 
     m_batch_size = arg0_shape[0];
@@ -78,12 +80,14 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& arg0,
     //
     if (m_window_movement_strides.size() != m_n_image_dimensions)
     {
-        throw ngraph_error("Convolution window movement stride rank does not match number of image dimensions.");
+        throw ngraph_error(
+            "Convolution window movement stride rank does not match number of image dimensions.");
     }
 
     if (m_window_dilation_strides.size() != m_n_image_dimensions)
     {
-        throw ngraph_error("Convolution window dilation stride rank does not match number of image dimensions.");
+        throw ngraph_error(
+            "Convolution window dilation stride rank does not match number of image dimensions.");
     }
 
     //
@@ -113,17 +117,18 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& arg0,
     }
 
     //
-    // Compute physical shape Wp of the convolution window, *including* dilation. At the same time, make sure all 
+    // Compute physical shape Wp of the convolution window, *including* dilation. At the same time, make sure all
     // window dilation strides are larger than 0, and that the dilated filter fits within the image dimensions.
     //
     for (size_t i = 0; i < m_n_image_dimensions; i++)
     {
         if (m_window_dilation_strides[i] == 0)
         {
-            throw ngraph_error("Convolution window axis stride is zero.");
+            throw ngraph_error("Convolution window axis dilation stride is zero.");
         }
 
-        m_window_physical_shape.push_back((m_window_virtual_shape[i] - 1) * m_window_dilation_strides[i] + 1);
+        m_window_physical_shape.push_back(
+            (m_window_virtual_shape[i] - 1) * m_window_dilation_strides[i] + 1);
 
         if (m_window_physical_shape[i] > m_input_image_shape[i])
         {
@@ -138,9 +143,10 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& arg0,
     {
         if (m_window_movement_strides[i] == 0)
         {
-            throw ngraph_error("Convolution window movement stride is zero.");
+            throw ngraph_error("Convolution window axis movement stride is zero.");
         }
-        m_output_image_shape.push_back(ceil_div(m_input_image_shape[i] - m_window_physical_shape[i] + 1,m_window_movement_strides[i]));
+        m_output_image_shape.push_back(ceil_div(
+            m_input_image_shape[i] - m_window_physical_shape[i] + 1, m_window_movement_strides[i]));
     }
 
     //
@@ -167,21 +173,22 @@ Strides default_strides(const std::shared_ptr<Node>& arg0)
     if (arg0_shape.size() < 3)
     {
         // For consistency we should throw the same error message here that we throw in the constructor.
-        throw ngraph_error("Convolution image batch input must have rank of at least 3 (one batch axis, one input-channel axis, at least one image dimension).");
+        throw ngraph_error(
+            "Convolution image batch input must have rank of at least 3 (one batch axis, one "
+            "input-channel axis, at least one image dimension).");
     }
-    return Strides(arg0_shape.size() - 2,1);
+    return Strides(arg0_shape.size() - 2, 1);
 }
 
 op::Convolution::Convolution(const std::shared_ptr<Node>& arg0,
                              const std::shared_ptr<Node>& arg1,
                              const Strides& window_movement_strides)
-    : Convolution(arg0,arg1,window_movement_strides,default_strides(arg0))
+    : Convolution(arg0, arg1, window_movement_strides, default_strides(arg0))
 {
 }
 
-op::Convolution::Convolution(const std::shared_ptr<Node>& arg0,
-                             const std::shared_ptr<Node>& arg1)
-    : Convolution(arg0,arg1,default_strides(arg0),default_strides(arg0))
+op::Convolution::Convolution(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+    : Convolution(arg0, arg1, default_strides(arg0), default_strides(arg0))
 {
 }
 
