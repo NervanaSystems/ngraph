@@ -23,6 +23,7 @@
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -42,6 +43,7 @@
 #include "ngraph/runtime/kernel/concat.hpp"
 #include "ngraph/runtime/kernel/constant.hpp"
 #include "ngraph/runtime/kernel/convert.hpp"
+#include "ngraph/runtime/kernel/convolution.hpp"
 #include "ngraph/runtime/kernel/copy.hpp"
 #include "ngraph/runtime/kernel/cos.hpp"
 #include "ngraph/runtime/kernel/cosh.hpp"
@@ -262,6 +264,18 @@ private:
             kernel::convert<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                                reinterpret_cast<S*>(out[0]->get_data_ptr()),
                                out[0]->get_element_count());
+        }
+        else if (node_op == "Convolution")
+        {
+            auto c = static_cast<const op::Convolution*>(&node);
+            kernel::convolution<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                   reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                   args[0]->get_shape(),
+                                   args[1]->get_shape(),
+                                   out[0]->get_shape(),
+                                   c->get_window_movement_strides(),
+                                   c->get_window_dilation_strides());
         }
         else if (node_op == "Cos")
         {
