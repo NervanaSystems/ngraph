@@ -262,7 +262,6 @@ void ngraph::replace_node_users_arguments(std::shared_ptr<Node> target,
     const_cast<std::multiset<Node*>&>(target->users()).clear();
 }
 
-// TODO:  Is this an ideal topological sort?  If not, we should change it.
 std::list<std::shared_ptr<ngraph::Node>>
     ngraph::topological_sort(const std::list<std::shared_ptr<Node>>& nodes)
 {
@@ -301,39 +300,68 @@ std::list<std::shared_ptr<ngraph::Node>>
     return result_list;
 }
 
-std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>
-    ngraph::clone_graph(const std::list<std::shared_ptr<ngraph::Node>>& nodes,
-                        std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> mapping)
+void ngraph::NodeMap::Add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> clone)
 {
-    auto sorted_list = topological_sort(nodes);
-    for (auto node : sorted_list)
+    if (Exists(orig))
     {
-        if (mapping.count(node.get()) == 0)
-        {
-            Nodes new_args;
-            for (auto old_arg : node->get_arguments())
-            {
-                assert(mapping.count(old_arg.get()));
-                new_args.push_back(mapping[old_arg.get()]);
-            }
-            mapping[node.get()] = node->copy_with_new_args(new_args);
-        }
+        throw ngraph_error("NodeMap: key already exists");
     }
-    return mapping;
+    node_map_[orig] = clone;
 }
 
-std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph::Function> func)
+std::shared_ptr<ngraph::Node> ngraph::NodeMap::operator[](std::shared_ptr<ngraph::Node> orig) const
 {
-    auto cloned_graph = clone_graph(
-        func->get_ops(), std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>());
-    assert(cloned_graph.count(func->get_result().get()));
-    auto cloned_result = cloned_graph[func->get_result().get()];
-
-    std::vector<std::shared_ptr<op::Parameter>> new_params;
-    for (auto param : func->get_parameters()) {
-        assert(cloned_graph.count(param.get()));
-        new_params.push_back(std::dynamic_pointer_cast<op::Parameter>(cloned_graph[param.get()]));
+    if (!Exists(orig))
+    {
+        throw ngraph_error("NodeMap: key does not exist");
     }
+    return node_map_.at(orig);
+}
+
+std::list<std::shared_ptr<ngraph::Node>>
+    ngraph::clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map)
+{
+    // for each node in topological order
+    auto sorted_nodes = topological_sort(nodes);
+    for (auto node : sorted_nodes)
+    {
+        if (!node_map.Exists(node))
+        {
+            // get (already) cloned arguments and clone the node
+            Nodes cloned_args;
+            for (auto arg : node->get_arguments())
+            {
+                cloned_args.push_back(node_map[arg]);
+            }
+            node_map.Add(node, node->copy_with_new_args(cloned_args));
+        }
+    }
+
+    // create and return list of cloned nodes
+    // order matches input list (not necessarily topological)
+    std::list<std::shared_ptr<ngraph::Node>> cloned_nodes;
+    for (auto node : nodes)
+    {
+        cloned_nodes.push_back(node_map[node]);
+    }
+    return cloned_nodes;
+}
+
+std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph::Function> func,
+                                                         NodeMap& node_map)
+{
+    // clone function operations
+    clone_nodes(func->get_ops(), node_map);
+
+    // get cloned function result and parameters
+    auto cloned_result = node_map[func->get_result()];
+    std::vector<std::shared_ptr<op::Parameter>> cloned_params;
+    for (auto param : func->get_parameters())
+    {
+        cloned_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_map[param]));
+    }
+
+    // create and return cloned function
     return std::make_shared<ngraph::Function>(
-        cloned_result, func->get_result_type(), new_params);
+        cloned_result, func->get_result_type(), cloned_params);
 }

@@ -23,9 +23,8 @@
 #include <memory>
 #include <sstream>
 #include <string>
-#include <vector>
 #include <unordered_map>
-#include <list>
+#include <vector>
 
 namespace ngraph
 {
@@ -163,6 +162,7 @@ namespace ngraph
         size_t get_total_milliseconds() const { return get_total_nanoseconds() / 1e6; }
         size_t get_total_microseconds() const { return get_total_nanoseconds() / 1e3; }
         size_t get_total_nanoseconds() const { return m_total_time.count(); }
+
     private:
         std::chrono::high_resolution_clock m_clock;
         std::chrono::time_point<std::chrono::high_resolution_clock> m_start_time;
@@ -256,9 +256,38 @@ namespace ngraph
     std::list<std::shared_ptr<Node>>
         topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
 
-    std::unordered_map<Node*, std::shared_ptr<Node>>
-        clone_graph(const std::list<std::shared_ptr<Node>>& nodes,
-                    std::unordered_map<Node*, std::shared_ptr<Node>> mapping);
+    // maps original to cloned nodes for clone utilities
+    // performs index checking on access
+    class NodeMap
+    {
+    public:
+        // map original node to cloned node
+        // throws ngraph_error if index already exists
+        void Add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> clone);
 
-    std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func);
+        // get cloned node from original node
+        // throws ngrah_error if index does not exist
+        std::shared_ptr<ngraph::Node> operator[](std::shared_ptr<ngraph::Node> orig) const;
+
+        // returns true if original node is already mapped
+        bool Exists(std::shared_ptr<ngraph::Node> orig) const
+        {
+            return (node_map_.count(orig) != 0);
+        }
+
+    private:
+        std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>> node_map_;
+    };
+
+    // input nodes are cloned and returned
+    // NodeMap input may contain default node mapping i.e. pre-cloned nodes
+    // NodeMap output (by reference) fully maps input and cloned nodes
+    std::list<std::shared_ptr<ngraph::Node>>
+        clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map);
+
+    // input function is cloned and returned
+    // NodeMap input may contain default node mapping i.e. pre-cloned nodes
+    // NodeMap output (by reference) fully maps input and cloned function ops
+    std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func,
+                                                     NodeMap& node_map);
 } // end namespace ngraph
