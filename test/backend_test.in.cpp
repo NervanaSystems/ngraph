@@ -21,6 +21,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
+#include "util/ndarray.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -55,11 +56,12 @@ TEST(${BACKEND_NAME}, ab)
     shared_ptr<runtime::TensorView> result =
         backend->make_primary_tensor_view(f32::element_type(), shape);
 
-    copy_data(a, runtime::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-    copy_data(b, runtime::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
     cf->call({a, b}, {result});
-    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{6, 8}, {10, 12}})));
+    EXPECT_EQ(result->get_vector<float>(),
+              (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
 
 TEST(${BACKEND_NAME}, abc)
@@ -88,18 +90,21 @@ TEST(${BACKEND_NAME}, abc)
     shared_ptr<runtime::TensorView> result =
         backend->make_primary_tensor_view(f32::element_type(), shape);
 
-    copy_data(a, runtime::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-    copy_data(b, runtime::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
-    copy_data(c, runtime::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     cf->call({a, b, c}, {result});
-    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
+    EXPECT_EQ(result->get_vector<float>(),
+              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
     cf->call({b, a, c}, {result});
-    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
+    EXPECT_EQ(result->get_vector<float>(),
+              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
     cf->call({a, c, b}, {result});
-    EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{50, 72}, {98, 128}})));
+    EXPECT_EQ(result->get_vector<float>(),
+              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 }
 
 TEST(${BACKEND_NAME}, abc_int64)

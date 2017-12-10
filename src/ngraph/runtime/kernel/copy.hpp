@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include "ngraph/log.hpp"
-
 namespace ngraph
 {
     namespace runtime
@@ -28,7 +26,6 @@ namespace ngraph
                 for (size_t i = 0; i < count; i++)
                 {
                     out[i] = arg[i];
-                    NGRAPH_INFO << "out[" << i << "] = " << arg[i];
                 }
             }
         }

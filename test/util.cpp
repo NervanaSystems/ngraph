@@ -22,6 +22,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close.hpp"
+#include "util/ndarray.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -189,13 +190,13 @@ TEST(util, all_close)
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 3});
     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 3});
 
-    copy_data(a, runtime::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
-    copy_data(b, runtime::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
+    copy_data(a, test::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
 
     EXPECT_TRUE(ngraph::test::all_close<float>(a, b));
 
     auto c = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 3});
-    copy_data(c, runtime::NDArray<float, 2>({{1.1f, 2, 3}, {3, 4, 5}}).get_vector());
+    copy_data(c, test::NDArray<float, 2>({{1.1f, 2, 3}, {3, 4, 5}}).get_vector());
 
     EXPECT_FALSE(ngraph::test::all_close<float>(c, a, 0, .05f));
     EXPECT_TRUE(ngraph::test::all_close<float>(c, a, 0, .11f));

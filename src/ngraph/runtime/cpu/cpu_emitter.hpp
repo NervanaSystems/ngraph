@@ -36,15 +36,15 @@ namespace ngraph
             class CPU_Emitter
             {
             protected:
-                codegen::CodeWriter TU;
+                codegen::CodeWriter m_out;
 
             public:
                 CPU_Emitter()
-                    : TU()
+                    : m_out()
                 {
                 }
-                std::string get_code() { return TU.get_code(); }
-                codegen::CodeWriter& get_code_writer() { return TU; }
+                std::string get_code() { return m_out.get_code(); }
+                codegen::CodeWriter& get_code_writer() { return m_out; }
                 void EMITTER_DECL(EmitNop);
                 void EMITTER_DECL(EmitAdd);
                 void EMITTER_DECL(EmitDot);
@@ -108,8 +108,6 @@ namespace ngraph
                 std::string emit_vector(const TensorViewWrapper&, const std::string& name = "");
                 std::string emit_array1d(const TensorViewWrapper&, const std::string& name = "");
                 std::string emit_matrix(const TensorViewWrapper&, const std::string& name = "");
-
-                std::vector<size_t> get_shape(const TensorViewWrapper&) const;
             };
         }
     }

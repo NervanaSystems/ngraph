@@ -60,104 +60,83 @@ void runtime::cpu::CPU_Emitter::EmitAdd(const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " = \n";
-    TU.indent++;
-    TU << emit_array1d(args[0]) << " +\n ";
-    TU << emit_array1d(args[1]) << ";\n";
-    TU.indent -= 2;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " = \n";
+    m_out.indent++;
+    m_out << emit_array1d(args[0]) << " +\n ";
+    m_out << emit_array1d(args[1]) << ";\n";
+    m_out.indent -= 2;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitDot(const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    auto& arg_nodes = n->get_arguments();
-    assert(arg_nodes.size() == 2);
-
-    auto arg0_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(arg_nodes.at(0)->get_value_type());
-    assert(arg0_tensor_type);
-
-    auto arg1_tensor_type =
-        dynamic_pointer_cast<const TensorViewType>(arg_nodes.at(1)->get_value_type());
-    assert(arg1_tensor_type);
-
-    auto arg0_shape = arg0_tensor_type->get_shape();
-    auto arg1_shape = arg1_tensor_type->get_shape();
-
-    auto& arg0_element_type = arg0_tensor_type->get_element_type();
-
+    const Shape& arg0_shape = args[0].get_shape();
+    const Shape& arg1_shape = args[1].get_shape();
     if (arg0_shape.empty() || arg1_shape.empty())
     {
         auto& first = (arg0_shape.empty() ? args[0] : args[1]);
         auto& second = (arg0_shape.empty() ? args[1] : args[0]);
 
-        TU << "{   // " << n->get_name() << "\n";
-        TU.indent++;
-        TU << "" << emit_vector(out[0]) << "\n    = ";
-        TU << first.get_name() << "[0]\n    * " << emit_vector(second) << ";\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << "\n";
+        m_out.indent++;
+        m_out << emit_vector(out[0]) << "\n    = ";
+        m_out << first.get_name() << "[0]\n    * " << emit_vector(second) << ";\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
     {
-        TU << "{   // " << n->get_name() << "\n";
-        TU.indent++;
-        TU << "" << emit_vector(out[0]) << " << \n"
-           << "    " << emit_vector(args[0]) << ".dot("
-           << "" << emit_vector(args[1]) << ");\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << "\n";
+        m_out.indent++;
+        m_out << emit_vector(out[0]) << " << \n"
+              << "    " << emit_vector(args[0]) << ".dot(" << emit_vector(args[1]) << ");\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
     {
-        TU << "{   // " << n->get_name() << "\n";
-        TU.indent++;
-        TU << "" << emit_vector(out[0]) << " = \n"
-           << "    " << emit_matrix(args[0]) << " * "
-           << "" << emit_vector(args[1]) << ";\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << "\n";
+        m_out.indent++;
+        m_out << emit_vector(out[0]) << " = \n"
+              << "    " << emit_matrix(args[0]) << " * " << emit_vector(args[1]) << ";\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
     {
         // Emit an MKL SGEMM call if possible
         // clang-format off
-        if (arg0_element_type == ngraph::element::Float32::element_type())
+        if (args[0].get_element_type() == element::f32)
         {
-            TU << "{   // " << n->get_name() << "\n";
-            TU.indent++;
-            TU << "cblas::cblas_sgemm("
+            m_out << "{   // " << n->get_name() << "\n";
+            m_out.indent++;
+            m_out << "cblas::cblas_sgemm("
                << "cblas::Layout::RowMajor, "
                << "cblas::Transpose::None, "
                << "cblas::Transpose::None, "
                << arg0_shape[0] << ", " << arg1_shape[1] << ", " << arg0_shape[1] << ",\n" <<
                 "        1.0f, " << args[0].get_name() << ", " << max(1UL, arg0_shape[1]) << ", " << args[1].get_name() << ", " << max(1UL, arg1_shape[1]) << ", 0.0f,\n" <<
                 "        " << out[0].get_name() << ", " << max(1UL, arg1_shape[1]) << ");\n";
-            TU.indent--;
-            TU << "}\n";
+            m_out.indent--;
+            m_out << "}\n";
         }
         // clang-format on
         else
         {
-            TU << "{   // " << n->get_name() << "\n";
-            TU.indent++;
-            TU << "" << emit_matrix(out[0]) << " = \n"
-               << "    " << emit_matrix(args[0]) << " * "
-               << "" << emit_matrix(args[1]) << ";\n";
-            TU.indent--;
-            TU << "}\n";
+            m_out << "{   // " << n->get_name() << "\n";
+            m_out.indent++;
+            m_out << emit_matrix(out[0]) << " = \n"
+                  << "    " << emit_matrix(args[0]) << " * " << emit_matrix(args[1]) << ";\n";
+            m_out.indent--;
+            m_out << "}\n";
         }
     }
     else
     {
-        auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
-        assert(result_tensor_type);
-        auto out0_shape = result_tensor_type->get_shape();
-
         size_t arg0_dot_axis;
         size_t arg1_dot_axis;
         if (arg0_shape.size() == 1 && arg1_shape.size() == 1)
@@ -182,14 +161,14 @@ void runtime::cpu::CPU_Emitter::EmitDot(const ngraph::Node* n,
             arg1_dot_axis = arg1_shape.size() - 2;
         }
 
-        TU << "kernel::dot(" << args[0].get_name() << ",\n";
-        TU << "            " << args[1].get_name() << ",\n";
-        TU << "            " << out[0].get_name() << ",\n";
-        TU << "            {" << join(get_shape(args[0])) << "},\n";
-        TU << "            {" << join(arg1_shape) << "},\n";
-        TU << "            {" << join(out0_shape) << "},\n";
-        TU << "            " << arg0_dot_axis << ",\n";
-        TU << "            " << arg1_dot_axis << ");\n";
+        m_out << "kernel::dot(" << args[0].get_name() << ",\n";
+        m_out << "            " << args[1].get_name() << ",\n";
+        m_out << "            " << out[0].get_name() << ",\n";
+        m_out << "            {" << join(args[0].get_shape()) << "},\n";
+        m_out << "            {" << join(args[1].get_shape()) << "},\n";
+        m_out << "            {" << join(out[0].get_shape()) << "},\n";
+        m_out << "            " << arg0_dot_axis << ",\n";
+        m_out << "            " << arg1_dot_axis << ");\n";
     }
 }
 
@@ -197,13 +176,13 @@ void runtime::cpu::CPU_Emitter::EmitMultiply(const ngraph::Node* n,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "   " << emit_array1d(args[0]) << " *\n"
-       << "   " << emit_array1d(args[1]) << ";\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "   " << emit_array1d(args[0]) << " *\n"
+          << "   " << emit_array1d(args[1]) << ";\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitGetTupleElement(
@@ -212,96 +191,86 @@ void runtime::cpu::CPU_Emitter::EmitGetTupleElement(
     const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
-    auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
-    assert(result_tensor_type);
-    auto& result_element_type = result_tensor_type->get_element_type();
-    string type = result_element_type.c_type_string();
 
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << "memcpy(" << out[0].get_name() << ", " << args[get_tuple_element->get_n()].get_name()
-       << ", " << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << "memcpy(" << out[0].get_name() << ", " << args[get_tuple_element->get_n()].get_name()
+          << ", " << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitTuple(const ngraph::Node* n,
                                           const vector<runtime::cpu::TensorViewWrapper>& args,
                                           const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    assert(args.size() == out.size());
-
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
     for (size_t i = 0; i < args.size(); ++i)
     {
-        TU << "memcpy(" << out.at(i).get_name() << ", " << args.at(i).get_name() << ", "
-           << out[i].get_size() * out[i].get_element_type().size() << ");\n";
+        m_out << "memcpy(" << out.at(i).get_name() << ", " << args.at(i).get_name() << ", "
+              << out[i].get_size() * out[i].get_element_type().size() << ");\n";
     }
-    TU.indent--;
-    TU += "}\n";
+    m_out.indent--;
+    m_out += "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitAbs(const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n";
-    TU << "Eigen::abs(" << emit_array1d(args[0]) << ");\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n";
+    m_out << "Eigen::abs(" << emit_array1d(args[0]) << ");\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    auto result_tensor_type = dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
-    assert(result_tensor_type);
-
-    auto result_shape = result_tensor_type->get_shape();
+    auto result_shape = out[0].get_shape();
 
     if (result_shape.size() == 1)
     {
-        TU << "{   // " << n->get_name() << "\n";
-        TU.indent++;
-        TU << "" << emit_vector(out[0], "out_vector") << ";\n";
+        m_out << "{   // " << n->get_name() << "\n";
+        m_out.indent++;
+        m_out << emit_vector(out[0], "out_vector") << ";\n";
 
         size_t concat_pos = 0;
         for (size_t i = 0; i < args.size(); i++)
         {
-            TU << "out_vector.segment(" << concat_pos << ", " << args[i].get_shape().at(0)
-               << ") << "
-               << "" << emit_vector(args[i]) << ";\n";
+            m_out << "out_vector.segment(" << concat_pos << ", " << args[i].get_shape().at(0)
+                  << ") << " << emit_vector(args[i]) << ";\n";
             concat_pos += args[i].get_shape().at(0);
         }
-        TU.indent--;
-        TU << "}\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else if (result_shape.size() == 2)
     {
         auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
 
-        TU << "{   // " << n->get_name() << "\n";
-        TU.indent++;
-        TU << "" << emit_matrix(out[0], "out_matrix") << ";\n";
+        m_out << "{   // " << n->get_name() << "\n";
+        m_out.indent++;
+        m_out << emit_matrix(out[0], "out_matrix") << ";\n";
 
         size_t concat_pos[2]{0, 0};
         for (size_t i = 0; i < args.size(); i++)
         {
             auto& arg_shape = args[i].get_shape();
 
-            TU << "out_matrix.block(" << concat_pos[0] << ", " << concat_pos[1] << ", "
-               << arg_shape.at(0) << ", " << arg_shape.at(1) << ") << "
-               << "" << emit_matrix(args[i]) << ";\n";
+            m_out << "out_matrix.block(" << concat_pos[0] << ", " << concat_pos[1] << ", "
+                  << arg_shape.at(0) << ", " << arg_shape.at(1) << ") << " << emit_matrix(args[i])
+                  << ";\n";
 
             concat_pos[axis] += arg_shape.at(axis);
         }
 
-        TU.indent--;
-        TU << "}\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
 }
 
@@ -309,178 +278,178 @@ void runtime::cpu::CPU_Emitter::EmitDivide(const ngraph::Node* n,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
     if (n->get_element_type().is_real() == false)
     {
         // Check for divide by zero for integer types only
         size_t element_count = args[1].get_size();
-        TU << "for (size_t i=0; i<" << element_count << "; i++)\n";
-        TU << "{\n";
-        TU << "    if (" << args.at(1).get_name()
-           << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
-        TU << "}\n";
+        m_out << "for (size_t i=0; i<" << element_count << "; i++)\n";
+        m_out << "{\n";
+        m_out << "    if (" << args.at(1).get_name()
+              << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
+        m_out << "}\n";
     }
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << " /\n"
-       << "    " << emit_array1d(args[1]) << ";\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << " /\n"
+          << "    " << emit_array1d(args[1]) << ";\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitEqual(const ngraph::Node* n,
                                           const vector<runtime::cpu::TensorViewWrapper>& args,
                                           const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    (" << emit_array1d(args[0]) << " ==\n"
-       << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    (" << emit_array1d(args[0]) << " ==\n"
+          << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitGreater(const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << " xxx\n";
-    TU.indent++;
-    TU << "" << emit_array1d(out[0]) << " =\n"
-       << "    (" << emit_array1d(args[0]) << " >\n"
-       << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << " xxx\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    (" << emit_array1d(args[0]) << " >\n"
+          << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitGreaterEq(const ngraph::Node* n,
                                               const vector<runtime::cpu::TensorViewWrapper>& args,
                                               const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << "" << emit_array1d(out[0]) << " =\n"
-       << "    (" << emit_array1d(args[0]) << " >=\n"
-       << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    (" << emit_array1d(args[0]) << " >=\n"
+          << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitLess(const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << "" << emit_array1d(out[0]) << " =\n"
-       << "    (" << emit_array1d(args[0]) << " <\n"
-       << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    (" << emit_array1d(args[0]) << " <\n"
+          << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitLessEq(const ngraph::Node* n,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << "" << emit_array1d(out[0]) << " =\n"
-       << "    (" << emit_array1d(args[0]) << " <=\n"
-       << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    (" << emit_array1d(args[0]) << " <=\n"
+          << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitLog(const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    Eigen::log(" << emit_array1d(args[0]) << ");\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    Eigen::log(" << emit_array1d(args[0]) << ");\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitMaximum(const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "        " << emit_array1d(args[0]) << ".max(\n"
-       << "        " << emit_array1d(args[1]) << ");\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "        " << emit_array1d(args[0]) << ".max(\n"
+          << "        " << emit_array1d(args[1]) << ");\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitMinimum(const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << ".min(\n"
-       << "    " << emit_array1d(args[1]) << ");\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << ".min(\n"
+          << "    " << emit_array1d(args[1]) << ");\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitNegative(const ngraph::Node* n,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    -" << emit_array1d(args[0]) << ";\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    -" << emit_array1d(args[0]) << ";\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitNotEqual(const ngraph::Node* n,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << "" << emit_array1d(out[0]) << " =\n"
-       << "    (" << emit_array1d(args[0]) << " !=\n"
-       << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    (" << emit_array1d(args[0]) << " !=\n"
+          << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitSelect(const ngraph::Node* n,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "   " << emit_array1d(args[0]) << "\n"
-       << "    .select(" << emit_array1d(args[1]) << ",\n"
-       << "       " << emit_array1d(args[2]) << ");\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "   " << emit_array1d(args[0]) << "\n"
+          << "    .select(" << emit_array1d(args[1]) << ",\n"
+          << "       " << emit_array1d(args[2]) << ");\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitSubtract(const ngraph::Node* n,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << " -\n"
-       << "    " << emit_array1d(args[1]) << ";\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << " -\n"
+          << "    " << emit_array1d(args[1]) << ";\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitParameterizedConstantBool(
@@ -492,31 +461,31 @@ void runtime::cpu::CPU_Emitter::EmitParameterizedConstantBool(
                      ->get_value()
                      ->get_vector();
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstantBool\n";
+    m_out << "// " << n->get_name() << " EmitParameterizedConstantBool\n";
     if (out[0].is_output())
     {
         // Special case where constant is stored directly in the output
         for (size_t i = 0; i < value.size(); i++)
         {
-            TU << out[0].get_name() << "[" << i << "] = static_cast<char>("
-               << (value[i] ? "true" : "false") << ");\n";
+            m_out << out[0].get_name() << "[" << i << "] = static_cast<char>("
+                  << (value[i] ? "true" : "false") << ");\n";
         }
     }
     else
     {
-        TU << "// this should be const but eigen hates const :(\n";
-        TU << "char " << out[0].get_name() << "[] = {\n";
+        m_out << "// this should be const but eigen hates const :(\n";
+        m_out << "char " << out[0].get_name() << "[] = {\n";
         for (size_t i = 0; i < value.size(); i++)
         {
             if (i != 0)
             {
-                TU << ",\n";
+                m_out << ",\n";
             }
-            TU << "    " << (value[i] ? "true" : "false");
+            m_out << "    " << (value[i] ? "true" : "false");
         }
-        TU << "\n};";
+        m_out << "\n};";
     }
-    TU << "\n";
+    m_out << "\n";
 }
 
 static string format_float_as_string(float value)
@@ -552,31 +521,31 @@ void runtime::cpu::CPU_Emitter::EmitParameterizedConstantFloat32(
                      ->get_vector();
     const char* type = "float";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstantFloat32\n";
+    m_out << "// " << n->get_name() << " EmitParameterizedConstantFloat32\n";
     if (out[0].is_output())
     {
         // Special case where constant is stored directly in the output
         for (size_t i = 0; i < value.size(); i++)
         {
-            TU << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">("
-               << format_float_as_string(value[i]) << ");\n";
+            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">("
+                  << format_float_as_string(value[i]) << ");\n";
         }
     }
     else
     {
-        TU << "// this should be const but eigen hates const :(\n";
-        TU << type << " " << out[0].get_name() << "[] = {\n";
+        m_out << "// this should be const but eigen hates const :(\n";
+        m_out << type << " " << out[0].get_name() << "[] = {\n";
         for (size_t i = 0; i < value.size(); i++)
         {
             if (i != 0)
             {
-                TU << ",\n";
+                m_out << ",\n";
             }
-            TU << "    " << format_float_as_string(value[i]);
+            m_out << "    " << format_float_as_string(value[i]);
         }
-        TU << "\n};";
+        m_out << "\n};";
     }
-    TU << "\n";
+    m_out << "\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt8(
@@ -589,31 +558,31 @@ void runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt8(
                      ->get_vector();
     const char* type = "int8_t";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstantInt8\n";
+    m_out << "// " << n->get_name() << " EmitParameterizedConstantInt8\n";
     if (out[0].is_output())
     {
         // Special case where constant is stored directly in the output
         for (size_t i = 0; i < value.size(); i++)
         {
-            TU << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">("
-               << static_cast<int>(value[i]) << ");\n";
+            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">("
+                  << static_cast<int>(value[i]) << ");\n";
         }
     }
     else
     {
-        TU << "// this should be const but eigen hates const :(\n";
-        TU << type << " " << out[0].get_name() << "[] = {\n";
+        m_out << "// this should be const but eigen hates const :(\n";
+        m_out << type << " " << out[0].get_name() << "[] = {\n";
         for (size_t i = 0; i < value.size(); i++)
         {
             if (i != 0)
             {
-                TU << ",\n";
+                m_out << ",\n";
             }
-            TU << "    " << value[i];
+            m_out << "    " << value[i];
         }
-        TU << "\n};";
+        m_out << "\n};";
     }
-    TU << "\n";
+    m_out << "\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt32(
@@ -626,31 +595,31 @@ void runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt32(
                      ->get_vector();
     const char* type = "int32_t";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstantInt32\n";
+    m_out << "// " << n->get_name() << " EmitParameterizedConstantInt32\n";
     if (out[0].is_output())
     {
         // Special case where constant is stored directly in the output
         for (size_t i = 0; i < value.size(); i++)
         {
-            TU << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i]
-               << ");\n";
+            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i]
+                  << ");\n";
         }
     }
     else
     {
-        TU << "// this should be const but eigen hates const :(\n";
-        TU << type << " " << out[0].get_name() << "[] = {\n";
+        m_out << "// this should be const but eigen hates const :(\n";
+        m_out << type << " " << out[0].get_name() << "[] = {\n";
         for (size_t i = 0; i < value.size(); i++)
         {
             if (i != 0)
             {
-                TU << ",\n";
+                m_out << ",\n";
             }
-            TU << "    " << value[i];
+            m_out << "    " << value[i];
         }
-        TU << "\n};";
+        m_out << "\n};";
     }
-    TU << "\n";
+    m_out << "\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt64(
@@ -663,31 +632,31 @@ void runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt64(
                      ->get_vector();
     const char* type = "int64_t";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstantInt64\n";
+    m_out << "// " << n->get_name() << " EmitParameterizedConstantInt64\n";
     if (out[0].is_output())
     {
         // Special case where constant is stored directly in the output
         for (size_t i = 0; i < value.size(); i++)
         {
-            TU << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i]
-               << ");\n";
+            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i]
+                  << ");\n";
         }
     }
     else
     {
-        TU << "// this should be const but eigen hates const :(\n";
-        TU << type << " " << out[0].get_name() << "[] = {\n";
+        m_out << "// this should be const but eigen hates const :(\n";
+        m_out << type << " " << out[0].get_name() << "[] = {\n";
         for (size_t i = 0; i < value.size(); i++)
         {
             if (i != 0)
             {
-                TU << ",\n";
+                m_out << ",\n";
             }
-            TU << "    " << value[i];
+            m_out << "    " << value[i];
         }
-        TU << "\n};";
+        m_out << "\n};";
     }
-    TU << "\n";
+    m_out << "\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt8(
@@ -700,31 +669,31 @@ void runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt8(
                      ->get_vector();
     const char* type = "uint8_t";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstantUInt8\n";
+    m_out << "// " << n->get_name() << " EmitParameterizedConstantUInt8\n";
     if (out[0].is_output())
     {
         // Special case where constant is stored directly in the output
         for (size_t i = 0; i < value.size(); i++)
         {
-            TU << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">("
-               << static_cast<uint>(value[i]) << ");\n";
+            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">("
+                  << static_cast<uint>(value[i]) << ");\n";
         }
     }
     else
     {
-        TU << "// this should be const but eigen hates const :(\n";
-        TU << type << " " << out[0].get_name() << "[] = {\n";
+        m_out << "// this should be const but eigen hates const :(\n";
+        m_out << type << " " << out[0].get_name() << "[] = {\n";
         for (size_t i = 0; i < value.size(); i++)
         {
             if (i != 0)
             {
-                TU << ",\n";
+                m_out << ",\n";
             }
-            TU << "    " << value[i];
+            m_out << "    " << value[i];
         }
-        TU << "\n};";
+        m_out << "\n};";
     }
-    TU << "\n";
+    m_out << "\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt32(
@@ -737,31 +706,31 @@ void runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt32(
                      ->get_vector();
     const char* type = "uint32_t";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstantUInt32\n";
+    m_out << "// " << n->get_name() << " EmitParameterizedConstantUInt32\n";
     if (out[0].is_output())
     {
         // Special case where constant is stored directly in the output
         for (size_t i = 0; i < value.size(); i++)
         {
-            TU << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i]
-               << ");\n";
+            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i]
+                  << ");\n";
         }
     }
     else
     {
-        TU << "// this should be const but eigen hates const :(\n";
-        TU << type << " " << out[0].get_name() << "[] = {\n";
+        m_out << "// this should be const but eigen hates const :(\n";
+        m_out << type << " " << out[0].get_name() << "[] = {\n";
         for (size_t i = 0; i < value.size(); i++)
         {
             if (i != 0)
             {
-                TU << ",\n";
+                m_out << ",\n";
             }
-            TU << "    " << value[i];
+            m_out << "    " << value[i];
         }
-        TU << "\n};";
+        m_out << "\n};";
     }
-    TU << "\n";
+    m_out << "\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt64(
@@ -774,31 +743,31 @@ void runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt64(
                      ->get_vector();
     const char* type = "uint64_t";
 
-    TU << "// " << n->get_name() << " EmitParameterizedConstantUInt64\n";
+    m_out << "// " << n->get_name() << " EmitParameterizedConstantUInt64\n";
     if (out[0].is_output())
     {
         // Special case where constant is stored directly in the output
         for (size_t i = 0; i < value.size(); i++)
         {
-            TU << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i]
-               << ");\n";
+            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i]
+                  << ");\n";
         }
     }
     else
     {
-        TU << "// this should be const but eigen hates const :(\n";
-        TU << type << " " << out[0].get_name() << "[] = {\n";
+        m_out << "// this should be const but eigen hates const :(\n";
+        m_out << type << " " << out[0].get_name() << "[] = {\n";
         for (size_t i = 0; i < value.size(); i++)
         {
             if (i != 0)
             {
-                TU << ",\n";
+                m_out << ",\n";
             }
-            TU << "    " << value[i];
+            m_out << "    " << value[i];
         }
-        TU << "\n};";
+        m_out << "\n};";
     }
-    TU << "\n";
+    m_out << "\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
@@ -812,41 +781,41 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
 
     if (broadcast->get_broadcast_axes().empty())
     {
-        TU << "{   // " << n->get_name() << "\n";
-        TU.indent++;
-        TU << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << "\n";
+        m_out.indent++;
+        m_out << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else if (arg_shape.size() == 0)
     {
-        TU << "{   // " << n->get_name() << "\n";
-        TU.indent++;
-        TU << "" << emit_array1d(out[0]) << " =\n"
-           << "    " << emit_array1d(args[0]) << "(0, 0);\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << "\n";
+        m_out.indent++;
+        m_out << emit_array1d(out[0]) << " =\n"
+              << "    " << emit_array1d(args[0]) << "(0, 0);\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else if (arg_shape.size() == 1 && result_shape.size() == 2)
     {
         if (broadcast->get_broadcast_axes() == AxisSet{1})
         {
-            TU << "{   // " << n->get_name() << "\n";
-            TU.indent++;
-            TU << "" << emit_matrix(out[0]) << ".colwise() =\n"
-               << "    " << emit_vector(args[0]) << ";\n";
-            TU.indent--;
-            TU << "}\n";
+            m_out << "{   // " << n->get_name() << "\n";
+            m_out.indent++;
+            m_out << emit_matrix(out[0]) << ".colwise() =\n"
+                  << "    " << emit_vector(args[0]) << ";\n";
+            m_out.indent--;
+            m_out << "}\n";
         }
         else if (broadcast->get_broadcast_axes() == AxisSet{0})
         {
-            TU << "{   // " << n->get_name() << "\n";
-            TU.indent++;
-            TU << "" << emit_matrix(out[0]) << ".rowwise() =\n"
-               << "    " << emit_vector(args[0]) << ".transpose();\n";
-            TU.indent--;
-            TU << "}\n";
+            m_out << "{   // " << n->get_name() << "\n";
+            m_out.indent++;
+            m_out << emit_matrix(out[0]) << ".rowwise() =\n"
+                  << "    " << emit_vector(args[0]) << ".transpose();\n";
+            m_out.indent--;
+            m_out << "}\n";
         }
         else
         {
@@ -857,11 +826,11 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
     }
     else
     {
-        TU << "kernel::broadcast<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-        TU << "                         " << out[0].get_name() << ",\n";
-        TU << "                         {" << join(arg_shape) << "},\n";
-        TU << "                         {" << join(result_shape) << "},\n";
-        TU << "                         {" << join(broadcast->get_broadcast_axes()) << "});\n";
+        m_out << "kernel::broadcast<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        m_out << "                         " << out[0].get_name() << ",\n";
+        m_out << "                         {" << join(arg_shape) << "},\n";
+        m_out << "                         {" << join(result_shape) << "},\n";
+        m_out << "                         {" << join(broadcast->get_broadcast_axes()) << "});\n";
     }
 }
 
@@ -871,13 +840,13 @@ void runtime::cpu::CPU_Emitter::EmitConvert(const ngraph::Node* n,
 {
     auto& result_element_type = out[0].get_element_type();
 
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << "\n"
-       << "    .template cast<" << result_element_type.c_type_string() << ">();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << "\n"
+          << "    .template cast<" << result_element_type.c_type_string() << ">();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitConstant(const ngraph::Node* n,
@@ -888,15 +857,15 @@ void runtime::cpu::CPU_Emitter::EmitConstant(const ngraph::Node* n,
     auto c_value_strings = c->get_value_strings();
     auto type = out[0].get_type();
 
-    TU << "{   // " << n->get_name() << " EmitConstant\n";
-    TU.indent++;
+    m_out << "{   // " << n->get_name() << " EmitConstant\n";
+    m_out.indent++;
     for (size_t i = 0; i < c_value_strings.size(); i++)
     {
-        TU << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">("
-           << c_value_strings[i] << ");\n";
+        m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">("
+              << c_value_strings[i] << ");\n";
     }
-    TU.indent--;
-    TU << "}\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
@@ -925,12 +894,12 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
     //  we can just copy.
     if (same_layout || result_shape_product < 2)
     {
-        TU << "{   // " << n->get_name() << " 1\n";
-        TU.indent++;
-        TU << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << " 1\n";
+        m_out.indent++;
+        m_out << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     // If there *is* a layout change in the 2D case, we transpose the input.
     else if (arg_rank == 2)
@@ -939,26 +908,26 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
         // clang-format off
         if (result_element_type == ngraph::element::Float32::element_type())
         {
-            TU << "{   // " << n->get_name() << " 2\n";
-            TU.indent++;
-            TU << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0]) << ",\n" <<
+            m_out << "{   // " << n->get_name() << " 2\n";
+            m_out.indent++;
+            m_out << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0]) << ",\n" <<
                 "                   " << to_string(arg_shape[1]) << ", 1.0f,\n" <<
                 "                   " << args[0].get_name() << ", "
                 << to_string(arg_shape[1]) << ",\n" <<
                 "                   " << out[0].get_name()
                 << ", " << to_string(arg_shape[0]) << ");\n";
-                TU.indent--;
-                TU << "}\n";
+                m_out.indent--;
+                m_out << "}\n";
         }
         // clang-format on
         else
         {
-            TU << "{   // " << n->get_name() << " 3\n";
-            TU.indent++;
-            TU << "" << emit_matrix(out[0]) << " =\n"
-               << "        " << emit_matrix(args[0]) << ".transpose();\n";
-            TU.indent--;
-            TU << "}\n";
+            m_out << "{   // " << n->get_name() << " 3\n";
+            m_out.indent++;
+            m_out << emit_matrix(out[0]) << " =\n"
+                  << "        " << emit_matrix(args[0]) << ".transpose();\n";
+            m_out.indent--;
+            m_out << "}\n";
         }
     }
     // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
@@ -977,11 +946,11 @@ void runtime::cpu::CPU_Emitter::EmitFunctionCall(
     auto function_call = static_cast<const op::FunctionCall*>(n);
     shared_ptr<Function> function = function_call->get_function();
 
-    TU << "{   // Call " << function->get_name() << "\n";
-    TU.indent++;
+    m_out << "{   // Call " << function->get_name() << "\n";
+    m_out.indent++;
     generate_call(args, out, function);
-    TU.indent--;
-    TU << "}\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 // TODO: This and other ops include comments/notes that
@@ -1007,12 +976,12 @@ void runtime::cpu::CPU_Emitter::EmitReduce(const ngraph::Node* n,
     // Trivial case: no reduction axes (this includes the scalar-reductee case).
     if (reduction_axes.empty())
     {
-        TU << "{   // " << n->get_name() << " 1\n";
-        TU.indent++;
-        TU << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << " 1\n";
+        m_out.indent++;
+        m_out << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     // Behavior for zero-size axes bears some explanation here. XLA's reduce
     // operator provides an "base" element (usually, but not necessarily,
@@ -1044,44 +1013,44 @@ void runtime::cpu::CPU_Emitter::EmitReduce(const ngraph::Node* n,
     {
         if (reductee_shape.at(0) == 0 || (reductee_shape.size() == 2 && reductee_shape.at(1) == 0))
         {
-            TU << "{   // " << n->get_name() << " 2\n";
-            TU.indent++;
-            TU << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
-               << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-            TU.indent--;
-            TU << "}\n";
+            m_out << "{   // " << n->get_name() << " 2\n";
+            m_out.indent++;
+            m_out << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
+                  << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+            m_out.indent--;
+            m_out << "}\n";
         }
         else
         {
-            TU << "{   // " << n->get_name() << " 3\n";
-            TU.indent++;
+            m_out << "{   // " << n->get_name() << " 3\n";
+            m_out.indent++;
             string type = f_result_element_type.c_type_string();
-            TU << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
-            TU.indent++;
-            TU << "\n";
-            TU << type << " result;\n";
-            TU << "void* args[] = {&x, &y};\n";
-            TU << "void* out[] = {&result};\n";
-            TU << reduction_function->get_name() << "(args, out);\n";
-            TU << "return result;\n";
-            TU.indent--;
-            TU << "};\n";
-            TU << "" << emit_array1d(out[0]) << " =\n"
-               << "    " << emit_array1d(args[0]) << ".redux(f);\n";
-            TU.indent--;
-            TU << "}\n";
+            m_out << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            m_out.indent++;
+            m_out << "\n";
+            m_out << type << " result;\n";
+            m_out << "void* args[] = {&x, &y};\n";
+            m_out << "void* out[] = {&result};\n";
+            m_out << reduction_function->get_name() << "(args, out);\n";
+            m_out << "return result;\n";
+            m_out.indent--;
+            m_out << "};\n";
+            m_out << emit_array1d(out[0]) << " =\n"
+                  << "    " << emit_array1d(args[0]) << ".redux(f);\n";
+            m_out.indent--;
+            m_out << "}\n";
         }
     }
     else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{1})
     {
         if (reductee_shape.at(1) == 0)
         {
-            TU << "{   // " << n->get_name() << " 4\n";
-            TU.indent++;
-            TU << "" << emit_array1d(out[0]) << " =\n"
-               << "    " << emit_array1d(args[1]) << "(0, 0);\n";
-            TU.indent--;
-            TU << "}\n";
+            m_out << "{   // " << n->get_name() << " 4\n";
+            m_out.indent++;
+            m_out << emit_array1d(out[0]) << " =\n"
+                  << "    " << emit_array1d(args[1]) << "(0, 0);\n";
+            m_out.indent--;
+            m_out << "}\n";
         }
         else
         {
@@ -1089,78 +1058,78 @@ void runtime::cpu::CPU_Emitter::EmitReduce(const ngraph::Node* n,
             //     dynamic_pointer_cast<CallFrame>(external->make_call_frame());
             // ef->get_callees().emplace_back(cf);
 
-            TU << "{   // " << n->get_name() << " 5\n";
-            TU.indent++;
+            m_out << "{   // " << n->get_name() << " 5\n";
+            m_out.indent++;
             string type = f_result_element_type.c_type_string();
-            TU << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
-            TU.indent++;
-            TU << "\n";
-            TU << type << " result;\n";
-            TU << "void* args[] = {&x, &y};\n";
-            TU << "void* out[] = {&result};\n";
-            TU << reduction_function->get_name() << "(args, out);\n";
-            TU << "return result;\n";
-            TU.indent--;
-            TU << "};\n";
-            TU << "" << emit_vector(out[0]) << " =\n"
-               << "        " << emit_matrix(args[0]) << ".rowwise().redux(f);\n";
-            TU.indent--;
-            TU << "}\n";
+            m_out << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            m_out.indent++;
+            m_out << "\n";
+            m_out << type << " result;\n";
+            m_out << "void* args[] = {&x, &y};\n";
+            m_out << "void* out[] = {&result};\n";
+            m_out << reduction_function->get_name() << "(args, out);\n";
+            m_out << "return result;\n";
+            m_out.indent--;
+            m_out << "};\n";
+            m_out << emit_vector(out[0]) << " =\n"
+                  << "        " << emit_matrix(args[0]) << ".rowwise().redux(f);\n";
+            m_out.indent--;
+            m_out << "}\n";
         }
     }
     else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{0})
     {
         if (reductee_shape.at(0) == 0)
         {
-            TU << "{   // " << n->get_name() << " 6\n";
-            TU.indent++;
-            TU << "" << emit_array1d(out[0]) << " =\n"
-               << "    " << emit_array1d(args[1]) << "(0, 0);\n";
-            TU.indent--;
-            TU << "}\n";
+            m_out << "{   // " << n->get_name() << " 6\n";
+            m_out.indent++;
+            m_out << emit_array1d(out[0]) << " =\n"
+                  << "    " << emit_array1d(args[1]) << "(0, 0);\n";
+            m_out.indent--;
+            m_out << "}\n";
         }
         else
         {
-            TU << "{   // " << n->get_name() << " 7\n";
-            TU.indent++;
+            m_out << "{   // " << n->get_name() << " 7\n";
+            m_out.indent++;
             string type = f_result_element_type.c_type_string();
-            TU << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
-            TU.indent++;
-            TU << "\n";
-            TU << type << " result;\n";
-            TU << "void* args[] = {&x, &y};\n";
-            TU << "void* out[] = {&result};\n";
-            TU << reduction_function->get_name() << "(args, out);\n";
-            TU << "return result;\n";
-            TU.indent--;
-            TU << "};\n";
-            TU << "" << emit_vector(out[0]) << " =\n"
-               << "    " << emit_matrix(args[0]) << ".colwise().redux(f);\n";
-            TU.indent--;
-            TU << "}\n";
+            m_out << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            m_out.indent++;
+            m_out << "\n";
+            m_out << type << " result;\n";
+            m_out << "void* args[] = {&x, &y};\n";
+            m_out << "void* out[] = {&result};\n";
+            m_out << reduction_function->get_name() << "(args, out);\n";
+            m_out << "return result;\n";
+            m_out.indent--;
+            m_out << "};\n";
+            m_out << emit_vector(out[0]) << " =\n"
+                  << "    " << emit_matrix(args[0]) << ".colwise().redux(f);\n";
+            m_out.indent--;
+            m_out << "}\n";
         }
     }
     else
     {
         string type = f_result_element_type.c_type_string();
-        TU << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
-        TU.indent++;
-        TU << "\n";
-        TU << type << " result;\n";
-        TU << "void* args[] = {&x, &y};\n";
-        TU << "void* out[] = {&result};\n";
-        TU << reduction_function->get_name() << "(args, out);\n";
-        TU << "return result;\n";
-        TU.indent--;
-        TU << "};\n";
+        m_out << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+        m_out.indent++;
+        m_out << "\n";
+        m_out << type << " result;\n";
+        m_out << "void* args[] = {&x, &y};\n";
+        m_out << "void* out[] = {&result};\n";
+        m_out << reduction_function->get_name() << "(args, out);\n";
+        m_out << "return result;\n";
+        m_out.indent--;
+        m_out << "};\n";
 
-        TU << "kernel::reduce<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-        TU << "               " << args[1].get_name() << ",\n";
-        TU << "               " << out[0].get_name() << ",\n";
-        TU << "               {" << join(args[0].get_shape()) << "},\n";
-        TU << "               {" << join(out[0].get_shape()) << "},\n";
-        TU << "               {" << join(reduce->get_reduction_axes()) << "},\n";
-        TU << "               f);\n";
+        m_out << "kernel::reduce<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        m_out << "               " << args[1].get_name() << ",\n";
+        m_out << "               " << out[0].get_name() << ",\n";
+        m_out << "               {" << join(args[0].get_shape()) << "},\n";
+        m_out << "               {" << join(out[0].get_shape()) << "},\n";
+        m_out << "               {" << join(reduce->get_reduction_axes()) << "},\n";
+        m_out << "               f);\n";
     }
 }
 
@@ -1168,12 +1137,12 @@ void runtime::cpu::CPU_Emitter::EmitSign(const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << ".sign();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << ".sign();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitSlice(const ngraph::Node* n,
@@ -1200,46 +1169,46 @@ void runtime::cpu::CPU_Emitter::EmitSlice(const ngraph::Node* n,
     // Scalar slice is necessarily just a copy.
     if (!strided && arg_rank == 0)
     {
-        TU << "{   // " << n->get_name() << " 1\n";
-        TU.indent++;
-        TU << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << " 1\n";
+        m_out.indent++;
+        m_out << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else if (!strided && arg_rank == 1)
     {
-        TU << "{   // " << n->get_name() << " 2\n";
-        TU.indent++;
-        TU << "" << emit_vector(out[0]) << " =\n"
-           << "    " << emit_vector(args[0]) << ".segment(\n"
-           << "        " << to_string(lower_bounds[0]) << ", "
-           << to_string(upper_bounds[0] - lower_bounds[0]) << ");\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << " 2\n";
+        m_out.indent++;
+        m_out << emit_vector(out[0]) << " =\n"
+              << "    " << emit_vector(args[0]) << ".segment(\n"
+              << "        " << to_string(lower_bounds[0]) << ", "
+              << to_string(upper_bounds[0] - lower_bounds[0]) << ");\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else if (!strided && arg_rank == 2)
     {
-        TU << "{   // " << n->get_name() << " 3\n";
-        TU.indent++;
-        TU << "" << emit_matrix(out[0]) << " = \n"
-           << "        " << emit_matrix(args[0]) << ".block(" << to_string(lower_bounds[0]) << ", "
-           << to_string(lower_bounds[1]) << ",\n"
-           << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
-           << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ");\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << " 3\n";
+        m_out.indent++;
+        m_out << emit_matrix(out[0]) << " = \n"
+              << "        " << emit_matrix(args[0]) << ".block(" << to_string(lower_bounds[0])
+              << ", " << to_string(lower_bounds[1]) << ",\n"
+              << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
+              << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ");\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
     else
     {
-        TU << "kernel::slice<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-        TU << "                         " << out[0].get_name() << ",\n";
-        TU << "                         {" << join(args[0].get_shape()) << "},\n";
-        TU << "                         {" << join(slice->get_lower_bounds()) << "},\n";
-        TU << "                         {" << join(slice->get_upper_bounds()) << "},\n";
-        TU << "                         {" << join(slice->get_strides()) << "},\n";
-        TU << "                         {" << join(out[0].get_shape()) << "});\n";
+        m_out << "kernel::slice<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        m_out << "                         " << out[0].get_name() << ",\n";
+        m_out << "                         {" << join(args[0].get_shape()) << "},\n";
+        m_out << "                         {" << join(slice->get_lower_bounds()) << "},\n";
+        m_out << "                         {" << join(slice->get_upper_bounds()) << "},\n";
+        m_out << "                         {" << join(slice->get_strides()) << "},\n";
+        m_out << "                         {" << join(out[0].get_shape()) << "});\n";
     }
 }
 
@@ -1247,67 +1216,57 @@ void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    auto s = static_cast<const op::Sum*>(n);
-    auto s_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(s->get_value_type());
-    assert(s_tensor_view_type);
-    auto s_shape = s_tensor_view_type->get_shape();
-
-    auto arg = s->get_arguments().at(0);
-    auto arg_type = arg->get_value_type();
-    auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
-    assert(arg_tensor_view_type);
-    auto arg_shape = arg_tensor_view_type->get_shape();
-    auto arg_rank = arg_shape.size();
-
-    auto& reduction_axes = s->get_reduction_axes();
+    const op::Sum* sum = static_cast<const op::Sum*>(n);
+    const Shape& arg_shape = args[0].get_shape();
+    size_t arg_rank = arg_shape.size();
+    const AxisSet& reduction_axes = sum->get_reduction_axes();
 
     // Trivial case: no reduction axes.
     if (reduction_axes.size() == 0)
     {
-        TU << "{   // " << n->get_name() << "\n";
-        TU.indent++;
-        TU << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << "\n";
+        m_out.indent++;
+        m_out << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     // Full reduction? Then sum to scalar.
     else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
              (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
     {
-        TU << "{   // " << n->get_name() << "\n";
-        TU.indent++;
-        TU << "" << emit_array1d(out[0]) << " =\n"
-           << "    " << emit_array1d(args[0]) << ".sum();\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << "\n";
+        m_out.indent++;
+        m_out << emit_array1d(out[0]) << " =\n"
+              << "    " << emit_array1d(args[0]) << ".sum();\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else if (arg_rank == 2 && reduction_axes == AxisSet{1})
     {
-        TU << "{   // " << n->get_name() << "\n";
-        TU.indent++;
-        TU << "" << emit_vector(out[0]) << " =\n"
-           << "    " << emit_matrix(args[0]) << ".rowwise().sum();\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << "\n";
+        m_out.indent++;
+        m_out << emit_vector(out[0]) << " =\n"
+              << "    " << emit_matrix(args[0]) << ".rowwise().sum();\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else if (arg_rank == 2 && reduction_axes == AxisSet{0})
     {
-        TU << "{   // " << n->get_name() << "\n";
-        TU.indent++;
-        TU << "" << emit_vector(out[0]) << " =\n"
-           << "    " << emit_matrix(args[0]) << ".colwise().sum();\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << "\n";
+        m_out.indent++;
+        m_out << emit_vector(out[0]) << " =\n"
+              << "    " << emit_matrix(args[0]) << ".colwise().sum();\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else
     {
-        const op::Sum* sum = static_cast<const op::Sum*>(n);
-        TU << "kernel::sum<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-        TU << "                         " << out[0].get_name() << ",\n";
-        TU << "                         {" << join(args[0].get_shape()) << "},\n";
-        TU << "                         {" << join(out[0].get_shape()) << "},\n";
-        TU << "                         {" << join(sum->get_reduction_axes()) << "});\n";
+        m_out << "kernel::sum<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        m_out << "                         " << out[0].get_name() << ",\n";
+        m_out << "                         {" << join(args[0].get_shape()) << "},\n";
+        m_out << "                         {" << join(out[0].get_shape()) << "},\n";
+        m_out << "                         {" << join(sum->get_reduction_axes()) << "});\n";
     }
 }
 
@@ -1315,72 +1274,72 @@ void runtime::cpu::CPU_Emitter::EmitExp(const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << ".exp();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << ".exp();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitSin(const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << ".sin();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << ".sin();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitSinh(const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << ".sinh();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << ".sinh();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitCos(const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << ".cos();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << ".cos();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitCosh(const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << ".cosh();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << ".cosh();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitTan(const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << ".tan();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << ".tan();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitTanh(const ngraph::Node* n,
@@ -1391,64 +1350,64 @@ void runtime::cpu::CPU_Emitter::EmitTanh(const ngraph::Node* n,
     // so we fall-back to tanh
     // TODO: Implement our own internal fast/approximate tanh if this actually gets used
     // by models
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
-    TU << "{\n";
-    TU << "    " << out[0].get_name() << "[i] = tanh(" << args[0].get_name() << "[i]);\n";
-    TU << "}\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = tanh(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitAsin(const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << ".asin();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << ".asin();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitAcos(const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << ".acos();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << ".acos();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitAtan(const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " =\n"
-       << "    " << emit_array1d(args[0]) << ".atan();\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "    " << emit_array1d(args[0]) << ".atan();\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitPower(const ngraph::Node* n,
                                           const vector<runtime::cpu::TensorViewWrapper>& args,
                                           const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
-    TU << emit_array1d(out[0]) << " = \n";
-    TU.indent++;
-    TU << emit_array1d(args[0]) << ".pow(\n ";
-    TU << emit_array1d(args[1]) << ");\n";
-    TU.indent -= 2;
-    TU << "}\n";
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+    m_out << emit_array1d(out[0]) << " = \n";
+    m_out.indent++;
+    m_out << emit_array1d(args[0]) << ".pow(\n ";
+    m_out << emit_array1d(args[1]) << ");\n";
+    m_out.indent -= 2;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
@@ -1476,52 +1435,53 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
     // Scalar slice is necessarily just a copy.
     if (!strided && arg0_rank == 0)
     {
-        TU << "{   // " << n->get_name() << " 1\n";
-        TU.indent++;
-        TU << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
-           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << " 1\n";
+        m_out.indent++;
+        m_out << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
+              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else if (!strided && arg0_rank == 1)
     {
-        TU << "{   // " << n->get_name() << " 2\n";
-        TU.indent++;
-        TU << "" << emit_vector(out[0]) << " =\n"
-           << "    " << emit_vector(args[0]) << ";\n"
-           << "" << emit_vector(out[0]) << ".segment(\n"
-           << "    " << to_string(lower_bounds[0]) << ", "
-           << to_string(upper_bounds[0] - lower_bounds[0]) << ") =\n"
-           << "    " << emit_vector(args[1]) << ";\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << " 2\n";
+        m_out.indent++;
+        m_out << emit_vector(out[0]) << " =\n"
+              << "    " << emit_vector(args[0]) << ";\n"
+              << emit_vector(out[0]) << ".segment(\n"
+              << "    " << to_string(lower_bounds[0]) << ", "
+              << to_string(upper_bounds[0] - lower_bounds[0]) << ") =\n"
+              << "    " << emit_vector(args[1]) << ";\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else if (!strided && arg0_rank == 2)
     {
-        TU << "{   // " << n->get_name() << " 3\n";
-        TU.indent++;
-        TU << "" << emit_matrix(out[0]) << " =\n"
-           << "    " << emit_matrix(args[0]) << ";\n"
-           << "" << emit_matrix(out[0]) << ".block(\n"
-           << "        " << to_string(lower_bounds[0]) << ",\n"
-           << "        " << to_string(lower_bounds[1]) << ",\n"
-           << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
-           << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ") =\n"
-           << "    " << emit_matrix(args[1]) << ";\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{   // " << n->get_name() << " 3\n";
+        m_out.indent++;
+        m_out << emit_matrix(out[0]) << " =\n"
+              << "    " << emit_matrix(args[0]) << ";\n"
+              << emit_matrix(out[0]) << ".block(\n"
+              << "        " << to_string(lower_bounds[0]) << ",\n"
+              << "        " << to_string(lower_bounds[1]) << ",\n"
+              << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
+              << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ") =\n"
+              << "    " << emit_matrix(args[1]) << ";\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
     else
     {
-        TU << "kernel::replace_slice<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-        TU << "                         " << args[1].get_name() << ",\n";
-        TU << "                         " << out[0].get_name() << ",\n";
-        TU << "                         {" << join(args[1].get_shape()) << "},\n";
-        TU << "                         {" << join(replace_slice->get_lower_bounds()) << "},\n";
-        TU << "                         {" << join(replace_slice->get_upper_bounds()) << "},\n";
-        TU << "                         {" << join(replace_slice->get_strides()) << "},\n";
-        TU << "                         {" << join(out[0].get_shape()) << "});\n";
+        m_out << "kernel::replace_slice<" << out[0].get_type() << ">(" << args[0].get_name()
+              << ",\n";
+        m_out << "                         " << args[1].get_name() << ",\n";
+        m_out << "                         " << out[0].get_name() << ",\n";
+        m_out << "                         {" << join(args[1].get_shape()) << "},\n";
+        m_out << "                         {" << join(replace_slice->get_lower_bounds()) << "},\n";
+        m_out << "                         {" << join(replace_slice->get_upper_bounds()) << "},\n";
+        m_out << "                         {" << join(replace_slice->get_strides()) << "},\n";
+        m_out << "                         {" << join(out[0].get_shape()) << "});\n";
     }
 }
 
@@ -1537,84 +1497,85 @@ void runtime::cpu::CPU_Emitter::EmitOneHot(const ngraph::Node* n,
 
     if (arg_rank == 0)
     {
-        TU << "{   // " << n->get_name() << " 1\n";
-        TU.indent++;
+        m_out << "{   // " << n->get_name() << " 1\n";
+        m_out.indent++;
 
-        TU << "" << emit_vector(out[0], "out_vector") << ";\n";
+        m_out << emit_vector(out[0], "out_vector") << ";\n";
 
-        TU << "out_vector.setZero();\n"
-           << ""
-           << "auto pos_raw = " << emit_vector(args[0]) << "(0, 0);\n"
-           << "if (floor(pos_raw) != pos_raw)\n"
-           << "{\n";
-        TU.indent++;
-        TU << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "out_vector.setZero();\n"
+              << ""
+              << "auto pos_raw = " << emit_vector(args[0]) << "(0, 0);\n"
+              << "if (floor(pos_raw) != pos_raw)\n"
+              << "{\n";
+        m_out.indent++;
+        m_out << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
+        m_out.indent--;
+        m_out << "}\n";
 
-        TU << "size_t pos = pos_raw;\n"
-           << "if (pos >= " << bounds << ")\n";
+        m_out << "size_t pos = pos_raw;\n"
+              << "if (pos >= " << bounds << ")\n";
 
-        TU << "{\n";
-        TU.indent++;
-        TU << "throw(std::range_error(\"One-hot: value is out of category range\"));\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "{\n";
+        m_out.indent++;
+        m_out << "throw(std::range_error(\"One-hot: value is out of category range\"));\n";
+        m_out.indent--;
+        m_out << "}\n";
 
-        TU << "out_vector(pos, 0) = 1;\n";
+        m_out << "out_vector(pos, 0) = 1;\n";
 
-        TU.indent--;
-        TU << "}\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     else if (arg_rank == 1)
     {
-        TU << "{   // " << n->get_name() << " 1\n";
-        TU.indent++;
+        m_out << "{   // " << n->get_name() << " 1\n";
+        m_out.indent++;
 
-        TU << "" << emit_vector(args[0], "arg_vector") << ";\n";
+        m_out << emit_vector(args[0], "arg_vector") << ";\n";
 
-        TU << "" << emit_matrix(out[0], "out_vector") << ";\n";
-        TU << "out_vector.setZero();\n";
+        m_out << emit_matrix(out[0], "out_vector") << ";\n";
+        m_out << "out_vector.setZero();\n";
 
-        TU << "for (size_t i = 0; i < " << args[0].get_shape()[0] << "; i++)\n"
-           << "{\n";
-        TU.indent++;
+        m_out << "for (size_t i = 0; i < " << args[0].get_shape()[0] << "; i++)\n"
+              << "{\n";
+        m_out.indent++;
 
-        TU << "auto pos_raw = arg_vector(i, 0);\n";
+        m_out << "auto pos_raw = arg_vector(i, 0);\n";
 
-        TU << "if (floor(pos_raw) != pos_raw)\n"
-           << "{\n";
-        TU.indent++;
-        TU << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "if (floor(pos_raw) != pos_raw)\n"
+              << "{\n";
+        m_out.indent++;
+        m_out << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
+        m_out.indent--;
+        m_out << "}\n";
 
-        TU << "size_t pos = pos_raw;\n";
-        TU << "bool found = false;\n";
+        m_out << "size_t pos = pos_raw;\n";
+        m_out << "bool found = false;\n";
 
-        TU << "if (pos >= " << bounds << ")\n"
-           << "{\n";
-        TU.indent++;
-        TU << "throw(std::range_error(\"One-hot: value is out of category range\"));\n";
-        TU.indent--;
-        TU << "}\n";
+        m_out << "if (pos >= " << bounds << ")\n"
+              << "{\n";
+        m_out.indent++;
+        m_out << "throw(std::range_error(\"One-hot: value is out of category range\"));\n";
+        m_out.indent--;
+        m_out << "}\n";
 
-        TU << "out_vector" << (oh->get_one_hot_axis() == 0 ? "(pos, i)" : "(i, pos)") << " = 1;\n";
+        m_out << "out_vector" << (oh->get_one_hot_axis() == 0 ? "(pos, i)" : "(i, pos)")
+              << " = 1;\n";
 
-        TU.indent--;
-        TU << "}\n";
+        m_out.indent--;
+        m_out << "}\n";
 
-        TU.indent--;
-        TU << "}\n";
+        m_out.indent--;
+        m_out << "}\n";
     }
     // Other cases are not handled yet.
     else
     {
-        TU << "kernel::one_hot<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-        TU << "                   " << out[0].get_name() << ",\n";
-        TU << "                   {" << join(args[0].get_shape()) << "},\n";
-        TU << "                   {" << join(out[0].get_shape()) << "},\n";
-        TU << "                   " << oh->get_one_hot_axis() << ");\n";
+        m_out << "kernel::one_hot<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        m_out << "                   " << out[0].get_name() << ",\n";
+        m_out << "                   {" << join(args[0].get_shape()) << "},\n";
+        m_out << "                   {" << join(out[0].get_shape()) << "},\n";
+        m_out << "                   " << oh->get_one_hot_axis() << ");\n";
     }
 }
 
@@ -1622,45 +1583,45 @@ void runtime::cpu::CPU_Emitter::EmitCeiling(const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
     size_t element_count = out[0].get_size();
-    TU << "for (size_t i = 0; i < " << element_count << "; i++)\n";
-    TU << "{\n";
-    TU << "    " << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
-    TU << "}\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitFloor(const ngraph::Node* n,
                                           const vector<runtime::cpu::TensorViewWrapper>& args,
                                           const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
     size_t element_count = out[0].get_size();
-    TU << "for (size_t i = 0; i < " << element_count << "; i++)\n";
-    TU << "{\n";
-    TU << "    " << out[0].get_name() << "[i] = floor(" << args[0].get_name() << "[i]);\n";
-    TU << "}\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = floor(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitSqrt(const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    TU << "{   // " << n->get_name() << "\n";
-    TU.indent++;
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
     size_t element_count = out[0].get_size();
-    TU << "for (size_t i = 0; i < " << element_count << "; i++)\n";
-    TU << "{\n";
-    TU << "    " << out[0].get_name() << "[i] = sqrt(" << args[0].get_name() << "[i]);\n";
-    TU << "}\n";
-    TU.indent--;
-    TU << "}\n";
+    m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = sqrt(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 //------------------------------------------------------------------------------------------------
@@ -1684,20 +1645,20 @@ void runtime::cpu::CPU_Emitter::generate_call(const vector<runtime::cpu::TensorV
         output_names.push_back(output.get_name());
     }
 
-    TU << "void* args[] =\n{";
-    TU.indent++;
-    TU << "\n" << join(input_names, ",\n");
-    TU.indent--;
-    TU << "\n};\n";
+    m_out << "void* args[] =\n{";
+    m_out.indent++;
+    m_out << "\n" << join(input_names, ",\n");
+    m_out.indent--;
+    m_out << "\n};\n";
 
-    TU << "void* out[] =\n{";
-    TU.indent++;
-    TU << "\n" << join(output_names, ",\n");
-    TU.indent--;
-    TU << "\n};\n";
+    m_out << "void* out[] =\n{";
+    m_out.indent++;
+    m_out << "\n" << join(output_names, ",\n");
+    m_out.indent--;
+    m_out << "\n};\n";
 
-    TU << "\n";
-    TU << function->get_name() << "(args, out);\n";
+    m_out << "\n";
+    m_out << function->get_name() << "(args, out);\n";
 }
 
 static string format_name(const string& name)
@@ -1741,10 +1702,4 @@ string runtime::cpu::CPU_Emitter::emit_matrix(const runtime::cpu::TensorViewWrap
     ss << "EigenMatrix<" << et.c_type_string() << ">" << format_name(name) << "(" << tvi.get_name()
        << ", " << eigen_matrix_format(tvi.get_shape(), tvi.get_strides()) << ")";
     return ss.str();
-}
-
-vector<size_t>
-    runtime::cpu::CPU_Emitter::get_shape(const runtime::cpu::TensorViewWrapper& tvi) const
-{
-    return tvi.get_shape();
 }

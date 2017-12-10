@@ -43,8 +43,6 @@ void runtime::interpreter::INT_CallFrame::call(
         {
             shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
             string name = tv->get_tensor().get_name();
-            // string name = output.get_node()->get_name();
-            NGRAPH_INFO << name;
             tensor_map.insert({name, input_tvs[arg_index++]});
         }
     }
@@ -53,61 +51,29 @@ void runtime::interpreter::INT_CallFrame::call(
         descriptor::Output& output = function->get_result()->get_outputs().at(i);
         shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
         string name = tv->get_tensor().get_name();
-        NGRAPH_INFO << name;
         tensor_map.insert({name, output_tvs[i]});
     }
 
     // Invoke computation
-    NGRAPH_INFO;
     for (shared_ptr<Node> op : function->get_ordered_ops())
     {
-        NGRAPH_INFO << *op;
         if (op->description() == "Parameter")
         {
-            NGRAPH_INFO;
             continue;
         }
 
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> inputs;
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> outputs;
-
-        auto gte = dynamic_pointer_cast<op::GetTupleElement>(op);
-        if (gte)
-        {
-            NGRAPH_INFO << gte->get_n();
-            NGRAPH_INFO << *op->get_value_type();
-            auto tvt = dynamic_pointer_cast<const TensorViewType>(op->get_value_type());
-            if (tvt)
-            {
-                NGRAPH_INFO << op->get_inputs().size();
-                descriptor::Input& in = op->get_inputs().at(gte->get_n());
-                shared_ptr<descriptor::TensorView> tv = in.get_output().get_tensor_view();
-                string input_name = tv->get_tensor().get_name();
-                NGRAPH_INFO << input_name;
-            }
-            // for (const descriptor::Output& output : gte->get_outputs())
-            // {
-            //     shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-            //     string name = tv->get_tensor().get_name();
-            //     NGRAPH_INFO << name;
-            //     // tensor_map.insert({name, input_tvs[arg_index++]});
-            // }
-        }
-        NGRAPH_INFO;
-
         for (const descriptor::Input& input : op->get_inputs())
         {
             shared_ptr<descriptor::TensorView> tv = input.get_output().get_tensor_view();
             string name = tv->get_tensor().get_name();
-            NGRAPH_INFO << "input " << name;
             inputs.push_back(tensor_map.at(name));
-            // NGRAPH_INFO << "Op Inputs " << name;
         }
         for (descriptor::Output& output : op->get_outputs())
         {
             shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
             string name = tv->get_tensor().get_name();
-            NGRAPH_INFO << "output " << name;
             shared_ptr<runtime::interpreter::INT_TensorView> itv;
             if (!contains_key(tensor_map, name))
             {
@@ -124,14 +90,10 @@ void runtime::interpreter::INT_CallFrame::call(
                 itv = tensor_map.at(name);
             }
             outputs.push_back(itv);
-            // NGRAPH_INFO << "Op Outputs " << name;
         }
         auto tuple = dynamic_pointer_cast<op::Tuple>(op);
         if (tuple)
         {
-            NGRAPH_INFO << *tuple;
-            NGRAPH_INFO << inputs.size();
-            NGRAPH_INFO << outputs.size();
             for (size_t i = 0; i < inputs.size(); i++)
             {
                 const element::Type& type = inputs[0]->get_tensor().get_element_type();
@@ -144,15 +106,12 @@ void runtime::interpreter::INT_CallFrame::call(
             element::Type secondary_type;
             if (op->get_inputs().empty())
             {
-                NGRAPH_INFO;
                 base_type = op->get_element_type();
             }
             else
             {
-                NGRAPH_INFO;
                 base_type = op->get_inputs().at(0).get_tensor().get_element_type();
             }
-            NGRAPH_INFO;
             secondary_type = op->get_element_type();
 
             // Some ops have unusual intput/output types so handle those special cases here
@@ -243,7 +202,6 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
     const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& input_tvs,
     const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs)
 {
-    NGRAPH_INFO;
     call(m_function, input_tvs, output_tvs);
 }
 
@@ -251,7 +209,6 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
     const vector<shared_ptr<runtime::TensorView>>& input_tvs,
     const vector<shared_ptr<runtime::TensorView>>& output_tvs)
 {
-    NGRAPH_INFO;
     vector<shared_ptr<runtime::interpreter::INT_TensorView>> args;
     vector<shared_ptr<runtime::interpreter::INT_TensorView>> out;
     for (auto tv : input_tvs)
@@ -268,7 +225,6 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
 void runtime::interpreter::INT_CallFrame::call(const vector<shared_ptr<runtime::Value>>& arguments,
                                                const vector<shared_ptr<runtime::Value>>& results)
 {
-    NGRAPH_INFO;
     vector<shared_ptr<runtime::TensorView>> inputs;
     for (shared_ptr<runtime::Value> argument : arguments)
     {
