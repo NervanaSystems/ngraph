@@ -14,7 +14,10 @@
 
 #pragma once
 
-#include "ngraph/runtime/backend.hpp"
+#include <memory>
+
+#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/types/element_type.hpp"
 
 namespace ngraph
 {
@@ -22,19 +25,24 @@ namespace ngraph
     {
         namespace cpu
         {
-            static size_t alignment = 64;
-
-            class CPU_Backend : public runtime::Backend
-            {
-            public:
-                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
-                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function)
-                    override;
-
-                std::shared_ptr<ngraph::runtime::TensorView>
-                    make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                             const Shape& shape) override;
-            };
+            class TensorViewWrapper;
         }
     }
 }
+
+class ngraph::runtime::cpu::TensorViewWrapper
+{
+public:
+    TensorViewWrapper(const std::shared_ptr<descriptor::TensorView>&);
+
+    size_t get_size() const;
+    const std::vector<size_t>& get_shape() const;
+    const std::vector<size_t>& get_strides() const;
+    const element::Type& get_element_type() const;
+    const std::string& get_name() const;
+    const std::string& get_type() const;
+    bool is_output() const;
+
+private:
+    std::shared_ptr<descriptor::TensorView> m_tensor_view;
+};

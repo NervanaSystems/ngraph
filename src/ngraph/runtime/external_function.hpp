@@ -20,7 +20,6 @@
 #include <unordered_map>
 
 #include "ngraph/function.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
 
 namespace ngraph
 {
