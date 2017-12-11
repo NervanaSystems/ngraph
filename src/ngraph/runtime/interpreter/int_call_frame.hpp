@@ -23,6 +23,7 @@
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -119,6 +120,11 @@ private:
 
     std::shared_ptr<ExternalFunction> m_external_function;
     std::shared_ptr<Function> m_function;
+    void generate_calls(const element::Type& base_type,
+                        const element::Type& secondary_type,
+                        ngraph::Node& op,
+                        const std::vector<std::shared_ptr<INT_TensorView>>& args,
+                        const std::vector<std::shared_ptr<INT_TensorView>>& out);
 
     template <typename BASE>
     void generate_calls(const element::Type& type,
@@ -357,6 +363,13 @@ private:
         {
             std::shared_ptr<Function> function = node.get_function();
             call(function, args, out);
+        }
+        else if (node_op == "GetTupleElement")
+        {
+            auto gte = dynamic_cast<op::GetTupleElement*>(&node);
+            kernel::copy<T>(reinterpret_cast<T*>(args[gte->get_n()]->get_data_ptr()),
+                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                            out[0]->get_element_count());
         }
         else if (node_op == "Greater")
         {
@@ -674,6 +687,15 @@ private:
             kernel::tanh<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
+        }
+        else if (node_op == "Tuple")
+        {
+            for (size_t i = 0; i < args.size(); ++i)
+            {
+                kernel::copy<T>(reinterpret_cast<T*>(args[i]->get_data_ptr()),
+                                reinterpret_cast<T*>(out[i]->get_data_ptr()),
+                                out[i]->get_element_count());
+            }
         }
         else
         {
