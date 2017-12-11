@@ -273,7 +273,7 @@ public:
 
     bool CompareNodes(const std::list<std::shared_ptr<ngraph::Node>>& orig,
                       const std::list<std::shared_ptr<ngraph::Node>>& clone,
-                      const NodeMap& node_map)
+                      const NodeMap& nm)
     {
         if (orig.size() != clone.size())
         {
@@ -283,7 +283,7 @@ public:
         auto cloneit = clone.begin();
         while (origit != orig.end() && cloneit != clone.end())
         {
-            if (*cloneit != node_map[*origit])
+            if (*cloneit != nm[*origit])
             {
                 return false;
             }
