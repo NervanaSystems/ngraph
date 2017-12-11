@@ -21,10 +21,6 @@ import os
 __version__ = '0.0.1'
 
 
-requirements = [
-    "numpy",
-]
-
 sources = ['pyngraph/function.cpp',
            'pyngraph/node.cpp',
            'pyngraph/pyngraph.cpp',
@@ -151,7 +147,6 @@ setup(
     description='A test project using pybind11',
     long_description='',
     ext_modules=ext_modules,
-    install_requires=requirements,
     cmdclass={'build_ext': BuildExt},
     zip_safe=False,
 )
