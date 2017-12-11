@@ -690,9 +690,12 @@ private:
         }
         else if (node_op == "Tuple")
         {
-            kernel::copy<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
+            for (size_t i = 0; i < args.size(); ++i)
+            {
+                kernel::copy<T>(reinterpret_cast<T*>(args[i]->get_data_ptr()),
+                                reinterpret_cast<T*>(out[i]->get_data_ptr()),
+                                out[i]->get_element_count());
+            }
         }
         else
         {
