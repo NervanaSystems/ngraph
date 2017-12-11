@@ -300,7 +300,8 @@ std::list<std::shared_ptr<ngraph::Node>>
     return result_list;
 }
 
-void ngraph::NodeMap::Add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> replacement)
+void ngraph::NodeMap::Add(std::shared_ptr<ngraph::Node> orig,
+                          std::shared_ptr<ngraph::Node> replacement)
 {
     if (Exists(orig))
     {
