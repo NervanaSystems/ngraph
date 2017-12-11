@@ -24,6 +24,7 @@
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/one_hot.hpp"
@@ -137,29 +138,7 @@ void runtime::cpu::CPU_Emitter::EmitDot(const ngraph::Node* n,
     }
     else
     {
-        size_t arg0_dot_axis;
-        size_t arg1_dot_axis;
-        if (arg0_shape.size() == 1 && arg1_shape.size() == 1)
-        {
-            arg0_dot_axis = 0;
-            arg1_dot_axis = 0;
-        }
-
-        // If arg0 is a matrix and arg1 is a vector, dot on axes 1 and 0 respectively.
-        else if (arg0_shape.size() == 2 && arg1_shape.size() == 1)
-        {
-            arg0_dot_axis = 1;
-            arg1_dot_axis = 0;
-        }
-
-        // If arg0 is rank n and arg1 is rank m, dot on axes n-1 and m-2, respectively.
-        //
-        // Note that this happens to handle the vector-matrix and matrix-matrix cases.
-        else
-        {
-            arg0_dot_axis = arg0_shape.size() - 1;
-            arg1_dot_axis = arg1_shape.size() - 2;
-        }
+        const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(n);
 
         m_out << "kernel::dot(" << args[0].get_name() << ",\n";
         m_out << "            " << args[1].get_name() << ",\n";
@@ -167,8 +146,7 @@ void runtime::cpu::CPU_Emitter::EmitDot(const ngraph::Node* n,
         m_out << "            {" << join(args[0].get_shape()) << "},\n";
         m_out << "            {" << join(args[1].get_shape()) << "},\n";
         m_out << "            {" << join(out[0].get_shape()) << "},\n";
-        m_out << "            " << arg0_dot_axis << ",\n";
-        m_out << "            " << arg1_dot_axis << ");\n";
+        m_out << "            " << dot->get_reduction_axes_count() << ");\n";
     }
 }
 
