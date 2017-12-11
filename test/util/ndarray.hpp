@@ -27,11 +27,12 @@
 #include <type_traits>
 #include <vector>
 
+#include "ngraph/log.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace test
     {
         namespace init
         {

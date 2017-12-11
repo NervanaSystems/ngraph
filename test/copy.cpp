@@ -18,6 +18,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "util/ndarray.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -136,7 +137,7 @@ TEST(copy, parameterized_constant)
 
     // Create some tensors for input/output
     auto c = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 2});
-    copy_data(c, runtime::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(c, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
 
     Shape shape{2, 2};
     auto cptv = dynamic_pointer_cast<ngraph::runtime::ParameterizedTensorView<element::Float32>>(c);

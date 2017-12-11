@@ -16,8 +16,8 @@
 
 #include "ngraph/runtime/ngvm/call_frame.hpp"
 #include "ngraph/runtime/ngvm/instruction.hpp"
+#include "ngraph/runtime/ngvm/tensor_view_info.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
 
 namespace ngraph
 {
