@@ -209,8 +209,8 @@ Coordinate CoordinateTransform::to_source_coordinate(const Coordinate& c) const
 
     for (size_t axis = 0; axis < m_n_axes; axis++)
     {
-        result[axis] = c[m_source_axis_order[axis]] * m_source_strides[m_source_axis_order[axis]] +
-                       m_source_start_corner[m_source_axis_order[axis]];
+        result[m_source_axis_order[axis]] =
+            c[axis] * m_source_strides[axis] + m_source_start_corner[axis];
     }
 
     return result;
