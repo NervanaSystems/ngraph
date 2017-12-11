@@ -61,7 +61,7 @@ sources = ['pyngraph/function.cpp',
            ]
 
 include_dirs = [# Path to pybind11 headers
-                os.environ["PYBIND_HEADERS_PATH"],
+                "pybind11/include",
                 # os.environ["NGRAPH_CPP_BUILD_PATH"] + "/include",
                 ".",
                ]
