@@ -300,13 +300,13 @@ std::list<std::shared_ptr<ngraph::Node>>
     return result_list;
 }
 
-void ngraph::NodeMap::Add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> clone)
+void ngraph::NodeMap::Add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> replacement)
 {
     if (Exists(orig))
     {
         throw ngraph_error("NodeMap: key already exists");
     }
-    node_map_[orig] = clone;
+    node_map_[orig] = replacement;
 }
 
 std::shared_ptr<ngraph::Node> ngraph::NodeMap::operator[](std::shared_ptr<ngraph::Node> orig) const
