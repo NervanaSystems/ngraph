@@ -75,7 +75,7 @@ TEST(serialize, main)
     shared_ptr<Function> sfunc = deserialize(in);
 
     // Now call g on some test vectors.
-    auto manager = runtime::Manager::get("CPU");
+    auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(sfunc);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
