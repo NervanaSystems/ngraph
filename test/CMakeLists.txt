@@ -22,6 +22,7 @@ include_directories(
     )
 
 set (SRC
+    backend_benchmark.cpp
     builder.cpp
     builder_autobroadcast.cpp
     build_graph.cpp
