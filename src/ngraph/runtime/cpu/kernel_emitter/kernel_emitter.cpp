@@ -80,7 +80,8 @@ std::vector<std::string>
 //
 // For example,
 //
-//    trans has stride (2,2,2), axis order (2,0,1), and start offsets (3,4,5)
+//    trans has source shape (2,2,2) stride (2,2,2), axis order (2,0,1),
+//       and start offsets (3,4,5)
 //
 //    index_vars are "i", "j", "k"
 //
