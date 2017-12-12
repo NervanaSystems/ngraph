@@ -32,6 +32,7 @@ import nwrapper.ngraph.ops.Greater as Greater
 import nwrapper.ngraph.ops.Convert as Convert
 import nwrapper.ngraph.ops.Reduce as Reduce
 import nwrapper.ngraph.Util as Util
+import nwrapper.ngraph.ops.OneHot as OneHot
 
 float_element_type = TraitedType.TraitedTypeF.element_type()
 int_element_type = TraitedType.TraitedTypeI.element_type()
@@ -40,7 +41,8 @@ lr = 0.2
 
 Input = Parameter.Parameter(float_element_type, [bz, 28, 28])
 Label = Parameter.Parameter(int_element_type, [bz])
-LabelOneHot = Parameter.Parameter(float_element_type, [bz, 10])
+LabelOneHot = Convert.Convert((OneHot.OneHot(Label, [bz, 10], 1)), float_element_type)
+
 
 MaxParam1 = Parameter.Parameter(float_element_type, [])
 MaxParam2 = Parameter.Parameter(float_element_type, [])
