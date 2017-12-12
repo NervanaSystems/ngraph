@@ -109,7 +109,6 @@
 #include "ngraph/runtime/ngvm/instruction/replace_slice.hpp"
 #include "ngraph/runtime/ngvm/instruction/reshape.hpp"
 #include "ngraph/runtime/ngvm/instruction/return.hpp"
-#include "ngraph/runtime/ngvm/instruction/scalar_tensor_product.hpp"
 #include "ngraph/runtime/ngvm/instruction/select.hpp"
 #include "ngraph/runtime/ngvm/instruction/sign.hpp"
 #include "ngraph/runtime/ngvm/instruction/sin.hpp"
@@ -352,8 +351,6 @@ std::vector<typename ET::type>
     }
 #define PUSH_POLYMORPHIC_INSTRUCTION(et, err_msg, instr, ...)                                      \
     DO_ON_ELEMENT_TYPE(et, err_msg, PUSH_INSTRUCTION, instr, __VA_ARGS__)
-#define PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(et, err_msg, instr, ...)                              \
-    DO_ON_NUMERIC_TYPE(et, err_msg, PUSH_INSTRUCTION, instr, __VA_ARGS__)
 
 // Turn off complaint suppression (see above)
 #pragma clang diagnostic pop
@@ -550,6 +547,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_TO_OP_MAP(op::Dot)
         {
+            auto dot = static_cast<const op::Dot*>(n);
+
             auto& arg_nodes = n->get_arguments();
 
             assert(arg_nodes.size() == 2);
@@ -566,81 +565,24 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             auto arg1_shape = arg1_tensor_type->get_shape();
             auto& arg0_element_type = arg0_tensor_type->get_element_type();
 
+            auto reduction_axes_count = dot->get_reduction_axes_count();
+
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);
 
             auto result_shape = result_tensor_type->get_shape();
 
-            // If arg0 or arg1 is a scalar, emit a scalar-tensor product.
-            if (arg0_shape.size() == 0)
-            {
-                PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
-                                                     "Dot has unhandled element type",
-                                                     instruction::ScalarTensorProductInstruction,
-                                                     in[0],
-                                                     in[1],
-                                                     out[0]);
-            }
-            else if (arg1_shape.size() == 0)
-            {
-                PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
-                                                     "Dot has unhandled element type",
-                                                     instruction::ScalarTensorProductInstruction,
-                                                     in[1],
-                                                     in[0],
-                                                     out[0]);
-            }
-
-            // If arg0 and arg1 are both vectors, dot both on axis 0.
-            else if (arg0_shape.size() == 1 && arg1_shape.size() == 1)
-            {
-                PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
-                                                     "Dot has unhandled element type",
-                                                     instruction::DotInstruction,
-                                                     in[0],
-                                                     in[1],
-                                                     out[0],
-                                                     arg0_shape,
-                                                     arg1_shape,
-                                                     result_shape,
-                                                     0,
-                                                     0);
-            }
-
-            // If arg0 is a matrix and arg1 is a vector, dot on axes 1 and 0 respectively.
-            else if (arg0_shape.size() == 2 && arg1_shape.size() == 1)
-            {
-                PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
-                                                     "Dot has unhandled element type",
-                                                     instruction::DotInstruction,
-                                                     in[0],
-                                                     in[1],
-                                                     out[0],
-                                                     arg0_shape,
-                                                     arg1_shape,
-                                                     result_shape,
-                                                     1,
-                                                     0);
-            }
-
-            // If arg0 is rank n and arg1 is rank m, dot on axes n-1 and m-2, respectively.
-            //
-            // Note that this happens to handle the vector-matrix and matrix-matrix cases.
-            else
-            {
-                PUSH_NUMERIC_POLYMORPHIC_INSTRUCTION(arg0_element_type,
-                                                     "Dot has unhandled element type",
-                                                     instruction::DotInstruction,
-                                                     in[0],
-                                                     in[1],
-                                                     out[0],
-                                                     arg0_shape,
-                                                     arg1_shape,
-                                                     result_shape,
-                                                     arg0_shape.size() - 1,
-                                                     arg1_shape.size() - 2);
-            }
+            PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+                                         "Dot has unhandled element type",
+                                         instruction::DotInstruction,
+                                         in[0],
+                                         in[1],
+                                         out[0],
+                                         arg0_shape,
+                                         arg1_shape,
+                                         result_shape,
+                                         reduction_axes_count);
         };
 
         // Parameter is a "runtime no-op" because the output tensor has already been filled.

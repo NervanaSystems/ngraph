@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(codegen, simple_return)
+TEST(DISABLED_codegen, simple_return)
 {
     constexpr auto source = R"(extern "C" int test() { return 2+5; })";
 
@@ -45,7 +45,7 @@ TEST(codegen, simple_return)
     EXPECT_EQ(7, result);
 }
 
-TEST(codegen, pass_args)
+TEST(DISABLED_codegen, pass_args)
 {
     constexpr auto source = R"(extern "C" int test(int a, int b) { return a+b; })";
 
@@ -66,7 +66,7 @@ TEST(codegen, pass_args)
     EXPECT_EQ(42, result);
 }
 
-TEST(codegen, include)
+TEST(DISABLED_codegen, include)
 {
     constexpr auto source =
         R"(

@@ -14,76 +14,44 @@
 
 #pragma once
 
+#include <utility>
+
 #include "ngraph/ops/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Inner product/dot product/matrix product/tensor contraction operation.
+        /// \brief Generalized dot product operation, including scalar-tensor product, matrix-vector product, and matrix multiplication.
         ///
-        /// Takes two arguments `arg0` and `arg1`. There are three possible cases:
+        /// Takes two arguments `arg0` and `arg1`, with shapes \f$(i_1,\dots,i_n,j_1,\dots,j_m)\f$ and \f$(j_1,\dots,j_m,k_1,\dots,k_p)\f$ respectively,
+        /// and produces an output tensor with shape \f$(i_1,\dots,i_n,k_1,\dots,k_p)\f$ by summing products along the \f$j\f$ dimensions.
         ///
-        /// 1. `arg0` or `arg1` is 0-dimensional. Then, treats that 0-dimensional argument as a scalars and computes a scalar-tensor product.
-        ///     (Example: `arg0` has shape `{1,2,3}` and arg1 has shape `{}`; then the result will have shape `{1,2,3}`.)
+        /// A few common cases are as follows:
         ///
-        /// 2. `arg1` is a vector (1-dimensional tensor). Then, computes a dot product reducing on the innermost (rightmost) dimensions of `arg0` and `arg1`.
-        ///         (Example: arg0 has shape `{1,2,3}` and arg1 has shape `{3}`; then the result will have shape `{1,2}`.)
+        /// * If \f$m = 0\f$ and \f$n = 1\f$ or \f$p = 1\f$, the operation is a scalar-tensor product.
+        /// * If \f$m = 1\f$, \f$n = 2\f$, and \f$p = 1\f$, the operation is a matrix-vector product.
+        /// * If \f$m = 1\f$ and \f$n = p = 2\f$, the operation is a matrix multiplication.
         ///
-        /// 3. `arg1` is more than 1-dimensional. Then, computes a dot product reducing on the innermost (rightmost) dimension of arg0, and the next-to-innermost dimension of arg1.
-        ///         (Example: arg0 has shape {3,4} and arg1 has shape {4,3}; then the result will have shape {3,3}.)
+        /// ## Parameters
         ///
-        ///
-        /// # Case 1: Scalar-tensor product
-        ///
-        /// ## Inputs
-        ///
-        /// |        | Type                              | Description                                                  |
-        /// | ------ | --------------------------------- | ------------------------------------------------------------ |
-        /// | `arg0` | \f$E[]\f$                         | A scalar of any element type.                                |
-        /// | `arg1` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape, with the same element type as `arg0`. |
-        ///
-        /// <i>(Note: the order of inputs may be reversed in this case, i.e., `arg1` can be the scalar and `arg0` the tensor.)</i>
-        ///
-        /// ## Output
-        ///
-        /// | Type                   | Description                                                                                          |
-        /// | ---------------------- | ---------------------------------------------------------------------------------------------------- |
-        /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathtt{arg0} \cdot \mathtt{arg1}[i_1,\dots,i_n]\f$. |
-        ///
-        /// # Case 2: Vector-tensor product
+        /// |                        | Description                                                                                      |
+        /// | ---------------------- | ------------------------------------------------------------------------------------------------ |
+        /// | `reduction_axes_count` | The number of axes to reduce through dot-product (corresponds to \f$m\f$ in the formulas above). |
         ///
         /// ## Inputs
         ///
-        /// |        | Type                                | Description                                                                                                  |
-        /// | ------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-        /// | `arg0` | \f$E[d]\f$                          | A vector of any element type.                                                                                |
-        /// | `arg1` | \f$E[d_1,\dots,d_n,d]~(n \geq 0)\f$ | A tensor of any shape whose innermost dimension matches `arg0`'s size, with the same element type as `arg0`. |
-        ///
-        /// <i>(Note: in the particular case where \f$n = 0\f$, this is a vector dot product; when \f$n = 1\f$, this is a vector-matrix product.)</i>
+        /// |        | Type                                                  | Description                                                                                                                                                                 |
+        /// | ------ | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+        /// | `arg0` | \f$E[d_1,\dots,d_n,d'_1,\dots,d'_m]~(n,m \geq 0)\f$   | A tensor of any shape and element type.                                                                                                                                     |
+        /// | `arg1` | \f$E[d'_1,\dots,d'_m,d''_1,\dots,d''_p]~(p \geq 0)\f$ | A tensor of any shape with the same element type as `arg0` and rank at least \f$m\f$, whose first \f$m\f$ dimensions match the last \f$m\f$ dimensions of `arg0`, in order. |
         ///
         /// ## Output
         ///
-        /// | Type                   | Description                                                                                                                     |
-        /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-        /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \Sigma_{0 \le k < d}(\mathtt{arg0}[k] \cdot \mathtt{arg1}[i_1,\dots,i_n,k])\f$. |
+        /// | Type                                     | Description                                                                                                                                                                                                                                                                                                                                  |
+        /// | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+        /// | \f$E[d_1,\dots,d_n,d''_1,\dots,d''_p]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n,k_1,\dots,k_p] = \Sigma_{0 \le j_1 < d'_1, \dots, 0 \le j_m < d'_m}(\mathtt{arg0}[i_1,\dots,i_n,j_1,\dots,j_m] \cdot \mathtt{arg1}[j_1,\dots,j_m,k_1,\dots,k_p])\f$ or, if \f$m = 0\f$, \f$T[i_1,\dots,i_n,k_1,\dots,k_p] = \mathtt{arg0}[i_1,\dots,i_n] \cdot \mathtt{arg1}[k_1,\dots,k_p]\f$. |
         ///
-        /// # Case 3: Tensor-tensor product
-        ///
-        /// ## Inputs
-        ///
-        /// |        | Type                                                        | Description                                                                                                                                                  |
-        /// | ------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-        /// | `arg0` | \f$E[d_1,\dots,d_n]~(n \geq 1)\f$                           | A tensor of any shape with rank of at least 1, and any element type.                                                                                         |
-        /// | `arg1` | \f$E[d'_1,\dots,d'_m]~(m \geq 2\text{ and }d'_{m-1}=d_n)\f$ | A tensor with the same element type as `arg0`, and any shape with rank of at least 2 whose next-to-innermost dimension matches `arg0`'s innermost dimension. |
-        ///
-        /// <i>(Note: in the particular case where \f$n = m = 2\f$, this is a matrix product.)</i>
-        ///
-        /// ## Output
-        ///
-        /// | Type                                                  | Description                                                                                                                                                                          |
-        /// | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-        /// | \f$E[d_1,\dots,d_{n-1},d'_1,\dots,d'_{m-2},d'_{m}]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_{n-1},j_1,\dots,j_{m-2},j_m] = \Sigma_{0 \le k < d_n}(\texttt{arg0}[i_1,\dots,i_{n-1},k] \cdot \texttt{arg1}[j_1,\dots,j_{n-2},k,j_n])\f$ |
         class Dot : public RequiresTensorViewArgs
         {
         public:
@@ -91,17 +59,36 @@ namespace ngraph
             ///
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
+            /// \param reduction_axes_count The number of axes to dot.
+            Dot(const std::shared_ptr<Node>& arg0,
+                const std::shared_ptr<Node>& arg1,
+                size_t reduction_axes_count);
+
+            /// \brief Constructs a dot product operation with default dot-axis selection depending on the inputs.
+            ///
+            /// If `arg0` or `arg1` is a scalar, there are no dot-axes. Else, there is one dot-axis.
+            ///
+            /// (Note that in particular, this results in scalar-tensor products where one or the other argument is
+            /// a scalar, a matrix-vector products where `arg0` is a matrix and `arg1` is a vector, and a
+            /// matrix multiplication where `arg0` and `arg1` are both matrices.)
+            ///
+            /// \param arg0 The node producing the first argument.
+            /// \param arg1 The node producing the second argument.
             Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
 
+            size_t get_reduction_axes_count() const { return m_reduction_axes_count; }
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 2)
                     throw ngraph_error("Incorrect number of new arguments");
-                return std::make_shared<Dot>(new_args.at(0), new_args.at(1));
+                return std::make_shared<Dot>(
+                    new_args.at(0), new_args.at(1), m_reduction_axes_count);
             }
 
         protected:
+            size_t m_reduction_axes_count;
+
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
         };

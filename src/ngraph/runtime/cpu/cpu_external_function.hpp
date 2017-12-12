@@ -23,9 +23,9 @@
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
-#include "ngraph/runtime/cpu/call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/external_function.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
 
 namespace ngraph
 {
@@ -33,23 +33,23 @@ namespace ngraph
     {
         namespace cpu
         {
-            class ExternalFunction;
-            class Emitter;
-            class CallFrame;
+            class CPU_ExternalFunction;
+            class CPU_Emitter;
+            class CPU_CallFrame;
 
-            using OpFunction = std::function<void(Emitter*,
+            using OpFunction = std::function<void(CPU_Emitter*,
                                                   const ngraph::Node*,
-                                                  const std::vector<TensorViewInfo>& inputs,
-                                                  const std::vector<TensorViewInfo>& outputs)>;
+                                                  const std::vector<TensorViewWrapper>& inputs,
+                                                  const std::vector<TensorViewWrapper>& outputs)>;
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
-            class ExternalFunction : public ngraph::runtime::ExternalFunction,
-                                     public std::enable_shared_from_this<ExternalFunction>
+            class CPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
+                                         public std::enable_shared_from_this<CPU_ExternalFunction>
             {
             public:
-                ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                 bool release_function = true);
+                CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                                     bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
             protected:

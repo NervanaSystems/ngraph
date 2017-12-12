@@ -24,7 +24,7 @@ namespace ngraph
         {
             static size_t alignment = 64;
 
-            class CPUBackend : public runtime::Backend
+            class CPU_Backend : public runtime::Backend
             {
             public:
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
