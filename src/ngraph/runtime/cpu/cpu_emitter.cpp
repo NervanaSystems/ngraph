@@ -250,6 +250,24 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
         m_out.indent--;
         m_out << "}\n";
     }
+    else
+    {
+        auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+        std::vector<std::string> arg_names;
+        std::vector<std::string> arg_shape_strings;
+
+        for (auto arg : args)
+        {
+            arg_names.push_back(arg.get_name());
+            arg_shape_strings.push_back("{" + join(arg.get_shape()) + "}");
+        }
+
+        m_out << "kernel::concat<" << out[0].get_type() << ">({" << join(arg_names) << "},\n";
+        m_out << "                         " << out[0].get_name() << ",\n";
+        m_out << "                         {" << join(arg_shape_strings) << "},\n";
+        m_out << "                         {" << join(result_shape) << "},\n";
+        m_out << "                         " << axis << ");\n";
+    }
 }
 
 void runtime::cpu::CPU_Emitter::EmitDivide(const ngraph::Node* n,
