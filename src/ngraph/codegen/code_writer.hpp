@@ -66,7 +66,10 @@ public:
         return out;
     }
 
+    std::string generate_fresh_name(std::string prefix = "i");
+
 private:
     std::stringstream m_ss;
     bool m_pending_indent;
+    unsigned int m_fresh_name_counter;
 };
