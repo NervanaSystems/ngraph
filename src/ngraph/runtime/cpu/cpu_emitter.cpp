@@ -34,6 +34,7 @@
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
+#include "ngraph/runtime/cpu/kernel_emitter/concat.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -253,20 +254,38 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
     else
     {
         auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+
         std::vector<std::string> arg_names;
-        std::vector<std::string> arg_shape_strings;
+        std::vector<Shape> arg_shapes;
 
         for (auto arg : args)
         {
             arg_names.push_back(arg.get_name());
-            arg_shape_strings.push_back("{" + join(arg.get_shape()) + "}");
+            arg_shapes.push_back(arg.get_shape());
         }
 
-        m_out << "kernel::concat<" << out[0].get_type() << ">({" << join(arg_names) << "},\n";
-        m_out << "                         " << out[0].get_name() << ",\n";
-        m_out << "                         {" << join(arg_shape_strings) << "},\n";
-        m_out << "                         {" << join(result_shape) << "},\n";
-        m_out << "                         " << axis << ");\n";
+        kernel_emitter::emit_concat(
+            m_out, arg_names, out[0].get_name(), arg_shapes, result_shape, axis);
+
+        //
+        // Here is how we would invoke the reference kernel itself.
+        //
+        // auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+        //
+        // std::vector<std::string> arg_names;
+        // std::vector<std::string> arg_shape_strings;
+        //
+        // for (auto arg : args)
+        // {
+        //     arg_names.push_back(arg.get_name());
+        //     arg_shape_strings.push_back("{" + join(arg.get_shape()) + "}");
+        // }
+        //
+        // m_out << "kernel::concat<" << out[0].get_type() << ">({" << join(arg_names) << "},\n";
+        // m_out << "                         " << out[0].get_name() << ",\n";
+        // m_out << "                         {" << join(arg_shape_strings) << "},\n";
+        // m_out << "                         {" << join(result_shape) << "},\n";
+        // m_out << "                         " << axis << ");\n";
     }
 }
 
