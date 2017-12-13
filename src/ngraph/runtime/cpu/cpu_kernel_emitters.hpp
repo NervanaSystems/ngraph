@@ -12,34 +12,27 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "code_writer.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/common.hpp"
 
-codegen::CodeWriter::CodeWriter()
-    : indent(0)
-    , m_pending_indent(true)
-    , m_temporary_name_count(0)
+namespace ngraph
 {
-}
-
-string codegen::CodeWriter::get_code() const
-{
-    return m_ss.str();
-}
-
-void codegen::CodeWriter::operator+=(const std::string& s)
-{
-    *this << s;
-}
-
-std::string codegen::CodeWriter::generate_temporary_name(std::string prefix)
-{
-    std::stringstream ss;
-
-    ss << prefix << "__" << m_temporary_name_count;
-    m_temporary_name_count++;
-
-    return ss.str();
+    namespace runtime
+    {
+        namespace cpu
+        {
+            namespace kernels
+            {
+                void emit_concat(codegen::CodeWriter& writer,
+                                 std::string element_type,
+                                 const std::vector<std::string> args,
+                                 std::string out,
+                                 const std::vector<Shape>& in_shapes,
+                                 const Shape& out_shape,
+                                 size_t concatenation_axis);
+            }
+        }
+    }
 }
