@@ -129,7 +129,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
     for (size_t i = 1; i < backend_names.size(); i++)
     {
         std::cout << "Verifying " << backend_names[i] << " result against " << backend_names[0]
-                  << "... " << std::flush;
+                  << "..." << std::flush;
 
         if (result_tvs[i]->get_vector<float>() == result_tvs[0]->get_vector<float>())
         {

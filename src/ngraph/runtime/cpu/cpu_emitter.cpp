@@ -34,7 +34,7 @@
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
-#include "ngraph/runtime/cpu/kernel_emitter/concat.hpp"
+#include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -264,8 +264,7 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
             arg_shapes.push_back(arg.get_shape());
         }
 
-        kernel_emitter::emit_concat(
-            m_out, arg_names, out[0].get_name(), arg_shapes, result_shape, axis);
+        kernels::emit_concat(m_out, arg_names, out[0].get_name(), arg_shapes, result_shape, axis);
 
         //
         // Here is how we would invoke the reference kernel itself.

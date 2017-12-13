@@ -13,3 +13,37 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
+#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/runtime/cpu/cpu_kernel_utils.hpp"
+
+using namespace ngraph;
+using namespace ngraph::runtime::cpu::kernels;
+
+//
+// For the reference kernel this is based on, see ngraph/runtime/kernel/concat.hpp.
+//
+void ngraph::runtime::cpu::kernels::emit_concat(codegen::CodeWriter& TU,
+                                                const std::vector<std::string> args,
+                                                std::string out,
+                                                const std::vector<Shape>& in_shapes,
+                                                const Shape& out_shape,
+                                                size_t concatenation_axis)
+{
+    size_t concatenation_pos = 0;
+
+    for (size_t i = 0; i < args.size(); i++)
+    {
+        Coordinate out_start_coord = Coordinate(out_shape.size(), 0);
+        out_start_coord[concatenation_axis] = concatenation_pos;
+
+        Coordinate out_end_coord = out_shape;
+        out_end_coord[concatenation_axis] = concatenation_pos + in_shapes[i][concatenation_axis];
+
+        CoordinateTransform input_transform(in_shapes[i]);
+        CoordinateTransform output_chunk_transform(out_shape, out_start_coord, out_end_coord);
+
+        emit_pointwise_copy(TU, args[i], out, input_transform, output_chunk_transform);
+
+        concatenation_pos += in_shapes[i][concatenation_axis];
+    }
+}

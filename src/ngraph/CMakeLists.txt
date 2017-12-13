@@ -151,12 +151,11 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_backend.cpp
         runtime/cpu/cpu_manager.cpp
         runtime/cpu/cpu_kernels.cpp
+        runtime/cpu/cpu_kernel_utils.cpp
         runtime/cpu/cpu_emitter.cpp
         runtime/cpu/cpu_external_function.cpp
         runtime/cpu/cpu_tensor_view.cpp
         runtime/cpu/cpu_tensor_view_wrapper.cpp
-        runtime/cpu/kernel_emitter/concat.cpp
-        runtime/cpu/kernel_emitter/kernel_emitter.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory

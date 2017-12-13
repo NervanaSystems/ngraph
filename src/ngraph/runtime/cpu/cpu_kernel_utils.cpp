@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/runtime/cpu/kernel_emitter/kernel_emitter.hpp"
+#include "ngraph/runtime/cpu/cpu_kernel_utils.hpp"
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/common.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
-using namespace ngraph::runtime::cpu::kernel_emitter;
+using namespace ngraph::runtime::cpu::kernels;
 
 //
 // Given a coordinate transform and a vector of index expressions relative to
@@ -38,8 +38,8 @@ using namespace ngraph::runtime::cpu::kernel_emitter;
 //
 //
 std::vector<std::string>
-    ngraph::runtime::cpu::kernel_emitter::emit_multi_indices(CoordinateTransform trans,
-                                                             std::vector<std::string> index_vars)
+    ngraph::runtime::cpu::kernels::emit_multi_indices(CoordinateTransform trans,
+                                                      std::vector<std::string> index_vars)
 {
     std::vector<std::string> result;
 
@@ -90,9 +90,8 @@ std::vector<std::string>
 //    "((4 * ((k) * 2 + 5)) + (2 * ((i) * 2 + 3)) + ((j) * 2 + 4))"
 //
 //
-std::string
-    ngraph::runtime::cpu::kernel_emitter::emit_linear_index(CoordinateTransform trans,
-                                                            std::vector<std::string> index_vars)
+std::string ngraph::runtime::cpu::kernels::emit_linear_index(CoordinateTransform trans,
+                                                             std::vector<std::string> index_vars)
 {
     std::vector<std::string> multi_indices = emit_multi_indices(trans, index_vars);
 
@@ -123,10 +122,10 @@ std::string
 //
 // Optionally emits an OpenMP parallel pragma, if "omp" is true.
 //
-std::string ngraph::runtime::cpu::kernel_emitter::start_index_loop(std::string index_var,
-                                                                   size_t start,
-                                                                   size_t end,
-                                                                   bool omp)
+std::string ngraph::runtime::cpu::kernels::start_index_loop(std::string index_var,
+                                                            size_t start,
+                                                            size_t end,
+                                                            bool omp)
 {
     std::stringstream ss;
 
@@ -145,7 +144,7 @@ std::string ngraph::runtime::cpu::kernel_emitter::start_index_loop(std::string i
 //
 // Ends an indexing loop on the index variable [index_var].
 //
-std::string ngraph::runtime::cpu::kernel_emitter::end_index_loop(std::string index_var)
+std::string ngraph::runtime::cpu::kernels::end_index_loop(std::string index_var)
 {
     std::stringstream ss;
 
@@ -158,11 +157,11 @@ std::string ngraph::runtime::cpu::kernel_emitter::end_index_loop(std::string ind
 // Emits a pointwise copy from source_buffer mediated by in_trans, to
 // dest_buffer mediated by dest_trans.
 //
-void ngraph::runtime::cpu::kernel_emitter::emit_pointwise_copy(codegen::CodeWriter& TU,
-                                                               std::string source_buffer,
-                                                               std::string dest_buffer,
-                                                               CoordinateTransform source_trans,
-                                                               CoordinateTransform dest_trans)
+void ngraph::runtime::cpu::kernels::emit_pointwise_copy(codegen::CodeWriter& TU,
+                                                        std::string source_buffer,
+                                                        std::string dest_buffer,
+                                                        CoordinateTransform source_trans,
+                                                        CoordinateTransform dest_trans)
 {
     std::vector<std::string> index_vars;
 
