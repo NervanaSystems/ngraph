@@ -34,7 +34,7 @@
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
-#include "ngraph/runtime/cpu/cpu_kernels.hpp"
+#include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

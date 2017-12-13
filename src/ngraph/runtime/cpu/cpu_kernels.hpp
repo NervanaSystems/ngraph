@@ -102,25 +102,3 @@ namespace mkl
                        size_t ldb);
     }
 }
-
-#include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/common.hpp"
-
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace cpu
-        {
-            namespace kernels
-            {
-                void emit_concat(codegen::CodeWriter& writer,
-                                 const std::vector<std::string> args,
-                                 std::string out,
-                                 const std::vector<Shape>& in_shapes,
-                                 const Shape& out_shape,
-                                 size_t concatenation_axis);
-            }
-        }
-    }
-}

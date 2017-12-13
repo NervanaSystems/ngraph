@@ -151,6 +151,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_backend.cpp
         runtime/cpu/cpu_manager.cpp
         runtime/cpu/cpu_kernels.cpp
+        runtime/cpu/cpu_kernel_emitters.cpp
         runtime/cpu/cpu_kernel_utils.cpp
         runtime/cpu/cpu_emitter.cpp
         runtime/cpu/cpu_external_function.cpp
