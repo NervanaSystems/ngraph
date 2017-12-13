@@ -83,7 +83,10 @@ Function::Function(const std::shared_ptr<Node>& result,
                parameters,
                name)
 {
-    assert(!std::dynamic_pointer_cast<op::XLATuple>(result));
+    if (std::dynamic_pointer_cast<op::XLATuple>(result))
+    {
+        throw "Unexpected XLATuple in Function";
+    }
 };
 
 void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)
