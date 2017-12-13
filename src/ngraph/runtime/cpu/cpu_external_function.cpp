@@ -207,7 +207,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/kernel/broadcast.hpp"
-#include "ngraph/runtime/kernel/concat.hpp"
 #include "ngraph/runtime/kernel/dot.hpp"
 #include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
