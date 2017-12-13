@@ -314,6 +314,9 @@ using namespace ngraph::runtime;
         writer << "{\n";
         writer.indent++;
 
+        // TODO: This should be static but we don't codegen statics correctly yet
+        writer << "tbb::flow::graph G;\n\n";
+
         bool temporaries_used = false;
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
@@ -392,6 +395,8 @@ using namespace ngraph::runtime;
         }
         writer << "\n";
 
+        Node* dependence_graph_head = nullptr;
+
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
             auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
@@ -414,20 +419,72 @@ using namespace ngraph::runtime;
                 auto tv = output.get_tensor_view();
                 out.push_back(TensorViewWrapper(tv));
             }
-            if (m_emit_timing)
+
+            // Emit operation prologue
+            if (!node->is_parameter())
             {
-                emit_debug_function_entry(writer, node.get(), in, out);
+                if (!dependence_graph_head)
+                {
+                    dependence_graph_head = node.get();
+                }
+
+                writer << "tbb::flow::continue_node<tbb::flow::continue_msg> flowgraph_node_" << node->get_name()
+                       << "(G, [&](const tbb::flow::continue_msg &msg) {\n";
+                writer.indent++;
+                if (m_emit_timing)
+                {
+                    emit_debug_function_entry(writer, node.get(), in, out);
+                }
             }
+
+            // Emit operation body
             handler->second(&emitter, node.get(), in, out);
-            if (m_emit_timing)
+
+            // Emit operation epilogue
+            if (!node->is_parameter())
             {
-                emit_debug_function_exit(writer, node.get(), in, out);
+                if (m_emit_timing)
+                {
+                    emit_debug_function_exit(writer, node.get(), in, out);
+                }
+                writer.indent--;
+                writer << "});\n";
             }
         }
 
+        writer << "\n";
+
+        // Build the flow graph
+        traverse_nodes(current_function, [&writer](shared_ptr<Node> n) {
+            if (!n->is_parameter())
+            {
+                for (auto arg : n->get_arguments())
+                {
+                    if (!arg->is_parameter())
+                    {
+                        writer << "tbb::flow::make_edge(flowgraph_node_"
+                               << arg->get_name()
+                               << ", flowgraph_node_"
+                               << n->get_name()
+                               << ");\n";
+                    }
+                }
+            }
+        });
+
+        writer << "\n";
+
+        assert(dependence_graph_head);
+
+        // Execute the flow graph
+        writer << "flowgraph_node_"
+               << dependence_graph_head->get_name()
+               << ".try_put(tbb::flow::continue_msg());\n"
+               << "G.wait_for_all();\n";
+
         writer.indent--;
 
-        // End writer
+        // End generated function
         writer += "}\n\n";
     }
 
@@ -480,10 +537,7 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     const std::vector<TensorViewWrapper>& in,
     const std::vector<TensorViewWrapper>& out)
 {
-    if (!dynamic_cast<op::Parameter*>(node))
-    {
-        writer << "timer_" << node->get_name() << ".start();\n";
-    }
+    writer << "timer_" << node->get_name() << ".start();\n";
 }
 
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
@@ -492,8 +546,5 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
     const std::vector<TensorViewWrapper>& in,
     const std::vector<TensorViewWrapper>& out)
 {
-    if (!dynamic_cast<op::Parameter*>(node))
-    {
-        writer << "timer_" << node->get_name() << ".stop();\n\n";
-    }
+    writer << "timer_" << node->get_name() << ".stop();\n\n";
 }
