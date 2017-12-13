@@ -21,6 +21,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
+#include "util/all_close.hpp"
 #include "util/ndarray.hpp"
 
 using namespace std;
@@ -4584,14 +4585,14 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
     auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ(
-        (vector<double>{
+    EXPECT_TRUE(test::all_close(
+        vector<double>{
             2.48832025919525478400e+18, 2.48832051839533977600e+18, 2.48832077759658444800e+18,
             2.48832103679413504000e+18, 2.48832129599669350400e+18, 2.48832155519793971200e+18,
             2.48832181439802265600e+18, 2.48832207359808000000e+18, 2.48832233279813580800e+18,
             2.48832259199822028800e+18, 2.48832285119946496000e+18, 2.48832311040043008000e+18,
             2.48832336959957401600e+18, 2.48832362880081817600e+18, 2.48832388800090368000e+18,
             2.48832414720096000000e+18, 2.48832440640101478400e+18, 2.48832466560109772800e+18,
-            2.48832492480234188800e+18, 2.48832518400031897600e+18}),
-        result->get_vector<double>());
+            2.48832492480234188800e+18, 2.48832518400031897600e+18},
+        result->get_vector<double>()));
 }
