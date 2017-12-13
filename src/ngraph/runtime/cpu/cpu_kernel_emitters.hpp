@@ -26,6 +26,7 @@ namespace ngraph
             namespace kernels
             {
                 void emit_concat(codegen::CodeWriter& writer,
+                                 std::string element_type,
                                  const std::vector<std::string> args,
                                  std::string out,
                                  const std::vector<Shape>& in_shapes,

@@ -285,8 +285,13 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
                 arg_shapes.push_back(arg.get_shape());
             }
 
-            kernels::emit_concat(
-                m_out, arg_names, out[0].get_name(), arg_shapes, result_shape, axis);
+            kernels::emit_concat(m_out,
+                                 args[0].get_element_type().c_type_string(),
+                                 arg_names,
+                                 out[0].get_name(),
+                                 arg_shapes,
+                                 result_shape,
+                                 axis);
         }
     }
 }
