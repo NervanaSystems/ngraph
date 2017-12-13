@@ -56,7 +56,6 @@ nervana_aeon.egg-info/
 *.swp
 *.swo
 
-# setup.py intermediate files
 build*/
 
 # makeenv and test intermediate files
