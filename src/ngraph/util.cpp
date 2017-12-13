@@ -26,8 +26,6 @@
 
 using namespace std;
 
-map<string, ngraph::stopwatch*> ngraph::stopwatch_statistics;
-
 void ngraph::dump(ostream& out, const void* _data, size_t _size)
 {
     auto flags = out.flags();

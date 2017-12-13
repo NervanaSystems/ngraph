@@ -808,19 +808,19 @@ TEST(${BACKEND_NAME}, dot2d)
 // >>> a.shape=(2,2,2)
 // >>> b.shape=(2,2,2)
 //
-// >>> tensordot(a,b,axes=([2],[1]))
-// array([[[[   7.,   10.],
-//          [  19.,   22.]],
+// >>> tensordot(a,b,axes=([2],[0]))
+// array([[[[ 11.,  14.],
+//          [ 17.,  20.]],
 //
-//         [[  15.,   22.],
-//          [  43.,   50.]]],
+//         [[ 23.,  30.],
+//          [ 37.,  44.]]],
 //
 //
-//        [[[  23.,   34.],
-//          [  67.,   78.]],
+//        [[[ 35.,  46.],
+//          [ 57.,  68.]],
 //
-//         [[  31.,   46.],
-//          [  91.,  106.]]]])
+//         [[ 47.,  62.],
+//          [ 77.,  92.]]]])
 //
 TEST(${BACKEND_NAME}, dot3d_3d)
 {
@@ -844,7 +844,7 @@ TEST(${BACKEND_NAME}, dot3d_3d)
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{7, 10, 19, 22, 15, 22, 43, 50, 23, 34, 67, 78, 31, 46, 91, 106}),
+    EXPECT_EQ((vector<float>{11, 14, 17, 20, 23, 30, 37, 44, 35, 46, 57, 68, 47, 62, 77, 92}),
               result->get_vector<float>());
 }
 
@@ -2522,6 +2522,104 @@ TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
     EXPECT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), result->get_vector<float>());
 }
 
+//
+// Numpy:
+//
+// >>> x = linspace(1,2*2*3*3*2*4,2*2*3*3*2*4)
+// >>> x.shape=(2,2,3,3,2,4)
+// >>> y = ascontiguousarray(transpose(x,(2,4,0,5,3,1)))
+// >>> y.shape=2*2*3*3*2*4
+// >>> y
+// array([   1.,   73.,    9.,   81.,   17.,   89.,    2.,   74.,   10.,
+//          82.,   18.,   90.,    3.,   75.,   11.,   83.,   19.,   91.,
+//           4.,   76.,   12.,   84.,   20.,   92.,  145.,  217.,  153.,
+//         225.,  161.,  233.,  146.,  218.,  154.,  226.,  162.,  234.,
+//         147.,  219.,  155.,  227.,  163.,  235.,  148.,  220.,  156.,
+//         228.,  164.,  236.,    5.,   77.,   13.,   85.,   21.,   93.,
+//           6.,   78.,   14.,   86.,   22.,   94.,    7.,   79.,   15.,
+//          87.,   23.,   95.,    8.,   80.,   16.,   88.,   24.,   96.,
+//         149.,  221.,  157.,  229.,  165.,  237.,  150.,  222.,  158.,
+//         230.,  166.,  238.,  151.,  223.,  159.,  231.,  167.,  239.,
+//         152.,  224.,  160.,  232.,  168.,  240.,   25.,   97.,   33.,
+//         105.,   41.,  113.,   26.,   98.,   34.,  106.,   42.,  114.,
+//          27.,   99.,   35.,  107.,   43.,  115.,   28.,  100.,   36.,
+//         108.,   44.,  116.,  169.,  241.,  177.,  249.,  185.,  257.,
+//         170.,  242.,  178.,  250.,  186.,  258.,  171.,  243.,  179.,
+//         251.,  187.,  259.,  172.,  244.,  180.,  252.,  188.,  260.,
+//          29.,  101.,   37.,  109.,   45.,  117.,   30.,  102.,   38.,
+//         110.,   46.,  118.,   31.,  103.,   39.,  111.,   47.,  119.,
+//          32.,  104.,   40.,  112.,   48.,  120.,  173.,  245.,  181.,
+//         253.,  189.,  261.,  174.,  246.,  182.,  254.,  190.,  262.,
+//         175.,  247.,  183.,  255.,  191.,  263.,  176.,  248.,  184.,
+//         256.,  192.,  264.,   49.,  121.,   57.,  129.,   65.,  137.,
+//          50.,  122.,   58.,  130.,   66.,  138.,   51.,  123.,   59.,
+//         131.,   67.,  139.,   52.,  124.,   60.,  132.,   68.,  140.,
+//         193.,  265.,  201.,  273.,  209.,  281.,  194.,  266.,  202.,
+//         274.,  210.,  282.,  195.,  267.,  203.,  275.,  211.,  283.,
+//         196.,  268.,  204.,  276.,  212.,  284.,   53.,  125.,   61.,
+//         133.,   69.,  141.,   54.,  126.,   62.,  134.,   70.,  142.,
+//          55.,  127.,   63.,  135.,   71.,  143.,   56.,  128.,   64.,
+//         136.,   72.,  144.,  197.,  269.,  205.,  277.,  213.,  285.,
+//         198.,  270.,  206.,  278.,  214.,  286.,  199.,  271.,  207.,
+//         279.,  215.,  287.,  200.,  272.,  208.,  280.,  216.,  288.])
+//
+// Disabled because it doesn't work on CPU yet.
+//
+TEST(DISABLED_${BACKEND_NAME}, reshape_6d)
+{
+    vector<float> a_data(2 * 2 * 3 * 3 * 2 * 4);
+    for (int i = 0; i < 2 * 2 * 3 * 3 * 2 * 4; i++)
+    {
+        a_data[i] = float(i + 1);
+    }
+
+    auto shape_a = Shape{2, 2, 3, 3, 2, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_r = Shape{3, 2, 2, 4, 3, 2};
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+
+    auto r = make_shared<op::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, a_data);
+
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a}, {result});
+    ASSERT_EQ(
+        (vector<float>{
+            1.,   73.,  9.,   81.,  17.,  89.,  2.,   74.,  10.,  82.,  18.,  90.,  3.,   75.,
+            11.,  83.,  19.,  91.,  4.,   76.,  12.,  84.,  20.,  92.,  145., 217., 153., 225.,
+            161., 233., 146., 218., 154., 226., 162., 234., 147., 219., 155., 227., 163., 235.,
+            148., 220., 156., 228., 164., 236., 5.,   77.,  13.,  85.,  21.,  93.,  6.,   78.,
+            14.,  86.,  22.,  94.,  7.,   79.,  15.,  87.,  23.,  95.,  8.,   80.,  16.,  88.,
+            24.,  96.,  149., 221., 157., 229., 165., 237., 150., 222., 158., 230., 166., 238.,
+            151., 223., 159., 231., 167., 239., 152., 224., 160., 232., 168., 240., 25.,  97.,
+            33.,  105., 41.,  113., 26.,  98.,  34.,  106., 42.,  114., 27.,  99.,  35.,  107.,
+            43.,  115., 28.,  100., 36.,  108., 44.,  116., 169., 241., 177., 249., 185., 257.,
+            170., 242., 178., 250., 186., 258., 171., 243., 179., 251., 187., 259., 172., 244.,
+            180., 252., 188., 260., 29.,  101., 37.,  109., 45.,  117., 30.,  102., 38.,  110.,
+            46.,  118., 31.,  103., 39.,  111., 47.,  119., 32.,  104., 40.,  112., 48.,  120.,
+            173., 245., 181., 253., 189., 261., 174., 246., 182., 254., 190., 262., 175., 247.,
+            183., 255., 191., 263., 176., 248., 184., 256., 192., 264., 49.,  121., 57.,  129.,
+            65.,  137., 50.,  122., 58.,  130., 66.,  138., 51.,  123., 59.,  131., 67.,  139.,
+            52.,  124., 60.,  132., 68.,  140., 193., 265., 201., 273., 209., 281., 194., 266.,
+            202., 274., 210., 282., 195., 267., 203., 275., 211., 283., 196., 268., 204., 276.,
+            212., 284., 53.,  125., 61.,  133., 69.,  141., 54.,  126., 62.,  134., 70.,  142.,
+            55.,  127., 63.,  135., 71.,  143., 56.,  128., 64.,  136., 72.,  144., 197., 269.,
+            205., 277., 213., 285., 198., 270., 206., 278., 214., 286., 199., 271., 207., 279.,
+            215., 287., 200., 272., 208., 280., 216., 288.}),
+        result->get_vector<float>());
+}
+
 TEST(${BACKEND_NAME}, sin)
 {
     auto shape = Shape{6};
@@ -4034,4 +4132,338 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
 
                              48,  49, 50, 51,  52, 53, 54, 55, 56,  57, 58, 59,  60, 61, 62, 63}),
               result->get_vector<float>());
+}
+
+//
+// Numpy test:
+//
+// > from numpy import *
+// > x = linspace(1,2*3*4,2*3*4)
+// > y = linspace(1,3*4*5,3*4*5)
+// > x.shape=(2,3,4)
+// > y.shape=(3,4,5)
+// > z = tensordot(x,y,([1,2],[0,1]))
+// > z.shape = 2*5
+// > z
+// array([ 2938.,  3016.,  3094.,  3172.,  3250.,  7042.,  7264.,  7486.,
+//         7708.,  7930.])
+//
+// Disabled because it doesn't work on CPU yet.
+//
+TEST(DISABLED_${BACKEND_NAME}, dot_3d_multi_axis)
+{
+    vector<float> a_data(2 * 3 * 4);
+    for (int i = 0; i < 2 * 3 * 4; i++)
+    {
+        a_data[i] = float(i + 1);
+    }
+
+    vector<float> b_data(3 * 4 * 5);
+    for (int i = 0; i < 3 * 4 * 5; i++)
+    {
+        b_data[i] = float(i + 1);
+    }
+
+    auto shape_a = Shape{2, 3, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_b = Shape{3, 4, 5};
+    auto B = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_b));
+    auto shape_r = Shape{2, 5};
+
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Dot>(A, B, 2);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, a_data);
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, b_data);
+
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{2938., 3016., 3094., 3172., 3250., 7042., 7264., 7486., 7708., 7930.}),
+              result->get_vector<float>());
+}
+
+//
+// Numpy test:
+//
+// > from numpy import *
+// > x = array([6,61,2,3,5,21,75,23,23,0,23,2,35,67,1,2,9,16,2,3,6,1,8,0])
+// > y = array([9,1,4,6,3,5,1,36,7,3,5,0,1,20,35,2,1,0,1,25,3,6,7,8])
+// > x.shape=(2,4,3)
+// > y.shape=(3,4,2)
+// > z = tensordot(x,y,([2],[0]))
+// > z.shape = 2*4*4*2
+// > z
+// array([ 483,  189,  331,   86,   85, 1262, 2155,  354,   83,   18,   58,
+//         543,   77,  241,  325,  286,  859,  144,  438, 1025,  317,  973,
+//        1041, 2930,  163,   69,  117,   50,   29,  472,  819,   62,  785,
+//         236,  476,  235,  175, 1521, 2387, 1402,   97,   29,   69,  412,
+//          63,  286,  429,  218,   45,   11,   29,  162,   27,  106,  149,
+//         126,   65,   25,   44,    6,   11,  165,  281,   52])
+//
+// Disabled because it doesn't work on CPU yet.
+//
+TEST(DISABLED_${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
+{
+    vector<float> a_data{6,  61, 2, 3, 5, 21, 75, 23, 23, 0, 23, 2,
+                         35, 67, 1, 2, 9, 16, 2,  3,  6,  1, 8,  0};
+    vector<float> b_data{9, 1,  4,  6, 3, 5, 1, 36, 7, 3, 5, 0,
+                         1, 20, 35, 2, 1, 0, 1, 25, 3, 6, 7, 8};
+
+    auto shape_a = Shape{2, 4, 3};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_b = Shape{3, 4, 2};
+    auto B = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_b));
+    auto shape_r = Shape{2, 4, 4, 2};
+
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Dot>(A, B);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, a_data);
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, b_data);
+
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{483,  189, 331, 86,  85,  1262, 2155, 354, 83,  18,   58,   543,  77,
+                             241,  325, 286, 859, 144, 438,  1025, 317, 973, 1041, 2930, 163,  69,
+                             117,  50,  29,  472, 819, 62,   785,  236, 476, 235,  175,  1521, 2387,
+                             1402, 97,  29,  69,  412, 63,   286,  429, 218, 45,   11,   29,   162,
+                             27,   106, 149, 126, 65,  25,   44,   6,   11,  165,  281,  52}),
+              result->get_vector<float>());
+}
+
+//
+// Numpy test:
+//
+// from numpy import *
+// x = linspace(1,2*3*3*4,2*3*3*4)
+// y = linspace(1,3*4*2*3*2,3*4*2*2*3)
+// x.shape=(2,3,3,4)
+// y.shape=(3,4,2,2,3)
+// z = tensordot(x,y,([2,3],[0,1]))
+// z.shape = 2*3*2*2*3
+// z
+//
+// array([  6942.,   7020.,   7098.,   7176.,   7254.,   7332.,   7410.,
+//          7488.,   7566.,   7644.,   7722.,   7800.,  16590.,  16812.,
+//         17034.,  17256.,  17478.,  17700.,  17922.,  18144.,  18366.,
+//         18588.,  18810.,  19032.,  26238.,  26604.,  26970.,  27336.,
+//         27702.,  28068.,  28434.,  28800.,  29166.,  29532.,  29898.,
+//         30264.,  35886.,  36396.,  36906.,  37416.,  37926.,  38436.,
+//         38946.,  39456.,  39966.,  40476.,  40986.,  41496.,  45534.,
+//         46188.,  46842.,  47496.,  48150.,  48804.,  49458.,  50112.,
+//         50766.,  51420.,  52074.,  52728.,  55182.,  55980.,  56778.,
+//         57576.,  58374.,  59172.,  59970.,  60768.,  61566.,  62364.,
+//         63162.,  63960.])
+//
+// Disabled because it doesn't work on CPU yet.
+//
+TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis)
+{
+    vector<float> a_data(2 * 3 * 3 * 4);
+    for (int i = 0; i < 2 * 3 * 3 * 4; i++)
+    {
+        a_data[i] = float(i + 1);
+    }
+
+    vector<float> b_data(3 * 4 * 2 * 2 * 3);
+    for (int i = 0; i < 3 * 4 * 2 * 2 * 3; i++)
+    {
+        b_data[i] = float(i + 1);
+    }
+
+    auto shape_a = Shape{2, 3, 3, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_b = Shape{3, 4, 2, 3, 2};
+    auto B = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_b));
+    auto shape_r = Shape{2, 3, 2, 3, 2};
+
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Dot>(A, B, 2);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, a_data);
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, b_data);
+
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ(
+        (vector<float>{6942.,  7020.,  7098.,  7176.,  7254.,  7332.,  7410.,  7488.,  7566.,
+                       7644.,  7722.,  7800.,  16590., 16812., 17034., 17256., 17478., 17700.,
+                       17922., 18144., 18366., 18588., 18810., 19032., 26238., 26604., 26970.,
+                       27336., 27702., 28068., 28434., 28800., 29166., 29532., 29898., 30264.,
+                       35886., 36396., 36906., 37416., 37926., 38436., 38946., 39456., 39966.,
+                       40476., 40986., 41496., 45534., 46188., 46842., 47496., 48150., 48804.,
+                       49458., 50112., 50766., 51420., 52074., 52728., 55182., 55980., 56778.,
+                       57576., 58374., 59172., 59970., 60768., 61566., 62364., 63162., 63960.}),
+        result->get_vector<float>());
+}
+
+//
+// Numpy test:
+//
+// from numpy import *
+// x = linspace(1,2*3*3*4,2*3*3*4)
+// y = linspace(1,2*3*3*4*2,2*3*3*4*2)
+// x.shape=(2,3,3,4)
+// y.shape=(2,3,3,4,2)
+// z = tensordot(x,y,([0,1,2,3],[0,1,2,3]))
+// z
+//
+// array([ 251412.,  254040.])
+//
+// Disabled because it doesn't work on CPU yet.
+//
+TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
+{
+    vector<float> a_data(2 * 3 * 3 * 4);
+    for (int i = 0; i < 2 * 3 * 3 * 4; i++)
+    {
+        a_data[i] = float(i + 1);
+    }
+
+    vector<float> b_data(2 * 3 * 3 * 4 * 2);
+    for (int i = 0; i < 2 * 3 * 3 * 4 * 2; i++)
+    {
+        b_data[i] = float(i + 1);
+    }
+
+    auto shape_a = Shape{2, 3, 3, 4};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_a));
+    auto shape_b = Shape{2, 3, 3, 4, 2};
+    auto B = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float32::element_type(), shape_b));
+    auto shape_r = Shape{2};
+
+    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto r = make_shared<op::Dot>(A, B, 4);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    copy_data(a, a_data);
+    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
+    copy_data(b, b_data);
+
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ((vector<float>{251412., 254040.}), result->get_vector<float>());
+}
+
+//
+// Numpy test:
+//
+// from numpy import *
+// x = linspace(1,20*30*30*40,20*30*30*40)
+// y = linspace(1,20*30*30*40*20,20*30*30*40*20)
+// x.shape=(20,30,30,40)
+// y.shape=(20,30,30,40,20)
+// z = tensordot(x,y,([0,1,2,3],[0,1,2,3]))
+// set_printoptions(precision=20)
+// z
+//
+// array([  2.48832025919525478400e+18,   2.48832051839533977600e+18,
+//          2.48832077759658444800e+18,   2.48832103679413504000e+18,
+//          2.48832129599669350400e+18,   2.48832155519793971200e+18,
+//          2.48832181439802265600e+18,   2.48832207359808000000e+18,
+//          2.48832233279813580800e+18,   2.48832259199822028800e+18,
+//          2.48832285119946496000e+18,   2.48832311040043008000e+18,
+//          2.48832336959957401600e+18,   2.48832362880081817600e+18,
+//          2.48832388800090368000e+18,   2.48832414720096000000e+18,
+//          2.48832440640101478400e+18,   2.48832466560109772800e+18,
+//          2.48832492480234188800e+18,   2.48832518400031897600e+18])
+//
+// Disabled because this test is very slow.
+//
+TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
+{
+    vector<double> a_data(20 * 30 * 30 * 40);
+    for (int i = 0; i < 20 * 30 * 30 * 40; i++)
+    {
+        a_data[i] = double(i + 1);
+    }
+
+    vector<double> b_data(20 * 30 * 30 * 40 * 20);
+    for (int i = 0; i < 20 * 30 * 30 * 40 * 20; i++)
+    {
+        b_data[i] = double(i + 1);
+    }
+
+    auto shape_a = Shape{20, 30, 30, 40};
+    auto A = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float64::element_type(), shape_a));
+    auto shape_b = Shape{20, 30, 30, 40, 20};
+    auto B = make_shared<op::Parameter>(
+        make_shared<TensorViewType>(element::Float64::element_type(), shape_b));
+    auto shape_r = Shape{20};
+
+    auto rt = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
+    auto r = make_shared<op::Dot>(A, B, 4);
+    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    copy_data(a, a_data);
+    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    copy_data(b, b_data);
+
+    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+
+    cf->call({a, b}, {result});
+    ASSERT_EQ(
+        (vector<double>{
+            2.48832025919525478400e+18, 2.48832051839533977600e+18, 2.48832077759658444800e+18,
+            2.48832103679413504000e+18, 2.48832129599669350400e+18, 2.48832155519793971200e+18,
+            2.48832181439802265600e+18, 2.48832207359808000000e+18, 2.48832233279813580800e+18,
+            2.48832259199822028800e+18, 2.48832285119946496000e+18, 2.48832311040043008000e+18,
+            2.48832336959957401600e+18, 2.48832362880081817600e+18, 2.48832388800090368000e+18,
+            2.48832414720096000000e+18, 2.48832440640101478400e+18, 2.48832466560109772800e+18,
+            2.48832492480234188800e+18, 2.48832518400031897600e+18}),
+        result->get_vector<double>());
 }

@@ -31,7 +31,6 @@ namespace ngraph
     class Node;
     class Function;
     class stopwatch;
-    extern std::map<std::string, stopwatch*> stopwatch_statistics;
 
     template <typename T>
     std::string join(const T& v, const std::string& sep = ", ")
@@ -106,21 +105,6 @@ namespace ngraph
     class stopwatch
     {
     public:
-        stopwatch() {}
-        stopwatch(const std::string& name)
-            : m_name{name}
-        {
-            stopwatch_statistics.insert({m_name, this});
-        }
-
-        ~stopwatch()
-        {
-            if (m_name.size() > 0)
-            {
-                stopwatch_statistics.find(m_name);
-            }
-        }
-
         void start()
         {
             if (m_active == false)
@@ -170,7 +154,6 @@ namespace ngraph
             std::chrono::high_resolution_clock::duration::zero();
         std::chrono::nanoseconds m_last_time;
         size_t m_total_count = 0;
-        std::string m_name;
     };
 
     /// Parses a string containing a literal of the underlying type.

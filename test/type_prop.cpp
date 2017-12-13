@@ -32,15 +32,6 @@ TEST(type_prop, broadcast_deduce)
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 3, 4}));
 }
 
-TEST(type_prop, broadcast_deduce_correct)
-{
-    // Check deduced type against correctly specified type
-    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 4});
-    auto bc = make_shared<op::Broadcast>(param, Shape{2, 3, 4}, AxisSet{1});
-    auto bc_vt = bc->get_value_type();
-    ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 3, 4}));
-}
-
 TEST(type_prop, broadcast_deduce_incorrect)
 {
     // Check deduced type against incorrectly specified type
@@ -228,15 +219,6 @@ TEST(type_prop, convert_deduce)
     ASSERT_EQ(*c_vt, TensorViewType(element::Int32::element_type(), Shape{2, 3, 4}));
 }
 
-TEST(type_prop, convert_deduce_correct)
-{
-    // Check deduced type against incorrectly specified type
-    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3, 4});
-    auto c = make_shared<op::Convert>(param, element::Int32::element_type());
-    auto c_vt = c->get_value_type();
-    ASSERT_EQ(*c_vt, TensorViewType(element::Int32::element_type(), Shape{2, 3, 4}));
-}
-
 TEST(type_prop, convert_deduce_incorrect)
 {
     // Check deduced type against incorrectly specified type
@@ -322,17 +304,7 @@ TEST(type_prop, dot_deduce_different_rank)
 {
     // Deduce type for different-rank tensor arguments
     auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 8, 4, 2});
-    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1, 2, 3});
-    auto bc = make_shared<op::Dot>(param1, param2);
-    auto bc_vt = bc->get_value_type();
-    ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 8, 4, 1, 3}));
-}
-
-TEST(type_prop, dot_deduce_different_rank_correct)
-{
-    // Deduced type matches explicitly set type
-    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 8, 4, 2});
-    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1, 2, 3});
+    auto param2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 1, 3});
     auto bc = make_shared<op::Dot>(param1, param2);
     auto bc_vt = bc->get_value_type();
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 8, 4, 1, 3}));
@@ -372,7 +344,7 @@ TEST(type_prop, dot_deduce_reduction_axes_size_mismatch)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Dot reduction axes not compatible"));
+        EXPECT_EQ(error.what(), std::string("Dot axes do not have same length"));
     }
     catch (...)
     {
@@ -571,19 +543,6 @@ TEST(type_prop, select_deduce)
     ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 4}));
 }
 
-TEST(type_prop, select_deduce_correct)
-{
-    auto tv0_2_4_param_0 = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Bool::element_type(), Shape{2, 4}));
-    auto tv0_2_4_param_1 = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
-    auto tv0_2_4_param_2 = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
-    auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
-    auto bc_vt = bc->get_value_type();
-    ASSERT_EQ(*bc_vt, TensorViewType(element::Float32::element_type(), Shape{2, 4}));
-}
-
 TEST(type_prop, select_shape_mismatch_a)
 {
     auto tv0_2_4_param_0 = make_shared<op::Parameter>(
@@ -733,24 +692,6 @@ TEST(type_prop, reduce_deduce)
     auto r_none = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{});
     ASSERT_EQ(*(r_none->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{2, 4}));
-}
-
-TEST(type_prop, reduce_deduce_correct)
-{
-    auto param_0 = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4}));
-    auto param_1 = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
-
-    auto f_param_0 = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{}));
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
-
-    auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
-    ASSERT_EQ(*(r0->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{4}));
 }
 
 TEST(type_prop, reduce_nonscalar)
@@ -1066,14 +1007,6 @@ TEST(type_prop, reshape_deduce_t2v_012)
 }
 
 TEST(type_prop, reshape_deduce_t2v_120)
-{
-    auto param = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));
-    auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0}, Shape{60});
-    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{60}));
-}
-
-TEST(type_prop, reshape_deduce_correct_t2v_120)
 {
     auto param = make_shared<op::Parameter>(
         make_shared<TensorViewType>(element::Float32::element_type(), Shape{3, 4, 5}));

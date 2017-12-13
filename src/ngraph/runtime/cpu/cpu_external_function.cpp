@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <cstdlib>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -99,8 +100,6 @@ public:
 
 static StaticInitializers s_static_initializers;
 
-using ngraph::descriptor::layout::DenseTensorViewLayout;
-
 #define TI(x) type_index(typeid(x))
 
 static const runtime::cpu::OpMap dispatcher{
@@ -172,6 +171,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
     , m_compiled_function(nullptr)
+    , m_emit_timing(std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr)
 {
 }
 
@@ -188,7 +188,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
     // For now, just make everyone row-major.
-    pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
+    pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>(64);
     pass_manager.register_pass<pass::DumpSorted>(dump_filename);
@@ -213,6 +213,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/slice.hpp"
 #include "ngraph/runtime/kernel/sum.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph::runtime::cpu::eigen;
 using namespace ngraph::runtime;
@@ -226,6 +227,75 @@ using namespace ngraph::runtime;
     // atexit() happens too late, when the JIT is no longer alive
 
     writer << "void *__dso_handle = 0;\n\n";
+
+    if (m_emit_timing)
+    {
+        writer << "// Declare debug timers\n";
+        vector<string> names;
+        for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
+        {
+            for (shared_ptr<Node> node : current_function->get_ordered_ops())
+            {
+                if (!dynamic_pointer_cast<op::Parameter>(node))
+                {
+                    names.push_back(node->get_name());
+                }
+            }
+        }
+        for (const string& s : names)
+        {
+            writer << "ngraph::stopwatch timer_" << s << ";\n";
+        }
+        writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
+               << "; }\n";
+        writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
+        writer << "{\n";
+        writer.indent++;
+        writer << "const char* rc;\n";
+        writer << "switch(index)\n";
+        writer << "{\n";
+        for (size_t i = 0; i < names.size(); i++)
+        {
+            writer << "case " << i << ": rc = \"" << names[i] << "\"; break;\n";
+        }
+        writer << "default: rc = \"\";\n";
+        writer << "}\n";
+        writer << "return rc;\n";
+        writer.indent--;
+        writer << "}\n";
+        writer << "extern \"C\" const size_t get_debug_timer_microseconds(size_t index)\n";
+        writer << "{\n";
+        writer.indent++;
+        writer << "size_t rc;\n";
+        writer << "switch(index)\n";
+        writer << "{\n";
+        for (size_t i = 0; i < names.size(); i++)
+        {
+            writer << "case " << i << ": rc = timer_" << names[i]
+                   << ".get_total_microseconds(); break;\n";
+        }
+        writer << "default: rc = 0;\n";
+        writer << "}\n";
+        writer << "return rc;\n";
+        writer.indent--;
+        writer << "}\n";
+        writer << "extern \"C\" const size_t get_debug_timer_call_count(size_t index)\n";
+        writer << "{\n";
+        writer.indent++;
+        writer << "size_t rc;\n";
+        writer << "switch(index)\n";
+        writer << "{\n";
+        for (size_t i = 0; i < names.size(); i++)
+        {
+            writer << "case " << i << ": rc = timer_" << names[i] << ".get_call_count(); break;\n";
+        }
+        writer << "default: rc = 0;\n";
+        writer << "}\n";
+        writer << "return rc;\n";
+        writer.indent--;
+        writer << "}\n";
+        writer << "\n";
+    }
 
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
@@ -341,7 +411,15 @@ using namespace ngraph::runtime;
                 auto tv = output.get_tensor_view();
                 out.push_back(TensorViewWrapper(tv));
             }
+            if (m_emit_timing)
+            {
+                emit_debug_function_entry(writer, node.get(), in, out);
+            }
             handler->second(&emitter, node.get(), in, out);
+            if (m_emit_timing)
+            {
+                emit_debug_function_exit(writer, node.get(), in, out);
+            }
         }
 
         writer.indent--;
@@ -359,20 +437,20 @@ using namespace ngraph::runtime;
     out << code;
     out.close();
 
-    compiler.reset(new codegen::Compiler());
-    execution_engine.reset(new codegen::ExecutionEngine());
+    m_compiler.reset(new codegen::Compiler());
+    m_execution_engine.reset(new codegen::ExecutionEngine());
 
-    compiler->set_precompiled_header_source(pch_header_source);
+    m_compiler->set_precompiled_header_source(pch_header_source);
 
-    auto llvm_module = compiler->compile(code);
+    auto llvm_module = m_compiler->compile(code);
 
     if (llvm_module == nullptr)
     {
         throw runtime_error("function failed to compile");
     }
-    execution_engine->add_module(llvm_module);
-    execution_engine->finalize();
-    m_compiled_function = execution_engine->find_function<EntryPoint_t>(function_name);
+    m_execution_engine->add_module(llvm_module);
+    m_execution_engine->finalize();
+    m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(function_name);
     assert(m_compiled_function);
 
     m_is_compiled = true;
@@ -391,4 +469,28 @@ shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPU_ExternalFunction::make_
 
     return make_shared<ngraph::runtime::cpu::CPU_CallFrame>(shared_from_this(),
                                                             m_compiled_function);
+}
+
+void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
+    codegen::CodeWriter& writer,
+    Node* node,
+    const std::vector<TensorViewWrapper>& in,
+    const std::vector<TensorViewWrapper>& out)
+{
+    if (!dynamic_cast<op::Parameter*>(node))
+    {
+        writer << "timer_" << node->get_name() << ".start();\n";
+    }
+}
+
+void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
+    codegen::CodeWriter& writer,
+    Node* node,
+    const std::vector<TensorViewWrapper>& in,
+    const std::vector<TensorViewWrapper>& out)
+{
+    if (!dynamic_cast<op::Parameter*>(node))
+    {
+        writer << "timer_" << node->get_name() << ".stop();\n\n";
+    }
 }
