@@ -33,7 +33,7 @@ namespace ngraph
                 std::string
                     start_index_loop(std::string index_var, size_t start, size_t end, bool omp);
                 std::string end_index_loop(std::string index_var);
-                void emit_pointwise_copy(codegen::CodeWriter& TU,
+                void emit_pointwise_copy(codegen::CodeWriter& writer,
                                          std::string source_buffer,
                                          std::string dest_buffer,
                                          CoordinateTransform source_trans,

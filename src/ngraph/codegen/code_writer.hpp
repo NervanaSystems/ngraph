@@ -66,10 +66,10 @@ public:
         return out;
     }
 
-    std::string generate_fresh_name(std::string prefix = "i");
+    std::string generate_temporary_name(std::string prefix = "tempvar");
 
 private:
     std::stringstream m_ss;
     bool m_pending_indent;
-    unsigned int m_fresh_name_counter;
+    size_t m_temporary_name_count;
 };

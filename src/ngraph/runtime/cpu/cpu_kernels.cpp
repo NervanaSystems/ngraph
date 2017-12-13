@@ -22,7 +22,7 @@ using namespace ngraph::runtime::cpu::kernels;
 //
 // For the reference kernel this is based on, see ngraph/runtime/kernel/concat.hpp.
 //
-void ngraph::runtime::cpu::kernels::emit_concat(codegen::CodeWriter& TU,
+void ngraph::runtime::cpu::kernels::emit_concat(codegen::CodeWriter& writer,
                                                 const std::vector<std::string> args,
                                                 std::string out,
                                                 const std::vector<Shape>& in_shapes,
@@ -42,7 +42,7 @@ void ngraph::runtime::cpu::kernels::emit_concat(codegen::CodeWriter& TU,
         CoordinateTransform input_transform(in_shapes[i]);
         CoordinateTransform output_chunk_transform(out_shape, out_start_coord, out_end_coord);
 
-        emit_pointwise_copy(TU, args[i], out, input_transform, output_chunk_transform);
+        emit_pointwise_copy(writer, args[i], out, input_transform, output_chunk_transform);
 
         concatenation_pos += in_shapes[i][concatenation_axis];
     }

@@ -114,7 +114,7 @@ namespace ngraph
         {
             namespace kernels
             {
-                void emit_concat(codegen::CodeWriter& TU,
+                void emit_concat(codegen::CodeWriter& writer,
                                  const std::vector<std::string> args,
                                  std::string out,
                                  const std::vector<Shape>& in_shapes,

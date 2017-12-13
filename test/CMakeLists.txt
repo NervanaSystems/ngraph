@@ -22,7 +22,7 @@ include_directories(
     )
 
 set (SRC
-    backend_benchmark.cpp
+    backend_performance.cpp
     builder.cpp
     builder_autobroadcast.cpp
     build_graph.cpp
@@ -47,6 +47,8 @@ set (SRC
     util.cpp
     uuid.cpp
 )
+
+add_subdirectory(models)
 
 #================================================================================================
 # To auto generate a suite of unit tests for a backend add a line like this

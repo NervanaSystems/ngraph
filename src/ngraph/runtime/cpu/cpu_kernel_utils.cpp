@@ -157,7 +157,7 @@ std::string ngraph::runtime::cpu::kernels::end_index_loop(std::string index_var)
 // Emits a pointwise copy from source_buffer mediated by in_trans, to
 // dest_buffer mediated by dest_trans.
 //
-void ngraph::runtime::cpu::kernels::emit_pointwise_copy(codegen::CodeWriter& TU,
+void ngraph::runtime::cpu::kernels::emit_pointwise_copy(codegen::CodeWriter& writer,
                                                         std::string source_buffer,
                                                         std::string dest_buffer,
                                                         CoordinateTransform source_trans,
@@ -172,20 +172,21 @@ void ngraph::runtime::cpu::kernels::emit_pointwise_copy(codegen::CodeWriter& TU,
 
     for (size_t i = 0; i < n_axes; i++)
     {
-        std::string index_var = TU.generate_fresh_name("i");
+        std::string index_var = writer.generate_temporary_name("i");
 
-        TU << start_index_loop(index_var, source_start_corner[i], source_end_corner[i], i == 0);
-        TU.indent++;
+        writer << start_index_loop(index_var, source_start_corner[i], source_end_corner[i], i == 0);
+        writer.indent++;
 
         index_vars.push_back(index_var);
     }
 
-    TU << dest_buffer << "[" << emit_linear_index(dest_trans, index_vars) << "] = " << source_buffer
-       << "[" << emit_linear_index(source_trans, index_vars) << "];\n";
+    writer << dest_buffer << "[" << emit_linear_index(dest_trans, index_vars)
+           << "] = " << source_buffer << "[" << emit_linear_index(source_trans, index_vars)
+           << "];\n";
 
     for (size_t i = n_axes; i-- > 0;)
     {
-        TU.indent--;
-        TU << end_index_loop(index_vars[i]);
+        writer.indent--;
+        writer << end_index_loop(index_vars[i]);
     }
 }
