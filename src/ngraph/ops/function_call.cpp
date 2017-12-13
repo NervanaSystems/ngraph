@@ -11,10 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
-#include <cassert>
 
-#include "ngraph/function.hpp"
 #include "ngraph/ops/function_call.hpp"
+#include "ngraph/function.hpp"
 #include "ngraph/xla_function.hpp"
 
 using namespace std;
@@ -52,9 +51,12 @@ op::FunctionCall::FunctionCall(std::shared_ptr<Function> function,
         }
     }
 
-    assert(std::dynamic_pointer_cast<XLAFunction>(m_function) ||
-           m_function->get_results().size() <
-               2); //TODO: we don't expect regular functions with multiple outputs just yet
+    if (!std::dynamic_pointer_cast<XLAFunction>(m_function) &&
+        m_function->get_results().size() >
+            1) //TODO: we don't expect regular functions with multiple outputs just yet
+    {
+        throw "Regular functions with multiple outputs NYI!";
+    }
     auto f_result_type = m_function->get_result_types().at(0);
 
     set_value_type_checked(f_result_type);

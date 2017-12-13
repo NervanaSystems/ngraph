@@ -15,7 +15,6 @@
 #pragma once
 
 #include <atomic>
-#include <cassert>
 #include <initializer_list>
 #include <list>
 #include <memory>

@@ -15,7 +15,6 @@
 #pragma once
 
 #include <atomic>
-#include <cassert>
 #include <initializer_list>
 #include <list>
 #include <memory>
@@ -53,7 +52,10 @@ namespace ngraph
         virtual ~Function() {}
         std::shared_ptr<Node> get_result() //TODO: push up to XLAFunction
         {
-            assert(m_results.size() < 2);
+            if (m_results.size() > 1)
+            {
+                throw "get_result was called on a function with multiple non-tuple outputs!";
+            }
             return m_results[0];
         }
 
@@ -66,7 +68,10 @@ namespace ngraph
         }
         std::shared_ptr<const ValueType> get_result_type() const //TODO: push up to XLAFunction
         {
-            assert(m_results.size() < 2);
+            if (m_results.size() > 1)
+            {
+                throw "get_result_type was called on a function with multiple non-tuple outputs!";
+            }
             return m_results[0]->get_value_type();
         }
         std::vector<std::shared_ptr<const ValueType>> get_result_types() const
