@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <cstdlib>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -170,7 +171,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
     , m_compiled_function(nullptr)
-    , m_emit_debug(true)
+    , m_emit_timing(std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr)
 {
 }
 
@@ -227,7 +228,7 @@ using namespace ngraph::runtime;
 
     writer << "void *__dso_handle = 0;\n\n";
 
-    if (m_emit_debug)
+    if (m_emit_timing)
     {
         writer << "// Declare debug timers\n";
         vector<string> names;
@@ -410,12 +411,12 @@ using namespace ngraph::runtime;
                 auto tv = output.get_tensor_view();
                 out.push_back(TensorViewWrapper(tv));
             }
-            if (m_emit_debug)
+            if (m_emit_timing)
             {
                 emit_debug_function_entry(writer, node.get(), in, out);
             }
             handler->second(&emitter, node.get(), in, out);
-            if (m_emit_debug)
+            if (m_emit_timing)
             {
                 emit_debug_function_exit(writer, node.get(), in, out);
             }

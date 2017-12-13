@@ -65,12 +65,6 @@ static HeaderCache s_header_cache;
 static StaticCompiler s_static_compiler;
 static std::mutex m_mutex;
 
-shared_ptr<SectionMemoryManager> get_mm()
-{
-    NGRAPH_INFO;
-    return std::make_shared<SectionMemoryManager>();
-}
-
 Compiler::Compiler()
 {
 }
