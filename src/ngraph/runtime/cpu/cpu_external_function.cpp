@@ -395,8 +395,6 @@ using namespace ngraph::runtime;
         }
         writer << "\n";
 
-        Node* dependence_graph_head = nullptr;
-
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
             auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
@@ -421,13 +419,8 @@ using namespace ngraph::runtime;
             }
 
             // Emit operation prologue
-            if (!node->is_parameter())
+            if (!node->is_parameter() && !node->is_constant())
             {
-                if (!dependence_graph_head)
-                {
-                    dependence_graph_head = node.get();
-                }
-
                 writer << "tbb::flow::continue_node<tbb::flow::continue_msg> flowgraph_node_" << node->get_name()
                        << "(G, [&](const tbb::flow::continue_msg &msg) {\n";
                 writer.indent++;
@@ -441,7 +434,7 @@ using namespace ngraph::runtime;
             handler->second(&emitter, node.get(), in, out);
 
             // Emit operation epilogue
-            if (!node->is_parameter())
+            if (!node->is_parameter() && !node->is_constant())
             {
                 if (m_emit_timing)
                 {
@@ -455,13 +448,17 @@ using namespace ngraph::runtime;
         writer << "\n";
 
         // Build the flow graph
-        traverse_nodes(current_function, [&writer](shared_ptr<Node> n) {
-            if (!n->is_parameter())
+        vector<Node*> dependence_graph_heads;
+
+        traverse_nodes(current_function, [&writer, &dependence_graph_heads](shared_ptr<Node> n) {
+            if (!n->is_parameter() && !n->is_constant())
             {
+                bool is_head = true;
                 for (auto arg : n->get_arguments())
                 {
-                    if (!arg->is_parameter())
+                    if (!arg->is_parameter() && !arg->is_constant())
                     {
+                        is_head = false;
                         writer << "tbb::flow::make_edge(flowgraph_node_"
                                << arg->get_name()
                                << ", flowgraph_node_"
@@ -469,19 +466,26 @@ using namespace ngraph::runtime;
                                << ");\n";
                     }
                 }
+                if (is_head)
+                {
+                    dependence_graph_heads.emplace_back(n.get());
+                }
             }
         });
 
         writer << "\n";
 
-        assert(dependence_graph_head);
-
         // Execute the flow graph
-        writer << "flowgraph_node_"
-               << dependence_graph_head->get_name()
-               << ".try_put(tbb::flow::continue_msg());\n"
-               << "G.wait_for_all();\n";
-
+        if (!dependence_graph_heads.empty())
+        {
+            for (Node* n : dependence_graph_heads)
+            {
+                writer << "flowgraph_node_"
+                       << n->get_name()
+                       << ".try_put(tbb::flow::continue_msg());\n"
+                       << "G.wait_for_all();\n";
+            }
+        }
         writer.indent--;
 
         // End generated function
