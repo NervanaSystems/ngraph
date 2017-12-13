@@ -26,6 +26,10 @@ codegen::ExecutionEngine::ExecutionEngine()
 
 codegen::ExecutionEngine::~ExecutionEngine()
 {
+    if (m_execution_engine)
+    {
+        m_execution_engine->runStaticConstructorsDestructors(true);
+    }
 }
 
 bool codegen::ExecutionEngine::add_module(std::unique_ptr<llvm::Module>& module)
