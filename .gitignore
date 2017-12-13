@@ -57,7 +57,7 @@ nervana_aeon.egg-info/
 *.swo
 
 # setup.py intermediate files
-build/
+build*/
 
 # makeenv and test intermediate files
 tmp/
