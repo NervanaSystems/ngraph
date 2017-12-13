@@ -37,10 +37,12 @@ namespace ngraph
             {
             protected:
                 codegen::CodeWriter m_out;
+                bool m_use_ref_kernels;
 
             public:
                 CPU_Emitter()
                     : m_out()
+                    , m_use_ref_kernels(std::getenv("NGRAPH_CPU_USE_REF_KERNELS") != nullptr)
                 {
                 }
                 std::string get_code() { return m_out.get_code(); }

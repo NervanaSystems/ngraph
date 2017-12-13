@@ -253,38 +253,41 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
     }
     else
     {
-        auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
-
-        std::vector<std::string> arg_names;
-        std::vector<Shape> arg_shapes;
-
-        for (auto arg : args)
+        if (m_use_ref_kernels)
         {
-            arg_names.push_back(arg.get_name());
-            arg_shapes.push_back(arg.get_shape());
+            auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+
+            std::vector<std::string> arg_names;
+            std::vector<std::string> arg_shape_strings;
+
+            for (auto arg : args)
+            {
+                arg_names.push_back(arg.get_name());
+                arg_shape_strings.push_back("{" + join(arg.get_shape()) + "}");
+            }
+
+            m_out << "kernel::concat<" << out[0].get_type() << ">({" << join(arg_names) << "},\n";
+            m_out << "                         " << out[0].get_name() << ",\n";
+            m_out << "                         {" << join(arg_shape_strings) << "},\n";
+            m_out << "                         {" << join(result_shape) << "},\n";
+            m_out << "                         " << axis << ");\n";
         }
+        else
+        {
+            auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
 
-        kernels::emit_concat(m_out, arg_names, out[0].get_name(), arg_shapes, result_shape, axis);
+            std::vector<std::string> arg_names;
+            std::vector<Shape> arg_shapes;
 
-        //
-        // Here is how we would invoke the reference kernel itself.
-        //
-        // auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
-        //
-        // std::vector<std::string> arg_names;
-        // std::vector<std::string> arg_shape_strings;
-        //
-        // for (auto arg : args)
-        // {
-        //     arg_names.push_back(arg.get_name());
-        //     arg_shape_strings.push_back("{" + join(arg.get_shape()) + "}");
-        // }
-        //
-        // m_out << "kernel::concat<" << out[0].get_type() << ">({" << join(arg_names) << "},\n";
-        // m_out << "                         " << out[0].get_name() << ",\n";
-        // m_out << "                         {" << join(arg_shape_strings) << "},\n";
-        // m_out << "                         {" << join(result_shape) << "},\n";
-        // m_out << "                         " << axis << ");\n";
+            for (auto arg : args)
+            {
+                arg_names.push_back(arg.get_name());
+                arg_shapes.push_back(arg.get_shape());
+            }
+
+            kernels::emit_concat(
+                m_out, arg_names, out[0].get_name(), arg_shapes, result_shape, axis);
+        }
     }
 }
 
