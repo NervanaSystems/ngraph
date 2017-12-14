@@ -18,59 +18,59 @@
 using namespace std;
 using namespace ngraph;
 
-op::Convolution::Convolution(const std::shared_ptr<Node>& arg0,
-                             const std::shared_ptr<Node>& arg1,
+op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
+                             const std::shared_ptr<Node>& filters,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides)
-    : RequiresTensorViewArgs("Convolution", {arg0, arg1})
+    : RequiresTensorViewArgs("Convolution", {image_batch, filters})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
 {
-    auto arg0_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
-    auto& arg0_shape = arg0_tensor_view_type->get_shape();
+    auto image_batch_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
+    auto& image_batch_shape = image_batch_tensor_view_type->get_shape();
 
-    auto arg1_tensor_view_type = get_inputs().at(1).get_tensor_view_type();
-    auto& arg1_shape = arg1_tensor_view_type->get_shape();
+    auto filters_tensor_view_type = get_inputs().at(1).get_tensor_view_type();
+    auto& filters_shape = filters_tensor_view_type->get_shape();
 
     //
-    // Make sure arg0: NCiDi for some Di of rank>0, N != 0, Ci != 0.
+    // Make sure image_batch: NCiDi for some Di of rank>0, N != 0, Ci != 0.
     //
-    if (arg0_shape.size() < 3)
+    if (image_batch_shape.size() < 3)
     {
         throw ngraph_error(
             "Convolution image batch input must have rank of at least 3 (one batch axis, one "
             "input-channel axis, at least one image dimension).");
     }
 
-    m_batch_size = arg0_shape[0];
+    m_batch_size = image_batch_shape[0];
     if (m_batch_size == 0)
     {
         throw ngraph_error("Convolution image batch size is zero.");
     }
 
-    m_n_input_channels = arg0_shape[1];
+    m_n_input_channels = image_batch_shape[1];
     if (m_n_input_channels == 0)
     {
         throw ngraph_error("Convolution requires at least one input channel.");
     }
 
-    m_n_image_dimensions = arg0_shape.size() - 2;
+    m_n_image_dimensions = image_batch_shape.size() - 2;
 
     //
-    // Make sure arg1: CoCiWv for some Co>0, rank of W = rank of Di.
+    // Make sure filters: CoCiWv for some Co>0, rank of W = rank of Di.
     //
-    if (arg1_shape.size() != 2 + m_n_image_dimensions)
+    if (filters_shape.size() != 2 + m_n_image_dimensions)
     {
         throw ngraph_error("Convolution filter input must have rank of 2 + n_image_dimensions.");
     }
 
-    m_n_output_channels = arg1_shape[0];
+    m_n_output_channels = filters_shape[0];
     if (m_n_output_channels == 0)
     {
         throw ngraph_error("Convolution requires at least one output channel.");
     }
 
-    if (arg1_shape[1] != m_n_input_channels)
+    if (filters_shape[1] != m_n_input_channels)
     {
         throw ngraph_error("Convolution image batch and filter input channel counts do not match.");
     }
@@ -95,7 +95,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& arg0,
     //
     for (size_t i = 0; i < m_n_image_dimensions; i++)
     {
-        m_input_image_shape.push_back(arg0_shape[1 + 1 + +i]);
+        m_input_image_shape.push_back(image_batch_shape[1 + 1 + +i]);
 
         if (m_input_image_shape[i] == 0)
         {
@@ -109,7 +109,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& arg0,
     //
     for (size_t i = 0; i < m_n_image_dimensions; i++)
     {
-        m_window_virtual_shape.push_back(arg1_shape[1 + 1 + i]);
+        m_window_virtual_shape.push_back(filters_shape[1 + 1 + i]);
         if (m_window_virtual_shape[i] == 0)
         {
             throw ngraph_error("Convolution window shape has a zero-length axis.");
@@ -157,38 +157,40 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& arg0,
     result_shape[1] = m_n_output_channels;
     std::copy(m_output_image_shape.begin(), m_output_image_shape.end(), result_shape.begin() + 2);
 
-    set_value_type_checked(
-        make_shared<TensorViewType>(arg0_tensor_view_type->get_element_type(), result_shape));
+    set_value_type_checked(make_shared<TensorViewType>(
+        image_batch_tensor_view_type->get_element_type(), result_shape));
 }
 
-Strides default_strides(const std::shared_ptr<Node>& arg0)
+Strides default_strides(const std::shared_ptr<Node>& image_batch)
 {
-    auto arg0_value_type = arg0->get_value_type();
-    auto arg0_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg0_value_type);
-    if (arg0_tensor_view_type == nullptr)
+    auto image_batch_value_type = image_batch->get_value_type();
+    auto image_batch_tensor_view_type =
+        dynamic_pointer_cast<const TensorViewType>(image_batch_value_type);
+    if (image_batch_tensor_view_type == nullptr)
     {
         throw ngraph_error("Convolution image batch argument has non-tensor view type");
     }
-    auto& arg0_shape = arg0_tensor_view_type->get_shape();
-    if (arg0_shape.size() < 3)
+    auto& image_batch_shape = image_batch_tensor_view_type->get_shape();
+    if (image_batch_shape.size() < 3)
     {
         // For consistency we should throw the same error message here that we throw in the constructor.
         throw ngraph_error(
             "Convolution image batch input must have rank of at least 3 (one batch axis, one "
             "input-channel axis, at least one image dimension).");
     }
-    return Strides(arg0_shape.size() - 2, 1);
+    return Strides(image_batch_shape.size() - 2, 1);
 }
 
-op::Convolution::Convolution(const std::shared_ptr<Node>& arg0,
-                             const std::shared_ptr<Node>& arg1,
+op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
+                             const std::shared_ptr<Node>& filters,
                              const Strides& window_movement_strides)
-    : Convolution(arg0, arg1, window_movement_strides, default_strides(arg0))
+    : Convolution(image_batch, filters, window_movement_strides, default_strides(image_batch))
 {
 }
 
-op::Convolution::Convolution(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
-    : Convolution(arg0, arg1, default_strides(arg0), default_strides(arg0))
+op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
+                             const std::shared_ptr<Node>& filters)
+    : Convolution(image_batch, filters, default_strides(image_batch), default_strides(image_batch))
 {
 }
 

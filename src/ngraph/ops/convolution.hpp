@@ -51,29 +51,30 @@ namespace ngraph
         public:
             /// \brief Constructs a batched convolution operation.
             ///
-            /// \param arg0 The node producing the input image batch tensor.
-            /// \param arg1 The node producing the filters tensor.
+            /// \param image_batch The node producing the input image batch tensor.
+            /// \param filters The node producing the filters tensor.
             /// \param window_movement_strides The window movement strides.
             /// \param window_dilation_strides The window dilation strides.
-            Convolution(const std::shared_ptr<Node>& arg0,
-                        const std::shared_ptr<Node>& arg1,
+            Convolution(const std::shared_ptr<Node>& image_batch,
+                        const std::shared_ptr<Node>& filters,
                         const Strides& window_movement_strides,
                         const Strides& window_dilation_strides);
 
             /// \brief Constructs a batched convolution operation with no window dilation (i.e., all dilation strides are 1).
             ///
-            /// \param arg0 The node producing the input image batch tensor.
-            /// \param arg1 The node producing the filters tensor.
+            /// \param image_batch The node producing the input image batch tensor.
+            /// \param filters The node producing the filters tensor.
             /// \param window_movement_strides The window movement strides.
-            Convolution(const std::shared_ptr<Node>& arg0,
-                        const std::shared_ptr<Node>& arg1,
+            Convolution(const std::shared_ptr<Node>& image_batch,
+                        const std::shared_ptr<Node>& filters,
                         const Strides& window_movement_strides);
 
             /// \brief Constructs a batched convolution operation with no window dilation or movement stride (i.e., all dilation and movement strides are 1).
             ///
-            /// \param arg0 The node producing the input image batch tensor.
-            /// \param arg1 The node producing the filters tensor.
-            Convolution(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            /// \param image_batch The node producing the input image batch tensor.
+            /// \param filters The node producing the filters tensor.
+            Convolution(const std::shared_ptr<Node>& image_batch,
+                        const std::shared_ptr<Node>& filters);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override

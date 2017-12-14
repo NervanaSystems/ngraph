@@ -4267,7 +4267,7 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
 #define CONV_TEST_BACKEND ${BACKEND_NAME}
 // clang-format on
 #define CONV_TEST_BACKEND_STR "${BACKEND_NAME}"
-#include "convolution_test_${BACKEND_NAME}.cpp"
+#include "convolution_test.cpp"
 #undef CONV_TEST_BACKEND
 #undef CONV_TEST_BACKEND_STR
 
