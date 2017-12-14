@@ -79,8 +79,8 @@ namespace ngraph
                         size_t movement_stride = window_movement_strides[i - 2];
 
                         input_batch_transform_start[i] = movement_stride * out_coord[i];
-                        input_batch_transform_end[i] =
-                            input_batch_transform_start[i] + dilation_stride * arg1_shape[i];
+                        input_batch_transform_end[i] = input_batch_transform_start[i] +
+                                                       (arg1_shape[i] - 1) * dilation_stride + 1;
                         input_batch_transform_strides[i] = dilation_stride;
                     }
 

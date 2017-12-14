@@ -4263,64 +4263,13 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, convolution)
-{
-    auto shape_a = Shape{1, 1, 3, 5};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
-    auto shape_b = Shape{2, 1, 2, 2};
-    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
-    auto shape_r = Shape{1, 2, 2, 4};
-    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
-    auto f = make_shared<Function>(
-        make_shared<op::Convolution>(A, B), result_type, op::Parameters{A, B});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
-    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
-    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
-    copy_data(b, vector<float>{1, 2, 3, 4, 4, 3, 2, 1});
-    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
-
-    cf->call({a, b}, {result});
-    ASSERT_EQ((vector<float>{51, 61, 71, 81, 101, 111, 121, 131, 29, 39, 49, 59, 79, 89, 99, 109}),
-              result->get_vector<float>());
-}
-
-TEST(${BACKEND_NAME}, convolution_2_images)
-{
-    auto shape_a = Shape{2, 1, 3, 5};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
-    auto shape_b = Shape{2, 1, 2, 2};
-    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
-    auto shape_r = Shape{2, 2, 2, 4};
-    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
-    auto f = make_shared<Function>(
-        make_shared<op::Convolution>(A, B), result_type, op::Parameters{A, B});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
-    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7, 8, 9, 10, 11, 12, 13, 14, 15,
-                               15, 14, 13, 12, 11, 10, 9, 8, 7, 6,  5,  4,  3,  2,  1});
-    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
-    copy_data(b, vector<float>{1, 2, 3, 4, 4, 3, 2, 1});
-    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
-
-    cf->call({a, b}, {result});
-    ASSERT_EQ(
-        (vector<float>{51,  61, 71, 81, 101, 111, 121, 131, 29,  39,  49,  59,  79, 89, 99, 109,
-                       109, 99, 89, 79, 59,  49,  39,  29,  131, 121, 111, 101, 81, 71, 61, 51}),
-        result->get_vector<float>());
-}
+// clang-format off
+#define CONV_TEST_BACKEND ${BACKEND_NAME}
+// clang-format on
+#define CONV_TEST_BACKEND_STR "${BACKEND_NAME}"
+#include "convolution_test_${BACKEND_NAME}.cpp"
+#undef CONV_TEST_BACKEND
+#undef CONV_TEST_BACKEND_STR
 
 //
 // Numpy test:
