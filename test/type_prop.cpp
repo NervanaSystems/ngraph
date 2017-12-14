@@ -438,7 +438,7 @@ void test_binary(std::string node_type,
 
     auto test_binary_good_arguments = [&](const shared_ptr<Node>& x, const shared_ptr<Node>& y) {
         auto node = f(x, y);
-        EXPECT_EQ(*node->get_value_type(), *node->get_arguments_via_inputs()[0]->get_value_type());
+        EXPECT_EQ(*node->get_value_type(), *node->get_input_ops()[0]->get_value_type());
     };
     test_binary_good_arguments(tv0_2_4_param_0, tv0_2_4_param_1);
 }

@@ -23,9 +23,9 @@ op::GetTupleElement::GetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
     : Node("GetTupleElement", {arg})
     , m_n{n}
 {
-    if (arg->get_outputs().size() > 1)
+    if (arg->get_outputs().size() < 1)
     {
-        throw ngraph_error("Argument must have multiple output tensors");
+        throw ngraph_error("Argument should have at least one output tensor");
     }
 
     if (m_n >= arg->get_outputs().size())

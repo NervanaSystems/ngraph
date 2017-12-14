@@ -174,12 +174,11 @@ void Node::set_name(const string& name)
 void Node::assert_argument_list_equivalency(const Nodes& b)
 {
     bool arguments_equal = true;
-    auto& a = this->m_arguments;
-    if (a.size() == b.size())
+    if (this->m_arguments.size() == b.size())
     {
-        for (size_t i = 0; i < a.size(); i++)
+        for (size_t i = 0; i < this->m_arguments.size(); i++)
         {
-            arguments_equal = arguments_equal && a.at(i) == b.at(i);
+            arguments_equal = arguments_equal && this->m_arguments.at(i) == b.at(i);
         }
     }
     else
@@ -191,7 +190,7 @@ void Node::assert_argument_list_equivalency(const Nodes& b)
     {
         std::cout << "node = " << this->get_name() << std::endl;
         std::cout << "m_arguments" << std::endl;
-        for (auto arg : a)
+        for (auto arg : this->m_arguments)
         {
             std::cout << "arg = " << arg->get_name() << std::endl;
         }
@@ -220,7 +219,7 @@ std::shared_ptr<Node> Node::get_input_op(size_t index)
     return m_inputs.at(index).get_output().get_node();
 }
 
-Nodes Node::get_arguments_via_inputs() //const
+Nodes Node::get_input_ops() //const
 {
     Nodes result;
     std::set<shared_ptr<op::XLATuple>> seen_tuples;

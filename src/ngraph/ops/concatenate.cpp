@@ -88,7 +88,7 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const std::shar
 
     size_t pos = 0;
 
-    for (auto arg : get_arguments_via_inputs())
+    for (auto arg : get_input_ops())
     {
         auto arg_value_type = arg->get_value_type();
         auto arg_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(arg_value_type);

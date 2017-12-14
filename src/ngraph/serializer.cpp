@@ -256,8 +256,8 @@ json write(const Function& f)
 
         traverse_nodes(const_cast<Function*>(&f), [&](shared_ptr<Node> node) {
             node_map[node.get()] = node;
-            node_depencency_count[node.get()] = node->get_arguments_via_inputs().size();
-            if (node->get_arguments_via_inputs().size() == 0)
+            node_depencency_count[node.get()] = node->get_input_ops().size();
+            if (node->get_input_ops().size() == 0)
             {
                 independent_nodes.push_back(node.get());
             }

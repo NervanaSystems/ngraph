@@ -62,7 +62,7 @@ TEST(topological_sort, basic)
     auto f0 = make_shared<Function>(r0, rt, args);
     ASSERT_NE(nullptr, f0);
 
-    ASSERT_EQ(2, r0->get_arguments_via_inputs().size());
+    ASSERT_EQ(2, r0->get_input_ops().size());
 
     // Visualize vz;
     // vz.add(r0);

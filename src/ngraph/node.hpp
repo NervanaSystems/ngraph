@@ -34,6 +34,9 @@
 
 namespace ngraph
 {
+    void replace_node_users_arguments(std::shared_ptr<Node> target,
+                                      std::shared_ptr<Node> replacement);
+
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// view or a (possibly empty) tuple of values.
@@ -41,6 +44,8 @@ namespace ngraph
     {
         // So Adjoints can call generate_adjoints
         friend class autodiff::Adjoints;
+        friend void replace_node_users_arguments(std::shared_ptr<Node> target,
+                                                 std::shared_ptr<Node> replacement);
 
     protected:
         Node(const std::string& node_type, const Nodes& arguments);
@@ -102,9 +107,8 @@ namespace ngraph
         std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
                                             const std::shared_ptr<Node>& c);
 
-        virtual Nodes get_arguments_via_inputs(); //const;
+        virtual Nodes get_input_ops(); //const;
 
-        Nodes& get_arguments_FOR_GRAPH_REWRITE_ONLY() { return m_arguments; }
         std::shared_ptr<Node> get_input_op(size_t index);
 
         /// Returns the shape if this node has tensor type, otherwise an ngraph-error is thrown.
@@ -131,5 +135,6 @@ namespace ngraph
 
     private:
         Nodes m_arguments;
+        Nodes& get_arguments_FOR_GRAPH_REWRITE_ONLY() { return m_arguments; }
     };
 }

@@ -24,7 +24,7 @@ op::XLAGetTupleElement::XLAGetTupleElement(const std::shared_ptr<Node>& arg, siz
     , m_n{n}
 {
     auto arg0_tuple_type =
-        dynamic_pointer_cast<const TupleType>(get_arguments_via_inputs().at(0)->get_value_type());
+        dynamic_pointer_cast<const TupleType>(get_input_ops().at(0)->get_value_type());
     if (nullptr == arg0_tuple_type)
     {
         throw ngraph_error("Argument must be a tuple view");
@@ -38,7 +38,7 @@ op::XLAGetTupleElement::XLAGetTupleElement(const std::shared_ptr<Node>& arg, siz
     set_value_type_checked(arg0_tuple_type->get_element_types().at(m_n));
 }
 
-Nodes op::XLAGetTupleElement::get_arguments_via_inputs() //const
+Nodes op::XLAGetTupleElement::get_input_ops() //const
 {
     Nodes result;
     if (auto gte = dynamic_cast<op::XLAGetTupleElement*>(this))

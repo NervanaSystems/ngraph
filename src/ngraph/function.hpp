@@ -50,14 +50,7 @@ namespace ngraph
                  const std::string& name = "");
 
         virtual ~Function() {}
-        std::shared_ptr<Node> get_result() //TODO: push up to XLAFunction
-        {
-            if (m_results.size() > 1)
-            {
-                throw "get_result was called on a function with multiple non-tuple outputs!";
-            }
-            return m_results[0];
-        }
+        std::shared_ptr<Node> get_result();
 
         const Nodes& get_results() const { return m_results; }
         std::vector<descriptor::Output*> get_outputs();
@@ -66,29 +59,16 @@ namespace ngraph
         {
             return m_parameters;
         }
-        std::shared_ptr<const ValueType> get_result_type() const //TODO: push up to XLAFunction
-        {
-            if (m_results.size() > 1)
-            {
-                throw "get_result_type was called on a function with multiple non-tuple outputs!";
-            }
-            return m_results[0]->get_value_type();
-        }
-        std::vector<std::shared_ptr<const ValueType>> get_result_types() const
-        {
-            std::vector<std::shared_ptr<const ValueType>> result_types{};
-            for (auto r : m_results)
-            {
-                result_types.push_back(r->get_value_type());
-            }
-            return result_types;
-        } //TODO: switch ValueType to TensorViewType
+
+        std::shared_ptr<const ValueType> get_result_type() const;
+
+        std::vector<std::shared_ptr<const ValueType>> get_result_types() const;
+
         std::string get_name() const;
-        virtual void
-            set_name(const std::string&
-                         name); //so we can check if we are dealing with XLA or regular function
-        std::list<std::shared_ptr<Node>>&
-            get_ops(); //overriding get_result_type doesn't work because we would like different behaviours(checks) depending on a caller
+        virtual void set_name(
+            const std::string&
+                name); //so we can use `dynamic_cast` in FunctionCall to double check if we are dealing with an XLA or regular function
+        std::list<std::shared_ptr<Node>>& get_ops();
         const std::list<std::shared_ptr<Node>>& get_ops() const;
         std::list<std::shared_ptr<Node>>& get_ordered_ops();
         const std::list<std::shared_ptr<Node>>& get_ordered_ops() const;

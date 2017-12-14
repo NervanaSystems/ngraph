@@ -87,7 +87,35 @@ Function::Function(const std::shared_ptr<Node>& result,
     {
         throw "Unexpected XLATuple in Function";
     }
-};
+}
+
+std::vector<std::shared_ptr<const ValueType>> Function::get_result_types() const
+{
+    std::vector<std::shared_ptr<const ValueType>> result_types{};
+    for (auto r : m_results)
+    {
+        result_types.push_back(r->get_value_type());
+    }
+    return result_types;
+}
+
+std::shared_ptr<const ValueType> Function::get_result_type() const
+{
+    if (m_results.size() > 1)
+    {
+        throw "get_result_type was called on a function with multiple non-tuple outputs!";
+    }
+    return m_results[0]->get_value_type();
+}
+
+std::shared_ptr<Node> Function::get_result() //TODO: push up to XLAFunction
+{
+    if (m_results.size() > 1)
+    {
+        throw "get_result was called on a function with multiple non-tuple outputs!";
+    }
+    return m_results[0];
+}
 
 void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)
 {
