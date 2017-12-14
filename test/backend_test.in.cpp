@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cinttypes>
 #include <cmath>
+#include <string>
 
 #include "gtest/gtest.h"
 
@@ -3793,7 +3794,18 @@ TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
     copy_data(a, vector<float>{1.1f});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+    try
+    {
+        cf->call({a}, {result});
+    }
+    catch (const std::exception& e)
+    {
+        EXPECT_EQ(e.what(), std::string("One-hot: non-integral value in input"));
+    }
+    catch (...)
+    {
+        FAIL() << "Expected a std::out_of_range exception";
+    }
 }
 
 TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
@@ -3816,7 +3828,18 @@ TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
     copy_data(a, vector<int32_t>{3000000});
     auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape_r);
 
-    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+    try
+    {
+        cf->call({a}, {result});
+    }
+    catch (const std::exception& e)
+    {
+        EXPECT_EQ(e.what(), std::string("One-hot: value is out of category range"));
+    }
+    catch (...)
+    {
+        FAIL() << "Expected a std::out_of_range exception";
+    }
 }
 
 TEST(${BACKEND_NAME}, one_hot_vector_0)
@@ -3891,7 +3914,18 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
     copy_data(a, vector<int32_t>{2, 1, 0, 0, 3, 2, 1, 0});
     auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape_r);
 
-    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+    try
+    {
+        cf->call({a}, {result});
+    }
+    catch (const std::exception& e)
+    {
+        EXPECT_EQ(e.what(), std::string("One-hot: value is out of category range"));
+    }
+    catch (...)
+    {
+        FAIL() << "Expected a std::out_of_range exception";
+    }
 }
 
 TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
@@ -3914,7 +3948,18 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
     copy_data(a, vector<int32_t>{2, 1, 0, 0, 3000000, 2, 1, 0});
     auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape_r);
 
-    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+    try
+    {
+        cf->call({a}, {result});
+    }
+    catch (const std::exception& e)
+    {
+        EXPECT_EQ(e.what(), std::string("One-hot: value is out of category range"));
+    }
+    catch (...)
+    {
+        FAIL() << "Expected a std::out_of_range exception";
+    }
 }
 
 // This test is disabled because it won't yet work on the IA backend, but it does work with
@@ -4003,7 +4048,18 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
     copy_data(a, vector<float>{2, 1, 0, 0, 2, 2, 1.01f, 0});
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
-    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+    try
+    {
+        cf->call({a}, {result});
+    }
+    catch (const std::exception& e)
+    {
+        EXPECT_EQ(e.what(), std::string("One-hot: non-integral value in input"));
+    }
+    catch (...)
+    {
+        FAIL() << "Expected a std::out_of_range exception";
+    }
 }
 
 TEST(${BACKEND_NAME}, replace_slice_3d)
