@@ -79,7 +79,8 @@ void runtime::interpreter::INT_CallFrame::call(
             {
                 // The output tensor is not in the tensor map so create a new tensor
                 const Shape& shape = output.get_tensor_view_type()->get_shape();
-                element::Type element_type = output.get_tensor_view_type()->get_element_type();
+                const element::Type& element_type =
+                    output.get_tensor_view_type()->get_element_type();
                 string tensor_name = output.get_tensor().get_name();
                 itv = make_shared<runtime::interpreter::INT_TensorView>(
                     element_type, shape, tensor_name);

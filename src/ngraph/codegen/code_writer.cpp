@@ -20,6 +20,7 @@ using namespace ngraph;
 codegen::CodeWriter::CodeWriter()
     : indent(0)
     , m_pending_indent(true)
+    , m_temporary_name_count(0)
 {
 }
 
@@ -31,4 +32,14 @@ string codegen::CodeWriter::get_code() const
 void codegen::CodeWriter::operator+=(const std::string& s)
 {
     *this << s;
+}
+
+std::string codegen::CodeWriter::generate_temporary_name(std::string prefix)
+{
+    std::stringstream ss;
+
+    ss << prefix << "__" << m_temporary_name_count;
+    m_temporary_name_count++;
+
+    return ss.str();
 }
