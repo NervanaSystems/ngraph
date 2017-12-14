@@ -12,21 +12,27 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <deque>
-#include <unordered_map>
+#pragma once
 
-#include "ngraph/function.hpp"
-#include "ngraph/log.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/common.hpp"
 
-using namespace ngraph;
-using namespace std;
-
-bool ngraph::pass::TopologicalSort::run_on_function(shared_ptr<ngraph::Function> func)
+namespace ngraph
 {
-    func->set_ordered_ops(topological_sort(func->get_ops()));
-    return false;
+    namespace runtime
+    {
+        namespace cpu
+        {
+            namespace kernels
+            {
+                void emit_concat(codegen::CodeWriter& writer,
+                                 std::string element_type,
+                                 const std::vector<std::string> args,
+                                 std::string out,
+                                 const std::vector<Shape>& in_shapes,
+                                 const Shape& out_shape,
+                                 size_t concatenation_axis);
+            }
+        }
+    }
 }

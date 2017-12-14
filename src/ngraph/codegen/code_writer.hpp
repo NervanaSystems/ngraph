@@ -66,7 +66,10 @@ public:
         return out;
     }
 
+    std::string generate_temporary_name(std::string prefix = "tempvar");
+
 private:
     std::stringstream m_ss;
     bool m_pending_indent;
+    size_t m_temporary_name_count;
 };

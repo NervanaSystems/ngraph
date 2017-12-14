@@ -41,12 +41,17 @@ namespace ngraph
                             const Coordinate& source_start_corner,
                             const Coordinate& source_end_corner);
 
-        CoordinateTransform(const Shape& source_space_shape);
+        CoordinateTransform(const Shape& source_shape);
 
         size_t index(const Coordinate& c) const;
         bool in_bounds(const Coordinate& c) const;
         Coordinate get_target_shape() const;
 
+        Shape get_source_shape() { return m_source_shape; }
+        Coordinate get_source_start_corner() { return m_source_start_corner; }
+        Coordinate get_source_end_corner() { return m_source_end_corner; }
+        Strides get_source_strides() { return m_source_strides; }
+        AxisVector get_source_axis_order() { return m_source_axis_order; }
         class Iterator
         {
         public:
@@ -73,7 +78,7 @@ namespace ngraph
         Coordinate to_source_coordinate(const Coordinate& c) const;
         size_t index_source(const Coordinate& c) const;
 
-        Shape m_source_space_shape;
+        Shape m_source_shape;
         Shape m_source_start_corner;
         Shape m_source_end_corner;
         Strides m_source_strides;

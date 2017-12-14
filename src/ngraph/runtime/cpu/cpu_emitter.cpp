@@ -34,6 +34,7 @@
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
+#include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -249,6 +250,49 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
 
         m_out.indent--;
         m_out << "}\n";
+    }
+    else
+    {
+        if (m_use_ref_kernels)
+        {
+            auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+
+            std::vector<std::string> arg_names;
+            std::vector<std::string> arg_shape_strings;
+
+            for (auto arg : args)
+            {
+                arg_names.push_back(arg.get_name());
+                arg_shape_strings.push_back("{" + join(arg.get_shape()) + "}");
+            }
+
+            m_out << "kernel::concat<" << out[0].get_type() << ">({" << join(arg_names) << "},\n";
+            m_out << "                         " << out[0].get_name() << ",\n";
+            m_out << "                         {" << join(arg_shape_strings) << "},\n";
+            m_out << "                         {" << join(result_shape) << "},\n";
+            m_out << "                         " << axis << ");\n";
+        }
+        else
+        {
+            auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+
+            std::vector<std::string> arg_names;
+            std::vector<Shape> arg_shapes;
+
+            for (auto arg : args)
+            {
+                arg_names.push_back(arg.get_name());
+                arg_shapes.push_back(arg.get_shape());
+            }
+
+            kernels::emit_concat(m_out,
+                                 args[0].get_element_type().c_type_string(),
+                                 arg_names,
+                                 out[0].get_name(),
+                                 arg_shapes,
+                                 result_shape,
+                                 axis);
+        }
     }
 }
 
