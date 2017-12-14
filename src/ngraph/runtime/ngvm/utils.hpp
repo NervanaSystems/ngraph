@@ -18,7 +18,7 @@
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
+#include "ngraph/runtime/ngvm/tensor_view_info.hpp"
 
 namespace ngraph
 {

@@ -38,7 +38,7 @@ namespace ngraph
     public:
         virtual ~ValueType() {}
         virtual bool operator==(const ValueType& that) const = 0;
-        bool operator!=(const ValueType& that) const { return !(*this == that); }
+        bool operator!=(const ValueType& that) const;
         /// Add tensor views in depth-first order.
         virtual void collect_tensor_views(
             std::vector<std::shared_ptr<const TensorViewType>>& views) const = 0;

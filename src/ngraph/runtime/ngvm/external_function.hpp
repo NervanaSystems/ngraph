@@ -21,7 +21,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/external_function.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
+#include "ngraph/runtime/ngvm/tensor_view_info.hpp"
 
 namespace ngraph
 {

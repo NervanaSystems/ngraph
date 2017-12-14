@@ -19,13 +19,13 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/cpu/external_function.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
+#include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
 #define EMITTER_DECL(E)                                                                            \
     E(const ngraph::Node* n,                                                                       \
-      const std::vector<TensorViewInfo>& inputs,                                                   \
-      const std::vector<TensorViewInfo>& outputs)
+      const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& args,                            \
+      const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& out)
 
 namespace ngraph
 {
@@ -33,18 +33,20 @@ namespace ngraph
     {
         namespace cpu
         {
-            class Emitter
+            class CPU_Emitter
             {
             protected:
-                codegen::CodeWriter TU;
+                codegen::CodeWriter m_out;
+                bool m_use_ref_kernels;
 
             public:
-                Emitter()
-                    : TU()
+                CPU_Emitter()
+                    : m_out()
+                    , m_use_ref_kernels(std::getenv("NGRAPH_CPU_USE_REF_KERNELS") != nullptr)
                 {
                 }
-                std::string get_code() { return TU.get_code(); }
-                codegen::CodeWriter& get_code_writer() { return TU; }
+                std::string get_code() { return m_out.get_code(); }
+                codegen::CodeWriter& get_code_writer() { return m_out; }
                 void EMITTER_DECL(EmitNop);
                 void EMITTER_DECL(EmitAdd);
                 void EMITTER_DECL(EmitDot);
@@ -101,13 +103,13 @@ namespace ngraph
                 void EMITTER_DECL(EmitSqrt);
 
             private:
-                void generate_call(const std::vector<TensorViewInfo>& inputs,
-                                   const std::vector<TensorViewInfo>& outputs,
+                void generate_call(const std::vector<TensorViewWrapper>& args,
+                                   const std::vector<TensorViewWrapper>& out,
                                    std::shared_ptr<Function> function);
 
-                std::string emit_vector(const TensorViewInfo&, const std::string& name = "");
-                std::string emit_array1d(const TensorViewInfo&, const std::string& name = "");
-                std::string emit_matrix(const TensorViewInfo&, const std::string& name = "");
+                std::string emit_vector(const TensorViewWrapper&, const std::string& name = "");
+                std::string emit_array1d(const TensorViewWrapper&, const std::string& name = "");
+                std::string emit_matrix(const TensorViewWrapper&, const std::string& name = "");
             };
         }
     }

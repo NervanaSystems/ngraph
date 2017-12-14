@@ -22,6 +22,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close.hpp"
+#include "util/ndarray.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -189,13 +190,13 @@ TEST(util, all_close)
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 3});
     auto b = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 3});
 
-    copy_data(a, runtime::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
-    copy_data(b, runtime::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
+    copy_data(a, test::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
 
     EXPECT_TRUE(ngraph::test::all_close<float>(a, b));
 
     auto c = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 3});
-    copy_data(c, runtime::NDArray<float, 2>({{1.1f, 2, 3}, {3, 4, 5}}).get_vector());
+    copy_data(c, test::NDArray<float, 2>({{1.1f, 2, 3}, {3, 4, 5}}).get_vector());
 
     EXPECT_FALSE(ngraph::test::all_close<float>(c, a, 0, .05f));
     EXPECT_TRUE(ngraph::test::all_close<float>(c, a, 0, .11f));
@@ -239,4 +240,92 @@ TEST(util, traverse_functions)
     vector<Function*> functions;
     traverse_functions(h, [&](shared_ptr<Function> fp) { functions.push_back(fp.get()); });
     ASSERT_EQ(3, functions.size());
+}
+
+class CloneTest : public ::testing::Test
+{
+public:
+    // (A + B) * C
+    Shape shape = Shape{2, 2};
+    std::shared_ptr<op::Parameter> A =
+        make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    std::shared_ptr<op::Parameter> B =
+        make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    std::shared_ptr<op::Parameter> C =
+        make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    std::shared_ptr<Node> AplusB = A + B;
+    std::shared_ptr<Node> AplusBtimesC = AplusB * C;
+
+    NodeMap node_map;
+    std::list<std::shared_ptr<ngraph::Node>> nodes;
+    std::shared_ptr<TensorViewType> type =
+        make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    std::shared_ptr<Function> func =
+        make_shared<Function>(AplusBtimesC, type, op::Parameters{A, B, C}, "f");
+
+    void SetUp()
+    {
+        nodes.push_back(AplusBtimesC);
+        nodes.push_back(AplusB);
+        nodes.push_back(A);
+        nodes.push_back(B);
+        nodes.push_back(C);
+    }
+
+    bool CompareNodes(const std::list<std::shared_ptr<ngraph::Node>>& orig,
+                      const std::list<std::shared_ptr<ngraph::Node>>& clone,
+                      const NodeMap& nm)
+    {
+        if (orig.size() != clone.size())
+        {
+            return false;
+        }
+        auto origit = orig.begin();
+        auto cloneit = clone.begin();
+        while (origit != orig.end() && cloneit != clone.end())
+        {
+            if (*cloneit != nm[*origit])
+            {
+                return false;
+            }
+            ++origit;
+            ++cloneit;
+        }
+        return true;
+    }
+};
+
+TEST_F(CloneTest, clone_nodes_full)
+{
+    auto cloned_nodes = clone_nodes(nodes, node_map);
+    ASSERT_TRUE(CompareNodes(nodes, cloned_nodes, node_map));
+
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map[A]));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map[B]));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map[C]));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Add>(node_map[AplusB]));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Multiply>(node_map[AplusBtimesC]));
+
+    auto sorted_nodes = topological_sort(nodes);
+    auto sorted_cloned_nodes = topological_sort(cloned_nodes);
+    ASSERT_TRUE(CompareNodes(sorted_nodes, sorted_cloned_nodes, node_map));
+}
+
+TEST_F(CloneTest, clone_nodes_partial)
+{
+    // map A -> A' prior to clone
+    auto Aprime = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    node_map.Add(A, Aprime);
+
+    auto cloned_nodes = clone_nodes(nodes, node_map);
+    ASSERT_TRUE(CompareNodes(nodes, cloned_nodes, node_map));
+
+    // ensure A -> A' after clone
+    ASSERT_EQ(Aprime, node_map[A]);
+}
+
+TEST_F(CloneTest, clone_function_full)
+{
+    auto cloned_func = clone_function(func, node_map);
+    ASSERT_TRUE(CompareNodes(func->get_ops(), cloned_func->get_ops(), node_map));
 }

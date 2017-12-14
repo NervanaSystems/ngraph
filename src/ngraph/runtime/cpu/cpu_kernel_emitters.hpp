@@ -14,27 +14,24 @@
 
 #pragma once
 
-#include <cmath>
-
+#include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/common.hpp"
-#include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace kernel
+        namespace cpu
         {
-            template <typename T>
-            void scalar_tensor_product(T* arg0, // the scalar (TODO: just pass as T?)
-                                       T* arg1, // the tensor
-                                       T* out,
-                                       size_t count)
+            namespace kernels
             {
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = (*arg0) * arg1[i];
-                }
+                void emit_concat(codegen::CodeWriter& writer,
+                                 std::string element_type,
+                                 const std::vector<std::string> args,
+                                 std::string out,
+                                 const std::vector<Shape>& in_shapes,
+                                 const Shape& out_shape,
+                                 size_t concatenation_axis);
             }
         }
     }

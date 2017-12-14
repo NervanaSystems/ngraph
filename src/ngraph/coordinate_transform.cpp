@@ -25,18 +25,18 @@
 
 using namespace ngraph;
 
-CoordinateTransform::CoordinateTransform(const Shape& source_space_shape,
+CoordinateTransform::CoordinateTransform(const Shape& source_shape,
                                          const Coordinate& source_start_corner,
                                          const Coordinate& source_end_corner,
                                          const Strides& source_strides,
                                          const AxisVector& source_axis_order)
-    : m_source_space_shape(source_space_shape)
+    : m_source_shape(source_shape)
     , m_source_start_corner(source_start_corner)
     , m_source_end_corner(source_end_corner)
     , m_source_strides(source_strides)
     , m_source_axis_order(source_axis_order)
 {
-    m_n_axes = source_space_shape.size();
+    m_n_axes = source_shape.size();
 
     if (m_n_axes != source_start_corner.size())
     {
@@ -75,8 +75,8 @@ CoordinateTransform::CoordinateTransform(const Shape& source_space_shape,
 
     for (size_t i = 0; i < m_n_axes; i++)
     {
-        if (source_start_corner[i] >= source_space_shape[i] &&
-            !(source_start_corner[i] == 0 && source_space_shape[i] == 0))
+        if (source_start_corner[i] >= source_shape[i] &&
+            !(source_start_corner[i] == 0 && source_shape[i] == 0))
         {
             std::stringstream ss;
 
@@ -87,7 +87,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_space_shape,
 
     for (size_t i = 0; i < m_n_axes; i++)
     {
-        if (source_end_corner[i] > source_space_shape[i])
+        if (source_end_corner[i] > source_shape[i])
         {
             std::stringstream ss;
 
@@ -115,7 +115,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_space_shape,
     }
 }
 
-AxisVector default_axis_order(size_t n_axes)
+static AxisVector default_axis_order(size_t n_axes)
 {
     AxisVector result(n_axes);
     size_t n = 0;
@@ -124,50 +124,50 @@ AxisVector default_axis_order(size_t n_axes)
     return result;
 }
 
-CoordinateTransform::CoordinateTransform(const Shape& source_space_shape,
+CoordinateTransform::CoordinateTransform(const Shape& source_shape,
                                          const Coordinate& source_start_corner,
                                          const Coordinate& source_end_corner,
                                          const Strides& source_strides)
-    : CoordinateTransform(source_space_shape,
+    : CoordinateTransform(source_shape,
                           source_start_corner,
                           source_end_corner,
                           source_strides,
-                          default_axis_order(source_space_shape.size()))
+                          default_axis_order(source_shape.size()))
 {
 }
 
-Strides default_source_strides(size_t n_axes)
+static Strides default_source_strides(size_t n_axes)
 {
     return AxisVector(n_axes, 1);
 }
 
-CoordinateTransform::CoordinateTransform(const Shape& source_space_shape,
+CoordinateTransform::CoordinateTransform(const Shape& source_shape,
                                          const Coordinate& source_start_corner,
                                          const Coordinate& source_end_corner)
-    : CoordinateTransform(source_space_shape,
+    : CoordinateTransform(source_shape,
                           source_start_corner,
                           source_end_corner,
-                          default_source_strides(source_space_shape.size()),
-                          default_axis_order(source_space_shape.size()))
+                          default_source_strides(source_shape.size()),
+                          default_axis_order(source_shape.size()))
 {
 }
 
-Coordinate default_source_start_corner(size_t n_axes)
+static Coordinate default_source_start_corner(size_t n_axes)
 {
     return Coordinate(n_axes, 0);
 }
 
-Coordinate default_source_end_corner(const Shape& source_space_shape)
+static Coordinate default_source_end_corner(const Shape& source_shape)
 {
-    return source_space_shape;
+    return source_shape;
 }
 
-CoordinateTransform::CoordinateTransform(const Shape& source_space_shape)
-    : CoordinateTransform(source_space_shape,
-                          default_source_start_corner(source_space_shape.size()),
-                          default_source_end_corner(source_space_shape),
-                          default_source_strides(source_space_shape.size()),
-                          default_axis_order(source_space_shape.size()))
+CoordinateTransform::CoordinateTransform(const Shape& source_shape)
+    : CoordinateTransform(source_shape,
+                          default_source_start_corner(source_shape.size()),
+                          default_source_end_corner(source_shape),
+                          default_source_strides(source_shape.size()),
+                          default_axis_order(source_shape.size()))
 {
 }
 
@@ -180,7 +180,7 @@ size_t CoordinateTransform::index_source(const Coordinate& c) const
     for (size_t axis = m_n_axes; axis-- > 0;)
     {
         index += c[axis] * stride;
-        stride *= m_source_space_shape[axis];
+        stride *= m_source_shape[axis];
     }
 
     return index;
@@ -204,8 +204,8 @@ Coordinate CoordinateTransform::to_source_coordinate(const Coordinate& c) const
 
     for (size_t axis = 0; axis < m_n_axes; axis++)
     {
-        result[axis] = c[m_source_axis_order[axis]] * m_source_strides[m_source_axis_order[axis]] +
-                       m_source_start_corner[m_source_axis_order[axis]];
+        result[m_source_axis_order[axis]] =
+            c[axis] * m_source_strides[axis] + m_source_start_corner[axis];
     }
 
     return result;

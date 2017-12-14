@@ -51,7 +51,7 @@ namespace ngraph
             /// @brief Return a handle for a tensor on the backend device.
             virtual std::shared_ptr<ngraph::runtime::TensorView>
                 make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                         const Shape& shape);
+                                         const Shape& shape) = 0;
 
             template <typename T>
             std::shared_ptr<ngraph::runtime::TensorView>

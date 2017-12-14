@@ -30,19 +30,37 @@ namespace ngraph
 
         namespace cpu
         {
-            class CallFrame;
-            class ExternalFunction;
+            class CPU_CallFrame;
+            class CPU_ExternalFunction;
+
+            class PerformanceCounter
+            {
+            public:
+                PerformanceCounter(const char* n, size_t us, size_t calls)
+                    : m_name(n)
+                    , m_total_microseconds(us)
+                    , m_call_count(calls)
+                {
+                }
+                const std::string& name() const { return m_name; }
+                size_t total_microseconds() const { return m_total_microseconds; }
+                size_t call_count() const { return m_call_count; }
+            private:
+                std::string m_name;
+                size_t m_total_microseconds;
+                size_t m_call_count;
+            };
 
             using EntryPoint_t = void(void** inputs, void** outputs);
 
             using EntryPoint = std::function<EntryPoint_t>;
 
             // Compile and execute graphs
-            class CallFrame : public ngraph::runtime::CallFrame
+            class CPU_CallFrame : public ngraph::runtime::CallFrame
             {
             public:
-                CallFrame(std::shared_ptr<ExternalFunction> external_function,
-                          EntryPoint compiled_function);
+                CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
+                              EntryPoint compiled_function);
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
@@ -55,8 +73,10 @@ namespace ngraph
                 void tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
                                  const std::vector<std::shared_ptr<TensorView>>& outputs);
 
+                std::vector<ngraph::runtime::cpu::PerformanceCounter> get_performance_data() const;
+
             protected:
-                std::shared_ptr<ExternalFunction> m_external_function;
+                std::shared_ptr<CPU_ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
             };
         }

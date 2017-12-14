@@ -521,6 +521,28 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 }
 
+TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
+{
+    auto manager = runtime::Manager::get("NGVM");
+    auto backend = manager->allocate_backend();
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    auto shape0 = Shape{2, 4, 3};
+    auto shape1 = Shape{4, 3, 3};
+    auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
+
+    auto make_graph = [shape0, shape1]() {
+        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
+        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape1);
+        return make_shared<Function>(make_shared<op::Dot>(X0, X1, 2),
+                                     nullptr,
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+    };
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
+}
+
 TEST(${BACKEND_NAME}, backwards_exp)
 {
     auto manager = runtime::Manager::get("${BACKEND_NAME}");

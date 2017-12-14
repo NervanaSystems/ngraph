@@ -14,6 +14,8 @@
 
 #include <algorithm>
 
+#include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/tuple.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
@@ -33,121 +35,94 @@ void runtime::interpreter::INT_CallFrame::call(
     const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs)
 {
     unordered_map<string, shared_ptr<runtime::interpreter::INT_TensorView>> tensor_map;
-    const std::vector<std::shared_ptr<op::Parameter>>& params = function->get_parameters();
 
-    for (size_t i = 0; i < input_tvs.size(); i++)
+    size_t arg_index = 0;
+    for (shared_ptr<op::Parameter> param : function->get_parameters())
     {
-        string name = params[i]->get_name();
-        tensor_map.insert({name, input_tvs[i]});
+        for (const descriptor::Output& output : param->get_outputs())
+        {
+            shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+            string name = tv->get_tensor().get_name();
+            tensor_map.insert({name, input_tvs[arg_index++]});
+        }
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        string name = function->get_result()->get_name();
+        descriptor::Output& output = function->get_result()->get_outputs().at(i);
+        shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+        string name = tv->get_tensor().get_name();
         tensor_map.insert({name, output_tvs[i]});
     }
 
     // Invoke computation
     for (shared_ptr<Node> op : function->get_ordered_ops())
     {
+        if (op->description() == "Parameter")
+        {
+            continue;
+        }
+
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> inputs;
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> outputs;
-
-        element::Type base_type;
-        if (op->get_inputs().empty())
-        {
-            base_type = op->get_element_type();
-        }
-        else
-        {
-            base_type = op->get_inputs().at(0).get_tensor().get_element_type();
-        }
-        element::Type secondary_type = op->get_element_type();
-
-        // Some ops have unusual intput/output types so handle those special cases here
-        if (op->description() == "Select")
-        {
-            base_type = op->get_inputs().at(1).get_tensor().get_element_type();
-            secondary_type = op->get_inputs().at(0).get_tensor().get_element_type();
-        }
-
         for (const descriptor::Input& input : op->get_inputs())
         {
-            string name = input.get_output().get_node()->get_name();
-            shared_ptr<runtime::interpreter::INT_TensorView> tv = tensor_map.at(name);
-            inputs.push_back(tv);
-            // NGRAPH_INFO << "Op Inputs " << name;
+            shared_ptr<descriptor::TensorView> tv = input.get_output().get_tensor_view();
+            string name = tv->get_tensor().get_name();
+            inputs.push_back(tensor_map.at(name));
         }
         for (descriptor::Output& output : op->get_outputs())
         {
-            string name = output.get_node()->get_name();
-            shared_ptr<runtime::interpreter::INT_TensorView> tv;
+            shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+            string name = tv->get_tensor().get_name();
+            shared_ptr<runtime::interpreter::INT_TensorView> itv;
             if (!contains_key(tensor_map, name))
             {
                 // The output tensor is not in the tensor map so create a new tensor
                 const Shape& shape = output.get_tensor_view_type()->get_shape();
-                element::Type element_type = output.get_tensor_view_type()->get_element_type();
+                const element::Type& element_type =
+                    output.get_tensor_view_type()->get_element_type();
                 string tensor_name = output.get_tensor().get_name();
-                tv = make_shared<runtime::interpreter::INT_TensorView>(
+                itv = make_shared<runtime::interpreter::INT_TensorView>(
                     element_type, shape, tensor_name);
-                tensor_map.insert({name, tv});
+                tensor_map.insert({name, itv});
             }
             else
             {
-                tv = tensor_map.at(name);
+                itv = tensor_map.at(name);
             }
-            outputs.push_back(tv);
-            // NGRAPH_INFO << "Op Outputs " << name;
+            outputs.push_back(itv);
         }
-
-        if (base_type == element::boolean)
+        auto tuple = dynamic_pointer_cast<op::Tuple>(op);
+        if (tuple)
         {
-            generate_calls<char>(secondary_type, *op, inputs, outputs);
-        }
-        else if (base_type == element::f32)
-        {
-            generate_calls<float>(secondary_type, *op, inputs, outputs);
-        }
-        else if (base_type == element::f64)
-        {
-            generate_calls<double>(secondary_type, *op, inputs, outputs);
-        }
-        else if (base_type == element::i8)
-        {
-            generate_calls<int8_t>(secondary_type, *op, inputs, outputs);
-        }
-        else if (base_type == element::i16)
-        {
-            generate_calls<int16_t>(secondary_type, *op, inputs, outputs);
-        }
-        else if (base_type == element::i32)
-        {
-            generate_calls<int32_t>(secondary_type, *op, inputs, outputs);
-        }
-        else if (base_type == element::i64)
-        {
-            generate_calls<int64_t>(secondary_type, *op, inputs, outputs);
-        }
-        else if (base_type == element::u8)
-        {
-            generate_calls<uint8_t>(secondary_type, *op, inputs, outputs);
-        }
-        else if (base_type == element::u16)
-        {
-            generate_calls<uint16_t>(secondary_type, *op, inputs, outputs);
-        }
-        else if (base_type == element::u32)
-        {
-            generate_calls<uint32_t>(secondary_type, *op, inputs, outputs);
-        }
-        else if (base_type == element::u64)
-        {
-            generate_calls<uint64_t>(secondary_type, *op, inputs, outputs);
+            for (size_t i = 0; i < inputs.size(); i++)
+            {
+                const element::Type& type = inputs[0]->get_tensor().get_element_type();
+                generate_calls(type, type, *op, {inputs[i]}, {outputs[i]});
+            }
         }
         else
         {
-            stringstream ss;
-            ss << "unsupported element type " << base_type << " op " << op->get_name();
-            throw runtime_error(ss.str());
+            element::Type base_type;
+            element::Type secondary_type;
+            if (op->get_inputs().empty())
+            {
+                base_type = op->get_element_type();
+            }
+            else
+            {
+                base_type = op->get_inputs().at(0).get_tensor().get_element_type();
+            }
+            secondary_type = op->get_element_type();
+
+            // Some ops have unusual intput/output types so handle those special cases here
+            if (op->description() == "Select")
+            {
+                base_type = op->get_inputs().at(1).get_tensor().get_element_type();
+                secondary_type = op->get_inputs().at(0).get_tensor().get_element_type();
+            }
+
+            generate_calls(base_type, secondary_type, *op, inputs, outputs);
         }
 
         // Delete any obsolete tensors
@@ -162,6 +137,65 @@ void runtime::interpreter::INT_CallFrame::call(
                 }
             }
         }
+    }
+}
+
+void runtime::interpreter::INT_CallFrame::generate_calls(
+    const element::Type& base_type,
+    const element::Type& secondary_type,
+    ngraph::Node& op,
+    const std::vector<std::shared_ptr<INT_TensorView>>& args,
+    const std::vector<std::shared_ptr<INT_TensorView>>& out)
+{
+    if (base_type == element::boolean)
+    {
+        generate_calls<char>(secondary_type, op, args, out);
+    }
+    else if (base_type == element::f32)
+    {
+        generate_calls<float>(secondary_type, op, args, out);
+    }
+    else if (base_type == element::f64)
+    {
+        generate_calls<double>(secondary_type, op, args, out);
+    }
+    else if (base_type == element::i8)
+    {
+        generate_calls<int8_t>(secondary_type, op, args, out);
+    }
+    else if (base_type == element::i16)
+    {
+        generate_calls<int16_t>(secondary_type, op, args, out);
+    }
+    else if (base_type == element::i32)
+    {
+        generate_calls<int32_t>(secondary_type, op, args, out);
+    }
+    else if (base_type == element::i64)
+    {
+        generate_calls<int64_t>(secondary_type, op, args, out);
+    }
+    else if (base_type == element::u8)
+    {
+        generate_calls<uint8_t>(secondary_type, op, args, out);
+    }
+    else if (base_type == element::u16)
+    {
+        generate_calls<uint16_t>(secondary_type, op, args, out);
+    }
+    else if (base_type == element::u32)
+    {
+        generate_calls<uint32_t>(secondary_type, op, args, out);
+    }
+    else if (base_type == element::u64)
+    {
+        generate_calls<uint64_t>(secondary_type, op, args, out);
+    }
+    else
+    {
+        stringstream ss;
+        ss << "unsupported element type " << base_type << " op " << op.get_name();
+        throw runtime_error(ss.str());
     }
 }
 

@@ -23,6 +23,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace ngraph
@@ -30,7 +31,6 @@ namespace ngraph
     class Node;
     class Function;
     class stopwatch;
-    extern std::map<std::string, stopwatch*> stopwatch_statistics;
 
     template <typename T>
     std::string join(const T& v, const std::string& sep = ", ")
@@ -105,21 +105,6 @@ namespace ngraph
     class stopwatch
     {
     public:
-        stopwatch() {}
-        stopwatch(const std::string& name)
-            : m_name{name}
-        {
-            stopwatch_statistics.insert({m_name, this});
-        }
-
-        ~stopwatch()
-        {
-            if (m_name.size() > 0)
-            {
-                stopwatch_statistics.find(m_name);
-            }
-        }
-
         void start()
         {
             if (m_active == false)
@@ -169,7 +154,6 @@ namespace ngraph
             std::chrono::high_resolution_clock::duration::zero();
         std::chrono::nanoseconds m_last_time;
         size_t m_total_count = 0;
-        std::string m_name;
     };
 
     /// Parses a string containing a literal of the underlying type.
@@ -256,4 +240,42 @@ namespace ngraph
 
     void replace_node_users_arguments(std::shared_ptr<Node> target,
                                       std::shared_ptr<Node> replacement);
+
+    std::list<std::shared_ptr<Node>>
+        topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
+
+    // maps original to replacement nodes e.g. for clone utilities
+    // performs index checking on access
+    class NodeMap
+    {
+    public:
+        // map original node to replcacement node
+        // throws ngraph_error if key already exists
+        void Add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> replacement);
+
+        // get replacement node from original node
+        // throws ngrah_error if key does not exist
+        std::shared_ptr<ngraph::Node> operator[](std::shared_ptr<ngraph::Node> orig) const;
+
+        // returns true if original node is already mapped
+        bool Exists(std::shared_ptr<ngraph::Node> orig) const
+        {
+            return (node_map_.count(orig) != 0);
+        }
+
+    private:
+        std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>> node_map_;
+    };
+
+    // input nodes are cloned and returned
+    // NodeMap input may contain default node mapping i.e. pre-cloned nodes
+    // NodeMap output (by reference) fully maps input and cloned nodes
+    std::list<std::shared_ptr<ngraph::Node>>
+        clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map);
+
+    // input function is cloned and returned
+    // NodeMap input may contain default node mapping i.e. pre-cloned nodes
+    // NodeMap output (by reference) fully maps input and cloned function ops
+    std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func,
+                                                     NodeMap& node_map);
 } // end namespace ngraph
