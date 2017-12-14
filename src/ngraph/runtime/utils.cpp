@@ -17,7 +17,7 @@
 #include <cmath>
 
 #include "ngraph/function.hpp"
-#include "ngraph/ops/tuple.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/utils.hpp"
 

@@ -31,7 +31,7 @@
 #include "ngraph/ops/exp.hpp"
 #include "ngraph/ops/floor.hpp"
 #include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 #include "ngraph/ops/greater.hpp"
 #include "ngraph/ops/greater_eq.hpp"
 #include "ngraph/ops/less.hpp"
@@ -55,8 +55,9 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/ops/tuple.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/xla_function.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -245,7 +246,7 @@ json write(const Function& f)
     {
         function["parameters"].push_back(param->get_name());
     }
-    function["result"].push_back(f.get_result()->get_name());
+    function["result"].push_back(f.get_results().at(0)->get_name());
 
     list<shared_ptr<Node>> result_list;
     {
@@ -255,8 +256,8 @@ json write(const Function& f)
 
         traverse_nodes(const_cast<Function*>(&f), [&](shared_ptr<Node> node) {
             node_map[node.get()] = node;
-            node_depencency_count[node.get()] = node->get_arguments().size();
-            if (node->get_arguments().size() == 0)
+            node_depencency_count[node.get()] = node->get_input_ops().size();
+            if (node->get_input_ops().size() == 0)
             {
                 independent_nodes.push_back(node.get());
             }
@@ -400,9 +401,9 @@ shared_ptr<ngraph::Function>
             shared_ptr<Function> f_ptr = function_map.at(function_name);
             node = make_shared<op::FunctionCall>(f_ptr, args);
         }
-        // else if (node_op == "GetTupleElement")
+        // else if (node_op == "GetOutputElement")
         // {
-        //     node = make_shared<op::GetTupleElement>(args[0]);
+        //     node = make_shared<op::GetOutputElement>(args[0]);
         // }
         else if (node_op == "Greater")
         {
@@ -508,9 +509,9 @@ shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Tanh>(args[0]);
         }
-        else if (node_op == "Tuple")
+        else if (node_op == "XLATuple")
         {
-            node = make_shared<op::Tuple>(args);
+            node = make_shared<op::XLATuple>(args);
         }
         else
         {
@@ -528,7 +529,7 @@ shared_ptr<ngraph::Function>
         params.push_back(dynamic_pointer_cast<op::Parameter>(node_map.at(param_name)));
     }
 
-    rc = make_shared<Function>(result, rvt, params, func_name);
+    rc = make_shared<XLAFunction>(result, rvt, params, func_name);
     function_map[func_name] = rc;
 
     return rc;
@@ -619,7 +620,7 @@ json write(const Node& n)
     {
         node["function"] = n.get_function()->get_name();
     }
-    else if (node_op == "GetTupleElement")
+    else if (node_op == "GetOutputElement")
     {
     }
     else if (node_op == "Greater")
@@ -708,7 +709,7 @@ json write(const Node& n)
     else if (node_op == "Tanh")
     {
     }
-    else if (node_op == "Tuple")
+    else if (node_op == "XLATuple")
     {
     }
 

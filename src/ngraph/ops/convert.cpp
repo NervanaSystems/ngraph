@@ -32,7 +32,7 @@ op::Convert::Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Ty
 void ngraph::op::Convert::generate_adjoints(autodiff::Adjoints& adjoints,
                                             const std::shared_ptr<Node>& delta)
 {
-    auto x = m_arguments[0];
+    auto x = get_input_op(0);
 
     adjoints.add_delta(x, std::make_shared<op::Convert>(delta, x->get_element_type()));
 }

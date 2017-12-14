@@ -17,8 +17,8 @@
 void ngraph::op::Add::generate_adjoints(autodiff::Adjoints& adjoints,
                                         const std::shared_ptr<Node>& delta)
 {
-    auto x = get_inputs().at(0).get_output().get_node();
-    auto y = get_inputs().at(1).get_output().get_node();
+    auto x = get_input_op(0);
+    auto y = get_input_op(1);
 
     adjoints.add_delta(x, delta);
     adjoints.add_delta(y, delta);

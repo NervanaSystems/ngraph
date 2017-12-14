@@ -26,7 +26,7 @@
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -164,12 +164,12 @@ void runtime::cpu::CPU_Emitter::EmitMultiply(const ngraph::Node* n,
     m_out << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitGetTupleElement(
+void runtime::cpu::CPU_Emitter::EmitGetOutputElement(
     const ngraph::Node* n,
     const vector<runtime::cpu::TensorViewWrapper>& args,
     const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
+    auto get_tuple_element = static_cast<const op::GetOutputElement*>(n);
 
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;

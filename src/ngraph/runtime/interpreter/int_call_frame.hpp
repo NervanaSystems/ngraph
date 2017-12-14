@@ -24,13 +24,13 @@
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/dot.hpp"
-#include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
@@ -325,9 +325,9 @@ private:
             std::shared_ptr<Function> function = node.get_function();
             call(function, args, out);
         }
-        else if (node_op == "GetTupleElement")
+        else if (node_op == "XLAGetTupleElement")
         {
-            auto gte = dynamic_cast<op::GetTupleElement*>(&node);
+            auto gte = dynamic_cast<op::XLAGetTupleElement*>(&node);
             kernel::copy<T>(reinterpret_cast<T*>(args[gte->get_n()]->get_data_ptr()),
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
@@ -517,7 +517,7 @@ private:
             std::shared_ptr<ngraph::Function> reduction_function = reduce->get_function();
 
             auto in_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(
-                node.get_arguments().at(0)->get_value_type());
+                node.get_input_op(0)->get_value_type());
             if (in_tensor_view_type == nullptr)
             {
                 throw std::runtime_error("encountered non-tensor view type as input to reduce");
@@ -649,7 +649,7 @@ private:
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
         }
-        else if (node_op == "Tuple")
+        else if (node_op == "XLATuple")
         {
             for (size_t i = 0; i < args.size(); ++i)
             {
