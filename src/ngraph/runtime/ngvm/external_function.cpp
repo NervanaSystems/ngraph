@@ -546,14 +546,10 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto convolution = static_cast<const op::Convolution*>(n);
 
-            auto arg0_tensor_type = dynamic_pointer_cast<const TensorViewType>(
-                n->get_arguments().at(0)->get_value_type());
-            assert(nullptr != arg0_tensor_type);
+            auto arg0_tensor_type = n->get_inputs().at(0).get_tensor_view_type();
             auto arg0_shape = arg0_tensor_type->get_shape();
 
-            auto arg1_tensor_type = dynamic_pointer_cast<const TensorViewType>(
-                n->get_arguments().at(1)->get_value_type());
-            assert(nullptr != arg1_tensor_type);
+            auto arg1_tensor_type = n->get_inputs().at(1).get_tensor_view_type();
             auto arg1_shape = arg1_tensor_type->get_shape();
 
             auto result_tensor_type =
