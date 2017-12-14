@@ -45,7 +45,7 @@ set (SRC
     ops/dot.cpp
     ops/exp.cpp
     ops/function_call.cpp
-    ops/get_tuple_element.cpp
+    ops/get_output_element.cpp
     ops/log.cpp
     ops/maximum.cpp
     ops/minimum.cpp

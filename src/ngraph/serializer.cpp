@@ -31,7 +31,7 @@
 #include "ngraph/ops/exp.hpp"
 #include "ngraph/ops/floor.hpp"
 #include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 #include "ngraph/ops/greater.hpp"
 #include "ngraph/ops/greater_eq.hpp"
 #include "ngraph/ops/less.hpp"
@@ -401,9 +401,9 @@ shared_ptr<ngraph::Function>
             shared_ptr<Function> f_ptr = function_map.at(function_name);
             node = make_shared<op::FunctionCall>(f_ptr, args);
         }
-        // else if (node_op == "GetTupleElement")
+        // else if (node_op == "GetOutputElement")
         // {
-        //     node = make_shared<op::GetTupleElement>(args[0]);
+        //     node = make_shared<op::GetOutputElement>(args[0]);
         // }
         else if (node_op == "Greater")
         {
@@ -620,7 +620,7 @@ json write(const Node& n)
     {
         node["function"] = n.get_function()->get_name();
     }
-    else if (node_op == "GetTupleElement")
+    else if (node_op == "GetOutputElement")
     {
     }
     else if (node_op == "Greater")

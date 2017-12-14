@@ -108,7 +108,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::EmitDot},
     {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::EmitMultiply},
     {TI(ngraph::op::Parameter), &runtime::cpu::CPU_Emitter::EmitNop},
-    {TI(ngraph::op::XLAGetTupleElement), &runtime::cpu::CPU_Emitter::EmitGetTupleElement},
+    {TI(ngraph::op::XLAGetTupleElement), &runtime::cpu::CPU_Emitter::EmitGetOutputElement},
     {TI(ngraph::op::XLATuple), &runtime::cpu::CPU_Emitter::EmitTuple},
     {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::EmitAbs},
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::EmitConcat},

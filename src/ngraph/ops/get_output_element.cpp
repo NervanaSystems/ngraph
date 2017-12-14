@@ -14,13 +14,13 @@
 
 #include <sstream>
 
-#include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::GetTupleElement::GetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
-    : Node("GetTupleElement", {arg})
+op::GetOutputElement::GetOutputElement(const std::shared_ptr<Node>& arg, size_t n)
+    : Node("GetOutputElement", {arg})
     , m_n{n}
 {
     if (arg->get_outputs().size() < 1)

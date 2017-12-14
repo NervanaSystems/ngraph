@@ -581,7 +581,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         // Parameter is a "runtime no-op" because the output tensor has already been filled.
         REGISTER_TO_OP_MAP(op::Parameter){};
 
-        // GetTupleElement will be spliced out, with the users of out redirected to in's source, but, for now, we need to copy.
+        // GetOutputElement will be spliced out, with the users of out redirected to in's source, but, for now, we need to copy.
         REGISTER_TO_OP_MAP(op::XLAGetTupleElement)
         {
             auto get_tuple_element = static_cast<const op::XLAGetTupleElement*>(n);
