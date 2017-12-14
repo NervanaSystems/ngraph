@@ -135,6 +135,10 @@ namespace ngraph
 
     private:
         Nodes m_arguments;
+        //m_arguments still needs to be kept in sync with i/o since get_input_ops
+        //is pretty ubiquitous and might be called after the original graph was modified.
+        //get_input_ops uses m_arguments to check if a node view reconstruction from i/o
+        //is correct.
         Nodes& get_arguments_FOR_GRAPH_REWRITE_ONLY() { return m_arguments; }
     };
 }
