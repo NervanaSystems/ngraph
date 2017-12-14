@@ -19,7 +19,7 @@
 void ngraph::op::Sqrt::generate_adjoints(autodiff::Adjoints& adjoints,
                                          const std::shared_ptr<Node>& delta)
 {
-    auto x = m_arguments[0];
+    auto x = get_input_op(0);
 
     adjoints.add_delta(x, delta / (shared_from_this() + shared_from_this()));
 }

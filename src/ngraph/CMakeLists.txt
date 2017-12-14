@@ -46,7 +46,7 @@ set (SRC
     ops/dot.cpp
     ops/exp.cpp
     ops/function_call.cpp
-    ops/get_tuple_element.cpp
+    ops/get_output_element.cpp
     ops/log.cpp
     ops/maximum.cpp
     ops/minimum.cpp
@@ -69,9 +69,10 @@ set (SRC
     ops/sum.cpp
     ops/tan.cpp
     ops/tanh.cpp
-    ops/tuple.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise.cpp
+    ops/xla_get_tuple_element.cpp
+    ops/xla_tuple.cpp
     pass/dump_sorted.cpp
     pass/graph_rewrite.cpp
     pass/liveness.cpp
@@ -82,16 +83,16 @@ set (SRC
     pass/pass.cpp
     pass/topological_sort.cpp
     pass/visualize_tree.cpp
-    runtime/aligned_buffer.cpp
     pattern/matcher.cpp
+    runtime/aligned_buffer.cpp
     runtime/backend.cpp
-    runtime/manager.cpp
-    runtime/interpreter/int_call_frame.cpp
     runtime/interpreter/int_backend.cpp
-    runtime/interpreter/int_manager.cpp
-    runtime/interpreter/int_kernels.cpp
+    runtime/interpreter/int_call_frame.cpp
     runtime/interpreter/int_external_function.cpp
+    runtime/interpreter/int_kernels.cpp
+    runtime/interpreter/int_manager.cpp
     runtime/interpreter/int_tensor_view.cpp
+    runtime/manager.cpp
     runtime/ngvm/call_frame.cpp
     runtime/ngvm/external_function.cpp
     runtime/ngvm/ngvm_backend.cpp
@@ -104,6 +105,7 @@ set (SRC
     types/element_type.cpp
     types/type.cpp
     util.cpp
+    xla_function.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)

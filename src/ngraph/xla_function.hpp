@@ -12,21 +12,34 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#pragma once
+
+#include <atomic>
+#include <initializer_list>
+#include <list>
 #include <memory>
+#include <string>
 #include <vector>
 
-#include "ngraph/ops/tuple.hpp"
+#include "ngraph/descriptor/output.hpp"
+#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/parameter.hpp"
+#include "ngraph/types/type.hpp"
 
-using namespace std;
-using namespace ngraph;
-
-op::Tuple::Tuple(const Nodes& args)
-    : Node("Tuple", args)
+namespace ngraph
 {
-    vector<shared_ptr<const ValueType>> element_types;
-    for (auto argument : m_arguments)
+    class XLAFunction : public Function
     {
-        element_types.push_back(argument->get_value_type());
-    }
-    set_value_type_checked(make_shared<TupleType>(element_types));
+    public:
+        XLAFunction(const std::shared_ptr<Node>& result,
+                    const std::shared_ptr<const ValueType>& result_type,
+                    const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                    const std::string& name = "");
+
+        virtual ~XLAFunction() {}
+    };
 }

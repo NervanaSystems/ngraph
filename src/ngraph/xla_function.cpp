@@ -12,14 +12,21 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ops/multiply.hpp"
+#include <memory>
 
-void ngraph::op::Multiply::generate_adjoints(autodiff::Adjoints& adjoints,
-                                             const std::shared_ptr<Node>& delta)
-{
-    auto x = get_input_op(0);
-    auto y = get_input_op(1);
+#include "ngraph/log.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
+#include "ngraph/util.hpp"
+#include "ngraph/xla_function.hpp"
 
-    adjoints.add_delta(x, delta * y);
-    adjoints.add_delta(y, x * delta);
-}
+using namespace std;
+using namespace ngraph;
+
+XLAFunction::XLAFunction(const std::shared_ptr<Node>& result,
+                         const std::shared_ptr<const ValueType>& result_type,
+                         const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                         const std::string& name)
+    : Function(Nodes{result},
+               std::vector<std::shared_ptr<const ValueType>>{result_type},
+               parameters,
+               name){};

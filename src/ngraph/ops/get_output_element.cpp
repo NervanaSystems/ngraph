@@ -14,26 +14,24 @@
 
 #include <sstream>
 
-#include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::GetTupleElement::GetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
-    : Node("GetTupleElement", {arg})
+op::GetOutputElement::GetOutputElement(const std::shared_ptr<Node>& arg, size_t n)
+    : Node("GetOutputElement", {arg})
     , m_n{n}
 {
-    auto arg0_tuple_type =
-        dynamic_pointer_cast<const TupleType>(m_arguments.at(0)->get_value_type());
-    if (nullptr == arg0_tuple_type)
+    if (arg->get_outputs().size() < 1)
     {
-        throw ngraph_error("Argument must be a tuple view");
+        throw ngraph_error("Argument should have at least one output tensor");
     }
 
-    if (m_n >= arg0_tuple_type->get_element_types().size())
+    if (m_n >= arg->get_outputs().size())
     {
         throw ngraph_error("Indexing tuple beyond its size");
     }
 
-    set_value_type_checked(arg0_tuple_type->get_element_types().at(m_n));
+    set_value_type_checked(arg->get_outputs().at(n).get_tensor_view_type());
 }
