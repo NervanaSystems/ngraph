@@ -77,6 +77,8 @@ build_docker_ngraph_cpp: expand_dockerfile_templates
 
 build_docker: build_docker_ngraph_cpp
 
+build_all: build_gcc build_clang
+
 build_gcc: build_docker_ngraph_cpp
 	# Remove old distribution directory if present
 	( test -d "${DIR}"/BUILD-GCC/ngraph_dist && rm -fr "${DIR}"/BUILD-GCC/ngraph_dist && echo "Removed old ${DIR}/BUILD-GCC/ngraph_dist directory" ) || echo "Previous ngraph_dist directory not found"
@@ -88,11 +90,9 @@ build_gcc: build_docker_ngraph_cpp
 	    ${DOCKER_RUN_ENV} \
             --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC/unit-test-results.xml" \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; cmake ${CMAKE_OPTIONS_GCC} .. 2>&1 | tee cmake.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make.log ; env VERBOSE=1 make check 2>&1 | tee make_check.log" \
+            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; cmake ${CMAKE_OPTIONS_GCC} .. 2>&1 | tee cmake_gcc.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_gcc.log ; env VERBOSE=1 make check 2>&1 | tee make_check_gcc.log" \
             "ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
-
-# XXXXX  TEST GCC BUILDS  XXXXX
 
 build_clang: # XXXXX  CREATE CLANG BUILD CHAIN  XXXXX
 	# Remove old distribution directory if present
@@ -105,15 +105,17 @@ build_clang: # XXXXX  CREATE CLANG BUILD CHAIN  XXXXX
 	    ${DOCKER_RUN_ENV} \
             --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG/unit-test-results.xml" \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG; cmake ${CMAKE_OPTIONS_CLANG} .. 2>&1 | tee cmake.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make.log ; env VERBOSE=1 make check 2>&1 | tee make_check.log" \
+            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG; cmake ${CMAKE_OPTIONS_CLANG} .. 2>&1 | tee cmake_clang.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_clang.log ; env VERBOSE=1 make check 2>&1 | tee make_check_clang.log" \
             "ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
-
-#            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; cmake -DCMAKE_CXX_COMPILER=clang++-3.9 -DCMAKE_C_COMPILER=clang-3.9 -DNGRAPH_BUILD_DOXYGEN_DOCS=ON -DNGRAPH_BUILD_SPHINX_DOCS=ON -DNGRAPH_WARNINGS_AS_ERRORS=ON .. 2>&1 | tee cmake.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make.log ; env VERBOSE=1 make check 2>&1 | tee make_check.log" \
-
+check_all: check_gcc check_clang
 
 check_gcc: build_gcc  # XXXXX  Implement split between build and check for gcc
+
+check_clang: build_clang  # XXXXX  Implement split between build and check for clang
+
+install_all: install_gcc install_clang
 
 install_gcc: check_gcc
 	# Puts ngraph_dist in BUILD-GCC directory.  This is used by Jenkins ngraph-tensorflow batch job.
@@ -124,8 +126,6 @@ install_gcc: check_gcc
             --env RUN_CMD="set -e ; set -o pipefail; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC ; test -d ngraph_dist && rm -fr ngraph_dist && echo 'Removed old ngraph_dist directory' ; make install 2>&1 | tee make_install_gcc.log ; tar cvzf ngraph_dist_gcc.tgz ngraph_dist 2>&1 | tee make_tarball_gcc.log" \
             "ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
-
-check_clang: build_clang  # XXXXX  Implement split between build and check for clang
 
 install_clang: check_clang  # XXXXX
 	# Puts ngraph_dist in BUILD-CLANG directory.  This is used by Jenkins ngraph-tensorflow batch job.
@@ -154,9 +154,6 @@ shell: build_docker_ngraph_cpp
 
 check_cpu: check_gcc
 	echo 'WARNING: "make check_cpu" is DEPRECATED and will be removed in a future revision'
-
-build_all: check_gcc
-	echo 'WARNING: "make build_all" is DEPRECATED and will be removed in a future revision'
 
 build_ngraph_cpp_cpu: build_docker_ngraph_cpp
 	echo 'WARNING: "make build_ngraph_cpp_cpu" is DEPRECATED and will be removed in a future revision'
