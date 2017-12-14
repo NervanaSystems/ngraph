@@ -58,16 +58,12 @@ endif
 
 all: check_gcc check_clang
 
+# Docker actions
+
 expand_dockerfile_templates:
 	cd "${DIR}"/contrib/docker
 	mkdir "${DBUILD_DIR}" || true
 	sed -e 's/\(FROM ngraph.*\)/\1:${DBUILD_VERSION}/' Dockerfile.ngraph_cpp > "${DBUILD_DIR}"/Dockerfile.ngraph_cpp
-
-clean:
-	rm -f "${DIR}"/contrib/docker/.build-*/Dockerfile.* || echo "keep going if files are not present"
-	rmdir "${DIR}"/contrib/docker/.build-* || echo "keep going if directory is not present"
-	rm -fr "${DIR}"/BUILD-GCC
-	rm -fr "${DIR}"/BUILD-CLANG
 
 build_docker_ngraph_cpp: expand_dockerfile_templates
 	$(DOCKER_BUILD) -f="${DBUILD_DIR}"/Dockerfile.ngraph_cpp --build-arg python_version="${PYTHON_VERSION}" -t=ngraph_cpp:"${DBUILD_VERSION}" "${DIR}"
@@ -76,6 +72,8 @@ build_docker_ngraph_cpp: expand_dockerfile_templates
 	docker tag `docker images -q "ngraph_cpp:${DBUILD_VERSION}"` ngraph_cpp:latest
 
 build_docker: build_docker_ngraph_cpp
+
+# Build
 
 build_all: build_gcc build_clang
 
@@ -90,11 +88,11 @@ build_gcc: build_docker_ngraph_cpp
 	    ${DOCKER_RUN_ENV} \
             --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC/unit-test-results.xml" \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; cmake ${CMAKE_OPTIONS_GCC} .. 2>&1 | tee cmake_gcc.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_gcc.log ; env VERBOSE=1 make check 2>&1 | tee make_check_gcc.log" \
+            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; cmake ${CMAKE_OPTIONS_GCC} .. 2>&1 | tee cmake_gcc.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_gcc.log" \
             "ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
-build_clang: # XXXXX  CREATE CLANG BUILD CHAIN  XXXXX
+build_clang:
 	# Remove old distribution directory if present
 	( test -d "${DIR}"/BUILD-CLANG/ngraph_dist && rm -fr "${DIR}"/BUILD-CLANG/ngraph_dist && echo "Removed old ${DIR}/BUILD-CLANG/ngraph_dist directory" ) || echo "Previous ngraph_dist directory not found"
 	# Make BUILD-CLANG directory as user
@@ -105,15 +103,35 @@ build_clang: # XXXXX  CREATE CLANG BUILD CHAIN  XXXXX
 	    ${DOCKER_RUN_ENV} \
             --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG/unit-test-results.xml" \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG; cmake ${CMAKE_OPTIONS_CLANG} .. 2>&1 | tee cmake_clang.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_clang.log ; env VERBOSE=1 make check 2>&1 | tee make_check_clang.log" \
+            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG; cmake ${CMAKE_OPTIONS_CLANG} .. 2>&1 | tee cmake_clang.log ; env VERBOSE=1 make ${PARALLEL} 2>&1 | tee make_clang.log" \
             "ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
+# Check (run unit-tests)
+
 check_all: check_gcc check_clang
 
-check_gcc: build_gcc  # XXXXX  Implement split between build and check for gcc
+check_gcc: build_gcc
+	docker run --rm --tty \
+            ${VOLUME} \
+	    ${DOCKER_RUN_ENV} \
+            --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC/unit-test-results.xml" \
+            --env RUN_UID="$(shell id -u)" \
+            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; env VERBOSE=1 make check 2>&1 | tee make_check_gcc.log" \
+            "ngraph_cpp:${DBUILD_VERSION}" \
+	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
-check_clang: build_clang  # XXXXX  Implement split between build and check for clang
+check_clang: build_clang
+	docker run --rm --tty \
+            ${VOLUME} \
+	    ${DOCKER_RUN_ENV} \
+            --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG/unit-test-results.xml" \
+            --env RUN_UID="$(shell id -u)" \
+            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG; env VERBOSE=1 make check 2>&1 | tee make_check_clang.log" \
+            "ngraph_cpp:${DBUILD_VERSION}" \
+	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+
+# Install
 
 install_all: install_gcc install_clang
 
@@ -127,7 +145,7 @@ install_gcc: check_gcc
             "ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
-install_clang: check_clang  # XXXXX
+install_clang: check_clang
 	# Puts ngraph_dist in BUILD-CLANG directory.  This is used by Jenkins ngraph-tensorflow batch job.
 	docker run --rm --tty \
             ${VOLUME} \
@@ -137,6 +155,8 @@ install_clang: check_clang  # XXXXX
             "ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
+# Interactive shell
+
 shell: build_docker_ngraph_cpp
 	# "make shell" runs an interactive shell in the docker image, for debugging
 	docker run --rm --tty --interactive \
@@ -145,6 +165,14 @@ shell: build_docker_ngraph_cpp
             --env RUN_UID="$(shell id -u)" \
             "ngraph_cpp:${DBUILD_VERSION}" \
             sh -c "cd ${DOCKUSER_HOME} ; ${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+
+# Clean
+
+clean:
+	rm -f "${DIR}"/contrib/docker/.build-*/Dockerfile.* || echo "keep going if files are not present"
+	rmdir "${DIR}"/contrib/docker/.build-* || echo "keep going if directory is not present"
+	rm -fr "${DIR}"/BUILD-GCC
+	rm -fr "${DIR}"/BUILD-CLANG
 
 #
 # DEPRECATED TARGETS -- These WILL BE REMOVED in a future revision.
