@@ -124,7 +124,7 @@ void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints,
     auto& y_element_type = y_input.get_element_type();
     auto y_shape = y_input.get_shape();
 
-    auto zeros_shaped_like_y = std::make_shared<op::Constant>(y_element_type, y_shape, "0");
+    auto zeros_shaped_like_y = op::Constant::create(y_element_type, y_shape, {0.0});
 
     adjoints.add_delta(x,
                        std::make_shared<op::ReplaceSlice>(

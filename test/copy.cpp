@@ -155,15 +155,15 @@ TEST(copy, parameterized_constant)
 TEST(copy, constant)
 {
     Shape shape{};
-    vector<string> c{"2.4"};
+    vector<float> c{2.4f};
     auto& et = element::Float32::element_type();
-    auto node = make_shared<op::Constant>(et, shape, c);
+    auto node = op::Constant::create(et, shape, c);
     auto new_node = node->copy_with_new_args(Nodes{});
     auto node_cast = dynamic_pointer_cast<op::Constant>(new_node);
     ASSERT_NE(node_cast, nullptr);
     ASSERT_TRUE(nullptr != new_node);
     ASSERT_TRUE(Nodes{} == new_node->get_input_ops());
-    ASSERT_TRUE(node_cast->get_value_strings() == c);
+    ASSERT_TRUE(node_cast->get_vector<float>() == c);
     ASSERT_TRUE(node_cast->get_shape() == shape);
     ASSERT_TRUE(node_cast->get_element_type() == et);
 }

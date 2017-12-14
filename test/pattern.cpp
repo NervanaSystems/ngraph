@@ -72,8 +72,7 @@ public:
 
 static std::shared_ptr<Node> construct_constant_node(int n)
 {
-    auto int_t = ngraph::runtime::make_tensor<element::Int32>(Shape{1}, {n});
-    return make_shared<op::Int32Constant>(Shape{1}, int_t);
+    return op::Constant::create(element::i32, Shape{1}, {n});
 }
 
 class TestGraphRewrite : public ngraph::pass::GraphRewrite
@@ -100,13 +99,13 @@ public:
             NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node;
             NGRAPH_DEBUG << "pattern " << pattern_map[pattern]->description() << " , "
                          << pattern_map[pattern];
-            assert(const_node);
+            ASSERT_TRUE(const_node);
 
             auto pattern_value_type =
                 dynamic_pointer_cast<const TensorViewType>(pattern_map[pattern]->get_value_type());
             auto const_node_value_type =
                 dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
-            assert(pattern_value_type && const_node);
+            ASSERT_TRUE(pattern_value_type && const_node);
 
             if (pattern_value_type->get_element_type() !=
                     const_node_value_type->get_element_type() ||
@@ -155,13 +154,13 @@ public:
             NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node;
             NGRAPH_DEBUG << "pattern " << pattern_map[pattern]->description() << " , "
                          << pattern_map[pattern];
-            assert(const_node);
+            ASSERT_NE(nullptr, const_node);
 
             auto pattern_value_type =
                 dynamic_pointer_cast<const TensorViewType>(pattern_map[pattern]->get_value_type());
             auto const_node_value_type =
                 dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
-            assert(pattern_value_type && const_node);
+            ASSERT_TRUE(pattern_value_type && const_node);
 
             if (pattern_value_type->get_element_type() !=
                     const_node_value_type->get_element_type() ||
@@ -171,7 +170,7 @@ public:
                 return;
             }
 
-            auto const_values = const_node->get_value()->get_vector();
+            auto const_values = const_node->get_vector<int>();
             bool all_zeros =
                 std::all_of(begin(const_values), end(const_values), [](int e) { return e == 0; });
 
@@ -342,8 +341,7 @@ TEST(pattern, matcher)
     auto iconst1_1 = construct_constant_node(1);
     ASSERT_TRUE(n.match(pattern * iconst1_0, a * iconst1_1)); //different iconst
     ASSERT_EQ(n.get_pattern_map()[pattern], a);
-    auto fconst1_0 =
-        make_shared<op::Constant>(element::Float32::element_type(), Shape{1}, std::to_string(1));
+    auto fconst1_0 = op::Constant::create(element::Float32::element_type(), Shape{1}, {1});
     auto patternf = pattern::op::Label::make_from_node(fconst1_0);
     ASSERT_FALSE(n.match(patternf * fconst1_0, a * iconst1_1)); //different iconst
 
