@@ -32,20 +32,20 @@ set (SRC
     file_util.cpp
     input_output_assign.cpp
     main.cpp
-    op.cpp
-    pass_liveness.cpp
-    pass_manager.cpp
-    pass_memory_layout.cpp
-    serialize.cpp
-    pattern.cpp
-    shape.cpp
-    tensor.cpp
-    topological_sort.cpp
-    type_prop.cpp
-    util/autodiff/backprop_function.cpp
-    util/test_tools.cpp
-    util.cpp
-    uuid.cpp
+    # op.cpp
+    # pass_liveness.cpp
+    # pass_manager.cpp
+    # pass_memory_layout.cpp
+    # serialize.cpp
+    # pattern.cpp
+    # shape.cpp
+    # tensor.cpp
+    # topological_sort.cpp
+    # type_prop.cpp
+    # util/autodiff/backprop_function.cpp
+    # util/test_tools.cpp
+    # util.cpp
+    # uuid.cpp
 )
 
 add_subdirectory(models)
@@ -72,12 +72,14 @@ if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
     set(BACKEND_NAMES ${BACKEND_NAMES} "CPU")
 endif()
 
-if(NGRAPH_GPU_ENABLE)
+if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
+    include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
+    link_directories(${LLVM_LIB_DIR})
     set(SRC
+        ${SRC}
         main.cpp
         cudnn.cpp)
-    # Disabled for testing
-    # set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
+    set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
 endif()
 
 if(NGRAPH_ARGON_ENABLE)

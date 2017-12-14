@@ -76,7 +76,7 @@ void runtime::gpu::GPUTensorView::write(const void* source, size_t tensor_offset
         throw out_of_range("write access past end of tensor");
     }
     char* target = get_data_ptr();
-    memcpy(&target[tensor_offset], source, n);
+    // std::memcpy(&target[tensor_offset], source, n);
 }
 
 void runtime::gpu::GPUTensorView::read(void* target, size_t tensor_offset, size_t n) const
@@ -86,5 +86,5 @@ void runtime::gpu::GPUTensorView::read(void* target, size_t tensor_offset, size_
         throw out_of_range("read access past end of tensor");
     }
     const char* source = get_data_ptr();
-    memcpy(target, &source[tensor_offset], n);
+    // std::memcpy(target, &source[tensor_offset], n);
 }

@@ -26,9 +26,11 @@
 using namespace std;
 using namespace ngraph::runtime::gpu;
 
-GPUExternalFunction::GPUExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                         bool release_function)
-    : ngraph::runtime::ExternalFunction(function, release_function)
-  , m_compiled_function(nullptr)
-{
-}
+// GPUExternalFunction::GPUExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+//                                          bool release_function)
+//     : ngraph::runtime::ExternalFunction(function, release_function)
+//   , m_compiled_function(nullptr)
+// {
+// }
+
+// GPUExternalFunction::~GPUExternalFunction(){}

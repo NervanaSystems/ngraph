@@ -16,22 +16,22 @@
 
 #include "ngraph/runtime/manager.hpp"
 
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace gpu
-        {
-            class GPUManager : public Manager
-            {
-            public:
-              virtual std::shared_ptr<Backend> allocate_backend() override;
+// namespace ngraph
+// {
+//     namespace runtime
+//     {
+//         namespace gpu
+//         {
+//             class GPUManager : public Manager
+//             {
+//             public:
+//               virtual std::shared_ptr<Backend> allocate_backend() override;
 
-              virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
-              compile(const std::shared_ptr<ngraph::Function>& fun) override;
+//               // virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
+//               // compile(const std::shared_ptr<ngraph::Function>& fun) override;
 
-              static Factory factory;
-            };
-        };
-    }
-}
+//               static Factory factory;
+//             };
+//         };
+//     }
+// }

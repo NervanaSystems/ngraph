@@ -25,7 +25,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/gpu/call_frame.hpp"
-#include "ngraph/runtime/tensor_view_info.hpp"
+// #include "ngraph/runtime/tensor_view_info.hpp"
 
 namespace ngraph
 {
@@ -33,34 +33,33 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPUExternalFunction;
-            class Emitter;
-            class CallFrame;
+            // class CallFrame;
 
-            using OpFunction = std::function<void(Emitter*,
-                                                  const ngraph::Node*,
-                                                  const std::vector<TensorViewInfo>& inputs,
-                                                  const std::vector<TensorViewInfo>& outputs)>;
+            // using OpFunction = std::function<void(Emitter*,
+            //                                       const ngraph::Node*,
+            //                                       const std::vector<TensorViewInfo>& inputs,
+            //                                       const std::vector<TensorViewInfo>& outputs)>;
 
-            using OpMap = std::unordered_map<std::type_index, OpFunction>;
+            // using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
-            class GPUExternalFunction : public ngraph::runtime::ExternalFunction,
-                                        public std::enable_shared_from_this<GPUExternalFunction>
-            {
-            public:
-                GPUExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                    bool release_function = true);
-                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
+            // class GPUExternalFunction : public ngraph::runtime::ExternalFunction,
+            //                             public std::enable_shared_from_this<GPUExternalFunction>
+            // {
+            // public:
+            //     GPUExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+            //                         bool release_function = true);
+            //     // ~GPUExternalFunction() {};
+            //     std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
-            protected:
-                void compile();
+            // protected:
+            //     void compile();
 
-                EntryPoint m_compiled_function;
+            //     EntryPoint m_compiled_function;
 
-            private:
-                std::unique_ptr<codegen::NVPTXCompiler> compiler;
-                std::unique_ptr<codegen::NVPTXExecutionEngine> execution_engine;
-            };
+            // private:
+            //     std::unique_ptr<codegen::NVPTXCompiler> compiler;
+            //     std::unique_ptr<codegen::NVPTXExecutionEngine> execution_engine;
+            // };
         }
     }
 }
