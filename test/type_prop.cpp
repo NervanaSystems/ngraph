@@ -1972,7 +1972,7 @@ TEST(type_prop, conv_1d_deduce)
     EXPECT_EQ(conv->get_window_virtual_shape(), Shape{10});
 
     EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_n_image_dimensions(), 1);
+    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_1d_deduce_strided)
@@ -1998,7 +1998,7 @@ TEST(type_prop, conv_1d_deduce_strided)
     EXPECT_EQ(conv->get_window_virtual_shape(), Shape{10});
 
     EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_n_image_dimensions(), 1);
+    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_1d_deduce_strided_small_uneven)
@@ -2024,7 +2024,7 @@ TEST(type_prop, conv_1d_deduce_strided_small_uneven)
     EXPECT_EQ(conv->get_window_virtual_shape(), Shape{2});
 
     EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_n_image_dimensions(), 1);
+    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_1d_deduce_strided_small_even)
@@ -2050,7 +2050,7 @@ TEST(type_prop, conv_1d_deduce_strided_small_even)
     EXPECT_EQ(conv->get_window_virtual_shape(), Shape{2});
 
     EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_n_image_dimensions(), 1);
+    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_1d_deduce_dilated)
@@ -2077,7 +2077,7 @@ TEST(type_prop, conv_1d_deduce_dilated)
     EXPECT_EQ(conv->get_window_virtual_shape(), Shape{10});
 
     EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_n_image_dimensions(), 1);
+    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_2d_deduce)
@@ -2104,7 +2104,7 @@ TEST(type_prop, conv_2d_deduce)
     EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{10, 20}));
 
     EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_n_image_dimensions(), 2);
+    EXPECT_EQ(conv->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, conv_2d_deduce_strided)
@@ -2132,7 +2132,7 @@ TEST(type_prop, conv_2d_deduce_strided)
     EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{10, 20}));
 
     EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_n_image_dimensions(), 2);
+    EXPECT_EQ(conv->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, conv_2d_deduce_strided_dilated)
@@ -2161,7 +2161,7 @@ TEST(type_prop, conv_2d_deduce_strided_dilated)
     EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{10, 20}));
 
     EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_n_image_dimensions(), 2);
+    EXPECT_EQ(conv->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, conv_2d_deduce_strided_dilated_small)
@@ -2188,7 +2188,7 @@ TEST(type_prop, conv_2d_deduce_strided_dilated_small)
     EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{2, 3}));
 
     EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_n_image_dimensions(), 2);
+    EXPECT_EQ(conv->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, conv_3d_deduce_strided_dilated_small)
@@ -2217,7 +2217,7 @@ TEST(type_prop, conv_3d_deduce_strided_dilated_small)
     EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{2, 3, 2}));
 
     EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_n_image_dimensions(), 3);
+    EXPECT_EQ(conv->get_image_dimension_count(), 3);
 }
 
 TEST(type_prop, conv_invalid_0d_input)

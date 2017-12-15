@@ -84,9 +84,9 @@ namespace ngraph
             /// \return The window dilation strides.
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
             /// \return The number of input channels.
-            size_t get_input_channel_count() const { return m_n_input_channels; }
+            size_t get_input_channel_count() const { return m_input_channel_count; }
             /// \return The number of output channels.
-            size_t get_output_channel_count() const { return m_n_output_channels; }
+            size_t get_output_channel_count() const { return m_output_channel_count; }
             /// \return The input image shape.
             Shape get_input_image_shape() const { return m_input_image_shape; }
             /// \return The output image shape.
@@ -98,19 +98,19 @@ namespace ngraph
             /// \return The batch size.
             size_t get_batch_size() const { return m_batch_size; }
             /// \return The number of image dimensions.
-            size_t get_n_image_dimensions() const { return m_n_image_dimensions; }
+            size_t get_image_dimension_count() const { return m_image_dimension_count; }
         protected:
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;
 
-            size_t m_n_input_channels;
-            size_t m_n_output_channels;
+            size_t m_input_channel_count;
+            size_t m_output_channel_count;
             Shape m_input_image_shape;
             Shape m_output_image_shape;
             Shape m_window_physical_shape;
             Shape m_window_virtual_shape;
             size_t m_batch_size;
-            size_t m_n_image_dimensions;
+            size_t m_image_dimension_count;
         };
     }
 }
