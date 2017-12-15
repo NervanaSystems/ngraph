@@ -93,7 +93,7 @@ public:
             auto pattern_map = m.get_pattern_map();
 
             size_t const_node_index = m.match_root()->get_input_ops().at(0) == pattern_map[pattern];
-            auto const_node = dynamic_pointer_cast<op::ParameterizedConstant<element::Int32>>(
+            auto const_node = dynamic_pointer_cast<op::Constant>(
                 m.match_root()->get_input_ops().at(const_node_index));
             auto second_node = m.match_root()->get_input_ops().at(const_node_index);
             NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node;
@@ -115,7 +115,7 @@ public:
                 return;
             }
 
-            auto const_values = const_node->get_value()->get_vector();
+            auto const_values = const_node->get_vector<int32_t>();
             bool all_ones =
                 std::all_of(begin(const_values), end(const_values), [](int e) { return e == 1; });
 
@@ -148,7 +148,7 @@ public:
             auto pattern_map = m.get_pattern_map();
 
             size_t const_node_index = m.match_root()->get_input_ops().at(0) == pattern_map[pattern];
-            auto const_node = dynamic_pointer_cast<op::ParameterizedConstant<element::Int32>>(
+            auto const_node = dynamic_pointer_cast<op::Constant>(
                 m.match_root()->get_input_ops().at(const_node_index));
             auto second_node = m.match_root()->get_input_ops().at(const_node_index);
             NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node;
