@@ -327,16 +327,6 @@ std::vector<typename ET::type>
     return rc;
 }
 
-#define REGISTER_CONSTANT_INSTRUCTIONS(T)                                                          \
-    {                                                                                              \
-        REGISTER_INSTRUCTION(                                                                      \
-            op::ParameterizedConstant<T>,                                                          \
-            instruction::ConstantInstruction<T>,                                                   \
-            std::vector<T::type>{                                                                  \
-                get_vector<T>(dynamic_cast<const op::ParameterizedConstant<T>*>(n)->get_value())}, \
-            out[0]);                                                                               \
-    }
-
 #define PUSH_INSTRUCTION(T, instr, ...)                                                            \
     {                                                                                              \
         ef->get_instructions()->push_back(make_shared<instr<T>>(__VA_ARGS__));                     \
@@ -407,18 +397,6 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_LOGICAL_UNOP(op::Not, instruction::NotInstruction);
 
         REGISTER_POLYMORPHIC_TERNOP(op::Select, instruction::SelectInstruction);
-
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Bool);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Float32);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Float64);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Int8);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Int16);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Int32);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Int64);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::UInt8);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::UInt16);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::UInt32);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::UInt64);
 
         REGISTER_TO_OP_MAP(op::Broadcast)
         {
