@@ -1962,8 +1962,8 @@ TEST(type_prop, conv_1d_deduce)
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
 
-    EXPECT_EQ(conv->get_n_input_channels(), 3);
-    EXPECT_EQ(conv->get_n_output_channels(), 128);
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
 
     EXPECT_EQ(conv->get_input_image_shape(), Shape{100});
     EXPECT_EQ(conv->get_output_image_shape(), Shape{91});
@@ -1988,8 +1988,8 @@ TEST(type_prop, conv_1d_deduce_strided)
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
 
-    EXPECT_EQ(conv->get_n_input_channels(), 3);
-    EXPECT_EQ(conv->get_n_output_channels(), 128);
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
 
     EXPECT_EQ(conv->get_input_image_shape(), Shape{100});
     EXPECT_EQ(conv->get_output_image_shape(), Shape{46});
@@ -2014,8 +2014,8 @@ TEST(type_prop, conv_1d_deduce_strided_small_uneven)
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
 
-    EXPECT_EQ(conv->get_n_input_channels(), 3);
-    EXPECT_EQ(conv->get_n_output_channels(), 128);
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
 
     EXPECT_EQ(conv->get_input_image_shape(), Shape{5});
     EXPECT_EQ(conv->get_output_image_shape(), Shape{2});
@@ -2040,8 +2040,8 @@ TEST(type_prop, conv_1d_deduce_strided_small_even)
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
 
-    EXPECT_EQ(conv->get_n_input_channels(), 3);
-    EXPECT_EQ(conv->get_n_output_channels(), 128);
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
 
     EXPECT_EQ(conv->get_input_image_shape(), Shape{6});
     EXPECT_EQ(conv->get_output_image_shape(), Shape{3});
@@ -2067,8 +2067,8 @@ TEST(type_prop, conv_1d_deduce_dilated)
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{2});
 
-    EXPECT_EQ(conv->get_n_input_channels(), 3);
-    EXPECT_EQ(conv->get_n_output_channels(), 128);
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
 
     EXPECT_EQ(conv->get_input_image_shape(), Shape{100});
     EXPECT_EQ(conv->get_output_image_shape(), Shape{82});
@@ -2094,8 +2094,8 @@ TEST(type_prop, conv_2d_deduce)
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{1, 1}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
 
-    EXPECT_EQ(conv->get_n_input_channels(), 3);
-    EXPECT_EQ(conv->get_n_output_channels(), 128);
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
 
     EXPECT_EQ(conv->get_input_image_shape(), (Shape{100, 150}));
     EXPECT_EQ(conv->get_output_image_shape(), (Shape{91, 131}));
@@ -2122,8 +2122,8 @@ TEST(type_prop, conv_2d_deduce_strided)
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
 
-    EXPECT_EQ(conv->get_n_input_channels(), 3);
-    EXPECT_EQ(conv->get_n_output_channels(), 128);
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
 
     EXPECT_EQ(conv->get_input_image_shape(), (Shape{100, 150}));
     EXPECT_EQ(conv->get_output_image_shape(), (Shape{46, 44}));
@@ -2151,8 +2151,8 @@ TEST(type_prop, conv_2d_deduce_strided_dilated)
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2}));
 
-    EXPECT_EQ(conv->get_n_input_channels(), 3);
-    EXPECT_EQ(conv->get_n_output_channels(), 128);
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
 
     EXPECT_EQ(conv->get_input_image_shape(), (Shape{100, 150}));
     EXPECT_EQ(conv->get_output_image_shape(), (Shape{37, 38}));
@@ -2178,8 +2178,8 @@ TEST(type_prop, conv_2d_deduce_strided_dilated_small)
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2}));
 
-    EXPECT_EQ(conv->get_n_input_channels(), 3);
-    EXPECT_EQ(conv->get_n_output_channels(), 128);
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
 
     EXPECT_EQ(conv->get_input_image_shape(), (Shape{7, 8}));
     EXPECT_EQ(conv->get_output_image_shape(), (Shape{2, 2}));
@@ -2207,8 +2207,8 @@ TEST(type_prop, conv_3d_deduce_strided_dilated_small)
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3, 4}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2, 2}));
 
-    EXPECT_EQ(conv->get_n_input_channels(), 3);
-    EXPECT_EQ(conv->get_n_output_channels(), 128);
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
 
     EXPECT_EQ(conv->get_input_image_shape(), (Shape{7, 8, 10}));
     EXPECT_EQ(conv->get_output_image_shape(), (Shape{2, 2, 2}));

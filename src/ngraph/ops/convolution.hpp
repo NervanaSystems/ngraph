@@ -77,24 +77,16 @@ namespace ngraph
                         const std::shared_ptr<Node>& filters);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
-            {
-                if (new_args.size() != 2)
-                    throw ngraph_error("Incorrect number of new arguments");
-                return std::make_shared<Convolution>(new_args.at(0),
-                                                     new_args.at(1),
-                                                     m_window_movement_strides,
-                                                     m_window_dilation_strides);
-            }
+                const std::vector<std::shared_ptr<Node>>& new_args) const override;
 
             /// \return The window movement strides.
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             /// \return The window dilation strides.
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
             /// \return The number of input channels.
-            size_t get_n_input_channels() const { return m_n_input_channels; }
+            size_t get_input_channel_count() const { return m_n_input_channels; }
             /// \return The number of output channels.
-            size_t get_n_output_channels() const { return m_n_output_channels; }
+            size_t get_output_channel_count() const { return m_n_output_channels; }
             /// \return The input image shape.
             Shape get_input_image_shape() const { return m_input_image_shape; }
             /// \return The output image shape.
