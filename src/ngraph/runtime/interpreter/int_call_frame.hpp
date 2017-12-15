@@ -83,7 +83,6 @@
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/util.hpp"
 
-//tmp
 namespace ngraph
 {
     namespace runtime
