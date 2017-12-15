@@ -26,9 +26,7 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Class for constants whose element types may not be known until graph construction time.
-        ///
-        /// This class must be used when the type of the tensor constant is unknown at C++ compile-time. For other cases, ParameterizedConstant should be used.
+        /// \brief Class for constants.
         ///
         /// ## Parameters
         ///
@@ -118,22 +116,11 @@ namespace ngraph
                 return std::make_shared<op::Constant>(et, shape, values);
             }
 
+            template <typename T>
             static std::shared_ptr<op::Constant>
-                create(const element::Type& et, Shape shape, std::initializer_list<double> values)
+                create(const element::Type& et, Shape shape, std::initializer_list<T> values)
             {
-                return std::make_shared<op::Constant>(et, shape, std::vector<double>{values});
-            }
-
-            static std::shared_ptr<op::Constant>
-                create(const element::Type& et, Shape shape, std::initializer_list<int> values)
-            {
-                return std::make_shared<op::Constant>(et, shape, std::vector<int>{values});
-            }
-
-            static std::shared_ptr<op::Constant>
-                create(const element::Type& et, Shape shape, std::initializer_list<size_t> values)
-            {
-                return std::make_shared<op::Constant>(et, shape, std::vector<size_t>{values});
+                return std::make_shared<op::Constant>(et, shape, std::vector<T>{values});
             }
 
             // /// \brief Constructs a tensor constant with the same initialization value copied across the tensor.
