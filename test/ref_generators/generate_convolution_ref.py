@@ -14,22 +14,7 @@
 # ----------------------------------------------------------------------------
 
 import sys
-
-try:
-    import numpy as np
-except ImportError:
-    print '!!!'
-    print '!!!'
-    print '!!! WARNING: Cannot import numpy. Convolution tests will not be generated.'
-    print '!!!'
-    print '!!!'
-    assert(len(sys.argv)>1)
-
-    f = open(sys.argv[1],'w')
-    f.close()
-
-    sys.exit(0)
-
+import numpy as np
 import math
 from operator import mul
 
