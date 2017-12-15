@@ -186,8 +186,7 @@ namespace ngraph
                     else if (target_type == element::f32)
                     {
                         float* p = reinterpret_cast<float*>(target);
-                        float tmp = static_cast<float>(source[i]);
-                        p[i] = tmp;
+                        p[i] = static_cast<float>(source[i]);
                     }
                     else if (target_type == element::f64)
                     {
