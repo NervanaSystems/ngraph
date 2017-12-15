@@ -165,6 +165,16 @@ namespace ngraph
                 write_to_buffer(m_element_type, m_shape, values, m_data, shape_size(m_shape));
             }
 
+            template <typename T, typename U>
+            void write_buffer(void* target, const std::vector<U>& source, size_t count)
+            {
+                T* p = reinterpret_cast<T*>(target);
+                for (size_t i = 0; i < count; i++)
+                {
+                    p[i] = static_cast<T>(source[i]);
+                }
+            }
+
             template <typename T>
             void write_to_buffer(const element::Type& target_type,
                                  const Shape& target_shape,
@@ -176,67 +186,53 @@ namespace ngraph
                 {
                     throw std::runtime_error("Constant initializer does not match shape");
                 }
-                for (size_t i = 0; i < target_element_count; i++)
+                if (target_type == element::boolean)
                 {
-                    if (target_type == element::boolean)
-                    {
-                        char* p = reinterpret_cast<char*>(target);
-                        p[i] = static_cast<char>(source[i]);
-                    }
-                    else if (target_type == element::f32)
-                    {
-                        float* p = reinterpret_cast<float*>(target);
-                        p[i] = static_cast<float>(source[i]);
-                    }
-                    else if (target_type == element::f64)
-                    {
-                        double* p = reinterpret_cast<double*>(target);
-                        p[i] = static_cast<double>(source[i]);
-                    }
-                    else if (target_type == element::i8)
-                    {
-                        int8_t* p = reinterpret_cast<int8_t*>(target);
-                        p[i] = static_cast<int8_t>(source[i]);
-                    }
-                    else if (target_type == element::i16)
-                    {
-                        int16_t* p = reinterpret_cast<int16_t*>(target);
-                        p[i] = static_cast<int16_t>(source[i]);
-                    }
-                    else if (target_type == element::i32)
-                    {
-                        int32_t* p = reinterpret_cast<int32_t*>(target);
-                        p[i] = static_cast<int32_t>(source[i]);
-                    }
-                    else if (target_type == element::i64)
-                    {
-                        int64_t* p = reinterpret_cast<int64_t*>(target);
-                        p[i] = static_cast<int64_t>(source[i]);
-                    }
-                    else if (target_type == element::u8)
-                    {
-                        uint8_t* p = reinterpret_cast<uint8_t*>(target);
-                        p[i] = static_cast<uint8_t>(source[i]);
-                    }
-                    else if (target_type == element::u16)
-                    {
-                        uint16_t* p = reinterpret_cast<uint16_t*>(target);
-                        p[i] = static_cast<uint16_t>(source[i]);
-                    }
-                    else if (target_type == element::u32)
-                    {
-                        uint32_t* p = reinterpret_cast<uint32_t*>(target);
-                        p[i] = static_cast<uint32_t>(source[i]);
-                    }
-                    else if (target_type == element::u64)
-                    {
-                        uint64_t* p = reinterpret_cast<uint64_t*>(target);
-                        p[i] = static_cast<uint64_t>(source[i]);
-                    }
-                    else
-                    {
-                        throw std::runtime_error("unsupported type");
-                    }
+                    write_buffer<char, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::f32)
+                {
+                    write_buffer<float, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::f64)
+                {
+                    write_buffer<double, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::i8)
+                {
+                    write_buffer<int8_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::i16)
+                {
+                    write_buffer<int16_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::i32)
+                {
+                    write_buffer<int32_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::i64)
+                {
+                    write_buffer<int64_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::u8)
+                {
+                    write_buffer<uint8_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::u16)
+                {
+                    write_buffer<uint16_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::u32)
+                {
+                    write_buffer<uint32_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::u64)
+                {
+                    write_buffer<uint64_t, T>(target, source, target_element_count);
+                }
+                else
+                {
+                    throw std::runtime_error("unsupported type");
                 }
             }
 
