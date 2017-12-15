@@ -66,7 +66,7 @@ expand_dockerfile_templates:
 	sed -e 's/\(FROM ngraph.*\)/\1:${DBUILD_VERSION}/' Dockerfile.ngraph_cpp > "${DBUILD_DIR}"/Dockerfile.ngraph_cpp
 
 build_docker_ngraph_cpp: expand_dockerfile_templates
-	$(DOCKER_BUILD) -f="${DBUILD_DIR}"/Dockerfile.ngraph_cpp --build-arg python_version="${PYTHON_VERSION}" -t=ngraph_cpp:"${DBUILD_VERSION}" "${DIR}"
+	$(DOCKER_BUILD) -f="${DBUILD_DIR}"/Dockerfile.ngraph_cpp --build-arg python_version="${PYTHON_VERSION}" -t=ngraph_cpp:"${DBUILD_VERSION}" .
 	# remove the tag for the previous latest image
 	docker rmi ngraph_cpp:latest || echo "keep going if docker rmi command fails"
 	docker tag `docker images -q "ngraph_cpp:${DBUILD_VERSION}"` ngraph_cpp:latest
