@@ -42,24 +42,24 @@ namespace ngraph
 
             // using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
-            // class GPUExternalFunction : public ngraph::runtime::ExternalFunction,
-            //                             public std::enable_shared_from_this<GPUExternalFunction>
-            // {
-            // public:
-            //     GPUExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-            //                         bool release_function = true);
-            //     // ~GPUExternalFunction() {};
-            //     std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
+            class ExternalFunction : public ngraph::runtime::ExternalFunction,
+                                        public std::enable_shared_from_this<ExternalFunction>
+            {
+            public:
+                ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                                    bool release_function = true);
+                // ~GPUExternalFunction() {};
+                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
-            // protected:
-            //     void compile();
+            protected:
+                void compile();
 
-            //     EntryPoint m_compiled_function;
+                std::shared_ptr<ngraph::Function> m_function;
 
             // private:
             //     std::unique_ptr<codegen::NVPTXCompiler> compiler;
             //     std::unique_ptr<codegen::NVPTXExecutionEngine> execution_engine;
-            // };
+            };
         }
     }
 }

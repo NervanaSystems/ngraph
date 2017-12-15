@@ -18,18 +18,18 @@
 
 using namespace ngraph::runtime::gpu;
 
-// std::shared_ptr<ngraph::runtime::Backend> GPUManager::allocate_backend()
-// {
-//     return std::make_shared<GPUBackend>();
-// }
+std::shared_ptr<ngraph::runtime::Backend> GPUManager::allocate_backend()
+{
+    return std::make_shared<GPUBackend>();
+}
 
-// // std::shared_ptr<ngraph::runtime::ExternalFunction>
-// //     GPUManager::compile(const std::shared_ptr<ngraph::Function>& fun)
-// // {
-// //     return std::make_shared<GPUExternalFunction>(fun);
-// // }
+std::shared_ptr<ngraph::runtime::ExternalFunction>
+    GPUManager::compile(const std::shared_ptr<ngraph::Function>& fun)
+{
+    return std::make_shared<ExternalFunction>(fun);
+}
 
-// ngraph::runtime::Manager::Factory GPUManager::factory = ngraph::runtime::Manager::register_factory(
-//     "GPU", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
-//         return std::make_shared<GPUManager>();
-//     });
+ngraph::runtime::Manager::Factory GPUManager::factory = ngraph::runtime::Manager::register_factory(
+    "GPU", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
+        return std::make_shared<GPUManager>();
+    });

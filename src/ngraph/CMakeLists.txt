@@ -186,7 +186,7 @@ if (NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
     # Add sources for the GPU backend
     # and all its dependencies
     set(SRC ${SRC}
-        # codegen/nvptx_compiler.cpp
+        codegen/compiler.cpp
         # codegen/nvptx_execution_engine.cpp
         runtime/gpu/call_frame.cpp
         runtime/gpu/backend.cpp

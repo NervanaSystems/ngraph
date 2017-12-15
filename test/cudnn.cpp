@@ -21,17 +21,17 @@
 #include <cuda.h>
 #include <cudnn.h>
 
-// #include "ngraph/codegen/nvptx_compiler.hpp"
+#include "ngraph/codegen/compiler.hpp"
 // #include "ngraph/codegen/nvptx_execution_engine.hpp"
 
 // #include "ngraph/runtime/gpu/call_frame.hpp"
 // #include "ngraph/runtime/gpu/backend.hpp"
-#include "ngraph/runtime/gpu/external_function.hpp"
+// #include "ngraph/runtime/gpu/external_function.hpp"
 // #include "ngraph/runtime/gpu/manager.hpp"
 
 #include "ngraph/ngraph.hpp"
 
-using namespace ngraph::runtime::gpu;
+using namespace ngraph::runtime;
 using namespace ngraph;
 using namespace std;
 
@@ -261,10 +261,10 @@ const auto str = R"(
   return 0;
 })###";
   // codegen::Compiler compiler;
-  // codegen::NVPTXCompiler compiler;
+  codegen::Compiler compiler;
   // codegen::NVPTXExecutionEngine execution_engine;
 
-  // auto module = compiler.compile(source);
+  auto module = compiler.compile(source);
   EXPECT_EQ(source,source);
 }
 

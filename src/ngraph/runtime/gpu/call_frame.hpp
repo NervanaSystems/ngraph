@@ -28,7 +28,6 @@ namespace ngraph
     {
         namespace gpu
         {
-          class CallFrame;
           class ExternalFunction;
 
           using EntryPoint_t = void(void** inputs, void** outputs);
@@ -40,7 +39,7 @@ namespace ngraph
             {
             public:
                 GPUCallFrame(std::shared_ptr<ExternalFunction> external_function,
-                          EntryPoint compiled_function);
+                             std::shared_ptr<Function> func);
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
@@ -55,7 +54,7 @@ namespace ngraph
 
             protected:
                 std::shared_ptr<ExternalFunction> m_external_function;
-                EntryPoint m_compiled_function;
+                std::shared_ptr<Function> m_function;
             };
         }
     }
