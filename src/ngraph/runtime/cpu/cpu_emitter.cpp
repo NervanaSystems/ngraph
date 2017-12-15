@@ -37,8 +37,6 @@
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/util.hpp"
 
-#define EMIT_BREAKPOINT "__asm__ volatile(\"int $0x03\");\n"
-
 using namespace std;
 using namespace ngraph;
 
