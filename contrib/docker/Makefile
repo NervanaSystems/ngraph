@@ -180,8 +180,10 @@ clean:
 #                       jobs on older development branches.
 #
 
-check_cpu: check_gcc
+check_cpu: check_all
 	echo 'WARNING: "make check_cpu" is DEPRECATED and will be removed in a future revision'
+	echo '         "make check_cpu" runs "make check_all" now, building with all compilers (gcc and clang)'
 
 build_ngraph_cpp_cpu: build_docker_image
 	echo 'WARNING: "make build_ngraph_cpp_cpu" is DEPRECATED and will be removed in a future revision'
+	echo '         "make build_ngraph_cpp_cpu" runs "make build_docker_image" now'
