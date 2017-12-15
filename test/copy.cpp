@@ -130,28 +130,6 @@ TEST(copy, concat)
     ASSERT_TRUE(node_cast->get_concatenation_axis() == axis);
 }
 
-TEST(copy, parameterized_constant)
-{
-    auto manager = runtime::Manager::get("NGVM");
-    auto backend = manager->allocate_backend();
-
-    // Create some tensors for input/output
-    auto c = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 2});
-    copy_data(c, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-
-    Shape shape{2, 2};
-    auto cptv = dynamic_pointer_cast<ngraph::runtime::ParameterizedTensorView<element::Float32>>(c);
-    ASSERT_NE(cptv, nullptr);
-    auto node = make_shared<op::ParameterizedConstant<element::Float32>>(shape, cptv);
-    auto new_node = node->copy_with_new_args(Nodes{});
-    auto node_cast = dynamic_pointer_cast<op::ParameterizedConstant<element::Float32>>(new_node);
-    ASSERT_NE(node_cast, nullptr);
-    ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(Nodes{} == new_node->get_input_ops());
-    ASSERT_TRUE(node_cast->get_value() == c);
-    ASSERT_TRUE(node_cast->get_shape() == shape);
-}
-
 TEST(copy, constant)
 {
     Shape shape{};
