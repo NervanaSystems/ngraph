@@ -343,7 +343,7 @@ TEST(pattern, matcher)
     ASSERT_EQ(n.get_pattern_map()[pattern], a);
     auto fconst1_0 = op::Constant::create(element::Float32::element_type(), Shape{1}, {1});
     auto patternf = pattern::op::Label::make_from_node(fconst1_0);
-    ASSERT_FALSE(n.match(patternf * fconst1_0, a * iconst1_1)); //different iconst
+    ASSERT_TRUE(n.match(patternf * fconst1_0, a * iconst1_1)); //different iconst
 
     //Subgraph labels
     auto add = a + b;
