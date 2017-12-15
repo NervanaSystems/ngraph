@@ -128,7 +128,6 @@ def convolution_ref(img_batch, filter, move_strides, dilation_strides):
 
         output_it.iternext()
 
-    # Print out the results.
     return output_batch
 
 def shape_str(shape):
