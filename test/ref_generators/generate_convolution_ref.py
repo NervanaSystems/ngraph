@@ -146,10 +146,10 @@ def data_str(data):
     first = True
     for x in np.nditer(data):
         if first:
-            result = ('%f' % x)
+            result = ('%.1000g' % x)
             first = False
         else:
-            result = result + (',%f' % x)
+            result = result + (',%.1000g' % x)
     return result
 
 def emit_test(t,f):
@@ -163,11 +163,11 @@ def emit_test(t,f):
 TEST (CONV_TEST_BACKEND, %s)
 {
     auto shape_a = Shape{%s};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::Float64::element_type(), shape_a);
     auto shape_b = Shape{%s};
-    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::Float64::element_type(), shape_b);
     auto shape_r = Shape{%s};
-    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), shape_r);
+    auto result_type = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
     auto f = make_shared<Function>(
         make_shared<op::Convolution>(A, B, Strides{%s}, Strides{%s}), result_type, op::Parameters{A, B});
 
@@ -177,15 +177,17 @@ TEST (CONV_TEST_BACKEND, %s)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
-    copy_data(a, vector<float>{%s});
-    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), shape_b);
-    copy_data(b, vector<float>{%s});
-    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
+    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    copy_data(a, vector<double>{%s});
+    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    copy_data(b, vector<double>{%s});
+    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+
+    vector<double> expected_result{%s};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(test::all_close(vector<float>{%s},
-                                result->get_vector<float>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result},
+                            result->get_vector<double>()));
 }
 '''
     f.write (template % (test_name,
@@ -198,24 +200,87 @@ TEST (CONV_TEST_BACKEND, %s)
                          data_str(filter_data),
                          data_str(output_batch_data)));
 
-#         test name                                input image batch                  filters                         stride    dilation
+#         test name                                input image batch              filters                        stride    dilation
 tests = [
-         ("convolution_2d_1image",                 shaped_linspace((1,1,3,5)),        shaped_linspace((2,1,2,2)),     (1,1),    (1,1)),
-         ("convolution_2d_2images",                shaped_linspace((2,1,3,5)),        shaped_linspace((2,1,2,2)),     (1,1),    (1,1)),
-         ("convolution_2d_2images_strided",        shaped_linspace((2,1,3,5)),        shaped_linspace((2,1,2,2)),     (2,2),    (1,1)),
-         ("convolution_2d_2images_dilated",        shaped_linspace((2,1,3,5)),        shaped_linspace((2,1,2,2)),     (1,1),    (2,2)),
-         ("convolution_3d_2images",                shaped_linspace((2,1,3,5,8)),      shaped_linspace((2,1,2,2,3)),   (1,1,1),  (1,1,1)),
-         ("convolution_4d_2images",                shaped_linspace((2,1,3,5,8,7)),    shaped_linspace((2,1,2,2,3,1)), (1,1,1,1),(1,1,1,1)),
-         ("convolution_4d_16images",               shaped_linspace((16,3,3,5,8,7)),   shaped_linspace((16,3,2,2,3,1)),(1,1,1,1),(1,1,1,1)),
-         ("convolution_4d_16images_strided",       shaped_linspace((16,3,3,5,8,7)),   shaped_linspace((16,3,2,2,3,1)),(2,1,3,2),(1,1,1,1)),
-         ("convolution_4d_16images_dilated",       shaped_linspace((16,3,3,5,8,7)),   shaped_linspace((16,3,2,2,3,1)),(1,1,1,1),(2,1,3,2)),
-         ("convolution_4d_4images_strided_dilated",shaped_linspace((4,3,16,16,16,16)),shaped_linspace((4,3,2,2,3,1)), (3,2,2,3),(2,1,3,2)),
+         ("convolution_2d_1image",                 shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1)),
+         ("convolution_2d_2images",                shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1)),
+         ("convolution_2d_2images_strided",        shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (2,2),    (1,1)),
+         ("convolution_2d_2images_dilated",        shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (2,2)),
+         ("convolution_3d_2images",                shaped_linspace((2,1,3,5,8)),  shaped_linspace((2,1,2,2,3)),  (1,1,1),  (1,1,1)),
+         ("convolution_4d_2images",                shaped_linspace((2,1,3,5,8,7)),shaped_linspace((2,1,2,2,3,1)),(1,1,1,1),(1,1,1,1)),
+         ("convolution_4d_4images",                shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(1,1,1,1),(1,1,1,1)),
+         ("convolution_4d_4images_strided",        shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(2,1,3,2),(1,1,1,1)),
+         ("convolution_4d_4images_dilated",        shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(1,1,1,1),(2,1,3,2)),
+         ("convolution_4d_4images_strided_dilated",shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2)),
         ]
 
 def main():
     assert(len(sys.argv)>1)
 
     f = open(sys.argv[1],'w')
+    f.write('''
+// ----------------------------------------------------------------------------
+// Copyright 2017 Nervana Systems Inc.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// ----------------------------------------------------------------------------
+//
+// !!!!!!!!!!!!!!THIS FILE IS AUTOGENERATED OUTSIDE OF THE BUILD PROCESS!!!!!!!!!!!!!!
+//
+// It takes quite awhile to compute the results, so doing it at cmake time is not a good option.
+//
+// If you want to add new tests, you should edit test/ref_generators/generate_convolution_ref.py
+// and regenerate this file.
+//
+// To regenerate (NOTE: this script will run apply-code-format.sh and reformat all source files
+// in your tree):
+//
+//   $ cd <ngraph source dir>/test
+//   $ ./update_reference.sh
+//
+// !!!!!!!!!!!!!!THIS FILE IS AUTOGENERATED OUTSIDE OF THE BUILD PROCESS!!!!!!!!!!!!!!
+//
+
+#include <cmath>
+
+#include "gtest/gtest.h"
+
+#include "ngraph/ngraph.hpp"
+
+using namespace std;
+using namespace ngraph;
+
+template <typename T>
+static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
+{
+    size_t data_size = data.size() * sizeof(T);
+    tv->write(data.data(), 0, data_size);
+}
+
+static bool all_close_d(const std::vector<double>& a,
+                        const std::vector<double>& b,
+                        double rtol = 1e-5,
+                        double atol = 1e-8)
+{
+    assert(a.size() == b.size());
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+''')
     for t in tests:
         emit_test(t,f)
     f.close()
