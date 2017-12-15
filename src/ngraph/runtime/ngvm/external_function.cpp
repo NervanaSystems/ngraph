@@ -247,12 +247,6 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         }                                                                                          \
     }
 
-#define REGISTER_INSTRUCTION(op_class, instr_class, ...)                                           \
-    REGISTER_TO_OP_MAP(op_class)                                                                   \
-    {                                                                                              \
-        ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__));                  \
-    }
-
 #define M_REGISTER_NUMERIC_UNOP(T, instr_class)                                                    \
     ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], out[0]));
 #define REGISTER_NUMERIC_UNOP(op_class, instr_class)                                               \
