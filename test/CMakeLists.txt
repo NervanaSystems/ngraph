@@ -82,7 +82,9 @@ endif()
 
 foreach(BACKEND_NAME ${BACKEND_NAMES})
     configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
+    configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)
     set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp)
+    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp)
 
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
@@ -98,8 +100,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
 
 add_executable(unit-test ${SRC})
-
-add_dependencies(unit-test generate-convolution-tests)
 
 if(MKLDNN_INCLUDE_DIR)
     target_link_libraries(unit-test mkldnn)
@@ -119,18 +119,6 @@ target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
 add_dependencies(unit-test ngraph libgtest eigen)
-
-add_custom_command(
-        OUTPUT convolution_test.stamp
-        DEPENDS ${PROJECT_SOURCE_DIR}/test/ref_generators/generate_convolution_ref.py
-        COMMAND echo 'Generating convolution tests...'
-        COMMAND python ${PROJECT_SOURCE_DIR}/test/ref_generators/generate_convolution_ref.py ${CMAKE_CURRENT_BINARY_DIR}/convolution_test.cpp
-        COMMAND cmake -E touch convolution_test.stamp
-        )
-
-add_custom_target(generate-convolution-tests
-        DEPENDS convolution_test.stamp
-)
 
 add_custom_target(style-check
         COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh

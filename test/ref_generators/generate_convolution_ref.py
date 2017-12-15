@@ -160,7 +160,7 @@ def emit_test(t,f):
     output_batch_data = convolution_ref(input_batch_data,filter_data,move_strides,dilation_strides)
 
     template = '''
-TEST (CONV_TEST_BACKEND, %s)
+TEST (${BACKEND_NAME}, %s)
 {
     auto shape_a = Shape{%s};
     auto A = make_shared<op::Parameter>(element::Float64::element_type(), shape_a);
@@ -171,7 +171,7 @@ TEST (CONV_TEST_BACKEND, %s)
     auto f = make_shared<Function>(
         make_shared<op::Convolution>(A, B, Strides{%s}, Strides{%s}), result_type, op::Parameters{A, B});
 
-    auto manager = runtime::Manager::get(CONV_TEST_BACKEND_STR);
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
