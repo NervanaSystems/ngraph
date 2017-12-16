@@ -422,23 +422,17 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto broadcast = static_cast<const op::Broadcast*>(n);
 
-            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
-                n->get_inputs().at(0).get_tensor_view_type());
-            assert(nullptr != arg_tensor_type);
-            auto arg_shape = arg_tensor_type->get_shape();
-
-            auto result_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
-            assert(nullptr != result_tensor_type);
-            auto result_shape = result_tensor_type->get_shape();
-            auto& result_element_type = result_tensor_type->get_element_type();
+            auto& input_shape = n->get_inputs().at(0).get_shape();
+            auto& result = n->get_outputs().at(0);
+            auto result_shape = result.get_shape();
+            auto& result_element_type = result.get_element_type();
 
             PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
                                          "Broadcast has unhandled element type",
                                          instruction::BroadcastInstruction,
                                          in[0],
                                          out[0],
-                                         arg_shape,
+                                         input_shape,
                                          result_shape,
                                          broadcast->get_broadcast_axes());
         };
@@ -447,28 +441,23 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto concat = static_cast<const op::Concat*>(n);
 
-            std::vector<Shape> arg_shapes;
+            std::vector<Shape> input_shapes;
 
-            for (auto& arg : n->get_inputs())
+            for (auto& input : n->get_inputs())
             {
-                auto arg_tensor_type =
-                    dynamic_pointer_cast<const TensorViewType>(arg.get_tensor_view_type());
-                assert(nullptr != arg_tensor_type);
-                arg_shapes.push_back(arg_tensor_type->get_shape());
+                input_shapes.push_back(input.get_shape());
             }
 
-            auto result_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
-            assert(nullptr != result_tensor_type);
-            auto result_shape = result_tensor_type->get_shape();
-            auto& result_element_type = result_tensor_type->get_element_type();
+            auto& result = n->get_outputs().at(0);
+            auto result_shape = result.get_shape();
+            auto& result_element_type = result.get_element_type();
 
             PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
                                          "Concat has unhandled element type",
                                          instruction::ConcatInstruction,
                                          in,
                                          out[0],
-                                         arg_shapes,
+                                         input_shapes,
                                          result_shape,
                                          concat->get_concatenation_axis());
         };
@@ -534,34 +523,25 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
             assert(n->get_inputs().size() == 2);
 
-            auto arg0_tensor_type = dynamic_pointer_cast<const TensorViewType>(
-                n->get_inputs().at(0).get_tensor_view_type());
-            assert(nullptr != arg0_tensor_type);
+            auto& input_0 = n->get_inputs().at(0);
+            auto& input_1 = n->get_inputs().at(1);
 
-            auto arg1_tensor_type = dynamic_pointer_cast<const TensorViewType>(
-                n->get_inputs().at(1).get_tensor_view_type());
-            assert(nullptr != arg1_tensor_type);
-
-            auto arg0_shape = arg0_tensor_type->get_shape();
-            auto arg1_shape = arg1_tensor_type->get_shape();
-            auto& arg0_element_type = arg0_tensor_type->get_element_type();
+            auto input_0_shape = input_0.get_shape();
+            auto input_1_shape = input_1.get_shape();
+            auto& input_0_element_type = input_0.get_element_type();
 
             auto reduction_axes_count = dot->get_reduction_axes_count();
 
-            auto result_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
-            assert(nullptr != result_tensor_type);
+            auto result_shape = n->get_outputs().at(0).get_shape();
 
-            auto result_shape = result_tensor_type->get_shape();
-
-            PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+            PUSH_POLYMORPHIC_INSTRUCTION(input_0_element_type,
                                          "Dot has unhandled element type",
                                          instruction::DotInstruction,
                                          in[0],
                                          in[1],
                                          out[0],
-                                         arg0_shape,
-                                         arg1_shape,
+                                         input_0_shape,
+                                         input_1_shape,
                                          result_shape,
                                          reduction_axes_count);
         };
@@ -639,16 +619,10 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                 function_map.insert({reduction_function, external});
             }
 
-            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
-                n->get_inputs().at(0).get_tensor_view_type());
-            assert(nullptr != arg_tensor_type);
-            auto arg_shape = arg_tensor_type->get_shape();
-
-            auto result_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
-            assert(nullptr != result_tensor_type);
-            auto result_shape = result_tensor_type->get_shape();
-            auto& result_element_type = result_tensor_type->get_element_type();
+            auto input_shape = n->get_inputs().at(0).get_shape();
+            auto& result = n->get_outputs().at(0);
+            auto result_shape = result.get_shape();
+            auto& result_element_type = result.get_element_type();
 
 #define M(ET)                                                                                      \
     {                                                                                              \
@@ -671,7 +645,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                          in[0],                                                                    \
                          in[1],                                                                    \
                          out[0],                                                                   \
-                         arg_shape,                                                                \
+                         input_shape,                                                              \
                          result_shape,                                                             \
                          reduce->get_reduction_axes(),                                             \
                          reduce_handler);                                                          \
@@ -688,23 +662,18 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto sum = static_cast<const op::Sum*>(n);
 
-            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
-                n->get_inputs().at(0).get_tensor_view_type());
-            assert(nullptr != arg_tensor_type);
-            auto arg_shape = arg_tensor_type->get_shape();
+            auto input_shape = n->get_inputs().at(0).get_shape();
 
-            auto result_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
-            assert(nullptr != result_tensor_type);
-            auto result_shape = result_tensor_type->get_shape();
-            auto& result_element_type = result_tensor_type->get_element_type();
+            auto& result = n->get_outputs().at(0);
+            auto result_shape = result.get_shape();
+            auto& result_element_type = result.get_element_type();
 
             PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
                                          "Sum has unhandled element type",
                                          instruction::SumInstruction,
                                          in[0],
                                          out[0],
-                                         arg_shape,
+                                         input_shape,
                                          result_shape,
                                          sum->get_reduction_axes());
         };
@@ -713,23 +682,18 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto reshape = static_cast<const op::Reshape*>(n);
 
-            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
-                n->get_inputs().at(0).get_tensor_view_type());
-            assert(nullptr != arg_tensor_type);
-            auto arg_shape = arg_tensor_type->get_shape();
+            auto input_shape = n->get_inputs().at(0).get_shape();
 
-            auto result_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
-            assert(nullptr != result_tensor_type);
-            auto result_shape = result_tensor_type->get_shape();
-            auto& result_element_type = result_tensor_type->get_element_type();
+            auto& result = n->get_outputs().at(0);
+            auto result_shape = result.get_shape();
+            auto& result_element_type = result.get_element_type();
 
             PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
                                          "Reshape has unhandled element type",
                                          instruction::ReshapeInstruction,
                                          in[0],
                                          out[0],
-                                         arg_shape,
+                                         input_shape,
                                          reshape->get_input_order(),
                                          result_shape);
         };
@@ -738,28 +702,23 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto slice = static_cast<const op::Slice*>(n);
 
-            auto arg_type = slice->get_inputs().at(0).get_tensor_view_type();
-            auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_type);
-            assert(nullptr != arg_tensor_view_type);
-            auto arg_shape = arg_tensor_view_type->get_shape();
-            auto& arg_element_type = arg_tensor_view_type->get_element_type();
+            auto& input = slice->get_inputs().at(0);
+            auto input_shape = input.get_shape();
+            auto& input_element_type = input.get_element_type();
 
-            auto result_type = slice->get_value_type();
-            auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
-            assert(nullptr != result_tensor_view_type);
-            auto result_shape = result_tensor_view_type->get_shape();
+            auto result_shape = slice->get_outputs().at(0).get_shape();
 
             auto& lower_bounds = slice->get_lower_bounds();
             auto& upper_bounds = slice->get_upper_bounds();
 
             auto& strides = slice->get_strides();
 
-            PUSH_POLYMORPHIC_INSTRUCTION(arg_element_type,
+            PUSH_POLYMORPHIC_INSTRUCTION(input_element_type,
                                          "Slice has unhandled element type",
                                          runtime::ngvm::instruction::SliceInstruction,
                                          in[0],
                                          out[0],
-                                         arg_shape,
+                                         input_shape,
                                          lower_bounds,
                                          upper_bounds,
                                          strides,
@@ -770,33 +729,23 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto replace_slice = static_cast<const op::ReplaceSlice*>(n);
 
-            auto arg0_type = replace_slice->get_inputs().at(0).get_tensor_view_type();
-            auto arg0_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg0_type);
-            assert(nullptr != arg0_tensor_view_type);
-            auto& arg0_element_type = arg0_tensor_view_type->get_element_type();
+            auto& input_0_element_type = replace_slice->get_inputs().at(0).get_element_type();
+            auto input_1_shape = replace_slice->get_inputs().at(1).get_shape();
 
-            auto arg1_type = replace_slice->get_inputs().at(1).get_tensor_view_type();
-            auto arg1_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg1_type);
-            assert(nullptr != arg1_tensor_view_type);
-            auto arg1_shape = arg1_tensor_view_type->get_shape();
-
-            auto result_type = replace_slice->get_value_type();
-            auto result_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(result_type);
-            assert(nullptr != result_tensor_view_type);
-            auto result_shape = result_tensor_view_type->get_shape();
+            auto result_shape = replace_slice->get_outputs().at(0).get_shape();
 
             auto& lower_bounds = replace_slice->get_lower_bounds();
             auto& upper_bounds = replace_slice->get_upper_bounds();
 
             auto& strides = replace_slice->get_strides();
 
-            PUSH_POLYMORPHIC_INSTRUCTION(arg0_element_type,
+            PUSH_POLYMORPHIC_INSTRUCTION(input_0_element_type,
                                          "Replace-slice has unhandled element type",
                                          runtime::ngvm::instruction::ReplaceSliceInstruction,
                                          in[0],
                                          in[1],
                                          out[0],
-                                         arg1_shape,
+                                         input_1_shape,
                                          lower_bounds,
                                          upper_bounds,
                                          strides,
@@ -807,23 +756,18 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto one_hot = static_cast<const op::OneHot*>(n);
 
-            auto arg_tensor_type = dynamic_pointer_cast<const TensorViewType>(
-                n->get_inputs().at(0).get_tensor_view_type());
-            assert(nullptr != arg_tensor_type);
-            auto arg_shape = arg_tensor_type->get_shape();
+            auto input_shape = n->get_inputs().at(0).get_shape();
 
-            auto result_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
-            assert(nullptr != result_tensor_type);
-            auto result_shape = result_tensor_type->get_shape();
-            auto& result_element_type = result_tensor_type->get_element_type();
+            auto& result = n->get_outputs().at(0);
+            auto result_shape = result.get_shape();
+            auto& result_element_type = result.get_element_type();
 
             PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
                                          "One-hot has unhandled element type",
                                          instruction::OneHotInstruction,
                                          in[0],
                                          out[0],
-                                         arg_shape,
+                                         input_shape,
                                          result_shape,
                                          one_hot->get_one_hot_axis());
         };

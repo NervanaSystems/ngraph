@@ -61,7 +61,7 @@ namespace ngraph
 
             void replace_output(Output& output);
 
-            //protected:
+        protected:
             /// @return the tensor view for the connected output
             std::shared_ptr<const TensorView> get_tensor_view() const;
 
