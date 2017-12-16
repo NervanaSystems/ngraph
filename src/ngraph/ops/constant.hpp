@@ -32,7 +32,7 @@ namespace ngraph
         ///
         /// |                 | Description                                                                                                                                                                    |
         /// | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-        /// | `et`            | The ngraph::element::Type of the tensor constant.                                                                                                                              |
+        /// | `type`          | The ngraph::element::Type of the tensor constant.                                                                                                                              |
         /// | `shape`         | The ngraph::Shape of the tensor constant.                                                                                                                                      |
         /// | `value_strings` | A list of strings containing literals for initialization of the tensor constant. These strings are parsed with the appropriate instance of ngraph::element::TraitedType::read. |
         ///
@@ -46,17 +46,18 @@ namespace ngraph
         public:
             /// \brief Constructs a tensor constant.
             ///
+            /// \param type The element type of the tensor constant.
             /// \param shape The shape of the tensor constant.
-            /// \param values A list of literals for initializing the tensor constant. There must be one literal for each element of the tensor; i.e., `value_strings.size()` must equal `ngraph::shape_size(shape)`.
+            /// \param values A vector of literals for initializing the tensor constant. The size of values must match the size of the shape.
             template <typename T>
-            Constant(const element::Type& et, Shape shape, const std::vector<T>& values)
+            Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
                 : Node("Constant", {})
-                , m_element_type(et)
+                , m_element_type(type)
                 , m_shape(shape)
                 , m_data(aligned_alloc(m_element_type.size(),
                                        shape_size(m_shape) * m_element_type.size()))
             {
-                auto vt = std::make_shared<TensorViewType>(et, shape);
+                auto vt = std::make_shared<TensorViewType>(type, shape);
                 set_value_type_checked(vt);
                 if (values.size() == 1)
                 {
@@ -72,63 +73,73 @@ namespace ngraph
                 }
             }
 
-            Constant(const element::Type& et, Shape shape, const std::vector<std::string>& values)
+            /// \brief Constructs a tensor constant
+            ///        This constructor is mainly to support deserialization of constants.
+            ///
+            /// \param type The element type of the tensor constant.
+            /// \param shape The shape of the tensor constant.
+            /// \param values A list of string values to use as the constant data.
+            Constant(const element::Type& type, Shape shape, const std::vector<std::string>& values)
                 : Node("Constant", {})
-                , m_element_type(et)
+                , m_element_type(type)
                 , m_shape(shape)
                 , m_data(aligned_alloc(m_element_type.size(),
                                        shape_size(m_shape) * m_element_type.size()))
             {
-                auto vt = std::make_shared<TensorViewType>(et, shape);
+                auto vt = std::make_shared<TensorViewType>(type, shape);
                 set_value_type_checked(vt);
-                if (values.size() != 1 && values.size() != shape_size(m_shape))
+                if (values.size() != shape_size(m_shape))
                 {
                     throw ngraph_error("Constant does not have the expected number of literals");
                 }
-                // write_values(values);
                 std::vector<double> dvalues = parse_string<double>(values);
-                if (dvalues.size() == 1)
-                {
-                    dvalues = std::vector<double>(shape_size(m_shape), dvalues[0]);
-                }
                 write_values(dvalues);
             }
 
-            Constant(const element::Type& et, const Shape& shape, const void* data)
+            /// \brief Constructs a tensor constant with the same initialization value copied across the tensor.
+            ///        This constructor is mainly to support deserialization of constants.
+            ///
+            /// \param type The element type of the tensor constant.
+            /// \param shape The shape of the tensor constant.
+            /// \param data A void* to constant data.
+            Constant(const element::Type& type, const Shape& shape, const void* data)
                 : Node("Constant", {})
-                , m_element_type(et)
+                , m_element_type(type)
                 , m_shape(shape)
                 , m_data(nullptr)
             {
                 size_t size = shape_size(m_shape) * m_element_type.size();
                 m_data = aligned_alloc(m_element_type.size(), size);
                 memcpy(m_data, data, size);
-                auto vt = std::make_shared<TensorViewType>(et, shape);
+                auto vt = std::make_shared<TensorViewType>(type, shape);
                 set_value_type_checked(vt);
             }
 
             virtual ~Constant();
 
+            /// \brief Wrapper around constructing a shared_ptr of a Constant
+            ///
+            /// \param type The element type of the tensor constant.
+            /// \param shape The shape of the tensor constant.
+            /// \param values A vector of string values to use as the constant data.
             template <typename T>
             static std::shared_ptr<op::Constant>
-                create(const element::Type& et, Shape shape, const std::vector<T> values)
+                create(const element::Type& type, Shape shape, const std::vector<T> values)
             {
-                return std::make_shared<op::Constant>(et, shape, values);
+                return std::make_shared<op::Constant>(type, shape, values);
             }
 
+            /// \brief Wrapper around constructing a shared_ptr of a Constant
+            ///
+            /// \param type The element type of the tensor constant.
+            /// \param shape The shape of the tensor constant.
+            /// \param values An initializer_list of string values to use as the constant data.
             template <typename T>
             static std::shared_ptr<op::Constant>
-                create(const element::Type& et, Shape shape, std::initializer_list<T> values)
+                create(const element::Type& type, Shape shape, std::initializer_list<T> values)
             {
-                return std::make_shared<op::Constant>(et, shape, std::vector<T>{values});
+                return std::make_shared<op::Constant>(type, shape, std::vector<T>{values});
             }
-
-            // /// \brief Constructs a tensor constant with the same initialization value copied across the tensor.
-            // ///
-            // /// \param et The element type of the tensor constant.
-            // /// \param shape The shape of the tensor constant.
-            // /// \param value_string A literal for initializing each tensor constant.
-            // Constant(const element::Type& et, const Shape& shape, const std::string& value_string);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
@@ -158,7 +169,6 @@ namespace ngraph
             void* get_data_ptr() { return m_data; }
             virtual bool is_constant() const override { return true; }
         protected:
-            // void check_args();
             template <typename T>
             void write_values(const std::vector<T>& values)
             {

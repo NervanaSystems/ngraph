@@ -310,17 +310,6 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
                            instr_class);                                                           \
     }
 
-template <typename ET>
-std::vector<typename ET::type>
-    get_vector(std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>> ptv)
-{
-    std::vector<typename ET::type> rc;
-
-    rc = ptv->get_vector();
-
-    return rc;
-}
-
 #define PUSH_INSTRUCTION(T, instr, ...)                                                            \
     {                                                                                              \
         ef->get_instructions()->push_back(make_shared<instr<T>>(__VA_ARGS__));                     \
