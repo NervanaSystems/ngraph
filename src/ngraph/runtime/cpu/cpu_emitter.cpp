@@ -26,7 +26,7 @@
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -62,13 +62,19 @@ void runtime::cpu::CPU_Emitter::EmitAdd(const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    // TODO: Audit all uses of Add and fix this to use
+    // the right alignment instead of Eigen::Unaligned
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-    m_out << emit_array1d(out[0]) << " = \n";
-    m_out.indent++;
-    m_out << emit_array1d(args[0]) << " +\n ";
-    m_out << emit_array1d(args[1]) << ";\n";
-    m_out.indent -= 2;
+    m_out << "Eigen::Map<Eigen::Array<" << out[0].get_element_type().c_type_string() << ", "
+          << out[0].get_size() << ", 1>, Eigen::Unaligned> out(" << out[0].get_name() << ");\n";
+    m_out << "Eigen::Map<Eigen::Array<" << args[0].get_element_type().c_type_string() << ", "
+          << args[0].get_size() << ", 1>, Eigen::Unaligned> arg0(" << args[0].get_name() << ");\n";
+    m_out << "Eigen::Map<Eigen::Array<" << args[1].get_element_type().c_type_string() << ", "
+          << args[1].get_size() << ", 1>, Eigen::Unaligned> arg1(" << args[1].get_name() << ");\n";
+    m_out << "out = arg0 + arg1;\n";
+
+    m_out.indent--;
     m_out << "}\n";
 }
 
@@ -164,12 +170,12 @@ void runtime::cpu::CPU_Emitter::EmitMultiply(const ngraph::Node* n,
     m_out << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitGetTupleElement(
+void runtime::cpu::CPU_Emitter::EmitGetOutputElement(
     const ngraph::Node* n,
     const vector<runtime::cpu::TensorViewWrapper>& args,
     const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    auto get_tuple_element = static_cast<const op::GetTupleElement*>(n);
+    auto get_tuple_element = static_cast<const op::GetOutputElement*>(n);
 
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;

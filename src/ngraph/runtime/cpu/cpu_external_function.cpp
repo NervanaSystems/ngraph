@@ -48,7 +48,6 @@
 #include "ngraph/ops/exp.hpp"
 #include "ngraph/ops/floor.hpp"
 #include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
 #include "ngraph/ops/greater_eq.hpp"
 #include "ngraph/ops/less.hpp"
@@ -74,7 +73,9 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/ops/tuple.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/liveness.hpp"
@@ -107,8 +108,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::EmitDot},
     {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::EmitMultiply},
     {TI(ngraph::op::Parameter), &runtime::cpu::CPU_Emitter::EmitNop},
-    {TI(ngraph::op::GetTupleElement), &runtime::cpu::CPU_Emitter::EmitGetTupleElement},
-    {TI(ngraph::op::Tuple), &runtime::cpu::CPU_Emitter::EmitTuple},
+    {TI(ngraph::op::XLAGetTupleElement), &runtime::cpu::CPU_Emitter::EmitGetOutputElement},
+    {TI(ngraph::op::XLATuple), &runtime::cpu::CPU_Emitter::EmitTuple},
     {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::EmitAbs},
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::EmitConcat},
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::EmitDivide},
@@ -362,9 +363,9 @@ using namespace ngraph::runtime;
         writer << "// Define outputs\n";
         size_t output_index = 0;
         set<string> output_names;
-        for (const descriptor::Output& output : current_function->get_result()->get_outputs())
+        for (const descriptor::Output* output : current_function->get_outputs())
         {
-            shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+            shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
             const element::Type& et = tv->get_tensor_view_type()->get_element_type();
             string type = et.c_type_string();
             writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<" << type

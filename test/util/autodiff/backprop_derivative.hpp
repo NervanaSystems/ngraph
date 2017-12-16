@@ -73,8 +73,13 @@ namespace ngraph
 
             std::vector<std::shared_ptr<op::Parameter>> df_params = params;
             df_params.push_back(c_param);
-            auto df_result = std::make_shared<op::Tuple>(deriv_nodes);
-            auto df = std::make_shared<Function>(df_result, df_result->get_value_type(), df_params);
+            //auto df_result = std::make_shared<op::XLATuple>(deriv_nodes);
+            std::vector<std::shared_ptr<const ValueType>> types;
+            for (auto dn : deriv_nodes)
+            {
+                types.push_back(dn->get_value_type());
+            }
+            auto df = std::make_shared<Function>(deriv_nodes, types, df_params);
 
             auto external = manager->compile(df);
             auto cf = backend->make_call_frame(external);
