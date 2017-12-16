@@ -1961,7 +1961,7 @@ TEST(type_prop, max_pool_1d_deduce)
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{1});
 
-    EXPECT_EQ(max_pool->get_n_channels(), 3);
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
 
     EXPECT_EQ(max_pool->get_input_image_shape(), Shape{100});
     EXPECT_EQ(max_pool->get_output_image_shape(), Shape{91});
@@ -1969,7 +1969,7 @@ TEST(type_prop, max_pool_1d_deduce)
     EXPECT_EQ(max_pool->get_window_shape(), Shape{10});
 
     EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_n_image_dimensions(), 1);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, max_pool_1d_deduce_strided)
@@ -1984,7 +1984,7 @@ TEST(type_prop, max_pool_1d_deduce_strided)
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
 
-    EXPECT_EQ(max_pool->get_n_channels(), 3);
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
 
     EXPECT_EQ(max_pool->get_input_image_shape(), Shape{100});
     EXPECT_EQ(max_pool->get_output_image_shape(), Shape{46});
@@ -1992,7 +1992,7 @@ TEST(type_prop, max_pool_1d_deduce_strided)
     EXPECT_EQ(max_pool->get_window_shape(), Shape{10});
 
     EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_n_image_dimensions(), 1);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, max_pool_1d_deduce_strided_small_uneven)
@@ -2007,7 +2007,7 @@ TEST(type_prop, max_pool_1d_deduce_strided_small_uneven)
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
 
-    EXPECT_EQ(max_pool->get_n_channels(), 3);
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
 
     EXPECT_EQ(max_pool->get_input_image_shape(), Shape{5});
     EXPECT_EQ(max_pool->get_output_image_shape(), Shape{2});
@@ -2015,7 +2015,7 @@ TEST(type_prop, max_pool_1d_deduce_strided_small_uneven)
     EXPECT_EQ(max_pool->get_window_shape(), Shape{2});
 
     EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_n_image_dimensions(), 1);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, max_pool_1d_deduce_strided_small_even)
@@ -2030,7 +2030,7 @@ TEST(type_prop, max_pool_1d_deduce_strided_small_even)
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
 
-    EXPECT_EQ(max_pool->get_n_channels(), 3);
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
 
     EXPECT_EQ(max_pool->get_input_image_shape(), Shape{6});
     EXPECT_EQ(max_pool->get_output_image_shape(), Shape{3});
@@ -2038,7 +2038,7 @@ TEST(type_prop, max_pool_1d_deduce_strided_small_even)
     EXPECT_EQ(max_pool->get_window_shape(), Shape{2});
 
     EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_n_image_dimensions(), 1);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, max_pool_2d_deduce)
@@ -2054,7 +2054,7 @@ TEST(type_prop, max_pool_2d_deduce)
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{1, 1}));
 
-    EXPECT_EQ(max_pool->get_n_channels(), 3);
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
 
     EXPECT_EQ(max_pool->get_input_image_shape(), (Shape{100, 150}));
     EXPECT_EQ(max_pool->get_output_image_shape(), (Shape{91, 131}));
@@ -2062,7 +2062,7 @@ TEST(type_prop, max_pool_2d_deduce)
     EXPECT_EQ(max_pool->get_window_shape(), (Shape{10, 20}));
 
     EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_n_image_dimensions(), 2);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, max_pool_2d_deduce_strided)
@@ -2078,7 +2078,7 @@ TEST(type_prop, max_pool_2d_deduce_strided)
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{2, 3}));
 
-    EXPECT_EQ(max_pool->get_n_channels(), 3);
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
 
     EXPECT_EQ(max_pool->get_input_image_shape(), (Shape{100, 150}));
     EXPECT_EQ(max_pool->get_output_image_shape(), (Shape{46, 44}));
@@ -2086,7 +2086,7 @@ TEST(type_prop, max_pool_2d_deduce_strided)
     EXPECT_EQ(max_pool->get_window_shape(), (Shape{10, 20}));
 
     EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_n_image_dimensions(), 2);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, max_pool_3d_deduce_strided_small)
@@ -2103,7 +2103,7 @@ TEST(type_prop, max_pool_3d_deduce_strided_small)
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{2, 3, 4}));
 
-    EXPECT_EQ(max_pool->get_n_channels(), 3);
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
 
     EXPECT_EQ(max_pool->get_input_image_shape(), (Shape{7, 8, 10}));
     EXPECT_EQ(max_pool->get_output_image_shape(), (Shape{3, 2, 3}));
@@ -2111,7 +2111,7 @@ TEST(type_prop, max_pool_3d_deduce_strided_small)
     EXPECT_EQ(max_pool->get_window_shape(), (Shape{2, 3, 2}));
 
     EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_n_image_dimensions(), 3);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 3);
 }
 
 TEST(type_prop, max_pool_invalid_0d_input)

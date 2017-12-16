@@ -45,8 +45,10 @@ Function::Function(const Nodes& results,
         if (nullptr != result_types.at(i) &&
             (*result_types.at(i) != *(m_results.at(i)->get_value_type())))
         {
-            throw ngraph_error(
-                "Function result node's value type does not match declared return type");
+            std::stringstream ss;
+            ss << "Function result node's value type " << (*(m_results.at(i)->get_value_type()))
+               << " does not match declared return type " << (*(result_types.at(i)));
+            throw ngraph_error(ss.str());
         }
     }
 
