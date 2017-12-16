@@ -619,9 +619,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             std::shared_ptr<CallFrame> cf =                                                        \
                 std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());                 \
                                                                                                    \
-            auto tx = ngraph::runtime::make_tensor<ET>(Shape{}, {x});                              \
-            auto ty = ngraph::runtime::make_tensor<ET>(Shape{}, {y});                              \
-            auto tr = ngraph::runtime::make_tensor<ET>(Shape{});                                   \
+            auto tx = ngraph::runtime::ngvm::make_tensor<ET>(Shape{}, {x});                        \
+            auto ty = ngraph::runtime::ngvm::make_tensor<ET>(Shape{}, {y});                        \
+            auto tr = ngraph::runtime::ngvm::make_tensor<ET>(Shape{});                             \
                                                                                                    \
             cf->call({tx, ty}, {tr});                                                              \
             return tr->get_vector()[0];                                                            \
@@ -904,7 +904,7 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame(Functio
         auto& et = tv->get_tensor_view_type()->get_element_type();
         auto shape = tv->get_tensor_view_type()->get_shape();
 
-#define M(T) temps.push_back(ngraph::runtime::make_tensor<T>(shape));
+#define M(T) temps.push_back(ngraph::runtime::ngvm::make_tensor<T>(shape));
         DO_ON_ELEMENT_TYPE(
             et, "Internal error: tried to create temporary for unhandled element type", M);
 #undef M

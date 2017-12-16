@@ -14,7 +14,7 @@
 
 #include "ngraph/runtime/ngvm/ngvm_backend.hpp"
 #include "ngraph/runtime/external_function.hpp"
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
+#include "ngraph/runtime/ngvm/parameterized_tensor_view.hpp"
 
 using namespace ngraph::runtime::ngvm;
 
