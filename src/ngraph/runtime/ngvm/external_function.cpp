@@ -256,9 +256,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 #define REGISTER_NUMERIC_UNOP(op_class, instr_class)                                               \
     REGISTER_TO_OP_MAP(op_class)                                                                   \
     {                                                                                              \
-        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
-                                       n->get_inputs().at(0).get_tensor_view_type()))              \
-                                      ->get_element_type();                                        \
+        const element::Type& et = n->get_inputs().at(0).get_element_type();                        \
         DO_ON_NUMERIC_TYPE(et,                                                                     \
                            "Internal error: numeric unop has unhandled element type",              \
                            M_REGISTER_NUMERIC_UNOP,                                                \
@@ -268,9 +266,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 #define REGISTER_LOGICAL_UNOP(op_class, instr_class)                                               \
     REGISTER_TO_OP_MAP(op_class)                                                                   \
     {                                                                                              \
-        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
-                                       n->get_inputs().at(0).get_tensor_view_type()))              \
-                                      ->get_element_type();                                        \
+        const element::Type& et = n->get_inputs().at(0).get_element_type();                        \
         if (element::Bool::element_type() == et)                                                   \
         {                                                                                          \
             ef->get_instructions()->push_back(make_shared<instr_class>(in[0], out[0]));            \
@@ -286,9 +282,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 #define REGISTER_NUMERIC_BINOP(op_class, instr_class)                                              \
     REGISTER_TO_OP_MAP(op_class)                                                                   \
     {                                                                                              \
-        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
-                                       n->get_inputs().at(0).get_tensor_view_type()))              \
-                                      ->get_element_type();                                        \
+        const element::Type& et = n->get_inputs().at(0).get_element_type();                        \
         DO_ON_NUMERIC_TYPE(et,                                                                     \
                            "Internal error: numeric binop has unhandled element type",             \
                            M_REGISTER_NUMERIC_BINOP,                                               \
@@ -300,9 +294,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 #define REGISTER_POLYMORPHIC_BINOP(op_class, instr_class)                                          \
     REGISTER_TO_OP_MAP(op_class)                                                                   \
     {                                                                                              \
-        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
-                                       n->get_inputs().at(0).get_tensor_view_type()))              \
-                                      ->get_element_type();                                        \
+        const element::Type& et = n->get_inputs().at(0).get_element_type();                        \
         DO_ON_ELEMENT_TYPE(et,                                                                     \
                            "Internal error: polymorphic binop has unhandled element type",         \
                            M_REGISTER_POLYMORPHIC_BINOP,                                           \
@@ -315,9 +307,7 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 #define REGISTER_POLYMORPHIC_TERNOP(op_class, instr_class)                                         \
     REGISTER_TO_OP_MAP(op_class)                                                                   \
     {                                                                                              \
-        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
-                                       n->get_inputs().at(1).get_tensor_view_type()))              \
-                                      ->get_element_type();                                        \
+        const element::Type& et = n->get_inputs().at(1).get_element_type();                        \
         DO_ON_ELEMENT_TYPE(et,                                                                     \
                            "Internal error: polymorphic ternop has unhandled element type",        \
                            M_REGISTER_POLYMORPHIC_TERNOP,                                          \
@@ -485,9 +475,7 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
 
         REGISTER_TO_OP_MAP(op::Convert)
         {
-            auto arg_tensor_type = n->get_inputs().at(0).get_tensor_view_type();
-            auto& arg_element_type = arg_tensor_type->get_element_type();
-
+            auto& arg_element_type = n->get_inputs().at(0).get_element_type();
             auto result_tensor_type =
                 dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
             assert(nullptr != result_tensor_type);

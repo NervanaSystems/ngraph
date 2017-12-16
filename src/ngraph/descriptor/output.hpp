@@ -48,11 +48,13 @@ namespace ngraph
             const std::set<Input*>& get_inputs() const { return m_inputs; }
             const Tensor& get_tensor() const;
             Tensor& get_tensor();
-            /// @return the tensor view type for the connected output
-            std::shared_ptr<const TensorViewType> get_tensor_view_type() const
-            {
-                return get_tensor_view()->get_tensor_view_type();
-            }
+            /// @return the tensor view type for the output
+            std::shared_ptr<const TensorViewType> get_tensor_view_type() const;
+
+            /// @return the shape of the output
+            const Shape get_shape() const;
+            /// @return the element type of the output
+            const element::Type& get_element_type() const;
 
         protected:
             Node* m_node;
