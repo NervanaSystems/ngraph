@@ -23,6 +23,9 @@
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
+#include "ngraph/runtime/backend.hpp"
+#include "ngraph/xla_function.hpp"
 
 using namespace std;
 
@@ -302,25 +305,6 @@ std::list<std::shared_ptr<ngraph::Node>>
     return result_list;
 }
 
-void ngraph::NodeMap::Add(std::shared_ptr<ngraph::Node> orig,
-                          std::shared_ptr<ngraph::Node> replacement)
-{
-    if (Exists(orig))
-    {
-        throw ngraph_error("NodeMap: key already exists");
-    }
-    node_map_[orig] = replacement;
-}
-
-std::shared_ptr<ngraph::Node> ngraph::NodeMap::operator[](std::shared_ptr<ngraph::Node> orig) const
-{
-    if (!Exists(orig))
-    {
-        throw ngraph_error("NodeMap: key does not exist");
-    }
-    return node_map_.at(orig);
-}
-
 std::list<std::shared_ptr<ngraph::Node>>
     ngraph::clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map)
 {
@@ -328,7 +312,7 @@ std::list<std::shared_ptr<ngraph::Node>>
     auto sorted_nodes = topological_sort(nodes);
     for (auto node : sorted_nodes)
     {
-        if (!node_map.Exists(node))
+        if (!node_map.count(node))
         {
             // get (already) cloned arguments and clone the node
             Nodes cloned_args;
@@ -336,7 +320,7 @@ std::list<std::shared_ptr<ngraph::Node>>
             {
                 cloned_args.push_back(node_map[arg]);
             }
-            node_map.Add(node, node->copy_with_new_args(cloned_args));
+            node_map[node] = node->copy_with_new_args(cloned_args);
         }
     }
 
@@ -367,4 +351,75 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     // create and return cloned function
     return std::make_shared<ngraph::Function>(
         cloned_result, func->get_result_type(), cloned_params);
+}
+
+ngraph::FpropCache ngraph::cache_fprop(
+    std::shared_ptr<ngraph::XLAFunction> fprop,
+    std::shared_ptr<ngraph::XLAFunction> bprop) {
+
+  using namespace ngraph;
+  op::Parameters bprop_input_params;
+
+  // create a map from f nodes to parameters
+  NodeMap node_param_map;
+  ngraph::traverse_nodes(fprop, [&node_param_map](std::shared_ptr<Node> node) {
+    node_param_map[node] = std::make_shared<op::Parameter>(
+        node->get_element_type(), node->get_shape());
+  });
+
+  std::unordered_set<std::shared_ptr<Node>> in_bprop;
+  ngraph::traverse_nodes(bprop, [&in_bprop](std::shared_ptr<Node> node) {
+    if (!in_bprop.count(node)) in_bprop.insert(node);
+  });
+
+  std::unordered_set<std::shared_ptr<Node>> fprop_params;
+  for (auto node : fprop->get_parameters()) {
+    if (fprop_params.count(node) == 0) fprop_params.insert(node);
+  }
+
+  FpropCache fprop_cache;
+  std::vector<std::shared_ptr<Node>> unused_nodes;
+  for (auto kv : node_param_map) {
+    if ((in_bprop.count(kv.first) == 0) || (fprop_params.count(kv.first) == 1)){
+      unused_nodes.push_back(kv.first);
+    } else {
+      fprop_cache.fprop_output_nodes.push_back(kv.first);
+    }
+  }
+
+  for (auto node : unused_nodes) {
+    node_param_map.erase(node);
+  }
+
+  std::vector<std::shared_ptr<Node>> fprop_outputs{fprop->get_results()};
+  fprop_outputs.insert(fprop_outputs.end(),
+                       fprop_cache.fprop_output_nodes.begin(),
+                       fprop_cache.fprop_output_nodes.end());
+
+  auto outTuple = std::make_shared<op::XLATuple>(fprop_outputs);
+  auto outTupleType = outTuple->get_value_type();
+  fprop_cache.fprop =
+      std::make_shared<XLAFunction>(outTuple, outTupleType, fprop->get_parameters());
+
+  ngraph::clone_nodes(bprop->get_ops(), node_param_map);
+
+  // get cloned function result and parameters
+  auto cloned_result = node_param_map[bprop->get_result()];
+
+  for (auto param : bprop->get_parameters()) {
+    bprop_input_params.push_back(
+        std::dynamic_pointer_cast<op::Parameter>(node_param_map[param]));
+  }
+
+  for (auto x : fprop_cache.fprop_output_nodes) {
+    bprop_input_params.push_back(
+        std::dynamic_pointer_cast<op::Parameter>(node_param_map[x]));
+  }
+
+  // create and return cloned function
+  fprop_cache.bprop = std::make_shared<XLAFunction>(
+      cloned_result, cloned_result->get_value_type(),
+      bprop_input_params);
+
+  return fprop_cache;
 }

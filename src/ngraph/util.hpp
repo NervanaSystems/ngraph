@@ -30,7 +30,14 @@ namespace ngraph
 {
     class Node;
     class Function;
+    class XLAFunction;
     class stopwatch;
+
+    namespace runtime 
+    {
+        class Backend;
+        class Value;
+    }
 
     template <typename T>
     std::string join(const T& v, const std::string& sep = ", ")
@@ -238,28 +245,7 @@ namespace ngraph
     std::list<std::shared_ptr<Node>>
         topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
 
-    // maps original to replacement nodes e.g. for clone utilities
-    // performs index checking on access
-    class NodeMap
-    {
-    public:
-        // map original node to replcacement node
-        // throws ngraph_error if key already exists
-        void Add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> replacement);
-
-        // get replacement node from original node
-        // throws ngrah_error if key does not exist
-        std::shared_ptr<ngraph::Node> operator[](std::shared_ptr<ngraph::Node> orig) const;
-
-        // returns true if original node is already mapped
-        bool Exists(std::shared_ptr<ngraph::Node> orig) const
-        {
-            return (node_map_.count(orig) != 0);
-        }
-
-    private:
-        std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>> node_map_;
-    };
+    using NodeMap = std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>;
 
     // input nodes are cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
@@ -272,4 +258,15 @@ namespace ngraph
     // NodeMap output (by reference) fully maps input and cloned function ops
     std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func,
                                                      NodeMap& node_map);
+
+    struct FpropCache
+    {   
+        std::shared_ptr<XLAFunction> fprop;
+        std::shared_ptr<XLAFunction> bprop;
+        std::vector<std::shared_ptr<Node>> fprop_output_nodes;
+    };
+
+FpropCache cache_fprop(
+    std::shared_ptr<XLAFunction> fprop,
+    std::shared_ptr<XLAFunction> bprop);
 } // end namespace ngraph
