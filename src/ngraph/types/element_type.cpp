@@ -17,6 +17,7 @@
 #include <iostream>
 
 #include "ngraph/log.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/types/element_type.hpp"
 
 using namespace ngraph;
@@ -84,6 +85,73 @@ size_t element::Type::hash() const
     size_t h2 = std::hash<bool>{}(m_is_real);
     size_t h3 = std::hash<bool>{}(m_is_signed);
     return h1 ^ ((h2 ^ (h3 << 1)) << 1);
+}
+
+namespace ngraph
+{
+    namespace element
+    {
+        template <>
+        const Type& from<char>()
+        {
+            return boolean;
+        }
+        template <>
+        const Type& from<bool>()
+        {
+            return boolean;
+        }
+        template <>
+        const Type& from<float>()
+        {
+            return f32;
+        }
+        template <>
+        const Type& from<double>()
+        {
+            return f64;
+        }
+        template <>
+        const Type& from<int8_t>()
+        {
+            return i8;
+        }
+        template <>
+        const Type& from<int16_t>()
+        {
+            return i16;
+        }
+        template <>
+        const Type& from<int32_t>()
+        {
+            return i32;
+        }
+        template <>
+        const Type& from<int64_t>()
+        {
+            return i64;
+        }
+        template <>
+        const Type& from<uint8_t>()
+        {
+            return u8;
+        }
+        template <>
+        const Type& from<uint16_t>()
+        {
+            return u16;
+        }
+        template <>
+        const Type& from<uint32_t>()
+        {
+            return u32;
+        }
+        template <>
+        const Type& from<uint64_t>()
+        {
+            return u64;
+        }
+    }
 }
 
 std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
