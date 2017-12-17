@@ -165,8 +165,7 @@ TEST(build_graph, function_incorrect_return_type)
     ASSERT_EQ(dot->get_input_ops()[0], arg2);
     ASSERT_EQ(dot->get_input_ops()[1], arg0);
 
-    auto incorrect_result_type =
-        make_shared<TensorViewType>(element::i32, Shape{32, 3});
+    auto incorrect_result_type = make_shared<TensorViewType>(element::i32, Shape{32, 3});
 
     try
     {

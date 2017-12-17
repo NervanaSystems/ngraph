@@ -193,14 +193,12 @@ TEST(benchmark, concat_32x1x200_axis1_6)
 
         for (size_t i = 0; i < n_arrays; i++)
         {
-            auto tv = backend->make_primary_tensor_view(element::f32,
-                                                        shape_of_each_array);
+            auto tv = backend->make_primary_tensor_view(element::f32, shape_of_each_array);
             copy_data(tv, data_arrays[i]);
             input_vals.push_back(tv);
         }
 
-        auto result_tv =
-            backend->make_primary_tensor_view(element::f32, result_shape);
+        auto result_tv = backend->make_primary_tensor_view(element::f32, result_shape);
         result_tvs.push_back(result_tv);
 
         std::function<void()> cb = [input_vals, result_tv, cf]() {

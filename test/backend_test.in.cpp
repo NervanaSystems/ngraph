@@ -568,14 +568,11 @@ TEST(${BACKEND_NAME}, concat_5d)
     }
 
     auto shape_a = Shape{2, 3, 4, 3, 2};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_b = Shape{2, 3, 3, 3, 2};
-    auto B = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
     auto shape_c = Shape{2, 3, 2, 3, 2};
-    auto C = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_c));
+    auto C = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_c));
     auto shape_r = Shape{2, 3, 9, 3, 2};
 
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
@@ -1912,8 +1909,8 @@ TEST(${BACKEND_NAME}, convert_int32_float32)
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(
-        make_shared<op::Convert>(A, element::f32), rt, op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Convert>(A, element::f32), rt, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1934,8 +1931,8 @@ TEST(${BACKEND_NAME}, convert_int32_bool)
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(
-        make_shared<op::Convert>(A, element::boolean), rt, op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Convert>(A, element::boolean), rt, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1956,8 +1953,8 @@ TEST(${BACKEND_NAME}, convert_float32_bool)
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(
-        make_shared<op::Convert>(A, element::boolean), rt, op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Convert>(A, element::boolean), rt, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2312,8 +2309,7 @@ TEST(${BACKEND_NAME}, reduce_3d_to_vector)
 TEST(${BACKEND_NAME}, reshape_t2v_012)
 {
     auto shape_a = Shape{2, 2, 3};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{12};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
@@ -2336,8 +2332,7 @@ TEST(${BACKEND_NAME}, reshape_t2v_012)
 TEST(${BACKEND_NAME}, reshape_t2s_012)
 {
     auto shape_a = Shape{1, 1, 1};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
@@ -2360,8 +2355,7 @@ TEST(${BACKEND_NAME}, reshape_t2s_012)
 TEST(${BACKEND_NAME}, reshape_t2s_120)
 {
     auto shape_a = Shape{1, 1, 1};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 2, 0}, shape_r);
@@ -2384,8 +2378,7 @@ TEST(${BACKEND_NAME}, reshape_t2s_120)
 TEST(${BACKEND_NAME}, reshape_s2t)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{1, 1, 1, 1, 1, 1};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{}, shape_r);
@@ -2408,8 +2401,7 @@ TEST(${BACKEND_NAME}, reshape_s2t)
 TEST(${BACKEND_NAME}, reshape_v2m_col)
 {
     auto shape_a = Shape{3};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{3, 1};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
@@ -2432,8 +2424,7 @@ TEST(${BACKEND_NAME}, reshape_v2m_col)
 TEST(${BACKEND_NAME}, reshape_v2m_row)
 {
     auto shape_a = Shape{3};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{1, 3};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
@@ -2456,8 +2447,7 @@ TEST(${BACKEND_NAME}, reshape_v2m_row)
 TEST(${BACKEND_NAME}, reshape_v2t_middle)
 {
     auto shape_a = Shape{3};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{1, 3, 1};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
@@ -2480,8 +2470,7 @@ TEST(${BACKEND_NAME}, reshape_v2t_middle)
 TEST(${BACKEND_NAME}, reshape_m2m_same)
 {
     auto shape_a = Shape{3, 3};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{3, 3};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1}, shape_r);
@@ -2504,8 +2493,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_same)
 TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 {
     auto shape_a = Shape{3, 3};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{3, 3};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
@@ -2528,8 +2516,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
 {
     auto shape_a = Shape{3, 2};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{2, 3};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
@@ -2601,8 +2588,7 @@ TEST(DISABLED_${BACKEND_NAME}, reshape_6d)
     }
 
     auto shape_a = Shape{2, 2, 3, 3, 2, 4};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{3, 2, 2, 4, 3, 2};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
 
@@ -2901,8 +2887,7 @@ TEST(${BACKEND_NAME}, exp)
 TEST(${BACKEND_NAME}, slice_scalar)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{}, Coordinate{});
@@ -2925,8 +2910,7 @@ TEST(${BACKEND_NAME}, slice_scalar)
 TEST(${BACKEND_NAME}, slice_matrix)
 {
     auto shape_a = Shape{4, 4};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{3, 2};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{0, 1}, Coordinate{3, 3});
@@ -2949,8 +2933,7 @@ TEST(${BACKEND_NAME}, slice_matrix)
 TEST(${BACKEND_NAME}, slice_vector)
 {
     auto shape_a = Shape{16};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{12};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{2}, Coordinate{14});
@@ -2973,8 +2956,7 @@ TEST(${BACKEND_NAME}, slice_vector)
 TEST(${BACKEND_NAME}, slice_matrix_strided)
 {
     auto shape_a = Shape{4, 4};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{2, 2};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{1, 0}, Coordinate{4, 4}, Strides{2, 3});
@@ -2997,8 +2979,7 @@ TEST(${BACKEND_NAME}, slice_matrix_strided)
 TEST(${BACKEND_NAME}, slice_3d)
 {
     auto shape_a = Shape{4, 4, 4};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{2, 2, 2};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{1, 1, 1}, Coordinate{3, 3, 3});
@@ -3027,8 +3008,7 @@ TEST(${BACKEND_NAME}, slice_3d)
 TEST(${BACKEND_NAME}, slice_3d_strided)
 {
     auto shape_a = Shape{4, 4, 4};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{2, 2, 2};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 2});
@@ -3057,8 +3037,7 @@ TEST(${BACKEND_NAME}, slice_3d_strided)
 TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
 {
     auto shape_a = Shape{4, 4, 4};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{2, 2, 2};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
@@ -3626,11 +3605,9 @@ TEST(${BACKEND_NAME}, sqrt)
 TEST(${BACKEND_NAME}, replace_slice_scalar)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_b = Shape{};
-    auto B = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
     auto shape_r = Shape{};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{}, Coordinate{});
@@ -3655,11 +3632,9 @@ TEST(${BACKEND_NAME}, replace_slice_scalar)
 TEST(${BACKEND_NAME}, replace_slice_matrix)
 {
     auto shape_a = Shape{4, 4};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_b = Shape{3, 2};
-    auto B = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
     auto shape_r = Shape{4, 4};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{0, 1}, Coordinate{3, 3});
@@ -3685,11 +3660,9 @@ TEST(${BACKEND_NAME}, replace_slice_matrix)
 TEST(${BACKEND_NAME}, replace_slice_vector)
 {
     auto shape_a = Shape{16};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_b = Shape{12};
-    auto B = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
     auto shape_r = Shape{16};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{2}, Coordinate{14});
@@ -3716,8 +3689,7 @@ TEST(${BACKEND_NAME}, replace_slice_vector)
 TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
     auto shape_r = Shape{3};
     auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
@@ -3740,8 +3712,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
 TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
     auto shape_r = Shape{3};
     auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
@@ -3764,8 +3735,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
 TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
     auto shape_r = Shape{3};
     auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
@@ -3788,8 +3758,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
 TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{3};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
@@ -3811,8 +3780,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
 TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
     auto shape_r = Shape{3};
     auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
@@ -3834,8 +3802,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
 TEST(${BACKEND_NAME}, one_hot_vector_0)
 {
     auto shape_a = Shape{8};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
     auto shape_r = Shape{3, 8};
     auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3, 8}, 0);
@@ -3860,8 +3827,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_0)
 TEST(${BACKEND_NAME}, one_hot_vector_1)
 {
     auto shape_a = Shape{8};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
     auto shape_r = Shape{8, 3};
     auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
@@ -3886,8 +3852,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1)
 TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
 {
     auto shape_a = Shape{8};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
     auto shape_r = Shape{8, 3};
     auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
@@ -3909,8 +3874,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
 TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
 {
     auto shape_a = Shape{8};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
     auto shape_r = Shape{8, 3};
     auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
@@ -3940,8 +3904,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
 TEST(${BACKEND_NAME}, one_hot_matrix_0)
 {
     auto shape_a = Shape{3, 3};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
     auto shape_r = Shape{3, 3, 3};
     auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3, 3, 3}, 0);
@@ -3972,8 +3935,7 @@ TEST(${BACKEND_NAME}, one_hot_matrix_0)
 TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
 {
     auto shape_a = Shape{8};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{8, 3};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
@@ -3998,8 +3960,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
 TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
 {
     auto shape_a = Shape{8};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_r = Shape{8, 3};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
@@ -4021,11 +3982,9 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
 TEST(${BACKEND_NAME}, replace_slice_3d)
 {
     auto shape_a = Shape{4, 4, 4};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_b = Shape{2, 2, 2};
-    auto B = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
     auto shape_r = Shape{4, 4, 4};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{1, 1, 1}, Coordinate{3, 3, 3});
@@ -4063,11 +4022,9 @@ TEST(${BACKEND_NAME}, replace_slice_3d)
 TEST(${BACKEND_NAME}, replace_slice_3d_strided)
 {
     auto shape_a = Shape{4, 4, 4};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_b = Shape{2, 2, 2};
-    auto B = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
     auto shape_r = Shape{4, 4, 4};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::ReplaceSlice>(
@@ -4106,11 +4063,9 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided)
 TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
 {
     auto shape_a = Shape{4, 4, 4};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_b = Shape{2, 2, 2};
-    auto B = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
     auto shape_r = Shape{4, 4, 4};
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::ReplaceSlice>(
@@ -4177,11 +4132,9 @@ TEST(DISABLED_${BACKEND_NAME}, dot_3d_multi_axis)
     }
 
     auto shape_a = Shape{2, 3, 4};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_b = Shape{3, 4, 5};
-    auto B = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
     auto shape_r = Shape{2, 5};
 
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
@@ -4234,11 +4187,9 @@ TEST(DISABLED_${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
                          1, 20, 35, 2, 1, 0, 1, 25, 3, 6, 7, 8};
 
     auto shape_a = Shape{2, 4, 3};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_b = Shape{3, 4, 2};
-    auto B = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
     auto shape_r = Shape{2, 4, 4, 2};
 
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
@@ -4308,11 +4259,9 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis)
     }
 
     auto shape_a = Shape{2, 3, 3, 4};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_b = Shape{3, 4, 2, 3, 2};
-    auto B = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
     auto shape_r = Shape{2, 3, 2, 3, 2};
 
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
@@ -4375,11 +4324,9 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
     }
 
     auto shape_a = Shape{2, 3, 3, 4};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
     auto shape_b = Shape{2, 3, 3, 4, 2};
-    auto B = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
     auto shape_r = Shape{2};
 
     auto rt = make_shared<TensorViewType>(element::f32, shape_r);
@@ -4443,11 +4390,9 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
     }
 
     auto shape_a = Shape{20, 30, 30, 40};
-    auto A = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f64, shape_a));
+    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f64, shape_a));
     auto shape_b = Shape{20, 30, 30, 40, 20};
-    auto B = make_shared<op::Parameter>(
-        make_shared<TensorViewType>(element::f64, shape_b));
+    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f64, shape_b));
     auto shape_r = Shape{20};
 
     auto rt = make_shared<TensorViewType>(element::f64, shape_r);

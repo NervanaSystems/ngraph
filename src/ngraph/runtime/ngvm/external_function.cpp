@@ -262,8 +262,15 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 #define REGISTER_LOGICAL_UNOP(op_class, instr_class)                                               \
     REGISTER_TO_OP_MAP(op_class)                                                                   \
     {                                                                                              \
+<<<<<<< HEAD
         const element::Type& et = n->get_inputs().at(0).get_element_type();                        \
         if (element::Bool::element_type() == et)                                                   \
+=======
+        const element::Type& et = (dynamic_pointer_cast<const TensorViewType>(                     \
+                                       n->get_inputs().at(0).get_tensor_view_type()))              \
+                                      ->get_element_type();                                        \
+        if (element::boolean == et)                                                                \
+>>>>>>> apply format, which keeps crashing
         {                                                                                          \
             ef->get_instructions()->push_back(make_shared<instr_class>(in[0], out[0]));            \
         }                                                                                          \

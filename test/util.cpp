@@ -247,19 +247,15 @@ class CloneTest : public ::testing::Test
 public:
     // (A + B) * C
     Shape shape = Shape{2, 2};
-    std::shared_ptr<op::Parameter> A =
-        make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> B =
-        make_shared<op::Parameter>(element::f32, shape);
-    std::shared_ptr<op::Parameter> C =
-        make_shared<op::Parameter>(element::f32, shape);
+    std::shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
+    std::shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
+    std::shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
     std::shared_ptr<Node> AplusB = A + B;
     std::shared_ptr<Node> AplusBtimesC = AplusB * C;
 
     NodeMap node_map;
     std::list<std::shared_ptr<ngraph::Node>> nodes;
-    std::shared_ptr<TensorViewType> type =
-        make_shared<TensorViewType>(element::f32, shape);
+    std::shared_ptr<TensorViewType> type = make_shared<TensorViewType>(element::f32, shape);
     std::shared_ptr<Function> func =
         make_shared<Function>(AplusBtimesC, type, op::Parameters{A, B, C}, "f");
 

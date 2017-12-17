@@ -211,8 +211,7 @@ TEST(autobroadcast, make_node_3_args)
     ngraph::Shape s21{2, 1};
     ngraph::Shape s23{2, 3};
 
-    auto predicates =
-        std::make_shared<ngraph::op::Parameter>(ngraph::element::boolean, s23);
+    auto predicates = std::make_shared<ngraph::op::Parameter>(ngraph::element::boolean, s23);
     auto lhs = getParamFromShape(s21);
     auto rhs = getParamFromShape(s23);
 
