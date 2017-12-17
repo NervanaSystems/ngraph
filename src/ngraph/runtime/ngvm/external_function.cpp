@@ -121,6 +121,7 @@
 #include "ngraph/runtime/ngvm/instruction/sum.hpp"
 #include "ngraph/runtime/ngvm/instruction/tan.hpp"
 #include "ngraph/runtime/ngvm/instruction/tanh.hpp"
+#include "ngraph/runtime/ngvm/types.hpp"
 #include "ngraph/runtime/utils.hpp"
 #include "ngraph/util.hpp"
 

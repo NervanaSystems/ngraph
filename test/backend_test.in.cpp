@@ -96,12 +96,10 @@ TEST(${BACKEND_NAME}, parameter_as_output)
 
 TEST(${BACKEND_NAME}, ab)
 {
-    using f32 = element::Float32;
-
     auto shape = Shape{2, 2};
-    auto A = make_shared<op::Parameter>(f32::element_type(), shape);
-    auto B = make_shared<op::Parameter>(f32::element_type(), shape);
-    auto rt = make_shared<TensorViewType>(f32::element_type(), shape);
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto rt = make_shared<TensorViewType>(element::f32, shape);
     auto f = make_shared<Function>(A + B, rt, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -110,12 +108,9 @@ TEST(${BACKEND_NAME}, ab)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a =
-        backend->make_primary_tensor_view(f32::element_type(), shape);
-    shared_ptr<runtime::TensorView> b =
-        backend->make_primary_tensor_view(f32::element_type(), shape);
-    shared_ptr<runtime::TensorView> result =
-        backend->make_primary_tensor_view(f32::element_type(), shape);
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
@@ -127,13 +122,11 @@ TEST(${BACKEND_NAME}, ab)
 
 TEST(${BACKEND_NAME}, abc)
 {
-    using f32 = element::Float32;
-
     auto shape = Shape{2, 2};
-    auto A = make_shared<op::Parameter>(f32::element_type(), shape);
-    auto B = make_shared<op::Parameter>(f32::element_type(), shape);
-    auto C = make_shared<op::Parameter>(f32::element_type(), shape);
-    auto rt = make_shared<TensorViewType>(f32::element_type(), shape);
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto rt = make_shared<TensorViewType>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -142,14 +135,10 @@ TEST(${BACKEND_NAME}, abc)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a =
-        backend->make_primary_tensor_view(f32::element_type(), shape);
-    shared_ptr<runtime::TensorView> b =
-        backend->make_primary_tensor_view(f32::element_type(), shape);
-    shared_ptr<runtime::TensorView> c =
-        backend->make_primary_tensor_view(f32::element_type(), shape);
-    shared_ptr<runtime::TensorView> result =
-        backend->make_primary_tensor_view(f32::element_type(), shape);
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> c = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
@@ -184,21 +173,21 @@ TEST(${BACKEND_NAME}, abc_int64)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::i64, shape);
-    copy_data(a, vector<element::Int64::type>{1, 2, 3, 4});
+    copy_data(a, vector<int64_t>{1, 2, 3, 4});
     auto b = backend->make_primary_tensor_view(element::i64, shape);
-    copy_data(b, vector<element::Int64::type>{5, 6, 7, 8});
+    copy_data(b, vector<int64_t>{5, 6, 7, 8});
     auto c = backend->make_primary_tensor_view(element::i64, shape);
-    copy_data(c, vector<element::Int64::type>{9, 10, 11, 12});
+    copy_data(c, vector<int64_t>{9, 10, 11, 12});
     auto result = backend->make_primary_tensor_view(element::i64, shape);
 
     cf->call({a, b, c}, {result});
-    EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector<int64_t>());
+    EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), result->get_vector<int64_t>());
 
     cf->call({b, a, c}, {result});
-    EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}), result->get_vector<int64_t>());
+    EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), result->get_vector<int64_t>());
 
     cf->call({a, c, b}, {result});
-    EXPECT_EQ((vector<element::Int64::type>{50, 72, 98, 128}), result->get_vector<int64_t>());
+    EXPECT_EQ((vector<int64_t>{50, 72, 98, 128}), result->get_vector<int64_t>());
 }
 
 // Same as abc, but using tuples for input and output
@@ -270,11 +259,11 @@ TEST(${BACKEND_NAME}, tuple_abc_int64)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::i64, shape);
-    copy_data(a, vector<element::Int64::type>{1, 2, 3, 4});
+    copy_data(a, vector<int64_t>{1, 2, 3, 4});
     auto b = backend->make_primary_tensor_view(element::i64, shape);
-    copy_data(b, vector<element::Int64::type>{5, 6, 7, 8});
+    copy_data(b, vector<int64_t>{5, 6, 7, 8});
     auto c = backend->make_primary_tensor_view(element::i64, shape);
-    copy_data(c, vector<element::Int64::type>{9, 10, 11, 12});
+    copy_data(c, vector<int64_t>{9, 10, 11, 12});
     auto abc = runtime::make_tuple({a, b, c});
     auto bac = runtime::make_tuple({b, a, c});
     auto acb = runtime::make_tuple({a, c, b});
@@ -282,16 +271,13 @@ TEST(${BACKEND_NAME}, tuple_abc_int64)
     auto result_tuple = runtime::make_tuple({result});
 
     cf->call({abc}, {result_tuple});
-    EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}),
-              result->get_vector<element::Int64::type>());
+    EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), result->get_vector<int64_t>());
 
     cf->call({bac}, {result_tuple});
-    EXPECT_EQ((vector<element::Int64::type>{54, 80, 110, 144}),
-              result->get_vector<element::Int64::type>());
+    EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), result->get_vector<int64_t>());
 
     cf->call({acb}, {result_tuple});
-    EXPECT_EQ((vector<element::Int64::type>{50, 72, 98, 128}),
-              result->get_vector<element::Int64::type>());
+    EXPECT_EQ((vector<int64_t>{50, 72, 98, 128}), result->get_vector<int64_t>());
 }
 
 // Multiple retrive values
@@ -458,16 +444,16 @@ TEST(${BACKEND_NAME}, concat_matrix_int64)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::i64, shape_a);
-    copy_data(a, vector<element::Int64::type>{2, 4, 8, 16});
+    copy_data(a, vector<int64_t>{2, 4, 8, 16});
     auto b = backend->make_primary_tensor_view(element::i64, shape_b);
-    copy_data(b, vector<element::Int64::type>{1, 2, 4, 8, 16, 32});
+    copy_data(b, vector<int64_t>{1, 2, 4, 8, 16, 32});
     auto c = backend->make_primary_tensor_view(element::i64, shape_c);
-    copy_data(c, vector<element::Int64::type>{2, 3, 5, 7, 11, 13});
+    copy_data(c, vector<int64_t>{2, 3, 5, 7, 11, 13});
     auto result = backend->make_primary_tensor_view(element::i64, shape_r);
 
     cf->call({a, b, c}, {result});
-    EXPECT_EQ((vector<element::Int64::type>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
-              result->get_vector<element::Int64::type>());
+    EXPECT_EQ((vector<int64_t>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
+              result->get_vector<int64_t>());
 }
 
 TEST(${BACKEND_NAME}, concat_vector)
@@ -1204,15 +1190,13 @@ TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::i64, shape_a);
-    copy_data(a,
-              vector<element::Int64::type>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    copy_data(a, vector<int64_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
     auto b = backend->make_primary_tensor_view(element::i64, shape_b);
-    copy_data(b, vector<element::Int64::type>{17, 18, 19, 20});
+    copy_data(b, vector<int64_t>{17, 18, 19, 20});
     auto result = backend->make_primary_tensor_view(element::i64, shape_r);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<element::Int64::type>{190, 486, 782, 1078}),
-              result->get_vector<element::Int64::type>());
+    EXPECT_EQ((vector<int64_t>{190, 486, 782, 1078}), result->get_vector<int64_t>());
 }
 
 TEST(${BACKEND_NAME}, greater)
@@ -1824,12 +1808,11 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::i64, shape_a);
-    copy_data(a, vector<element::Int64::type>{1, 2, 3, 4});
+    copy_data(a, vector<int64_t>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::i64, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<element::Int64::type>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}),
-              result->get_vector<element::Int64::type>());
+    EXPECT_EQ((vector<int64_t>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), result->get_vector<int64_t>());
 }
 
 TEST(${BACKEND_NAME}, broadcast_matrix_0)
@@ -1848,12 +1831,11 @@ TEST(${BACKEND_NAME}, broadcast_matrix_0)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f32, shape_a);
-    copy_data(a, vector<element::Float32::type>{1, 2, 3, 4});
+    copy_data(a, vector<float>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<element::Float32::type>{1, 2, 3, 4, 1, 2, 3, 4}),
-              result->get_vector<element::Float32::type>());
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, broadcast_matrix_1)
@@ -1872,12 +1854,11 @@ TEST(${BACKEND_NAME}, broadcast_matrix_1)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f32, shape_a);
-    copy_data(a, vector<element::Float32::type>{1, 2, 3, 4});
+    copy_data(a, vector<float>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<element::Float32::type>{1, 2, 1, 2, 3, 4, 3, 4}),
-              result->get_vector<element::Float32::type>());
+    EXPECT_EQ((vector<float>{1, 2, 1, 2, 3, 4, 3, 4}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, broadcast_matrix_2)
@@ -1896,12 +1877,11 @@ TEST(${BACKEND_NAME}, broadcast_matrix_2)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f32, shape_a);
-    copy_data(a, vector<element::Float32::type>{1, 2, 3, 4});
+    copy_data(a, vector<float>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<element::Float32::type>{1, 1, 2, 2, 3, 3, 4, 4}),
-              result->get_vector<element::Float32::type>());
+    EXPECT_EQ((vector<float>{1, 1, 2, 2, 3, 3, 4, 4}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, convert_int32_float32)
@@ -1919,11 +1899,11 @@ TEST(${BACKEND_NAME}, convert_int32_float32)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::i32, shape);
-    copy_data(a, vector<element::Int32::type>{1, 2, 3, 4});
+    copy_data(a, vector<int32_t>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<element::Float32::type>{1, 2, 3, 4}), result->get_vector<float>());
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, convert_int32_bool)
@@ -1941,11 +1921,11 @@ TEST(${BACKEND_NAME}, convert_int32_bool)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::i32, shape);
-    copy_data(a, vector<element::Int32::type>{1, 2, 3, 4});
+    copy_data(a, vector<int32_t>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector<element::Bool::type>());
+    EXPECT_EQ((vector<char>{1, 2, 3, 4}), result->get_vector<char>());
 }
 
 TEST(${BACKEND_NAME}, convert_float32_bool)
@@ -1963,11 +1943,11 @@ TEST(${BACKEND_NAME}, convert_float32_bool)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f32, shape);
-    copy_data(a, vector<element::Float32::type>{1, 2, 3, 4});
+    copy_data(a, vector<float>{1, 2, 3, 4});
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<element::Bool::type>{1, 2, 3, 4}), result->get_vector<element::Bool::type>());
+    EXPECT_EQ((vector<char>{1, 2, 3, 4}), result->get_vector<char>());
 }
 
 // Trivial case with no reduction axes.
