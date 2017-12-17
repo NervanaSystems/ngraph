@@ -23,17 +23,17 @@ using namespace ngraph;
 TEST(build_graph, build_simple)
 {
     // Function with 4 parameters
-    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{7, 3});
-    auto arg1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{3});
-    auto arg2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
-    auto arg3 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
+    auto arg0 = make_shared<op::Parameter>(element::f32, Shape{7, 3});
+    auto arg1 = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto arg2 = make_shared<op::Parameter>(element::f32, Shape{32, 7});
+    auto arg3 = make_shared<op::Parameter>(element::f32, Shape{32, 7});
     auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto dot = make_shared<op::Dot>(arg2, arg0);
     ASSERT_EQ(dot->get_input_ops()[0], arg2);
     ASSERT_EQ(dot->get_input_ops()[1], arg0);
 
-    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), Shape{32, 3});
+    auto result_type = make_shared<TensorViewType>(element::f32, Shape{32, 3});
     auto cluster_0 =
         make_shared<Function>(dot, result_type, op::Parameters{arg0, arg1, arg2, arg3});
 
@@ -44,7 +44,7 @@ TEST(build_graph, build_simple)
 TEST(build_graph, as_type)
 {
     // Check upcasting a ValueType::ptr that is a TensorViewType to a TensorViewType and Tuple.
-    auto tv_vt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 3, 5});
+    auto tv_vt = make_shared<TensorViewType>(element::f32, Shape{2, 3, 5});
     auto tv_tv = dynamic_pointer_cast<TensorViewType>(tv_vt);
     ASSERT_EQ(tv_vt, tv_tv);
     auto tv_tp = dynamic_pointer_cast<TupleType>(tv_vt);
@@ -61,14 +61,14 @@ TEST(build_graph, as_type)
 // Check node comparisons
 TEST(build_graph, node_comparison)
 {
-    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 3});
-    auto arg1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{3});
-    auto arg2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32});
+    auto arg0 = make_shared<op::Parameter>(element::f32, Shape{32, 3});
+    auto arg1 = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto arg2 = make_shared<op::Parameter>(element::f32, Shape{32});
 
     auto dot = make_shared<op::Dot>(arg0, arg1);
     auto add = make_shared<op::Add>(dot, arg2);
 
-    auto parg = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto parg = make_shared<op::Parameter>(element::f32, Shape{});
     auto pattern_dot = make_shared<op::Dot>(parg, parg);
 }
 
@@ -78,7 +78,7 @@ TEST(build_graph, literal)
     //auto float0 = FloatConstant::make(3.0);
     vector<float> float_t{3.0};
     auto float0 = make_shared<op::Constant>(element::f32, Shape{}, float_t);
-    auto float_scalar_type = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto float_scalar_type = make_shared<TensorViewType>(element::f32, Shape{});
     ASSERT_EQ(float0->get_vector<float>(), std::vector<float>{3.0});
     ASSERT_EQ(*float0->get_value_type(), *float_scalar_type);
     auto d = make_shared<op::Dot>(float0, float0);
@@ -87,7 +87,7 @@ TEST(build_graph, literal)
 
     vector<int32_t> int32{3};
     auto int32_0 = make_shared<op::Constant>(element::i32, Shape{}, int32);
-    auto int32_scalar_type = make_shared<TensorViewType>(element::Int32::element_type(), Shape{});
+    auto int32_scalar_type = make_shared<TensorViewType>(element::i32, Shape{});
     ASSERT_EQ(int32_0->get_vector<int32_t>(), std::vector<int>{3});
     ASSERT_EQ(*int32_0->get_value_type(), *int32_scalar_type);
     ASSERT_NE(*int32_0->get_value_type(), *float_scalar_type);
@@ -100,7 +100,7 @@ TEST(build_graph, tensor)
     Shape shape{2, 3};
     vector<float> float_t(shape_size(shape), 0);
     auto float0 = make_shared<op::Constant>(element::f32, shape, float_t);
-    auto float_tensor_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto float_tensor_type = make_shared<TensorViewType>(element::f32, shape);
     ASSERT_EQ(*float0->get_value_type(), *float_tensor_type);
     auto d = make_shared<op::Add>(float0, float0);
     ASSERT_EQ(d->get_input_ops().at(0), float0);
@@ -109,7 +109,7 @@ TEST(build_graph, tensor)
     Shape ishape{3, 5};
     vector<int32_t> idata(shape_size(ishape), 0);
     auto int32_0 = make_shared<op::Constant>(element::i32, ishape, idata);
-    auto int32_tensor_type = make_shared<TensorViewType>(element::Int32::element_type(), ishape);
+    auto int32_tensor_type = make_shared<TensorViewType>(element::i32, ishape);
     ASSERT_EQ(*int32_0->get_value_type(), *int32_tensor_type);
     ASSERT_NE(*int32_0->get_value_type(), *float_tensor_type);
 }
@@ -123,17 +123,17 @@ TEST(build_graph, arg_inverse)
 TEST(build_graph, function_undeclared_parameters)
 {
     // Function with 4 parameters
-    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{7, 3});
-    auto arg1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{3});
-    auto arg2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
-    auto arg3 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
+    auto arg0 = make_shared<op::Parameter>(element::f32, Shape{7, 3});
+    auto arg1 = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto arg2 = make_shared<op::Parameter>(element::f32, Shape{32, 7});
+    auto arg3 = make_shared<op::Parameter>(element::f32, Shape{32, 7});
     auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto dot = make_shared<op::Dot>(arg2, arg0);
     ASSERT_EQ(dot->get_input_ops()[0], arg2);
     ASSERT_EQ(dot->get_input_ops()[1], arg0);
 
-    auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), Shape{32, 3});
+    auto result_type = make_shared<TensorViewType>(element::f32, Shape{32, 3});
 
     try
     {
@@ -155,10 +155,10 @@ TEST(build_graph, function_undeclared_parameters)
 TEST(build_graph, function_incorrect_return_type)
 {
     // Function with 4 parameters
-    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{7, 3});
-    auto arg1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{3});
-    auto arg2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
-    auto arg3 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
+    auto arg0 = make_shared<op::Parameter>(element::f32, Shape{7, 3});
+    auto arg1 = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto arg2 = make_shared<op::Parameter>(element::f32, Shape{32, 7});
+    auto arg3 = make_shared<op::Parameter>(element::f32, Shape{32, 7});
     auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto dot = make_shared<op::Dot>(arg2, arg0);
@@ -166,7 +166,7 @@ TEST(build_graph, function_incorrect_return_type)
     ASSERT_EQ(dot->get_input_ops()[1], arg0);
 
     auto incorrect_result_type =
-        make_shared<TensorViewType>(element::Int32::element_type(), Shape{32, 3});
+        make_shared<TensorViewType>(element::i32, Shape{32, 3});
 
     try
     {
@@ -191,10 +191,10 @@ TEST(build_graph, function_incorrect_return_type)
 TEST(build_graph, function_no_declared_return_type)
 {
     // Function with 4 parameters
-    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{7, 3});
-    auto arg1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{3});
-    auto arg2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
-    auto arg3 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{32, 7});
+    auto arg0 = make_shared<op::Parameter>(element::f32, Shape{7, 3});
+    auto arg1 = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto arg2 = make_shared<op::Parameter>(element::f32, Shape{32, 7});
+    auto arg3 = make_shared<op::Parameter>(element::f32, Shape{32, 7});
     auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto dot = make_shared<op::Dot>(arg2, arg0);
@@ -204,5 +204,5 @@ TEST(build_graph, function_no_declared_return_type)
     auto f = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg2, arg3});
     auto f_rt = f->get_result_type();
 
-    ASSERT_EQ(*f_rt, TensorViewType(element::Float32::element_type(), Shape{32, 3}));
+    ASSERT_EQ(*f_rt, TensorViewType(element::f32, Shape{32, 3}));
 }

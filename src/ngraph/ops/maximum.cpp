@@ -31,8 +31,8 @@ void ngraph::op::Maximum::generate_adjoints(autodiff::Adjoints& adjoints,
 
     adjoints.add_delta(x,
                        delta * make_shared<op::Convert>(make_shared<op::Greater>(x, y),
-                                                        element::Float32::element_type()));
+                                                        element::f32));
     adjoints.add_delta(y,
                        delta * make_shared<op::Convert>(make_shared<op::Greater>(y, x),
-                                                        element::Float32::element_type()));
+                                                        element::f32));
 }

@@ -38,9 +38,9 @@ TEST(tensor, size)
     pass_manager.register_pass<pass::Liveness>();
 
     {
-        auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3});
+        auto arg0 = make_shared<op::Parameter>(element::f32, Shape{2, 3});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 3});
+        auto rt = make_shared<TensorViewType>(element::f32, Shape{2, 3});
         auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
@@ -52,9 +52,9 @@ TEST(tensor, size)
     }
 
     {
-        auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+        auto arg0 = make_shared<op::Parameter>(element::f32, Shape{});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+        auto rt = make_shared<TensorViewType>(element::f32, Shape{});
         auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
@@ -66,9 +66,9 @@ TEST(tensor, size)
     }
 
     {
-        auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+        auto arg0 = make_shared<op::Parameter>(element::f32, Shape{1});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{1});
+        auto rt = make_shared<TensorViewType>(element::f32, Shape{1});
         auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
@@ -120,9 +120,9 @@ TEST(tensor, output_flag)
     pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.register_pass<pass::Liveness>();
 
-    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+    auto arg0 = make_shared<op::Parameter>(element::f32, Shape{1});
     auto add = make_shared<op::Add>(arg0, arg0);
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{1});
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{1});
     auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
 
     pass_manager.run_passes(f0);
