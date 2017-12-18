@@ -28,13 +28,13 @@ namespace ngraph
     {
         namespace gpu
         {
-          class ExternalFunction;
+            class ExternalFunction;
 
-          using EntryPoint_t = void(void** inputs, void** outputs);
+            using EntryPoint_t = void(void** inputs, void** outputs);
 
-          using EntryPoint = std::function<EntryPoint_t>;
+            using EntryPoint = std::function<EntryPoint_t>;
 
-          // Compile and execute graphs
+            // Compile and execute graphs
             class GPUCallFrame : public ngraph::runtime::CallFrame
             {
             public:

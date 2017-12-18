@@ -22,16 +22,8 @@
 #include <cudnn.h>
 
 #include "ngraph/codegen/compiler.hpp"
-// #include "ngraph/codegen/nvptx_execution_engine.hpp"
-
-// #include "ngraph/runtime/gpu/call_frame.hpp"
-// #include "ngraph/runtime/gpu/backend.hpp"
-// #include "ngraph/runtime/gpu/external_function.hpp"
-// #include "ngraph/runtime/gpu/manager.hpp"
-
 #include "ngraph/ngraph.hpp"
 
-using namespace ngraph::runtime;
 using namespace ngraph;
 using namespace std;
 
@@ -41,20 +33,12 @@ TEST(cudnn, loadTest)
     EXPECT_FLOAT_EQ(cudnn_version, CUDNN_VERSION);
 }
 
-TEST(cudnn, loadBackend)
-{
-  // auto gpu_call_frame = new GPUCallFrame();
-  // auto gpu_backend = new GPUBackend();
-  // auto gpu_external_function = new GPUExternalFunction();
-  // auto gpu_manager = new GPUManager();
-}
-
 TEST(cudnn, compileTest)
 {
-  const auto source = R"###(
-#include <iostream>
-#include <fstream>
+    const auto source = R"###(
 #include <cassert>
+#include <fstream>
+#include <iostream>
 #include "cuda.h"
 
 
@@ -260,19 +244,10 @@ const auto str = R"(
 
   return 0;
 })###";
-  // codegen::Compiler compiler;
-  codegen::Compiler compiler;
-  // codegen::NVPTXExecutionEngine execution_engine;
+    codegen::Compiler compiler;
 
-  auto module = compiler.compile(source);
-  EXPECT_EQ(source,source);
-}
-
-template <typename T>
-static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
-{
-    size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
+    auto module = compiler.compile(source);
+    EXPECT_EQ(source, source);
 }
 
 TEST(cudnn, abc)
@@ -290,27 +265,4 @@ TEST(cudnn, abc)
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
-
-    // // Create some tensors for input/output
-    // shared_ptr<runtime::TensorView> a =
-    //     backend->make_primary_tensor_view(f32::element_type(), shape);
-    // shared_ptr<runtime::TensorView> b =
-    //     backend->make_primary_tensor_view(f32::element_type(), shape);
-    // shared_ptr<runtime::TensorView> c =
-    //     backend->make_primary_tensor_view(f32::element_type(), shape);
-    // shared_ptr<runtime::TensorView> result =
-    //     backend->make_primary_tensor_view(f32::element_type(), shape);
-
-    // copy_data(a, runtime::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-    // copy_data(b, runtime::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
-    // copy_data(c, runtime::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
-
-    // cf->call({a, b, c}, {result});
-    // EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
-
-    // cf->call({b, a, c}, {result});
-    // EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{54, 80}, {110, 144}})));
-
-    // cf->call({a, c, b}, {result});
-    // EXPECT_EQ(*result, (runtime::NDArray<float, 2>({{50, 72}, {98, 128}})));
 }
