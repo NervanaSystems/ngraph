@@ -247,7 +247,6 @@ const auto str = R"(
     codegen::Compiler compiler;
 
     auto module = compiler.compile(source);
-    EXPECT_EQ(source, source);
 }
 
 TEST(cudnn, abc)
