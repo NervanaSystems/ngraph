@@ -843,13 +843,13 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
 
             m_out << "Eigen::Map<Eigen::Matrix<" << out[0].get_element_type().c_type_string()
                   << ", " << join(out[0].get_shape())
-                  << ", Eigen::RowMajor>, Eigen::Unaligned, Eigen::Stride<"
+                  << ", Eigen::RowMajor>, Eigen::Aligned64, Eigen::Stride<"
                   << join(out[0].get_strides()) << ">> out(" << out[0].get_name() << ");\n";
             m_out << "Eigen::Map<Eigen::Matrix<" << args[0].get_element_type().c_type_string()
                   << ", 1, " << args[0].get_size()
-                  << ", Eigen::RowMajor>, Eigen::Unaligned, Eigen::Stride<1, "
-                  << join(args[0].get_strides()) << ">> arg0(" << args[0].get_name() << ");\n";
-            m_out << "out.rowwise() = arg0;\n";
+                  << ", Eigen::RowMajor>, Eigen::Aligned64, Eigen::Stride<" << args[0].get_size()
+                  << ", 1>> arg0(" << args[0].get_name() << ");\n";
+            m_out << "out = arg0.replicate<" << out[0].get_shape().at(0) << ", 1>();\n";
 
             m_out.indent--;
             m_out << "}\n";
