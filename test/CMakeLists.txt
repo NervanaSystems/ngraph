@@ -92,13 +92,6 @@ set(BACKEND_NAME "NGVM")
 configure_file(autodiff.in.cpp autodiff_NGVM.cpp)
 set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_NGVM.cpp)
 # </special cast>
-
-# <special case>
-# This is a special case as INTERPRETER is being worked on for autodiff
-set(BACKEND_NAME "INTERPRETER")
-configure_file(autodiff.in.cpp autodiff_INTERPRETER.cpp)
-set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_INTERPRETER.cpp)
-# </special cast>
 include_directories(".")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
