@@ -177,9 +177,10 @@ TEST(build_graph, function_incorrect_return_type)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string("Function result node's value type does not match declared return type"));
+        EXPECT_EQ(error.what(),
+                  std::string("Function result node's value type TensorViewType(element::Type(32, "
+                              "1, 1), {32, 3}) does not match declared return type "
+                              "TensorViewType(element::Type(32, 0, 1), {32, 3})"));
     }
     catch (...)
     {
