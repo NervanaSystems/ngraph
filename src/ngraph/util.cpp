@@ -359,8 +359,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fpro
 {
     using namespace ngraph;
 
-    // Traverse fprop to make a map that stores parameters witht he same
-    // same an element type as the nodes in fprop
+    // Traverse fprop to make a map that stores parameters with the same
+    // shape and element type as the nodes in fprop
     NodeMap node_param_map;
     ngraph::traverse_nodes(fprop, [&node_param_map](std::shared_ptr<Node> node) {
         node_param_map[node] =
@@ -370,7 +370,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fpro
     // Traverse bprop to find all of the nodes in the graph
     std::unordered_set<std::shared_ptr<Node>> in_bprop;
     ngraph::traverse_nodes(bprop, [&in_bprop](std::shared_ptr<Node> node) {
-        if (!in_bprop.count(node))
+        if (in_bprop.count(node) == 0)
         {
             in_bprop.insert(node);
         }
