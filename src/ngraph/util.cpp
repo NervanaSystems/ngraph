@@ -354,7 +354,8 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
 }
 
 ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fprop,
-                                       std::shared_ptr<ngraph::XLAFunction> bprop)
+                                       std::shared_ptr<ngraph::XLAFunction> bprop,
+                                       std::vector<std::shared_ptr<Node>> adjoints)
 {
     using namespace ngraph;
 
@@ -385,14 +386,15 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fpro
         }
     }
 
-    // Find all of the nodes that are intermediate values of fprop and used in bprop
+    // Find all of the nodes that are intermediate values of fprop and used in
+    // bprop
     // and store those nodes that aren't needed in bprop
     FpropCache fprop_cache;
     std::vector<std::shared_ptr<Node>> unused_nodes;
     for (auto kv : node_param_map)
     {
-        // if it's an input parameter or not in bprop, mark it unused
-        if ((in_bprop.count(kv.first) == 0) || (fprop_params.count(kv.first) == 1))
+        // if it's not in bprop, mark it unused
+        if (in_bprop.count(kv.first) == 0)
         {
             unused_nodes.push_back(kv.first);
         }
@@ -429,7 +431,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fpro
 
     // get clone bprop parameters
     op::Parameters bprop_input_params;
-    for (auto param : bprop->get_parameters())
+    for (auto param : adjoints)
     {
         bprop_input_params.push_back(
             std::dynamic_pointer_cast<op::Parameter>(node_param_map[param]));

@@ -277,7 +277,11 @@ namespace ngraph
     * This utility takes forward-propogation and back-propogation XLAunctions
     * and turns them into clone functions where the intermediate values of 
     * the forward prop are added to the output of fprop and the input of the bprop
-    * to avoid repeat calcualtions
+    * to avoid repeat calcualtions.
+    * The last argument is the adjoints coming into the bprop function, the output
+    * bprop function will have these nodes as the first N input parameters
     **/
-    FpropCache cache_fprop(std::shared_ptr<XLAFunction> fprop, std::shared_ptr<XLAFunction> bprop);
+    FpropCache cache_fprop(std::shared_ptr<XLAFunction> fprop,
+                           std::shared_ptr<XLAFunction> bprop,
+                           std::vector<std::shared_ptr<Node>> adjoints);
 } // end namespace ngraph
