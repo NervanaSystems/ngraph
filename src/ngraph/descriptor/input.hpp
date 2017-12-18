@@ -74,7 +74,7 @@ namespace ngraph
         public:
             /// @return the shape of the connected output
             const Shape get_shape() const;
-            
+
             /// @return the element type of the connected output
             const element::Type& get_element_type() const;
 
