@@ -25,10 +25,8 @@ op::UnaryElementwise::UnaryElementwise(
     const std::shared_ptr<Node>& arg)
     : RequiresTensorViewArgs(node_type, Nodes{arg})
 {
-    auto arg_tensor_type = get_inputs().at(0).get_tensor_view_type();
-    const element::Type& result_element_type =
-        element_type_function(arg_tensor_type->get_element_type());
+    auto& input = get_inputs().at(0);
+    const element::Type& result_element_type = element_type_function(input.get_element_type());
 
-    set_value_type_checked(
-        make_shared<TensorViewType>(result_element_type, arg_tensor_type->get_shape()));
+    set_value_type_checked(result_element_type, input.get_shape());
 }

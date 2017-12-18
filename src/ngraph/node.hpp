@@ -87,6 +87,7 @@ namespace ngraph
         // This is used when the framework specifies a value type for the value, and we
         // independently compute what we thing the value type should be from the arguments.
         void set_value_type_checked(const std::shared_ptr<const ValueType>& value_type);
+        void set_value_type_checked(const element::Type& element_type, const Shape& shape);
 
         bool is_parameter() const;
         bool is_output() const;
