@@ -523,17 +523,12 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         {
             auto convolution = static_cast<const op::Convolution*>(n);
 
-            auto arg0_tensor_type = n->get_inputs().at(0).get_tensor_view_type();
-            auto arg0_shape = arg0_tensor_type->get_shape();
+            auto input_0_shape = n->get_inputs().at(0).get_shape();
+            auto input_1_shape = n->get_inputs().at(1).get_shape();
 
-            auto arg1_tensor_type = n->get_inputs().at(1).get_tensor_view_type();
-            auto arg1_shape = arg1_tensor_type->get_shape();
-
-            auto result_tensor_type =
-                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
-            assert(nullptr != result_tensor_type);
-            auto result_shape = result_tensor_type->get_shape();
-            auto& result_element_type = result_tensor_type->get_element_type();
+            auto& result = n->get_outputs().at(0);
+            auto& result_shape = result.get_shape();
+            auto& result_element_type = result.get_element_type();
 
             PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
                                          "Convolution has unhandled element type",
@@ -541,8 +536,8 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                          in[0],
                                          in[1],
                                          out[0],
-                                         arg0_shape,
-                                         arg1_shape,
+                                         input_0_shape,
+                                         input_1_shape,
                                          result_shape,
                                          convolution->get_window_movement_strides(),
                                          convolution->get_window_dilation_strides());
