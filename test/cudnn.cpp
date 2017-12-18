@@ -287,9 +287,9 @@ TEST(cudnn, abc)
     auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("GPU");
-    // auto external = manager->compile(f);
-    // auto backend = manager->allocate_backend();
-    // auto cf = backend->make_call_frame(external);
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
 
     // // Create some tensors for input/output
     // shared_ptr<runtime::TensorView> a =
