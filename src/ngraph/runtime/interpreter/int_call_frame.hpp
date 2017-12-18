@@ -411,6 +411,13 @@ private:
         }
         else if (node_op == "Parameter")
         {
+            // If the parameter is also an output then copy to the output
+            if (out.size() == 1 && args.size() == 1)
+            {
+                kernel::copy<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                out[0]->get_element_count());
+            }
         }
         else if (node_op == "ParameterizedConstant")
         {

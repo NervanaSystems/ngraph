@@ -57,11 +57,6 @@ void runtime::interpreter::INT_CallFrame::call(
     // Invoke computation
     for (shared_ptr<Node> op : function->get_ordered_ops())
     {
-        if (op->description() == "Parameter")
-        {
-            continue;
-        }
-
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> inputs;
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> outputs;
         for (const descriptor::Input& input : op->get_inputs())
