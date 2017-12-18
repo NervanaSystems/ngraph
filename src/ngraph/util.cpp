@@ -312,7 +312,7 @@ std::list<std::shared_ptr<ngraph::Node>>
     auto sorted_nodes = topological_sort(nodes);
     for (auto node : sorted_nodes)
     {
-        if (!node_map.count(node))
+        if (node_map.count(node) == 0)
         {
             // get (already) cloned arguments and clone the node
             Nodes cloned_args;
