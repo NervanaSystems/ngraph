@@ -117,7 +117,7 @@ check_gcc: build_gcc
 	    ${DOCKER_RUN_ENV} \
             --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC/unit-test-results.xml" \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; env VERBOSE=1 make check 2>&1 | tee make_check_gcc.log" \
+            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC; env VERBOSE=1 make check 2>&1 | tee make_check_gcc.log ; sed -E -e 's/<testsuite name\=\"[a-zA-Z0-9_]+/&1_gcc/' unit-test-results.xml > unit-test-results-gcc.xml" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
@@ -127,7 +127,7 @@ check_clang: build_clang
 	    ${DOCKER_RUN_ENV} \
             --env GTEST_OUTPUT="xml:${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG/unit-test-results.xml" \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG; env VERBOSE=1 make check 2>&1 | tee make_check_clang.log" \
+            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG; env VERBOSE=1 make check 2>&1 | tee make_check_clang.log ; sed -E -e 's/<testsuite name\=\"[a-zA-Z0-9_]+/&1_clang/' unit-test-results.xml > unit-test-results-clang.xml" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
