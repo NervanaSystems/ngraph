@@ -48,8 +48,8 @@ void runtime::interpreter::INT_CallFrame::call(
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        descriptor::Output& output = function->get_result()->get_outputs().at(i);
-        shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+        descriptor::Output* output = function->get_outputs().at(i);
+        shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
         string name = tv->get_tensor().get_name();
         tensor_map.insert({name, output_tvs[i]});
     }
