@@ -14,8 +14,8 @@
 
 #include <algorithm>
 
-#include "ngraph/ops/get_tuple_element.hpp"
-#include "ngraph/ops/tuple.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
@@ -48,8 +48,8 @@ void runtime::interpreter::INT_CallFrame::call(
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        descriptor::Output& output = function->get_result()->get_outputs().at(i);
-        shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+        descriptor::Output* output = function->get_outputs().at(i);
+        shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
         string name = tv->get_tensor().get_name();
         tensor_map.insert({name, output_tvs[i]});
     }
@@ -92,7 +92,7 @@ void runtime::interpreter::INT_CallFrame::call(
             }
             outputs.push_back(itv);
         }
-        auto tuple = dynamic_pointer_cast<op::Tuple>(op);
+        auto tuple = dynamic_pointer_cast<op::XLATuple>(op);
         if (tuple)
         {
             for (size_t i = 0; i < inputs.size(); i++)

@@ -12,14 +12,21 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ops/multiply.hpp"
+#include <memory>
+#include <vector>
 
-void ngraph::op::Multiply::generate_adjoints(autodiff::Adjoints& adjoints,
-                                             const std::shared_ptr<Node>& delta)
+#include "ngraph/ops/xla_tuple.hpp"
+
+using namespace std;
+using namespace ngraph;
+
+op::XLATuple::XLATuple(const Nodes& args)
+    : Node("XLATuple", args)
 {
-    auto x = get_input_op(0);
-    auto y = get_input_op(1);
-
-    adjoints.add_delta(x, delta * y);
-    adjoints.add_delta(y, x * delta);
+    vector<shared_ptr<const ValueType>> element_types;
+    for (auto argument : get_input_ops())
+    {
+        element_types.push_back(argument->get_value_type());
+    }
+    set_value_type_checked(make_shared<TupleType>(element_types));
 }

@@ -153,11 +153,11 @@ TEST(${BACKEND_NAME}, tuple_abc)
     auto ABC = make_shared<op::Parameter>(
         make_shared<TupleType>(ValueTypes{tensor_view_type, tensor_view_type, tensor_view_type}));
 
-    auto A = make_shared<op::GetTupleElement>(ABC, 0);
-    auto B = make_shared<op::GetTupleElement>(ABC, 1);
-    auto C = make_shared<op::GetTupleElement>(ABC, 2);
-    auto f =
-        make_shared<Function>(make_shared<op::Tuple>(Nodes{(A + B) * C}), rt, op::Parameters{ABC});
+    auto A = make_shared<op::XLAGetTupleElement>(ABC, 0);
+    auto B = make_shared<op::XLAGetTupleElement>(ABC, 1);
+    auto C = make_shared<op::XLAGetTupleElement>(ABC, 2);
+    auto f = make_shared<XLAFunction>(
+        make_shared<op::XLATuple>(Nodes{(A + B) * C}), rt, op::Parameters{ABC});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -198,11 +198,11 @@ TEST(${BACKEND_NAME}, tuple_abc_int64)
     auto ABC = make_shared<op::Parameter>(
         make_shared<TupleType>(ValueTypes{tensor_view_type, tensor_view_type, tensor_view_type}));
 
-    auto A = make_shared<op::GetTupleElement>(ABC, 0);
-    auto B = make_shared<op::GetTupleElement>(ABC, 1);
-    auto C = make_shared<op::GetTupleElement>(ABC, 2);
-    auto f =
-        make_shared<Function>(make_shared<op::Tuple>(Nodes{(A + B) * C}), rt, op::Parameters{ABC});
+    auto A = make_shared<op::XLAGetTupleElement>(ABC, 0);
+    auto B = make_shared<op::XLAGetTupleElement>(ABC, 1);
+    auto C = make_shared<op::XLAGetTupleElement>(ABC, 2);
+    auto f = make_shared<XLAFunction>(
+        make_shared<op::XLATuple>(Nodes{(A + B) * C}), rt, op::Parameters{ABC});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -248,8 +248,8 @@ TEST(${BACKEND_NAME}, tuple_result)
     auto rt = make_shared<TupleType>(std::vector<shared_ptr<const ValueType>>(
         {make_shared<TensorViewType>(element::Float32::element_type(), shape),
          make_shared<TensorViewType>(element::Float32::element_type(), shape)}));
-    auto f = make_shared<Function>(
-        make_shared<op::Tuple>(Nodes{A_add_B, A_add_B_mul_C}), rt, op::Parameters{A, B, C});
+    auto f = make_shared<XLAFunction>(
+        make_shared<op::XLATuple>(Nodes{A_add_B, A_add_B_mul_C}), rt, op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4651,4 +4651,24 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
             2.48832414720096000000e+18, 2.48832440640101478400e+18, 2.48832466560109772800e+18,
             2.48832492480234188800e+18, 2.48832518400031897600e+18},
         result->get_vector<double>()));
+}
+
+TEST(${BACKEND_NAME}, DISABLED_parameter_to_output)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto f = make_shared<Function>(A, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    copy_data(a, vector<float>{1, -2, 0, -4.8f});
+    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{1, -2, 0, -4.8f}), result->get_vector<float>());
 }

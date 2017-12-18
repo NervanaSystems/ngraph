@@ -21,12 +21,10 @@
 #include <clang/Driver/DriverDiagnostic.h>
 #include <clang/Driver/Options.h>
 #include <clang/Frontend/CompilerInstance.h>
-#include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/CompilerInvocation.h>
 #include <clang/Frontend/FrontendActions.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
 #include <clang/Frontend/TextDiagnosticBuffer.h>
-#include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/Frontend/Utils.h>
 #include <clang/FrontendTool/Utils.h>
@@ -40,7 +38,6 @@
 #include <llvm/Support/ErrorHandling.h>
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/Signals.h>
-#include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/Timer.h>
 #include <llvm/Support/raw_ostream.h>

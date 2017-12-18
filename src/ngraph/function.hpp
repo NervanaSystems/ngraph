@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
@@ -34,6 +35,11 @@ namespace ngraph
     class Function
     {
     public:
+        Function(const Nodes& results,
+                 const std::vector<std::shared_ptr<const ValueType>>& result_types,
+                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                 const std::string& name = "");
+
         Function(const std::shared_ptr<Node>& result,
                  const std::shared_ptr<const ValueType>& result_type,
                  const std::vector<std::shared_ptr<op::Parameter>>& parameters,
@@ -43,18 +49,25 @@ namespace ngraph
                  const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                  const std::string& name = "");
 
-        std::shared_ptr<Node> get_result() { return m_result; }
-        std::shared_ptr<const Node> get_result() const { return m_result; }
+        virtual ~Function() {}
+        std::shared_ptr<Node> get_result();
+
+        const Nodes& get_results() const { return m_results; }
+        std::vector<descriptor::Output*> get_outputs();
+
         const std::vector<std::shared_ptr<op::Parameter>>& get_parameters() const
         {
             return m_parameters;
         }
-        std::shared_ptr<const ValueType> get_result_type() const
-        {
-            return m_result->get_value_type();
-        }
+
+        std::shared_ptr<const ValueType> get_result_type() const;
+
+        std::vector<std::shared_ptr<const ValueType>> get_result_types() const;
+
         std::string get_name() const;
-        void set_name(const std::string& name);
+        void set_name(
+            const std::string&
+                name); //so we can use `dynamic_cast` in FunctionCall to double check if we are dealing with an XLA or regular function
         std::list<std::shared_ptr<Node>>& get_ops();
         const std::list<std::shared_ptr<Node>>& get_ops() const;
         std::list<std::shared_ptr<Node>>& get_ordered_ops();
@@ -68,10 +81,10 @@ namespace ngraph
         void set_temporary_pool_size(size_t);
 
     protected:
-        std::shared_ptr<Node> m_result;
+        Nodes m_results;
         std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;
         std::string m_name;
-        std::shared_ptr<const ValueType> m_result_type;
+        std::vector<std::shared_ptr<const ValueType>> m_result_types;
         bool m_ordered_ops_valid;
         std::list<std::shared_ptr<Node>> m_ordered_ops;
         std::list<std::shared_ptr<Node>> m_ops;

@@ -40,8 +40,12 @@ TEST(serialize, tuple)
     auto A = make_shared<op::Parameter>(tensor_view_type);
     auto B = make_shared<op::Parameter>(tensor_view_type);
     auto C = make_shared<op::Parameter>(tensor_view_type);
-    auto f = make_shared<Function>(make_shared<op::Tuple>(Nodes{(A + B), (A - B), (C * A)}),
-                                   op::Parameters{A, B, C});
+
+    auto ttt =
+        make_shared<TupleType>(ValueTypes{tensor_view_type, tensor_view_type, tensor_view_type});
+
+    auto f = make_shared<XLAFunction>(
+        make_shared<op::XLATuple>(Nodes{(A + B), (A - B), (C * A)}), ttt, op::Parameters{A, B, C});
 
     string js = serialize(f);
     {

@@ -40,6 +40,7 @@
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
+#include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/cos.hpp"
 #include "ngraph/ops/cosh.hpp"
 #include "ngraph/ops/divide.hpp"
@@ -48,7 +49,6 @@
 #include "ngraph/ops/exp.hpp"
 #include "ngraph/ops/floor.hpp"
 #include "ngraph/ops/function_call.hpp"
-#include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/greater.hpp"
 #include "ngraph/ops/greater_eq.hpp"
 #include "ngraph/ops/less.hpp"
@@ -74,7 +74,9 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/ops/tuple.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/liveness.hpp"
@@ -107,8 +109,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::EmitDot},
     {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::EmitMultiply},
     {TI(ngraph::op::Parameter), &runtime::cpu::CPU_Emitter::EmitNop},
-    {TI(ngraph::op::GetTupleElement), &runtime::cpu::CPU_Emitter::EmitGetTupleElement},
-    {TI(ngraph::op::Tuple), &runtime::cpu::CPU_Emitter::EmitTuple},
+    {TI(ngraph::op::XLAGetTupleElement), &runtime::cpu::CPU_Emitter::EmitGetOutputElement},
+    {TI(ngraph::op::XLATuple), &runtime::cpu::CPU_Emitter::EmitTuple},
     {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::EmitAbs},
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::EmitConcat},
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::EmitDivide},
@@ -165,6 +167,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Floor), &runtime::cpu::CPU_Emitter::EmitFloor},
     {TI(ngraph::op::Ceiling), &runtime::cpu::CPU_Emitter::EmitCeiling},
     {TI(ngraph::op::Sqrt), &runtime::cpu::CPU_Emitter::EmitSqrt},
+    {TI(ngraph::op::Convolution), &runtime::cpu::CPU_Emitter::EmitConvolution},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
@@ -211,6 +214,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/kernel/broadcast.hpp"
 #include "ngraph/runtime/kernel/concat.hpp"
+#include "ngraph/runtime/kernel/convolution.hpp"
 #include "ngraph/runtime/kernel/dot.hpp"
 #include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
@@ -371,9 +375,9 @@ using namespace ngraph::runtime;
         writer << "// Define outputs\n";
         size_t output_index = 0;
         set<string> output_names;
-        for (const descriptor::Output& output : current_function->get_result()->get_outputs())
+        for (const descriptor::Output* output : current_function->get_outputs())
         {
-            shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+            shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
             const element::Type& et = tv->get_tensor_view_type()->get_element_type();
             string type = et.c_type_string();
             writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<" << type
