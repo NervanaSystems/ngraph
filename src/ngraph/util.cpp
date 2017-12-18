@@ -22,9 +22,9 @@
 #include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/util.hpp"
 #include "ngraph/xla_function.hpp"
 
 using namespace std;
@@ -353,73 +353,97 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
         cloned_result, func->get_result_type(), cloned_params);
 }
 
-ngraph::FpropCache ngraph::cache_fprop(
-    std::shared_ptr<ngraph::XLAFunction> fprop,
-    std::shared_ptr<ngraph::XLAFunction> bprop) {
+ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fprop,
+                                       std::shared_ptr<ngraph::XLAFunction> bprop)
+{
+    using namespace ngraph;
 
-  using namespace ngraph;
-  op::Parameters bprop_input_params;
+    // Traverse fprop to make a map that stores parameters witht he same
+    // same an element type as the nodes in fprop
+    NodeMap node_param_map;
+    ngraph::traverse_nodes(fprop, [&node_param_map](std::shared_ptr<Node> node) {
+        node_param_map[node] =
+            std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape());
+    });
 
-  // create a map from f nodes to parameters
-  NodeMap node_param_map;
-  ngraph::traverse_nodes(fprop, [&node_param_map](std::shared_ptr<Node> node) {
-    node_param_map[node] = std::make_shared<op::Parameter>(
-        node->get_element_type(), node->get_shape());
-  });
+    // Traverse bprop to find all of the nodes in the graph
+    std::unordered_set<std::shared_ptr<Node>> in_bprop;
+    ngraph::traverse_nodes(bprop, [&in_bprop](std::shared_ptr<Node> node) {
+        if (!in_bprop.count(node))
+        {
+            in_bprop.insert(node);
+        }
+    });
 
-  std::unordered_set<std::shared_ptr<Node>> in_bprop;
-  ngraph::traverse_nodes(bprop, [&in_bprop](std::shared_ptr<Node> node) {
-    if (!in_bprop.count(node)) in_bprop.insert(node);
-  });
-
-  std::unordered_set<std::shared_ptr<Node>> fprop_params;
-  for (auto node : fprop->get_parameters()) {
-    if (fprop_params.count(node) == 0) fprop_params.insert(node);
-  }
-
-  FpropCache fprop_cache;
-  std::vector<std::shared_ptr<Node>> unused_nodes;
-  for (auto kv : node_param_map) {
-    if ((in_bprop.count(kv.first) == 0) || (fprop_params.count(kv.first) == 1)){
-      unused_nodes.push_back(kv.first);
-    } else {
-      fprop_cache.fprop_output_nodes.push_back(kv.first);
+    // Get the input paramters of fprop
+    std::unordered_set<std::shared_ptr<Node>> fprop_params;
+    for (auto node : fprop->get_parameters())
+    {
+        if (fprop_params.count(node) == 0)
+        {
+            fprop_params.insert(node);
+        }
     }
-  }
 
-  for (auto node : unused_nodes) {
-    node_param_map.erase(node);
-  }
+    // Find all of the nodes that are intermediate values of fprop and used in bprop
+    // and store those nodes that aren't needed in bprop
+    FpropCache fprop_cache;
+    std::vector<std::shared_ptr<Node>> unused_nodes;
+    for (auto kv : node_param_map)
+    {
+        // if it's an input parameter or not in bprop, mark it unused
+        if ((in_bprop.count(kv.first) == 0) || (fprop_params.count(kv.first) == 1))
+        {
+            unused_nodes.push_back(kv.first);
+        }
+        // otherwise save in in the ouputs
+        else
+        {
+            fprop_cache.fprop_output_nodes.push_back(kv.first);
+        }
+    }
 
-  std::vector<std::shared_ptr<Node>> fprop_outputs{fprop->get_results()};
-  fprop_outputs.insert(fprop_outputs.end(),
-                       fprop_cache.fprop_output_nodes.begin(),
-                       fprop_cache.fprop_output_nodes.end());
+    // erase all unused nodes form the map
+    for (auto node : unused_nodes)
+    {
+        node_param_map.erase(node);
+    }
 
-  auto outTuple = std::make_shared<op::XLATuple>(fprop_outputs);
-  auto outTupleType = outTuple->get_value_type();
-  fprop_cache.fprop =
-      std::make_shared<XLAFunction>(outTuple, outTupleType, fprop->get_parameters());
+    // create the new outputs for fprop and the new fprop function
+    std::vector<std::shared_ptr<Node>> fprop_outputs{fprop->get_results()};
+    fprop_outputs.insert(fprop_outputs.end(),
+                         fprop_cache.fprop_output_nodes.begin(),
+                         fprop_cache.fprop_output_nodes.end());
 
-  ngraph::clone_nodes(bprop->get_ops(), node_param_map);
+    auto outTuple = std::make_shared<op::XLATuple>(fprop_outputs);
+    auto outTupleType = outTuple->get_value_type();
+    fprop_cache.fprop =
+        std::make_shared<XLAFunction>(outTuple, outTupleType, fprop->get_parameters());
 
-  // get cloned function result and parameters
-  auto cloned_result = node_param_map[bprop->get_result()];
+    // clone the nodes in bprop, replacing fprop-related nodes with the
+    // intermediate parameters
+    ngraph::clone_nodes(bprop->get_ops(), node_param_map);
 
-  for (auto param : bprop->get_parameters()) {
-    bprop_input_params.push_back(
-        std::dynamic_pointer_cast<op::Parameter>(node_param_map[param]));
-  }
+    // get cloned bprop results
+    auto cloned_result = node_param_map[bprop->get_result()];
 
-  for (auto x : fprop_cache.fprop_output_nodes) {
-    bprop_input_params.push_back(
-        std::dynamic_pointer_cast<op::Parameter>(node_param_map[x]));
-  }
+    // get clone bprop parameters
+    op::Parameters bprop_input_params;
+    for (auto param : bprop->get_parameters())
+    {
+        bprop_input_params.push_back(
+            std::dynamic_pointer_cast<op::Parameter>(node_param_map[param]));
+    }
 
-  // create and return cloned function
-  fprop_cache.bprop = std::make_shared<XLAFunction>(
-      cloned_result, cloned_result->get_value_type(),
-      bprop_input_params);
+    // add the cached fprop nodes as inputs to bprop
+    for (auto x : fprop_cache.fprop_output_nodes)
+    {
+        bprop_input_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_param_map[x]));
+    }
 
-  return fprop_cache;
+    // create the new bprop function
+    fprop_cache.bprop = std::make_shared<XLAFunction>(
+        cloned_result, cloned_result->get_value_type(), bprop_input_params);
+
+    return fprop_cache;
 }

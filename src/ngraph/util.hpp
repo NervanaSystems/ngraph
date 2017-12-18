@@ -33,7 +33,7 @@ namespace ngraph
     class XLAFunction;
     class stopwatch;
 
-    namespace runtime 
+    namespace runtime
     {
         class Backend;
         class Value;
@@ -245,7 +245,8 @@ namespace ngraph
     std::list<std::shared_ptr<Node>>
         topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
 
-    using NodeMap = std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>;
+    using NodeMap =
+        std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>;
 
     // input nodes are cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
@@ -259,14 +260,24 @@ namespace ngraph
     std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func,
                                                      NodeMap& node_map);
 
+    /*
+    * Return type struct for cache_fprop, with the modified fprop and bprop
+    * functions
+    * and a list of the nodes that have been appended to fprop output/bprop
+    * input
+    */
     struct FpropCache
-    {   
+    {
         std::shared_ptr<XLAFunction> fprop;
         std::shared_ptr<XLAFunction> bprop;
         std::vector<std::shared_ptr<Node>> fprop_output_nodes;
     };
 
-FpropCache cache_fprop(
-    std::shared_ptr<XLAFunction> fprop,
-    std::shared_ptr<XLAFunction> bprop);
+    /**
+    * This utility takes forward-propogation and back-propogation XLAunctions
+    * and turns them into clone functions where the intermediate values of 
+    * the forward prop are added to the output of fprop and the input of the bprop
+    * to avoid repeat calcualtions
+    **/
+    FpropCache cache_fprop(std::shared_ptr<XLAFunction> fprop, std::shared_ptr<XLAFunction> bprop);
 } // end namespace ngraph

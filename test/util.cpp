@@ -284,7 +284,7 @@ public:
         auto cloneit = clone.begin();
         while (origit != orig.end() && cloneit != clone.end())
         {
-            if (cloneit != nm[origit])
+            if (*cloneit != nm.at(*origit))
             {
                 return false;
             }
