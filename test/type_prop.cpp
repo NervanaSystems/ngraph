@@ -2592,3 +2592,448 @@ TEST(type_prop, conv_invalid_movement_stride_0)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, max_pool_1d_deduce)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100});
+    auto window_shape = Shape{10};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+    auto max_pool_vt = max_pool->get_value_type();
+    EXPECT_EQ(*max_pool_vt, TensorViewType(element::Float32::element_type(), Shape{64, 3, 91}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{1});
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), Shape{100});
+    EXPECT_EQ(max_pool->get_output_image_shape(), Shape{91});
+
+    EXPECT_EQ(max_pool->get_window_shape(), Shape{10});
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
+}
+
+TEST(type_prop, max_pool_1d_deduce_strided)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100});
+    auto window_shape = Shape{10};
+    auto move_strides = Strides{2};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+    auto max_pool_vt = max_pool->get_value_type();
+    EXPECT_EQ(*max_pool_vt, TensorViewType(element::Float32::element_type(), Shape{64, 3, 46}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), Shape{100});
+    EXPECT_EQ(max_pool->get_output_image_shape(), Shape{46});
+
+    EXPECT_EQ(max_pool->get_window_shape(), Shape{10});
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
+}
+
+TEST(type_prop, max_pool_1d_deduce_strided_small_uneven)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 5});
+    auto window_shape = Shape{2};
+    auto move_strides = Strides{2};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+    auto max_pool_vt = max_pool->get_value_type();
+    EXPECT_EQ(*max_pool_vt, TensorViewType(element::Float32::element_type(), Shape{64, 3, 2}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), Shape{5});
+    EXPECT_EQ(max_pool->get_output_image_shape(), Shape{2});
+
+    EXPECT_EQ(max_pool->get_window_shape(), Shape{2});
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
+}
+
+TEST(type_prop, max_pool_1d_deduce_strided_small_even)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 6});
+    auto window_shape = Shape{2};
+    auto move_strides = Strides{2};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+    auto max_pool_vt = max_pool->get_value_type();
+    EXPECT_EQ(*max_pool_vt, TensorViewType(element::Float32::element_type(), Shape{64, 3, 3}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), Shape{6});
+    EXPECT_EQ(max_pool->get_output_image_shape(), Shape{3});
+
+    EXPECT_EQ(max_pool->get_window_shape(), Shape{2});
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
+}
+
+TEST(type_prop, max_pool_2d_deduce)
+{
+    // Deduce type
+    auto param =
+        make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100, 150});
+    auto window_shape = Shape{10, 20};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+    auto max_pool_vt = max_pool->get_value_type();
+    EXPECT_EQ(*max_pool_vt,
+              TensorViewType(element::Float32::element_type(), Shape{64, 3, 91, 131}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{1, 1}));
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), (Shape{100, 150}));
+    EXPECT_EQ(max_pool->get_output_image_shape(), (Shape{91, 131}));
+
+    EXPECT_EQ(max_pool->get_window_shape(), (Shape{10, 20}));
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 2);
+}
+
+TEST(type_prop, max_pool_2d_deduce_strided)
+{
+    // Deduce type
+    auto param =
+        make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100, 150});
+    auto window_shape = Shape{10, 20};
+    auto move_strides = Strides{2, 3};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+    auto max_pool_vt = max_pool->get_value_type();
+    EXPECT_EQ(*max_pool_vt, TensorViewType(element::Float32::element_type(), Shape{64, 3, 46, 44}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{2, 3}));
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), (Shape{100, 150}));
+    EXPECT_EQ(max_pool->get_output_image_shape(), (Shape{46, 44}));
+
+    EXPECT_EQ(max_pool->get_window_shape(), (Shape{10, 20}));
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 2);
+}
+
+TEST(type_prop, max_pool_3d_deduce_strided_small)
+{
+    // Deduce type
+    auto param =
+        make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 7, 8, 10});
+    auto window_shape = Shape{2, 3, 2};
+    auto move_strides = Strides{2, 3, 4};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+    auto max_pool_vt = max_pool->get_value_type();
+    EXPECT_EQ(*max_pool_vt,
+              TensorViewType(element::Float32::element_type(), Shape{64, 3, 3, 2, 3}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{2, 3, 4}));
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), (Shape{7, 8, 10}));
+    EXPECT_EQ(max_pool->get_output_image_shape(), (Shape{3, 2, 3}));
+
+    EXPECT_EQ(max_pool->get_window_shape(), (Shape{2, 3, 2}));
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 3);
+}
+
+TEST(type_prop, max_pool_invalid_0d_input)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto window_shape = Shape{};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid 0D input not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Max pool image batch input must have rank of at "
+                              "least 3 (one batch axis, one channel axis, at "
+                              "least one image dimension)."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_1d_input)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2});
+    auto window_shape = Shape{};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid 1D input not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Max pool image batch input must have rank of at "
+                              "least 3 (one batch axis, one channel axis, at "
+                              "least one image dimension)."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_2d_input)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 6});
+    auto window_shape = Shape{};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid 2D input not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Max pool image batch input must have rank of at "
+                              "least 3 (one batch axis, one channel axis, at "
+                              "least one image dimension)."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_0_batch_size)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{0, 6, 1});
+    auto window_shape = Shape{1};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with 0 batch size not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Max pool image batch size is zero."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_0_channels)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 0, 1});
+    auto window_shape = Shape{1};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with 0 channels not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Max pool requires at least one image depth channel."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_many)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto window_shape = Shape{3, 3, 3};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with too many window dimensions not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Max pool window shape rank does not match number of image dimensions."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_few)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto window_shape = Shape{3};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with too few window dimensions not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Max pool window shape rank does not match number of image dimensions."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_movement_stride_rank)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto window_shape = Shape{3, 3};
+    auto move_strides = Strides{2, 3, 8};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with wrong movement stride rank not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Max pool window movement stride rank does not "
+                              "match number of image dimensions."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_input_image_size_0)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 0, 10});
+    auto window_shape = Shape{3, 3};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with zero-length image axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Max pool input image dimension is zero."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_window_size_0)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto window_shape = Shape{3, 0};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with zero-length window axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Max pool window shape has a zero-length axis."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_dilated_too_large)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 8, 8});
+    auto window_shape = Shape{9, 9};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with oversized window not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Max pool window shape is larger than the image."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_movement_stride_0)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto window_shape = Shape{3, 3};
+    auto move_strides = Strides{0, 1};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with 0-length movement stride axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Max pool window axis movement stride is zero."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
