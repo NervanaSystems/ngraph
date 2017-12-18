@@ -67,7 +67,7 @@ std::shared_ptr<const TensorViewType> Input::get_tensor_view_type() const
     return m_output->get_tensor_view()->get_tensor_view_type();
 }
 
-const Shape Input::get_shape() const
+const Shape& Input::get_shape() const
 {
     return get_tensor_view_type()->get_shape();
 }
