@@ -223,6 +223,12 @@ namespace ngraph
         return a * b;
     }
 
+    template <typename T>
+    T ceil_div(const T& x, const T& y)
+    {
+        return (x == 0 ? 0 : (1 + (x - 1) / y));
+    }
+
     void traverse_nodes(Function* p, std::function<void(std::shared_ptr<Node>)> f);
     void traverse_nodes(std::shared_ptr<Function> p, std::function<void(std::shared_ptr<Node>)> f);
     void traverse_functions(std::shared_ptr<Function> p,
