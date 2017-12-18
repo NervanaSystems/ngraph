@@ -33,6 +33,7 @@
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
+#include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/cos.hpp"
 #include "ngraph/ops/cosh.hpp"
 #include "ngraph/ops/divide.hpp"
@@ -83,6 +84,7 @@
 #include "ngraph/runtime/ngvm/instruction/concat.hpp"
 #include "ngraph/runtime/ngvm/instruction/constant.hpp"
 #include "ngraph/runtime/ngvm/instruction/convert.hpp"
+#include "ngraph/runtime/ngvm/instruction/convolution.hpp"
 #include "ngraph/runtime/ngvm/instruction/copy.hpp"
 #include "ngraph/runtime/ngvm/instruction/copy_by_index.hpp"
 #include "ngraph/runtime/ngvm/instruction/cos.hpp"
@@ -515,6 +517,35 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             else { throw ngraph_error("Internal error: cannot convert between element types"); }
 #undef REGISTER_CONVERTS
 #undef REGISTER_CONVERT
+        };
+
+        REGISTER_TO_OP_MAP(op::Convolution)
+        {
+            auto convolution = static_cast<const op::Convolution*>(n);
+
+            auto arg0_tensor_type = n->get_inputs().at(0).get_tensor_view_type();
+            auto arg0_shape = arg0_tensor_type->get_shape();
+
+            auto arg1_tensor_type = n->get_inputs().at(1).get_tensor_view_type();
+            auto arg1_shape = arg1_tensor_type->get_shape();
+
+            auto result_tensor_type =
+                dynamic_pointer_cast<const TensorViewType>(n->get_value_type());
+            assert(nullptr != result_tensor_type);
+            auto result_shape = result_tensor_type->get_shape();
+            auto& result_element_type = result_tensor_type->get_element_type();
+
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "Convolution has unhandled element type",
+                                         instruction::ConvolutionInstruction,
+                                         in[0],
+                                         in[1],
+                                         out[0],
+                                         arg0_shape,
+                                         arg1_shape,
+                                         result_shape,
+                                         convolution->get_window_movement_strides(),
+                                         convolution->get_window_dilation_strides());
         };
 
         REGISTER_TO_OP_MAP(op::Dot)
