@@ -167,7 +167,7 @@ namespace ngraph
                 return rc;
             }
 
-            void* get_data_ptr() { return m_data; }
+            const void* get_data_ptr() const { return m_data; }
             virtual bool is_constant() const override { return true; }
         protected:
             template <typename T>

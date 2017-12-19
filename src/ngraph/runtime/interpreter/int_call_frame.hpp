@@ -259,9 +259,8 @@ private:
         }
         else if (node_op == "Constant")
         {
-            auto c = static_cast<const op::Constant*>(&node);
-            std::vector<T> input = c->get_vector<T>();
-            kernel::constant<T>(reinterpret_cast<T*>(input.data()),
+            const op::Constant* c = static_cast<const op::Constant*>(&node);
+            kernel::constant<T>(reinterpret_cast<const T*>(c->get_data_ptr()),
                                 reinterpret_cast<T*>(out[0]->get_data_ptr()),
                                 out[0]->get_element_count());
         }
