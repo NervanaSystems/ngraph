@@ -71,31 +71,6 @@ void runtime::interpreter::INT_CallFrame::call(
         }
     }
 
-    // size_t output_index = 0;
-    // for (const descriptor::Output* output : function->get_outputs())
-    // {
-    //     shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
-    //     const element::Type& type = tv->get_tensor_view_type()->get_element_type();
-    //     bool parameter_as_output = false;
-    //     for (shared_ptr<op::Parameter> param : function->get_parameters())
-    //     {
-    //         for (const descriptor::Output& pout : param->get_outputs())
-    //         {
-    //             shared_ptr<descriptor::TensorView> ptv = pout.get_tensor_view();
-    //             if (tv == ptv)
-    //             {
-    //                 NGRAPH_INFO << type;
-    //                 parameter_as_output = true;
-    //                 // writer << "memcpy(static_cast<" << et.c_type_string() << "*>(outputs["
-    //                 //        << output_index << "]), " << ptv->get_tensor().get_name() << ", "
-    //                 //        << ptv->get_tensor().size() << ");\n";
-    //                 break;
-    //             }
-    //         }
-    //     }
-    //     output_index++;
-    // }
-
     // Invoke computation
     for (shared_ptr<Node> op : function->get_ordered_ops())
     {

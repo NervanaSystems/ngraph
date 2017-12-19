@@ -411,10 +411,6 @@ private:
         }
         else if (node_op == "Parameter")
         {
-            NGRAPH_INFO << args.size();
-            NGRAPH_INFO << out.size();
-            float* f = reinterpret_cast<float*>(out[0]->get_data_ptr());
-            f[0] = 42;
         }
         else if (node_op == "ParameterizedConstant")
         {
