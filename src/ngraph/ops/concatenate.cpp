@@ -30,47 +30,47 @@ op::Concat::Concat(const Nodes& args, size_t concatenation_axis)
         throw ngraph_error("At least one argument required");
     }
 
-    auto arg0_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
-    auto arg0_shape = arg0_tensor_view_type->get_shape();
-    if (m_concatenation_axis >= arg0_shape.size())
+    auto& input_0 = get_inputs().at(0);
+    auto input_0_shape = input_0.get_shape();
+    if (m_concatenation_axis >= input_0_shape.size())
     {
         throw ngraph_error("Concatenation axis is out of bounds");
     }
 
-    size_t concatenation_axis_length = arg0_shape.at(m_concatenation_axis);
-    auto& arg0_element_type = arg0_tensor_view_type->get_element_type();
+    size_t concatenation_axis_length = input_0_shape.at(m_concatenation_axis);
+    auto& input_0_element_type = input_0.get_element_type();
 
     for (auto i = 1; i < get_inputs().size(); i++)
     {
-        auto argi_tensor_view_type = get_inputs().at(i).get_tensor_view_type();
-        auto argi_shape = argi_tensor_view_type->get_shape();
-        if (argi_shape.size() != arg0_shape.size())
+        auto& input_i = get_inputs().at(i);
+        auto input_i_shape = input_i.get_shape();
+        if (input_i_shape.size() != input_0_shape.size())
         {
             throw ngraph_error("Arguments to concat do not have same rank");
         }
 
-        if (argi_tensor_view_type->get_element_type() != arg0_element_type)
+        if (input_i.get_element_type() != input_0_element_type)
         {
             throw ngraph_error("Argument element types do not match");
         }
 
-        for (auto j = 0; j < argi_shape.size(); j++)
+        for (auto j = 0; j < input_i_shape.size(); j++)
         {
-            if (j != m_concatenation_axis && arg0_shape.at(j) != argi_shape.at(j))
+            if (j != m_concatenation_axis && input_0_shape.at(j) != input_i_shape.at(j))
             {
                 throw ngraph_error(
                     "Arguments to concat do not have same dimension on a non-concatenation axis");
             }
             else if (j == m_concatenation_axis)
             {
-                concatenation_axis_length += argi_shape.at(j);
+                concatenation_axis_length += input_i_shape.at(j);
             }
         }
     }
-    vector<size_t> concatenated_shape = arg0_shape;
+    vector<size_t> concatenated_shape = input_0_shape;
     concatenated_shape.at(m_concatenation_axis) = concatenation_axis_length;
 
-    set_value_type_checked(make_shared<TensorViewType>(arg0_element_type, concatenated_shape));
+    set_value_type_checked(make_shared<TensorViewType>(input_0_element_type, concatenated_shape));
 }
 
 void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)

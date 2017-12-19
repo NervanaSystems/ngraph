@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "ngraph/log.hpp"
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/util.hpp"
 

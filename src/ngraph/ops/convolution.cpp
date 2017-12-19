@@ -26,11 +26,8 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
 {
-    auto image_batch_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
-    auto& image_batch_shape = image_batch_tensor_view_type->get_shape();
-
-    auto filters_tensor_view_type = get_inputs().at(1).get_tensor_view_type();
-    auto& filters_shape = filters_tensor_view_type->get_shape();
+    auto& image_batch_shape = get_inputs().at(0).get_shape();
+    auto& filters_shape = get_inputs().at(1).get_shape();
 
     //
     // Make sure image_batch: NCiDi for some Di of rank>0, N != 0, Ci != 0.
@@ -157,8 +154,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
     result_shape[1] = m_output_channel_count;
     std::copy(m_output_image_shape.begin(), m_output_image_shape.end(), result_shape.begin() + 2);
 
-    set_value_type_checked(make_shared<TensorViewType>(
-        image_batch_tensor_view_type->get_element_type(), result_shape));
+    set_value_type_checked(get_inputs().at(0).get_element_type(), result_shape);
 }
 
 Strides default_strides(const std::shared_ptr<Node>& image_batch)

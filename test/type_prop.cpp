@@ -559,7 +559,7 @@ TEST(type_prop, select_shape_mismatch_a)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
     }
     catch (...)
     {
@@ -583,7 +583,7 @@ TEST(type_prop, select_shape_mismatch_b)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
     }
     catch (...)
     {
@@ -607,7 +607,7 @@ TEST(type_prop, select_shape_mismatch_c)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
     }
     catch (...)
     {
@@ -657,8 +657,7 @@ TEST(type_prop, select_elem_mismatch_bc)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Arguments 1 and 2 must have the same tensor view type"));
+        EXPECT_EQ(error.what(), std::string("Arguments 1 and 2 must have the same element type"));
     }
     catch (...)
     {
@@ -1368,78 +1367,35 @@ TEST(type_prop, slice_deduce_matrix_upper_extra)
 
 TEST(type_prop, scalar_constant_deduce_float32)
 {
-    auto c = make_shared<op::Constant>(element::Float32::element_type(), Shape{}, "208");
+    auto c = op::Constant::create(element::Float32::element_type(), Shape{}, {208});
     ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
 }
 
 TEST(type_prop, scalar_constant_deduce_bool)
 {
-    auto c = make_shared<op::Constant>(element::Bool::element_type(), Shape{}, "1");
+    auto c = op::Constant::create(element::Bool::element_type(), Shape{}, {1});
     ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Bool::element_type(), Shape{}));
 }
 
 TEST(type_prop, tensor_constant_deduce_float32)
 {
-    auto c = make_shared<op::Constant>(element::Float32::element_type(),
-                                       Shape{2, 2},
-                                       std::vector<std::string>{"208", "208", "208", "208"});
+    auto c =
+        op::Constant::create(element::Float32::element_type(), Shape{2, 2}, {208, 208, 208, 208});
     ASSERT_EQ(*(c->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{2, 2}));
 }
 
 TEST(type_prop, tensor_constant_deduce_bool)
 {
-    auto c = make_shared<op::Constant>(
-        element::Bool::element_type(), Shape{2, 2}, std::vector<std::string>{"1", "1", "1", "1"});
+    auto c = op::Constant::create(element::Bool::element_type(), Shape{2, 2}, {1, 1, 1, 1});
     ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Bool::element_type(), Shape{2, 2}));
-}
-
-TEST(type_prop, tensor_constant_bad_parse)
-{
-    try
-    {
-        auto c = make_shared<op::Constant>(element::Bool::element_type(),
-                                           Shape{2, 2},
-                                           std::vector<std::string>{"1", "grunk", "1", "1"});
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Bad literal parse not detected";
-    }
-    catch (const runtime_error& error)
-    {
-        EXPECT_TRUE(string(error.what()).find("Could not parse literal") != string::npos);
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, tensor_constant_bad_parse_float_for_int)
-{
-    try
-    {
-        auto c = make_shared<op::Constant>(element::Int32::element_type(),
-                                           Shape{2, 2},
-                                           std::vector<std::string>{"1", "2.7", "1", "1"});
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Bad literal parse not detected";
-    }
-    catch (const runtime_error& error)
-    {
-        EXPECT_TRUE(string(error.what()).find("Could not parse literal") != string::npos);
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
 }
 
 TEST(type_prop, tensor_constant_bad_count)
 {
     try
     {
-        auto c = make_shared<op::Constant>(
-            element::Bool::element_type(), Shape{2, 2}, std::vector<std::string>{"1", "1", "1"});
+        auto c = op::Constant::create(element::Bool::element_type(), Shape{2, 2}, {1, 1, 1});
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect number of literals not detected";
     }

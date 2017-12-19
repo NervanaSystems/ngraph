@@ -62,6 +62,11 @@ void Node::assert_value_type(const shared_ptr<const ValueType>& value_type) cons
     }
 }
 
+void Node::set_value_type_checked(const element::Type& element_type, const Shape& shape)
+{
+    set_value_type_checked(make_shared<TensorViewType>(element_type, shape));
+}
+
 void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
 {
     if (nullptr == m_value_type)

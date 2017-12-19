@@ -70,44 +70,44 @@ op::Dot::Dot(const std::shared_ptr<Node>& arg0,
     : RequiresTensorViewArgs("Dot", {arg0, arg1})
     , m_reduction_axes_count(reduction_axes_count)
 {
-    auto arg0_tensor_type = get_inputs().at(0).get_tensor_view_type();
-    auto arg1_tensor_type = get_inputs().at(1).get_tensor_view_type();
+    auto& input_0 = get_inputs().at(0);
+    auto& input_1 = get_inputs().at(1);
 
-    if (arg0_tensor_type->get_element_type() != arg1_tensor_type->get_element_type())
+    if (input_0.get_element_type() != input_1.get_element_type())
     {
         throw ngraph_error("Arguments to dot must have the same element type");
     }
 
-    vector<size_t> arg0_shape = arg0_tensor_type->get_shape();
-    vector<size_t> arg1_shape = arg1_tensor_type->get_shape();
+    Shape input_0_shape = input_0.get_shape();
+    Shape input_1_shape = input_1.get_shape();
 
-    if (reduction_axes_count > arg0_shape.size())
+    if (reduction_axes_count > input_0_shape.size())
     {
         throw ngraph_error("Dot has too many axes for arg0");
     }
 
-    if (reduction_axes_count > arg1_shape.size())
+    if (reduction_axes_count > input_1_shape.size())
     {
         throw ngraph_error("Dot has too many axes for arg1");
     }
 
     for (size_t i = 0; i < reduction_axes_count; i++)
     {
-        if (arg0_shape[arg0_shape.size() - reduction_axes_count + i] != arg1_shape[i])
+        if (input_0_shape[input_0_shape.size() - reduction_axes_count + i] != input_1_shape[i])
         {
             throw ngraph_error("Dot axes do not have same length");
         }
     }
 
-    vector<size_t> result_shape(arg0_shape.size() + arg1_shape.size() - 2 * reduction_axes_count);
+    Shape result_shape(input_0_shape.size() + input_1_shape.size() - 2 * reduction_axes_count);
 
-    std::copy(arg0_shape.begin(), arg0_shape.end() - reduction_axes_count, result_shape.begin());
-    std::copy(arg1_shape.begin() + reduction_axes_count,
-              arg1_shape.end(),
-              result_shape.begin() + (arg0_shape.size() - reduction_axes_count));
+    std::copy(
+        input_0_shape.begin(), input_0_shape.end() - reduction_axes_count, result_shape.begin());
+    std::copy(input_1_shape.begin() + reduction_axes_count,
+              input_1_shape.end(),
+              result_shape.begin() + (input_0_shape.size() - reduction_axes_count));
 
-    auto result_type =
-        make_shared<TensorViewType>(arg0_tensor_type->get_element_type(), result_shape);
+    auto result_type = make_shared<TensorViewType>(input_0.get_element_type(), result_shape);
     set_value_type_checked(result_type);
 }
 

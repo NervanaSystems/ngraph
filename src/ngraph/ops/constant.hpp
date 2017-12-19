@@ -14,165 +14,242 @@
 
 #pragma once
 
+#include <cstring>
 #include <sstream>
 
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/utils.hpp"
 #include "ngraph/types/element_type.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Abstract base class for constants.
-        ///
-        /// There are two subclasses: ParameterizedConstant and Constant. ParameterizedConstant allows constant values to be supplied via vectors of the corresponding C++ type;
-        /// however, the ParameterizedConstant subclass can only be used when type information is available at C++ compile-time. In cases where types are not known until
-        /// C++ runtime, the Constant subclass must be used instead.
-        class ConstantBase : public Node
-        {
-        protected:
-            /// \brief Constructs a constant base-type node.
-            ///
-            /// \param type The TensorViewType for the constant.
-            ConstantBase(const std::string& node_type, const std::shared_ptr<TensorViewType>& type)
-                : Node(node_type, {})
-            {
-                set_value_type_checked(type);
-            }
-
-            virtual bool is_constant() const override { return true; }
-        };
-
-        /// \brief Class for constants whose element types are known at C++ compile-time.
-        ///
-        /// \tparam T The ngraph::element::Type of the tensor's elements.
-        ///
-        /// This class can be used when the type of the tensor constant is known at C++ compile-time. For other cases, Constant must be used.
-        ///
-        /// ## Parameters
-        ///
-        /// |         | Description                                                                          |
-        /// | ------- | ------------------------------------------------------------------------------------ |
-        /// | `shape` | The ngraph::Shape of the tensor constant.                                            |
-        /// | `value` | The ngraph::runtime::ParameterizedTensorView containing data fo the tensor constant. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                   | Description                                                           |
-        /// | ---------------------- | --------------------------------------------------------------------- |
-        /// | \f$E[d_1,\dots,d_n]\f$ | A constant tensor with the specified element type, shape, and values. |
-        template <typename T>
-        class ParameterizedConstant : public ConstantBase
-        {
-        public:
-            /// \brief The ngraph element type
-            using element_type = T;
-            /// \brief The C++ type that holds the element type
-            using type = typename T::type;
-
-            /// \brief Constructs a parameterized tensor constant.
-            ///
-            /// \param shape The shape of the tensor constant.
-            /// \param value The value of the tensor constant.
-            ParameterizedConstant(
-                const Shape& shape,
-                const typename std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>>& value)
-                : ConstantBase("ParameterizedConstant",
-                               std::make_shared<TensorViewType>(T::element_type(), shape))
-                , m_value(value)
-            {
-            }
-
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
-            {
-                if (new_args.size() != 0)
-                    throw ngraph_error("Incorrect number of new arguments");
-                return std::make_shared<ParameterizedConstant<T>>(get_shape(), m_value);
-            }
-
-            /// \return The value of the tensor constant.
-            typename std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>> get_value() const
-            {
-                return m_value;
-            }
-
-        protected:
-            const std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>> m_value;
-        };
-
-        /// \brief A 32-bit floating-point tensor constant.
-        using Float32Constant = ParameterizedConstant<element::Float32>;
-        /// \brief A 64-bit floating-point tensor constant.
-        using Float64Constant = ParameterizedConstant<element::Float64>;
-        /// \brief An 8-bit signed integer tensor constant.
-        using Int8Constant = ParameterizedConstant<element::Int8>;
-        /// \brief A 16-bit signed integer tensor constant.
-        using Int16Constant = ParameterizedConstant<element::Int16>;
-        /// \brief A 32-bit signed integer tensor constant.
-        using Int32Constant = ParameterizedConstant<element::Int32>;
-        /// \brief A 64-bit signed integer tensor constant.
-        using Int64Constant = ParameterizedConstant<element::Int64>;
-        /// \brief An 8-bit unsigned integer tensor constant.
-        using UInt8Constant = ParameterizedConstant<element::UInt8>;
-        /// \brief A 16-bit unsigned integer tensor constant.
-        using UInt16Constant = ParameterizedConstant<element::UInt16>;
-        /// \brief A 32-bit unsigned integer tensor constant.
-        using UInt32Constant = ParameterizedConstant<element::UInt32>;
-        /// \brief A 64-bit unsigned integer tensor constant.
-        using UInt64Constant = ParameterizedConstant<element::UInt64>;
-
-        /// \brief Class for constants whose element types may not be known until graph construction time.
-        ///
-        /// This class must be used when the type of the tensor constant is unknown at C++ compile-time. For other cases, ParameterizedConstant should be used.
+        /// \brief Class for constants.
         ///
         /// ## Parameters
         ///
         /// |                 | Description                                                                                                                                                                    |
         /// | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-        /// | `et`            | The ngraph::element::Type of the tensor constant.                                                                                                                              |
+        /// | `type`          | The ngraph::element::Type of the tensor constant.                                                                                                                              |
         /// | `shape`         | The ngraph::Shape of the tensor constant.                                                                                                                                      |
-        /// | `value_strings` | A list of strings containing literals for initialization of the tensor constant. These strings are parsed with the appropriate instance of ngraph::element::TraitedType::read. |
+        /// | `values`        | A list of values to initialize the underlying tensor constant. |
         ///
         /// ## Output
         ///
         /// | Type                   | Description                                                           |
         /// | ---------------------- | --------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | A constant tensor with the specified element type, shape, and values. |
-        class Constant : public ConstantBase
+        class Constant : public Node
         {
         public:
             /// \brief Constructs a tensor constant.
             ///
-            /// \param et The element type of the tensor constant.
+            /// \param type The element type of the tensor constant.
             /// \param shape The shape of the tensor constant.
-            /// \param value_strings A list of literals for initializing the tensor constant. There must be one literal for each element of the tensor; i.e., `value_strings.size()` must equal `ngraph::shape_size(shape)`.
-            Constant(const element::Type& et,
-                     const Shape& shape,
-                     const std::vector<std::string>& value_strings);
+            /// \param values A vector of literals for initializing the tensor constant. The size of values must match the size of the shape.
+            template <typename T>
+            Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
+                : Node("Constant", {})
+                , m_element_type(type)
+                , m_shape(shape)
+                , m_data(ngraph::aligned_alloc(m_element_type.size(),
+                                               shape_size(m_shape) * m_element_type.size()))
+            {
+                auto vt = std::make_shared<TensorViewType>(type, shape);
+                set_value_type_checked(vt);
+                if (values.size() == 1)
+                {
+                    write_values(std::vector<T>(shape_size(m_shape), values[0]));
+                }
+                else if (values.size() == shape_size(m_shape))
+                {
+                    write_values(values);
+                }
+                else
+                {
+                    throw ngraph_error("Constant does not have the expected number of literals");
+                }
+            }
+
+            /// \brief Constructs a tensor constant
+            ///        This constructor is mainly to support deserialization of constants.
+            ///
+            /// \param type The element type of the tensor constant.
+            /// \param shape The shape of the tensor constant.
+            /// \param values A list of string values to use as the constant data.
+            Constant(const element::Type& type, Shape shape, const std::vector<std::string>& values)
+                : Node("Constant", {})
+                , m_element_type(type)
+                , m_shape(shape)
+                , m_data(ngraph::aligned_alloc(m_element_type.size(),
+                                               shape_size(m_shape) * m_element_type.size()))
+            {
+                auto vt = std::make_shared<TensorViewType>(type, shape);
+                set_value_type_checked(vt);
+                if (values.size() != shape_size(m_shape))
+                {
+                    throw ngraph_error("Constant does not have the expected number of literals");
+                }
+                std::vector<double> dvalues = parse_string<double>(values);
+                write_values(dvalues);
+            }
 
             /// \brief Constructs a tensor constant with the same initialization value copied across the tensor.
+            ///        This constructor is mainly to support deserialization of constants.
             ///
-            /// \param et The element type of the tensor constant.
+            /// \param type The element type of the tensor constant.
             /// \param shape The shape of the tensor constant.
-            /// \param value_string A literal for initializing each tensor constant.
-            Constant(const element::Type& et, const Shape& shape, const std::string& value_string);
+            /// \param data A void* to constant data.
+            Constant(const element::Type& type, const Shape& shape, const void* data)
+                : Node("Constant", {})
+                , m_element_type(type)
+                , m_shape(shape)
+                , m_data(nullptr)
+            {
+                size_t size = shape_size(m_shape) * m_element_type.size();
+                m_data = ngraph::aligned_alloc(m_element_type.size(), size);
+                memcpy(m_data, data, size);
+                auto vt = std::make_shared<TensorViewType>(type, shape);
+                set_value_type_checked(vt);
+            }
+
+            virtual ~Constant();
+
+            /// \brief Wrapper around constructing a shared_ptr of a Constant
+            ///
+            /// \param type The element type of the tensor constant.
+            /// \param shape The shape of the tensor constant.
+            /// \param values A vector of values to use as the constant data.
+            template <typename T>
+            static std::shared_ptr<op::Constant>
+                create(const element::Type& type, Shape shape, const std::vector<T> values)
+            {
+                return std::make_shared<op::Constant>(type, shape, values);
+            }
+
+            /// \brief Wrapper around constructing a shared_ptr of a Constant
+            ///
+            /// \param type The element type of the tensor constant.
+            /// \param shape The shape of the tensor constant.
+            /// \param values An initializer_list of values to use as the constant data.
+            template <typename T>
+            static std::shared_ptr<op::Constant>
+                create(const element::Type& type, Shape shape, std::initializer_list<T> values)
+            {
+                return std::make_shared<op::Constant>(type, shape, std::vector<T>{values});
+            }
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 0)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
-                return std::make_shared<Constant>(get_element_type(), get_shape(), m_value_strings);
+                }
+                return std::make_shared<Constant>(m_element_type, m_shape, m_data);
             }
 
             /// \return The initialization literals for the tensor constant.
-            const std::vector<std::string>& get_value_strings() const { return m_value_strings; }
-        protected:
-            void check_args();
+            std::vector<std::string> get_value_strings() const;
 
-            const std::vector<std::string> m_value_strings;
+            template <typename T>
+            std::vector<T> get_vector() const
+            {
+                std::vector<T> rc;
+                const T* p = reinterpret_cast<const T*>(m_data);
+                for (size_t i = 0; i < shape_size(m_shape); i++)
+                {
+                    rc.push_back(p[i]);
+                }
+                return rc;
+            }
+
+            const void* get_data_ptr() const { return m_data; }
+            bool is_constant() const override { return true; }
+        protected:
+            template <typename T>
+            void write_values(const std::vector<T>& values)
+            {
+                write_to_buffer(m_element_type, m_shape, values, m_data, shape_size(m_shape));
+            }
+
+            template <typename T, typename U>
+            void write_buffer(void* target, const std::vector<U>& source, size_t count)
+            {
+                T* p = reinterpret_cast<T*>(target);
+                for (size_t i = 0; i < count; i++)
+                {
+                    p[i] = static_cast<T>(source[i]);
+                }
+            }
+
+            template <typename T>
+            void write_to_buffer(const element::Type& target_type,
+                                 const Shape& target_shape,
+                                 const std::vector<T>& source,
+                                 void* target,
+                                 size_t target_element_count)
+            {
+                if (source.size() != target_element_count)
+                {
+                    throw std::runtime_error("Constant initializer does not match shape");
+                }
+                if (target_type == element::boolean)
+                {
+                    write_buffer<char, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::f32)
+                {
+                    write_buffer<float, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::f64)
+                {
+                    write_buffer<double, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::i8)
+                {
+                    write_buffer<int8_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::i16)
+                {
+                    write_buffer<int16_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::i32)
+                {
+                    write_buffer<int32_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::i64)
+                {
+                    write_buffer<int64_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::u8)
+                {
+                    write_buffer<uint8_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::u16)
+                {
+                    write_buffer<uint16_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::u32)
+                {
+                    write_buffer<uint32_t, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::u64)
+                {
+                    write_buffer<uint64_t, T>(target, source, target_element_count);
+                }
+                else
+                {
+                    throw std::runtime_error("unsupported type");
+                }
+            }
+
+            element::Type m_element_type;
+            Shape m_shape;
+            void* m_data;
         };
     }
 }
