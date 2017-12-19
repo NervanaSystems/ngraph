@@ -559,7 +559,7 @@ TEST(type_prop, select_shape_mismatch_a)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
     }
     catch (...)
     {
@@ -583,7 +583,7 @@ TEST(type_prop, select_shape_mismatch_b)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
     }
     catch (...)
     {
@@ -607,7 +607,7 @@ TEST(type_prop, select_shape_mismatch_c)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
     }
     catch (...)
     {
@@ -657,8 +657,7 @@ TEST(type_prop, select_elem_mismatch_bc)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Arguments 1 and 2 must have the same tensor view type"));
+        EXPECT_EQ(error.what(), std::string("Arguments 1 and 2 must have the same element type"));
     }
     catch (...)
     {

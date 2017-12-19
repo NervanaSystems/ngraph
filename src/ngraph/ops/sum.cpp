@@ -23,18 +23,18 @@ op::Sum::Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
     : RequiresTensorViewArgs("Sum", {arg})
     , m_reduction_axes(reduction_axes)
 {
-    auto arg_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
-    auto& arg_element_type = arg_tensor_view_type->get_element_type();
-    if (arg_element_type == element::Bool::element_type())
+    auto& input = get_inputs().at(0);
+    auto& input_element_type = input.get_element_type();
+    if (input_element_type == element::Bool::element_type())
     {
         throw ngraph_error("Argument for sum must have numeric element type");
     }
 
-    auto arg_shape = arg_tensor_view_type->get_shape();
+    auto input_shape = input.get_shape();
 
     for (auto axis : m_reduction_axes)
     {
-        if (axis >= arg_shape.size())
+        if (axis >= input_shape.size())
         {
             throw ngraph_error("Reduction axis for sum is out of bounds");
         }
@@ -42,22 +42,21 @@ op::Sum::Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
 
     Shape result_shape;
 
-    for (size_t i = 0; i < arg_shape.size(); i++)
+    for (size_t i = 0; i < input_shape.size(); i++)
     {
         if (m_reduction_axes.count(i) == 0)
         {
-            result_shape.push_back(arg_shape.at(i));
+            result_shape.push_back(input_shape.at(i));
         }
     }
 
-    set_value_type_checked(
-        make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), result_shape));
+    set_value_type_checked(input.get_element_type(), result_shape);
 }
 
 void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {
     auto x = get_inputs().at(0).get_output().get_node();
-    auto& x_shape = get_inputs().at(0).get_tensor_view_type()->get_shape();
+    auto& x_shape = get_inputs().at(0).get_shape();
 
     adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, m_reduction_axes));
 }

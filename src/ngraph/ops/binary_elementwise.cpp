@@ -28,16 +28,15 @@ op::BinaryElementwise::BinaryElementwise(
     const std::shared_ptr<Node>& arg1)
     : RequiresTensorViewArgs(node_type, Nodes{arg0, arg1})
 {
-    auto arg0_tensor_type = get_inputs().at(0).get_tensor_view_type();
-    auto arg1_tensor_type = get_inputs().at(1).get_tensor_view_type();
-    if (arg0_tensor_type->get_shape() != arg1_tensor_type->get_shape())
+    auto& input_0 = get_inputs().at(0);
+    auto& input_1 = get_inputs().at(1);
+    if (input_0.get_shape() != input_1.get_shape())
     {
         throw ngraph_error("Arguments must have the same tensor view shape");
     }
 
-    const element::Type& result_element_type = element_type_function(
-        arg0_tensor_type->get_element_type(), arg1_tensor_type->get_element_type());
+    const element::Type& result_element_type =
+        element_type_function(input_0.get_element_type(), input_1.get_element_type());
 
-    set_value_type_checked(
-        make_shared<TensorViewType>(result_element_type, arg0_tensor_type->get_shape()));
+    set_value_type_checked(make_shared<TensorViewType>(result_element_type, input_0.get_shape()));
 }
