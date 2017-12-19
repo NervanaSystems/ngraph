@@ -1476,171 +1476,10 @@ TEST(${BACKEND_NAME}, subtract)
     EXPECT_EQ((vector<float>{1, 2, 4, 8}), result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, scalar_parameterized_constant_bool)
-{
-    auto shape = Shape{};
-    auto t = runtime::make_tensor<element::Bool>(shape, {true});
-    auto A = make_shared<op::ParameterizedConstant<element::Bool>>(shape, t);
-    auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
-    auto f = make_shared<Function>(A, rt, op::Parameters{});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
-
-    cf->call({}, {result});
-    EXPECT_EQ((vector<char>{true}), result->get_vector<char>());
-}
-
-TEST(${BACKEND_NAME}, scalar_parameterized_constant_float)
-{
-    auto shape = Shape{};
-    auto t = runtime::make_tensor<element::Float32>(shape, {-3.0f});
-    auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto f = make_shared<Function>(A, rt, op::Parameters{});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
-
-    cf->call({}, {result});
-    EXPECT_EQ((vector<float>{-3.0f}), result->get_vector<float>());
-}
-
-TEST(${BACKEND_NAME}, scalar_parameterized_constant_int8)
-{
-    auto shape = Shape{};
-    auto t = runtime::make_tensor<element::Int8>(shape, {-3});
-    auto A = make_shared<op::ParameterizedConstant<element::Int8>>(shape, t);
-    auto rt = make_shared<TensorViewType>(element::Int8::element_type(), shape);
-    auto f = make_shared<Function>(A, rt, op::Parameters{});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::Int8::element_type(), shape);
-
-    cf->call({}, {result});
-    EXPECT_EQ((vector<int8_t>{-3}), result->get_vector<int8_t>());
-}
-
-TEST(${BACKEND_NAME}, scalar_parameterized_constant_int32)
-{
-    auto shape = Shape{};
-    auto t = runtime::make_tensor<element::Int32>(shape, {-3});
-    auto A = make_shared<op::ParameterizedConstant<element::Int32>>(shape, t);
-    auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape);
-    auto f = make_shared<Function>(A, rt, op::Parameters{});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::Int32::element_type(), shape);
-
-    cf->call({}, {result});
-    EXPECT_EQ((vector<int32_t>{-3}), result->get_vector<int32_t>());
-}
-
-TEST(${BACKEND_NAME}, scalar_parameterized_constant_int64)
-{
-    auto shape = Shape{};
-    auto t = runtime::make_tensor<element::Int64>(shape, {-3});
-    auto A = make_shared<op::ParameterizedConstant<element::Int64>>(shape, t);
-    auto rt = make_shared<TensorViewType>(element::Int64::element_type(), shape);
-    auto f = make_shared<Function>(A, rt, op::Parameters{});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
-
-    cf->call({}, {result});
-    EXPECT_EQ((vector<int64_t>{-3}), result->get_vector<int64_t>());
-}
-
-TEST(${BACKEND_NAME}, scalar_parameterized_constant_uint8)
-{
-    auto shape = Shape{};
-    auto t = runtime::make_tensor<element::UInt8>(shape, {3});
-    auto A = make_shared<op::ParameterizedConstant<element::UInt8>>(shape, t);
-    auto rt = make_shared<TensorViewType>(element::UInt8::element_type(), shape);
-    auto f = make_shared<Function>(A, rt, op::Parameters{});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::UInt8::element_type(), shape);
-
-    cf->call({}, {result});
-    EXPECT_EQ((vector<uint8_t>{3}), result->get_vector<uint8_t>());
-}
-
-TEST(${BACKEND_NAME}, scalar_parameterized_constant_uint32)
-{
-    auto shape = Shape{};
-    auto t = runtime::make_tensor<element::UInt32>(shape, {3});
-    auto A = make_shared<op::ParameterizedConstant<element::UInt32>>(shape, t);
-    auto rt = make_shared<TensorViewType>(element::UInt32::element_type(), shape);
-    auto f = make_shared<Function>(A, rt, op::Parameters{});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::UInt32::element_type(), shape);
-
-    cf->call({}, {result});
-    EXPECT_EQ((vector<uint32_t>{3}), result->get_vector<uint32_t>());
-}
-
-TEST(${BACKEND_NAME}, scalar_parameterized_constant_uint64)
-{
-    auto shape = Shape{};
-    auto t = runtime::make_tensor<element::UInt64>(shape, {3});
-    auto A = make_shared<op::ParameterizedConstant<element::UInt64>>(shape, t);
-    auto rt = make_shared<TensorViewType>(element::UInt64::element_type(), shape);
-    auto f = make_shared<Function>(A, rt, op::Parameters{});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto result = backend->make_primary_tensor_view(element::UInt64::element_type(), shape);
-
-    cf->call({}, {result});
-    EXPECT_EQ((vector<uint64_t>{3}), result->get_vector<uint64_t>());
-}
-
 TEST(${BACKEND_NAME}, tensor_constant)
 {
     auto shape = Shape{2, 2, 2};
-    auto t = runtime::make_tensor<element::Float32>(shape, {1, 2, 3, 4, 5, 6, 7, 8});
-    auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
+    auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(A, rt, op::Parameters{});
 
@@ -1659,8 +1498,7 @@ TEST(${BACKEND_NAME}, tensor_constant)
 TEST(${BACKEND_NAME}, tensor_constant_with_op)
 {
     auto shape = Shape{2, 2, 2};
-    auto t = runtime::make_tensor<element::Float32>(shape, {-1, 2, 3, -4, 5, -6, -7, 8});
-    auto A = make_shared<op::ParameterizedConstant<element::Float32>>(shape, t);
+    auto A = op::Constant::create(element::f32, shape, {-1, 2, 3, -4, 5, -6, -7, 8});
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Abs>(A), rt, op::Parameters{});
 
@@ -3213,7 +3051,7 @@ TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
 TEST(${BACKEND_NAME}, scalar_constant_float32)
 {
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
-    auto r = make_shared<op::Constant>(element::Float32::element_type(), Shape{}, "4.8");
+    auto r = op::Constant::create(element::Float32::element_type(), Shape{}, {4.8});
     auto f = make_shared<Function>(r, rt, op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -3225,13 +3063,13 @@ TEST(${BACKEND_NAME}, scalar_constant_float32)
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{});
 
     cf->call({}, {result});
-    EXPECT_EQ(vector<float>{std::strtof("4.8", NULL)}, result->get_vector<float>());
+    EXPECT_EQ(vector<float>{4.8}, result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, scalar_constant_int64)
 {
     auto rt = make_shared<TensorViewType>(element::Int64::element_type(), Shape{});
-    auto r = make_shared<op::Constant>(element::Int64::element_type(), Shape{}, "2112");
+    auto r = op::Constant::create(element::Int64::element_type(), Shape{}, {2112});
     auto f = make_shared<Function>(r, rt, op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -3243,17 +3081,14 @@ TEST(${BACKEND_NAME}, scalar_constant_int64)
     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), Shape{});
 
     cf->call({}, {result});
-    EXPECT_EQ(vector<element::Int64::type>{std::strtol("2112", NULL, 10)},
-              result->get_vector<element::Int64::type>());
+    EXPECT_EQ(vector<int64_t>{{2112}}, result->get_vector<int64_t>());
 }
 
 TEST(${BACKEND_NAME}, tensor_constant_float32)
 {
     auto shape = Shape{2, 2};
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape);
-    auto r = make_shared<op::Constant>(element::Float32::element_type(),
-                                       shape,
-                                       std::vector<std::string>{"4.8", "4.7", "-5.3", "0"});
+    auto r = op::Constant::create(element::Float32::element_type(), shape, {4.8, 4.7, -5.3, 0.0});
     auto f = make_shared<Function>(r, rt, op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -3265,20 +3100,14 @@ TEST(${BACKEND_NAME}, tensor_constant_float32)
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
 
     cf->call({}, {result});
-    EXPECT_EQ((vector<float>{std::strtof("4.8", NULL),
-                             std::strtof("4.7", NULL),
-                             std::strtof("-5.3", NULL),
-                             std::strtof("0", NULL)}),
-              result->get_vector<float>());
+    EXPECT_EQ((vector<float>{4.8, 4.7, -5.3, 0}), result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, tensor_constant_int64)
 {
     auto shape = Shape{2, 2};
     auto rt = make_shared<TensorViewType>(element::Int64::element_type(), shape);
-    auto r = make_shared<op::Constant>(element::Int64::element_type(),
-                                       shape,
-                                       std::vector<std::string>{"2112", "1848", "1776", "1964"});
+    auto r = op::Constant::create(element::Int64::element_type(), shape, {2112, 1848, 1776, 1964});
     auto f = make_shared<Function>(r, rt, op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -3290,11 +3119,7 @@ TEST(${BACKEND_NAME}, tensor_constant_int64)
     auto result = backend->make_primary_tensor_view(element::Int64::element_type(), shape);
 
     cf->call({}, {result});
-    EXPECT_EQ((vector<element::Int64::type>{std::strtol("2112", NULL, 10),
-                                            std::strtol("1848", NULL, 10),
-                                            std::strtol("1776", NULL, 10),
-                                            std::strtol("1964", NULL, 10)}),
-              result->get_vector<element::Int64::type>());
+    EXPECT_EQ((vector<int64_t>{2112, 1848, 1776, 1964}), result->get_vector<int64_t>());
 }
 
 // Trivial case with no summed axes.
@@ -3724,10 +3549,8 @@ TEST(${BACKEND_NAME}, constant_equality_bool)
     // auto result_type = make_shared<TensorViewType>(element::Bool::element_type(), shape);
     // auto f = make_shared<Function>(make_shared<op::Equal>(A, B), result_type, op::Parameters{A, B});
 
-    auto a = runtime::make_tensor<element::Bool>(shape, {true, false, true, false});
-    auto A = make_shared<op::ParameterizedConstant<element::Bool>>(shape, a);
-    auto b = runtime::make_tensor<element::Bool>(shape, {true, true, true, true});
-    auto B = make_shared<op::ParameterizedConstant<element::Bool>>(shape, b);
+    auto A = op::Constant::create(element::boolean, shape, {true, false, true, false});
+    auto B = op::Constant::create(element::boolean, shape, {true, true, true, true});
     auto rt = make_shared<TensorViewType>(element::Bool::element_type(), shape);
     auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
 

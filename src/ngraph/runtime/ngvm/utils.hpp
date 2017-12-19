@@ -18,6 +18,7 @@
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/runtime/ngvm/call_frame.hpp"
+#include "ngraph/runtime/ngvm/parameterized_tensor_view.hpp"
 #include "ngraph/runtime/ngvm/tensor_view_info.hpp"
 
 namespace ngraph
@@ -43,6 +44,24 @@ namespace ngraph
                 return tensor_view_info
                     .get_layout<ngraph::descriptor::layout::DenseTensorViewLayout>()
                     ->get_size();
+            }
+
+            /// @brief Framework constructor of a tensor of a specific element type and shape.
+            template <typename ET>
+            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>
+                make_tensor(const Shape& shape)
+            {
+                return std::make_shared<runtime::ParameterizedTensorView<ET>>(shape);
+            }
+
+            /// @brief Framework constructor of a tensor of a specific element type and shape.
+            template <typename ET>
+            std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>
+                make_tensor(const Shape& shape, const std::vector<typename ET::type>& data)
+            {
+                auto rc = std::make_shared<runtime::ParameterizedTensorView<ET>>(shape);
+                rc->write(data.data(), 0, data.size() * sizeof(typename ET::type));
+                return rc;
             }
         }
     }

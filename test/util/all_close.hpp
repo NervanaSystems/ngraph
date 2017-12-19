@@ -18,7 +18,6 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
 #include "ngraph/types/element_type.hpp"
 
 namespace ngraph

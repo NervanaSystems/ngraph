@@ -74,7 +74,7 @@ TEST(element_type, size)
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{2, false, false, ""};
+        element::Type t1{8, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
