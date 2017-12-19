@@ -122,7 +122,7 @@ namespace ngraph
             ///
             /// \param type The element type of the tensor constant.
             /// \param shape The shape of the tensor constant.
-            /// \param values A vector of string values to use as the constant data.
+            /// \param values A vector of values to use as the constant data.
             template <typename T>
             static std::shared_ptr<op::Constant>
                 create(const element::Type& type, Shape shape, const std::vector<T> values)
@@ -134,7 +134,7 @@ namespace ngraph
             ///
             /// \param type The element type of the tensor constant.
             /// \param shape The shape of the tensor constant.
-            /// \param values An initializer_list of string values to use as the constant data.
+            /// \param values An initializer_list of values to use as the constant data.
             template <typename T>
             static std::shared_ptr<op::Constant>
                 create(const element::Type& type, Shape shape, std::initializer_list<T> values)
