@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/ops/constant.hpp"
+#include <cstdio>
+
 #include "ngraph/log.hpp"
+#include "ngraph/ops/constant.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -23,7 +25,7 @@ op::Constant::~Constant()
 {
     if (m_data)
     {
-        free(m_data);
+        ngraph::aligned_free(m_data);
     }
 }
 
