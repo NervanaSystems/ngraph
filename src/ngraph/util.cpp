@@ -381,7 +381,7 @@ void* ngraph::aligned_alloc(size_t alignment, size_t size)
 void ngraph::aligned_free(void* p)
 {
 #ifdef __APPLE__
-    delete[] p;
+    delete[] reinterpret_cast<uint64_t*>(p);
 #else
     free(p);
 #endif
