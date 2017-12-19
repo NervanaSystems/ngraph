@@ -370,9 +370,28 @@ using namespace ngraph::runtime;
         {
             shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
             const element::Type& et = tv->get_tensor_view_type()->get_element_type();
-            string type = et.c_type_string();
-            writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<" << type
-                   << "*>(outputs[" << output_index << "]);\n";
+            bool parameter_as_output = false;
+            for (shared_ptr<op::Parameter> param : current_function->get_parameters())
+            {
+                for (const descriptor::Output& pout : param->get_outputs())
+                {
+                    shared_ptr<descriptor::TensorView> ptv = pout.get_tensor_view();
+                    if (tv == ptv)
+                    {
+                        parameter_as_output = true;
+                        writer << "memcpy(static_cast<" << et.c_type_string() << "*>(outputs["
+                               << output_index << "]), " << ptv->get_tensor().get_name() << ", "
+                               << ptv->get_tensor().size() << ");\n";
+                        break;
+                    }
+                }
+            }
+            if (!parameter_as_output)
+            {
+                string type = et.c_type_string();
+                writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<" << type
+                       << "*>(outputs[" << output_index << "]);\n";
+            }
             output_names.insert(tv->get_tensor().get_name());
             output_index++;
         }

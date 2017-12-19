@@ -34,6 +34,30 @@ static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
     tv->write(data.data(), 0, data_size);
 }
 
+TEST(${BACKEND_NAME}, parameter_as_output)
+{
+    auto shape = Shape{3, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto rt = make_shared<TensorViewType>(element::f32, shape);
+    auto f = make_shared<Function>(A, rt, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+
+    vector<float> expected{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    vector<float> zero(shape_size(shape), 0);
+    copy_data(a, expected);
+
+    cf->call({a}, {result});
+    EXPECT_EQ(result->get_vector<float>(), expected);
+}
+
 TEST(${BACKEND_NAME}, ab)
 {
     using f32 = element::Float32;
