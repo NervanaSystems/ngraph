@@ -103,6 +103,7 @@ namespace ngraph
                 void EMITTER_DECL(EmitCeiling);
                 void EMITTER_DECL(EmitSqrt);
                 void EMITTER_DECL(EmitConvolution);
+                void EMITTER_DECL(EmitMaxPool);
 
             private:
                 void generate_call(const std::vector<TensorViewWrapper>& args,
