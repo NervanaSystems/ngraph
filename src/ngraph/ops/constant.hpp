@@ -35,7 +35,7 @@ namespace ngraph
         /// | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
         /// | `type`          | The ngraph::element::Type of the tensor constant.                                                                                                                              |
         /// | `shape`         | The ngraph::Shape of the tensor constant.                                                                                                                                      |
-        /// | `value_strings` | A list of strings containing literals for initialization of the tensor constant. These strings are parsed with the appropriate instance of ngraph::element::TraitedType::read. |
+        /// | `values`        | A list of values to initialize the underlying tensor constant. |
         ///
         /// ## Output
         ///
