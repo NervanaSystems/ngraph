@@ -64,15 +64,15 @@ namespace ngraph
             }
 
             /// \return The window shape.
-            Shape get_window_shape() const { return m_window_shape; }
+            const Shape& get_window_shape() const { return m_window_shape; }
             /// \return The window movement strides.
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             /// \return The number of image channels.
             size_t get_channel_count() const { return m_channel_count; }
             /// \return The input image shape.
-            Shape get_input_image_shape() const { return m_input_image_shape; }
+            const Shape& get_input_image_shape() const { return m_input_image_shape; }
             /// \return The output image shape.
-            Shape get_output_image_shape() const { return m_output_image_shape; }
+            const Shape& get_output_image_shape() const { return m_output_image_shape; }
             /// \return The batch size.
             size_t get_batch_size() const { return m_batch_size; }
             /// \return The number of image dimensions.
