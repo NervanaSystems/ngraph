@@ -33,7 +33,7 @@ op::Select::Select(const std::shared_ptr<Node>& arg0,
     auto& input_1 = get_inputs().at(1);
     auto& input_2 = get_inputs().at(2);
 
-    if (input_0.get_element_type() != element::Bool::element_type())
+    if (input_0.get_element_type() != element::boolean)
     {
         throw ngraph_error("Argument 0 for arithmetic operators must have boolean element type");
     }
