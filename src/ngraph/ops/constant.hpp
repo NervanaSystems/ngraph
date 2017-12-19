@@ -55,8 +55,8 @@ namespace ngraph
                 : Node("Constant", {})
                 , m_element_type(type)
                 , m_shape(shape)
-                , m_data(aligned_alloc(m_element_type.size(),
-                                       shape_size(m_shape) * m_element_type.size()))
+                , m_data(ngraph::aligned_alloc(m_element_type.size(),
+                                               shape_size(m_shape) * m_element_type.size()))
             {
                 auto vt = std::make_shared<TensorViewType>(type, shape);
                 set_value_type_checked(vt);
@@ -84,8 +84,8 @@ namespace ngraph
                 : Node("Constant", {})
                 , m_element_type(type)
                 , m_shape(shape)
-                , m_data(aligned_alloc(m_element_type.size(),
-                                       shape_size(m_shape) * m_element_type.size()))
+                , m_data(ngraph::aligned_alloc(m_element_type.size(),
+                                               shape_size(m_shape) * m_element_type.size()))
             {
                 auto vt = std::make_shared<TensorViewType>(type, shape);
                 set_value_type_checked(vt);
@@ -110,7 +110,7 @@ namespace ngraph
                 , m_data(nullptr)
             {
                 size_t size = shape_size(m_shape) * m_element_type.size();
-                m_data = aligned_alloc(m_element_type.size(), size);
+                m_data = ngraph::aligned_alloc(m_element_type.size(), size);
                 memcpy(m_data, data, size);
                 auto vt = std::make_shared<TensorViewType>(type, shape);
                 set_value_type_checked(vt);

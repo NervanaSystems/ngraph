@@ -278,4 +278,8 @@ namespace ngraph
     // NodeMap output (by reference) fully maps input and cloned function ops
     std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func,
                                                      NodeMap& node_map);
+
+    void* aligned_alloc(size_t alignment, size_t size);
+    void aligned_free(void*);
+    size_t round_up(size_t size, size_t alignment);
 } // end namespace ngraph

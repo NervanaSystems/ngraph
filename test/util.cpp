@@ -329,3 +329,13 @@ TEST_F(CloneTest, clone_function_full)
     auto cloned_func = clone_function(func, node_map);
     ASSERT_TRUE(CompareNodes(func->get_ops(), cloned_func->get_ops(), node_map));
 }
+
+TEST(util, round_up)
+{
+    EXPECT_EQ(0, round_up(0, 4));
+    EXPECT_EQ(4, round_up(1, 4));
+    EXPECT_EQ(4, round_up(2, 4));
+    EXPECT_EQ(4, round_up(3, 4));
+    EXPECT_EQ(4, round_up(4, 4));
+    EXPECT_EQ(8, round_up(5, 4));
+}

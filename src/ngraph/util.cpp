@@ -368,3 +368,37 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     return std::make_shared<ngraph::Function>(
         cloned_result, func->get_result_type(), cloned_params);
 }
+
+void* ngraph::aligned_alloc(size_t alignment, size_t size)
+{
+#ifdef __APPLE__
+    return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
+#else
+    return ::aligned_alloc(alignment, size);
+#endif
+}
+
+void ngraph::aligned_free(void* p)
+{
+#ifdef __APPLE__
+    delete[] p;
+#else
+    free(p);
+#endif
+}
+
+size_t ngraph::round_up(size_t size, size_t alignment)
+{
+    if (alignment == 0)
+    {
+        return size;
+    }
+
+    size_t remainder = size % alignment;
+    if (remainder == 0)
+    {
+        return size;
+    }
+
+    return size + alignment - remainder;
+}
