@@ -61,6 +61,7 @@ namespace ngraph
 
             void replace_output(Output& output);
 
+        protected:
             /// @return the tensor view for the connected output
             std::shared_ptr<const TensorView> get_tensor_view() const;
 
@@ -69,6 +70,13 @@ namespace ngraph
 
             /// @return the tensor view type for the connected output
             std::shared_ptr<const TensorViewType> get_tensor_view_type() const;
+
+        public:
+            /// @return the shape of the connected output
+            const Shape& get_shape() const;
+
+            /// @return the element type of the connected output
+            const element::Type& get_element_type() const;
 
         protected:
             Node* m_node;       // The node we are an input for
