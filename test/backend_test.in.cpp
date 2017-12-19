@@ -4634,11 +4634,13 @@ TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
-    copy_data(a, vector<float>{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0});
+    copy_data(a,
+              test::NDArray<float, 3>{{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}}}.get_vector());
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}), result->get_vector<float>());
+    EXPECT_EQ((test::NDArray<float, 3>({{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}}).get_vector()),
+              result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
@@ -4658,14 +4660,17 @@ TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
-    copy_data(a, vector<float>{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0,
-                               0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2});
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}},
+                                       {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2}}})
+                  .get_vector());
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ(
-        (vector<float>{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0, 2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}),
-        result->get_vector<float>());
+    EXPECT_EQ((test::NDArray<float, 3>(
+                   {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}, {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}}})
+                   .get_vector()),
+              result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
@@ -4685,19 +4690,22 @@ TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
-    copy_data(a, vector<float>{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0,
-                               0, 0, 0, 2, 0, 0, 2, 3, 0, 1, 2, 0, 1, 0,
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0},
+                                        {0, 0, 0, 2, 0, 0, 2, 3, 0, 1, 2, 0, 1, 0}},
 
-                               0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2,
-                               2, 1, 0, 0, 1, 0, 2, 0, 0, 0, 1, 1, 2, 0});
+                                       {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2},
+                                        {2, 1, 0, 0, 1, 0, 2, 0, 0, 0, 1, 1, 2, 0}}})
+                  .get_vector());
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ(
-        (vector<float>{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0, 0, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 1,
+    EXPECT_EQ((test::NDArray<float, 3>(
+                   {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}, {0, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 1}},
 
-                       2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 2, 0, 1, 1, 2, 2}),
-        result->get_vector<float>());
+                    {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}, {2, 1, 1, 1, 2, 2, 2, 0, 1, 1, 2, 2}}})
+                   .get_vector()),
+              result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
@@ -4717,55 +4725,55 @@ TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
-    // clang-format off
-    copy_data(a, vector<float>{0, 1, 0, 2, 1, // img 0 chan 0
-                               0, 3, 2, 0, 0,
-                               2, 0, 0, 0, 1,
-                               2, 0, 1, 1, 2,
-                               0, 2, 1, 0, 0,
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1}, // img 0 chan 0
+                                         {0, 3, 2, 0, 0},
+                                         {2, 0, 0, 0, 1},
+                                         {2, 0, 1, 1, 2},
+                                         {0, 2, 1, 0, 0}},
 
-                               0, 0, 0, 2, 0, // img 0 chan 1
-                               0, 2, 3, 0, 1,
-                               2, 0, 1, 0, 2,
-                               3, 1, 0, 0, 0,
-                               2, 0, 0, 0, 0,
+                                        {{0, 0, 0, 2, 0}, // img 0 chan 1
+                                         {0, 2, 3, 0, 1},
+                                         {2, 0, 1, 0, 2},
+                                         {3, 1, 0, 0, 0},
+                                         {2, 0, 0, 0, 0}}},
 
+                                       {{{0, 2, 1, 1, 0}, // img 1 chan 0
+                                         {0, 0, 2, 0, 1},
+                                         {0, 0, 1, 2, 3},
+                                         {2, 0, 0, 3, 0},
+                                         {0, 0, 0, 0, 0}},
 
-                               0, 2, 1, 1, 0, // img 1 chan 0
-                               0, 0, 2, 0, 1,
-                               0, 0, 1, 2, 3,
-                               2, 0, 0, 3, 0,
-                               0, 0, 0, 0, 0,
-
-                               2, 1, 0, 0, 1, // img 1 chan 1
-                               0, 2, 0, 0, 0,
-                               1, 1, 2, 0, 2,
-                               1, 1, 1, 0, 1,
-                               1, 0, 0, 0, 2});
+                                        {{2, 1, 0, 0, 1}, // img 1 chan 1
+                                         {0, 2, 0, 0, 0},
+                                         {1, 1, 2, 0, 2},
+                                         {1, 1, 1, 0, 1},
+                                         {1, 0, 0, 0, 2}}}})
+                  .get_vector());
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{3, 3, 2, // img 0 chan 0
-                             3, 3, 2,
-                             2, 1, 2,
-                             2, 2, 2,
+    EXPECT_EQ((test::NDArray<float, 4>({{{{3, 3, 2}, // img 0 chan 0
+                                          {3, 3, 2},
+                                          {2, 1, 2},
+                                          {2, 2, 2}},
 
-                             3, 3, 3, // img 0 chan 1
-                             3, 3, 3,
-                             3, 1, 2,
-                             3, 1, 0,
+                                         {{3, 3, 3}, // img 0 chan 1
+                                          {3, 3, 3},
+                                          {3, 1, 2},
+                                          {3, 1, 0}}},
 
+                                        {{{2, 2, 2}, // img 1 chan 0
+                                          {2, 2, 3},
+                                          {2, 3, 3},
+                                          {2, 3, 3}},
 
-                             2, 2, 2, // img 1 chan 0
-                             2, 2, 3,
-                             2, 3, 3,
-                             2, 3, 3,
-
-                             2, 2, 1, // img 1 chan 1
-                             2, 2, 2,
-                             2, 2, 2,
-                             1, 1, 2}), result->get_vector<float>());
-    // clang-format on
+                                         {{2, 2, 1}, // img 1 chan 1
+                                          {2, 2, 2},
+                                          {2, 2, 2},
+                                          {1, 1, 2}}}})
+                   .get_vector()),
+              result->get_vector<float>());
 }
 
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
@@ -4788,20 +4796,19 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
-    // clang-format off
-    copy_data(a, vector<float>{0, 1, 0, 2, 1, 2, 0, 0,
-                               0, 3, 2, 0, 0, 0, 1, 0,
-                               2, 0, 0, 0, 1, 0, 0, 0,
-                               2, 0, 1, 1, 2, 2, 3, 0,
-                               0, 2, 1, 0, 0, 0, 1, 0,
-                               2, 0, 3, 1, 0, 0, 0, 0,
-                               1, 2, 0, 0, 0, 1, 2, 0,
-                               1, 0, 2, 0, 0, 0, 1, 0});
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1, 2, 0, 0},
+                                         {0, 3, 2, 0, 0, 0, 1, 0},
+                                         {2, 0, 0, 0, 1, 0, 0, 0},
+                                         {2, 0, 1, 1, 2, 2, 3, 0},
+                                         {0, 2, 1, 0, 0, 0, 1, 0},
+                                         {2, 0, 3, 1, 0, 0, 0, 0},
+                                         {1, 2, 0, 0, 0, 1, 2, 0},
+                                         {1, 0, 2, 0, 0, 0, 1, 0}}}})
+                  .get_vector());
     auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{3, 2, 2,
-                             2, 2, 3,
-                             2, 2, 2}), result->get_vector<float>());
-    // clang-format on
+    EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
+              result->get_vector<float>());
 }
