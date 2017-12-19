@@ -34,6 +34,8 @@ void runtime::interpreter::INT_CallFrame::call(
     const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& input_tvs,
     const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs)
 {
+    NGRAPH_INFO << input_tvs.size();
+    NGRAPH_INFO << output_tvs.size();
     unordered_map<string, shared_ptr<runtime::interpreter::INT_TensorView>> tensor_map;
 
     size_t arg_index = 0;
@@ -43,20 +45,64 @@ void runtime::interpreter::INT_CallFrame::call(
         {
             shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
             string name = tv->get_tensor().get_name();
+            NGRAPH_INFO << name;
             tensor_map.insert({name, input_tvs[arg_index++]});
         }
     }
+    unordered_map<descriptor::Output*, string> output_names;
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
         descriptor::Output* output = function->get_outputs().at(i);
         shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
         string name = tv->get_tensor().get_name();
-        tensor_map.insert({name, output_tvs[i]});
+        output_names.insert({output, name});
+        NGRAPH_INFO << name;
+        if (contains_key(tensor_map, name))
+        {
+            // Here we handle the special case where an output is just a copy of an input
+            NGRAPH_INFO;
+            memcpy(output_tvs[i]->get_data_ptr(),
+                   tensor_map.at(name)->get_data_ptr(),
+                   tv->get_tensor().size());
+        }
+        else
+        {
+            tensor_map.insert({name, output_tvs[i]});
+        }
     }
+
+    // size_t output_index = 0;
+    // for (const descriptor::Output* output : function->get_outputs())
+    // {
+    //     shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
+    //     const element::Type& type = tv->get_tensor_view_type()->get_element_type();
+    //     bool parameter_as_output = false;
+    //     for (shared_ptr<op::Parameter> param : function->get_parameters())
+    //     {
+    //         for (const descriptor::Output& pout : param->get_outputs())
+    //         {
+    //             shared_ptr<descriptor::TensorView> ptv = pout.get_tensor_view();
+    //             if (tv == ptv)
+    //             {
+    //                 NGRAPH_INFO << type;
+    //                 parameter_as_output = true;
+    //                 // writer << "memcpy(static_cast<" << et.c_type_string() << "*>(outputs["
+    //                 //        << output_index << "]), " << ptv->get_tensor().get_name() << ", "
+    //                 //        << ptv->get_tensor().size() << ");\n";
+    //                 break;
+    //             }
+    //         }
+    //     }
+    //     output_index++;
+    // }
 
     // Invoke computation
     for (shared_ptr<Node> op : function->get_ordered_ops())
     {
+        if (op->description() == "Parameter")
+        {
+            continue;
+        }
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> inputs;
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> outputs;
         for (const descriptor::Input& input : op->get_inputs())
@@ -87,8 +133,8 @@ void runtime::interpreter::INT_CallFrame::call(
             }
             outputs.push_back(itv);
         }
-        auto tuple = dynamic_pointer_cast<op::XLATuple>(op);
-        if (tuple)
+
+        if (op->description() == "XLATuple")
         {
             for (size_t i = 0; i < inputs.size(); i++)
             {

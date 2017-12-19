@@ -411,13 +411,10 @@ private:
         }
         else if (node_op == "Parameter")
         {
-            // If the parameter is also an output then copy to the output
-            if (out.size() == 1 && args.size() == 1)
-            {
-                kernel::copy<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
-                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                out[0]->get_element_count());
-            }
+            NGRAPH_INFO << args.size();
+            NGRAPH_INFO << out.size();
+            float* f = reinterpret_cast<float*>(out[0]->get_data_ptr());
+            f[0] = 42;
         }
         else if (node_op == "ParameterizedConstant")
         {
