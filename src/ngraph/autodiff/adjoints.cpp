@@ -34,9 +34,7 @@ using namespace ngraph;
 
 std::shared_ptr<Node> make_zero(const element::Type& element_type, const Shape& shape)
 {
-    std::shared_ptr<Node> zero =
-        op::Constant::create(tensor_view_type->get_element_type(), Shape{}, {0.0});
-    const Shape& shape = tensor_view_type->get_shape();
+    std::shared_ptr<Node> zero = op::Constant::create(element_type, Shape{}, {0.0});
     if (shape.size() > 0)
     {
         AxisSet axes;
