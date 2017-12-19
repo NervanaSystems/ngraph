@@ -168,7 +168,7 @@ namespace ngraph
             }
 
             const void* get_data_ptr() const { return m_data; }
-            virtual bool is_constant() const override { return true; }
+            bool is_constant() const override { return true; }
         protected:
             template <typename T>
             void write_values(const std::vector<T>& values)
