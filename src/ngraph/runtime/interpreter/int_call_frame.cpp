@@ -34,8 +34,6 @@ void runtime::interpreter::INT_CallFrame::call(
     const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& input_tvs,
     const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs)
 {
-    NGRAPH_INFO << input_tvs.size();
-    NGRAPH_INFO << output_tvs.size();
     unordered_map<string, shared_ptr<runtime::interpreter::INT_TensorView>> tensor_map;
 
     size_t arg_index = 0;
@@ -45,22 +43,17 @@ void runtime::interpreter::INT_CallFrame::call(
         {
             shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
             string name = tv->get_tensor().get_name();
-            NGRAPH_INFO << name;
             tensor_map.insert({name, input_tvs[arg_index++]});
         }
     }
-    unordered_map<descriptor::Output*, string> output_names;
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
         descriptor::Output* output = function->get_outputs().at(i);
         shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
         string name = tv->get_tensor().get_name();
-        output_names.insert({output, name});
-        NGRAPH_INFO << name;
         if (contains_key(tensor_map, name))
         {
             // Here we handle the special case where an output is just a copy of an input
-            NGRAPH_INFO;
             memcpy(output_tvs[i]->get_data_ptr(),
                    tensor_map.at(name)->get_data_ptr(),
                    tv->get_tensor().size());
@@ -78,6 +71,7 @@ void runtime::interpreter::INT_CallFrame::call(
         {
             continue;
         }
+
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> inputs;
         vector<shared_ptr<runtime::interpreter::INT_TensorView>> outputs;
         for (const descriptor::Input& input : op->get_inputs())
@@ -109,7 +103,8 @@ void runtime::interpreter::INT_CallFrame::call(
             outputs.push_back(itv);
         }
 
-        if (op->description() == "XLATuple")
+        auto tuple = dynamic_pointer_cast<op::XLATuple>(op);
+        if (tuple)
         {
             for (size_t i = 0; i < inputs.size(); i++)
             {
