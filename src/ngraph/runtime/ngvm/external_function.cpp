@@ -249,12 +249,6 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
         }                                                                                          \
     }
 
-#define REGISTER_INSTRUCTION(op_class, instr_class, ...)                                           \
-    REGISTER_TO_OP_MAP(op_class)                                                                   \
-    {                                                                                              \
-        ef->get_instructions()->push_back(make_shared<instr_class>(__VA_ARGS__));                  \
-    }
-
 #define M_REGISTER_NUMERIC_UNOP(T, instr_class)                                                    \
     ef->get_instructions()->push_back(make_shared<instr_class<T>>(in[0], out[0]));
 #define REGISTER_NUMERIC_UNOP(op_class, instr_class)                                               \
@@ -316,27 +310,6 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
                            "Internal error: polymorphic ternop has unhandled element type",        \
                            M_REGISTER_POLYMORPHIC_TERNOP,                                          \
                            instr_class);                                                           \
-    }
-
-template <typename ET>
-std::vector<typename ET::type>
-    get_vector(std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>> ptv)
-{
-    std::vector<typename ET::type> rc;
-
-    rc = ptv->get_vector();
-
-    return rc;
-}
-
-#define REGISTER_CONSTANT_INSTRUCTIONS(T)                                                          \
-    {                                                                                              \
-        REGISTER_INSTRUCTION(                                                                      \
-            op::ParameterizedConstant<T>,                                                          \
-            instruction::ConstantInstruction<T>,                                                   \
-            std::vector<T::type>{                                                                  \
-                get_vector<T>(dynamic_cast<const op::ParameterizedConstant<T>*>(n)->get_value())}, \
-            out[0]);                                                                               \
     }
 
 #define PUSH_INSTRUCTION(T, instr, ...)                                                            \
@@ -409,18 +382,6 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
         REGISTER_LOGICAL_UNOP(op::Not, instruction::NotInstruction);
 
         REGISTER_POLYMORPHIC_TERNOP(op::Select, instruction::SelectInstruction);
-
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Bool);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Float32);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Float64);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Int8);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Int16);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Int32);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::Int64);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::UInt8);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::UInt16);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::UInt32);
-        REGISTER_CONSTANT_INSTRUCTIONS(element::UInt64);
 
         REGISTER_TO_OP_MAP(op::Broadcast)
         {
@@ -660,9 +621,9 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
             std::shared_ptr<CallFrame> cf =                                                        \
                 std::dynamic_pointer_cast<CallFrame>(external->make_call_frame());                 \
                                                                                                    \
-            auto tx = ngraph::runtime::make_tensor<ET>(Shape{}, {x});                              \
-            auto ty = ngraph::runtime::make_tensor<ET>(Shape{}, {y});                              \
-            auto tr = ngraph::runtime::make_tensor<ET>(Shape{});                                   \
+            auto tx = ngraph::runtime::ngvm::make_tensor<ET>(Shape{}, {x});                        \
+            auto ty = ngraph::runtime::ngvm::make_tensor<ET>(Shape{}, {y});                        \
+            auto tr = ngraph::runtime::ngvm::make_tensor<ET>(Shape{});                             \
                                                                                                    \
             cf->call({tx, ty}, {tr});                                                              \
             return tr->get_vector()[0];                                                            \
@@ -966,7 +927,7 @@ shared_ptr<ngraph::runtime::CallFrame> ExternalFunction::make_call_frame(Functio
         auto& et = tv->get_tensor_view_type()->get_element_type();
         auto shape = tv->get_tensor_view_type()->get_shape();
 
-#define M(T) temps.push_back(ngraph::runtime::make_tensor<T>(shape));
+#define M(T) temps.push_back(ngraph::runtime::ngvm::make_tensor<T>(shape));
         DO_ON_ELEMENT_TYPE(
             et, "Internal error: tried to create temporary for unhandled element type", M);
 #undef M

@@ -116,7 +116,6 @@
 #include "ngraph/runtime/manager.hpp"
 #include "ngraph/runtime/ngvm/ngvm_backend.hpp"
 #include "ngraph/runtime/ngvm/ngvm_manager.hpp"
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/runtime/tuple.hpp"
 #include "ngraph/runtime/value.hpp"

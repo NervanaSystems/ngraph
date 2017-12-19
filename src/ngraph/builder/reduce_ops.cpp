@@ -43,7 +43,7 @@ namespace ngraph
             auto x2sum = std::make_shared<op::Sum>(x2, reduction_axes);
 
             // TODO(mbrookhart): Use Sqrt instead of Power
-            auto half = std::make_shared<op::Constant>(et, x2sum->get_shape(), "0.5");
+            auto half = op::Constant::create(et, x2sum->get_shape(), {0.5});
             return std::make_shared<op::Power>(x2sum, half);
         }
 
@@ -54,7 +54,7 @@ namespace ngraph
             auto N = get_num_elements(node->get_shape(), reduction_axes);
             const auto& et = node->get_element_type();
 
-            auto divisor = std::make_shared<op::Constant>(et, xsum->get_shape(), std::to_string(N));
+            auto divisor = op::Constant::create(et, xsum->get_shape(), {N});
 
             return xsum / divisor;
         }
@@ -67,7 +67,7 @@ namespace ngraph
 
             const auto& et = node->get_element_type();
             // TODO(mbrookhart): Use Sqrt instead of Power
-            auto half = std::make_shared<op::Constant>(et, var->get_shape(), "0.5");
+            auto half = op::Constant::create(et, var->get_shape(), {0.5});
             return std::make_shared<op::Power>(var, half);
         }
 
@@ -88,15 +88,14 @@ namespace ngraph
             const auto& et = node->get_element_type();
             auto N = get_num_elements(node->get_shape(), reduction_axes);
 
-            auto Nconst = std::make_shared<op::Constant>(et, xsum->get_shape(), std::to_string(N));
+            auto Nconst = op::Constant::create(et, xsum->get_shape(), {N});
             auto xbar2 = (xsum * xsum) / Nconst;
 
             auto diff = x2sum - xbar2;
 
             if (bessel_correction)
             {
-                auto N1const =
-                    std::make_shared<op::Constant>(et, xsum->get_shape(), std::to_string(N - 1));
+                auto N1const = op::Constant::create(et, xsum->get_shape(), {N - 1});
                 return diff / N1const;
             }
             else

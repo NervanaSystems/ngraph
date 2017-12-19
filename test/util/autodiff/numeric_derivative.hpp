@@ -19,7 +19,6 @@
 
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/manager.hpp"
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
 #include "ngraph/runtime/tuple.hpp"
 #include "ngraph/runtime/value.hpp"
 #include "ngraph/types/element_type.hpp"
