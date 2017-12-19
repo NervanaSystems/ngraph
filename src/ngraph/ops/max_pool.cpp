@@ -25,8 +25,7 @@ op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg,
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
 {
-    auto arg_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
-    auto& arg_shape = arg_tensor_view_type->get_shape();
+    auto& arg_shape = get_inputs().at(0).get_shape();
 
     //
     // Make sure arg: NCDi for some Di of rank>0, N != 0, C != 0.
@@ -122,19 +121,17 @@ op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg,
     result_shape[1] = m_channel_count;
     std::copy(m_output_image_shape.begin(), m_output_image_shape.end(), result_shape.begin() + 2);
 
-    set_value_type_checked(
-        make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), result_shape));
+    set_value_type_checked(get_inputs().at(0).get_element_type(), result_shape);
 }
 
 static Strides default_strides(const std::shared_ptr<Node>& arg)
 {
-    auto arg_value_type = arg->get_value_type();
-    auto arg_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(arg_value_type);
-    if (arg_tensor_view_type == nullptr)
+    if (arg->get_outputs().size() != 1)
     {
-        throw ngraph_error("Max pool image batch argument has non-tensor view type");
+        throw ngraph_error("Max pool image batch argument must have exactly one output");
     }
-    auto& arg_shape = arg_tensor_view_type->get_shape();
+
+    auto& arg_shape = arg->get_outputs().at(0).get_shape();
     if (arg_shape.size() < 3)
     {
         // For consistency we should throw the same error message here that we throw in the constructor.

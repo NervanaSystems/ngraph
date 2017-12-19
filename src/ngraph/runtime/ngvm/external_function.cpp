@@ -47,6 +47,7 @@
 #include "ngraph/ops/less.hpp"
 #include "ngraph/ops/less_eq.hpp"
 #include "ngraph/ops/log.hpp"
+#include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/maximum.hpp"
 #include "ngraph/ops/minimum.hpp"
 #include "ngraph/ops/multiply.hpp"
@@ -99,6 +100,7 @@
 #include "ngraph/runtime/ngvm/instruction/less.hpp"
 #include "ngraph/runtime/ngvm/instruction/less_eq.hpp"
 #include "ngraph/runtime/ngvm/instruction/log.hpp"
+#include "ngraph/runtime/ngvm/instruction/max_pool.hpp"
 #include "ngraph/runtime/ngvm/instruction/maximum.hpp"
 #include "ngraph/runtime/ngvm/instruction/minimum.hpp"
 #include "ngraph/runtime/ngvm/instruction/multiply.hpp"
@@ -796,6 +798,27 @@ ExternalFunction::OpMap& ExternalFunction::get_op_map()
                                          input_shape,
                                          result_shape,
                                          one_hot->get_one_hot_axis());
+        };
+
+        REGISTER_TO_OP_MAP(op::MaxPool)
+        {
+            auto max_pool = static_cast<const op::MaxPool*>(n);
+
+            auto arg_shape = n->get_inputs().at(0).get_shape();
+
+            auto& result = n->get_outputs().at(0);
+            auto result_shape = result.get_shape();
+            auto& result_element_type = result.get_element_type();
+
+            PUSH_POLYMORPHIC_INSTRUCTION(result_element_type,
+                                         "Max pool has unhandled element type",
+                                         instruction::MaxPoolInstruction,
+                                         in[0],
+                                         out[0],
+                                         arg_shape,
+                                         result_shape,
+                                         max_pool->get_window_shape(),
+                                         max_pool->get_window_movement_strides());
         };
 
         initialized = true;
