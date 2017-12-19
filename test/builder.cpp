@@ -35,7 +35,7 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result(
     auto shape_rt = Shape{2};
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
     auto f = make_shared<Function>(func(A, {0}), rt, op::Parameters{A});
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -56,7 +56,7 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_true(
     auto shape_rt = Shape{2};
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
     auto f = make_shared<Function>(func(A, {0}, true), rt, op::Parameters{A});
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -77,7 +77,7 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_false(
     auto shape_rt = Shape{2};
     auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
     auto f = make_shared<Function>(func(A, {0}, false), rt, op::Parameters{A});
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);

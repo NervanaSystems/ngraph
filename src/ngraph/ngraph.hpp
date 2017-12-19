@@ -113,8 +113,6 @@
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/manager.hpp"
-#include "ngraph/runtime/ngvm/ngvm_backend.hpp"
-#include "ngraph/runtime/ngvm/ngvm_manager.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/runtime/tuple.hpp"
 #include "ngraph/runtime/value.hpp"

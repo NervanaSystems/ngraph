@@ -56,7 +56,6 @@ add_subdirectory(models)
 # The code for the unit test suite is in test/backend_test.in.cpp
 #================================================================================================
 # TODO add interpreter back to unit tests when it works
-set(BACKEND_NAMES ${BACKEND_NAMES} "NGVM")
 set(BACKEND_NAMES ${BACKEND_NAMES} "INTERPRETER")
 
 if(MKLDNN_INCLUDE_DIR)
@@ -83,17 +82,14 @@ endif()
 foreach(BACKEND_NAME ${BACKEND_NAMES})
     configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
     configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)
+    configure_file(autodiff.in.cpp autodiff_${BACKEND_NAME}.cpp)
     set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp)
     set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp)
+    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp)
 
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
-# <special case>
-# This is a special case as NGVM is the only backend that can run these tests
-set(BACKEND_NAME "NGVM")
-configure_file(autodiff.in.cpp autodiff_NGVM.cpp)
-set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_NGVM.cpp)
-# </special cast>
+
 include_directories(".")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
