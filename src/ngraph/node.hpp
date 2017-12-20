@@ -16,6 +16,7 @@
 
 #include <atomic>
 #include <deque>
+#include <iostream>
 #include <memory>
 #include <set>
 #include <string>
@@ -23,8 +24,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include <iostream>
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/common.hpp"
@@ -35,6 +34,9 @@
 
 namespace ngraph
 {
+    void replace_node_users_arguments(std::shared_ptr<Node> target,
+                                      std::shared_ptr<Node> replacement);
+
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// view or a (possibly empty) tuple of values.
@@ -42,6 +44,8 @@ namespace ngraph
     {
         // So Adjoints can call generate_adjoints
         friend class autodiff::Adjoints;
+        friend void replace_node_users_arguments(std::shared_ptr<Node> target,
+                                                 std::shared_ptr<Node> replacement);
 
     protected:
         Node(const std::string& node_type, const Nodes& arguments);
@@ -57,8 +61,6 @@ namespace ngraph
         std::string description() const { return m_node_type; }
         std::string get_name() const;
         void set_name(const std::string& name);
-
-        const Nodes& get_arguments() const { return m_arguments; }
         void clear_arguments() { m_arguments.clear(); }
         const std::multiset<Node*>& users() const { return m_users; }
         std::string get_node_id() const;
@@ -85,6 +87,7 @@ namespace ngraph
         // This is used when the framework specifies a value type for the value, and we
         // independently compute what we thing the value type should be from the arguments.
         void set_value_type_checked(const std::shared_ptr<const ValueType>& value_type);
+        void set_value_type_checked(const element::Type& element_type, const Shape& shape);
 
         bool is_parameter() const;
         bool is_output() const;
@@ -105,6 +108,10 @@ namespace ngraph
         std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x,
                                             const std::shared_ptr<Node>& c);
 
+        virtual Nodes get_input_ops(); //const;
+
+        std::shared_ptr<Node> get_input_op(size_t index);
+
         /// Returns the shape if this node has tensor type, otherwise an ngraph-error is thrown.
         const Shape& get_shape() const { return m_value_type->get_shape(); }
         const element::Type& get_element_type() const { return m_value_type->get_element_type(); }
@@ -114,8 +121,9 @@ namespace ngraph
         virtual std::shared_ptr<Function> get_function() const;
 
     protected:
+        void assert_argument_list_equivalency(const Nodes& b);
+
         std::string m_node_type;
-        Nodes m_arguments;
         std::shared_ptr<const ValueType> m_value_type;
         std::multiset<Node*> m_users;
         std::string m_name;
@@ -125,5 +133,13 @@ namespace ngraph
         std::deque<descriptor::Output> m_outputs;
         bool m_is_output;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
+
+    private:
+        Nodes m_arguments;
+        //m_arguments still needs to be kept in sync with i/o since get_input_ops
+        //is pretty ubiquitous and might be called after the original graph was modified.
+        //get_input_ops uses m_arguments to check if a node view reconstruction from i/o
+        //is correct.
+        Nodes& get_arguments_FOR_GRAPH_REWRITE_ONLY() { return m_arguments; }
     };
 }

@@ -33,18 +33,18 @@ namespace ngraph
         /// | Type                  | Description                                                |
         /// | --------------------- | ---------------------------------------------------------- |
         /// | \f$(T_1,\dots,T_n)\f$ | The tuple \f$(\texttt{args}[0],\dots,\texttt{args}[n])\f$. |
-        class Tuple : public Node
+        class XLATuple : public Node
         {
         public:
             /// \brief Constructs a tuple construction operation.
             ///
             /// \param args The nodes that produce the elements of the constructed tuple.
-            Tuple(const Nodes& args);
+            XLATuple(const Nodes& args);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
-                return std::make_shared<Tuple>(new_args);
+                return std::make_shared<XLATuple>(new_args);
             }
         };
     }

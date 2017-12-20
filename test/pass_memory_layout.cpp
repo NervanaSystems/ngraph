@@ -229,7 +229,7 @@ TEST(memory_layout, constant)
     pass_manager.register_pass<pass::DumpSorted>(dump_file);
 
     auto shape = Shape{1};
-    auto c = make_shared<op::Constant>(element::i32, shape, "5");
+    auto c = op::Constant::create(element::i32, shape, {5});
     auto rt = make_shared<TensorViewType>(element::i32, shape);
     auto f = make_shared<Function>(make_shared<op::Negative>(c), rt, op::Parameters{});
 

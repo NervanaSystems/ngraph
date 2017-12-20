@@ -438,7 +438,7 @@ void test_binary(std::string node_type,
 
     auto test_binary_good_arguments = [&](const shared_ptr<Node>& x, const shared_ptr<Node>& y) {
         auto node = f(x, y);
-        EXPECT_EQ(*node->get_value_type(), *node->get_arguments()[0]->get_value_type());
+        EXPECT_EQ(*node->get_value_type(), *node->get_input_ops()[0]->get_value_type());
     };
     test_binary_good_arguments(tv0_2_4_param_0, tv0_2_4_param_1);
 }
@@ -559,7 +559,7 @@ TEST(type_prop, select_shape_mismatch_a)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
     }
     catch (...)
     {
@@ -583,7 +583,7 @@ TEST(type_prop, select_shape_mismatch_b)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
     }
     catch (...)
     {
@@ -607,7 +607,7 @@ TEST(type_prop, select_shape_mismatch_c)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Arguments must have the same tensor view shape"));
+        EXPECT_EQ(error.what(), std::string("Arguments must have the same shape"));
     }
     catch (...)
     {
@@ -657,8 +657,7 @@ TEST(type_prop, select_elem_mismatch_bc)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Arguments 1 and 2 must have the same tensor view type"));
+        EXPECT_EQ(error.what(), std::string("Arguments 1 and 2 must have the same element type"));
     }
     catch (...)
     {
@@ -1368,78 +1367,35 @@ TEST(type_prop, slice_deduce_matrix_upper_extra)
 
 TEST(type_prop, scalar_constant_deduce_float32)
 {
-    auto c = make_shared<op::Constant>(element::Float32::element_type(), Shape{}, "208");
+    auto c = op::Constant::create(element::Float32::element_type(), Shape{}, {208});
     ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Float32::element_type(), Shape{}));
 }
 
 TEST(type_prop, scalar_constant_deduce_bool)
 {
-    auto c = make_shared<op::Constant>(element::Bool::element_type(), Shape{}, "1");
+    auto c = op::Constant::create(element::Bool::element_type(), Shape{}, {1});
     ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Bool::element_type(), Shape{}));
 }
 
 TEST(type_prop, tensor_constant_deduce_float32)
 {
-    auto c = make_shared<op::Constant>(element::Float32::element_type(),
-                                       Shape{2, 2},
-                                       std::vector<std::string>{"208", "208", "208", "208"});
+    auto c =
+        op::Constant::create(element::Float32::element_type(), Shape{2, 2}, {208, 208, 208, 208});
     ASSERT_EQ(*(c->get_value_type()),
               TensorViewType(element::Float32::element_type(), Shape{2, 2}));
 }
 
 TEST(type_prop, tensor_constant_deduce_bool)
 {
-    auto c = make_shared<op::Constant>(
-        element::Bool::element_type(), Shape{2, 2}, std::vector<std::string>{"1", "1", "1", "1"});
+    auto c = op::Constant::create(element::Bool::element_type(), Shape{2, 2}, {1, 1, 1, 1});
     ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::Bool::element_type(), Shape{2, 2}));
-}
-
-TEST(type_prop, tensor_constant_bad_parse)
-{
-    try
-    {
-        auto c = make_shared<op::Constant>(element::Bool::element_type(),
-                                           Shape{2, 2},
-                                           std::vector<std::string>{"1", "grunk", "1", "1"});
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Bad literal parse not detected";
-    }
-    catch (const runtime_error& error)
-    {
-        EXPECT_TRUE(string(error.what()).find("Could not parse literal") != string::npos);
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, tensor_constant_bad_parse_float_for_int)
-{
-    try
-    {
-        auto c = make_shared<op::Constant>(element::Int32::element_type(),
-                                           Shape{2, 2},
-                                           std::vector<std::string>{"1", "2.7", "1", "1"});
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Bad literal parse not detected";
-    }
-    catch (const runtime_error& error)
-    {
-        EXPECT_TRUE(string(error.what()).find("Could not parse literal") != string::npos);
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
 }
 
 TEST(type_prop, tensor_constant_bad_count)
 {
     try
     {
-        auto c = make_shared<op::Constant>(
-            element::Bool::element_type(), Shape{2, 2}, std::vector<std::string>{"1", "1", "1"});
+        auto c = op::Constant::create(element::Bool::element_type(), Shape{2, 2}, {1, 1, 1});
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect number of literals not detected";
     }
@@ -1943,6 +1899,649 @@ TEST(type_prop, one_hot_deduce_shape_incompatible)
         EXPECT_EQ(
             error.what(),
             std::string("One-hot argument shape is not compatible with desired output shape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_1d_deduce)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 10});
+    auto conv = make_shared<op::Convolution>(param0, param1);
+    auto conv_vt = conv->get_value_type();
+    EXPECT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 91}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
+    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
+
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
+
+    EXPECT_EQ(conv->get_input_image_shape(), Shape{100});
+    EXPECT_EQ(conv->get_output_image_shape(), Shape{91});
+
+    EXPECT_EQ(conv->get_window_physical_shape(), Shape{10});
+    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{10});
+
+    EXPECT_EQ(conv->get_batch_size(), 64);
+    EXPECT_EQ(conv->get_image_dimension_count(), 1);
+}
+
+TEST(type_prop, conv_1d_deduce_strided)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 10});
+    auto move_strides = Strides{2};
+    auto conv = make_shared<op::Convolution>(param0, param1, move_strides);
+    auto conv_vt = conv->get_value_type();
+    EXPECT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 46}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
+    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
+
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
+
+    EXPECT_EQ(conv->get_input_image_shape(), Shape{100});
+    EXPECT_EQ(conv->get_output_image_shape(), Shape{46});
+
+    EXPECT_EQ(conv->get_window_physical_shape(), Shape{10});
+    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{10});
+
+    EXPECT_EQ(conv->get_batch_size(), 64);
+    EXPECT_EQ(conv->get_image_dimension_count(), 1);
+}
+
+TEST(type_prop, conv_1d_deduce_strided_small_uneven)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 5});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 2});
+    auto move_strides = Strides{2};
+    auto conv = make_shared<op::Convolution>(param0, param1, move_strides);
+    auto conv_vt = conv->get_value_type();
+    EXPECT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 2}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
+    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
+
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
+
+    EXPECT_EQ(conv->get_input_image_shape(), Shape{5});
+    EXPECT_EQ(conv->get_output_image_shape(), Shape{2});
+
+    EXPECT_EQ(conv->get_window_physical_shape(), Shape{2});
+    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{2});
+
+    EXPECT_EQ(conv->get_batch_size(), 64);
+    EXPECT_EQ(conv->get_image_dimension_count(), 1);
+}
+
+TEST(type_prop, conv_1d_deduce_strided_small_even)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 6});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 2});
+    auto move_strides = Strides{2};
+    auto conv = make_shared<op::Convolution>(param0, param1, move_strides);
+    auto conv_vt = conv->get_value_type();
+    EXPECT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 3}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
+    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
+
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
+
+    EXPECT_EQ(conv->get_input_image_shape(), Shape{6});
+    EXPECT_EQ(conv->get_output_image_shape(), Shape{3});
+
+    EXPECT_EQ(conv->get_window_physical_shape(), Shape{2});
+    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{2});
+
+    EXPECT_EQ(conv->get_batch_size(), 64);
+    EXPECT_EQ(conv->get_image_dimension_count(), 1);
+}
+
+TEST(type_prop, conv_1d_deduce_dilated)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 10});
+    auto move_strides = Strides{1};
+    auto dilate_strides = Strides{2};
+    auto conv = make_shared<op::Convolution>(param0, param1, move_strides, dilate_strides);
+    auto conv_vt = conv->get_value_type();
+    EXPECT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 82}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
+    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{2});
+
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
+
+    EXPECT_EQ(conv->get_input_image_shape(), Shape{100});
+    EXPECT_EQ(conv->get_output_image_shape(), Shape{82});
+
+    EXPECT_EQ(conv->get_window_physical_shape(), Shape{19});
+    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{10});
+
+    EXPECT_EQ(conv->get_batch_size(), 64);
+    EXPECT_EQ(conv->get_image_dimension_count(), 1);
+}
+
+TEST(type_prop, conv_2d_deduce)
+{
+    // Deduce type
+    auto param0 =
+        make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100, 150});
+    auto param1 =
+        make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 10, 20});
+    auto conv = make_shared<op::Convolution>(param0, param1);
+    auto conv_vt = conv->get_value_type();
+    EXPECT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 91, 131}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
+
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
+
+    EXPECT_EQ(conv->get_input_image_shape(), (Shape{100, 150}));
+    EXPECT_EQ(conv->get_output_image_shape(), (Shape{91, 131}));
+
+    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{10, 20}));
+    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{10, 20}));
+
+    EXPECT_EQ(conv->get_batch_size(), 64);
+    EXPECT_EQ(conv->get_image_dimension_count(), 2);
+}
+
+TEST(type_prop, conv_2d_deduce_strided)
+{
+    // Deduce type
+    auto param0 =
+        make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100, 150});
+    auto param1 =
+        make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 10, 20});
+    auto move_strides = Strides{2, 3};
+    auto conv = make_shared<op::Convolution>(param0, param1, move_strides);
+    auto conv_vt = conv->get_value_type();
+    EXPECT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 46, 44}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3}));
+    EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
+
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
+
+    EXPECT_EQ(conv->get_input_image_shape(), (Shape{100, 150}));
+    EXPECT_EQ(conv->get_output_image_shape(), (Shape{46, 44}));
+
+    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{10, 20}));
+    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{10, 20}));
+
+    EXPECT_EQ(conv->get_batch_size(), 64);
+    EXPECT_EQ(conv->get_image_dimension_count(), 2);
+}
+
+TEST(type_prop, conv_2d_deduce_strided_dilated)
+{
+    // Deduce type
+    auto param0 =
+        make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 100, 150});
+    auto param1 =
+        make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 10, 20});
+    auto move_strides = Strides{2, 3};
+    auto dilate_strides = Strides{3, 2};
+    auto conv = make_shared<op::Convolution>(param0, param1, move_strides, dilate_strides);
+    auto conv_vt = conv->get_value_type();
+    EXPECT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 37, 38}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3}));
+    EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2}));
+
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
+
+    EXPECT_EQ(conv->get_input_image_shape(), (Shape{100, 150}));
+    EXPECT_EQ(conv->get_output_image_shape(), (Shape{37, 38}));
+
+    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{28, 39}));
+    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{10, 20}));
+
+    EXPECT_EQ(conv->get_batch_size(), 64);
+    EXPECT_EQ(conv->get_image_dimension_count(), 2);
+}
+
+TEST(type_prop, conv_2d_deduce_strided_dilated_small)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 7, 8});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 2, 3});
+    auto move_strides = Strides{2, 3};
+    auto dilate_strides = Strides{3, 2};
+    auto conv = make_shared<op::Convolution>(param0, param1, move_strides, dilate_strides);
+    auto conv_vt = conv->get_value_type();
+    EXPECT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 2, 2}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3}));
+    EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2}));
+
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
+
+    EXPECT_EQ(conv->get_input_image_shape(), (Shape{7, 8}));
+    EXPECT_EQ(conv->get_output_image_shape(), (Shape{2, 2}));
+
+    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{4, 5}));
+    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{2, 3}));
+
+    EXPECT_EQ(conv->get_batch_size(), 64);
+    EXPECT_EQ(conv->get_image_dimension_count(), 2);
+}
+
+TEST(type_prop, conv_3d_deduce_strided_dilated_small)
+{
+    // Deduce type
+    auto param0 =
+        make_shared<op::Parameter>(element::Float32::element_type(), Shape{64, 3, 7, 8, 10});
+    auto param1 =
+        make_shared<op::Parameter>(element::Float32::element_type(), Shape{128, 3, 2, 3, 2});
+    auto move_strides = Strides{2, 3, 4};
+    auto dilate_strides = Strides{3, 2, 2};
+    auto conv = make_shared<op::Convolution>(param0, param1, move_strides, dilate_strides);
+    auto conv_vt = conv->get_value_type();
+    EXPECT_EQ(*conv_vt, TensorViewType(element::Float32::element_type(), Shape{64, 128, 2, 2, 2}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3, 4}));
+    EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2, 2}));
+
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
+
+    EXPECT_EQ(conv->get_input_image_shape(), (Shape{7, 8, 10}));
+    EXPECT_EQ(conv->get_output_image_shape(), (Shape{2, 2, 2}));
+
+    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{4, 5, 3}));
+    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{2, 3, 2}));
+
+    EXPECT_EQ(conv->get_batch_size(), 64);
+    EXPECT_EQ(conv->get_image_dimension_count(), 3);
+}
+
+TEST(type_prop, conv_invalid_0d_input)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid 0D input not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution image batch input must have rank of at "
+                              "least 3 (one batch axis, one input-channel axis, at "
+                              "least one image dimension)."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_1d_input)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid 1D input not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution image batch input must have rank of at "
+                              "least 3 (one batch axis, one input-channel axis, at "
+                              "least one image dimension)."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_2d_input)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 6});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 6});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid 2D input not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution image batch input must have rank of at "
+                              "least 3 (one batch axis, one input-channel axis, at "
+                              "least one image dimension)."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_0_batch_size)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{0, 6, 1});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{0, 6, 1});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with 0 batch size not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Convolution image batch size is zero."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_0_input_channels)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 0, 1});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{5, 0, 1});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with 0 input channels not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Convolution requires at least one input channel."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_many)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto param1 =
+        make_shared<op::Parameter>(element::Float32::element_type(), Shape{5, 2, 3, 3, 3});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with too many filter dimensions not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Convolution filter input must have rank of 2 + n_image_dimensions."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_few)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{5, 2, 3});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with too few filter dimensions not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Convolution filter input must have rank of 2 + n_image_dimensions."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_0_output_channels)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{0, 2, 3, 3});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with 0 output channels not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Convolution requires at least one output channel."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_input_channel_mismatch)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 3, 3, 3});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with channel count mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Convolution image batch and filter input channel counts do not match."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_movement_stride_rank)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 3, 3});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1, Strides{2, 3, 8});
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with wrong movement stride rank not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution window movement stride rank does not "
+                              "match number of image dimensions."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_dilation_stride_rank)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 3, 3});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1, Strides{2, 3}, Strides{2, 3, 8});
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with wrong dilation stride rank not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution window dilation stride rank does not "
+                              "match number of image dimensions."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_input_image_size_0)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 0, 10});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 3, 3});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with zero-length image axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Convolution input image dimension is zero."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_window_size_0)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 3, 0});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with zero-length window axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Convolution window shape has a zero-length axis."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_dilation_stride_0)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 3, 3});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1, Strides{2, 3}, Strides{2, 0});
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with wrong 0-length dilation stride axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Convolution window axis dilation stride is zero."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_dilated_window_too_large)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 8, 8});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 3, 3});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1, Strides{1, 1}, Strides{4, 4});
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with oversized dilated window not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution window after dilation is larger than the image."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_movement_stride_0)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{6, 2, 3, 3});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1, Strides{0, 1});
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with wrong 0-length movement stride axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Convolution window axis movement stride is zero."));
     }
     catch (...)
     {

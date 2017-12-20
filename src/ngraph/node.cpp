@@ -20,6 +20,8 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -28,9 +30,9 @@ atomic<size_t> Node::m_next_instance_id(0);
 
 Node::Node(const std::string& node_type, const std::vector<shared_ptr<Node>>& arguments)
     : m_node_type(node_type)
-    , m_arguments(arguments)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_is_output(false)
+    , m_arguments(arguments)
 {
     // Add this node as a user of each argument.
     size_t i = 0;
@@ -58,6 +60,11 @@ void Node::assert_value_type(const shared_ptr<const ValueType>& value_type) cons
     {
         throw ngraph_error("Setting value type to a different ValueType");
     }
+}
+
+void Node::set_value_type_checked(const element::Type& element_type, const Shape& shape)
+{
+    set_value_type_checked(make_shared<TensorViewType>(element_type, shape));
 }
 
 void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
@@ -167,6 +174,68 @@ void Node::set_name(const string& name)
     {
         throw ngraph_error("Node name may be set exactly once");
     }
+}
+
+void Node::assert_argument_list_equivalency(const Nodes& b)
+{
+    bool arguments_equal = true;
+    if (this->m_arguments.size() == b.size())
+    {
+        for (size_t i = 0; i < this->m_arguments.size(); i++)
+        {
+            arguments_equal = arguments_equal && this->m_arguments.at(i) == b.at(i);
+        }
+    }
+    else
+    {
+        arguments_equal = false;
+    }
+
+    if (!arguments_equal)
+    {
+        std::cout << "node = " << this->get_name() << std::endl;
+        std::cout << "m_arguments" << std::endl;
+        for (auto arg : this->m_arguments)
+        {
+            std::cout << "arg = " << arg->get_name() << std::endl;
+        }
+        std::cout << "results" << std::endl;
+        for (auto arg : b)
+        {
+            std::cout << "arg = " << arg->get_name() << std::endl;
+        }
+    }
+
+    if (!arguments_equal)
+    {
+        throw "Arguments aren't equal";
+    }
+}
+
+std::shared_ptr<Node> Node::get_input_op(size_t index)
+{
+    for (auto arg : m_arguments)
+    {
+        if (arg->get_outputs().size() != 1)
+        {
+            throw "get_input_op called on an argument w/ multiple outputs";
+        }
+    }
+    return m_inputs.at(index).get_output().get_node();
+}
+
+Nodes Node::get_input_ops() //const
+{
+    Nodes result;
+    std::set<shared_ptr<op::XLATuple>> seen_tuples;
+    for (auto& i : get_inputs())
+    {
+        {
+            result.push_back(i.get_output().get_node());
+        }
+    }
+    assert_argument_list_equivalency(result);
+    return result;
 }
 
 std::shared_ptr<Node> Node::backprop_node(const std::shared_ptr<Node>& x,

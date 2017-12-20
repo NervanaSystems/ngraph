@@ -23,14 +23,15 @@
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/dot.hpp"
-#include "ngraph/ops/get_tuple_element.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
@@ -44,6 +45,7 @@
 #include "ngraph/runtime/kernel/concat.hpp"
 #include "ngraph/runtime/kernel/constant.hpp"
 #include "ngraph/runtime/kernel/convert.hpp"
+#include "ngraph/runtime/kernel/convolution.hpp"
 #include "ngraph/runtime/kernel/copy.hpp"
 #include "ngraph/runtime/kernel/cos.hpp"
 #include "ngraph/runtime/kernel/cosh.hpp"
@@ -257,9 +259,8 @@ private:
         }
         else if (node_op == "Constant")
         {
-            auto c = static_cast<const op::Constant*>(&node);
-            std::vector<T> input = ngraph::parse_string<T>(c->get_value_strings());
-            kernel::constant<T>(reinterpret_cast<T*>(input.data()),
+            const op::Constant* c = static_cast<const op::Constant*>(&node);
+            kernel::constant<T>(reinterpret_cast<const T*>(c->get_data_ptr()),
                                 reinterpret_cast<T*>(out[0]->get_data_ptr()),
                                 out[0]->get_element_count());
         }
@@ -268,6 +269,18 @@ private:
             kernel::convert<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                                reinterpret_cast<S*>(out[0]->get_data_ptr()),
                                out[0]->get_element_count());
+        }
+        else if (node_op == "Convolution")
+        {
+            auto c = static_cast<const op::Convolution*>(&node);
+            kernel::convolution<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                   reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                   args[0]->get_shape(),
+                                   args[1]->get_shape(),
+                                   out[0]->get_shape(),
+                                   c->get_window_movement_strides(),
+                                   c->get_window_dilation_strides());
         }
         else if (node_op == "Cos")
         {
@@ -325,9 +338,9 @@ private:
             std::shared_ptr<Function> function = node.get_function();
             call(function, args, out);
         }
-        else if (node_op == "GetTupleElement")
+        else if (node_op == "XLAGetTupleElement")
         {
-            auto gte = dynamic_cast<op::GetTupleElement*>(&node);
+            auto gte = dynamic_cast<op::XLAGetTupleElement*>(&node);
             kernel::copy<T>(reinterpret_cast<T*>(args[gte->get_n()]->get_data_ptr()),
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
@@ -412,98 +425,6 @@ private:
         else if (node_op == "Parameter")
         {
         }
-        else if (node_op == "ParameterizedConstant")
-        {
-            // I would like to appologize for this...
-            element::Type type = element::from<T>();
-            const void* data;
-            if (type == element::boolean)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Bool>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::f32)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Float32>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::f64)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Float64>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::i8)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Int8>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::i16)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Int16>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::i32)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Int32>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::i64)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Int64>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::u8)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::UInt8>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::u16)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::UInt16>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::u32)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::UInt32>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::u64)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::UInt64>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else
-            {
-                std::stringstream ss;
-                ss << "unsupported element type " << type << " op " << node.get_name();
-                throw std::runtime_error(ss.str());
-            }
-            kernel::copy<T>(reinterpret_cast<T*>(const_cast<void*>(data)),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
-        }
         else if (node_op == "Power")
         {
             kernel::power<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
@@ -517,7 +438,7 @@ private:
             std::shared_ptr<ngraph::Function> reduction_function = reduce->get_function();
 
             auto in_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(
-                node.get_arguments().at(0)->get_value_type());
+                node.get_input_op(0)->get_value_type());
             if (in_tensor_view_type == nullptr)
             {
                 throw std::runtime_error("encountered non-tensor view type as input to reduce");
@@ -649,7 +570,7 @@ private:
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
         }
-        else if (node_op == "Tuple")
+        else if (node_op == "XLATuple")
         {
             for (size_t i = 0; i < args.size(); ++i)
             {

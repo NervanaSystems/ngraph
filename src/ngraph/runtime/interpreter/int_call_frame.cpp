@@ -14,8 +14,8 @@
 
 #include <algorithm>
 
-#include "ngraph/ops/get_tuple_element.hpp"
-#include "ngraph/ops/tuple.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
@@ -48,10 +48,20 @@ void runtime::interpreter::INT_CallFrame::call(
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        descriptor::Output& output = function->get_result()->get_outputs().at(i);
-        shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+        descriptor::Output* output = function->get_outputs().at(i);
+        shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
         string name = tv->get_tensor().get_name();
-        tensor_map.insert({name, output_tvs[i]});
+        if (contains_key(tensor_map, name))
+        {
+            // Here we handle the special case where an output is just a copy of an input
+            memcpy(output_tvs[i]->get_data_ptr(),
+                   tensor_map.at(name)->get_data_ptr(),
+                   tv->get_tensor().size());
+        }
+        else
+        {
+            tensor_map.insert({name, output_tvs[i]});
+        }
     }
 
     // Invoke computation
@@ -78,9 +88,8 @@ void runtime::interpreter::INT_CallFrame::call(
             if (!contains_key(tensor_map, name))
             {
                 // The output tensor is not in the tensor map so create a new tensor
-                const Shape& shape = output.get_tensor_view_type()->get_shape();
-                const element::Type& element_type =
-                    output.get_tensor_view_type()->get_element_type();
+                const Shape& shape = output.get_shape();
+                const element::Type& element_type = output.get_element_type();
                 string tensor_name = output.get_tensor().get_name();
                 itv = make_shared<runtime::interpreter::INT_TensorView>(
                     element_type, shape, tensor_name);
@@ -92,7 +101,8 @@ void runtime::interpreter::INT_CallFrame::call(
             }
             outputs.push_back(itv);
         }
-        auto tuple = dynamic_pointer_cast<op::Tuple>(op);
+
+        auto tuple = dynamic_pointer_cast<op::XLATuple>(op);
         if (tuple)
         {
             for (size_t i = 0; i < inputs.size(); i++)

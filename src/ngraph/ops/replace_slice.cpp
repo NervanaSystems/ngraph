@@ -46,37 +46,37 @@ op::ReplaceSlice::ReplaceSlice(const std::shared_ptr<Node>& arg0,
 
 void op::ReplaceSlice::check_args()
 {
-    auto arg0_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
-    auto& arg0_shape = arg0_tensor_view_type->get_shape();
-    auto& arg0_element_type = arg0_tensor_view_type->get_element_type();
+    auto& input_0 = get_inputs().at(0);
+    auto& input_0_shape = input_0.get_shape();
+    auto& input_0_element_type = input_0.get_element_type();
 
-    auto arg1_tensor_view_type = get_inputs().at(1).get_tensor_view_type();
-    auto& arg1_shape = arg1_tensor_view_type->get_shape();
-    auto& arg1_element_type = arg1_tensor_view_type->get_element_type();
+    auto& input_1 = get_inputs().at(1);
+    auto& input_1_shape = input_1.get_shape();
+    auto& input_1_element_type = input_1.get_element_type();
 
-    if (arg0_shape.size() != arg1_shape.size())
+    if (input_0_shape.size() != input_1_shape.size())
     {
         throw ngraph_error("Replace-slice argument ranks do not match");
     }
 
-    if (arg0_element_type != arg1_element_type)
+    if (input_0_element_type != input_1_element_type)
     {
         throw ngraph_error("Element types for replace-slice arguments do not match");
     }
 
-    if (m_lower_bounds.size() != arg0_shape.size())
+    if (m_lower_bounds.size() != input_0_shape.size())
     {
         throw ngraph_error(
             "Number of lower bounds provided for slice does not match number of input axes");
     }
 
-    if (m_upper_bounds.size() != arg0_shape.size())
+    if (m_upper_bounds.size() != input_0_shape.size())
     {
         throw ngraph_error(
             "Number of upper bounds provided for slice does not match number of input axes");
     }
 
-    if (m_strides.size() != arg0_shape.size())
+    if (m_strides.size() != input_0_shape.size())
     {
         throw ngraph_error(
             "Number of strides provided for slice does not match number of input axes");
@@ -84,9 +84,9 @@ void op::ReplaceSlice::check_args()
 
     Shape slice_shape;
 
-    for (size_t i = 0; i < arg0_shape.size(); i++)
+    for (size_t i = 0; i < input_0_shape.size(); i++)
     {
-        if (m_upper_bounds[i] > arg0_shape[i])
+        if (m_upper_bounds[i] > input_0_shape[i])
         {
             throw ngraph_error("Upper bound for slice is out of range");
         }
@@ -107,12 +107,12 @@ void op::ReplaceSlice::check_args()
         slice_shape.push_back(slice_axis_size);
     }
 
-    if (arg1_shape != slice_shape)
+    if (input_1_shape != slice_shape)
     {
         throw ngraph_error("Shape of replacement tensor does not match slice shape");
     }
 
-    set_value_type_checked(arg0_tensor_view_type);
+    set_value_type_checked(input_0_element_type, input_0_shape);
 }
 
 void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints,
@@ -121,10 +121,10 @@ void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints,
     auto x = get_inputs().at(0).get_output().get_node();
     auto& y_input = get_inputs().at(1);
     auto y = y_input.get_output().get_node();
-    auto& y_element_type = y_input.get_tensor_view_type()->get_element_type();
-    auto y_shape = y_input.get_tensor_view_type()->get_shape();
+    auto& y_element_type = y_input.get_element_type();
+    auto y_shape = y_input.get_shape();
 
-    auto zeros_shaped_like_y = std::make_shared<op::Constant>(y_element_type, y_shape, "0");
+    auto zeros_shaped_like_y = op::Constant::create(y_element_type, y_shape, {0.0});
 
     adjoints.add_delta(x,
                        std::make_shared<op::ReplaceSlice>(

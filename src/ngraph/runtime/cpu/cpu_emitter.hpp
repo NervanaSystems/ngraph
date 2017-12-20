@@ -51,7 +51,8 @@ namespace ngraph
                 void EMITTER_DECL(EmitAdd);
                 void EMITTER_DECL(EmitDot);
                 void EMITTER_DECL(EmitMultiply);
-                void EMITTER_DECL(EmitGetTupleElement);
+                void EMITTER_DECL(EmitGetOutputElement);
+                void EMITTER_DECL(EmitXLAGetTupleElement);
                 void EMITTER_DECL(EmitTuple);
                 void EMITTER_DECL(EmitAbs);
                 void EMITTER_DECL(EmitConcat);
@@ -68,14 +69,6 @@ namespace ngraph
                 void EMITTER_DECL(EmitNotEqual);
                 void EMITTER_DECL(EmitSelect);
                 void EMITTER_DECL(EmitSubtract);
-                void EMITTER_DECL(EmitParameterizedConstantBool);
-                void EMITTER_DECL(EmitParameterizedConstantFloat32);
-                void EMITTER_DECL(EmitParameterizedConstantInt8);
-                void EMITTER_DECL(EmitParameterizedConstantInt32);
-                void EMITTER_DECL(EmitParameterizedConstantInt64);
-                void EMITTER_DECL(EmitParameterizedConstantUInt8);
-                void EMITTER_DECL(EmitParameterizedConstantUInt32);
-                void EMITTER_DECL(EmitParameterizedConstantUInt64);
                 void EMITTER_DECL(EmitBroadcast);
                 void EMITTER_DECL(EmitConvert);
                 void EMITTER_DECL(EmitConstant);
@@ -101,6 +94,7 @@ namespace ngraph
                 void EMITTER_DECL(EmitFloor);
                 void EMITTER_DECL(EmitCeiling);
                 void EMITTER_DECL(EmitSqrt);
+                void EMITTER_DECL(EmitConvolution);
 
             private:
                 void generate_call(const std::vector<TensorViewWrapper>& args,

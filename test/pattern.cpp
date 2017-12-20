@@ -72,8 +72,7 @@ public:
 
 static std::shared_ptr<Node> construct_constant_node(int n)
 {
-    auto int_t = ngraph::runtime::make_tensor<element::Int32>(Shape{1}, {n});
-    return make_shared<op::Int32Constant>(Shape{1}, int_t);
+    return op::Constant::create(element::i32, Shape{1}, {n});
 }
 
 class TestGraphRewrite : public ngraph::pass::GraphRewrite
@@ -89,24 +88,24 @@ public:
 
         ngraph::pattern::gr_callback_fn callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "IN CALLBACK";
-            assert(m.match_root()->get_arguments().size() == 2);
+            assert(m.match_root()->get_input_ops().size() == 2);
 
             auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index = m.match_root()->get_arguments().at(0) == pattern_map[pattern];
-            auto const_node = dynamic_pointer_cast<op::ParameterizedConstant<element::Int32>>(
-                m.match_root()->get_arguments().at(const_node_index));
-            auto second_node = m.match_root()->get_arguments().at(const_node_index);
+            size_t const_node_index = m.match_root()->get_input_ops().at(0) == pattern_map[pattern];
+            auto const_node = dynamic_pointer_cast<op::Constant>(
+                m.match_root()->get_input_ops().at(const_node_index));
+            auto second_node = m.match_root()->get_input_ops().at(const_node_index);
             NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node;
             NGRAPH_DEBUG << "pattern " << pattern_map[pattern]->description() << " , "
                          << pattern_map[pattern];
-            assert(const_node);
+            ASSERT_TRUE(const_node);
 
             auto pattern_value_type =
                 dynamic_pointer_cast<const TensorViewType>(pattern_map[pattern]->get_value_type());
             auto const_node_value_type =
                 dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
-            assert(pattern_value_type && const_node);
+            ASSERT_TRUE(pattern_value_type && const_node);
 
             if (pattern_value_type->get_element_type() !=
                     const_node_value_type->get_element_type() ||
@@ -116,7 +115,7 @@ public:
                 return;
             }
 
-            auto const_values = const_node->get_value()->get_vector();
+            auto const_values = const_node->get_vector<int32_t>();
             bool all_ones =
                 std::all_of(begin(const_values), end(const_values), [](int e) { return e == 1; });
 
@@ -144,24 +143,24 @@ public:
 
         ngraph::pattern::gr_callback_fn callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "IN CALLBACK";
-            assert(m.match_root()->get_arguments().size() == 2);
+            assert(m.match_root()->get_input_ops().size() == 2);
 
             auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index = m.match_root()->get_arguments().at(0) == pattern_map[pattern];
-            auto const_node = dynamic_pointer_cast<op::ParameterizedConstant<element::Int32>>(
-                m.match_root()->get_arguments().at(const_node_index));
-            auto second_node = m.match_root()->get_arguments().at(const_node_index);
+            size_t const_node_index = m.match_root()->get_input_ops().at(0) == pattern_map[pattern];
+            auto const_node = dynamic_pointer_cast<op::Constant>(
+                m.match_root()->get_input_ops().at(const_node_index));
+            auto second_node = m.match_root()->get_input_ops().at(const_node_index);
             NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node;
             NGRAPH_DEBUG << "pattern " << pattern_map[pattern]->description() << " , "
                          << pattern_map[pattern];
-            assert(const_node);
+            ASSERT_NE(nullptr, const_node);
 
             auto pattern_value_type =
                 dynamic_pointer_cast<const TensorViewType>(pattern_map[pattern]->get_value_type());
             auto const_node_value_type =
                 dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
-            assert(pattern_value_type && const_node);
+            ASSERT_TRUE(pattern_value_type && const_node);
 
             if (pattern_value_type->get_element_type() !=
                     const_node_value_type->get_element_type() ||
@@ -171,7 +170,7 @@ public:
                 return;
             }
 
-            auto const_values = const_node->get_value()->get_vector();
+            auto const_values = const_node->get_vector<int>();
             bool all_zeros =
                 std::all_of(begin(const_values), end(const_values), [](int e) { return e == 0; });
 
@@ -222,7 +221,7 @@ TEST(pattern, graph_rewrite)
         auto sum = (a + iconst0);
         auto graph = b + sum;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(1), a);
+        ASSERT_EQ(graph->get_input_ops().at(1), a);
         ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
                   &a->get_outputs().at(0)); //graph's input points to a's output
         ASSERT_TRUE(sum->get_outputs()
@@ -240,7 +239,7 @@ TEST(pattern, graph_rewrite)
         auto mul = (a * iconst1);
         auto graph = b + mul;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(1), a);
+        ASSERT_EQ(graph->get_input_ops().at(1), a);
         ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
                   &a->get_outputs().at(0)); //graph's input points to a's output
         ASSERT_TRUE(mul->get_outputs()
@@ -257,7 +256,7 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = ((((a * iconst1) * iconst1) * iconst1) * iconst1) + b;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(0), a);
+        ASSERT_EQ(graph->get_input_ops().at(0), a);
         ASSERT_EQ(&graph->get_inputs().at(0).get_output(),
                   &a->get_outputs().at(0)); //graph's input points to a's output
         ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
@@ -271,7 +270,7 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = b + (iconst0 + ((a + iconst0) * iconst1));
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(1), a);
+        ASSERT_EQ(graph->get_input_ops().at(1), a);
         ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
                   &a->get_outputs().at(0)); //graph's input points to a's output
         ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
@@ -284,7 +283,7 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = b + (iconst1 * (iconst1 * (iconst1 * (iconst1 * a))));
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(1), a);
+        ASSERT_EQ(graph->get_input_ops().at(1), a);
         ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
                   &a->get_outputs().at(0)); //graph's input points to a's output
         ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
@@ -342,10 +341,9 @@ TEST(pattern, matcher)
     auto iconst1_1 = construct_constant_node(1);
     ASSERT_TRUE(n.match(pattern * iconst1_0, a * iconst1_1)); //different iconst
     ASSERT_EQ(n.get_pattern_map()[pattern], a);
-    auto fconst1_0 =
-        make_shared<op::Constant>(element::Float32::element_type(), Shape{1}, std::to_string(1));
+    auto fconst1_0 = op::Constant::create(element::Float32::element_type(), Shape{1}, {1});
     auto patternf = pattern::op::Label::make_from_node(fconst1_0);
-    ASSERT_FALSE(n.match(patternf * fconst1_0, a * iconst1_1)); //different iconst
+    ASSERT_TRUE(n.match(patternf * fconst1_0, a * iconst1_1)); //different iconst
 
     //Subgraph labels
     auto add = a + b;

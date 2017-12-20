@@ -148,7 +148,11 @@ void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<N
     std::unordered_set<shared_ptr<Node>> instances_seen;
     deque<shared_ptr<Node>> stack;
 
-    stack.push_front(p->get_result());
+    for (auto r : p->get_results())
+    {
+        stack.push_front(r);
+    }
+
     for (auto param : p->get_parameters())
     {
         stack.push_front(param);
@@ -163,7 +167,7 @@ void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<N
             f(n);
         }
         stack.pop_front();
-        for (auto arg : n->get_arguments())
+        for (auto arg : n->get_input_ops())
         {
             if (instances_seen.count(arg) == 0)
             {
@@ -249,7 +253,7 @@ void ngraph::replace_node_users_arguments(std::shared_ptr<Node> target,
     NGRAPH_DEBUG << "user = " << replacement << " , " << replacement->get_name();
     for (auto user : target->users())
     {
-        auto& args = const_cast<ngraph::Nodes&>(user->get_arguments());
+        auto& args = const_cast<ngraph::Nodes&>(user->get_arguments_FOR_GRAPH_REWRITE_ONLY());
         auto it = std::find(begin(args), end(args), target);
         assert(it != end(args));
         //NGRAPH_DEBUG << "Replaced " << *it << " w/ " << replacement << " in args of " << user << " , args = " << &args;
@@ -270,8 +274,8 @@ std::list<std::shared_ptr<ngraph::Node>>
     for (auto node : nodes)
     {
         node_map[node.get()] = node;
-        node_depencency_count[node.get()] = node->get_arguments().size();
-        if (node->get_arguments().size() == 0)
+        node_depencency_count[node.get()] = node->get_input_ops().size();
+        if (node->get_input_ops().size() == 0)
         {
             independent_nodes.push_back(node.get());
         }
@@ -328,7 +332,7 @@ std::list<std::shared_ptr<ngraph::Node>>
         {
             // get (already) cloned arguments and clone the node
             Nodes cloned_args;
-            for (auto arg : node->get_arguments())
+            for (auto arg : node->get_input_ops())
             {
                 cloned_args.push_back(node_map[arg]);
             }
@@ -363,4 +367,38 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     // create and return cloned function
     return std::make_shared<ngraph::Function>(
         cloned_result, func->get_result_type(), cloned_params);
+}
+
+void* ngraph::aligned_alloc(size_t alignment, size_t size)
+{
+#ifdef __APPLE__
+    return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
+#else
+    return ::aligned_alloc(alignment, size);
+#endif
+}
+
+void ngraph::aligned_free(void* p)
+{
+#ifdef __APPLE__
+    delete[] reinterpret_cast<uint64_t*>(p);
+#else
+    free(p);
+#endif
+}
+
+size_t ngraph::round_up(size_t size, size_t alignment)
+{
+    if (alignment == 0)
+    {
+        return size;
+    }
+
+    size_t remainder = size % alignment;
+    if (remainder == 0)
+    {
+        return size;
+    }
+
+    return size + alignment - remainder;
 }

@@ -27,16 +27,14 @@
 #include "ngraph/ops/convert.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/slice.hpp"
-#include "ngraph/ops/tuple.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/types/type.hpp"
 
 using namespace ngraph;
 
-std::shared_ptr<Node> make_zero(const std::shared_ptr<const TensorViewType>& tensor_view_type)
+std::shared_ptr<Node> make_zero(const element::Type& element_type, const Shape& shape)
 {
-    std::shared_ptr<Node> zero =
-        std::make_shared<op::Constant>(tensor_view_type->get_element_type(), Shape{}, "0");
-    const Shape& shape = tensor_view_type->get_shape();
+    std::shared_ptr<Node> zero = op::Constant::create(element_type, Shape{}, {0.0});
     if (shape.size() > 0)
     {
         AxisSet axes;
@@ -71,7 +69,7 @@ autodiff::Adjoints::Adjoints(const std::shared_ptr<Node>& y, const std::shared_p
         {
             continue;
         }
-        for (auto arg : node->get_arguments())
+        for (auto arg : node->get_input_ops())
         {
             auto count_it = parent_counts.find(arg);
             if (count_it == parent_counts.end())
@@ -96,7 +94,7 @@ autodiff::Adjoints::Adjoints(const std::shared_ptr<Node>& y, const std::shared_p
         auto node = nodes_to_check.front();
         nodes_to_check.pop_front();
         // Look for nodes that will be available when this node is done
-        for (auto arg : node->get_arguments())
+        for (auto arg : node->get_input_ops())
         {
             auto count_it = parent_counts.find(arg);
             count_it->second--;
@@ -114,7 +112,8 @@ std::shared_ptr<Node> autodiff::Adjoints::get(const std::shared_ptr<Node>& x)
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)
     {
-        auto result = make_zero(x->get_outputs().at(0).get_tensor_view_type());
+        auto& output = x->get_outputs().at(0);
+        auto result = make_zero(output.get_element_type(), output.get_shape());
         adjoint_it = m_adjoint_map.insert({x.get(), result}).first;
     }
     return adjoint_it->second;
@@ -152,7 +151,8 @@ void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)
     {
-        auto zeros = make_zero(x->get_outputs().at(0).get_tensor_view_type());
+        auto& output = x->get_outputs().at(0);
+        auto zeros = make_zero(output.get_element_type(), output.get_shape());
         m_adjoint_map.insert({x.get(),
                               std::make_shared<op::ReplaceSlice>(
                                   zeros, delta, lower_bounds, upper_bounds, strides)});

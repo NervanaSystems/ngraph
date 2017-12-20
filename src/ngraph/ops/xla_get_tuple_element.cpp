@@ -14,17 +14,17 @@
 
 #include <sstream>
 
-#include "ngraph/ops/get_tuple_element.hpp"
+#include "ngraph/ops/xla_get_tuple_element.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::GetTupleElement::GetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
-    : Node("GetTupleElement", {arg})
+op::XLAGetTupleElement::XLAGetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
+    : Node("XLAGetTupleElement", {arg})
     , m_n{n}
 {
     auto arg0_tuple_type =
-        dynamic_pointer_cast<const TupleType>(m_arguments.at(0)->get_value_type());
+        dynamic_pointer_cast<const TupleType>(get_input_ops().at(0)->get_value_type());
     if (nullptr == arg0_tuple_type)
     {
         throw ngraph_error("Argument must be a tuple view");
@@ -36,4 +36,15 @@ op::GetTupleElement::GetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
     }
 
     set_value_type_checked(arg0_tuple_type->get_element_types().at(m_n));
+}
+
+Nodes op::XLAGetTupleElement::get_input_ops() //const
+{
+    Nodes result;
+    if (auto gte = dynamic_cast<op::XLAGetTupleElement*>(this))
+    {
+        result.push_back(get_inputs().at(0).get_output().get_node());
+    }
+    assert_argument_list_equivalency(result);
+    return result;
 }

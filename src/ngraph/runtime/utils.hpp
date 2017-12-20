@@ -17,7 +17,6 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
 #include "ngraph/runtime/tuple.hpp"
 #include "ngraph/runtime/value.hpp"
 #include "ngraph/types/element_type.hpp"
@@ -26,24 +25,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        /// @brief Framework constructor of a tensor of a specific element type and shape.
-        template <typename ET>
-        std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>
-            make_tensor(const Shape& shape)
-        {
-            return std::make_shared<runtime::ParameterizedTensorView<ET>>(shape);
-        }
-
-        /// @brief Framework constructor of a tensor of a specific element type and shape.
-        template <typename ET>
-        std::shared_ptr<ngraph::runtime::ParameterizedTensorView<ET>>
-            make_tensor(const Shape& shape, const std::vector<typename ET::type>& data)
-        {
-            auto rc = std::make_shared<runtime::ParameterizedTensorView<ET>>(shape);
-            rc->write(data.data(), 0, data.size() * sizeof(typename ET::type));
-            return rc;
-        }
-
         /// @brief Framework constructor of a tuple from a sequence of values.
         std::shared_ptr<ngraph::runtime::Tuple>
             make_tuple(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& elements);

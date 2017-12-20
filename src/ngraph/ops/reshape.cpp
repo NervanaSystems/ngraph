@@ -27,16 +27,16 @@ op::Reshape::Reshape(const std::shared_ptr<Node>& arg,
     , m_input_order(input_order)
     , m_output_shape(output_shape)
 {
-    auto arg_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
-    auto arg_shape = arg_tensor_view_type->get_shape();
-    auto arg_rank = arg_shape.size();
+    auto& input = get_inputs().at(0);
+    auto input_shape = input.get_shape();
+    auto input_rank = input_shape.size();
 
-    if (m_input_order.size() != arg_rank)
+    if (m_input_order.size() != input_rank)
     {
         throw ngraph_error("Input axis order for reshape is not a permutation of argument's axes");
     }
 
-    for (size_t i = 0; i < arg_rank; i++)
+    for (size_t i = 0; i < input_rank; i++)
     {
         auto it = std::find(std::begin(m_input_order), std::end(m_input_order), i);
         if (std::end(m_input_order) == it)
@@ -46,10 +46,10 @@ op::Reshape::Reshape(const std::shared_ptr<Node>& arg,
         }
     }
 
-    size_t arg_shape_product = 1;
-    for (auto i : arg_shape)
+    size_t input_shape_product = 1;
+    for (auto i : input_shape)
     {
-        arg_shape_product *= i;
+        input_shape_product *= i;
     }
 
     size_t output_shape_product = 1;
@@ -58,21 +58,20 @@ op::Reshape::Reshape(const std::shared_ptr<Node>& arg,
         output_shape_product *= i;
     }
 
-    if (arg_shape_product != output_shape_product)
+    if (input_shape_product != output_shape_product)
     {
         throw ngraph_error(
             "Product of output shape dimensions does not match product of argument shape "
             "dimensions for reshape");
     }
 
-    set_value_type_checked(
-        make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), m_output_shape));
+    set_value_type_checked(input.get_element_type(), m_output_shape);
 }
 
 void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints,
                                     const std::shared_ptr<Node>& delta)
 {
-    auto x = m_arguments[0];
+    auto x = get_input_op(0);
     auto x_type = x->get_value_type();
     auto x_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(x_type);
     if (nullptr == x_type)

@@ -26,6 +26,7 @@
 
 #include "ngraph/common.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/log.hpp"
 
 namespace ngraph
 {
@@ -76,55 +77,32 @@ namespace ngraph
         template <typename T>
         const Type& from()
         {
-            if (typeid(T) == typeid(char) || typeid(T) == typeid(bool))
-            {
-                return boolean;
-            }
-            else if (typeid(T) == typeid(float))
-            {
-                return f32;
-            }
-            else if (typeid(T) == typeid(double))
-            {
-                return f64;
-            }
-            else if (typeid(T) == typeid(int8_t))
-            {
-                return i8;
-            }
-            else if (typeid(T) == typeid(int16_t))
-            {
-                return i16;
-            }
-            else if (typeid(T) == typeid(int32_t))
-            {
-                return i32;
-            }
-            else if (typeid(T) == typeid(int64_t))
-            {
-                return i64;
-            }
-            else if (typeid(T) == typeid(uint8_t))
-            {
-                return u8;
-            }
-            else if (typeid(T) == typeid(uint16_t))
-            {
-                return u16;
-            }
-            else if (typeid(T) == typeid(uint32_t))
-            {
-                return u32;
-            }
-            else if (typeid(T) == typeid(uint64_t))
-            {
-                return u64;
-            }
-            else
-            {
-                throw std::invalid_argument("Unknown type");
-            }
+            throw std::invalid_argument("Unknown type");
         }
+        template <>
+        const Type& from<char>();
+        template <>
+        const Type& from<bool>();
+        template <>
+        const Type& from<float>();
+        template <>
+        const Type& from<double>();
+        template <>
+        const Type& from<int8_t>();
+        template <>
+        const Type& from<int16_t>();
+        template <>
+        const Type& from<int32_t>();
+        template <>
+        const Type& from<int64_t>();
+        template <>
+        const Type& from<uint8_t>();
+        template <>
+        const Type& from<uint16_t>();
+        template <>
+        const Type& from<uint32_t>();
+        template <>
+        const Type& from<uint64_t>();
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
 

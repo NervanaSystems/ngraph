@@ -41,7 +41,7 @@ bool check_unary()
     auto node = make_shared<OP>(arg0);
     auto new_node = node->copy_with_new_args(new_args);
 
-    return (nullptr != new_node) && (new_args == new_node->get_arguments());
+    return (nullptr != new_node) && (new_args == new_node->get_input_ops());
 }
 
 template <typename OP>
@@ -57,7 +57,7 @@ bool check_binary()
     auto node = make_shared<OP>(arg0, arg1);
     auto new_node = node->copy_with_new_args(new_args);
 
-    return (nullptr != new_node) && (new_args == new_node->get_arguments());
+    return (nullptr != new_node) && (new_args == new_node->get_input_ops());
 }
 
 TEST(copy, abs)
@@ -101,7 +101,7 @@ TEST(copy, broadcast)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(new_args == new_node->get_input_ops());
     ASSERT_TRUE(shape == node_cast->get_broadcast_shape());
     ASSERT_TRUE(axes == node_cast->get_broadcast_axes());
 }
@@ -126,44 +126,22 @@ TEST(copy, concat)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(new_args == new_node->get_input_ops());
     ASSERT_TRUE(node_cast->get_concatenation_axis() == axis);
-}
-
-TEST(copy, parameterized_constant)
-{
-    auto manager = runtime::Manager::get("NGVM");
-    auto backend = manager->allocate_backend();
-
-    // Create some tensors for input/output
-    auto c = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 2});
-    copy_data(c, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-
-    Shape shape{2, 2};
-    auto cptv = dynamic_pointer_cast<ngraph::runtime::ParameterizedTensorView<element::Float32>>(c);
-    ASSERT_NE(cptv, nullptr);
-    auto node = make_shared<op::ParameterizedConstant<element::Float32>>(shape, cptv);
-    auto new_node = node->copy_with_new_args(Nodes{});
-    auto node_cast = dynamic_pointer_cast<op::ParameterizedConstant<element::Float32>>(new_node);
-    ASSERT_NE(node_cast, nullptr);
-    ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(Nodes{} == new_node->get_arguments());
-    ASSERT_TRUE(node_cast->get_value() == c);
-    ASSERT_TRUE(node_cast->get_shape() == shape);
 }
 
 TEST(copy, constant)
 {
     Shape shape{};
-    vector<string> c{"2.4"};
+    vector<float> c{2.4f};
     auto& et = element::Float32::element_type();
-    auto node = make_shared<op::Constant>(et, shape, c);
+    auto node = op::Constant::create(et, shape, c);
     auto new_node = node->copy_with_new_args(Nodes{});
     auto node_cast = dynamic_pointer_cast<op::Constant>(new_node);
     ASSERT_NE(node_cast, nullptr);
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(Nodes{} == new_node->get_arguments());
-    ASSERT_TRUE(node_cast->get_value_strings() == c);
+    ASSERT_TRUE(Nodes{} == new_node->get_input_ops());
+    ASSERT_TRUE(node_cast->get_vector<float>() == c);
     ASSERT_TRUE(node_cast->get_shape() == shape);
     ASSERT_TRUE(node_cast->get_element_type() == et);
 }
@@ -182,7 +160,7 @@ TEST(copy, convert)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(new_args == new_node->get_input_ops());
     ASSERT_TRUE(et == node_cast->get_convert_element_type());
 }
 
@@ -244,7 +222,7 @@ TEST(copy, FunctionCall)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(new_args == new_node->get_input_ops());
     ASSERT_TRUE(node_cast->get_function() == f);
 }
 
@@ -258,13 +236,13 @@ TEST(copy, GetTupleElement)
 
     std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(tuple_type)};
 
-    auto node = make_shared<op::GetTupleElement>(arg0, n);
+    auto node = make_shared<op::XLAGetTupleElement>(arg0, n);
     auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::GetTupleElement>(new_node);
+    auto node_cast = dynamic_pointer_cast<op::XLAGetTupleElement>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(new_args == new_node->get_input_ops());
     ASSERT_TRUE(node_cast->get_n() == n);
 }
 
@@ -327,7 +305,7 @@ TEST(copy, parameter)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_node->get_arguments().size() == 0);
+    ASSERT_TRUE(new_node->get_input_ops().size() == 0);
     ASSERT_TRUE(node->get_value_type() == new_node->get_value_type());
 }
 
@@ -358,7 +336,7 @@ TEST(copy, reduce)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(new_args == new_node->get_input_ops());
     ASSERT_TRUE(f == node_cast->get_function());
     ASSERT_TRUE(axes == node_cast->get_reduction_axes());
 }
@@ -384,7 +362,7 @@ TEST(copy, reshape)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(new_args == new_node->get_input_ops());
     ASSERT_TRUE(axes == node_cast->get_input_order());
     ASSERT_TRUE(shape_out == node_cast->get_output_shape());
 }
@@ -406,7 +384,7 @@ TEST(copy, select)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(new_args == new_node->get_input_ops());
 }
 
 TEST(copy, sign)
@@ -441,7 +419,7 @@ TEST(copy, slice)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(new_args == new_node->get_input_ops());
     ASSERT_TRUE(lower == node_cast->get_lower_bounds());
     ASSERT_TRUE(upper == node_cast->get_upper_bounds());
     ASSERT_TRUE(strides == node_cast->get_strides());
@@ -466,7 +444,7 @@ TEST(copy, sum)
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(new_args == new_node->get_input_ops());
     ASSERT_TRUE(axes == node_cast->get_reduction_axes());
 }
 
@@ -489,11 +467,11 @@ TEST(copy, tuple)
         make_shared<op::Parameter>(element::Float32::element_type(), shape),
         make_shared<op::Parameter>(element::Float32::element_type(), shape)};
 
-    auto node = make_shared<op::Tuple>(Nodes{arg0, arg1});
+    auto node = make_shared<op::XLATuple>(Nodes{arg0, arg1});
     auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::Tuple>(new_node);
+    auto node_cast = dynamic_pointer_cast<op::XLATuple>(new_node);
     ASSERT_NE(node_cast, nullptr);
 
     ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_arguments());
+    ASSERT_TRUE(new_args == new_node->get_input_ops());
 }

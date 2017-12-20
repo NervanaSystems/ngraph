@@ -52,3 +52,18 @@ Tensor& Output::get_tensor()
 {
     return m_tensor_view->get_tensor();
 }
+
+std::shared_ptr<const TensorViewType> Output::get_tensor_view_type() const
+{
+    return get_tensor_view()->get_tensor_view_type();
+}
+
+const Shape& Output::get_shape() const
+{
+    return get_tensor_view_type()->get_shape();
+}
+
+const element::Type& Output::get_element_type() const
+{
+    return get_tensor_view_type()->get_element_type();
+}

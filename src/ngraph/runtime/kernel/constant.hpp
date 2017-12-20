@@ -21,7 +21,7 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void constant(T* arg0, T* out, size_t count)
+            void constant(const T* arg0, T* out, size_t count)
             {
                 for (size_t i = 0; i < count; i++)
                 {

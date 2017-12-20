@@ -30,8 +30,8 @@ TEST(build_graph, build_simple)
     auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto dot = make_shared<op::Dot>(arg2, arg0);
-    ASSERT_EQ(dot->get_arguments()[0], arg2);
-    ASSERT_EQ(dot->get_arguments()[1], arg0);
+    ASSERT_EQ(dot->get_input_ops()[0], arg2);
+    ASSERT_EQ(dot->get_input_ops()[1], arg0);
 
     auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), Shape{32, 3});
     auto cluster_0 =
@@ -76,19 +76,19 @@ TEST(build_graph, literal)
 {
     // float scalar from a float
     //auto float0 = FloatConstant::make(3.0);
-    auto float_t = ngraph::runtime::make_tensor<element::Float32>(Shape{}, {3.0});
-    auto float0 = make_shared<op::Float32Constant>(Shape{}, float_t);
+    vector<float> float_t{3.0};
+    auto float0 = make_shared<op::Constant>(element::f32, Shape{}, float_t);
     auto float_scalar_type = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
-    ASSERT_EQ(float0->get_value()->get_vector(), std::vector<float>{3.0});
+    ASSERT_EQ(float0->get_vector<float>(), std::vector<float>{3.0});
     ASSERT_EQ(*float0->get_value_type(), *float_scalar_type);
     auto d = make_shared<op::Dot>(float0, float0);
-    ASSERT_EQ(d->get_arguments().at(0), float0);
-    ASSERT_EQ(d->get_arguments().at(1), float0);
+    ASSERT_EQ(d->get_input_ops().at(0), float0);
+    ASSERT_EQ(d->get_input_ops().at(1), float0);
 
-    auto int32_t = ngraph::runtime::make_tensor<element::Int32>(Shape{}, {3});
-    auto int32_0 = make_shared<op::Int32Constant>(Shape{}, int32_t);
+    vector<int32_t> int32{3};
+    auto int32_0 = make_shared<op::Constant>(element::i32, Shape{}, int32);
     auto int32_scalar_type = make_shared<TensorViewType>(element::Int32::element_type(), Shape{});
-    ASSERT_EQ(int32_0->get_value()->get_vector(), std::vector<int>{3});
+    ASSERT_EQ(int32_0->get_vector<int32_t>(), std::vector<int>{3});
     ASSERT_EQ(*int32_0->get_value_type(), *int32_scalar_type);
     ASSERT_NE(*int32_0->get_value_type(), *float_scalar_type);
 }
@@ -97,19 +97,19 @@ TEST(build_graph, tensor)
 {
     // float scalar from a float
     //auto float0 = FloatConstant::make(3.0);
-    auto float_t = ngraph::runtime::make_tensor<element::Float32>(Shape{2, 3});
-    auto float0 = make_shared<op::Float32Constant>(Shape{2, 3}, float_t);
-    auto float_tensor_type =
-        make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 3});
+    Shape shape{2, 3};
+    vector<float> float_t(shape_size(shape), 0);
+    auto float0 = make_shared<op::Constant>(element::f32, shape, float_t);
+    auto float_tensor_type = make_shared<TensorViewType>(element::Float32::element_type(), shape);
     ASSERT_EQ(*float0->get_value_type(), *float_tensor_type);
     auto d = make_shared<op::Add>(float0, float0);
-    ASSERT_EQ(d->get_arguments().at(0), float0);
-    ASSERT_EQ(d->get_arguments().at(1), float0);
+    ASSERT_EQ(d->get_input_ops().at(0), float0);
+    ASSERT_EQ(d->get_input_ops().at(1), float0);
 
-    auto int32_t = ngraph::runtime::make_tensor<element::Int32>(Shape{3, 5});
-    auto int32_0 = make_shared<op::Int32Constant>(Shape{3, 5}, int32_t);
-    auto int32_tensor_type =
-        make_shared<TensorViewType>(element::Int32::element_type(), Shape{3, 5});
+    Shape ishape{3, 5};
+    vector<int32_t> idata(shape_size(ishape), 0);
+    auto int32_0 = make_shared<op::Constant>(element::i32, ishape, idata);
+    auto int32_tensor_type = make_shared<TensorViewType>(element::Int32::element_type(), ishape);
     ASSERT_EQ(*int32_0->get_value_type(), *int32_tensor_type);
     ASSERT_NE(*int32_0->get_value_type(), *float_tensor_type);
 }
@@ -130,8 +130,8 @@ TEST(build_graph, function_undeclared_parameters)
     auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto dot = make_shared<op::Dot>(arg2, arg0);
-    ASSERT_EQ(dot->get_arguments()[0], arg2);
-    ASSERT_EQ(dot->get_arguments()[1], arg0);
+    ASSERT_EQ(dot->get_input_ops()[0], arg2);
+    ASSERT_EQ(dot->get_input_ops()[1], arg0);
 
     auto result_type = make_shared<TensorViewType>(element::Float32::element_type(), Shape{32, 3});
 
@@ -162,8 +162,8 @@ TEST(build_graph, function_incorrect_return_type)
     auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto dot = make_shared<op::Dot>(arg2, arg0);
-    ASSERT_EQ(dot->get_arguments()[0], arg2);
-    ASSERT_EQ(dot->get_arguments()[1], arg0);
+    ASSERT_EQ(dot->get_input_ops()[0], arg2);
+    ASSERT_EQ(dot->get_input_ops()[1], arg0);
 
     auto incorrect_result_type =
         make_shared<TensorViewType>(element::Int32::element_type(), Shape{32, 3});
@@ -198,8 +198,8 @@ TEST(build_graph, function_no_declared_return_type)
     auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
     auto dot = make_shared<op::Dot>(arg2, arg0);
-    ASSERT_EQ(dot->get_arguments()[0], arg2);
-    ASSERT_EQ(dot->get_arguments()[1], arg0);
+    ASSERT_EQ(dot->get_input_ops()[0], arg2);
+    ASSERT_EQ(dot->get_input_ops()[1], arg0);
 
     auto f = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg2, arg3});
     auto f_rt = f->get_result_type();
