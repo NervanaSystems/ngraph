@@ -351,7 +351,24 @@ using namespace ngraph::runtime;
         writer << "\n";
 
         writer << "// Define outputs\n";
+
+        // create alias list
         size_t output_index = 0;
+        unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
+        vector<size_t> aliases;
+        for (const descriptor::Output* output : current_function->get_outputs())
+        {
+            shared_ptr<descriptor::TensorView> otv = output->get_tensor_view();
+            vector<size_t>& al = output_alias_map[otv.get()];
+            al.push_back(output_index);
+            if (al.size() > 1)
+            {
+                aliases.push_back(output_index);
+            }
+            output_index++;
+        }
+
+        output_index = 0;
         set<string> output_names;
         for (const descriptor::Output* output : current_function->get_outputs())
         {
@@ -373,7 +390,7 @@ using namespace ngraph::runtime;
                     }
                 }
             }
-            if (!parameter_as_output)
+            if (!parameter_as_output && !contains(aliases, output_index))
             {
                 string type = et.c_type_string();
                 writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<" << type
@@ -413,13 +430,13 @@ using namespace ngraph::runtime;
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
-                auto tv = output.get_tensor_view();
+                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
                 in.push_back(TensorViewWrapper(tv));
             }
             vector<TensorViewWrapper> out;
             for (const descriptor::Output& output : node->get_outputs())
             {
-                auto tv = output.get_tensor_view();
+                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
                 out.push_back(TensorViewWrapper(tv));
             }
             if (m_emit_timing)
@@ -427,6 +444,7 @@ using namespace ngraph::runtime;
                 emit_debug_function_entry(writer, node.get(), in, out);
             }
             handler->second(&emitter, node.get(), in, out);
+            handle_output_alias(writer, *node, output_alias_map);
             if (m_emit_timing)
             {
                 emit_debug_function_exit(writer, node.get(), in, out);
@@ -468,6 +486,35 @@ using namespace ngraph::runtime;
     if (m_release_function)
     {
         release_function();
+    }
+}
+
+void runtime::cpu::CPU_ExternalFunction::handle_output_alias(
+    codegen::CodeWriter& writer,
+    const Node& node,
+    const unordered_map<descriptor::TensorView*, vector<size_t>>& output_alias_map)
+{
+    for (const descriptor::Output& output : node.get_outputs())
+    {
+        shared_ptr<descriptor::TensorView> otv = output.get_tensor_view();
+        auto it = output_alias_map.find(otv.get());
+        if (it != output_alias_map.end())
+        {
+            const vector<size_t>& outputs = it->second;
+            if (outputs.size() > 1)
+            {
+                writer << "{    // handle output alias for previous op\n";
+                writer.indent++;
+                for (size_t i = 1; i < outputs.size(); i++)
+                {
+                    writer << "memcpy(static_cast<void*>(outputs[" << outputs[i]
+                           << "]), static_cast<void*>(outputs[" << outputs[0] << "]), "
+                           << otv->get_tensor().size() << ");\n";
+                }
+                writer.indent--;
+                writer << "}\n";
+            }
+        }
     }
 }
 
