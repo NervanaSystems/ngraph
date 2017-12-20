@@ -362,7 +362,6 @@ using namespace ngraph::runtime;
             {
                 aliases.push_back(output_index);
             }
-            NGRAPH_INFO << otv.get() << ", " << otv->get_tensor().get_name();
             output_index++;
         }
 
@@ -495,7 +494,6 @@ void runtime::cpu::CPU_ExternalFunction::handle_output_alias(
     for (const descriptor::Output& output : node.get_outputs())
     {
         shared_ptr<descriptor::TensorView> otv = output.get_tensor_view();
-        NGRAPH_INFO << otv.get() << ", " << otv->get_tensor().get_name();
         auto it = output_alias_map.find(otv.get());
         if (it != output_alias_map.end())
         {
