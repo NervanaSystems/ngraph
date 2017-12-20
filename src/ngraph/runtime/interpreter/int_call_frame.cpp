@@ -65,6 +65,22 @@ void runtime::interpreter::INT_CallFrame::call(
         }
     }
 
+    // create alias list
+    size_t output_index = 0;
+    unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
+    vector<size_t> aliases;
+    for (const descriptor::Output* output : function->get_outputs())
+    {
+        shared_ptr<descriptor::TensorView> otv = output->get_tensor_view();
+        vector<size_t>& al = output_alias_map[otv.get()];
+        al.push_back(output_index);
+        if (al.size() > 1)
+        {
+            aliases.push_back(output_index);
+        }
+        output_index++;
+    }
+
     // Invoke computation
     for (shared_ptr<Node> op : function->get_ordered_ops())
     {
@@ -136,6 +152,8 @@ void runtime::interpreter::INT_CallFrame::call(
             generate_calls(base_type, secondary_type, *op, inputs, outputs);
         }
 
+        handle_output_alias(*op, output_alias_map, output_tvs);
+
         // Delete any obsolete tensors
         for (const descriptor::Tensor* t : op->liveness_free_list)
         {
@@ -146,6 +164,32 @@ void runtime::interpreter::INT_CallFrame::call(
                     NGRAPH_INFO << "delete tmp " << t->get_name();
                     tensor_map.erase(it);
                     break;
+                }
+            }
+        }
+    }
+}
+
+void runtime::interpreter::INT_CallFrame::handle_output_alias(
+    const Node& node,
+    const unordered_map<descriptor::TensorView*, vector<size_t>>& output_alias_map,
+    const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs)
+{
+    for (const descriptor::Output& output : node.get_outputs())
+    {
+        shared_ptr<descriptor::TensorView> otv = output.get_tensor_view();
+        auto it = output_alias_map.find(otv.get());
+        if (it != output_alias_map.end())
+        {
+            const vector<size_t>& outputs = it->second;
+            if (outputs.size() > 1)
+            {
+                for (size_t i = 1; i < outputs.size(); i++)
+                {
+                    NGRAPH_INFO << "output alias";
+                    memcpy(static_cast<void*>(output_tvs[i]->get_data_ptr()),
+                           static_cast<void*>(output_tvs[0]->get_data_ptr()),
+                           otv->get_tensor().size());
                 }
             }
         }
