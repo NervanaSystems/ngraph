@@ -28,7 +28,7 @@ DBUILD_DIR = ${DIR}/contrib/docker/.build-${DBUILD_VERSION}
 
 # For gcc builds, we do NOT regard warnings as errors
 # For clang builds, we DO make warnings into errors
-CMAKE_OPTIONS_COMMON=-DNGRAPH_BUILD_DOXYGEN_DOCS=ON -DNGRAPH_BUILD_SPHINX_DOCS=ON
+CMAKE_OPTIONS_COMMON=-DNGRAPH_BUILD_DOXYGEN_DOCS=ON -DNGRAPH_BUILD_SPHINX_DOCS=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo
 CMAKE_OPTIONS_GCC=$CMAKE_OPTIONS_COMMON -DNGRAPH_INSTALL_PREFIX=${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC/ngraph_dist
 CMAKE_OPTIONS_CLANG=$CMAKE_OPTIONS_COMMON -DNGRAPH_INSTALL_PREFIX=${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG/ngraph_dist -DCMAKE_CXX_COMPILER=clang++-3.9 -DCMAKE_C_COMPILER=clang-3.9 -DNGRAPH_WARNINGS_AS_ERRORS=ON
 
@@ -141,7 +141,7 @@ install_gcc: check_gcc
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC ; test -d ngraph_dist && rm -fr ngraph_dist && echo 'Removed old ngraph_dist directory' ; make install 2>&1 | tee make_install_gcc.log ; tar cvzf ngraph_dist_gcc.tgz ngraph_dist 2>&1 | tee make_tarball_gcc.log" \
+            --env RUN_CMD="set -e ; set -o pipefail; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-GCC ; test -d ngraph_dist && rm -fr ngraph_dist && echo 'Removed old ngraph_dist directory' ; make install 2>&1 | tee make_install_gcc.log ; tar czf ngraph_dist_gcc.tgz ngraph_dist 2>&1 | tee make_tarball_gcc.log" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
@@ -151,7 +151,7 @@ install_clang: check_clang
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
             --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG ; test -d ngraph_dist && rm -fr ngraph_dist && echo 'Removed old ngraph_dist directory' ; make install 2>&1 | tee make_install_clang.log ; tar cvzf ngraph_dist_clang.tgz ngraph_dist 2>&1 | tee make_tarball_clang.log" \
+            --env RUN_CMD="set -e ; set -o pipefail; cd ${DOCKUSER_HOME}/ngraph-cpp-test/BUILD-CLANG ; test -d ngraph_dist && rm -fr ngraph_dist && echo 'Removed old ngraph_dist directory' ; make install 2>&1 | tee make_install_clang.log ; tar czf ngraph_dist_clang.tgz ngraph_dist 2>&1 | tee make_tarball_clang.log" \
             "build_ngraph_cpp:${DBUILD_VERSION}" \
 	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
 
