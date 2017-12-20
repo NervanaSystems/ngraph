@@ -63,8 +63,11 @@ TEST(${BACKEND_NAME}, aliased_output)
 
     copy_data(a, vector<float>{0, 1, 2, 3});
     copy_data(b, vector<float>{1, 2, 3, 4});
+    vector<float> expected{1, 3, 5, 7};
 
     cf->call({a, b}, {out1, out2});
+    EXPECT_EQ(expected, out1->get_vector<float>());
+    EXPECT_EQ(expected, out2->get_vector<float>());
     // EXPECT_EQ(result->get_vector<float>(),
     //           (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
