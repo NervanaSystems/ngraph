@@ -161,7 +161,6 @@ void runtime::interpreter::INT_CallFrame::call(
             {
                 if (it->second->get_tensor().get_name() == t->get_name())
                 {
-                    NGRAPH_INFO << "delete tmp " << t->get_name();
                     tensor_map.erase(it);
                     break;
                 }
@@ -186,7 +185,6 @@ void runtime::interpreter::INT_CallFrame::handle_output_alias(
             {
                 for (size_t i = 1; i < outputs.size(); i++)
                 {
-                    NGRAPH_INFO << "output alias";
                     memcpy(static_cast<void*>(output_tvs[i]->get_data_ptr()),
                            static_cast<void*>(output_tvs[0]->get_data_ptr()),
                            otv->get_tensor().size());
