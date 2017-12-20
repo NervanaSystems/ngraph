@@ -125,9 +125,9 @@ std::list<shared_ptr<Node>> Function::get_ops() const
 {
     std::list<shared_ptr<Node>> roots;
 
-    for (auto root: m_parameters)
+    for (auto root : m_parameters)
         roots.insert(roots.end(), root);
-    for (auto root: m_results)
+    for (auto root : m_results)
         roots.insert(roots.end(), root);
 
     return topological_sort(roots);
