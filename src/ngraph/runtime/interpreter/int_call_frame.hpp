@@ -63,6 +63,7 @@
 #include "ngraph/runtime/kernel/minimum.hpp"
 #include "ngraph/runtime/kernel/multiply.hpp"
 #include "ngraph/runtime/kernel/negate.hpp"
+#include "ngraph/runtime/kernel/not.hpp"
 #include "ngraph/runtime/kernel/not_equal.hpp"
 #include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/kernel/power.hpp"
@@ -409,6 +410,12 @@ private:
             kernel::negate<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
                               out[0]->get_element_count());
+        }
+        else if (node_op == "Not")
+        {
+            kernel::logical_not(reinterpret_cast<char*>(args[0]->get_data_ptr()),
+                                reinterpret_cast<char*>(out[0]->get_data_ptr()),
+                                out[0]->get_element_count());
         }
         else if (node_op == "NotEqual")
         {

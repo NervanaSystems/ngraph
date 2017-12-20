@@ -1357,6 +1357,15 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(const ngraph::Node* n,
           << "});\n";
 }
 
+void runtime::cpu::CPU_Emitter::EmitNot(const ngraph::Node* n,
+                                        const vector<runtime::cpu::TensorViewWrapper>& args,
+                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    m_out << "kernel::logical_not(" << args[0].get_name() << ",\n"
+          << "                    " << out[0].get_name() << ",\n"
+          << "                    " << out[0].get_size() << ");\n";
+}
+
 //------------------------------------------------------------------------------------------------
 // Utility methods
 //------------------------------------------------------------------------------------------------
