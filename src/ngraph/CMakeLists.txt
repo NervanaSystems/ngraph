@@ -60,6 +60,7 @@ set (SRC
     ops/reduce.cpp
     ops/replace_slice.cpp
     ops/reshape.cpp
+    ops/reverse.cpp
     ops/select.cpp
     ops/sin.cpp
     ops/sinh.cpp
