@@ -58,7 +58,7 @@ namespace ngraph
                 return std::make_shared<Reverse>(new_args.at(0), m_reversed_axes);
             }
 
-            /// \return The order in which to iterate over input axes.
+            /// \return The set of axes to reverse.
             const AxisSet& get_reversed_axes() const { return m_reversed_axes; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
