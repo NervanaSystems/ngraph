@@ -20,6 +20,11 @@
 
 using namespace std;
 
+// This function rewrites all of the
+// #include "../../blah"
+// into something with a dotless relative path. It seems that clang can't handle the .. stuff
+// when the header files are stored in its in-memory filesystem.
+// Eigen has a lot of .. in their header files.
 const string rewrite_header(const string& s, const string& path)
 {
     stringstream ss(s);
