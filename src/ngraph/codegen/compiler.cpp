@@ -42,6 +42,7 @@
 #include <llvm/Support/Timer.h>
 #include <llvm/Support/raw_ostream.h>
 
+#include "header_resource.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
@@ -49,11 +50,12 @@
 
 // TODO: Fix leaks
 
-#define USE_BUILTIN using namespace clang;
+#define USE_BUILTIN
+
+using namespace clang;
 using namespace llvm;
 using namespace llvm::opt;
 using namespace std;
-
 using namespace ngraph::codegen;
 
 static StaticCompiler s_static_compiler;
