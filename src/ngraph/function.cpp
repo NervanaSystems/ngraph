@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <list>
 #include <memory>
 
 #include "ngraph/function.hpp"
@@ -49,22 +50,6 @@ Function::Function(const Nodes& results,
                 "Function result node's value type does not match declared return type");
         }
     }
-
-    traverse_nodes(this, [&](shared_ptr<Node> node) {
-        m_ops.push_back(node);
-
-        std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
-        if (nullptr != p)
-        {
-            auto it = std::find_if(parameters.begin(),
-                                   parameters.end(),
-                                   [p](std::shared_ptr<op::Parameter> q) { return (p == q); });
-            if (it == parameters.end())
-            {
-                throw ngraph_error("Function references undeclared parameter");
-            }
-        }
-    });
 }
 
 Function::Function(const std::shared_ptr<Node>& result,
@@ -136,14 +121,16 @@ std::vector<descriptor::Output*> Function::get_outputs()
     return outputs;
 }
 
-std::list<shared_ptr<Node>>& Function::get_ops()
+std::list<shared_ptr<Node>> Function::get_ops() const
 {
-    return m_ops;
-}
+    std::list<shared_ptr<Node>> roots;
 
-const std::list<shared_ptr<Node>>& Function::get_ops() const
-{
-    return m_ops;
+    for (auto root: m_parameters)
+        roots.insert(roots.end(), root);
+    for (auto root: m_results)
+        roots.insert(roots.end(), root);
+
+    return topological_sort(roots);
 }
 
 std::list<shared_ptr<Node>>& Function::get_ordered_ops()
