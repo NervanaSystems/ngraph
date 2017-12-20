@@ -68,8 +68,6 @@ TEST(${BACKEND_NAME}, aliased_output)
     cf->call({a, b}, {out1, out2});
     EXPECT_EQ(expected, out1->get_vector<float>());
     EXPECT_EQ(expected, out2->get_vector<float>());
-    // EXPECT_EQ(result->get_vector<float>(),
-    //           (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
 
 TEST(${BACKEND_NAME}, parameter_as_output)
