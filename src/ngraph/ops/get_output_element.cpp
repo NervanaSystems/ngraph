@@ -33,5 +33,6 @@ op::GetOutputElement::GetOutputElement(const std::shared_ptr<Node>& arg, size_t 
         throw ngraph_error("Indexing tuple beyond its size");
     }
 
-    set_value_type_checked(arg->get_outputs().at(n).get_tensor_view_type());
+    auto& output = arg->get_outputs().at(n);
+    set_value_type_checked(output.get_element_type(), output.get_shape());
 }

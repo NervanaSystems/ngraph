@@ -19,7 +19,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/parameterized_tensor_view.hpp"
+#include "ngraph/runtime/ngvm/parameterized_tensor_view.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph

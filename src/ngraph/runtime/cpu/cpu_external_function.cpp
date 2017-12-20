@@ -127,22 +127,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Power), &runtime::cpu::CPU_Emitter::EmitPower},
     {TI(ngraph::op::Select), &runtime::cpu::CPU_Emitter::EmitSelect},
     {TI(ngraph::op::Subtract), &runtime::cpu::CPU_Emitter::EmitSubtract},
-    {TI(ngraph::op::ParameterizedConstant<ngraph::element::Bool>),
-     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantBool},
-    {TI(ngraph::op::ParameterizedConstant<ngraph::element::Float32>),
-     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantFloat32},
-    {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int8>),
-     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt8},
-    {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int32>),
-     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt32},
-    {TI(ngraph::op::ParameterizedConstant<ngraph::element::Int64>),
-     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt64},
-    {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt8>),
-     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt8},
-    {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt32>),
-     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt32},
-    {TI(ngraph::op::ParameterizedConstant<ngraph::element::UInt64>),
-     &runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt64},
     {TI(ngraph::op::Broadcast), &runtime::cpu::CPU_Emitter::EmitBroadcast},
     {TI(ngraph::op::Convert), &runtime::cpu::CPU_Emitter::EmitConvert},
     {TI(ngraph::op::Constant), &runtime::cpu::CPU_Emitter::EmitConstant},
@@ -379,9 +363,28 @@ using namespace ngraph::runtime;
         {
             shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
             const element::Type& et = tv->get_tensor_view_type()->get_element_type();
-            string type = et.c_type_string();
-            writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<" << type
-                   << "*>(outputs[" << output_index << "]);\n";
+            bool parameter_as_output = false;
+            for (shared_ptr<op::Parameter> param : current_function->get_parameters())
+            {
+                for (const descriptor::Output& pout : param->get_outputs())
+                {
+                    shared_ptr<descriptor::TensorView> ptv = pout.get_tensor_view();
+                    if (tv == ptv)
+                    {
+                        parameter_as_output = true;
+                        writer << "memcpy(static_cast<" << et.c_type_string() << "*>(outputs["
+                               << output_index << "]), " << ptv->get_tensor().get_name() << ", "
+                               << ptv->get_tensor().size() << ");\n";
+                        break;
+                    }
+                }
+            }
+            if (!parameter_as_output)
+            {
+                string type = et.c_type_string();
+                writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<" << type
+                       << "*>(outputs[" << output_index << "]);\n";
+            }
             output_names.insert(tv->get_tensor().get_name());
             output_index++;
         }

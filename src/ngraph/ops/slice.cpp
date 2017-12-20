@@ -42,22 +42,22 @@ op::Slice::Slice(const std::shared_ptr<Node>& arg,
 
 void op::Slice::check_args()
 {
-    auto arg_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
-    auto& arg_shape = arg_tensor_view_type->get_shape();
+    auto& input = get_inputs().at(0);
+    auto& input_shape = input.get_shape();
 
-    if (m_lower_bounds.size() != arg_shape.size())
+    if (m_lower_bounds.size() != input_shape.size())
     {
         throw ngraph_error(
             "Number of lower bounds provided for slice does not match number of input axes");
     }
 
-    if (m_upper_bounds.size() != arg_shape.size())
+    if (m_upper_bounds.size() != input_shape.size())
     {
         throw ngraph_error(
             "Number of upper bounds provided for slice does not match number of input axes");
     }
 
-    if (m_strides.size() != arg_shape.size())
+    if (m_strides.size() != input_shape.size())
     {
         throw ngraph_error(
             "Number of strides provided for slice does not match number of input axes");
@@ -65,9 +65,9 @@ void op::Slice::check_args()
 
     Shape result_shape;
 
-    for (size_t i = 0; i < arg_shape.size(); i++)
+    for (size_t i = 0; i < input_shape.size(); i++)
     {
-        if (m_upper_bounds[i] > arg_shape[i])
+        if (m_upper_bounds[i] > input_shape[i])
         {
             throw ngraph_error("Upper bound for slice is out of range");
         }
@@ -88,8 +88,7 @@ void op::Slice::check_args()
         result_shape.push_back(result_axis_size);
     }
 
-    set_value_type_checked(
-        make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), result_shape));
+    set_value_type_checked(input.get_element_type(), result_shape);
 }
 
 void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)

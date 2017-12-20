@@ -259,9 +259,8 @@ private:
         }
         else if (node_op == "Constant")
         {
-            auto c = static_cast<const op::Constant*>(&node);
-            std::vector<T> input = ngraph::parse_string<T>(c->get_value_strings());
-            kernel::constant<T>(reinterpret_cast<T*>(input.data()),
+            const op::Constant* c = static_cast<const op::Constant*>(&node);
+            kernel::constant<T>(reinterpret_cast<const T*>(c->get_data_ptr()),
                                 reinterpret_cast<T*>(out[0]->get_data_ptr()),
                                 out[0]->get_element_count());
         }
@@ -425,98 +424,6 @@ private:
         }
         else if (node_op == "Parameter")
         {
-        }
-        else if (node_op == "ParameterizedConstant")
-        {
-            // I would like to appologize for this...
-            element::Type type = element::from<T>();
-            const void* data;
-            if (type == element::boolean)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Bool>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::f32)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Float32>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::f64)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Float64>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::i8)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Int8>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::i16)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Int16>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::i32)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Int32>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::i64)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::Int64>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::u8)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::UInt8>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::u16)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::UInt16>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::u32)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::UInt32>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else if (type == element::u64)
-            {
-                data = dynamic_cast<const op::ParameterizedConstant<element::UInt64>*>(&node)
-                           ->get_value()
-                           ->get_vector()
-                           .data();
-            }
-            else
-            {
-                std::stringstream ss;
-                ss << "unsupported element type " << type << " op " << node.get_name();
-                throw std::runtime_error(ss.str());
-            }
-            kernel::copy<T>(reinterpret_cast<T*>(const_cast<void*>(data)),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
         }
         else if (node_op == "Power")
         {
