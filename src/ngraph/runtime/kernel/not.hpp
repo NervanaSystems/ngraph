@@ -20,9 +20,9 @@ namespace ngraph
     {
         namespace kernel
         {
-            void logical_not(char* arg,
-                             char* out,
-                             size_t count) // TODO: using char for bool, is this right?
+            static void logical_not(char* arg,
+                                    char* out,
+                                    size_t count) // TODO: using char for bool, is this right?
             {
                 for (size_t i = 0; i < count; i++)
                 {

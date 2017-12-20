@@ -4463,3 +4463,24 @@ TEST(${BACKEND_NAME}, DISABLED_parameter_to_output)
     cf->call({a}, {result});
     EXPECT_EQ((vector<float>{1, -2, 0, -4.8f}), result->get_vector<float>());
 }
+
+TEST(${BACKEND_NAME}, not)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto result_type = make_shared<TensorViewType>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::Not>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::boolean, shape);
+    copy_data(a, vector<char>{1, 0, 2, 0});
+    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<char>{0, 1, 0, 1}), result->get_vector<char>());
+}
