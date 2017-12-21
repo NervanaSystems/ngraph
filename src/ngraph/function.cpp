@@ -50,6 +50,10 @@ Function::Function(const Nodes& results,
                 "Function result node's value type does not match declared return type");
         }
     }
+
+    // Running get_ops ensures that all the nodes required to compute the results are passed
+    // in as parameters.
+    get_ops();
 }
 
 Function::Function(const std::shared_ptr<Node>& result,
