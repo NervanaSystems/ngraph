@@ -83,7 +83,7 @@ TEST(tensor, size)
 template <typename T>
 void test_read_write(const std::vector<T>& x)
 {
-    auto manager = ngraph::runtime::Manager::get("NGVM");
+    auto manager = ngraph::runtime::Manager::get("INTERPRETER");
     auto backend = manager->allocate_backend();
 
     auto a = backend->make_primary_tensor_view(element::from<T>(), Shape{2, x.size()});
