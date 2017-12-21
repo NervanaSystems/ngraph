@@ -56,7 +56,11 @@ namespace ngraph
             }
 
             /// \return The function to be called.
-            std::shared_ptr<Function> get_function() const override { return m_function; }
+            std::vector<std::shared_ptr<Function>> get_functions() const override
+            {
+                return std::vector<std::shared_ptr<Function>>{m_function};
+            }
+
         protected:
             std::shared_ptr<Function> m_function;
         };

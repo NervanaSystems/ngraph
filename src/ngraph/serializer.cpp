@@ -618,7 +618,7 @@ json write(const Node& n)
     }
     else if (node_op == "FunctionCall")
     {
-        node["function"] = n.get_function()->get_name();
+        node["function"] = n.get_functions()[0]->get_name();
     }
     else if (node_op == "GetOutputElement")
     {
@@ -664,7 +664,7 @@ json write(const Node& n)
     else if (node_op == "Reduce")
     {
         auto tmp = dynamic_cast<const op::Reduce*>(&n);
-        node["function"] = tmp->get_function()->get_name();
+        node["function"] = tmp->get_functions()[0]->get_name();
         node["reduction_axes"] = tmp->get_reduction_axes();
     }
     else if (node_op == "Remainder")

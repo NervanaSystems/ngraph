@@ -57,7 +57,7 @@ namespace ngraph
             /// \param arg_init The initial value for reduction.
             /// \param reduction_function The reduction function to use.
             /// \param window_shape The window shape.
-            /// \param window_movement_stride The window movement stride.
+            /// \param window_movement_strides The window movement strides.
             ReduceWindow(const std::shared_ptr<Node>& arg_reductee,
                          const std::shared_ptr<Node>& arg_init,
                          const std::shared_ptr<Function>& reduction_function,
@@ -77,11 +77,14 @@ namespace ngraph
             }
 
             /// \return The function to use for reduction.
-            std::shared_ptr<Function> get_function() const override { return m_reduction_function; }
+            std::vector<std::shared_ptr<Function>> get_functions() const override
+            {
+                return std::vector<std::shared_ptr<Function>>{m_reduction_function};
+            }
             /// \return The window shape.
             const Shape& get_window_shape() const { return m_window_shape; }
             /// \return The window movement strides.
-            const Strides& get_window_movement_strides() const { return m_window_shape; }
+            const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
         protected:
             std::shared_ptr<Function> m_reduction_function;
             Shape m_window_shape;

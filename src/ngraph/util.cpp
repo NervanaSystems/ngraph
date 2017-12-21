@@ -196,8 +196,8 @@ void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
         stack.pop_front();
         for (shared_ptr<Node> op : func->get_ops())
         {
-            shared_ptr<Function> fp = op->get_function();
-            if (fp)
+            vector<shared_ptr<Function>> fps = op->get_functions();
+            for (shared_ptr<Function> fp : fps)
             {
                 stack.push_front(fp);
             }

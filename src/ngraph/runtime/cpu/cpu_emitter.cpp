@@ -655,7 +655,7 @@ void runtime::cpu::CPU_Emitter::EmitFunctionCall(
     const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto function_call = static_cast<const op::FunctionCall*>(n);
-    shared_ptr<Function> function = function_call->get_function();
+    shared_ptr<Function> function = function_call->get_functions()[0];
 
     m_out << "{   // Call " << function->get_name() << "\n";
     m_out.indent++;
@@ -675,7 +675,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(const ngraph::Node* n,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto reduce = static_cast<const op::Reduce*>(n);
-    auto reduction_function = reduce->get_function();
+    auto reduction_function = reduce->get_functions()[0];
 
     auto reductee_shape = args[0].get_shape();
 

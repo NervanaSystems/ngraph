@@ -340,7 +340,7 @@ private:
         }
         else if (node_op == "FunctionCall")
         {
-            std::shared_ptr<Function> function = node.get_function();
+            std::shared_ptr<Function> function = node.get_functions()[0];
             call(function, args, out);
         }
         else if (node_op == "XLAGetTupleElement")
@@ -446,7 +446,7 @@ private:
         else if (node_op == "Reduce")
         {
             ngraph::op::Reduce* reduce = dynamic_cast<ngraph::op::Reduce*>(&node);
-            std::shared_ptr<ngraph::Function> reduction_function = reduce->get_function();
+            std::shared_ptr<ngraph::Function> reduction_function = reduce->get_functions()[0];
 
             auto in_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(
                 node.get_input_op(0)->get_value_type());

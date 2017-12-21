@@ -223,7 +223,7 @@ TEST(copy, FunctionCall)
 
     ASSERT_TRUE(nullptr != new_node);
     ASSERT_TRUE(new_args == new_node->get_input_ops());
-    ASSERT_TRUE(node_cast->get_function() == f);
+    ASSERT_TRUE(node_cast->get_functions()[0] == f);
 }
 
 TEST(copy, GetTupleElement)
@@ -337,7 +337,7 @@ TEST(copy, reduce)
 
     ASSERT_TRUE(nullptr != new_node);
     ASSERT_TRUE(new_args == new_node->get_input_ops());
-    ASSERT_TRUE(f == node_cast->get_function());
+    ASSERT_TRUE(f == node_cast->get_functions()[0]);
     ASSERT_TRUE(axes == node_cast->get_reduction_axes());
 }
 

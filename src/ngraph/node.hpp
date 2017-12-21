@@ -118,7 +118,7 @@ namespace ngraph
         virtual std::shared_ptr<Node>
             copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const = 0;
 
-        virtual std::shared_ptr<Function> get_function() const;
+        virtual std::vector<std::shared_ptr<Function>> get_functions() const;
 
     protected:
         void assert_argument_list_equivalency(const Nodes& b);
