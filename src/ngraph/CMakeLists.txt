@@ -93,10 +93,6 @@ set (SRC
     runtime/interpreter/int_manager.cpp
     runtime/interpreter/int_tensor_view.cpp
     runtime/manager.cpp
-    runtime/ngvm/call_frame.cpp
-    runtime/ngvm/external_function.cpp
-    runtime/ngvm/ngvm_backend.cpp
-    runtime/ngvm/ngvm_manager.cpp
     runtime/tensor_view.cpp
     runtime/tuple.cpp
     runtime/utils.cpp

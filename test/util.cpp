@@ -183,7 +183,7 @@ TEST(util, reduce)
 
 TEST(util, all_close)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("INTERPRETER");
     auto backend = manager->allocate_backend();
 
     // Create some tensors for input/output

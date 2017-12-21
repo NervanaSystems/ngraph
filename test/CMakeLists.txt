@@ -56,7 +56,6 @@ add_subdirectory(models)
 # The code for the unit test suite is in test/backend_test.in.cpp
 #================================================================================================
 # TODO add interpreter back to unit tests when it works
-set(BACKEND_NAMES ${BACKEND_NAMES} "NGVM")
 set(BACKEND_NAMES ${BACKEND_NAMES} "INTERPRETER")
 
 if(MKLDNN_INCLUDE_DIR)
@@ -89,10 +88,11 @@ foreach(BACKEND_NAME ${BACKEND_NAMES})
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
 # <special case>
-# This is a special case as NGVM is the only backend that can run these tests
-set(BACKEND_NAME "NGVM")
-configure_file(autodiff.in.cpp autodiff_NGVM.cpp)
-set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_NGVM.cpp)
+# This is a special case as the autodiff test recompile the graph multiple times per
+# test which is slow on the CPU
+set(BACKEND_NAME "INTERPRETER")
+configure_file(autodiff.in.cpp autodiff_${BACKEND_NAME}.cpp)
+set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp)
 # </special cast>
 include_directories(".")
 
