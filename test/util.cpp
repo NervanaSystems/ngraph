@@ -20,7 +20,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/graph_util.hpp"
 #include "util/all_close.hpp"
 #include "util/ndarray.hpp"
 

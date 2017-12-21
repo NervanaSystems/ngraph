@@ -27,7 +27,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace ngraph;
 using namespace std;

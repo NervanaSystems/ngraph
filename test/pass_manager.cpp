@@ -22,7 +22,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/graph_util.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
