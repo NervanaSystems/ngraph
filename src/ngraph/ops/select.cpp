@@ -33,7 +33,7 @@ op::Select::Select(const std::shared_ptr<Node>& arg0,
     auto& input_1 = get_inputs().at(1);
     auto& input_2 = get_inputs().at(2);
 
-    if (input_0.get_element_type() != element::Bool::element_type())
+    if (input_0.get_element_type() != element::boolean)
     {
         throw ngraph_error("Argument 0 for arithmetic operators must have boolean element type");
     }
@@ -56,9 +56,8 @@ void ngraph::op::Select::generate_adjoints(autodiff::Adjoints& adjoints,
     auto x = get_inputs().at(1).get_output().get_node();
     auto y = get_inputs().at(2).get_output().get_node();
 
-    auto p_as_float = std::make_shared<op::Convert>(p, element::Float32::element_type());
-    auto not_p_as_float = std::make_shared<op::Convert>(std::make_shared<op::Not>(p),
-                                                        element::Float32::element_type());
+    auto p_as_float = std::make_shared<op::Convert>(p, element::f32);
+    auto not_p_as_float = std::make_shared<op::Convert>(std::make_shared<op::Not>(p), element::f32);
 
     adjoints.add_delta(x, delta * p_as_float);
     adjoints.add_delta(y, delta * not_p_as_float);

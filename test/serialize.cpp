@@ -35,7 +35,7 @@ static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
 TEST(serialize, tuple)
 {
     auto shape = Shape{2, 2};
-    auto tensor_view_type = make_shared<TensorViewType>(element::Int64::element_type(), shape);
+    auto tensor_view_type = make_shared<TensorViewType>(element::i64, shape);
 
     auto A = make_shared<op::Parameter>(tensor_view_type);
     auto B = make_shared<op::Parameter>(tensor_view_type);
@@ -61,17 +61,17 @@ TEST(serialize, main)
 {
     // First create "f(A,B,C) = (A+B)*C".
     auto shape = Shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt_f = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto rt_f = make_shared<TensorViewType>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, rt_f, op::Parameters{A, B, C}, "f");
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
-    auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Y = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Z = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt_g = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto X = make_shared<op::Parameter>(element::f32, shape);
+    auto Y = make_shared<op::Parameter>(element::f32, shape);
+    auto Z = make_shared<op::Parameter>(element::f32, shape);
+    auto rt_g = make_shared<TensorViewType>(element::f32, shape);
     auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}) +
                                        make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}),
                                    rt_g,
@@ -79,10 +79,10 @@ TEST(serialize, main)
                                    "g");
 
     // Now make "h(X,Y,Z) = g(X,Y,Z) + g(X,Y,Z)"
-    auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Y1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Z1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt_h = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto X1 = make_shared<op::Parameter>(element::f32, shape);
+    auto Y1 = make_shared<op::Parameter>(element::f32, shape);
+    auto Z1 = make_shared<op::Parameter>(element::f32, shape);
+    auto rt_h = make_shared<TensorViewType>(element::f32, shape);
     auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}) +
                                        make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}),
                                    rt_h,
@@ -105,13 +105,13 @@ TEST(serialize, main)
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
-    auto x = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    auto x = backend->make_primary_tensor_view(element::f32, shape);
     copy_data(x, vector<float>{1, 2, 3, 4});
-    auto y = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    auto y = backend->make_primary_tensor_view(element::f32, shape);
     copy_data(y, vector<float>{5, 6, 7, 8});
-    auto z = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    auto z = backend->make_primary_tensor_view(element::f32, shape);
     copy_data(z, vector<float>{9, 10, 11, 12});
-    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape);
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({x, y, z}, {result});
     EXPECT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
