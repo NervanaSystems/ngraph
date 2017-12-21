@@ -514,7 +514,7 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
