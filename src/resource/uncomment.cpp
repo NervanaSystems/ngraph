@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <iostream>
 #include <sstream>
 
 #include "uncomment.hpp"
@@ -26,26 +27,22 @@ void skip_comment(istream& s)
 
 string uncomment(const string& s)
 {
-    stringstream ss(s);
     stringstream out;
-    while (ss)
+    for (size_t i = 0; i < s.size(); i++)
     {
-        char c;
-        ss >> c;
-        out << c;
+        char c = s[i];
+        if (i < s.size() - 1 && c == '/' && s[i + 1] == '/')
+        {
+            while (i < s.size() && c != '\n')
+            {
+                c = s[++i];
+            }
+            out << "\n";
+        }
+        else
+        {
+            out << c;
+        }
     }
-    // for (string line; ss; getline(ss, line))
-    // {
-    //     for (size_t i = 0; i < line.size(); i++)
-    //     {
-    //         if (i < line.size() - 2 && line[i] == '/' && line[i + 1] == '/')
-    //         {
-    //             // start of a line comment
-    //             out << '\n';
-    //             break;
-    //         }
-    //         out << line[i];
-    //     }
-    // }
     return out.str();
 }
