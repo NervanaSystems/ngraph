@@ -29,6 +29,18 @@
 using namespace std;
 using namespace ngraph;
 
+static int n_tests()
+{
+    if (std::string("${BACKEND_NAME}") == std::string("CPU"))
+    {
+        return 5;
+    }
+    else
+    {
+        return 100;
+    }
+}
+
 template <typename T>
 bool autodiff_numeric_compare(const std::shared_ptr<runtime::Manager>& manager,
                               const std::shared_ptr<runtime::Backend>& backend,
@@ -111,7 +123,7 @@ TEST(${BACKEND_NAME}, backwards_abs)
             make_shared<op::Abs>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x_neg = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -303,7 +315,7 @@ TEST(${BACKEND_NAME}, backwards_ceiling)
             make_shared<op::Ceiling>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x_minusone = rng_minusone.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -335,7 +347,7 @@ TEST(${BACKEND_NAME}, backwards_cos)
             make_shared<op::Cos>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -356,7 +368,7 @@ TEST(${BACKEND_NAME}, backwards_cosh)
             make_shared<op::Cosh>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -523,7 +535,7 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -578,7 +590,7 @@ TEST(${BACKEND_NAME}, backwards_floor)
             make_shared<op::Floor>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x_minusone = rng_minusone.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -766,7 +778,7 @@ TEST(${BACKEND_NAME}, backwards_replace_slice)
             std::vector<std::shared_ptr<op::Parameter>>{X, Y});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape_x));
         auto y = rng.initialize(backend->make_primary_tensor_view<float>(shape_y));
@@ -810,7 +822,7 @@ TEST(${BACKEND_NAME}, backwards_select)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x0 = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
         x0->write(vector<char>{0, 1, 0, 1, 0, 1});
@@ -844,7 +856,7 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x0 = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
         x0->write(vector<char>{0, 1, 0, 1, 0, 1});
@@ -879,7 +891,7 @@ TEST(${BACKEND_NAME}, backwards_sign)
             make_shared<op::Sign>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x_neg = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -906,7 +918,7 @@ TEST(${BACKEND_NAME}, backwards_sin)
             make_shared<op::Sin>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -927,7 +939,7 @@ TEST(${BACKEND_NAME}, backwards_sinh)
             make_shared<op::Sinh>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -949,7 +961,7 @@ TEST(${BACKEND_NAME}, backwards_slice)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -971,7 +983,7 @@ TEST(${BACKEND_NAME}, backwards_sqrt)
             make_shared<op::Sqrt>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -1091,7 +1103,7 @@ TEST(${BACKEND_NAME}, backwards_tan)
             make_shared<op::Tan>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x_r = rng_r.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -1118,7 +1130,7 @@ TEST(${BACKEND_NAME}, backwards_tanh)
             make_shared<op::Tanh>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < n_tests(); i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 

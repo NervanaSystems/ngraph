@@ -85,7 +85,7 @@ void test_read_write(const std::vector<typename ET::type>& x)
 {
     using T = typename ET::type;
 
-    auto manager = ngraph::runtime::Manager::get("NGVM");
+    auto manager = ngraph::runtime::Manager::get("INTERPRETER");
     auto backend = manager->allocate_backend();
 
     auto a = backend->make_primary_tensor_view(ET::element_type(), Shape{2, x.size()});
