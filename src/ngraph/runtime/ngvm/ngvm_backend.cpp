@@ -15,6 +15,7 @@
 #include "ngraph/runtime/ngvm/ngvm_backend.hpp"
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/ngvm/parameterized_tensor_view.hpp"
+#include "ngraph/runtime/ngvm/types.hpp"
 
 using namespace ngraph::runtime::ngvm;
 
@@ -29,47 +30,47 @@ std::shared_ptr<ngraph::runtime::TensorView>
                                           const Shape& shape)
 {
     std::shared_ptr<TensorView> rc;
-    if (element_type == element::Bool::element_type())
+    if (element_type == element::boolean)
     {
         rc = std::make_shared<ParameterizedTensorView<element::Bool>>(shape);
     }
-    else if (element_type == element::Float32::element_type())
+    else if (element_type == element::f32)
     {
         rc = std::make_shared<ParameterizedTensorView<element::Float32>>(shape);
     }
-    else if (element_type == element::Float64::element_type())
+    else if (element_type == element::f64)
     {
         rc = std::make_shared<ParameterizedTensorView<element::Float64>>(shape);
     }
-    else if (element_type == element::Int8::element_type())
+    else if (element_type == element::i8)
     {
         rc = std::make_shared<ParameterizedTensorView<element::Int8>>(shape);
     }
-    else if (element_type == element::Int16::element_type())
+    else if (element_type == element::i16)
     {
         rc = std::make_shared<ParameterizedTensorView<element::Int16>>(shape);
     }
-    else if (element_type == element::Int32::element_type())
+    else if (element_type == element::i32)
     {
         rc = std::make_shared<ParameterizedTensorView<element::Int32>>(shape);
     }
-    else if (element_type == element::Int64::element_type())
+    else if (element_type == element::i64)
     {
         rc = std::make_shared<ParameterizedTensorView<element::Int64>>(shape);
     }
-    else if (element_type == element::UInt8::element_type())
+    else if (element_type == element::u8)
     {
         rc = std::make_shared<ParameterizedTensorView<element::UInt8>>(shape);
     }
-    else if (element_type == element::UInt16::element_type())
+    else if (element_type == element::u16)
     {
         rc = std::make_shared<ParameterizedTensorView<element::UInt16>>(shape);
     }
-    else if (element_type == element::UInt32::element_type())
+    else if (element_type == element::u32)
     {
         rc = std::make_shared<ParameterizedTensorView<element::UInt32>>(shape);
     }
-    else if (element_type == element::UInt64::element_type())
+    else if (element_type == element::u64)
     {
         rc = std::make_shared<ParameterizedTensorView<element::UInt64>>(shape);
     }
