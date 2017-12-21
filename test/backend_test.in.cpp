@@ -36,13 +36,11 @@ static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
 
 TEST(${BACKEND_NAME}, aliased_output)
 {
-    using f32 = element::Float32;
-
     auto shape = Shape{2, 2};
-    auto A = make_shared<op::Parameter>(f32::element_type(), shape);
-    auto B = make_shared<op::Parameter>(f32::element_type(), shape);
-    auto rt1 = make_shared<TensorViewType>(f32::element_type(), shape);
-    auto rt2 = make_shared<TensorViewType>(f32::element_type(), shape);
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto rt1 = make_shared<TensorViewType>(element::f32, shape);
+    auto rt2 = make_shared<TensorViewType>(element::f32, shape);
     auto C = A + B;
     auto f = make_shared<Function>(Nodes{C, C}, ValueTypes{rt1, rt2}, op::Parameters{A, B});
 
@@ -53,13 +51,13 @@ TEST(${BACKEND_NAME}, aliased_output)
 
     // Create some tensors for input/output
     shared_ptr<runtime::TensorView> a =
-        backend->make_primary_tensor_view(f32::element_type(), shape);
+        backend->make_primary_tensor_view(element::f32, shape);
     shared_ptr<runtime::TensorView> b =
-        backend->make_primary_tensor_view(f32::element_type(), shape);
+        backend->make_primary_tensor_view(element::f32, shape);
     shared_ptr<runtime::TensorView> out1 =
-        backend->make_primary_tensor_view(f32::element_type(), shape);
+        backend->make_primary_tensor_view(element::f32, shape);
     shared_ptr<runtime::TensorView> out2 =
-        backend->make_primary_tensor_view(f32::element_type(), shape);
+        backend->make_primary_tensor_view(element::f32, shape);
 
     copy_data(a, vector<float>{0, 1, 2, 3});
     copy_data(b, vector<float>{1, 2, 3, 4});
