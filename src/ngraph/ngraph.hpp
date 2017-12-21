@@ -100,6 +100,7 @@
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
+#include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/sign.hpp"
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"

@@ -63,6 +63,7 @@ set (SRC
     ops/reshape.cpp
     ops/reverse.cpp
     ops/select.cpp
+    ops/select_and_scatter.cpp
     ops/sin.cpp
     ops/sinh.cpp
     ops/slice.cpp

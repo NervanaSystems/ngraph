@@ -51,7 +51,7 @@ namespace ngraph
         class ReduceWindow : public RequiresTensorViewArgs
         {
         public:
-            /// \brief Constructs a reduction operation.
+            /// \brief Constructs a reduce-window operation.
             ///
             /// \param arg_reductee The tensor view to be reduced.
             /// \param arg_init The initial value for reduction.

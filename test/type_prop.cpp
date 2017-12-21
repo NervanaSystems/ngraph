@@ -3092,3 +3092,938 @@ TEST(type_prop, reduce_window_reduction_function_return_type_mismatch)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, select_and_scatter_deduce_1d)
+{
+    auto param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{13}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{4};
+    Strides move_strides{1};
+
+    auto sas = make_shared<op::SelectAndScatter>(
+        param_0, param_1, param_2, f, g, window_shape, move_strides);
+    ASSERT_EQ(*(sas->get_value_type()), TensorViewType(element::f32, Shape{16}));
+}
+
+TEST(type_prop, select_and_scatter_deduce_2d)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{13, 14}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{4, 5};
+    Strides move_strides{1, 1};
+
+    auto sas = make_shared<op::SelectAndScatter>(
+        param_0, param_1, param_2, f, g, window_shape, move_strides);
+    ASSERT_EQ(*(sas->get_value_type()), TensorViewType(element::f32, Shape{16, 18}));
+}
+
+TEST(type_prop, select_and_scatter_deduce_3d)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{13, 14, 9}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{4, 5, 2};
+    Strides move_strides{1, 1, 1};
+
+    auto sas = make_shared<op::SelectAndScatter>(
+        param_0, param_1, param_2, f, g, window_shape, move_strides);
+    ASSERT_EQ(*(sas->get_value_type()), TensorViewType(element::f32, Shape{16, 18, 10}));
+}
+
+TEST(type_prop, select_and_scatter_deduce_3d_strided)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{4, 3, 2}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{4, 3, 2};
+    Strides move_strides{4, 6, 5};
+
+    auto sas = make_shared<op::SelectAndScatter>(
+        param_0, param_1, param_2, f, g, window_shape, move_strides);
+    ASSERT_EQ(*(sas->get_value_type()), TensorViewType(element::f32, Shape{16, 18, 10}));
+}
+
+TEST(type_prop, select_and_scatter_deduce_3d_strided_uneven)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    auto sas = make_shared<op::SelectAndScatter>(
+        param_0, param_1, param_2, f, g, window_shape, move_strides);
+    ASSERT_EQ(*(sas->get_value_type()), TensorViewType(element::f32, Shape{16, 18, 10}));
+}
+
+TEST(type_prop, select_and_scatter_deduce_init_not_scalar)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{4}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Non-scalar init value not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Argument for initial value is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_init_elem_type_wrong)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect init element type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Element types for selectee and initial values do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_elem_type_wrong)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect source tensor element type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Element types for selectee and source tensors do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_window_shape_wrong_rank)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong window shape rank not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Window shape has different rank from selectee tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_window_strides_wrong_rank)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong window strides rank not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Window movement strides have different rank from selectee tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_window_shape_zero_length_axis)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 0, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Zero-length window shape axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Window shape has a zero-length axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_window_strides_zero_length_axis)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 0, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Zero-length window strides axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Window movement stride for some axis is zero"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_window_too_big)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 19, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Window too big not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Reduction window is bigger than selectee tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_tensor_wrong_shape)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong source tensor shape not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Source tensor does not have expected shape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_count)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   f_rt,
+                                   op::Parameters{f_param_0, f_param_1, f_param_2});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong selection function parameter count not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Selection function has wrong number of parameters (should be two)"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_0_type)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_1, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong type for selection function parameter 0 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 0 of selection function has wrong type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_1_type)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_0), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong type for selection function parameter 1 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 1 of selection function has wrong type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_multi_output)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f_rts = std::vector<std::shared_ptr<const ValueType>>{f_rt, f_rt};
+    auto f = make_shared<Function>(
+        std::vector<std::shared_ptr<Node>>{make_shared<op::Greater>(f_param_0, f_param_1),
+                                           make_shared<op::Greater>(f_param_0, f_param_1)},
+        f_rts,
+        op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Multi-output selection function not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Single-output selection function was expected"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_result_type)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Add>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong selection function result type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Return type from selection function is not a boolean scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_count)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g = make_shared<Function>(
+        g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1, g_param_2});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong scatter function parameter count not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Scatter function has wrong number of parameters (should be two)"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_0_type)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_1 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong type for scatter function parameter 0 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 0 of scatter function has wrong type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_1_type)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g =
+        make_shared<Function>(g_param_0 + g_param_0, g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong type for scatter function parameter 1 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 1 of scatter function has wrong type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_multi_output)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto g_rts = std::vector<std::shared_ptr<const ValueType>>{g_rt, g_rt};
+    auto g = make_shared<Function>(
+        std::vector<std::shared_ptr<Node>>{g_param_0 + g_param_1, g_param_0 + g_param_1},
+        g_rts,
+        op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Multi-output scatter function not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Single-output scatter function was expected"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_result_type)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
+    auto param_1 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
+    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto g_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto g = make_shared<Function>(
+        make_shared<op::Greater>(g_param_0, g_param_1), g_rt, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong scatter function result type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Return type from scatter does not match the init value type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
