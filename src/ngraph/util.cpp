@@ -177,7 +177,8 @@ void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<N
     }
 }
 
-void ngraph::traverse_nodes(std::shared_ptr<const ngraph::Function> p, std::function<void(std::shared_ptr<Node>)> f)
+void ngraph::traverse_nodes(std::shared_ptr<const ngraph::Function> p,
+                            std::function<void(std::shared_ptr<Node>)> f)
 {
     traverse_nodes(p.get(), f);
 }
