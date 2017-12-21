@@ -626,7 +626,7 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
     {
         // Emit an MKL transpose call if possible
         // clang-format off
-        if (result_element_type == ngraph::element::Float32::element_type())
+        if (result_element_type == ngraph::element::f32)
         {
             m_out << "{   // " << n->get_name() << " 2\n";
             m_out.indent++;

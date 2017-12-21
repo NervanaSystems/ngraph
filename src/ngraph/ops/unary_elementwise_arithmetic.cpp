@@ -21,7 +21,7 @@ op::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& no
     : UnaryElementwise(
           node_type,
           [](const ngraph::element::Type& arg_element_type) -> const ngraph::element::Type& {
-              if (arg_element_type == element::Bool::element_type())
+              if (arg_element_type == element::boolean)
               {
                   throw ngraph_error(
                       "Operands for arithmetic operators must have numeric element "

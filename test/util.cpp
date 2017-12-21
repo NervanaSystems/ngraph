@@ -187,15 +187,15 @@ TEST(util, all_close)
     auto backend = manager->allocate_backend();
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 3});
-    auto b = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 3});
+    auto a = backend->make_primary_tensor_view(element::f32, Shape{2, 3});
+    auto b = backend->make_primary_tensor_view(element::f32, Shape{2, 3});
 
     copy_data(a, test::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{1, 2, 3}, {3, 4, 5}}).get_vector());
 
     EXPECT_TRUE(ngraph::test::all_close<float>(a, b));
 
-    auto c = backend->make_primary_tensor_view(element::Float32::element_type(), Shape{2, 3});
+    auto c = backend->make_primary_tensor_view(element::f32, Shape{2, 3});
     copy_data(c, test::NDArray<float, 2>({{1.1f, 2, 3}, {3, 4, 5}}).get_vector());
 
     EXPECT_FALSE(ngraph::test::all_close<float>(c, a, 0, .05f));
@@ -209,17 +209,17 @@ TEST(util, traverse_functions)
 {
     // First create "f(A,B,C) = (A+B)*C".
     auto shape = Shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt_f = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto rt_f = make_shared<TensorViewType>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, rt_f, op::Parameters{A, B, C}, "f");
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
-    auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Y = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Z = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt_g = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto X = make_shared<op::Parameter>(element::f32, shape);
+    auto Y = make_shared<op::Parameter>(element::f32, shape);
+    auto Z = make_shared<op::Parameter>(element::f32, shape);
+    auto rt_g = make_shared<TensorViewType>(element::f32, shape);
     auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}) +
                                        make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}),
                                    rt_g,
@@ -227,10 +227,10 @@ TEST(util, traverse_functions)
                                    "g");
 
     // Now make "h(X,Y,Z) = g(X,Y,Z) + g(X,Y,Z)"
-    auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Y1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Z1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt_h = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto X1 = make_shared<op::Parameter>(element::f32, shape);
+    auto Y1 = make_shared<op::Parameter>(element::f32, shape);
+    auto Z1 = make_shared<op::Parameter>(element::f32, shape);
+    auto rt_h = make_shared<TensorViewType>(element::f32, shape);
     auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}) +
                                        make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}),
                                    rt_h,
@@ -247,19 +247,15 @@ class CloneTest : public ::testing::Test
 public:
     // (A + B) * C
     Shape shape = Shape{2, 2};
-    std::shared_ptr<op::Parameter> A =
-        make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    std::shared_ptr<op::Parameter> B =
-        make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    std::shared_ptr<op::Parameter> C =
-        make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    std::shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
+    std::shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
+    std::shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
     std::shared_ptr<Node> AplusB = A + B;
     std::shared_ptr<Node> AplusBtimesC = AplusB * C;
 
     NodeMap node_map;
     std::list<std::shared_ptr<ngraph::Node>> nodes;
-    std::shared_ptr<TensorViewType> type =
-        make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    std::shared_ptr<TensorViewType> type = make_shared<TensorViewType>(element::f32, shape);
     std::shared_ptr<Function> func =
         make_shared<Function>(AplusBtimesC, type, op::Parameters{A, B, C}, "f");
 
@@ -314,7 +310,7 @@ TEST_F(CloneTest, clone_nodes_full)
 TEST_F(CloneTest, clone_nodes_partial)
 {
     // map A -> A' prior to clone
-    auto Aprime = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+    auto Aprime = make_shared<op::Parameter>(element::f32, shape);
     node_map.Add(A, Aprime);
 
     auto cloned_nodes = clone_nodes(nodes, node_map);
