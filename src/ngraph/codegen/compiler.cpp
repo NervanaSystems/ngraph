@@ -220,7 +220,7 @@ StaticCompiler::StaticCompiler()
     auto& CGO = m_compiler->getInvocation().getCodeGenOpts();
     CGO.OptimizationLevel = 3;
     CGO.RelocationModel = "static";
-    CGO.CodeModel = "medium";
+    // CGO.CodeModel = "medium";
     CGO.ThreadModel = "posix";
     CGO.FloatABI = "hard";
     CGO.OmitLeafFramePointer = 1;
