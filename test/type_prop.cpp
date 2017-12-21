@@ -2704,3 +2704,473 @@ TEST(type_prop, reverse_3d_deduce_oob)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, reduce_window_deduce_1d)
+{
+    auto param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4};
+    Strides move_strides{1};
+
+    auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+    ASSERT_EQ(*(rw->get_value_type()), TensorViewType(element::f32, Shape{13}));
+}
+
+TEST(type_prop, reduce_window_deduce_1d_strided_even)
+{
+    auto param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4};
+    Strides move_strides{4};
+
+    auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+    ASSERT_EQ(*(rw->get_value_type()), TensorViewType(element::f32, Shape{4}));
+}
+
+TEST(type_prop, reduce_window_deduce_1d_strided_uneven)
+{
+    auto param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4};
+    Strides move_strides{4};
+
+    auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+    ASSERT_EQ(*(rw->get_value_type()), TensorViewType(element::f32, Shape{4}));
+}
+
+TEST(type_prop, reduce_window_deduce_2d_strided_uneven)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2};
+    Strides move_strides{4, 3};
+
+    auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+    ASSERT_EQ(*(rw->get_value_type()), TensorViewType(element::f32, Shape{4, 3}));
+}
+
+TEST(type_prop, reduce_window_deduce_3d_strided_uneven)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+    ASSERT_EQ(*(rw->get_value_type()), TensorViewType(element::f32, Shape{4, 3, 6}));
+}
+
+TEST(type_prop, reduce_window_deduce_non_scalar_init)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Non-scalar initial value not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Argument for initial value is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_different_element_types)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Different element types not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Element types for reductee and initial values do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_bad_window_shape)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Bad window shape not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Window shape has different rank from input tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_bad_move_strides)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Bad window movement strides not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Window movement strides have different rank from input tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_zero_length_axis)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 0, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Zero-length window axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Window shape has a zero-length axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_zero_length_stride)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 0, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Zero-length window movement stride not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Window movement stride for some axis is zero"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_window_too_big)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 11, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Window too big not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Reduction window is bigger than input"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_param_count)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(
+        f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1, f_param_2});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Too many reduction function parameters not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Reduction function has wrong number of parameters (should be two)"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_param_0_wrong_type)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Parameter 0 wrong type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 0 of reduction function has wrong type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_param_1_wrong_type)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0, rt, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Parameter 1 wrong type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 1 of reduction function has wrong type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_multi_output)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto rts = std::vector<std::shared_ptr<const ValueType>>{rt, rt};
+    auto f = make_shared<Function>(Nodes{f_param_0 + f_param_1, f_param_0 * f_param_1},
+                                   rts,
+                                   op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Multiple-output reduction function not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Single-output reduction function was expected"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_reduction_function_return_type_mismatch)
+{
+    auto param_0 =
+        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
+    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+
+    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto rt = make_shared<TensorViewType>(element::i32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Convert>(f_param_0 + f_param_1, element::i32),
+                                   rt,
+                                   op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Reduction function return type mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Return type from reduction function does not match expected"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
