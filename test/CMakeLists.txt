@@ -90,9 +90,9 @@ foreach(BACKEND_NAME ${BACKEND_NAMES})
 endforeach()
 # <special case>
 # This is a special case as NGVM is the only backend that can run these tests
-set(BACKEND_NAME "NGVM")
-configure_file(autodiff.in.cpp autodiff_NGVM.cpp)
-set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_NGVM.cpp)
+set(BACKEND_NAME "INTERPRETER")
+configure_file(autodiff.in.cpp autodiff_${BACKEND_NAME}.cpp)
+set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp)
 # </special cast>
 include_directories(".")
 
