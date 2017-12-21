@@ -42,7 +42,7 @@ bool codegen::ExecutionEngine::add_module(std::unique_ptr<llvm::Module>& module)
                                          .setEngineKind(llvm::EngineKind::JIT)
                                          .setOptLevel(llvm::CodeGenOpt::Aggressive)
                                          .setMCPU(llvm::sys::getHostCPUName())
-                                         .setCodeModel(llvm::CodeModel::Medium)
+                                         //  .setCodeModel(llvm::CodeModel::Medium)
                                          .setErrorStr(&m_jit_error)
                                          .create());
 
