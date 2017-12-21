@@ -149,47 +149,47 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 
 #define DO_ON_ELEMENT_TYPE(et, err_msg, macro, ...)                                                \
     {                                                                                              \
-        if (et == element::Bool::element_type())                                                   \
+        if (et == element::boolean)                                                                \
         {                                                                                          \
             macro(element::Bool, ##__VA_ARGS__);                                                   \
         }                                                                                          \
-        else if (et == element::Float32::element_type())                                           \
+        else if (et == element::f32)                                                               \
         {                                                                                          \
             macro(element::Float32, ##__VA_ARGS__);                                                \
         }                                                                                          \
-        else if (et == element::Float64::element_type())                                           \
+        else if (et == element::f64)                                                               \
         {                                                                                          \
             macro(element::Float64, ##__VA_ARGS__);                                                \
         }                                                                                          \
-        else if (et == element::Int8::element_type())                                              \
+        else if (et == element::i8)                                                                \
         {                                                                                          \
             macro(element::Int8, ##__VA_ARGS__);                                                   \
         }                                                                                          \
-        else if (et == element::Int16::element_type())                                             \
+        else if (et == element::i16)                                                               \
         {                                                                                          \
             macro(element::Int16, ##__VA_ARGS__);                                                  \
         }                                                                                          \
-        else if (et == element::Int32::element_type())                                             \
+        else if (et == element::i32)                                                               \
         {                                                                                          \
             macro(element::Int32, ##__VA_ARGS__);                                                  \
         }                                                                                          \
-        else if (et == element::Int64::element_type())                                             \
+        else if (et == element::i64)                                                               \
         {                                                                                          \
             macro(element::Int64, ##__VA_ARGS__);                                                  \
         }                                                                                          \
-        else if (et == element::UInt8::element_type())                                             \
+        else if (et == element::u8)                                                                \
         {                                                                                          \
             macro(element::UInt8, ##__VA_ARGS__);                                                  \
         }                                                                                          \
-        else if (et == element::UInt16::element_type())                                            \
+        else if (et == element::u16)                                                               \
         {                                                                                          \
             macro(element::UInt16, ##__VA_ARGS__);                                                 \
         }                                                                                          \
-        else if (et == element::UInt32::element_type())                                            \
+        else if (et == element::u32)                                                               \
         {                                                                                          \
             macro(element::UInt32, ##__VA_ARGS__);                                                 \
         }                                                                                          \
-        else if (et == element::UInt64::element_type())                                            \
+        else if (et == element::u64)                                                               \
         {                                                                                          \
             macro(element::UInt64, ##__VA_ARGS__);                                                 \
         }                                                                                          \
@@ -201,43 +201,43 @@ ExternalFunction::ExternalFunction(const std::shared_ptr<ngraph::Function>& func
 
 #define DO_ON_NUMERIC_TYPE(et, err_msg, macro, ...)                                                \
     {                                                                                              \
-        if (et == element::Float32::element_type())                                                \
+        if (et == element::f32)                                                                    \
         {                                                                                          \
             macro(element::Float32, ##__VA_ARGS__);                                                \
         }                                                                                          \
-        else if (et == element::Float64::element_type())                                           \
+        else if (et == element::f64)                                                               \
         {                                                                                          \
             macro(element::Float64, ##__VA_ARGS__);                                                \
         }                                                                                          \
-        else if (et == element::Int8::element_type())                                              \
+        else if (et == element::i8)                                                                \
         {                                                                                          \
             macro(element::Int8, ##__VA_ARGS__);                                                   \
         }                                                                                          \
-        else if (et == element::Int16::element_type())                                             \
+        else if (et == element::i16)                                                               \
         {                                                                                          \
             macro(element::Int16, ##__VA_ARGS__);                                                  \
         }                                                                                          \
-        else if (et == element::Int32::element_type())                                             \
+        else if (et == element::i32)                                                               \
         {                                                                                          \
             macro(element::Int32, ##__VA_ARGS__);                                                  \
         }                                                                                          \
-        else if (et == element::Int64::element_type())                                             \
+        else if (et == element::i64)                                                               \
         {                                                                                          \
             macro(element::Int64, ##__VA_ARGS__);                                                  \
         }                                                                                          \
-        else if (et == element::UInt8::element_type())                                             \
+        else if (et == element::u8)                                                                \
         {                                                                                          \
             macro(element::UInt8, ##__VA_ARGS__);                                                  \
         }                                                                                          \
-        else if (et == element::UInt16::element_type())                                            \
+        else if (et == element::u16)                                                               \
         {                                                                                          \
             macro(element::UInt16, ##__VA_ARGS__);                                                 \
         }                                                                                          \
-        else if (et == element::UInt32::element_type())                                            \
+        else if (et == element::u32)                                                               \
         {                                                                                          \
             macro(element::UInt32, ##__VA_ARGS__);                                                 \
         }                                                                                          \
-        else if (et == element::UInt64::element_type())                                            \
+        else if (et == element::u64)                                                               \
         {                                                                                          \
             macro(element::UInt64, ##__VA_ARGS__);                                                 \
         }                                                                                          \
