@@ -50,14 +50,10 @@ TEST(${BACKEND_NAME}, aliased_output)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a =
-        backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b =
-        backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> out1 =
-        backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> out2 =
-        backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> out1 = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> out2 = backend->make_primary_tensor_view(element::f32, shape);
 
     copy_data(a, vector<float>{0, 1, 2, 3});
     copy_data(b, vector<float>{1, 2, 3, 4});
