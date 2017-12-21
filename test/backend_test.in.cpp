@@ -34,6 +34,42 @@ static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
     tv->write(data.data(), 0, data_size);
 }
 
+TEST(${BACKEND_NAME}, aliased_output)
+{
+    using f32 = element::Float32;
+
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(f32::element_type(), shape);
+    auto B = make_shared<op::Parameter>(f32::element_type(), shape);
+    auto rt1 = make_shared<TensorViewType>(f32::element_type(), shape);
+    auto rt2 = make_shared<TensorViewType>(f32::element_type(), shape);
+    auto C = A + B;
+    auto f = make_shared<Function>(Nodes{C, C}, ValueTypes{rt1, rt2}, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+    shared_ptr<runtime::TensorView> b =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+    shared_ptr<runtime::TensorView> out1 =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+    shared_ptr<runtime::TensorView> out2 =
+        backend->make_primary_tensor_view(f32::element_type(), shape);
+
+    copy_data(a, vector<float>{0, 1, 2, 3});
+    copy_data(b, vector<float>{1, 2, 3, 4});
+    vector<float> expected{1, 3, 5, 7};
+
+    cf->call({a, b}, {out1, out2});
+    EXPECT_EQ(expected, out1->get_vector<float>());
+    EXPECT_EQ(expected, out2->get_vector<float>());
+}
+
 TEST(${BACKEND_NAME}, parameter_as_output)
 {
     auto shape = Shape{3, 4};
@@ -4462,4 +4498,25 @@ TEST(${BACKEND_NAME}, DISABLED_parameter_to_output)
 
     cf->call({a}, {result});
     EXPECT_EQ((vector<float>{1, -2, 0, -4.8f}), result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, not)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto result_type = make_shared<TensorViewType>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::Not>(A), result_type, op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::boolean, shape);
+    copy_data(a, vector<char>{1, 0, 2, 0});
+    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<char>{0, 1, 0, 1}), result->get_vector<char>());
 }
