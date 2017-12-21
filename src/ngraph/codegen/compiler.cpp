@@ -111,6 +111,12 @@ StaticCompiler::StaticCompiler()
     vector<const char*> args;
     args.push_back(m_source_name.c_str());
 
+    // Inlining thresholds are forced to a very high value
+    // to ensure all Eigen code gets properly inlined
+    // This is for both Eigen strong and weak inlines
+    args.push_back("-mllvm");
+    args.push_back("-inline-threshold=1000000");
+
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
     TextDiagnosticPrinter* textDiagPrinter = new clang::TextDiagnosticPrinter(errs(), &*DiagOpts);
@@ -204,6 +210,7 @@ StaticCompiler::StaticCompiler()
     auto& CGO = m_compiler->getInvocation().getCodeGenOpts();
     CGO.OptimizationLevel = 3;
     CGO.RelocationModel = "static";
+    CGO.CodeModel = "medium";
     CGO.ThreadModel = "posix";
     CGO.FloatABI = "hard";
     CGO.OmitLeafFramePointer = 1;
@@ -219,8 +226,8 @@ StaticCompiler::StaticCompiler()
     // Enable various target features
     // Most of these are for Eigen
     auto& TO = m_compiler->getInvocation().getTargetOpts();
-    // TODO: This needs to be configurable and selected carefully
-    TO.CPU = "broadwell";
+
+    TO.CPU = sys::getHostCPUName();
     TO.FeaturesAsWritten.emplace_back("+sse");
     TO.FeaturesAsWritten.emplace_back("+sse2");
     TO.FeaturesAsWritten.emplace_back("+sse3");

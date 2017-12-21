@@ -30,7 +30,7 @@ op::BinaryElementwiseComparison::BinaryElementwiseComparison(const std::string& 
                                     "Arguments must have the same tensor view element type");
                             }
 
-                            return element::Bool::element_type();
+                            return element::boolean;
                         },
                         arg0,
                         arg1)
