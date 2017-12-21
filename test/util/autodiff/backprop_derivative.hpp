@@ -100,6 +100,7 @@ namespace ngraph
             bprops_tv.insert(bprops_tv.begin(), bprops.begin(), bprops.end());
 
             auto c_vec = c_arg->template get_vector<T>();
+            fill(c_vec.begin(), c_vec.end(), 0);
             for (size_t i = 0; i < c_vec.size(); i++)
             {
                 c_vec[i] = 1;
