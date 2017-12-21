@@ -231,7 +231,7 @@ using namespace ngraph::runtime;
         {
             for (shared_ptr<Node> node : current_function->get_ordered_ops())
             {
-                if (!dynamic_pointer_cast<op::Parameter>(node))
+                if (!node->is_parameter() && !node->is_constant())
                 {
                     names.push_back(node->get_name());
                 }
