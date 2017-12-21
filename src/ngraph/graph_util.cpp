@@ -20,20 +20,20 @@
 #include <unordered_set>
 
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/graph_util.hpp"
 
 using namespace std;
 
-template<>
+template <>
 void ngraph::traverse_nodes(std::shared_ptr<ngraph::Function> p,
                             std::function<void(shared_ptr<Node>)> f)
 {
     traverse_nodes(p.get(), f);
 }
 
-template<>
+template <>
 void ngraph::traverse_nodes(std::shared_ptr<const ngraph::Function> p,
                             std::function<void(std::shared_ptr<Node>)> f)
 {

@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
@@ -82,7 +83,6 @@
 #include "ngraph/runtime/kernel/tanh.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/graph_util.hpp"
 
 namespace ngraph
 {

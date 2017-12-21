@@ -15,10 +15,10 @@
 #include <fstream>
 
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;

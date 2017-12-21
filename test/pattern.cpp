@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
@@ -27,7 +28,6 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/graph_util.hpp"
 
 using namespace ngraph;
 using namespace std;

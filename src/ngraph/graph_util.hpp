@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include <unordered_set>
 #include <algorithm>
 #include <chrono>
 #include <deque>
@@ -26,6 +25,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "ngraph/node.hpp"
@@ -70,10 +70,10 @@ namespace ngraph
         }
     }
 
-    template<>
+    template <>
     void traverse_nodes(std::shared_ptr<Function> p, std::function<void(std::shared_ptr<Node>)> f);
 
-    template<>
+    template <>
     void traverse_nodes(std::shared_ptr<const Function> p,
                         std::function<void(std::shared_ptr<Node>)> f);
 

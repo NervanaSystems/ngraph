@@ -19,8 +19,8 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/function.hpp"
-#include "ngraph/ngraph.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/ngraph.hpp"
 #include "util/all_close.hpp"
 #include "util/ndarray.hpp"
 
