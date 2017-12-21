@@ -123,14 +123,23 @@ std::vector<descriptor::Output*> Function::get_outputs()
 
 std::list<shared_ptr<Node>> Function::get_ops() const
 {
-    std::list<shared_ptr<Node>> roots;
+    std::list<std::shared_ptr<Node>> ops;
+    traverse_nodes(this, [&](shared_ptr<Node> node) {
+        ops.push_back(node);
 
-    for (auto root : m_parameters)
-        roots.insert(roots.end(), root);
-    for (auto root : m_results)
-        roots.insert(roots.end(), root);
-
-    return topological_sort(roots);
+        std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
+        if (nullptr != p)
+        {
+            auto it = std::find_if(m_parameters.begin(),
+                                   m_parameters.end(),
+                                   [p](std::shared_ptr<op::Parameter> q) { return (p == q); });
+            if (it == m_parameters.end())
+            {
+                throw ngraph_error("Function references undeclared parameter");
+            }
+        }
+    });
+    return ops;
 }
 
 std::list<shared_ptr<Node>>& Function::get_ordered_ops()

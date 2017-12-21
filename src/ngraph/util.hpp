@@ -231,13 +231,15 @@ namespace ngraph
 
     void traverse_nodes(Function* p, std::function<void(std::shared_ptr<Node>)> f);
     void traverse_nodes(std::shared_ptr<Function> p, std::function<void(std::shared_ptr<Node>)> f);
+    void traverse_nodes(const Function* p, std::function<void(std::shared_ptr<Node>)> f);
+    void traverse_nodes(std::shared_ptr<const Function> p, std::function<void(std::shared_ptr<Node>)> f);
+
     void traverse_functions(std::shared_ptr<Function> p,
                             std::function<void(std::shared_ptr<Function>)> f);
 
     void free_nodes(std::shared_ptr<Function>);
 
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
-
     void replace_node_users_arguments(std::shared_ptr<Node> target,
                                       std::shared_ptr<Node> replacement);
 
