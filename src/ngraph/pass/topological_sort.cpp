@@ -20,7 +20,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace ngraph;
 using namespace std;

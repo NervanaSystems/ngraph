@@ -21,6 +21,7 @@
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

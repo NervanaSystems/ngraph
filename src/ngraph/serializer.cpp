@@ -56,7 +56,7 @@
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/ops/xla_tuple.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/xla_function.hpp"
 
 using namespace ngraph;

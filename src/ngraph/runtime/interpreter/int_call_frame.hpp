@@ -82,6 +82,7 @@
 #include "ngraph/runtime/kernel/tanh.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/graph_util.hpp"
 
 namespace ngraph
 {

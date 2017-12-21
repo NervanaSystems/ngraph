@@ -21,7 +21,7 @@
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;

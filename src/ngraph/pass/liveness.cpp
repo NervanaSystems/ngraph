@@ -21,6 +21,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/liveness.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

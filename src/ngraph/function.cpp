@@ -18,7 +18,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ops/xla_tuple.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
