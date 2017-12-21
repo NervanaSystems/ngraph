@@ -47,12 +47,6 @@ void op::Reverse::generate_adjoints(autodiff::Adjoints& adjoints,
                                     const std::shared_ptr<Node>& delta)
 {
     auto x = get_input_op(0);
-    auto x_type = x->get_value_type();
-    auto x_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(x_type);
-    if (x_type == nullptr)
-    {
-        throw ngraph_error("Argument to reverse is not a tensor view");
-    }
 
     adjoints.add_delta(x, make_shared<op::Reverse>(delta, m_reversed_axes));
 }
