@@ -22,7 +22,7 @@ op::Not::Not(const std::shared_ptr<Node>& arg)
     : UnaryElementwise(
           "Not",
           [](const ngraph::element::Type& arg_element_type) -> const ngraph::element::Type& {
-              if (arg_element_type != element::Bool::element_type())
+              if (arg_element_type != element::boolean)
               {
                   throw ngraph_error(
                       "Operands for logical operators must have boolean element "

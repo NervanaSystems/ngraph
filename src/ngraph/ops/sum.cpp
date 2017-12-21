@@ -25,7 +25,7 @@ op::Sum::Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes)
 {
     auto& input = get_inputs().at(0);
     auto& input_element_type = input.get_element_type();
-    if (input_element_type == element::Bool::element_type())
+    if (input_element_type == element::boolean)
     {
         throw ngraph_error("Argument for sum must have numeric element type");
     }

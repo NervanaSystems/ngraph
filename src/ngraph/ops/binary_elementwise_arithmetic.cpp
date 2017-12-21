@@ -29,7 +29,7 @@ op::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(const std::string& 
                   throw ngraph_error("Arguments must have the same tensor view element type");
               }
 
-              if (arg0_element_type == element::Bool::element_type())
+              if (arg0_element_type == element::boolean)
               {
                   throw ngraph_error(
                       "Operands for arithmetic operators must have numeric element type");

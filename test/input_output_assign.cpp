@@ -23,7 +23,7 @@ using namespace ngraph;
 TEST(input_output, param_tensor)
 {
     // Params have no arguments, so we can check that the value becomes a tensor output
-    auto tv_tp = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4});
+    auto tv_tp = make_shared<TensorViewType>(element::f32, Shape{2, 4});
     auto param = make_shared<op::Parameter>(tv_tp);
 
     ASSERT_EQ(param->get_outputs().size(), 1);
@@ -40,8 +40,8 @@ TEST(input_output, param_tensor)
 TEST(input_output, param_tuple)
 {
     // Same as param_tensor, but for a tuple
-    auto tv_tp_0 = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4});
-    auto tv_tp_1 = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4, 6});
+    auto tv_tp_0 = make_shared<TensorViewType>(element::f32, Shape{2, 4});
+    auto tv_tp_1 = make_shared<TensorViewType>(element::f32, Shape{2, 4, 6});
     auto tp_tp = make_shared<TupleType>(ValueTypes{tv_tp_0, tv_tp_1});
     auto param = make_shared<op::Parameter>(tp_tp);
 
@@ -59,7 +59,7 @@ TEST(input_output, param_tuple)
 
 TEST(input_output, simple_output)
 {
-    auto tv_tp_0 = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 4});
+    auto tv_tp_0 = make_shared<TensorViewType>(element::f32, Shape{2, 4});
     auto param_0 = make_shared<op::Parameter>(tv_tp_0);
     auto param_1 = make_shared<op::Parameter>(tv_tp_0);
     auto add = make_shared<op::Add>(param_0, param_1);

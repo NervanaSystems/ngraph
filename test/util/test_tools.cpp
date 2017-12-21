@@ -55,12 +55,12 @@ bool validate_list(const list<shared_ptr<Node>>& nodes)
 
 shared_ptr<Function> make_test_graph()
 {
-    auto arg_0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
-    auto arg_1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
-    auto arg_2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
-    auto arg_3 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
-    auto arg_4 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
-    auto arg_5 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    auto arg_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto arg_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto arg_2 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto arg_3 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto arg_4 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto arg_5 = make_shared<op::Parameter>(element::f32, Shape{});
 
     auto t0 = make_shared<op::Add>(arg_0, arg_1);
     auto t1 = make_shared<op::Dot>(t0, arg_2);
@@ -71,7 +71,7 @@ shared_ptr<Function> make_test_graph()
 
     auto r0 = make_shared<op::Add>(t3, t4);
 
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
 
     auto f0 =
         make_shared<Function>(r0, rt, op::Parameters{arg_0, arg_1, arg_2, arg_3, arg_4, arg_5});

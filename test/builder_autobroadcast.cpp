@@ -7,7 +7,7 @@ using namespace ngraph;
 
 std::shared_ptr<ngraph::op::Parameter> getParamFromShape(const ngraph::Shape& shape)
 {
-    return std::make_shared<ngraph::op::Parameter>(ngraph::element::Float32::element_type(), shape);
+    return std::make_shared<ngraph::op::Parameter>(ngraph::element::f32, shape);
 }
 
 inline ngraph::Shape getShapeFromParam(const shared_ptr<ngraph::Node>& node)
@@ -211,8 +211,7 @@ TEST(autobroadcast, make_node_3_args)
     ngraph::Shape s21{2, 1};
     ngraph::Shape s23{2, 3};
 
-    auto predicates =
-        std::make_shared<ngraph::op::Parameter>(ngraph::element::Bool::element_type(), s23);
+    auto predicates = std::make_shared<ngraph::op::Parameter>(ngraph::element::boolean, s23);
     auto lhs = getParamFromShape(s21);
     auto rhs = getParamFromShape(s23);
 

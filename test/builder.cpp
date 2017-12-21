@@ -31,18 +31,18 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result(
     std::function<std::shared_ptr<Node>(const std::shared_ptr<Node>&, const AxisSet&)> func)
 {
     auto shape_a = Shape{3, 2};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{2};
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
     auto f = make_shared<Function>(func(A, {0}), rt, op::Parameters{A});
     auto manager = runtime::Manager::get("NGVM");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
     cf->call({a}, {result});
 
     return result;
@@ -52,18 +52,18 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_true(
     std::function<std::shared_ptr<Node>(const std::shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
     auto shape_a = Shape{3, 2};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{2};
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
     auto f = make_shared<Function>(func(A, {0}, true), rt, op::Parameters{A});
     auto manager = runtime::Manager::get("NGVM");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
     cf->call({a}, {result});
 
     return result;
@@ -73,18 +73,18 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_false(
     std::function<std::shared_ptr<Node>(const std::shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
     auto shape_a = Shape{3, 2};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{2};
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), shape_rt);
+    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
     auto f = make_shared<Function>(func(A, {0}, false), rt, op::Parameters{A});
     auto manager = runtime::Manager::get("NGVM");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float32::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    auto result = backend->make_primary_tensor_view(element::Float32::element_type(), shape_rt);
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
     cf->call({a}, {result});
 
     return result;
@@ -125,19 +125,19 @@ TEST(builder, numpy_transpose)
 {
     // 2D Transpose
     Shape shape{2, 4};
-    auto param = std::make_shared<op::Parameter>(ngraph::element::Float32::element_type(), shape);
+    auto param = std::make_shared<op::Parameter>(ngraph::element::f32, shape);
     auto transposed = std::dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param));
     EXPECT_EQ(Shape({4, 2}), transposed->get_output_shape());
 
     // Multidimensional Transpose
     shape = Shape{2, 4, 8};
-    param = std::make_shared<op::Parameter>(ngraph::element::Float32::element_type(), shape);
+    param = std::make_shared<op::Parameter>(ngraph::element::f32, shape);
     transposed = std::dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param));
     EXPECT_EQ(Shape({8, 4, 2}), transposed->get_output_shape());
 
     // Dimshuffle
     shape = Shape{2, 4, 8};
-    param = std::make_shared<op::Parameter>(ngraph::element::Float32::element_type(), shape);
+    param = std::make_shared<op::Parameter>(ngraph::element::f32, shape);
     transposed = std::dynamic_pointer_cast<op::Reshape>(
         builder::numpy_transpose(param, AxisVector{2, 0, 1}));
     EXPECT_EQ(Shape({8, 2, 4}), transposed->get_output_shape());
