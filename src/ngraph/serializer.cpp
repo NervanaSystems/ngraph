@@ -63,17 +63,17 @@ using namespace ngraph;
 using namespace std;
 using json = nlohmann::json;
 
-std::shared_ptr<ngraph::Function>
+static std::shared_ptr<ngraph::Function>
     read_function(const json&, std::unordered_map<std::string, std::shared_ptr<Function>>&);
 
-json write(const ngraph::Function&);
-json write(const ngraph::Node&);
-json write(const ngraph::element::Type&);
+static json write(const ngraph::Function&);
+static json write(const ngraph::Node&);
+static json write(const ngraph::element::Type&);
 
 // This stupidity is caused by the fact that we do not pass element types
 // by value but by reference even though they can be compared. There is no reason to pass
 // them by reference EVERYWERE but here we are...
-const element::Type& to_ref(const element::Type& t)
+static const element::Type& to_ref(const element::Type& t)
 {
     if (t == element::boolean)
     {
@@ -144,65 +144,67 @@ static const element::Type& read_element_type(const json& j)
 
 static json write_value_type(std::shared_ptr<const ValueType> vt)
 {
+    json j;
     if (auto tt = std::dynamic_pointer_cast<const ngraph::TupleType>(vt))
     {
-        json j;
         for (auto e : tt->get_element_types())
         {
             j.push_back(write_value_type(e));
         }
-        return j;
     }
-
-    if (auto tvt = std::dynamic_pointer_cast<const ngraph::TensorViewType>(vt))
+    else if (auto tvt = std::dynamic_pointer_cast<const ngraph::TensorViewType>(vt))
     {
-        json j;
         j["element_type"] = write_element_type(tvt->get_element_type());
         j["shape"] = tvt->get_shape();
-        return j;
     }
-
-    throw "UNREACHABLE!";
+    return j;
 }
 
-std::shared_ptr<const ValueType>
+static std::shared_ptr<const ValueType>
     extract_type_shape(const json& j, const char* type, const char* sshape)
 {
-    const auto& et = read_element_type(j.at(type));
-    auto shape = j.count(sshape)
-                     ? j.at(sshape).get<vector<size_t>>()
-                     : Shape{} /*HACK, so we could call read_value_type uniformly @ each callsite*/;
+    const element::Type& et = read_element_type(j.at(type));
+    Shape shape =
+        j.count(sshape)
+            ? j.at(sshape).get<vector<size_t>>()
+            : Shape{} /*HACK, so we could call read_value_type uniformly @ each callsite*/;
     auto tvt = make_shared<TensorViewType>(et, shape);
     return tvt;
 }
 
-std::shared_ptr<const ValueType> read_value_type_(const json& j)
+static std::shared_ptr<const ValueType> read_value_type(const json& j)
 {
+    std::shared_ptr<const ValueType> rc;
     if (j.is_array())
     {
         std::vector<std::shared_ptr<const ValueType>> vts;
 
         for (auto& e : j)
         {
-            vts.push_back(read_value_type_(e));
+            vts.push_back(read_value_type(e));
         }
-        return make_shared<const TupleType>(vts);
+        rc = make_shared<const TupleType>(vts);
     }
     else
     {
-        return extract_type_shape(j, "element_type", "shape");
+        rc = extract_type_shape(j, "element_type", "shape");
     }
+    return rc;
 }
 
-std::shared_ptr<const ValueType>
+static std::shared_ptr<const ValueType>
     read_value_type(const json& j, const char* type, const char* sshape)
 {
+    std::shared_ptr<const ValueType> rc;
     if (j.count("value_type")) //new serialization format supporting tuples
     {
-        return read_value_type_(j.at("value_type"));
+        rc = read_value_type(j.at("value_type"));
     }
-
-    return extract_type_shape(j, type, sshape);
+    else
+    {
+        rc = extract_type_shape(j, type, sshape);
+    }
+    return rc;
 }
 
 string ngraph::serialize(shared_ptr<ngraph::Function> func)
@@ -237,7 +239,7 @@ shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
     return rc;
 }
 
-json write(const Function& f)
+static json write(const Function& f)
 {
     json function;
     function["name"] = f.get_name();
@@ -290,7 +292,7 @@ json write(const Function& f)
     return function;
 }
 
-shared_ptr<ngraph::Function>
+static shared_ptr<ngraph::Function>
     read_function(const json& func_js, unordered_map<string, shared_ptr<Function>>& function_map)
 {
     shared_ptr<ngraph::Function> rc;
@@ -535,7 +537,7 @@ shared_ptr<ngraph::Function>
     return rc;
 }
 
-json write(const Node& n)
+static json write(const Node& n)
 {
     json node;
     node["name"] = n.get_name();
