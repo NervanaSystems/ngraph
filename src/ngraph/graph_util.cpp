@@ -26,12 +26,13 @@
 
 using namespace std;
 
-void ngraph::traverse_nodes(const std::shared_ptr<const Function> p, std::function<void(std::shared_ptr<Node>)> f)
+void ngraph::traverse_nodes(const std::shared_ptr<const Function> p,
+                            std::function<void(std::shared_ptr<Node>)> f)
 {
     traverse_nodes(p.get(), f);
 }
 
-void ngraph::traverse_nodes(const Function *p, std::function<void(std::shared_ptr<Node>)> f)
+void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_ptr<Node>)> f)
 {
     std::unordered_set<std::shared_ptr<Node>> instances_seen;
     std::deque<std::shared_ptr<Node>> stack;
