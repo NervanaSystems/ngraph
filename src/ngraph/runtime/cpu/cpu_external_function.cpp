@@ -333,7 +333,6 @@ using namespace ngraph::runtime;
             {
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 constants.insert(tv.get());
-                NGRAPH_INFO << tv->get_tensor().get_name();
             }
         }
 
@@ -410,8 +409,6 @@ using namespace ngraph::runtime;
         for (const descriptor::Output* output : current_function->get_outputs())
         {
             shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
-            NGRAPH_INFO << tv->get_tensor().get_name();
-            NGRAPH_INFO << tv->get_name();
             const element::Type& et = tv->get_tensor_view_type()->get_element_type();
             bool parameter_as_output = false;
             for (shared_ptr<op::Parameter> param : current_function->get_parameters())
@@ -447,22 +444,6 @@ using namespace ngraph::runtime;
             output_index++;
         }
         writer << "\n";
-
-        // writer << "// Define constants\n";
-        // for (shared_ptr<Node> node : current_function->get_ordered_ops())
-        // {
-        //     if (dynamic_cast<op::Constant*>(node.get()))
-        //     {
-        //         shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
-        //         if (!contains(output_names, tv->get_tensor().get_name()))
-        //         {
-        //             writer << tv->get_tensor().get_element_type().c_type_string() << " "
-        //                    << tv->get_tensor().get_name() << "[" << tv->get_tensor().size()
-        //                    << "];\n";
-        //         }
-        //     }
-        // }
-        // writer << "\n";
 
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
