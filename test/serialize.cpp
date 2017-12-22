@@ -17,6 +17,7 @@
 
 #include "gtest/gtest.h"
 
+#include "ngraph/file_util.hpp"
 #include "ngraph/json.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
@@ -47,7 +48,7 @@ TEST(serialize, tuple)
     auto f = make_shared<XLAFunction>(
         make_shared<op::XLATuple>(Nodes{(A + B), (A - B), (C * A)}), ttt, op::Parameters{A, B, C});
 
-    string js = serialize(f);
+    string js = serialize(f, 4);
     {
         ofstream f("serialize_function_tuple.js");
         f << js;
@@ -89,7 +90,7 @@ TEST(serialize, main)
                                    op::Parameters{X1, Y1, Z1},
                                    "h");
 
-    string js = serialize(h);
+    string js = serialize(h, 4);
 
     {
         ofstream f("serialize_function.js");
@@ -121,4 +122,17 @@ TEST(serialize, main)
 
     cf->call({x, z, y}, {result});
     EXPECT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector<float>());
+}
+
+TEST(serialize, existing_models)
+{
+    vector<string> models = {"mxnet/mnist_mlp_forward.json", "mxnet/10_bucket_LSTM.json"};
+
+    for (const string& model : models)
+    {
+        const string json_path = file_util::path_join(SERIALIZED_ZOO, model);
+        const string json_string = file_util::read_file_to_string(json_path);
+        stringstream ss(json_string);
+        shared_ptr<Function> f = ngraph::deserialize(ss);
+    }
 }
