@@ -289,6 +289,28 @@ using namespace ngraph::runtime;
         writer << "\n";
     }
 
+    writer << "// Declare all constants\n";
+    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
+    {
+        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        {
+            const op::Constant* c = dynamic_cast<op::Constant*>(node.get());
+            if (c)
+            {
+                shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
+                auto c_value_strings = c->get_value_strings();
+                writer << "const " << tv->get_tensor().get_element_type().c_type_string() << " c"
+                       << tv->get_tensor().get_name() << "[" << c_value_strings.size() << "] =\n";
+                writer << "{\n";
+                for (size_t i = 0; i < c_value_strings.size(); i++)
+                {
+                    writer << "    " << c_value_strings[i] << ",\n";
+                }
+                writer << "};\n\n";
+            }
+        }
+    }
+
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
     {
@@ -298,6 +320,23 @@ using namespace ngraph::runtime;
 
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
+        set<string> output_names;
+        for (const descriptor::Output* output : current_function->get_outputs())
+        {
+            shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
+            output_names.insert(tv->get_tensor().get_name());
+        }
+        set<descriptor::TensorView*> constants;
+        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        {
+            if (dynamic_cast<op::Constant*>(node.get()))
+            {
+                shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
+                constants.insert(tv.get());
+                NGRAPH_INFO << tv->get_tensor().get_name();
+            }
+        }
+
         writer << "extern \"C\" void " << current_function->get_name();
         writer << "(void** inputs, void** outputs)\n";
         writer << "{\n";
@@ -351,7 +390,6 @@ using namespace ngraph::runtime;
         writer << "\n";
 
         writer << "// Define outputs\n";
-
         // create alias list
         size_t output_index = 0;
         unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
@@ -369,10 +407,11 @@ using namespace ngraph::runtime;
         }
 
         output_index = 0;
-        set<string> output_names;
         for (const descriptor::Output* output : current_function->get_outputs())
         {
             shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
+            NGRAPH_INFO << tv->get_tensor().get_name();
+            NGRAPH_INFO << tv->get_name();
             const element::Type& et = tv->get_tensor_view_type()->get_element_type();
             bool parameter_as_output = false;
             for (shared_ptr<op::Parameter> param : current_function->get_parameters())
@@ -390,32 +429,32 @@ using namespace ngraph::runtime;
                     }
                 }
             }
-            if (!parameter_as_output && !contains(aliases, output_index))
+            if (!parameter_as_output && !contains(aliases, output_index)) // &&
+            // !contains(constants, tv.get()))
             {
                 string type = et.c_type_string();
                 writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<" << type
                        << "*>(outputs[" << output_index << "]);\n";
             }
-            output_names.insert(tv->get_tensor().get_name());
             output_index++;
         }
         writer << "\n";
 
-        writer << "// Define constants\n";
-        for (shared_ptr<Node> node : current_function->get_ordered_ops())
-        {
-            if (dynamic_cast<op::Constant*>(node.get()))
-            {
-                shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
-                if (!contains(output_names, tv->get_tensor().get_name()))
-                {
-                    writer << tv->get_tensor().get_element_type().c_type_string() << " "
-                           << tv->get_tensor().get_name() << "[" << tv->get_tensor().size()
-                           << "];\n";
-                }
-            }
-        }
-        writer << "\n";
+        // writer << "// Define constants\n";
+        // for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        // {
+        //     if (dynamic_cast<op::Constant*>(node.get()))
+        //     {
+        //         shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
+        //         if (!contains(output_names, tv->get_tensor().get_name()))
+        //         {
+        //             writer << tv->get_tensor().get_element_type().c_type_string() << " "
+        //                    << tv->get_tensor().get_name() << "[" << tv->get_tensor().size()
+        //                    << "];\n";
+        //         }
+        //     }
+        // }
+        // writer << "\n";
 
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {

@@ -577,15 +577,8 @@ void runtime::cpu::CPU_Emitter::EmitConstant(const ngraph::Node* n,
     auto c_value_strings = c->get_value_strings();
     auto type = out[0].get_type();
 
-    m_out << "{   // " << n->get_name() << " EmitConstant\n";
-    m_out.indent++;
-    for (size_t i = 0; i < c_value_strings.size(); i++)
-    {
-        m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">("
-              << c_value_strings[i] << ");\n";
-    }
-    m_out.indent--;
-    m_out << "}\n";
+    m_out << "memcpy(" << out[0].get_name() << ", c" << out[0].get_name() << ", "
+          << out[0].get_size() * out[0].get_element_type().size() << ");\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
