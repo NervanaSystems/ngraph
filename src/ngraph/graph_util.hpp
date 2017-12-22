@@ -28,54 +28,13 @@
 #include <unordered_set>
 #include <vector>
 
-#include "ngraph/node.hpp"
-
 namespace ngraph
 {
     class Node;
     class Function;
 
-    template <typename T, typename V>
-    void traverse_nodes(T p, V f)
-    {
-        std::unordered_set<std::shared_ptr<Node>> instances_seen;
-        std::deque<std::shared_ptr<Node>> stack;
-
-        for (auto r : p->get_results())
-        {
-            stack.push_front(r);
-        }
-
-        for (auto param : p->get_parameters())
-        {
-            stack.push_front(param);
-        }
-
-        while (stack.size() > 0)
-        {
-            std::shared_ptr<Node> n = stack.front();
-            if (instances_seen.count(n) == 0)
-            {
-                instances_seen.insert(n);
-                f(n);
-            }
-            stack.pop_front();
-            for (auto arg : n->get_input_ops())
-            {
-                if (instances_seen.count(arg) == 0)
-                {
-                    stack.push_front(arg);
-                }
-            }
-        }
-    }
-
-    template <>
-    void traverse_nodes(std::shared_ptr<Function> p, std::function<void(std::shared_ptr<Node>)> f);
-
-    template <>
-    void traverse_nodes(std::shared_ptr<const Function> p,
-                        std::function<void(std::shared_ptr<Node>)> f);
+    void traverse_nodes(const std::shared_ptr<const Function> p, std::function<void(std::shared_ptr<Node>)> f);
+    void traverse_nodes(const Function *p, std::function<void(std::shared_ptr<Node>)> f);
 
     void traverse_functions(std::shared_ptr<Function> p,
                             std::function<void(std::shared_ptr<Function>)> f);

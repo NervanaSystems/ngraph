@@ -26,18 +26,43 @@
 
 using namespace std;
 
-template <>
-void ngraph::traverse_nodes(std::shared_ptr<ngraph::Function> p,
-                            std::function<void(shared_ptr<Node>)> f)
+void ngraph::traverse_nodes(const std::shared_ptr<const Function> p, std::function<void(std::shared_ptr<Node>)> f)
 {
     traverse_nodes(p.get(), f);
 }
 
-template <>
-void ngraph::traverse_nodes(std::shared_ptr<const ngraph::Function> p,
-                            std::function<void(std::shared_ptr<Node>)> f)
+void ngraph::traverse_nodes(const Function *p, std::function<void(std::shared_ptr<Node>)> f)
 {
-    traverse_nodes(p.get(), f);
+    std::unordered_set<std::shared_ptr<Node>> instances_seen;
+    std::deque<std::shared_ptr<Node>> stack;
+
+    for (auto r : p->get_results())
+    {
+        stack.push_front(r);
+    }
+
+    for (auto param : p->get_parameters())
+    {
+        stack.push_front(param);
+    }
+
+    while (stack.size() > 0)
+    {
+        std::shared_ptr<Node> n = stack.front();
+        if (instances_seen.count(n) == 0)
+        {
+            instances_seen.insert(n);
+            f(n);
+        }
+        stack.pop_front();
+        for (auto arg : n->get_input_ops())
+        {
+            if (instances_seen.count(arg) == 0)
+            {
+                stack.push_front(arg);
+            }
+        }
+    }
 }
 
 void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
