@@ -48,7 +48,7 @@ TEST(serialize, tuple)
     auto f = make_shared<XLAFunction>(
         make_shared<op::XLATuple>(Nodes{(A + B), (A - B), (C * A)}), ttt, op::Parameters{A, B, C});
 
-    string js = serialize(f);
+    string js = serialize(f, 4);
     {
         ofstream f("serialize_function_tuple.js");
         f << js;
@@ -90,7 +90,7 @@ TEST(serialize, main)
                                    op::Parameters{X1, Y1, Z1},
                                    "h");
 
-    string js = serialize(h);
+    string js = serialize(h, 4);
 
     {
         ofstream f("serialize_function.js");

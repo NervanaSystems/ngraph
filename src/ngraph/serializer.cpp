@@ -225,7 +225,7 @@ static std::shared_ptr<const ValueType>
     return rc;
 }
 
-string ngraph::serialize(shared_ptr<ngraph::Function> func)
+string ngraph::serialize(shared_ptr<ngraph::Function> func, size_t indent)
 {
     json j;
     vector<json> functions;
@@ -236,7 +236,16 @@ string ngraph::serialize(shared_ptr<ngraph::Function> func)
         j.push_back(*it);
     }
 
-    return j.dump(4);
+    string rc;
+    if (indent == 0)
+    {
+        rc = j.dump();
+    }
+    else
+    {
+        rc = j.dump(indent);
+    }
+    return rc;
 }
 
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
