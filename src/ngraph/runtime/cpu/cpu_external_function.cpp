@@ -299,7 +299,7 @@ using namespace ngraph::runtime;
             {
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 auto c_value_strings = c->get_value_strings();
-                writer << "const " << tv->get_tensor().get_element_type().c_type_string() << " c"
+                writer << tv->get_tensor().get_element_type().c_type_string() << " "
                        << tv->get_tensor().get_name() << "[" << c_value_strings.size() << "] =\n";
                 writer << "{\n";
                 for (size_t i = 0; i < c_value_strings.size(); i++)
@@ -429,12 +429,20 @@ using namespace ngraph::runtime;
                     }
                 }
             }
-            if (!parameter_as_output && !contains(aliases, output_index)) // &&
-            // !contains(constants, tv.get()))
+            if (!parameter_as_output && !contains(aliases, output_index))
             {
-                string type = et.c_type_string();
-                writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<" << type
-                       << "*>(outputs[" << output_index << "]);\n";
+                if (contains(constants, tv.get()))
+                {
+                    writer << "memcpy(outputs[" << output_index << "], "
+                           << tv->get_tensor().get_name() << ", " << tv->get_tensor().size()
+                           << ");\n";
+                }
+                else
+                {
+                    string type = et.c_type_string();
+                    writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<"
+                           << type << "*>(outputs[" << output_index << "]);\n";
+                }
             }
             output_index++;
         }
