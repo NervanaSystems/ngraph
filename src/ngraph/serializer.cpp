@@ -125,20 +125,38 @@ static const element::Type& to_ref(const element::Type& t)
 static json write_element_type(const ngraph::element::Type& n)
 {
     json j;
-    j["bitwidth"] = n.bitwidth();
-    j["is_real"] = n.is_real();
-    j["is_signed"] = n.is_signed();
-    j["c_type_string"] = n.c_type_string();
+    j = n.c_type_string();
     return j;
 }
 
 static const element::Type& read_element_type(const json& j)
 {
-    size_t bitwidth = j.at("bitwidth").get<size_t>();
-    bool is_real = j.at("is_real").get<bool>();
-    bool is_signed = j.at("is_signed").get<bool>();
-    string c_type_string = j.at("c_type_string").get<string>();
-
+    size_t bitwidth = 0;
+    bool is_real;
+    bool is_signed;
+    string c_type_string;
+    if (j.is_object())
+    {
+        bitwidth = j.at("bitwidth").get<size_t>();
+        is_real = j.at("is_real").get<bool>();
+        is_signed = j.at("is_signed").get<bool>();
+        c_type_string = j.at("c_type_string").get<string>();
+    }
+    else
+    {
+        string c_type = j.get<string>();
+        for (const element::Type* t : element::Type::get_known_types())
+        {
+            if (t->c_type_string() == c_type)
+            {
+                bitwidth = t->bitwidth();
+                is_real = t->is_real();
+                is_signed = t->is_signed();
+                c_type_string = t->c_type_string();
+                break;
+            }
+        }
+    }
     return to_ref(element::Type(bitwidth, is_real, is_signed, c_type_string));
 }
 
@@ -218,7 +236,7 @@ string ngraph::serialize(shared_ptr<ngraph::Function> func)
         j.push_back(*it);
     }
 
-    return j.dump();
+    return j.dump(4);
 }
 
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
