@@ -161,7 +161,7 @@ static json write_value_type(std::shared_ptr<const ValueType> vt)
 }
 
 static std::shared_ptr<const ValueType>
-    extract_type_shape(const json& j, const char* type, const char* sshape)
+    extract_type_shape(const json& j, const string& type, const string& sshape)
 {
     const element::Type& et = read_element_type(j.at(type));
     Shape shape =
@@ -193,7 +193,7 @@ static std::shared_ptr<const ValueType> read_value_type(const json& j)
 }
 
 static std::shared_ptr<const ValueType>
-    read_value_type(const json& j, const char* type, const char* sshape)
+    read_value_type(const json& j, const string& type, const string& sshape)
 {
     std::shared_ptr<const ValueType> rc;
     if (j.count("value_type")) //new serialization format supporting tuples
