@@ -33,15 +33,15 @@ using namespace ngraph;
 
 std::shared_ptr<Function> autodiff::backprop_function(const std::shared_ptr<Function>& f)
 {
-    auto Y = f->get_result();
+    auto Y_out = f->get_output_op(0);
     auto Xs = f->get_parameters();
-    auto C = std::make_shared<op::Parameter>(Y->get_value_type());
+    auto C = std::make_shared<op::Parameter>(Y_out->get_element_type(), Y_out->get_shape());
     std::vector<std::shared_ptr<Node>> dYdXs(Xs.size());
-    transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, Y](const std::shared_ptr<Node>& X) {
-        return Y->backprop_node(X, C);
+    transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, Y_out](const std::shared_ptr<Node>& X) {
+        return Y_out->backprop_node(X, C);
     });
     auto result = std::make_shared<op::XLATuple>(dYdXs);
     std::vector<std::shared_ptr<op::Parameter>> params(Xs);
     params.push_back(C);
-    return std::make_shared<Function>(result, result->get_value_type(), params);
+    return std::make_shared<Function>(result, params);
 }

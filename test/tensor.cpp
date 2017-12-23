@@ -125,10 +125,8 @@ TEST(tensor, output_flag)
 
     pass_manager.run_passes(f0);
 
-    EXPECT_TRUE(f0->get_result()->is_output());
-    for (descriptor::Output& output : f0->get_result()->get_outputs())
+    for (size_t i = 0; i < f0->get_num_outputs(); ++i)
     {
-        const Tensor& t = output.get_tensor();
-        EXPECT_TRUE(t.is_output());
+        EXPECT_TRUE(f0->get_output_op(i)->is_output());
     }
 }

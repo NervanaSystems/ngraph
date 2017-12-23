@@ -25,7 +25,6 @@ set (SRC
     descriptor/primary_tensor_view.cpp
     descriptor/tensor.cpp
     descriptor/tensor_view.cpp
-    descriptor/tuple.cpp
     file_util.cpp
     function.cpp
     log.cpp
@@ -85,7 +84,6 @@ set (SRC
     pass/visualize_tree.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
-    runtime/backend.cpp
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp
     runtime/interpreter/int_external_function.cpp
@@ -94,8 +92,6 @@ set (SRC
     runtime/interpreter/int_tensor_view.cpp
     runtime/manager.cpp
     runtime/tensor_view.cpp
-    runtime/tuple.cpp
-    runtime/utils.cpp
     serializer.cpp
     shape.cpp
     types/element_type.cpp

@@ -46,9 +46,7 @@ namespace ngraph
                                 const std::vector<std::shared_ptr<runtime::TensorView>>& args,
                                 const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
-            auto y = f->get_result();
-            Shape y_shape =
-                std::dynamic_pointer_cast<const TensorViewType>(y->get_value_type())->get_shape();
+            Shape y_shape = f->get_shape(0);
 
             auto c_param = std::make_shared<op::Parameter>(element::from<T>(), y_shape);
             auto c_arg = backend->make_primary_tensor_view<T>(y_shape);
@@ -61,24 +59,16 @@ namespace ngraph
             for (auto param : indep_params)
             {
                 Shape s = y_shape;
-                auto param_shape =
-                    std::dynamic_pointer_cast<const TensorViewType>(param->get_value_type())
-                        ->get_shape();
+                auto param_shape = param->get_shape();
                 s.insert(s.end(), param_shape.begin(), param_shape.end());
                 results.push_back(backend->make_primary_tensor_view<T>(s));
                 bprops.push_back(backend->make_primary_tensor_view<T>(param_shape));
-                deriv_nodes.push_back(y->backprop_node(param, c_param));
+                deriv_nodes.push_back(f->get_output_op(0)->backprop_node(param, c_param));
             }
 
             std::vector<std::shared_ptr<op::Parameter>> df_params = params;
             df_params.push_back(c_param);
-            //auto df_result = std::make_shared<op::XLATuple>(deriv_nodes);
-            std::vector<std::shared_ptr<const ValueType>> types;
-            for (auto dn : deriv_nodes)
-            {
-                types.push_back(dn->get_value_type());
-            }
-            auto df = std::make_shared<Function>(deriv_nodes, types, df_params);
+            auto df = std::make_shared<Function>(deriv_nodes, df_params);
 
             auto external = manager->compile(df);
             auto cf = backend->make_call_frame(external);

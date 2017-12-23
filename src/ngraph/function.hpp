@@ -36,33 +36,42 @@ namespace ngraph
     {
     public:
         Function(const Nodes& results,
-                 const std::vector<std::shared_ptr<const ValueType>>& result_types,
                  const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                  const std::string& name = "");
 
+        // Deprecated
+        Function(const Nodes& results,
+                 const std::vector<std::shared_ptr<const ValueType>>& result_types,
+                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                 const std::string& name = "")
+            : Function(results, parameters, name)
+        {
+        }
+
+        Function(const std::shared_ptr<Node>& result,
+                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
+                 const std::string& name = "");
+
+        // Deprecated
         Function(const std::shared_ptr<Node>& result,
                  const std::shared_ptr<const ValueType>& result_type,
                  const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                 const std::string& name = "");
-
-        Function(const std::shared_ptr<Node>& result,
-                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                 const std::string& name = "");
+                 const std::string& name = "")
+            : Function(result, parameters, name)
+        {
+        }
 
         virtual ~Function() {}
-        std::shared_ptr<Node> get_result();
-
-        const Nodes& get_results() const { return m_results; }
-        std::vector<descriptor::Output*> get_outputs();
+    public:
+        size_t get_num_outputs() const;
+        std::shared_ptr<Node> get_output_op(size_t i) const;
+        const element::Type& get_element_type(size_t i) const;
+        const Shape& get_shape(size_t i) const;
 
         const std::vector<std::shared_ptr<op::Parameter>>& get_parameters() const
         {
             return m_parameters;
         }
-
-        std::shared_ptr<const ValueType> get_result_type() const;
-
-        std::vector<std::shared_ptr<const ValueType>> get_result_types() const;
 
         std::string get_name() const;
         void set_name(
@@ -84,7 +93,6 @@ namespace ngraph
         Nodes m_results;
         std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;
         std::string m_name;
-        std::vector<std::shared_ptr<const ValueType>> m_result_types;
         bool m_ordered_ops_valid;
         std::list<std::shared_ptr<Node>> m_ordered_ops;
         std::list<std::shared_ptr<Node>> m_ops;

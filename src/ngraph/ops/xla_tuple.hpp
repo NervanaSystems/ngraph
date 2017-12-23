@@ -15,6 +15,7 @@
 #pragma once
 
 #include "ngraph/node.hpp"
+#include "ngraph/ops/xla_node.hpp"
 
 namespace ngraph
 {
@@ -33,7 +34,7 @@ namespace ngraph
         /// | Type                  | Description                                                |
         /// | --------------------- | ---------------------------------------------------------- |
         /// | \f$(T_1,\dots,T_n)\f$ | The tuple \f$(\texttt{args}[0],\dots,\texttt{args}[n])\f$. |
-        class XLATuple : public Node
+        class XLATuple : public XLANode
         {
         public:
             /// \brief Constructs a tuple construction operation.
@@ -46,6 +47,14 @@ namespace ngraph
             {
                 return std::make_shared<XLATuple>(new_args);
             }
+
+            virtual std::shared_ptr<const XLATuple> get_tuple_value() const override
+            {
+                return std::dynamic_pointer_cast<const XLATuple>(shared_from_this());
+            }
+            virtual const Nodes& get_tuple_elements() const override { return m_args; }
+        protected:
+            Nodes m_args;
         };
     }
 }

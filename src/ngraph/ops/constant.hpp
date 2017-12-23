@@ -19,7 +19,6 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/utils.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/util.hpp"
 

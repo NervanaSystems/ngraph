@@ -29,37 +29,22 @@ op::FunctionCall::FunctionCall(std::shared_ptr<Function> function,
     //TODO : [nikolayk] this needs to be rewritten as follows
     //for each i : FunctionCall->get_inputs.at(i).get_tensor_view_type ==
     //flatten(function_parms).at(i)
-    if (get_input_ops().size() != function_params.size())
+    if (get_num_inputs() != function_params.size())
     {
         throw ngraph_error("Wrong number of arguments.");
     }
 
-    for (size_t i = 0; i < get_input_ops().size(); i++)
+    for (size_t i = 0; i < get_num_inputs(); i++)
     {
-        if (nullptr == get_input_ops().at(i)->get_value_type())
-        {
-            throw ngraph_error("Function call argument is missing type.");
-        }
-
-        if (nullptr == function_params.at(i)->get_value_type())
-        {
-            throw ngraph_error("Function parameter is missing type.");
-        }
-
-        if (*(get_input_ops().at(i)->get_value_type()) !=
-            *(function_params.at(i)->get_value_type()))
+        if (get_input_element_type(i) != function->get_parameters().at(i)->get_element_type() ||
+            get_input_shape(i) != function->get_parameters().at(i)->get_shape())
         {
             throw ngraph_error("Function argument type mismatch.");
         }
     }
 
-    if (!std::dynamic_pointer_cast<XLAFunction>(m_function) &&
-        m_function->get_results().size() >
-            1) //TODO: we don't expect regular functions with multiple outputs just yet
+    for (size_t i = 0; i < m_function->get_num_outputs(); ++i)
     {
-        throw "Regular functions with multiple outputs NYI!";
+        add_output(function->get_element_type(i), function->get_shape(i));
     }
-    auto f_result_type = m_function->get_result_types().at(0);
-
-    set_value_type_checked(f_result_type);
 }

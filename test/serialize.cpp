@@ -33,31 +33,6 @@ static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
     tv->write(data.data(), 0, data_size);
 }
 
-TEST(serialize, tuple)
-{
-    auto shape = Shape{2, 2};
-    auto tensor_view_type = make_shared<TensorViewType>(element::i64, shape);
-
-    auto A = make_shared<op::Parameter>(tensor_view_type);
-    auto B = make_shared<op::Parameter>(tensor_view_type);
-    auto C = make_shared<op::Parameter>(tensor_view_type);
-
-    auto ttt =
-        make_shared<TupleType>(ValueTypes{tensor_view_type, tensor_view_type, tensor_view_type});
-
-    auto f = make_shared<XLAFunction>(
-        make_shared<op::XLATuple>(Nodes{(A + B), (A - B), (C * A)}), ttt, op::Parameters{A, B, C});
-
-    string js = serialize(f, 4);
-    {
-        ofstream f("serialize_function_tuple.js");
-        f << js;
-    }
-
-    istringstream in(js);
-    shared_ptr<Function> sfunc = deserialize(in);
-}
-
 TEST(serialize, main)
 {
     // First create "f(A,B,C) = (A+B)*C".

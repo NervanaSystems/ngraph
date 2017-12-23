@@ -75,7 +75,6 @@
 #include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_external_function.hpp"
-#include "ngraph/runtime/utils.hpp"
 
 using namespace std;
 using namespace ngraph;

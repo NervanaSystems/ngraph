@@ -220,26 +220,6 @@ TEST(copy, FunctionCall)
     ASSERT_TRUE(node_cast->get_function() == f);
 }
 
-TEST(copy, GetTupleElement)
-{
-    Shape shape{1};
-    size_t n = 0;
-    auto tuple_type = make_shared<TupleType>(
-        vector<shared_ptr<const ValueType>>{make_shared<TensorViewType>(element::f32, shape)});
-    auto arg0 = make_shared<op::Parameter>(tuple_type);
-
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(tuple_type)};
-
-    auto node = make_shared<op::XLAGetTupleElement>(arg0, n);
-    auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::XLAGetTupleElement>(new_node);
-    ASSERT_NE(node_cast, nullptr);
-
-    ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_input_ops());
-    ASSERT_TRUE(node_cast->get_n() == n);
-}
-
 TEST(copy, greater_eq)
 {
     ASSERT_TRUE(check_binary<op::GreaterEq>());
@@ -300,7 +280,7 @@ TEST(copy, parameter)
 
     ASSERT_TRUE(nullptr != new_node);
     ASSERT_TRUE(new_node->get_input_ops().size() == 0);
-    ASSERT_TRUE(node->get_value_type() == new_node->get_value_type());
+    ASSERT_TRUE(node->has_same_type(new_node));
 }
 
 TEST(copy, power)

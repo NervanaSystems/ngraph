@@ -12,39 +12,44 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <memory>
 #include <sstream>
 
 #include "ngraph/ops/xla_get_tuple_element.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 op::XLAGetTupleElement::XLAGetTupleElement(const std::shared_ptr<Node>& arg, size_t n)
-    : Node("XLAGetTupleElement", {arg})
+    : XLANode("XLAGetTupleElement", {arg})
     , m_n{n}
 {
-    auto arg0_tuple_type =
-        dynamic_pointer_cast<const TupleType>(get_input_ops().at(0)->get_value_type());
-    if (nullptr == arg0_tuple_type)
+    m_arg = dynamic_pointer_cast<XLANode>(arg);
+    if (m_arg == nullptr || m_arg->get_tuple_value() == nullptr)
     {
         throw ngraph_error("Argument must be a tuple view");
     }
 
-    if (m_n >= arg0_tuple_type->get_element_types().size())
+    const Nodes& elements = m_arg->get_tuple_elements();
+
+    if (m_n >= elements.size())
     {
         throw ngraph_error("Indexing tuple beyond its size");
     }
-
-    set_value_type_checked(arg0_tuple_type->get_element_types().at(m_n));
 }
 
 Nodes op::XLAGetTupleElement::get_input_ops() //const
 {
-    Nodes result;
-    if (auto gte = dynamic_cast<op::XLAGetTupleElement*>(this))
-    {
-        result.push_back(get_inputs().at(0).get_output().get_node());
-    }
-    assert_argument_list_equivalency(result);
-    return result;
+    return Nodes{m_arg};
+}
+
+shared_ptr<const op::XLATuple> op::XLAGetTupleElement::get_tuple_value() const
+{
+    return dynamic_pointer_cast<const op::XLATuple>(m_arg->get_tuple_elements().at(m_n));
+}
+
+const Nodes& op::XLAGetTupleElement::get_tuple_elements() const
+{
+    return get_tuple_value()->get_tuple_elements();
 }

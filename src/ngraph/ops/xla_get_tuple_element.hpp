@@ -15,6 +15,7 @@
 #pragma once
 
 #include "ngraph/node.hpp"
+#include "ngraph/ops/xla_node.hpp"
 
 namespace ngraph
 {
@@ -39,7 +40,7 @@ namespace ngraph
         /// | Type      | Description                           |
         /// | --------- | ------------------------------------- |
         /// | \f$T_n\f$ | The `n`th element of the input tuple. |
-        class XLAGetTupleElement : public Node
+        class XLAGetTupleElement : public XLANode
         {
         public:
             /// \brief Constructs a get-tuple-element operation.
@@ -58,9 +59,13 @@ namespace ngraph
 
             virtual Nodes get_input_ops() override; //const;
 
+            virtual std::shared_ptr<const XLATuple> get_tuple_value() const override;
+            virtual const Nodes& get_tuple_elements() const override;
+
             /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }
         protected:
+            std::shared_ptr<XLANode> m_arg;
             size_t m_n;
         };
     }

@@ -66,26 +66,23 @@ op::Reduce::Reduce(const std::shared_ptr<Node>& arg_reductee,
         throw ngraph_error("Reduction function has wrong number of parameters (should be two)");
     }
 
-    if (*(f_params.at(0)->get_value_type()) != *(arg_init->get_value_type()))
+    if (!f_params.at(0)->has_same_type(arg_init))
     {
         throw ngraph_error("Argument 0 of reduction function has wrong type");
     }
-    if (*(f_params.at(1)->get_value_type()) != *(arg_init->get_value_type()))
+    if (!f_params.at(1)->has_same_type(arg_init))
     {
         throw ngraph_error("Argument 1 of reduction function has wrong type");
     }
 
-    if (m_reduction_function->get_result_types().size() > 1)
+    if (m_reduction_function->get_num_outputs() > 1)
     {
         throw ngraph_error("Single-output reduce function was expected!");
     }
-    auto f_result_type = m_reduction_function->get_result_types().at(0);
-
-    if (*(f_result_type) != *(arg_init->get_value_type()))
+    if (m_reduction_function->get_element_type(0) != arg_init->get_element_type())
     {
         throw ngraph_error("Return type from reduction function does not match expected");
     }
 
-    set_value_type_checked(
-        make_shared<TensorViewType>(input_reductee.get_element_type(), result_shape));
+    add_output(input_reductee.get_element_type(), result_shape);
 }

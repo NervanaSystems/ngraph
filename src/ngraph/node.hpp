@@ -44,13 +44,13 @@ namespace ngraph
     {
         // So Adjoints can call generate_adjoints
         friend class autodiff::Adjoints;
+        friend class descriptor::Input;
         friend void replace_node_users_arguments(std::shared_ptr<Node> target,
                                                  std::shared_ptr<Node> replacement);
 
     protected:
         Node(const std::string& node_type, const Nodes& arguments);
-        virtual ~Node();
-
+        virtual ~Node() {}
         virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const std::shared_ptr<Node>& delta)
         {
@@ -74,14 +74,7 @@ namespace ngraph
             return std::type_index(typeid(*this)) == std::type_index(typeid(*n));
         }
 
-        std::shared_ptr<const ValueType> get_value_type();
-        const std::shared_ptr<const ValueType> get_value_type() const;
-        void assert_value_type(const std::shared_ptr<const ValueType>& value_type) const;
-        void assert_value_type(const element::Type& element_type, const Shape& shape) const
-        {
-            assert_value_type(std::make_shared<TensorViewType>(element_type, shape));
-        }
-
+    public:
         // Set the value type if it has not already been set; otherwise, ensure that
         // value_type agrees with the value type that was set.
         // This is used when the framework specifies a value type for the value, and we
@@ -99,8 +92,39 @@ namespace ngraph
 
         std::deque<descriptor::Input>& get_inputs() { return m_inputs; }
         const std::deque<descriptor::Input>& get_inputs() const { return m_inputs; }
+        // These are deprecated but still quite prevalent in unit tests
         std::deque<descriptor::Output>& get_outputs();
         const std::deque<descriptor::Output>& get_outputs() const;
+
+    public:
+        size_t get_num_outputs() const { return m_outputs.size(); }
+        const element::Type& get_element_type(size_t i) const
+        {
+            return m_outputs.at(i).get_element_type();
+        }
+
+        const Shape& get_shape(size_t i) const { return m_outputs.at(i).get_shape(); }
+        descriptor::Tensor& get_output_tensor(size_t i) const
+        {
+            return m_outputs.at(i).get_tensor();
+        }
+        descriptor::Tensor& get_output_tensor() const;
+        std::shared_ptr<descriptor::TensorView> get_output_tensor_view(size_t i) const
+        {
+            return m_outputs.at(i).get_tensor_view();
+        }
+        std::shared_ptr<descriptor::TensorView> get_output_tensor_view() const;
+
+        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const
+        {
+            return m_outputs.at(i).get_inputs();
+        }
+        size_t get_num_inputs() const { return m_inputs.size(); }
+        const element::Type& get_input_element_type(size_t i)
+        {
+            return m_inputs.at(i).get_element_type();
+        }
+        const Shape& get_input_shape(size_t i) { return m_inputs.at(i).get_shape(); }
         std::unordered_set<descriptor::Tensor*> liveness_live_list;
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
@@ -113,18 +137,21 @@ namespace ngraph
         std::shared_ptr<Node> get_input_op(size_t index);
 
         /// Returns the shape if this node has tensor type, otherwise an ngraph-error is thrown.
-        const Shape& get_shape() const { return m_value_type->get_shape(); }
-        const element::Type& get_element_type() const { return m_value_type->get_element_type(); }
+        const Shape& get_shape() const;
+        const element::Type& get_element_type() const;
         virtual std::shared_ptr<Node>
             copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const = 0;
 
         virtual std::shared_ptr<Function> get_function() const;
 
+        // True if this and node have one output with same element type and shape
+        bool has_same_type(std::shared_ptr<const Node> node) const;
+
     protected:
+        void add_output(const element::Type& element_type, const Shape& shape);
         void assert_argument_list_equivalency(const Nodes& b);
 
         std::string m_node_type;
-        std::shared_ptr<const ValueType> m_value_type;
         std::multiset<Node*> m_users;
         std::string m_name;
         size_t m_instance_id;

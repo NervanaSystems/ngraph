@@ -159,14 +159,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
 
 Strides default_strides(const std::shared_ptr<Node>& image_batch)
 {
-    auto image_batch_value_type = image_batch->get_value_type();
-    auto image_batch_tensor_view_type =
-        dynamic_pointer_cast<const TensorViewType>(image_batch_value_type);
-    if (image_batch_tensor_view_type == nullptr)
-    {
-        throw ngraph_error("Convolution image batch argument has non-tensor view type");
-    }
-    auto& image_batch_shape = image_batch_tensor_view_type->get_shape();
+    auto& image_batch_shape = image_batch->get_shape();
     if (image_batch_shape.size() < 3)
     {
         // For consistency we should throw the same error message here that we throw in the constructor.

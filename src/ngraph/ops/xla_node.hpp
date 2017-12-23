@@ -14,19 +14,26 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
-
-#include "ngraph/runtime/tuple.hpp"
-#include "ngraph/runtime/value.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace op
     {
-        /// @brief Framework constructor of a tuple from a sequence of values.
-        std::shared_ptr<ngraph::runtime::Tuple>
-            make_tuple(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& elements);
+        class XLATuple;
+
+        class XLANode : public Node
+        {
+        protected:
+            XLANode(const std::string& node_type,
+                    const std::vector<std::shared_ptr<Node>>& arguments)
+                : Node(node_type, arguments)
+            {
+            }
+
+        public:
+            virtual std::shared_ptr<const XLATuple> get_tuple_value() const = 0;
+            virtual const Nodes& get_tuple_elements() const = 0;
+        };
     }
 }

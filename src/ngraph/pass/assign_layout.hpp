@@ -34,9 +34,9 @@ namespace ngraph
                 {
                     try
                     {
-                        for (const descriptor::Output& output : node->get_outputs())
+                        for (size_t i = 0; i < node->get_num_outputs(); ++i)
                         {
-                            auto tv = output.get_tensor_view();
+                            auto tv = node->get_output_tensor_view(i);
                             if (nullptr == tv->get_tensor_view_layout())
                             {
                                 auto layout = std::make_shared<LT>(*tv);

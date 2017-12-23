@@ -39,10 +39,8 @@ TEST(${BACKEND_NAME}, aliased_output)
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto rt1 = make_shared<TensorViewType>(element::f32, shape);
-    auto rt2 = make_shared<TensorViewType>(element::f32, shape);
     auto C = A + B;
-    auto f = make_shared<Function>(Nodes{C, C}, ValueTypes{rt1, rt2}, op::Parameters{A, B});
+    auto f = make_shared<Function>(Nodes{C, C}, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -68,8 +66,7 @@ TEST(${BACKEND_NAME}, parameter_as_output)
 {
     auto shape = Shape{3, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(A, rt, op::Parameters{A});
+    auto f = make_shared<Function>(A, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -93,8 +90,7 @@ TEST(${BACKEND_NAME}, ab)
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(A + B, rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(A + B, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -120,8 +116,7 @@ TEST(${BACKEND_NAME}, abc)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -157,8 +152,7 @@ TEST(${BACKEND_NAME}, abc_int64)
     auto A = make_shared<op::Parameter>(element::i64, shape);
     auto B = make_shared<op::Parameter>(element::i64, shape);
     auto C = make_shared<op::Parameter>(element::i64, shape);
-    auto rt = make_shared<TensorViewType>(element::i64, shape);
-    auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -184,98 +178,8 @@ TEST(${BACKEND_NAME}, abc_int64)
     EXPECT_EQ((vector<int64_t>{50, 72, 98, 128}), result->get_vector<int64_t>());
 }
 
-// Same as abc, but using tuples for input and output
-TEST(${BACKEND_NAME}, tuple_abc)
-{
-    auto shape = Shape{2, 2};
-
-    auto tensor_view_type = make_shared<TensorViewType>(element::f32, shape);
-    auto rt = make_shared<TupleType>(ValueTypes{tensor_view_type});
-
-    auto ABC = make_shared<op::Parameter>(
-        make_shared<TupleType>(ValueTypes{tensor_view_type, tensor_view_type, tensor_view_type}));
-
-    auto A = make_shared<op::XLAGetTupleElement>(ABC, 0);
-    auto B = make_shared<op::XLAGetTupleElement>(ABC, 1);
-    auto C = make_shared<op::XLAGetTupleElement>(ABC, 2);
-    auto f = make_shared<XLAFunction>(
-        make_shared<op::XLATuple>(Nodes{(A + B) * C}), rt, op::Parameters{ABC});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
-    copy_data(a, vector<float>{1, 2, 3, 4});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
-    copy_data(b, vector<float>{5, 6, 7, 8});
-    auto c = backend->make_primary_tensor_view(element::f32, shape);
-    copy_data(c, vector<float>{9, 10, 11, 12});
-    auto abc = runtime::make_tuple({a, b, c});
-    auto bac = runtime::make_tuple({b, a, c});
-    auto acb = runtime::make_tuple({a, c, b});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
-    auto result_tuple = runtime::make_tuple({result});
-
-    cf->call({abc}, {result_tuple});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
-
-    cf->call({bac}, {result_tuple});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
-
-    cf->call({acb}, {result_tuple});
-    EXPECT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector<float>());
-}
-
-// Same as abc, but using tuples for input and output
-TEST(${BACKEND_NAME}, tuple_abc_int64)
-{
-    auto shape = Shape{2, 2};
-
-    auto tensor_view_type = make_shared<TensorViewType>(element::i64, shape);
-    auto rt = make_shared<TupleType>(ValueTypes{tensor_view_type});
-
-    auto ABC = make_shared<op::Parameter>(
-        make_shared<TupleType>(ValueTypes{tensor_view_type, tensor_view_type, tensor_view_type}));
-
-    auto A = make_shared<op::XLAGetTupleElement>(ABC, 0);
-    auto B = make_shared<op::XLAGetTupleElement>(ABC, 1);
-    auto C = make_shared<op::XLAGetTupleElement>(ABC, 2);
-    auto f = make_shared<XLAFunction>(
-        make_shared<op::XLATuple>(Nodes{(A + B) * C}), rt, op::Parameters{ABC});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::i64, shape);
-    copy_data(a, vector<int64_t>{1, 2, 3, 4});
-    auto b = backend->make_primary_tensor_view(element::i64, shape);
-    copy_data(b, vector<int64_t>{5, 6, 7, 8});
-    auto c = backend->make_primary_tensor_view(element::i64, shape);
-    copy_data(c, vector<int64_t>{9, 10, 11, 12});
-    auto abc = runtime::make_tuple({a, b, c});
-    auto bac = runtime::make_tuple({b, a, c});
-    auto acb = runtime::make_tuple({a, c, b});
-    auto result = backend->make_primary_tensor_view(element::i64, shape);
-    auto result_tuple = runtime::make_tuple({result});
-
-    cf->call({abc}, {result_tuple});
-    EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), result->get_vector<int64_t>());
-
-    cf->call({bac}, {result_tuple});
-    EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), result->get_vector<int64_t>());
-
-    cf->call({acb}, {result_tuple});
-    EXPECT_EQ((vector<int64_t>{50, 72, 98, 128}), result->get_vector<int64_t>());
-}
-
 // Multiple retrive values
-TEST(${BACKEND_NAME}, tuple_result)
+TEST(${BACKEND_NAME}, multiple_result)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -284,11 +188,7 @@ TEST(${BACKEND_NAME}, tuple_result)
     auto A_add_B = make_shared<op::Add>(A, B);
     auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
 
-    auto rt = make_shared<TupleType>(std::vector<shared_ptr<const ValueType>>(
-        {make_shared<TensorViewType>(element::f32, shape),
-         make_shared<TensorViewType>(element::f32, shape)}));
-    auto f = make_shared<XLAFunction>(
-        make_shared<op::XLATuple>(Nodes{A_add_B, A_add_B_mul_C}), rt, op::Parameters{A, B, C});
+    auto f = make_shared<Function>(Nodes{A_add_B, A_add_B_mul_C}, op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -304,9 +204,8 @@ TEST(${BACKEND_NAME}, tuple_result)
 
     auto r0 = backend->make_primary_tensor_view(element::f32, shape);
     auto r1 = backend->make_primary_tensor_view(element::f32, shape);
-    auto result_tuple = runtime::make_tuple({r0, r1});
 
-    cf->call({a, b, c}, {result_tuple});
+    cf->call({a, b, c}, {r0, r1});
 
     EXPECT_EQ((vector<float>{6, 8, 10, 12}), r0->get_vector<float>());
     EXPECT_EQ((vector<float>{54, 80, 110, 144}), r1->get_vector<float>());
@@ -316,8 +215,7 @@ TEST(${BACKEND_NAME}, abs)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Abs>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Abs>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -337,8 +235,7 @@ TEST(${BACKEND_NAME}, ceiling)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Ceiling>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Ceiling>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -363,9 +260,8 @@ TEST(${BACKEND_NAME}, concat_matrix_colwise)
     auto shape_c = Shape{2, 3};
     auto C = make_shared<op::Parameter>(element::f32, shape_c);
     auto shape_r = Shape{2, 8};
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{2, 8});
-    auto f = make_shared<Function>(
-        make_shared<op::Concat>(Nodes{A, B, C}, 1), rt, op::Parameters{A, B, C});
+    auto f =
+        make_shared<Function>(make_shared<op::Concat>(Nodes{A, B, C}, 1), op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -395,9 +291,8 @@ TEST(${BACKEND_NAME}, concat_matrix_rowwise)
     auto shape_c = Shape{3, 2};
     auto C = make_shared<op::Parameter>(element::f32, shape_c);
     auto shape_r = Shape{8, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{8, 2});
-    auto f = make_shared<Function>(
-        make_shared<op::Concat>(Nodes{A, B, C}, 0), rt, op::Parameters{A, B, C});
+    auto f =
+        make_shared<Function>(make_shared<op::Concat>(Nodes{A, B, C}, 0), op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -427,9 +322,8 @@ TEST(${BACKEND_NAME}, concat_matrix_int64)
     auto shape_c = Shape{3, 2};
     auto C = make_shared<op::Parameter>(element::i64, shape_c);
     auto shape_r = Shape{8, 2};
-    auto rt = make_shared<TensorViewType>(element::i64, Shape{8, 2});
-    auto f = make_shared<Function>(
-        make_shared<op::Concat>(Nodes{A, B, C}, 0), rt, op::Parameters{A, B, C});
+    auto f =
+        make_shared<Function>(make_shared<op::Concat>(Nodes{A, B, C}, 0), op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -459,9 +353,8 @@ TEST(${BACKEND_NAME}, concat_vector)
     auto shape_c = Shape{2};
     auto C = make_shared<op::Parameter>(element::f32, shape_c);
     auto shape_r = Shape{12};
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{12});
-    auto f = make_shared<Function>(
-        make_shared<op::Concat>(Nodes{A, B, C}, 0), rt, op::Parameters{A, B, C});
+    auto f =
+        make_shared<Function>(make_shared<op::Concat>(Nodes{A, B, C}, 0), op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -548,16 +441,15 @@ TEST(${BACKEND_NAME}, concat_5d)
     }
 
     auto shape_a = Shape{2, 3, 4, 3, 2};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_b = Shape{2, 3, 3, 3, 2};
-    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_c = Shape{2, 3, 2, 3, 2};
-    auto C = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_c));
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
     auto shape_r = Shape{2, 3, 9, 3, 2};
 
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Concat>(Nodes{A, B, C}, 2);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A, B, C});
+    auto f = make_shared<Function>(r, op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -617,8 +509,7 @@ TEST(${BACKEND_NAME}, divide)
     auto make_external = [&]() {
         auto A = make_shared<op::Parameter>(element::f32, shape);
         auto B = make_shared<op::Parameter>(element::f32, shape);
-        auto rt = make_shared<TensorViewType>(element::f32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), rt, op::Parameters{A, B});
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::Parameters{A, B});
 
         auto external = manager->compile(f);
         return external;
@@ -647,8 +538,7 @@ TEST(${BACKEND_NAME}, divide_by_zero_float32)
     auto make_external = [&]() {
         auto A = make_shared<op::Parameter>(element::f32, shape);
         auto B = make_shared<op::Parameter>(element::f32, shape);
-        auto rt = make_shared<TensorViewType>(element::f32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), rt, op::Parameters{A, B});
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::Parameters{A, B});
 
         auto external = manager->compile(f);
         return external;
@@ -681,8 +571,7 @@ TEST(${BACKEND_NAME}, divide_by_zero_int32)
     auto make_external = [&]() {
         auto A = make_shared<op::Parameter>(element::i32, shape);
         auto B = make_shared<op::Parameter>(element::i32, shape);
-        auto rt = make_shared<TensorViewType>(element::i32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), rt, op::Parameters{A, B});
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::Parameters{A, B});
 
         auto external = manager->compile(f);
         return external;
@@ -705,8 +594,7 @@ TEST(${BACKEND_NAME}, equal)
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -728,8 +616,7 @@ TEST(${BACKEND_NAME}, floor)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Floor>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Floor>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -751,8 +638,7 @@ TEST(${BACKEND_NAME}, dot_0_0)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto shape_r = Shape{};
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -785,8 +671,7 @@ TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
     auto make_external = [&]() {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
         auto B = make_shared<op::Parameter>(element::f32, shape_b);
-        auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-        auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+        auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
         auto external = manager->compile(f);
         return external;
@@ -815,8 +700,7 @@ TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
     auto shape_b = Shape{2, 0};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{0, 0};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -841,8 +725,7 @@ TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
     auto shape_b = Shape{2, 0};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{3, 0};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -867,8 +750,7 @@ TEST(${BACKEND_NAME}, dot_scalar_0x2)
     auto shape_b = Shape{0, 2};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{0, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -893,8 +775,7 @@ TEST(${BACKEND_NAME}, dot_2x0_0)
     auto shape_b = Shape{0};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -921,8 +802,7 @@ TEST(${BACKEND_NAME}, dot1d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto shape_r = Shape{};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -946,8 +826,7 @@ TEST(${BACKEND_NAME}, dot2d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto shape_r = Shape{2, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -994,8 +873,7 @@ TEST(${BACKEND_NAME}, dot3d_3d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto shape_r = Shape{2, 2, 2, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1044,8 +922,7 @@ TEST(${BACKEND_NAME}, dot3d_2d)
     auto shape_b = Shape{3, 4};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{4, 2, 4};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1073,8 +950,7 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
     auto shape_b = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto rt = make_shared<TensorViewType>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1098,8 +974,7 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
     auto shape_b = Shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto rt = make_shared<TensorViewType>(element::f32, shape_a);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1122,8 +997,7 @@ TEST(${BACKEND_NAME}, dot_scalar_scalar)
     auto shape = Shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1147,8 +1021,7 @@ TEST(${BACKEND_NAME}, dot_matrix_vector)
     auto shape_b = Shape{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto rt = make_shared<TensorViewType>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
     auto shape_r = Shape{4};
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -1173,8 +1046,7 @@ TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
     auto shape_b = Shape{4};
     auto A = make_shared<op::Parameter>(element::i64, shape_a);
     auto B = make_shared<op::Parameter>(element::i64, shape_b);
-    auto rt = make_shared<TensorViewType>(element::i64, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
     auto shape_r = Shape{4};
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -1198,8 +1070,7 @@ TEST(${BACKEND_NAME}, greater)
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Greater>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Greater>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1222,8 +1093,7 @@ TEST(${BACKEND_NAME}, greatereq)
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::GreaterEq>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::GreaterEq>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1246,8 +1116,7 @@ TEST(${BACKEND_NAME}, less)
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Less>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Less>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1270,8 +1139,7 @@ TEST(${BACKEND_NAME}, lesseq)
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::LessEq>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::LessEq>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1294,8 +1162,7 @@ TEST(${BACKEND_NAME}, lesseq_bool)
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::boolean, shape);
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::LessEq>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::LessEq>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1320,8 +1187,7 @@ TEST(${BACKEND_NAME}, log)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Log>(A), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Log>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1348,8 +1214,7 @@ TEST(${BACKEND_NAME}, maximum)
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1372,8 +1237,7 @@ TEST(${BACKEND_NAME}, minimum)
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Minimum>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Minimum>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1395,8 +1259,7 @@ TEST(${BACKEND_NAME}, negative)
 {
     auto shape = Shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Negative>(A), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Negative>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1417,8 +1280,7 @@ TEST(${BACKEND_NAME}, notequal)
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::NotEqual>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::NotEqual>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1442,8 +1304,7 @@ TEST(${BACKEND_NAME}, select)
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Select>(A, B, C), rt, op::Parameters{A, B, C});
+    auto f = make_shared<Function>(make_shared<op::Select>(A, B, C), op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1468,8 +1329,7 @@ TEST(${BACKEND_NAME}, subtract)
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Subtract>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Subtract>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1491,8 +1351,7 @@ TEST(${BACKEND_NAME}, tensor_constant)
 {
     auto shape = Shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(A, rt, op::Parameters{});
+    auto f = make_shared<Function>(A, op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1510,8 +1369,7 @@ TEST(${BACKEND_NAME}, tensor_constant_with_op)
 {
     auto shape = Shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {-1, 2, 3, -4, 5, -6, -7, 8});
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Abs>(A), rt, op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Abs>(A), op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1612,17 +1470,14 @@ TEST(${BACKEND_NAME}, function_call)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto rt_f = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, rt_f, op::Parameters{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
     auto Y = make_shared<op::Parameter>(element::f32, shape);
     auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto rt_g = make_shared<TensorViewType>(element::f32, shape);
     auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}) +
                                        make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}),
-                                   rt_g,
                                    op::Parameters{X, Y, Z});
 
     // Now call g on some test vectors.
@@ -1654,9 +1509,8 @@ TEST(${BACKEND_NAME}, broadcast_scalar_vector)
     auto shape_a = Shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{4};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(
-        make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
+                                   op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1677,9 +1531,8 @@ TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
     auto shape_a = Shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{2, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(
-        make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1}),
+                                   op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1700,9 +1553,8 @@ TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
     auto shape_a = Shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{2, 2, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(
-        make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1, 2}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1, 2}),
+                                   op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1722,9 +1574,8 @@ TEST(${BACKEND_NAME}, broadcast_trivial)
 {
     auto shape = Shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(
-        make_shared<op::Broadcast>(A, shape, AxisSet{}), rt, op::Parameters{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1745,9 +1596,8 @@ TEST(${BACKEND_NAME}, broadcast_vector_colwise)
     auto shape_a = Shape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{3, 4};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(
-        make_shared<op::Broadcast>(A, shape_r, AxisSet{1}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{1}),
+                                   op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1768,9 +1618,8 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
     auto shape_a = Shape{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{3, 4};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(
-        make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
+                                   op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1791,9 +1640,8 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
     auto shape_a = Shape{4};
     auto A = make_shared<op::Parameter>(element::i64, shape_a);
     auto shape_r = Shape{3, 4};
-    auto rt = make_shared<TensorViewType>(element::i64, shape_r);
-    auto f = make_shared<Function>(
-        make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
+                                   op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1814,9 +1662,8 @@ TEST(${BACKEND_NAME}, broadcast_matrix_0)
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{2, 2, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(
-        make_shared<op::Broadcast>(A, shape_r, AxisSet{0}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{0}),
+                                   op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1837,9 +1684,8 @@ TEST(${BACKEND_NAME}, broadcast_matrix_1)
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{2, 2, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(
-        make_shared<op::Broadcast>(A, shape_r, AxisSet{1}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{1}),
+                                   op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1860,9 +1706,8 @@ TEST(${BACKEND_NAME}, broadcast_matrix_2)
     auto shape_a = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{2, 2, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
-    auto f = make_shared<Function>(
-        make_shared<op::Broadcast>(A, shape_r, AxisSet{2}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, AxisSet{2}),
+                                   op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1882,9 +1727,7 @@ TEST(${BACKEND_NAME}, convert_int32_float32)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f =
-        make_shared<Function>(make_shared<op::Convert>(A, element::f32), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Convert>(A, element::f32), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1904,9 +1747,8 @@ TEST(${BACKEND_NAME}, convert_int32_bool)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
     auto f =
-        make_shared<Function>(make_shared<op::Convert>(A, element::boolean), rt, op::Parameters{A});
+        make_shared<Function>(make_shared<op::Convert>(A, element::boolean), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1926,9 +1768,8 @@ TEST(${BACKEND_NAME}, convert_float32_bool)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
     auto f =
-        make_shared<Function>(make_shared<op::Convert>(A, element::boolean), rt, op::Parameters{A});
+        make_shared<Function>(make_shared<op::Convert>(A, element::boolean), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -1950,16 +1791,14 @@ TEST(${BACKEND_NAME}, reduce_trivial)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), f_rt, op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     auto shape = Shape{2, 2};
     auto g_A = make_shared<op::Parameter>(element::f32, shape);
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g_rt = make_shared<TensorViewType>(element::f32, shape);
-    auto g = make_shared<Function>(
-        make_shared<op::Reduce>(g_A, g_B, f, AxisSet{}), g_rt, op::Parameters{g_A, g_B});
+    auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{}),
+                                   op::Parameters{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -1982,16 +1821,14 @@ TEST(${BACKEND_NAME}, reduce_to_scalar)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), f_rt, op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     auto shape = Shape{2, 2};
     auto g_A = make_shared<op::Parameter>(element::f32, shape);
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g = make_shared<Function>(
-        make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0, 1}), g_rt, op::Parameters{g_A, g_B});
+    auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0, 1}),
+                                   op::Parameters{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2019,17 +1856,17 @@ TEST(${BACKEND_NAME}, reduce_matrix_columns)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), f_rt, op::Parameters{f_A, f_B});
+
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     auto shape_a = Shape{3, 2};
     auto g_A = make_shared<op::Parameter>(element::f32, shape_a);
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     auto shape_rt = Shape{2};
-    auto g_rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto g = make_shared<Function>(
-        make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}), g_rt, op::Parameters{g_A, g_B});
+
+    auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}),
+                                   op::Parameters{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2057,17 +1894,16 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), f_rt, op::Parameters{f_A, f_B});
+
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     auto shape_a = Shape{3, 2};
     auto g_A = make_shared<op::Parameter>(element::f32, shape_a);
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     auto shape_rt = Shape{3};
-    auto g_rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto g = make_shared<Function>(
-        make_shared<op::Reduce>(g_A, g_B, f, AxisSet{1}), g_rt, op::Parameters{g_A, g_B});
+    auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{1}),
+                                   op::Parameters{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2095,17 +1931,15 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), f_rt, op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     auto shape_a = Shape{3, 0};
     auto g_A = make_shared<op::Parameter>(element::f32, shape_a);
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     auto shape_rt = Shape{3};
-    auto g_rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto g = make_shared<Function>(
-        make_shared<op::Reduce>(g_A, g_B, f, AxisSet{1}), g_rt, op::Parameters{g_A, g_B});
+    auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{1}),
+                                   op::Parameters{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2133,17 +1967,15 @@ TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), f_rt, op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     auto shape_a = Shape{0, 2};
     auto g_A = make_shared<op::Parameter>(element::f32, shape_a);
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     auto shape_rt = Shape{2};
-    auto g_rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto g = make_shared<Function>(
-        make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}), g_rt, op::Parameters{g_A, g_B});
+    auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}),
+                                   op::Parameters{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2171,17 +2003,15 @@ TEST(${BACKEND_NAME}, reduce_vector_zero)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), f_rt, op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     auto shape_a = Shape{0};
     auto g_A = make_shared<op::Parameter>(element::f32, shape_a);
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     auto shape_rt = Shape{};
-    auto g_rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto g = make_shared<Function>(
-        make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}), g_rt, op::Parameters{g_A, g_B});
+    auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}),
+                                   op::Parameters{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2209,17 +2039,15 @@ TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), f_rt, op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::Parameters{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     auto shape_a = Shape{0, 0};
     auto g_A = make_shared<op::Parameter>(element::f32, shape_a);
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     auto shape_rt = Shape{};
-    auto g_rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto g = make_shared<Function>(
-        make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0, 1}), g_rt, op::Parameters{g_A, g_B});
+    auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0, 1}),
+                                   op::Parameters{g_A, g_B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2247,18 +2075,15 @@ TEST(${BACKEND_NAME}, reduce_3d_to_vector)
     // First, the reduction function (f(x:float32[],y:float32[]) = x*y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(make_shared<op::Multiply>(f_A, f_B), f_rt, op::Parameters{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Multiply>(f_A, f_B), op::Parameters{f_A, f_B});
 
     auto shape_a = Shape{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_b = Shape{};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_rt = Shape{3};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto g = make_shared<Function>(
-        make_shared<op::Reduce>(A, B, f, AxisSet{0, 1}), rt, op::Parameters{A, B});
+    auto g = make_shared<Function>(make_shared<op::Reduce>(A, B, f, AxisSet{0, 1}),
+                                   op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(g);
@@ -2283,11 +2108,10 @@ TEST(${BACKEND_NAME}, reduce_3d_to_vector)
 TEST(${BACKEND_NAME}, reshape_t2v_012)
 {
     auto shape_a = Shape{2, 2, 3};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{12};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2306,11 +2130,10 @@ TEST(${BACKEND_NAME}, reshape_t2v_012)
 TEST(${BACKEND_NAME}, reshape_t2s_012)
 {
     auto shape_a = Shape{1, 1, 1};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2329,11 +2152,10 @@ TEST(${BACKEND_NAME}, reshape_t2s_012)
 TEST(${BACKEND_NAME}, reshape_t2s_120)
 {
     auto shape_a = Shape{1, 1, 1};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 2, 0}, shape_r);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2352,11 +2174,10 @@ TEST(${BACKEND_NAME}, reshape_t2s_120)
 TEST(${BACKEND_NAME}, reshape_s2t)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{1, 1, 1, 1, 1, 1};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{}, shape_r);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2375,11 +2196,10 @@ TEST(${BACKEND_NAME}, reshape_s2t)
 TEST(${BACKEND_NAME}, reshape_v2m_col)
 {
     auto shape_a = Shape{3};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{3, 1};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2398,11 +2218,10 @@ TEST(${BACKEND_NAME}, reshape_v2m_col)
 TEST(${BACKEND_NAME}, reshape_v2m_row)
 {
     auto shape_a = Shape{3};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{1, 3};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2421,11 +2240,10 @@ TEST(${BACKEND_NAME}, reshape_v2m_row)
 TEST(${BACKEND_NAME}, reshape_v2t_middle)
 {
     auto shape_a = Shape{3};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{1, 3, 1};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2444,11 +2262,10 @@ TEST(${BACKEND_NAME}, reshape_v2t_middle)
 TEST(${BACKEND_NAME}, reshape_m2m_same)
 {
     auto shape_a = Shape{3, 3};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{3, 3};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{0, 1}, shape_r);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2467,11 +2284,10 @@ TEST(${BACKEND_NAME}, reshape_m2m_same)
 TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 {
     auto shape_a = Shape{3, 3};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{3, 3};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2490,11 +2306,10 @@ TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
 {
     auto shape_a = Shape{3, 2};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{2, 3};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2562,12 +2377,11 @@ TEST(DISABLED_${BACKEND_NAME}, reshape_6d)
     }
 
     auto shape_a = Shape{2, 2, 3, 3, 2, 4};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{3, 2, 2, 4, 3, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
 
     auto r = make_shared<op::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2611,8 +2425,7 @@ TEST(${BACKEND_NAME}, sin)
 {
     auto shape = Shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sin>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sin>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2637,8 +2450,7 @@ TEST(${BACKEND_NAME}, cos)
 {
     auto shape = Shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Cos>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Cos>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2663,8 +2475,7 @@ TEST(${BACKEND_NAME}, tan)
 {
     auto shape = Shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Tan>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Tan>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2689,8 +2500,7 @@ TEST(${BACKEND_NAME}, asin)
 {
     auto shape = Shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Asin>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Asin>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2714,8 +2524,7 @@ TEST(${BACKEND_NAME}, acos)
 {
     auto shape = Shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Acos>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Acos>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2739,8 +2548,7 @@ TEST(${BACKEND_NAME}, atan)
 {
     auto shape = Shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Atan>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Atan>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2764,8 +2572,7 @@ TEST(${BACKEND_NAME}, sinh)
 {
     auto shape = Shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sinh>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sinh>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2789,8 +2596,7 @@ TEST(${BACKEND_NAME}, cosh)
 {
     auto shape = Shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Cosh>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Cosh>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2814,8 +2620,7 @@ TEST(${BACKEND_NAME}, tanh)
 {
     auto shape = Shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Tanh>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Tanh>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2839,8 +2644,7 @@ TEST(${BACKEND_NAME}, exp)
 {
     auto shape = Shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Exp>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Exp>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2861,11 +2665,10 @@ TEST(${BACKEND_NAME}, exp)
 TEST(${BACKEND_NAME}, slice_scalar)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{}, Coordinate{});
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2884,11 +2687,10 @@ TEST(${BACKEND_NAME}, slice_scalar)
 TEST(${BACKEND_NAME}, slice_matrix)
 {
     auto shape_a = Shape{4, 4};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{3, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{0, 1}, Coordinate{3, 3});
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2907,11 +2709,10 @@ TEST(${BACKEND_NAME}, slice_matrix)
 TEST(${BACKEND_NAME}, slice_vector)
 {
     auto shape_a = Shape{16};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{12};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{2}, Coordinate{14});
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2930,11 +2731,10 @@ TEST(${BACKEND_NAME}, slice_vector)
 TEST(${BACKEND_NAME}, slice_matrix_strided)
 {
     auto shape_a = Shape{4, 4};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{2, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{1, 0}, Coordinate{4, 4}, Strides{2, 3});
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2953,11 +2753,10 @@ TEST(${BACKEND_NAME}, slice_matrix_strided)
 TEST(${BACKEND_NAME}, slice_3d)
 {
     auto shape_a = Shape{4, 4, 4};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{2, 2, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{1, 1, 1}, Coordinate{3, 3, 3});
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -2982,11 +2781,10 @@ TEST(${BACKEND_NAME}, slice_3d)
 TEST(${BACKEND_NAME}, slice_3d_strided)
 {
     auto shape_a = Shape{4, 4, 4};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{2, 2, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 2});
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3011,11 +2809,10 @@ TEST(${BACKEND_NAME}, slice_3d_strided)
 TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
 {
     auto shape_a = Shape{4, 4, 4};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{2, 2, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3039,9 +2836,8 @@ TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
 
 TEST(${BACKEND_NAME}, scalar_constant_float32)
 {
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
     auto r = op::Constant::create(element::f32, Shape{}, {4.8});
-    auto f = make_shared<Function>(r, rt, op::Parameters{});
+    auto f = make_shared<Function>(r, op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3057,9 +2853,8 @@ TEST(${BACKEND_NAME}, scalar_constant_float32)
 
 TEST(${BACKEND_NAME}, scalar_constant_int64)
 {
-    auto rt = make_shared<TensorViewType>(element::i64, Shape{});
     auto r = op::Constant::create(element::i64, Shape{}, {2112});
-    auto f = make_shared<Function>(r, rt, op::Parameters{});
+    auto f = make_shared<Function>(r, op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3076,9 +2871,8 @@ TEST(${BACKEND_NAME}, scalar_constant_int64)
 TEST(${BACKEND_NAME}, tensor_constant_float32)
 {
     auto shape = Shape{2, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
     auto r = op::Constant::create(element::f32, shape, {4.8, 4.7, -5.3, 0.0});
-    auto f = make_shared<Function>(r, rt, op::Parameters{});
+    auto f = make_shared<Function>(r, op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3095,9 +2889,8 @@ TEST(${BACKEND_NAME}, tensor_constant_float32)
 TEST(${BACKEND_NAME}, tensor_constant_int64)
 {
     auto shape = Shape{2, 2};
-    auto rt = make_shared<TensorViewType>(element::i64, shape);
     auto r = op::Constant::create(element::i64, shape, {2112, 1848, 1776, 1964});
-    auto f = make_shared<Function>(r, rt, op::Parameters{});
+    auto f = make_shared<Function>(r, op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3116,8 +2909,7 @@ TEST(${BACKEND_NAME}, sum_trivial)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3138,8 +2930,7 @@ TEST(${BACKEND_NAME}, sum_trivial_5d)
 {
     auto shape = Shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3162,8 +2953,7 @@ TEST(${BACKEND_NAME}, sum_to_scalar)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3188,8 +2978,7 @@ TEST(${BACKEND_NAME}, sum_matrix_columns)
     auto shape_a = Shape{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3214,8 +3003,7 @@ TEST(${BACKEND_NAME}, sum_matrix_rows)
     auto shape_a = Shape{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{3};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3240,8 +3028,7 @@ TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
     auto shape_a = Shape{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{3};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3268,8 +3055,7 @@ TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
     auto shape_a = Shape{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3295,8 +3081,7 @@ TEST(${BACKEND_NAME}, sum_vector_zero)
     auto shape_a = Shape{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3322,8 +3107,7 @@ TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
     auto shape_a = Shape{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3349,8 +3133,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
     auto shape_a = Shape{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{3, 3};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3381,8 +3164,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
     auto shape_a = Shape{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{3, 3};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{2}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{2}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3413,8 +3195,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector)
     auto shape_a = Shape{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{3};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3439,9 +3220,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_scalar)
     auto shape_a = Shape{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto f =
-        make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3465,8 +3244,7 @@ TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
     auto shape_a = Shape{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{3, 2};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_rt);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), rt, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3489,8 +3267,7 @@ TEST(${BACKEND_NAME}, sign)
 {
     auto shape = Shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sign>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sign>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3511,8 +3288,7 @@ TEST(${BACKEND_NAME}, power)
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Power>(A, B), rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Power>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3535,13 +3311,11 @@ TEST(${BACKEND_NAME}, constant_equality_bool)
     auto shape = Shape{4};
     // auto A = make_shared<op::Parameter>(element::boolean, shape);
     // auto B = make_shared<op::Parameter>(element::boolean, shape);
-    // auto result_type = make_shared<TensorViewType>(element::boolean, shape);
-    // auto f = make_shared<Function>(make_shared<op::Equal>(A, B), result_type, op::Parameters{A, B});
+    // auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{A, B});
 
     auto A = op::Constant::create(element::boolean, shape, {true, false, true, false});
     auto B = op::Constant::create(element::boolean, shape, {true, true, true, true});
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3559,8 +3333,7 @@ TEST(${BACKEND_NAME}, sqrt)
 {
     auto shape = Shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto result_type = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sqrt>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Sqrt>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3579,13 +3352,12 @@ TEST(${BACKEND_NAME}, sqrt)
 TEST(${BACKEND_NAME}, replace_slice_scalar)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_b = Shape{};
-    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{}, Coordinate{});
-    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3606,13 +3378,12 @@ TEST(${BACKEND_NAME}, replace_slice_scalar)
 TEST(${BACKEND_NAME}, replace_slice_matrix)
 {
     auto shape_a = Shape{4, 4};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_b = Shape{3, 2};
-    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{4, 4};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{0, 1}, Coordinate{3, 3});
-    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3634,13 +3405,12 @@ TEST(${BACKEND_NAME}, replace_slice_matrix)
 TEST(${BACKEND_NAME}, replace_slice_vector)
 {
     auto shape_a = Shape{16};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_b = Shape{12};
-    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{16};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{2}, Coordinate{14});
-    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3663,11 +3433,10 @@ TEST(${BACKEND_NAME}, replace_slice_vector)
 TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto shape_r = Shape{3};
-    auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3686,11 +3455,10 @@ TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
 TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto shape_r = Shape{3};
-    auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3709,11 +3477,10 @@ TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
 TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto shape_r = Shape{3};
-    auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3732,11 +3499,10 @@ TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
 TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{3};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3754,11 +3520,10 @@ TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
 TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
 {
     auto shape_a = Shape{};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto shape_r = Shape{3};
-    auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3776,11 +3541,10 @@ TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
 TEST(${BACKEND_NAME}, one_hot_vector_0)
 {
     auto shape_a = Shape{8};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto shape_r = Shape{3, 8};
-    auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3, 8}, 0);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3801,11 +3565,10 @@ TEST(${BACKEND_NAME}, one_hot_vector_0)
 TEST(${BACKEND_NAME}, one_hot_vector_1)
 {
     auto shape_a = Shape{8};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto shape_r = Shape{8, 3};
-    auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3826,11 +3589,10 @@ TEST(${BACKEND_NAME}, one_hot_vector_1)
 TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
 {
     auto shape_a = Shape{8};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto shape_r = Shape{8, 3};
-    auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3848,11 +3610,10 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
 TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
 {
     auto shape_a = Shape{8};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto shape_r = Shape{8, 3};
-    auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3870,11 +3631,10 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
 TEST(${BACKEND_NAME}, one_hot_matrix_0)
 {
     auto shape_a = Shape{3, 3};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, shape_a));
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto shape_r = Shape{3, 3, 3};
-    auto rt = make_shared<TensorViewType>(element::i32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{3, 3, 3}, 0);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3901,11 +3661,10 @@ TEST(${BACKEND_NAME}, one_hot_matrix_0)
 TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
 {
     auto shape_a = Shape{8};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{8, 3};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3926,11 +3685,10 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
 TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
 {
     auto shape_a = Shape{8};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_r = Shape{8, 3};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A});
+    auto f = make_shared<Function>(r, op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3948,13 +3706,12 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
 TEST(${BACKEND_NAME}, replace_slice_3d)
 {
     auto shape_a = Shape{4, 4, 4};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_b = Shape{2, 2, 2};
-    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{4, 4, 4};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{1, 1, 1}, Coordinate{3, 3, 3});
-    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -3988,14 +3745,13 @@ TEST(${BACKEND_NAME}, replace_slice_3d)
 TEST(${BACKEND_NAME}, replace_slice_3d_strided)
 {
     auto shape_a = Shape{4, 4, 4};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_b = Shape{2, 2, 2};
-    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{4, 4, 4};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::ReplaceSlice>(
         A, B, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 2});
-    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4029,14 +3785,13 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided)
 TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
 {
     auto shape_a = Shape{4, 4, 4};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_b = Shape{2, 2, 2};
-    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{4, 4, 4};
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::ReplaceSlice>(
         A, B, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
-    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4098,14 +3853,13 @@ TEST(DISABLED_${BACKEND_NAME}, dot_3d_multi_axis)
     }
 
     auto shape_a = Shape{2, 3, 4};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_b = Shape{3, 4, 5};
-    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{2, 5};
 
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Dot>(A, B, 2);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4153,14 +3907,13 @@ TEST(DISABLED_${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
                          1, 20, 35, 2, 1, 0, 1, 25, 3, 6, 7, 8};
 
     auto shape_a = Shape{2, 4, 3};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_b = Shape{3, 4, 2};
-    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{2, 4, 4, 2};
 
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Dot>(A, B);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4225,14 +3978,13 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis)
     }
 
     auto shape_a = Shape{2, 3, 3, 4};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_b = Shape{3, 4, 2, 3, 2};
-    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{2, 3, 2, 3, 2};
 
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Dot>(A, B, 2);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4290,14 +4042,13 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
     }
 
     auto shape_a = Shape{2, 3, 3, 4};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_a));
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_b = Shape{2, 3, 3, 4, 2};
-    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, shape_b));
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto shape_r = Shape{2};
 
-    auto rt = make_shared<TensorViewType>(element::f32, shape_r);
     auto r = make_shared<op::Dot>(A, B, 4);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4356,14 +4107,13 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
     }
 
     auto shape_a = Shape{20, 30, 30, 40};
-    auto A = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f64, shape_a));
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
     auto shape_b = Shape{20, 30, 30, 40, 20};
-    auto B = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f64, shape_b));
+    auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{20};
 
-    auto rt = make_shared<TensorViewType>(element::f64, shape_r);
     auto r = make_shared<op::Dot>(A, B, 4);
-    auto f = make_shared<Function>(r, rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(r, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4415,8 +4165,7 @@ TEST(${BACKEND_NAME}, not)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
-    auto result_type = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Not>(A), result_type, op::Parameters{A});
+    auto f = make_shared<Function>(make_shared<op::Not>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
