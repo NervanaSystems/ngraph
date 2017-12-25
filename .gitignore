@@ -72,3 +72,6 @@ venv/
 # VisualGDB files
 VisualGDB/
 toolchain.cmake
+
+# Generated docs
+doc/build/*
