@@ -45,6 +45,7 @@ public:
     static bool exists(const std::string& filename);
     static int try_get_lock(const std::string& filename);
     static void release_lock(int fd, const std::string& filename);
+    static time_t get_timestamp(const std::string& filename);
 
 private:
     static void iterate_files_worker(const std::string& path,
