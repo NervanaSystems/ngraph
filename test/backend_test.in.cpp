@@ -4448,14 +4448,5 @@ TEST(${BACKEND_NAME}, nan)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
     cf->call({}, {result});
-    EXPECT_EQ((vector<float>{4.8, 4.7, -5.3, 0}), result->get_vector<float>());
+    EXPECT_EQ((vector<char>{false, false, true, false, false}), result->get_vector<char>());
 }
-// {
-//     SetFastMathDisabled(true);
-//     ComputationBuilder builder(client_, TestName());
-//     auto lhs = builder.ConstantR1<float>({-2.5f, 25.5f, 2.25f, NAN, 6.0f});
-//     auto rhs = builder.ConstantR1<float>({10.0f, 5.0f, 2.25f, 10.0f, NAN});
-//     auto compare = builder.Eq(lhs, rhs);
-
-//     ComputeAndCompareR1<bool>(&builder, {false, false, true, false, false}, {});
-// }
