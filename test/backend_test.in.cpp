@@ -4431,3 +4431,31 @@ TEST(${BACKEND_NAME}, not)
     cf->call({a}, {result});
     EXPECT_EQ((vector<char>{0, 1, 0, 1}), result->get_vector<char>());
 }
+
+TEST(${BACKEND_NAME}, nan)
+{
+    auto shape = Shape{5};
+    auto A = op::Constant::create(element::f32, shape, {-2.5f, 25.5f, 2.25f, NAN, 6.0f});
+    auto B = op::Constant::create(element::f32, shape, {10.0f, 5.0f, 2.25f, 10.0f, NAN});
+    auto rt = make_shared<TensorViewType>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    cf->call({}, {result});
+    EXPECT_EQ((vector<float>{4.8, 4.7, -5.3, 0}), result->get_vector<float>());
+}
+// {
+//     SetFastMathDisabled(true);
+//     ComputationBuilder builder(client_, TestName());
+//     auto lhs = builder.ConstantR1<float>({-2.5f, 25.5f, 2.25f, NAN, 6.0f});
+//     auto rhs = builder.ConstantR1<float>({10.0f, 5.0f, 2.25f, 10.0f, NAN});
+//     auto compare = builder.Eq(lhs, rhs);
+
+//     ComputeAndCompareR1<bool>(&builder, {false, false, true, false, false}, {});
+// }
