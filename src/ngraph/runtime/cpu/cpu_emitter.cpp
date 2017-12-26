@@ -523,8 +523,17 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
         {
             m_out << "{   // " << n->get_name() << "\n";
             m_out.indent++;
-            m_out << emit_matrix(out[0]) << ".rowwise() =\n"
-                  << "    " << emit_vector(args[0]) << ".transpose();\n";
+
+            m_out << "Eigen::Map<Eigen::Matrix<" << out[0].get_element_type().c_type_string()
+                  << ", " << join(out[0].get_shape())
+                  << ", Eigen::RowMajor>, Eigen::Aligned64, Eigen::Stride<"
+                  << join(out[0].get_strides()) << ">> out(" << out[0].get_name() << ");\n";
+            m_out << "Eigen::Map<Eigen::Matrix<" << args[0].get_element_type().c_type_string()
+                  << ", 1, " << args[0].get_size()
+                  << ", Eigen::RowMajor>, Eigen::Aligned64, Eigen::Stride<" << args[0].get_size()
+                  << ", 1>> arg0(" << args[0].get_name() << ");\n";
+            m_out << "out = arg0.replicate<" << out[0].get_shape().at(0) << ", 1>();\n";
+
             m_out.indent--;
             m_out << "}\n";
         }
@@ -617,7 +626,7 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
     {
         // Emit an MKL transpose call if possible
         // clang-format off
-        if (result_element_type == ngraph::element::Float32::element_type())
+        if (result_element_type == ngraph::element::f32)
         {
             m_out << "{   // " << n->get_name() << " 2\n";
             m_out.indent++;
