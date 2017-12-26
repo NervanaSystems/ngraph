@@ -47,7 +47,18 @@
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
-// TODO: Fix leaks
+#if defined(__clang__)
+#define IS_RTTI_ENABLED __has_feature(cxx_rtti)
+#elif defined(__GNUC__)
+#define IS_RTTI_ENABLED __GXX_RTTI
+#else
+// Unknown compiler so assume RTTI is enabled by default
+#define IS_RTTI_ENABLED 1
+#endif
+
+#if IS_RTTI_ENABLED
+#error "This source file interfaces with LLVM and Clang and must be compiled with RTTI disabled"
+#endif
 
 // #define USE_CACHE
 
