@@ -117,9 +117,6 @@ namespace ngraph
                 using EigenArray1d = EigenWrapper<T, FMT, EigenArrayBase<T>>;
 
                 template <typename T, typename FMT = fmt::M>
-                using EigenArray2d = EigenWrapper<T, FMT, EigenArrayBase<T>>;
-
-                template <typename T, typename FMT = fmt::M>
                 using EigenMatrix = EigenWrapper<T, FMT, EigenMatrixBase<T>>;
 
                 template <typename T, typename FMT = fmt::V>
