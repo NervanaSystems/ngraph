@@ -236,7 +236,7 @@ if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
     target_link_libraries(ngraph PRIVATE mkldnn)
 endif()
 
-if(NGRAPH_CPU_ENABLE AND TBB_FOUND)
+if(NGRAPH_CPU_ENABLE)
     target_link_libraries(ngraph PRIVATE ${TBB_IMPORTED_TARGETS})
 endif()
 
@@ -262,7 +262,7 @@ if (NOT APPLE)
         ${MKLDNN_LIB_DIR}/
         DESTINATION "${NGRAPH_INSTALL_LIB}"
     )
-    if (NGRAPH_CPU_ENABLE AND TBB_FOUND)
+    if (NGRAPH_CPU_ENABLE)
         install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
             DESTINATION ${NGRAPH_INSTALL_LIB}
             FILES_MATCHING PATTERN "libtbb.so.*"
