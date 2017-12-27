@@ -127,17 +127,6 @@ void run_benchmark(const std::string& json_path, size_t iterations)
             cout << setw(15) << left << it->second << " " << setw(10) << right << it->first
                  << "us\n";
         }
-        // size_t count = 30;
-        // for (const runtime::cpu::PerformanceCounter& p : perf_data)
-        // {
-        //     if (--count == 0)
-        //     {
-        //         break;
-        //     }
-        //     cout.imbue(locale(""));
-        //     cout << setw(15) << left << p.name() << " " << setw(10) << right
-        //          << p.microseconds() << "us\n";
-        // }
     }
 }
 
