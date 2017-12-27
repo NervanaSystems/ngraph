@@ -98,7 +98,6 @@ std::vector<std::string> op::Constant::get_value_strings() const
     {
         for (int32_t value : get_vector<int32_t>())
         {
-            NGRAPH_INFO << value;
             rc.push_back(to_string(value));
         }
     }
