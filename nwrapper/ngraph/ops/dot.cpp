@@ -28,6 +28,8 @@ PYBIND11_MODULE(Dot, mod) {
     py::class_<Dot, std::shared_ptr<Dot>, RequiresTensorViewArgs> dot(mod, "Dot");
     dot.def(py::init<const std::shared_ptr<ngraph::Node>&,
                      const std::shared_ptr<ngraph::Node>& >());
+    dot.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                     const std::shared_ptr<ngraph::Node>&, size_t >());
 }
 
 }}  // ngraph

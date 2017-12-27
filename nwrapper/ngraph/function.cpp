@@ -17,6 +17,7 @@
 #include <string>
 #include "ngraph/function.hpp"
 #include "ngraph/types/type.hpp"
+#include "ngraph/common.hpp"
 
 namespace py = pybind11;
 namespace ngraph {
@@ -28,9 +29,12 @@ PYBIND11_MODULE(Function, mod) {
 
     py::class_<Function, std::shared_ptr<Function>> function(mod, "Function");
 
-    function.def(py::init<const std::shared_ptr<Node>&, const std::shared_ptr<const TensorViewType>&,
+    function.def(py::init<const std::shared_ptr<Node>&, const std::shared_ptr<const ValueType>&,
+                          const std::vector<std::shared_ptr<op::Parameter>>&, const std::string&>());
+    function.def(py::init<const Nodes&, const std::vector<std::shared_ptr<const ValueType>>&,
                           const std::vector<std::shared_ptr<op::Parameter>>&, const std::string&>());
     function.def("get_result_type", &Function::get_result_type);
+    function.def("get_results", &Function::get_results);
 }
 
 }  // ngraph
