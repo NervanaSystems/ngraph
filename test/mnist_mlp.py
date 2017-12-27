@@ -22,6 +22,7 @@ from pyngraph.op import Parameter, Maximum, Reshape, Dot, Broadcast
 from pyngraph.op import Float32Constant, Exp, Log, Sum
 from pyngraph.op import Greater, Convert, Reduce
 from pyngraph.op import Add, Multiply, Subtract, Divide
+from pyngraph.op import OneHot
 
 
 float_element_type = Float32.element_type()
@@ -31,7 +32,7 @@ lr = 0.2
 
 Input = Parameter(float_element_type, [bz, 28, 28])
 Label = Parameter(int_element_type, [bz])
-LabelOneHot = Parameter(float_element_type, [bz, 10])
+LabelOneHot = Convert((OneHot(Label, [bz, 10], 1)), float_element_type)
 
 MaxParam1 = Parameter(float_element_type, [])
 MaxParam2 = Parameter(float_element_type, [])

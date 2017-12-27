@@ -24,7 +24,7 @@ namespace py = pybind11;
 void regclass_pyngraph_runtime_ParameterizedTensorView(py::module m) {
     using PTVFloat32 = ngraph::runtime::ParameterizedTensorView<ngraph::element::Float32>;
     py::class_<PTVFloat32, std::shared_ptr<PTVFloat32>, ngraph::runtime::TensorView> ptvfloat32(m, "ParameterizedTensorViewFloat32");
-    ptvfloat32.def("write", (void (PTVFloat32::*) (const void*, size_t, size_t)) &PTVFloat32::write);
-    ptvfloat32.def("read", &PTVFloat32::read);
+    // ptvfloat32.def("write", (void (PTVFloat32::*) (const void*, size_t, size_t)) &PTVFloat32::write);
+    // ptvfloat32.def("read", &PTVFloat32::read);
     // TODO: add other types as well
 }

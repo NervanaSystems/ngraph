@@ -29,8 +29,13 @@ void regclass_pyngraph_Function(py::module m) {
 
     py::class_<ngraph::Function, std::shared_ptr<ngraph::Function>> function(m, "Function");
 
-    function.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<const ngraph::TensorViewType>&,
+    function.def(py::init<const ngraph::Nodes&, const std::vector<std::shared_ptr<const ngraph::ValueType>>&,
+                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&, const std::string&>());
+    function.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<const ngraph::ValueType>&,
+                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&, const std::string&>());
+    function.def(py::init<const std::shared_ptr<ngraph::Node>&,
                           const std::vector<std::shared_ptr<ngraph::op::Parameter>>&, const std::string&>());
     function.def("get_result_type", &ngraph::Function::get_result_type);
+    function.def("get_results", &ngraph::Function::get_results);
 }
 
