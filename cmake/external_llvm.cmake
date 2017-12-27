@@ -54,6 +54,7 @@ if((NGRAPH_CPU_ENABLE OR USE_CUDA) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin
 
     ExternalProject_Get_Property(ext_llvm source_dir)
     set(LLVM_INCLUDE_DIR "${source_dir}/include" PARENT_SCOPE)
+    set(LLVM_INCLUDE_DIR "${source_dir}/include")  # used by other external projects in current scope
     set(LLVM_LIB_DIR "${source_dir}/lib" PARENT_SCOPE)
 
     set(LLVM_LINK_LIBS
