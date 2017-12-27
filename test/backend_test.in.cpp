@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cinttypes>
 #include <cmath>
+#include <cstdlib>
 #include <string>
 
 #include "gtest/gtest.h"
@@ -4562,4 +4563,54 @@ TEST(${BACKEND_NAME}, numeric_double_inf)
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
     cf->call({}, {result});
     EXPECT_EQ((vector<char>{false, false, true, false, false}), result->get_vector<char>());
+}
+
+TEST(${BACKEND_NAME}, abc_tbb)
+{
+    // Force TBB flow graph generation in the CPU backend
+    // This has no effect on other backends
+    bool use_tbb = (getenv("NGRAPH_CPU_USE_TBB") != nullptr);
+    if (!use_tbb)
+    {
+        setenv("NGRAPH_CPU_USE_TBB", "1", 1);
+    }
+
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto rt = make_shared<TensorViewType>(element::f32, shape);
+    auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> c = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
+
+    cf->call({a, b, c}, {result});
+    EXPECT_EQ(result->get_vector<float>(),
+              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+
+    cf->call({b, a, c}, {result});
+    EXPECT_EQ(result->get_vector<float>(),
+              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+
+    cf->call({a, c, b}, {result});
+    EXPECT_EQ(result->get_vector<float>(),
+              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
+
+    if (!use_tbb)
+    {
+        unsetenv("NGRAPH_CPU_USE_TBB");
+    }
 }
