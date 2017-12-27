@@ -67,9 +67,14 @@ void runtime::cpu::CPU_Emitter::EmitAdd(const ngraph::Node* n,
     // the right alignment instead of Eigen::Unaligned
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "   " << emit_array1d(args[0]) << " +\n"
-          << "   " << emit_array1d(args[1]) << ";\n";
+    m_out << "Eigen::Map<Eigen::Array<" << out[0].get_element_type().c_type_string() << ", "
+          << out[0].get_size() << ", 1>, Eigen::Unaligned> out(" << out[0].get_name() << ");\n";
+    m_out << "Eigen::Map<Eigen::Array<" << args[0].get_element_type().c_type_string() << ", "
+          << args[0].get_size() << ", 1>, Eigen::Unaligned> arg0(" << args[0].get_name() << ");\n";
+    m_out << "Eigen::Map<Eigen::Array<" << args[1].get_element_type().c_type_string() << ", "
+          << args[1].get_size() << ", 1>, Eigen::Unaligned> arg1(" << args[1].get_name() << ");\n";
+    m_out << "out = arg0 + arg1;\n";
+
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1422,10 +1427,9 @@ string runtime::cpu::CPU_Emitter::emit_vector(const runtime::cpu::TensorViewWrap
 {
     stringstream ss;
 
-    to_string(tvi.get_size());
-    string type = tvi.get_element_type().c_type_string();
-    ss << "EigenVector<" << type << ">" << format_name(name) << "(" << tvi.get_name() << ", "
-       << eigen_vector_format(tvi) << ")";
+    const element::Type& et = tvi.get_element_type();
+    ss << "EigenVector<" << et.c_type_string() << ">" << format_name(name) << "(" << tvi.get_name()
+       << ", " << eigen_vector_format(tvi) << ")";
     return ss.str();
 }
 
@@ -1434,9 +1438,9 @@ string runtime::cpu::CPU_Emitter::emit_array1d(const runtime::cpu::TensorViewWra
 {
     stringstream ss;
 
-    string type = tvi.get_element_type().c_type_string();
-    ss << "EigenArray1d<" << type << ">" << format_name(name) << "(" << tvi.get_name() << ", "
-       << eigen_vector_format(tvi) << ")";
+    const element::Type& et = tvi.get_element_type();
+    ss << "EigenArray1d<" << et.c_type_string() << ">" << format_name(name) << "(" << tvi.get_name()
+       << ", " << eigen_vector_format(tvi) << ")";
     return ss.str();
 }
 
@@ -1445,8 +1449,8 @@ string runtime::cpu::CPU_Emitter::emit_matrix(const runtime::cpu::TensorViewWrap
 {
     stringstream ss;
 
-    string type = tvi.get_element_type().c_type_string();
-    ss << "EigenMatrix<" << type << ">" << format_name(name) << "(" << tvi.get_name() << ", "
-       << eigen_matrix_format(tvi.get_shape(), tvi.get_strides()) << ")";
+    const element::Type& et = tvi.get_element_type();
+    ss << "EigenMatrix<" << et.c_type_string() << ">" << format_name(name) << "(" << tvi.get_name()
+       << ", " << eigen_matrix_format(tvi.get_shape(), tvi.get_strides()) << ")";
     return ss.str();
 }
