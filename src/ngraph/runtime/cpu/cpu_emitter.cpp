@@ -24,6 +24,7 @@
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_output_element.hpp"
@@ -480,324 +481,6 @@ void runtime::cpu::CPU_Emitter::EmitSubtract(const ngraph::Node* n,
     m_out << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitParameterizedConstantBool(
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
-{
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Bool>*>(n)
-                     ->get_value()
-                     ->get_vector();
-
-    m_out << "// " << n->get_name() << " EmitParameterizedConstantBool\n";
-    if (out[0].is_output())
-    {
-        // Special case where constant is stored directly in the output
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            m_out << out[0].get_name() << "[" << i << "] = static_cast<char>("
-                  << (value[i] ? "true" : "false") << ");\n";
-        }
-    }
-    else
-    {
-        m_out << "// this should be const but eigen hates const :(\n";
-        m_out << "char " << out[0].get_name() << "[] = {\n";
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            if (i != 0)
-            {
-                m_out << ",\n";
-            }
-            m_out << "    " << (value[i] ? "true" : "false");
-        }
-        m_out << "\n};";
-    }
-    m_out << "\n";
-}
-
-static string format_float_as_string(float value)
-{
-    if (isnan(value))
-    {
-        return "NAN";
-    }
-    else if (isinf(value))
-    {
-        if (value > 0)
-        {
-            return "INFINITY";
-        }
-        else
-        {
-            return "-INFINITY";
-        }
-    }
-    else
-    {
-        return to_string(value);
-    }
-}
-
-void runtime::cpu::CPU_Emitter::EmitParameterizedConstantFloat32(
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
-{
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Float32>*>(n)
-                     ->get_value()
-                     ->get_vector();
-    const char* type = "float";
-
-    m_out << "// " << n->get_name() << " EmitParameterizedConstantFloat32\n";
-    if (out[0].is_output())
-    {
-        // Special case where constant is stored directly in the output
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">("
-                  << format_float_as_string(value[i]) << ");\n";
-        }
-    }
-    else
-    {
-        m_out << "// this should be const but eigen hates const :(\n";
-        m_out << type << " " << out[0].get_name() << "[] = {\n";
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            if (i != 0)
-            {
-                m_out << ",\n";
-            }
-            m_out << "    " << format_float_as_string(value[i]);
-        }
-        m_out << "\n};";
-    }
-    m_out << "\n";
-}
-
-void runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt8(
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
-{
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int8>*>(n)
-                     ->get_value()
-                     ->get_vector();
-    const char* type = "int8_t";
-
-    m_out << "// " << n->get_name() << " EmitParameterizedConstantInt8\n";
-    if (out[0].is_output())
-    {
-        // Special case where constant is stored directly in the output
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">("
-                  << static_cast<int>(value[i]) << ");\n";
-        }
-    }
-    else
-    {
-        m_out << "// this should be const but eigen hates const :(\n";
-        m_out << type << " " << out[0].get_name() << "[] = {\n";
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            if (i != 0)
-            {
-                m_out << ",\n";
-            }
-            m_out << "    " << value[i];
-        }
-        m_out << "\n};";
-    }
-    m_out << "\n";
-}
-
-void runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt32(
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
-{
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int32>*>(n)
-                     ->get_value()
-                     ->get_vector();
-    const char* type = "int32_t";
-
-    m_out << "// " << n->get_name() << " EmitParameterizedConstantInt32\n";
-    if (out[0].is_output())
-    {
-        // Special case where constant is stored directly in the output
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i]
-                  << ");\n";
-        }
-    }
-    else
-    {
-        m_out << "// this should be const but eigen hates const :(\n";
-        m_out << type << " " << out[0].get_name() << "[] = {\n";
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            if (i != 0)
-            {
-                m_out << ",\n";
-            }
-            m_out << "    " << value[i];
-        }
-        m_out << "\n};";
-    }
-    m_out << "\n";
-}
-
-void runtime::cpu::CPU_Emitter::EmitParameterizedConstantInt64(
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
-{
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::Int64>*>(n)
-                     ->get_value()
-                     ->get_vector();
-    const char* type = "int64_t";
-
-    m_out << "// " << n->get_name() << " EmitParameterizedConstantInt64\n";
-    if (out[0].is_output())
-    {
-        // Special case where constant is stored directly in the output
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i]
-                  << ");\n";
-        }
-    }
-    else
-    {
-        m_out << "// this should be const but eigen hates const :(\n";
-        m_out << type << " " << out[0].get_name() << "[] = {\n";
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            if (i != 0)
-            {
-                m_out << ",\n";
-            }
-            m_out << "    " << value[i];
-        }
-        m_out << "\n};";
-    }
-    m_out << "\n";
-}
-
-void runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt8(
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
-{
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt8>*>(n)
-                     ->get_value()
-                     ->get_vector();
-    const char* type = "uint8_t";
-
-    m_out << "// " << n->get_name() << " EmitParameterizedConstantUInt8\n";
-    if (out[0].is_output())
-    {
-        // Special case where constant is stored directly in the output
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">("
-                  << static_cast<uint>(value[i]) << ");\n";
-        }
-    }
-    else
-    {
-        m_out << "// this should be const but eigen hates const :(\n";
-        m_out << type << " " << out[0].get_name() << "[] = {\n";
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            if (i != 0)
-            {
-                m_out << ",\n";
-            }
-            m_out << "    " << value[i];
-        }
-        m_out << "\n};";
-    }
-    m_out << "\n";
-}
-
-void runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt32(
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
-{
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt32>*>(n)
-                     ->get_value()
-                     ->get_vector();
-    const char* type = "uint32_t";
-
-    m_out << "// " << n->get_name() << " EmitParameterizedConstantUInt32\n";
-    if (out[0].is_output())
-    {
-        // Special case where constant is stored directly in the output
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i]
-                  << ");\n";
-        }
-    }
-    else
-    {
-        m_out << "// this should be const but eigen hates const :(\n";
-        m_out << type << " " << out[0].get_name() << "[] = {\n";
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            if (i != 0)
-            {
-                m_out << ",\n";
-            }
-            m_out << "    " << value[i];
-        }
-        m_out << "\n};";
-    }
-    m_out << "\n";
-}
-
-void runtime::cpu::CPU_Emitter::EmitParameterizedConstantUInt64(
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
-{
-    auto value = dynamic_cast<const op::ParameterizedConstant<ngraph::element::UInt64>*>(n)
-                     ->get_value()
-                     ->get_vector();
-    const char* type = "uint64_t";
-
-    m_out << "// " << n->get_name() << " EmitParameterizedConstantUInt64\n";
-    if (out[0].is_output())
-    {
-        // Special case where constant is stored directly in the output
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">(" << value[i]
-                  << ");\n";
-        }
-    }
-    else
-    {
-        m_out << "// this should be const but eigen hates const :(\n";
-        m_out << type << " " << out[0].get_name() << "[] = {\n";
-        for (size_t i = 0; i < value.size(); i++)
-        {
-            if (i != 0)
-            {
-                m_out << ",\n";
-            }
-            m_out << "    " << value[i];
-        }
-        m_out << "\n};";
-    }
-    m_out << "\n";
-}
-
 void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
                                               const vector<runtime::cpu::TensorViewWrapper>& args,
                                               const vector<runtime::cpu::TensorViewWrapper>& out)
@@ -840,8 +523,17 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
         {
             m_out << "{   // " << n->get_name() << "\n";
             m_out.indent++;
-            m_out << emit_matrix(out[0]) << ".rowwise() =\n"
-                  << "    " << emit_vector(args[0]) << ".transpose();\n";
+
+            m_out << "Eigen::Map<Eigen::Matrix<" << out[0].get_element_type().c_type_string()
+                  << ", " << join(out[0].get_shape())
+                  << ", Eigen::RowMajor>, Eigen::Aligned64, Eigen::Stride<"
+                  << join(out[0].get_strides()) << ">> out(" << out[0].get_name() << ");\n";
+            m_out << "Eigen::Map<Eigen::Matrix<" << args[0].get_element_type().c_type_string()
+                  << ", 1, " << args[0].get_size()
+                  << ", Eigen::RowMajor>, Eigen::Aligned64, Eigen::Stride<" << args[0].get_size()
+                  << ", 1>> arg0(" << args[0].get_name() << ");\n";
+            m_out << "out = arg0.replicate<" << out[0].get_shape().at(0) << ", 1>();\n";
+
             m_out.indent--;
             m_out << "}\n";
         }
@@ -934,7 +626,7 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
     {
         // Emit an MKL transpose call if possible
         // clang-format off
-        if (result_element_type == ngraph::element::Float32::element_type())
+        if (result_element_type == ngraph::element::f32)
         {
             m_out << "{   // " << n->get_name() << " 2\n";
             m_out.indent++;
@@ -1650,6 +1342,37 @@ void runtime::cpu::CPU_Emitter::EmitSqrt(const ngraph::Node* n,
     m_out << "}\n";
     m_out.indent--;
     m_out << "}\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitConvolution(const ngraph::Node* n,
+                                                const vector<runtime::cpu::TensorViewWrapper>& args,
+                                                const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto convolution = static_cast<const op::Convolution*>(n);
+
+    auto arg0_shape = args[0].get_shape();
+    auto arg1_shape = args[1].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    m_out << "kernel::convolution<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    m_out << "                         " << args[1].get_name() << ",\n";
+    m_out << "                         " << out[0].get_name() << ",\n";
+    m_out << "                         {" << join(arg0_shape) << "},\n";
+    m_out << "                         {" << join(arg1_shape) << "},\n";
+    m_out << "                         {" << join(result_shape) << "},\n";
+    m_out << "                         {" << join(convolution->get_window_movement_strides())
+          << "},\n";
+    m_out << "                         {" << join(convolution->get_window_dilation_strides())
+          << "});\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitNot(const ngraph::Node* n,
+                                        const vector<runtime::cpu::TensorViewWrapper>& args,
+                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    m_out << "kernel::logical_not(" << args[0].get_name() << ",\n"
+          << "                    " << out[0].get_name() << ",\n"
+          << "                    " << out[0].get_size() << ");\n";
 }
 
 //------------------------------------------------------------------------------------------------

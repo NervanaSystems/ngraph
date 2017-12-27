@@ -26,25 +26,24 @@ op::Reduce::Reduce(const std::shared_ptr<Node>& arg_reductee,
     , m_reduction_function(reduction_function)
     , m_reduction_axes(reduction_axes)
 {
-    auto arg_reductee_tensor_view_type = get_inputs().at(0).get_tensor_view_type();
+    auto& input_reductee = get_inputs().at(0);
 
-    auto arg_init_tensor_view_type = get_inputs().at(1).get_tensor_view_type();
-    if (arg_init_tensor_view_type->get_shape().size() != 0)
+    auto& input_init = get_inputs().at(1);
+    if (input_init.get_shape().size() != 0)
     {
         throw ngraph_error("Argument for initial value is not a scalar");
     }
 
-    if (arg_init_tensor_view_type->get_element_type() !=
-        arg_reductee_tensor_view_type->get_element_type())
+    if (input_init.get_element_type() != input_reductee.get_element_type())
     {
         throw ngraph_error("Element types for reductee and initial values do not match");
     }
 
-    auto arg_reductee_shape = arg_reductee_tensor_view_type->get_shape();
+    auto input_reductee_shape = input_reductee.get_shape();
 
     for (auto axis : m_reduction_axes)
     {
-        if (axis >= arg_reductee_shape.size())
+        if (axis >= input_reductee_shape.size())
         {
             throw ngraph_error("Reduction axis is out of bounds");
         }
@@ -52,11 +51,11 @@ op::Reduce::Reduce(const std::shared_ptr<Node>& arg_reductee,
 
     Shape result_shape;
 
-    for (size_t i = 0; i < arg_reductee_shape.size(); i++)
+    for (size_t i = 0; i < input_reductee_shape.size(); i++)
     {
         if (m_reduction_axes.count(i) == 0)
         {
-            result_shape.push_back(arg_reductee_shape.at(i));
+            result_shape.push_back(input_reductee_shape.at(i));
         }
     }
 
@@ -87,6 +86,6 @@ op::Reduce::Reduce(const std::shared_ptr<Node>& arg_reductee,
         throw ngraph_error("Return type from reduction function does not match expected");
     }
 
-    set_value_type_checked(make_shared<TensorViewType>(
-        arg_reductee_tensor_view_type->get_element_type(), result_shape));
+    set_value_type_checked(
+        make_shared<TensorViewType>(input_reductee.get_element_type(), result_shape));
 }

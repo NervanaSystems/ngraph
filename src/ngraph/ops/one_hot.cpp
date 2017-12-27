@@ -23,21 +23,21 @@ op::OneHot::OneHot(const std::shared_ptr<Node>& arg, const Shape& shape, size_t 
     , m_shape(shape)
     , m_one_hot_axis(one_hot_axis)
 {
-    auto arg_tensor_view_type = m_inputs.at(0).get_tensor_view_type();
-    auto& arg_element_type = arg_tensor_view_type->get_element_type();
+    auto& input = m_inputs.at(0);
+    auto& input_element_type = input.get_element_type();
 
     if (one_hot_axis >= shape.size())
     {
         throw ngraph_error("One-hot axis is out of bounds");
     }
 
-    auto expected_arg_shape = shape;
-    expected_arg_shape.erase(expected_arg_shape.begin() + one_hot_axis);
+    auto expected_input_shape = shape;
+    expected_input_shape.erase(expected_input_shape.begin() + one_hot_axis);
 
-    if (arg_tensor_view_type->get_shape() != expected_arg_shape)
+    if (input.get_shape() != expected_input_shape)
     {
         throw ngraph_error("One-hot argument shape is not compatible with desired output shape");
     }
 
-    set_value_type_checked(make_shared<TensorViewType>(arg_element_type, shape));
+    set_value_type_checked(make_shared<TensorViewType>(input_element_type, shape));
 }

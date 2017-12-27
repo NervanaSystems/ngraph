@@ -12,33 +12,6 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include <string>
 
-#include <memory>
-
-#include "ngraph/runtime/manager.hpp"
-
-namespace ngraph
-{
-    class Function;
-
-    namespace runtime
-    {
-        class ExternalFunction;
-
-        namespace ngvm
-        {
-            /// @brief Transformer for the interpreted backend
-            class NGVMManager : public Manager
-            {
-            public:
-                virtual std::shared_ptr<Backend> allocate_backend() override;
-
-                virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
-                    compile(const std::shared_ptr<ngraph::Function>& fun) override;
-
-                static Factory factory;
-            };
-        };
-    }
-}
+const std::string rewrite_header(const std::string& s, const std::string& path);

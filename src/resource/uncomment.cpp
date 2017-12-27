@@ -12,29 +12,37 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include <iostream>
+#include <sstream>
 
-#include <memory>
+#include "uncomment.hpp"
 
-namespace ngraph
+using namespace std;
+
+// start 23,749,645 in 1,912 files
+
+void skip_comment(istream& s)
 {
-    namespace runtime
-    {
-        namespace ngvm
-        {
-            class CallFrame;
+}
 
-            /// @brief An interpreter for an Op
-            ///
-            /// The call_frame has a vector of instructions and calls execute on each instruction, passing it the call_frame.
-            /// Instructions get argument, result, and intermediate tensor views from the call frame. Instructions may also
-            /// set a flag in the call_frame to end execution, or adjust execution by modifying the position in the instruction vector.
-            class Instruction
+string uncomment(const string& s)
+{
+    stringstream out;
+    for (size_t i = 0; i < s.size(); i++)
+    {
+        char c = s[i];
+        if (i < s.size() - 1 && c == '/' && s[i + 1] == '/')
+        {
+            while (i < s.size() && c != '\n')
             {
-            public:
-                virtual ~Instruction() {}
-                virtual void execute(CallFrame& call_frame) const = 0;
-            };
+                c = s[++i];
+            }
+            out << "\n";
+        }
+        else
+        {
+            out << c;
         }
     }
+    return out.str();
 }

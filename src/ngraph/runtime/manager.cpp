@@ -14,6 +14,7 @@
 
 #include <dlfcn.h>
 #include <iostream>
+#include <mutex>
 #include <sstream>
 #include <string>
 
@@ -23,57 +24,73 @@
 
 using namespace ngraph::runtime;
 
+static std::mutex load_plugins_mutex;
+static std::mutex close_plugins_mutex;
+
 bool Manager::m_is_factory_map_initialized = false;
-std::shared_ptr<std::vector<void*>> Manager::m_plugin_lib_handles =
-    std::make_shared<std::vector<void*>>(std::vector<void*>());
+std::vector<void*> Manager::m_plugin_handles = {};
 
 void Manager::load_plugins(const std::string& runtime_plugin_libs)
 {
-    std::vector<std::string> plugin_lib_paths = ngraph::split(runtime_plugin_libs, ':', false);
+    std::lock_guard<std::mutex> lock(load_plugins_mutex);
 
-    for (auto plugin_lib_path : plugin_lib_paths)
+    if (Manager::m_is_factory_map_initialized)
     {
-        if (plugin_lib_path.size() > 0)
+        return;
+    }
+
+    std::vector<std::string> plugin_paths = ngraph::split(runtime_plugin_libs, ':', false);
+    for (auto plugin_path : plugin_paths)
+    {
+        if (plugin_path.size() > 0)
         {
-            void* lib_handle = dlopen(plugin_lib_path.c_str(), RTLD_NOW);
-            if (lib_handle)
+            void* plugin_handle = dlopen(plugin_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
+            if (plugin_handle)
             {
-                Manager::m_plugin_lib_handles->push_back(lib_handle);
+                void (*register_plugin)() =
+                    reinterpret_cast<void (*)()>(dlsym(plugin_handle, "register_plugin"));
+                if (register_plugin != NULL)
+                {
+                    register_plugin();
+                    Manager::m_plugin_handles.push_back(plugin_handle);
+                }
+                else
+                {
+                    throw ngraph_error("register_plugin() not found in " + plugin_path);
+                }
             }
             else
             {
-                throw ngraph_error("Cannot open library " + plugin_lib_path);
+                throw ngraph_error("Cannot open library " + plugin_path);
             }
         }
     }
+
+    Manager::m_is_factory_map_initialized = true;
 }
 
 // TODO: Should call this function after plugin is not needed anymore.
 void Manager::close_plugins()
 {
-    for (auto lib_handle : *Manager::m_plugin_lib_handles)
+    std::lock_guard<std::mutex> lock(close_plugins_mutex);
+
+    for (auto plugin_handle : Manager::m_plugin_handles)
     {
-        dlclose(lib_handle);
+        dlclose(plugin_handle);
     }
-    Manager::m_plugin_lib_handles->clear();
+    Manager::m_plugin_handles.clear();
 }
 
 Manager::FactoryMap& Manager::get_factory_map()
 {
     // Stores Manager Factories
     static FactoryMap factory_map;
-
-    // Try to load runtime plugins
-    if (!Manager::m_is_factory_map_initialized)
-    {
-        Manager::load_plugins(RUNTIME_PLUGIN_LIBS);
-        Manager::m_is_factory_map_initialized = true;
-    }
     return factory_map;
 }
 
 std::shared_ptr<Manager> Manager::get(const std::string& name)
 {
+    Manager::load_plugins(RUNTIME_PLUGIN_LIBS);
     return get_factory_map().at(name)(name);
 }
 

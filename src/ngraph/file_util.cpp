@@ -331,3 +331,14 @@ void ngraph::file_util::release_lock(int fd, const std::string& filename)
         close(fd);
     }
 }
+
+time_t ngraph::file_util::get_timestamp(const std::string& filename)
+{
+    time_t rc = 0;
+    struct stat st;
+    if (stat(filename.c_str(), &st) == 0)
+    {
+        rc = st.st_mtime;
+    }
+    return rc;
+}

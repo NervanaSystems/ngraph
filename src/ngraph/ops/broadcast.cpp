@@ -25,18 +25,17 @@ op::Broadcast::Broadcast(const std::shared_ptr<Node>& arg,
     , m_shape(shape)
     , m_broadcast_axes(broadcast_axes)
 {
-    auto arg_tensor_view_type = m_inputs.at(0).get_tensor_view_type();
+    auto& input = m_inputs.at(0);
     vector<size_t> target_shape = m_shape;
     for (auto i = m_broadcast_axes.rbegin(); i != m_broadcast_axes.rend(); ++i)
     {
         target_shape.erase(target_shape.begin() + *i);
     }
-    if (Shape{target_shape} != arg_tensor_view_type->get_shape())
+    if (Shape{target_shape} != input.get_shape())
     {
         throw ngraph_error("Broadcast arg, shape, and axes are incompatible");
     }
-    set_value_type_checked(
-        make_shared<TensorViewType>(arg_tensor_view_type->get_element_type(), m_shape));
+    set_value_type_checked(make_shared<TensorViewType>(input.get_element_type(), m_shape));
 }
 
 void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints,

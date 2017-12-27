@@ -14,26 +14,6 @@
 
 #pragma once
 
-#include "ngraph/runtime/backend.hpp"
+#include <string>
 
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace ngvm
-        {
-            /// @brief Transformer for the interpreted backend
-            class NGVMBackend : public Backend
-            {
-            public:
-                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
-                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function)
-                    override;
-
-                std::shared_ptr<ngraph::runtime::TensorView>
-                    make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                             const Shape& shape) override;
-            };
-        }
-    }
-}
+std::string uncomment(const std::string& s);

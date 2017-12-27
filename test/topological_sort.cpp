@@ -36,7 +36,7 @@ TEST(topological_sort, basic)
     vector<shared_ptr<op::Parameter>> args;
     for (int i = 0; i < 10; i++)
     {
-        auto arg = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+        auto arg = make_shared<op::Parameter>(element::f32, Shape{});
         ASSERT_NE(nullptr, arg);
         args.push_back(arg);
     }
@@ -56,7 +56,7 @@ TEST(topological_sort, basic)
     auto r0 = make_shared<op::Add>(t3, t4);
     ASSERT_NE(nullptr, r0);
 
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
     ASSERT_NE(nullptr, rt);
 
     auto f0 = make_shared<Function>(r0, rt, args);
@@ -84,7 +84,7 @@ TEST(topological_sort, basic)
 //     vector<shared_ptr<op::Parameter>> args;
 //     for (int i = 0; i < 10; i++)
 //     {
-//         auto arg = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+//         auto arg = make_shared<op::Parameter>(element::f32, Shape{1});
 //         ASSERT_NE(nullptr, arg);
 //         args.push_back(arg);
 //     }
@@ -107,16 +107,16 @@ TEST(benchmark, topological_sort)
     // x[i+1] = tanh(dot(W,x[i])+b)
     shared_ptr<Node> result;
     vector<shared_ptr<op::Parameter>> args;
-    result = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+    result = make_shared<op::Parameter>(element::f32, Shape{});
     for (int i = 0; i < 1000000; i++)
     {
-        auto in_1 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
-        auto in_2 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+        auto in_1 = make_shared<op::Parameter>(element::f32, Shape{});
+        auto in_2 = make_shared<op::Parameter>(element::f32, Shape{});
         args.push_back(in_1);
         args.push_back(in_2);
         result = make_cell(result, in_1, in_2);
     }
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
+    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
     auto f0 = make_shared<Function>(result, rt, args);
 
     timer.start();
@@ -142,17 +142,17 @@ TEST(topological_sort, collect_functions)
 {
     // First create "f(A,B,C) = (A+B)*C".
     auto shape = Shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt_f = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto rt_f = make_shared<TensorViewType>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, rt_f, op::Parameters{A, B, C}, "f");
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
-    auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Y = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Z = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt_g = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto X = make_shared<op::Parameter>(element::f32, shape);
+    auto Y = make_shared<op::Parameter>(element::f32, shape);
+    auto Z = make_shared<op::Parameter>(element::f32, shape);
+    auto rt_g = make_shared<TensorViewType>(element::f32, shape);
     auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}) +
                                        make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}),
                                    rt_g,
@@ -160,10 +160,10 @@ TEST(topological_sort, collect_functions)
                                    "g");
 
     // Now make "h(X,Y,Z) = g(X,Y,Z) + g(X,Y,Z)"
-    auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Y1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto Z1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt_h = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto X1 = make_shared<op::Parameter>(element::f32, shape);
+    auto Y1 = make_shared<op::Parameter>(element::f32, shape);
+    auto Z1 = make_shared<op::Parameter>(element::f32, shape);
+    auto rt_h = make_shared<TensorViewType>(element::f32, shape);
     auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}) +
                                        make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}),
                                    rt_h,
@@ -192,10 +192,10 @@ TEST(topological_sort, unused_function_arg)
     // Create a function with an unused argument
     // B is unused in the function but must be in the graph
     auto shape = Shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto B = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto C = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-    auto rt_f = make_shared<TensorViewType>(element::Float32::element_type(), shape);
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto rt_f = make_shared<TensorViewType>(element::f32, shape);
     auto result = A + C + C;
     auto f = make_shared<Function>(result, rt_f, op::Parameters{A, B, C}, "f");
 

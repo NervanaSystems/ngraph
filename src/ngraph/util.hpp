@@ -230,6 +230,12 @@ namespace ngraph
         return a * b;
     }
 
+    template <typename T>
+    T ceil_div(const T& x, const T& y)
+    {
+        return (x == 0 ? 0 : (1 + (x - 1) / y));
+    }
+
     void traverse_nodes(Function* p, std::function<void(std::shared_ptr<Node>)> f);
     void traverse_nodes(std::shared_ptr<Function> p, std::function<void(std::shared_ptr<Node>)> f);
     void traverse_functions(std::shared_ptr<Function> p,
@@ -259,6 +265,10 @@ namespace ngraph
     // NodeMap output (by reference) fully maps input and cloned function ops
     std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func,
                                                      NodeMap& node_map);
+
+    void* aligned_alloc(size_t alignment, size_t size);
+    void aligned_free(void*);
+    size_t round_up(size_t size, size_t alignment);
 
     /*
     * Return type struct for cache_fprop, with the modified fprop and bprop

@@ -57,7 +57,7 @@ namespace ngraph
 
             static void close_plugins();
 
-            static std::shared_ptr<std::vector<void*>> m_plugin_lib_handles;
+            static std::vector<void*> m_plugin_handles;
 
             static bool m_is_factory_map_initialized;
 

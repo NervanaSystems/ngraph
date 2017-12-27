@@ -29,25 +29,24 @@ op::Select::Select(const std::shared_ptr<Node>& arg0,
                    const std::shared_ptr<Node>& arg2)
     : RequiresTensorViewArgs("Select", Nodes{arg0, arg1, arg2})
 {
-    auto arg0_tensor_type = get_inputs().at(0).get_tensor_view_type();
-    auto arg1_tensor_type = get_inputs().at(1).get_tensor_view_type();
-    auto arg2_tensor_type = get_inputs().at(2).get_tensor_view_type();
+    auto& input_0 = get_inputs().at(0);
+    auto& input_1 = get_inputs().at(1);
+    auto& input_2 = get_inputs().at(2);
 
-    if (arg0_tensor_type->get_element_type() != element::Bool::element_type())
+    if (input_0.get_element_type() != element::boolean)
     {
         throw ngraph_error("Argument 0 for arithmetic operators must have boolean element type");
     }
-    if (arg0_tensor_type->get_shape() != arg1_tensor_type->get_shape() ||
-        arg0_tensor_type->get_shape() != arg2_tensor_type->get_shape())
+    if (input_0.get_shape() != input_1.get_shape() || input_0.get_shape() != input_2.get_shape())
     {
-        throw ngraph_error("Arguments must have the same tensor view shape");
+        throw ngraph_error("Arguments must have the same shape");
     }
-    if (*arg1_tensor_type != *arg2_tensor_type)
+    if (input_1.get_element_type() != input_2.get_element_type())
     {
-        throw ngraph_error("Arguments 1 and 2 must have the same tensor view type");
+        throw ngraph_error("Arguments 1 and 2 must have the same element type");
     }
 
-    set_value_type_checked(arg1_tensor_type);
+    set_value_type_checked(input_1.get_element_type(), input_1.get_shape());
 }
 
 void ngraph::op::Select::generate_adjoints(autodiff::Adjoints& adjoints,
@@ -57,9 +56,8 @@ void ngraph::op::Select::generate_adjoints(autodiff::Adjoints& adjoints,
     auto x = get_inputs().at(1).get_output().get_node();
     auto y = get_inputs().at(2).get_output().get_node();
 
-    auto p_as_float = std::make_shared<op::Convert>(p, element::Float32::element_type());
-    auto not_p_as_float = std::make_shared<op::Convert>(std::make_shared<op::Not>(p),
-                                                        element::Float32::element_type());
+    auto p_as_float = std::make_shared<op::Convert>(p, element::f32);
+    auto not_p_as_float = std::make_shared<op::Convert>(std::make_shared<op::Not>(p), element::f32);
 
     adjoints.add_delta(x, delta * p_as_float);
     adjoints.add_delta(y, delta * not_p_as_float);

@@ -72,8 +72,7 @@ public:
 
 static std::shared_ptr<Node> construct_constant_node(int n)
 {
-    auto int_t = ngraph::runtime::make_tensor<element::Int32>(Shape{1}, {n});
-    return make_shared<op::Int32Constant>(Shape{1}, int_t);
+    return op::Constant::create(element::i32, Shape{1}, {n});
 }
 
 class TestGraphRewrite : public ngraph::pass::GraphRewrite
@@ -94,19 +93,19 @@ public:
             auto pattern_map = m.get_pattern_map();
 
             size_t const_node_index = m.match_root()->get_input_ops().at(0) == pattern_map[pattern];
-            auto const_node = dynamic_pointer_cast<op::ParameterizedConstant<element::Int32>>(
+            auto const_node = dynamic_pointer_cast<op::Constant>(
                 m.match_root()->get_input_ops().at(const_node_index));
             auto second_node = m.match_root()->get_input_ops().at(const_node_index);
             NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node;
             NGRAPH_DEBUG << "pattern " << pattern_map[pattern]->description() << " , "
                          << pattern_map[pattern];
-            assert(const_node);
+            ASSERT_TRUE(const_node);
 
             auto pattern_value_type =
                 dynamic_pointer_cast<const TensorViewType>(pattern_map[pattern]->get_value_type());
             auto const_node_value_type =
                 dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
-            assert(pattern_value_type && const_node);
+            ASSERT_TRUE(pattern_value_type && const_node);
 
             if (pattern_value_type->get_element_type() !=
                     const_node_value_type->get_element_type() ||
@@ -116,7 +115,7 @@ public:
                 return;
             }
 
-            auto const_values = const_node->get_value()->get_vector();
+            auto const_values = const_node->get_vector<int32_t>();
             bool all_ones =
                 std::all_of(begin(const_values), end(const_values), [](int e) { return e == 1; });
 
@@ -149,19 +148,19 @@ public:
             auto pattern_map = m.get_pattern_map();
 
             size_t const_node_index = m.match_root()->get_input_ops().at(0) == pattern_map[pattern];
-            auto const_node = dynamic_pointer_cast<op::ParameterizedConstant<element::Int32>>(
+            auto const_node = dynamic_pointer_cast<op::Constant>(
                 m.match_root()->get_input_ops().at(const_node_index));
             auto second_node = m.match_root()->get_input_ops().at(const_node_index);
             NGRAPH_DEBUG << "second_node " << second_node->description() << " , " << second_node;
             NGRAPH_DEBUG << "pattern " << pattern_map[pattern]->description() << " , "
                          << pattern_map[pattern];
-            assert(const_node);
+            ASSERT_NE(nullptr, const_node);
 
             auto pattern_value_type =
                 dynamic_pointer_cast<const TensorViewType>(pattern_map[pattern]->get_value_type());
             auto const_node_value_type =
                 dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
-            assert(pattern_value_type && const_node);
+            ASSERT_TRUE(pattern_value_type && const_node);
 
             if (pattern_value_type->get_element_type() !=
                     const_node_value_type->get_element_type() ||
@@ -171,7 +170,7 @@ public:
                 return;
             }
 
-            auto const_values = const_node->get_value()->get_vector();
+            auto const_values = const_node->get_vector<int>();
             bool all_zeros =
                 std::all_of(begin(const_values), end(const_values), [](int e) { return e == 0; });
 
@@ -202,7 +201,7 @@ static void run_passes(pass::Manager& pass_manager,
                        std::vector<shared_ptr<op::Parameter>> parms)
 {
     auto shape = Shape{1};
-    auto rt = make_shared<TensorViewType>(element::Int32::element_type(), shape);
+    auto rt = make_shared<TensorViewType>(element::i32, shape);
     auto func = make_shared<Function>(graph, rt, op::Parameters{parms});
     pass_manager.run_passes(func);
 }
@@ -216,8 +215,8 @@ TEST(pattern, graph_rewrite)
     pass_manager.register_pass<TestGraphRewrite>();
 
     {
-        auto a = make_shared<op::Parameter>(element::Int32::element_type(), shape);
-        auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+        auto a = make_shared<op::Parameter>(element::i32, shape);
+        auto b = make_shared<op::Parameter>(element::i32, shape);
         auto iconst0 = construct_constant_node(0);
         auto sum = (a + iconst0);
         auto graph = b + sum;
@@ -234,8 +233,8 @@ TEST(pattern, graph_rewrite)
     }
 
     {
-        auto a = make_shared<op::Parameter>(element::Int32::element_type(), shape);
-        auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+        auto a = make_shared<op::Parameter>(element::i32, shape);
+        auto b = make_shared<op::Parameter>(element::i32, shape);
         auto iconst1 = construct_constant_node(1);
         auto mul = (a * iconst1);
         auto graph = b + mul;
@@ -252,8 +251,8 @@ TEST(pattern, graph_rewrite)
     }
 
     {
-        auto a = make_shared<op::Parameter>(element::Int32::element_type(), shape);
-        auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+        auto a = make_shared<op::Parameter>(element::i32, shape);
+        auto b = make_shared<op::Parameter>(element::i32, shape);
         auto iconst1 = construct_constant_node(1);
         auto graph = ((((a * iconst1) * iconst1) * iconst1) * iconst1) + b;
         run_passes(pass_manager, graph, {a, b});
@@ -265,8 +264,8 @@ TEST(pattern, graph_rewrite)
     }
 
     {
-        auto a = make_shared<op::Parameter>(element::Int32::element_type(), shape);
-        auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+        auto a = make_shared<op::Parameter>(element::i32, shape);
+        auto b = make_shared<op::Parameter>(element::i32, shape);
         auto iconst0 = construct_constant_node(0);
         auto iconst1 = construct_constant_node(1);
         auto graph = b + (iconst0 + ((a + iconst0) * iconst1));
@@ -279,8 +278,8 @@ TEST(pattern, graph_rewrite)
     }
 
     {
-        auto a = make_shared<op::Parameter>(element::Int32::element_type(), shape);
-        auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+        auto a = make_shared<op::Parameter>(element::i32, shape);
+        auto b = make_shared<op::Parameter>(element::i32, shape);
         auto iconst1 = construct_constant_node(1);
         auto graph = b + (iconst1 * (iconst1 * (iconst1 * (iconst1 * a))));
         run_passes(pass_manager, graph, {a, b});
@@ -296,7 +295,7 @@ TEST(pattern, matcher)
 {
     auto shape = Shape{1};
 
-    auto a = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+    auto a = make_shared<op::Parameter>(element::i32, shape);
     TestMatcher n(nullptr);
     ASSERT_TRUE(n.match(a, a));
 
@@ -316,8 +315,8 @@ TEST(pattern, matcher)
         pattern::op::Label::make_from_node(a, [](std::shared_ptr<Node> no) { return false; });
     ASSERT_FALSE(n.match(pattern_false, a));
 
-    auto b = make_shared<op::Parameter>(element::Int32::element_type(), shape);
-    auto d = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto d = make_shared<op::Parameter>(element::i32, shape);
     ASSERT_FALSE(n.match(d, b));
 
     ASSERT_FALSE(n.match(abs + b, b + b));
@@ -329,7 +328,7 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(b + pattern, abs + b));
     ASSERT_EQ(n.get_pattern_map()[pattern], abs);
 
-    auto c = make_shared<op::Parameter>(element::Int32::element_type(), shape);
+    auto c = make_shared<op::Parameter>(element::i32, shape);
     ASSERT_TRUE(n.match(c * (b + pattern), c * (abs + b)));
     ASSERT_EQ(n.get_pattern_map()[pattern], abs);
 
@@ -342,10 +341,9 @@ TEST(pattern, matcher)
     auto iconst1_1 = construct_constant_node(1);
     ASSERT_TRUE(n.match(pattern * iconst1_0, a * iconst1_1)); //different iconst
     ASSERT_EQ(n.get_pattern_map()[pattern], a);
-    auto fconst1_0 =
-        make_shared<op::Constant>(element::Float32::element_type(), Shape{1}, std::to_string(1));
+    auto fconst1_0 = op::Constant::create(element::f32, Shape{1}, {1});
     auto patternf = pattern::op::Label::make_from_node(fconst1_0);
-    ASSERT_FALSE(n.match(patternf * fconst1_0, a * iconst1_1)); //different iconst
+    ASSERT_TRUE(n.match(patternf * fconst1_0, a * iconst1_1)); //different iconst
 
     //Subgraph labels
     auto add = a + b;
