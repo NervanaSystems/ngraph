@@ -21,6 +21,32 @@
 using namespace ngraph;
 using namespace std;
 
+template <typename T>
+std::string to_cpp_string(T value)
+{
+    string rc;
+    if (isnan(value))
+    {
+        rc = "NAN";
+    }
+    else if (isinf(value))
+    {
+        if (value > 0)
+        {
+            rc = "INFINITY";
+        }
+        else
+        {
+            rc = "-INFINITY";
+        }
+    }
+    else
+    {
+        rc = to_string(value);
+    }
+    return rc;
+}
+
 op::Constant::~Constant()
 {
     if (m_data)
@@ -44,14 +70,14 @@ std::vector<std::string> op::Constant::get_value_strings() const
     {
         for (float value : get_vector<float>())
         {
-            rc.push_back(isnan(value) ? "NAN" : to_string(value));
+            rc.push_back(to_cpp_string(value));
         }
     }
     else if (m_element_type == element::f64)
     {
         for (double value : get_vector<double>())
         {
-            rc.push_back(isnan(value) ? "NAN" : to_string(value));
+            rc.push_back(to_cpp_string(value));
         }
     }
     else if (m_element_type == element::i8)
