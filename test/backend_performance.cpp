@@ -41,6 +41,24 @@ static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
     tv->write(data.data(), 0, data_size);
 }
 
+static multimap<size_t, string>
+    agregate_timing(const vector<runtime::cpu::PerformanceCounter>& perf_data)
+{
+    unordered_map<string, size_t> timing;
+    for (const runtime::cpu::PerformanceCounter& p : perf_data)
+    {
+        string op = p.name().substr(0, p.name().find('_'));
+        timing[op] += p.microseconds();
+    }
+
+    multimap<size_t, string> rc;
+    for (const pair<string, size_t>& t : timing)
+    {
+        rc.insert({t.second, t.first});
+    }
+    return rc;
+}
+
 // Starting point CPU: 1.2ms/iteration
 
 shared_ptr<runtime::TensorView> make_tensor(runtime::Backend& backend, const ValueType& value)
@@ -87,6 +105,12 @@ TEST(benchmark, mxnet_mnist_mlp_forward)
 
 TEST(benchmark, mxnet_10_bucket_lstm)
 {
+    bool emit_timing = (std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr);
+    if (!emit_timing)
+    {
+        cout << "To get per-op timing set the environment variable NGRAPH_CPU_EMIT_TIMING\n";
+    }
+
     test::Uniform<float> rng{-1, 1, 0};
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/10_bucket_LSTM.json");
     const string json_string = file_util::read_file_to_string(json_path);
@@ -111,7 +135,7 @@ TEST(benchmark, mxnet_10_bucket_lstm)
 
     stopwatch t1;
     t1.start();
-    float count = 10;
+    float count = 30;
     for (size_t i = 0; i < static_cast<size_t>(count); i++)
     {
         cf->call(args, {result});
@@ -120,16 +144,33 @@ TEST(benchmark, mxnet_10_bucket_lstm)
     float time = t1.get_milliseconds();
     cout << time / count << "ms per iteration\n";
 
-    vector<runtime::cpu::PerformanceCounter> perf_data = cpu_cf->get_performance_data();
-    sort(
-        perf_data.begin(),
-        perf_data.end(),
-        [](const runtime::cpu::PerformanceCounter& p1, const runtime::cpu::PerformanceCounter& p2) {
-            return p1.total_microseconds() > p2.total_microseconds();
-        });
-    for (const runtime::cpu::PerformanceCounter& p : perf_data)
+    if (emit_timing)
     {
-        NGRAPH_INFO << p.name() << ", " << p.total_microseconds();
+        vector<runtime::cpu::PerformanceCounter> perf_data = cpu_cf->get_performance_data();
+        sort(perf_data.begin(),
+             perf_data.end(),
+             [](const runtime::cpu::PerformanceCounter& p1,
+                const runtime::cpu::PerformanceCounter& p2) {
+                 return p1.total_microseconds() > p2.total_microseconds();
+             });
+        multimap<size_t, string> timing = agregate_timing(perf_data);
+        for (auto it = timing.rbegin(); it != timing.rend(); it++)
+        {
+            cout.imbue(locale(""));
+            cout << setw(15) << left << it->second << " " << setw(10) << right << it->first
+                 << "us\n";
+        }
+        // size_t count = 30;
+        // for (const runtime::cpu::PerformanceCounter& p : perf_data)
+        // {
+        //     if (--count == 0)
+        //     {
+        //         break;
+        //     }
+        //     cout.imbue(locale(""));
+        //     cout << setw(15) << left << p.name() << " " << setw(10) << right
+        //          << p.microseconds() << "us\n";
+        // }
     }
 }
 

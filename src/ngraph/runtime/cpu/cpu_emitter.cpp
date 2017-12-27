@@ -67,14 +67,9 @@ void runtime::cpu::CPU_Emitter::EmitAdd(const ngraph::Node* n,
     // the right alignment instead of Eigen::Unaligned
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-    m_out << "Eigen::Map<Eigen::Array<" << out[0].get_element_type().c_type_string() << ", "
-          << out[0].get_size() << ", 1>, Eigen::Unaligned> out(" << out[0].get_name() << ");\n";
-    m_out << "Eigen::Map<Eigen::Array<" << args[0].get_element_type().c_type_string() << ", "
-          << args[0].get_size() << ", 1>, Eigen::Unaligned> arg0(" << args[0].get_name() << ");\n";
-    m_out << "Eigen::Map<Eigen::Array<" << args[1].get_element_type().c_type_string() << ", "
-          << args[1].get_size() << ", 1>, Eigen::Unaligned> arg1(" << args[1].get_name() << ");\n";
-    m_out << "out = arg0 + arg1;\n";
-
+    m_out << emit_array1d(out[0]) << " =\n"
+          << "   " << emit_array1d(args[0]) << " +\n"
+          << "   " << emit_array1d(args[1]) << ";\n";
     m_out.indent--;
     m_out << "}\n";
 }
