@@ -28,28 +28,21 @@ namespace ngraph
 
             namespace eigen
             {
-                using DynamicStrides = Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>;
-                using VectorStrides = Eigen::Stride<Eigen::Dynamic, 1>;
+                template <typename T>
+                using EigenArrayBase =
+                    Eigen::Map<Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>,
+                               0,
+                               Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
 
                 template <typename T>
-                using DynamicArray =
-                    Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+                using EigenMatrixBase =
+                    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>,
+                               0,
+                               Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>;
 
                 template <typename T>
-                using EigenArrayBase = Eigen::Map<DynamicArray<T>, 0, DynamicStrides>;
-
-                template <typename T>
-                using DynamicMatrix =
-                    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-
-                template <typename T>
-                using EigenMatrixBase = Eigen::Map<DynamicMatrix<T>, 0, DynamicStrides>;
-
-                template <typename T>
-                using DynamicVector = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-
-                template <typename T>
-                using EigenVectorBase = Eigen::Map<DynamicVector<T>, 0, VectorStrides>;
+                using EigenVectorBase = Eigen::
+                    Map<Eigen::Matrix<T, Eigen::Dynamic, 1>, 0, Eigen::Stride<Eigen::Dynamic, 1>>;
 
                 namespace fmt
                 {
@@ -94,21 +87,19 @@ namespace ngraph
                 template <typename T,
                           typename FMT,
                           typename BASE,
-                          typename STRIDES = DynamicStrides>
+                          typename STRIDES = Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>
                 class EigenWrapper : public BASE
                 {
-                    using base = BASE;
-
                 public:
                     EigenWrapper(T* t, const FMT& fmt)
-                        : base(t, fmt.l0, fmt.l1, STRIDES(fmt.s0, fmt.s1))
+                        : BASE(t, fmt.l0, fmt.l1, STRIDES(fmt.s0, fmt.s1))
                     {
                     }
 
                     template <typename U>
                     EigenWrapper& operator=(const U& other)
                     {
-                        this->base::operator=(other);
+                        this->BASE::operator=(other);
                         return *this;
                     }
                 };
@@ -120,7 +111,8 @@ namespace ngraph
                 using EigenMatrix = EigenWrapper<T, FMT, EigenMatrixBase<T>>;
 
                 template <typename T, typename FMT = fmt::V>
-                using EigenVector = EigenWrapper<T, FMT, EigenVectorBase<T>, VectorStrides>;
+                using EigenVector =
+                    EigenWrapper<T, FMT, EigenVectorBase<T>, Eigen::Stride<Eigen::Dynamic, 1>>;
             }
         }
     }
