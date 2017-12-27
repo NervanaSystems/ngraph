@@ -88,7 +88,6 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -338,9 +337,9 @@ using namespace ngraph::runtime;
         size_t arg_index = 0;
         for (shared_ptr<op::Parameter> param : current_function->get_parameters())
         {
-            for (const descriptor::Output& output : param->get_outputs())
+            for (size_t i = 0; i < param->get_num_outputs(); ++i)
             {
-                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
                 const element::Type& et = tv->get_tensor_view_type()->get_element_type();
                 string type = et.c_type_string();
                 writer << "" << type << "* " << tv->get_tensor().get_name() << " = static_cast<"
@@ -356,9 +355,10 @@ using namespace ngraph::runtime;
         size_t output_index = 0;
         unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
         vector<size_t> aliases;
-        for (const descriptor::Output* output : current_function->get_outputs())
+        for (size_t i = 0; i < current_function->get_num_outputs(); ++i)
         {
-            shared_ptr<descriptor::TensorView> otv = output->get_tensor_view();
+            shared_ptr<Node> op = current_function->get_output_op(i);
+            shared_ptr<descriptor::TensorView> otv = op->get_output_tensor_view();
             vector<size_t>& al = output_alias_map[otv.get()];
             al.push_back(output_index);
             if (al.size() > 1)
@@ -370,9 +370,10 @@ using namespace ngraph::runtime;
 
         output_index = 0;
         set<string> output_names;
-        for (const descriptor::Output* output : current_function->get_outputs())
+        for (size_t i = 0; i < current_function->get_num_outputs(); ++i)
         {
-            shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
+            shared_ptr<Node> op = current_function->get_output_op(i);
+            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
             const element::Type& et = tv->get_tensor_view_type()->get_element_type();
             bool parameter_as_output = false;
             for (shared_ptr<op::Parameter> param : current_function->get_parameters())

@@ -43,10 +43,10 @@ static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
 
 // Starting point CPU: 1.2ms/iteration
 
-shared_ptr<runtime::TensorView> make_tensor(runtime::Backend& backend, const ValueType& value)
+shared_ptr<runtime::TensorView> make_tensor(runtime::Backend& backend, shared_ptr<Node> value)
 {
     shared_ptr<runtime::TensorView> arg =
-        backend.make_primary_tensor_view(value.get_element_type(), value.get_shape());
+        backend.make_primary_tensor_view(value->get_element_type(), value->get_shape());
     return arg;
 }
 
@@ -66,12 +66,11 @@ TEST(benchmark, mxnet_mnist_mlp_forward)
     vector<shared_ptr<runtime::Value>> args;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
-        auto arg = make_tensor(*backend, *(param->get_value_type()));
+        auto arg = make_tensor(*backend, param);
         rng.initialize(arg);
         args.push_back(arg);
     }
-    shared_ptr<const ValueType> result_type = f->get_result_type();
-    auto result = make_tensor(*backend, *result_type);
+    auto result = make_tensor(*backend, f->get_output_op(0));
 
     stopwatch t1;
     t1.start();
@@ -102,12 +101,11 @@ TEST(benchmark, mxnet_10_bucket_lstm)
     vector<shared_ptr<runtime::Value>> args;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
-        auto arg = make_tensor(*backend, *(param->get_value_type()));
+        auto arg = make_tensor(*backend, param);
         rng.initialize(arg);
         args.push_back(arg);
     }
-    shared_ptr<const ValueType> result_type = f->get_result_type();
-    auto result = make_tensor(*backend, *result_type);
+    auto result = make_tensor(*backend, f->get_output_op(0));
 
     stopwatch t1;
     t1.start();
@@ -175,8 +173,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         vector<std::shared_ptr<Node>> params_as_nodes(n_arrays);
         for (size_t i = 0; i < n_arrays; i++)
         {
-            auto param = make_shared<op::Parameter>(
-                make_shared<TensorViewType>(element::f32, shape_of_each_array));
+            auto param = make_shared<op::Parameter>(element::f32, shape_of_each_array);
             params[i] = param;
             params_as_nodes[i] = param;
         }
