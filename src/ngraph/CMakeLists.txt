@@ -183,7 +183,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     # Generate the resource file containing all headers used by the codegen compiler
     add_custom_target(header_resource
         resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
-        DEPENDS resource_generator eigen ext_llvm ext_mkldnn ${TBB_IMPORTED_TARGETS}
+        DEPENDS resource_generator eigen ext_llvm ext_mkldnn
         BYPRODUCTS
     )
     add_dependencies(ngraph header_resource)
