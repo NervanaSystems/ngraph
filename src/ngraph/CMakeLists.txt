@@ -142,9 +142,9 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
               tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
     find_package(TBB REQUIRED tbb)
     if (NOT TBB_FOUND)
-      message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
+        message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
     else()
-      message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
+        message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
     endif()
 
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${MKLDNN_INCLUDE_DIR})
