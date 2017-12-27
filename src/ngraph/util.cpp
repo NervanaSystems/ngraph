@@ -483,4 +483,3 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fpro
 
     return fprop_cache;
 }
-
