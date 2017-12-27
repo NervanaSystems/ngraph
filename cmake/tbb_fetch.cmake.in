@@ -18,12 +18,12 @@ include(ExternalProject)
 project(tbb-fetch NONE)
 
 ExternalProject_Add(
-  ext_tbb
-  GIT_REPOSITORY ${TBB_GIT_REPO_URL}
-  GIT_TAG ${TBB_GIT_TAG}
-  SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/tbb/tbb-src"
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ""
-  UPDATE_COMMAND ""
-  INSTALL_COMMAND ""
-  )
+    ext_tbb
+    GIT_REPOSITORY ${TBB_GIT_REPO_URL}
+    GIT_TAG ${TBB_GIT_TAG}
+    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/tbb/tbb-src"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    UPDATE_COMMAND ""
+    INSTALL_COMMAND ""
+)
