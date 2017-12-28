@@ -21,7 +21,6 @@ from pyngraph import Float32, Int32, Function, TensorViewType
 from pyngraph.op import Parameter, Maximum, Reshape, Dot, Broadcast
 from pyngraph.op import Float32Constant, Exp, Log, Sum
 from pyngraph.op import Greater, Convert, Reduce
-from pyngraph.op import Add, Multiply, Subtract, Divide
 from pyngraph.op import OneHot
 
 
@@ -36,7 +35,7 @@ LabelOneHot = Convert((OneHot(Label, [bz, 10], 1)), float_element_type)
 
 MaxParam1 = Parameter(float_element_type, [])
 MaxParam2 = Parameter(float_element_type, [])
-MaxOutput = TensorViewType(float_element_type, []) 
+MaxOutput = TensorViewType(float_element_type, [])
 MaxFn = Function(Maximum(MaxParam1, MaxParam2),
                  MaxOutput,
                  [MaxParam1, MaxParam2],
@@ -78,46 +77,44 @@ def relu(op):
 X1 = Reshape(Input, [0, 1, 2], [bz, 784])
 
 # Normalize
-X2 = Divide(X1, makeFloat32ConstantLike(255., X1))
+X2 = X1 / makeFloat32ConstantLike(255., X1)
 
 # Affine 1
 W1 = Parameter(float_element_type, [784, 100])
 b1 = Parameter(float_element_type, [100])
-X3 = Add(Dot(X2, W1), Broadcast(b1, [bz, 100], {0}))
+X3 = Dot(X2, W1) + Broadcast(b1, [bz, 100], {0})
 X4 = relu(X3)
 
 # Affine 2
 W2 = Parameter(float_element_type, [100, 10])
 b2 = Parameter(float_element_type, [10])
-X5 = Add(Dot(X4, W2), Broadcast(b2, [bz, 10], {0}))
+X5 = Dot(X4, W2) + Broadcast(b2, [bz, 10], {0})
 
 # Softmax
 Logits = X5
-Exp = Exp(Logits) 
+Exp = Exp(Logits)
 Max = Reduce(Exp, makeFloat32Constant(0., [], set()), MaxFn, {1})
 MaxBroadcast = Broadcast(Max, [bz, 10], {1})
-Softmax = Divide(Exp, MaxBroadcast)
+Softmax = Exp / MaxBroadcast
 
 # Loss
 LogSoftmax = Log(Softmax)
-Loss = Divide(Sum(Multiply(LogSoftmax, LabelOneHot), {0, 1}),
-              makeFloat32Constant(float(bz), [], set()))
+Loss = Sum(LogSoftmax * LabelOneHot, {0, 1}) / makeFloat32Constant(float(bz), [], set())
 
 # Derivatives
-dLogits = Subtract(Softmax, LabelOneHot)
+dLogits = Softmax - LabelOneHot
 dX5 = dLogits
 
 dX4 = Dot(dX5, transpose(W2, [1, 0]))
 dW2 = Dot(transpose(X4, [1, 0]), dX5)
 db2 = Sum(dX5, {0})
 
-dX3 = Multiply(Convert((Greater(X3, makeFloat32Constant(0., [bz, 100], {0, 1}))), float_element_type),
-               dX4)
+dX3 = Convert((Greater(X3, makeFloat32Constant(0., [bz, 100], {0, 1}))), float_element_type) * dX4
 dX2 = Dot(dX3, transpose(W1, [1, 0]))
 dW1 = Dot(transpose(X2, [1, 0]), dX3)
 db1 = Sum(dX3, {0})
 
-nW1 = Subtract(W1, Multiply(makeFloat32ConstantLike(lr, dW1), dW1))
-nb1 = Subtract(b1, Multiply(makeFloat32ConstantLike(lr, db1), db1))
-nW2 = Subtract(W2, Multiply(makeFloat32ConstantLike(lr, dW2), dW2))
-nb2 = Subtract(b2, Multiply(makeFloat32ConstantLike(lr, db2), db2))
+nW1 = W1 - makeFloat32ConstantLike(lr, dW1) * dW1
+nb1 = b1 - makeFloat32ConstantLike(lr, db1) * db1
+nW2 = W2 - makeFloat32ConstantLike(lr, dW2) * dW2
+nb2 = b2 - makeFloat32ConstantLike(lr, db2) * db2

@@ -17,10 +17,10 @@
 //#include <string>
 #include "ngraph/node.hpp"          // ngraph::Node
 #include "ngraph/types/type.hpp"    // ngraph::ValueType
-//#include "ngraph/ops/add.hpp"       // ngraph::op::Add
-//#include "ngraph/ops/multiply.hpp"  // ngraph::op::Multiply
-//#include "ngraph/ops/divide.hpp"    // ngraph::op::Divide
-//#include "ngraph/ops/subtract.hpp"  // ngraph::op::Subtract
+#include "ngraph/ops/add.hpp"       // ngraph::op::Add
+#include "ngraph/ops/multiply.hpp"  // ngraph::op::Multiply
+#include "ngraph/ops/divide.hpp"    // ngraph::op::Divide
+#include "ngraph/ops/subtract.hpp"  // ngraph::op::Subtract
 #include "pyngraph/node.hpp"
 
 namespace py = pybind11;
@@ -28,20 +28,20 @@ namespace py = pybind11;
 void regclass_pyngraph_Node(py::module m){
 
     py::class_<ngraph::Node, std::shared_ptr<ngraph::Node>> node(m, "Node");
-/*
+
     node.def("__add__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
-                return ngraph::op::Add(a, b);
+                return a + b;
                }, py::is_operator());
     node.def("__sub__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
-                return ngraph::op::Subtract(a, b);
+                return a - b;
                }, py::is_operator());
     node.def("__mul__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
-                return ngraph::op::Multiply(a, b);
+                return a * b;
                }, py::is_operator());
     node.def("__truediv__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
-                return ngraph::op::Divide(a, b);
+                return a / b;
                }, py::is_operator());
-*/
+
     node.def("get_shape", &ngraph::Node::get_shape);
     node.def("get_value_type", (std::shared_ptr<const ngraph::ValueType> (ngraph::Node::*)()) &ngraph::Node::get_value_type);
     node.def("get_value_type", (const std::shared_ptr<const ngraph::ValueType> (ngraph::Node::*)() const) &ngraph::Node::get_value_type);

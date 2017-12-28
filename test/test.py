@@ -17,9 +17,8 @@ import numpy as np
 
 import pyngraph.util as util
 from pyngraph import Float32, TensorViewType, Function
-from pyngraph.op import Parameter, Add, Multiply
+from pyngraph.op import Parameter
 from pyngraph.runtime import Manager
-from pyngraph.runtime import ParameterizedTensorViewFloat32
 
 element_type = Float32.element_type()
 
@@ -29,7 +28,7 @@ B = Parameter(element_type, shape)
 C = Parameter(element_type, shape)
 value_type = TensorViewType(element_type, shape)
 parameter_list = [A, B, C]
-function = Function(Multiply(Add(A, B), C), value_type, parameter_list, 'test')
+function = Function((A + B) * C, value_type, parameter_list, 'test')
 manager = Manager.get('NGVM');
 external = manager.compile(function)
 backend = manager.allocate_backend()
