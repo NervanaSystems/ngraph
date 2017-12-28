@@ -24,6 +24,7 @@ include_directories(
 set (SRC
     builder.cpp
     builder_autobroadcast.cpp
+    builder_xla.cpp
     build_graph.cpp
     copy.cpp
     eigen.cpp
