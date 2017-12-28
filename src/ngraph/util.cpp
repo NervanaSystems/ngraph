@@ -446,7 +446,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     }
 
     // create the new outputs for fprop and the new fprop function
-    std::vector<std::shared_ptr<Node>> fprop_outputs{fprop->get_results()};
+    Nodes fprop_outputs{fprop->get_results()};
     fprop_outputs.insert(fprop_outputs.end(),
                          fprop_cache.fprop_output_nodes.begin(),
                          fprop_cache.fprop_output_nodes.end());
@@ -458,7 +458,11 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     ngraph::clone_nodes(bprop->get_ops(), node_param_map);
 
     // get cloned bprop results
-    auto cloned_result = node_param_map[bprop->get_result()];
+    Nodes cloned_results;
+    for (auto node : bprop->get_results())
+    {
+        cloned_results.push_back(node_param_map[node]);
+    }
 
     // get clone bprop parameters
     op::Parameters bprop_input_params;
@@ -475,7 +479,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     }
 
     // create the new bprop function
-    fprop_cache.bprop = std::make_shared<Function>(Nodes{cloned_result}, bprop_input_params);
+    fprop_cache.bprop = std::make_shared<Function>(cloned_results, bprop_input_params);
 
     return fprop_cache;
 }
