@@ -196,6 +196,16 @@ if (NOT APPLE)
     # option so making this portable is still an open issue. As a note for the future,
     # this is not an issue on Windows and LLVM's lld does support --exclude-libs.
     set_target_properties(ngraph PROPERTIES LINK_FLAGS "-Wl,--exclude-libs,ALL")
+
+    # GCC invokes the linker with --as-needed by default which doesn't work for us
+    # because generated code needs to find symbols in these DSOs at runtime.
+    # The fix below is temporary and will be removed once we find a better way
+    # to do this because certain dependencies like the OpenMP runtime libraries
+    # _do_ need to be linked with --as-needed with a higher priority for the
+    # Intel OpenMP runtime so we don't mix libgomp and libiomp5
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--no-as-needed")
+    endif()
 endif()
 
 # Colon separated string for specified runtime plugin loading, this is made explicit s.t. if a
