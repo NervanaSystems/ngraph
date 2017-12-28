@@ -22,7 +22,10 @@
 #include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/ops/xla_tuple.hpp"
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/xla_function.hpp"
 
 using namespace std;
 
@@ -302,25 +305,6 @@ std::list<std::shared_ptr<ngraph::Node>>
     return result_list;
 }
 
-void ngraph::NodeMap::Add(std::shared_ptr<ngraph::Node> orig,
-                          std::shared_ptr<ngraph::Node> replacement)
-{
-    if (Exists(orig))
-    {
-        throw ngraph_error("NodeMap: key already exists");
-    }
-    node_map_[orig] = replacement;
-}
-
-std::shared_ptr<ngraph::Node> ngraph::NodeMap::operator[](std::shared_ptr<ngraph::Node> orig) const
-{
-    if (!Exists(orig))
-    {
-        throw ngraph_error("NodeMap: key does not exist");
-    }
-    return node_map_.at(orig);
-}
-
 std::list<std::shared_ptr<ngraph::Node>>
     ngraph::clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map)
 {
@@ -328,7 +312,7 @@ std::list<std::shared_ptr<ngraph::Node>>
     auto sorted_nodes = topological_sort(nodes);
     for (auto node : sorted_nodes)
     {
-        if (!node_map.Exists(node))
+        if (node_map.count(node) == 0)
         {
             // get (already) cloned arguments and clone the node
             Nodes cloned_args;
@@ -336,7 +320,7 @@ std::list<std::shared_ptr<ngraph::Node>>
             {
                 cloned_args.push_back(node_map[arg]);
             }
-            node_map.Add(node, node->copy_with_new_args(cloned_args));
+            node_map[node] = node->copy_with_new_args(cloned_args);
         }
     }
 
@@ -401,4 +385,101 @@ size_t ngraph::round_up(size_t size, size_t alignment)
     }
 
     return size + alignment - remainder;
+}
+
+ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fprop,
+                                       std::shared_ptr<ngraph::XLAFunction> bprop,
+                                       std::vector<std::shared_ptr<Node>> adjoints)
+{
+    using namespace ngraph;
+
+    // Traverse fprop to make a map that stores parameters with the same
+    // shape and element type as the nodes in fprop
+    NodeMap node_param_map;
+    ngraph::traverse_nodes(fprop, [&node_param_map](std::shared_ptr<Node> node) {
+        node_param_map[node] =
+            std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape());
+    });
+
+    // Traverse bprop to find all of the nodes in the graph
+    std::unordered_set<std::shared_ptr<Node>> in_bprop;
+    ngraph::traverse_nodes(bprop, [&in_bprop](std::shared_ptr<Node> node) {
+        if (in_bprop.count(node) == 0)
+        {
+            in_bprop.insert(node);
+        }
+    });
+
+    // Get the input paramters of fprop
+    std::unordered_set<std::shared_ptr<Node>> fprop_params;
+    for (auto node : fprop->get_parameters())
+    {
+        if (fprop_params.count(node) == 0)
+        {
+            fprop_params.insert(node);
+        }
+    }
+
+    // Find all of the nodes that are intermediate values of fprop and used in
+    // bprop
+    // and store those nodes that aren't needed in bprop
+    FpropCache fprop_cache;
+    std::vector<std::shared_ptr<Node>> unused_nodes;
+    for (auto kv : node_param_map)
+    {
+        // if it's not in bprop, mark it unused
+        if (in_bprop.count(kv.first) == 0)
+        {
+            unused_nodes.push_back(kv.first);
+        }
+        // otherwise save in in the ouputs
+        else
+        {
+            fprop_cache.fprop_output_nodes.push_back(kv.first);
+        }
+    }
+
+    // erase all unused nodes form the map
+    for (auto node : unused_nodes)
+    {
+        node_param_map.erase(node);
+    }
+
+    // create the new outputs for fprop and the new fprop function
+    std::vector<std::shared_ptr<Node>> fprop_outputs{fprop->get_results()};
+    fprop_outputs.insert(fprop_outputs.end(),
+                         fprop_cache.fprop_output_nodes.begin(),
+                         fprop_cache.fprop_output_nodes.end());
+
+    auto outTuple = std::make_shared<op::XLATuple>(fprop_outputs);
+    auto outTupleType = outTuple->get_value_type();
+    fprop_cache.fprop =
+        std::make_shared<XLAFunction>(outTuple, outTupleType, fprop->get_parameters());
+
+    // clone the nodes in bprop, replacing fprop-related nodes with the
+    // intermediate parameters
+    ngraph::clone_nodes(bprop->get_ops(), node_param_map);
+
+    // get cloned bprop results
+    auto cloned_result = node_param_map[bprop->get_result()];
+
+    // get clone bprop parameters
+    op::Parameters bprop_input_params;
+    for (auto param : adjoints)
+    {
+        bprop_input_params.push_back(
+            std::dynamic_pointer_cast<op::Parameter>(node_param_map[param]));
+    }
+
+    // add the cached fprop nodes as inputs to bprop
+    for (auto x : fprop_cache.fprop_output_nodes)
+    {
+        bprop_input_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_param_map[x]));
+    }
+
+    // create the new bprop function
+    fprop_cache.bprop = std::make_shared<XLAFunction>(
+        cloned_result, cloned_result->get_value_type(), bprop_input_params);
+
+    return fprop_cache;
 }

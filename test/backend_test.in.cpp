@@ -15,6 +15,8 @@
 #include <algorithm>
 #include <cinttypes>
 #include <cmath>
+#include <cstdlib>
+#include <string>
 
 #include "gtest/gtest.h"
 
@@ -3748,7 +3750,18 @@ TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
     copy_data(a, vector<float>{1.1f});
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
-    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+    try
+    {
+        cf->call({a}, {result});
+    }
+    catch (const std::exception& e)
+    {
+        EXPECT_EQ(e.what(), std::string("One-hot: non-integral value in input"));
+    }
+    catch (...)
+    {
+        FAIL() << "Expected a std::out_of_range exception";
+    }
 }
 
 TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
@@ -3770,7 +3783,18 @@ TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
     copy_data(a, vector<int32_t>{3000000});
     auto result = backend->make_primary_tensor_view(element::i32, shape_r);
 
-    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+    try
+    {
+        cf->call({a}, {result});
+    }
+    catch (const std::exception& e)
+    {
+        EXPECT_EQ(e.what(), std::string("One-hot: value is out of category range"));
+    }
+    catch (...)
+    {
+        FAIL() << "Expected a std::out_of_range exception";
+    }
 }
 
 TEST(${BACKEND_NAME}, one_hot_vector_0)
@@ -3842,7 +3866,18 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
     copy_data(a, vector<int32_t>{2, 1, 0, 0, 3, 2, 1, 0});
     auto result = backend->make_primary_tensor_view(element::i32, shape_r);
 
-    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+    try
+    {
+        cf->call({a}, {result});
+    }
+    catch (const std::exception& e)
+    {
+        EXPECT_EQ(e.what(), std::string("One-hot: value is out of category range"));
+    }
+    catch (...)
+    {
+        FAIL() << "Expected a std::out_of_range exception";
+    }
 }
 
 TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
@@ -3864,7 +3899,18 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
     copy_data(a, vector<int32_t>{2, 1, 0, 0, 3000000, 2, 1, 0});
     auto result = backend->make_primary_tensor_view(element::i32, shape_r);
 
-    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+    try
+    {
+        cf->call({a}, {result});
+    }
+    catch (const std::exception& e)
+    {
+        EXPECT_EQ(e.what(), std::string("One-hot: value is out of category range"));
+    }
+    catch (...)
+    {
+        FAIL() << "Expected a std::out_of_range exception";
+    }
 }
 
 TEST(${BACKEND_NAME}, one_hot_matrix_0)
@@ -3942,7 +3988,18 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
     copy_data(a, vector<float>{2, 1, 0, 0, 2, 2, 1.01f, 0});
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
-    EXPECT_THROW({ cf->call({a}, {result}); }, std::range_error);
+    try
+    {
+        cf->call({a}, {result});
+    }
+    catch (const std::exception& e)
+    {
+        EXPECT_EQ(e.what(), std::string("One-hot: non-integral value in input"));
+    }
+    catch (...)
+    {
+        FAIL() << "Expected a std::out_of_range exception";
+    }
 }
 
 TEST(${BACKEND_NAME}, replace_slice_3d)
@@ -4430,4 +4487,130 @@ TEST(${BACKEND_NAME}, not)
 
     cf->call({a}, {result});
     EXPECT_EQ((vector<char>{0, 1, 0, 1}), result->get_vector<char>());
+}
+
+TEST(${BACKEND_NAME}, numeric_float_nan)
+{
+    auto shape = Shape{5};
+    auto A = op::Constant::create(element::f32, shape, {-2.5f, 25.5f, 2.25f, NAN, 6.0f});
+    auto B = op::Constant::create(element::f32, shape, {10.0f, 5.0f, 2.25f, 10.0f, NAN});
+    auto rt = make_shared<TensorViewType>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    cf->call({}, {result});
+    EXPECT_EQ((vector<char>{false, false, true, false, false}), result->get_vector<char>());
+}
+
+TEST(${BACKEND_NAME}, numeric_double_nan)
+{
+    auto shape = Shape{5};
+    auto A = op::Constant::create(element::f64, shape, {-2.5f, 25.5f, 2.25f, NAN, 6.0f});
+    auto B = op::Constant::create(element::f64, shape, {10.0f, 5.0f, 2.25f, 10.0f, NAN});
+    auto rt = make_shared<TensorViewType>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    cf->call({}, {result});
+    EXPECT_EQ((vector<char>{false, false, true, false, false}), result->get_vector<char>());
+}
+
+TEST(${BACKEND_NAME}, numeric_float_inf)
+{
+    auto shape = Shape{5};
+    auto A = op::Constant::create(element::f32, shape, {-2.5f, 25.5f, 2.25f, INFINITY, 6.0f});
+    auto B = op::Constant::create(element::f32, shape, {10.0f, 5.0f, 2.25f, 10.0f, -INFINITY});
+    auto rt = make_shared<TensorViewType>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    cf->call({}, {result});
+    EXPECT_EQ((vector<char>{false, false, true, false, false}), result->get_vector<char>());
+}
+
+TEST(${BACKEND_NAME}, numeric_double_inf)
+{
+    auto shape = Shape{5};
+    auto A = op::Constant::create(element::f64, shape, {-2.5f, 25.5f, 2.25f, INFINITY, 6.0f});
+    auto B = op::Constant::create(element::f64, shape, {10.0f, 5.0f, 2.25f, 10.0f, -INFINITY});
+    auto rt = make_shared<TensorViewType>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+    cf->call({}, {result});
+    EXPECT_EQ((vector<char>{false, false, true, false, false}), result->get_vector<char>());
+}
+
+TEST(${BACKEND_NAME}, abc_tbb)
+{
+    // Force TBB flow graph generation in the CPU backend
+    // This has no effect on other backends
+    bool use_tbb = (getenv("NGRAPH_CPU_USE_TBB") != nullptr);
+    if (!use_tbb)
+    {
+        setenv("NGRAPH_CPU_USE_TBB", "1", 1);
+    }
+
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto rt = make_shared<TensorViewType>(element::f32, shape);
+    auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> c = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
+
+    cf->call({a, b, c}, {result});
+    EXPECT_EQ(result->get_vector<float>(),
+              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+
+    cf->call({b, a, c}, {result});
+    EXPECT_EQ(result->get_vector<float>(),
+              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+
+    cf->call({a, c, b}, {result});
+    EXPECT_EQ(result->get_vector<float>(),
+              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
+
+    if (!use_tbb)
+    {
+        unsetenv("NGRAPH_CPU_USE_TBB");
+    }
 }

@@ -280,7 +280,7 @@ public:
         auto cloneit = clone.begin();
         while (origit != orig.end() && cloneit != clone.end())
         {
-            if (*cloneit != nm[*origit])
+            if (*cloneit != nm.at(*origit))
             {
                 return false;
             }
@@ -311,7 +311,7 @@ TEST_F(CloneTest, clone_nodes_partial)
 {
     // map A -> A' prior to clone
     auto Aprime = make_shared<op::Parameter>(element::f32, shape);
-    node_map.Add(A, Aprime);
+    node_map[A] = Aprime;
 
     auto cloned_nodes = clone_nodes(nodes, node_map);
     ASSERT_TRUE(CompareNodes(nodes, cloned_nodes, node_map));

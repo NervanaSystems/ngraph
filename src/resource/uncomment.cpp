@@ -12,18 +12,37 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include <iostream>
+#include <sstream>
 
-#include <memory>
-#include <unordered_map>
+#include "uncomment.hpp"
 
-#include "ngraph/function.hpp"
-#include "ngraph/json.hpp"
-#include "ngraph/node.hpp"
+using namespace std;
 
-namespace ngraph
+// start 23,749,645 in 1,912 files
+
+void skip_comment(istream& s)
 {
-    std::string serialize(std::shared_ptr<ngraph::Function>, size_t indent = 0);
-    std::shared_ptr<ngraph::Function> deserialize(std::istream&);
-    std::shared_ptr<ngraph::Function> deserialize(const std::string&);
+}
+
+string uncomment(const string& s)
+{
+    stringstream out;
+    for (size_t i = 0; i < s.size(); i++)
+    {
+        char c = s[i];
+        if (i < s.size() - 1 && c == '/' && s[i + 1] == '/')
+        {
+            while (i < s.size() && c != '\n')
+            {
+                c = s[++i];
+            }
+            out << "\n";
+        }
+        else
+        {
+            out << c;
+        }
+    }
+    return out.str();
 }
