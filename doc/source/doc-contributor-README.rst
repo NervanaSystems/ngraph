@@ -13,35 +13,31 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-################################
 Documentation Contributor README
-################################
+================================
 
 How to start contributing?
-==========================
+--------------------------
 
-For Intel® Nervana™ Graph project components only, please submit a PR with any 
-changes or ideas you'd like integrated to help us maintain trackability with 
-respect to additions or feature requests.
+For Intel® nGraph™ library core project components only, please submit a PR with 
+any changes or ideas you'd like integrated. This helps us maintain trackability 
+with respect to additions or feature requests.
 
-If you prefer to use a containerized application, like Jupyter* notebooks, 
-Google Docs*, or MS Word* to write and share your documentation contributions, 
-you can convert the ``doc/source/.rst`` files in this folder to another file 
-extension-friendly format with a tool like ``pypandoc``.  Another option is to 
-fork the `ngraph repo`_, essentially snapshotting it at that point in time, 
-and to build a Jupyter* notebook or other set of docs around it for a specific 
-use case.  
+If you prefer to use a containerized application, like Jupyter\* notebooks, 
+Google Docs\*, or MS Word\* to write and share documentation contributions, 
+you can convert the ``doc/source/.rst`` files to another format with a tool 
+like ``pypandoc`` and share a link to your docs on our `wiki`_.    
 
-Keep in mind though, that if you do that, we request the following: 
+Another option is to fork the `ngraph repo`_, essentially snapshotting it at 
+that point in time, and to build a Jupyter\* notebook or other set of docs around 
+it for a specific use case, and to share that contribution with us directly on
+our wiki.  
 
-.. note:: Please do not submit Jupyter* notebook code to Intel Nervana Graph
-   project repos; best practice is to maintain any project-specific examples, 
-   tests, or walk-throughs separately. Alternatively you may wish to upstream 
-   documentation contributions directly to whatever frontend framework supports 
-   the rendering and reproducibility of your example.
-
-To share your non-component contributions with us, please add a link to your project on 
-our new `Showcase`_ page on the wiki.    
+.. note:: Please do not submit Jupyter* notebook code to the Intel nGraph library 
+   repos; best practice is to maintain any project-specific examples, tests, or 
+   walk-throughs separately. Alternatively you may wish to upstream documentation 
+   contributions directly to whatever frontend framework supports the rendering and 
+   reproducibility of your example.
 
 
 
@@ -50,7 +46,7 @@ Documenting source code examples
 
 When **verbosely** documenting functionality of specific sections of code -- whether 
 they're entire code blocks within a file, or code strings that are **outside** the 
-Intel Nervana Graph `documentation repo`_, here is an example of best practice: 
+Intel nGraph `documentation repo`_, here is an example of best practice: 
 
 Say the file named ``dqn_atari.py`` has some interesting functionality that could
 benefit from more explanation about one or more of the pieces in context. To keep 
@@ -131,6 +127,6 @@ For tips similar to this, see the `sphinx`_ stable reST documentation.
 .. _ngraph repo: https://github.com/NervanaSystems/ngraph/
 .. _documentation repo: https://github.com/NervanaSystems/ngraph/tree/master/doc
 .. _sphinx: http://www.sphinx-doc.org/en/stable/rest.html
-.. _showcase: https://github.com/NervanaSystems/ngraph/wiki/Showcase
+.. _wiki: https://github.com/NervanaSystems/ngraph/wiki/
 
 

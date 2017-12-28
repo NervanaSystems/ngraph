@@ -3819,6 +3819,7 @@ pre, .codeblock, pre.literal-block, .rst-content .literal-block, .rst-content pr
   background: #e1e1e1;
   margin: 1px 0 20px 0;
 }
+
 .codeblock div[class^='highlight'], pre.literal-block div[class^='highlight'], .rst-content .literal-block div[class^='highlight'], div[class^='highlight'] div[class^='highlight'] {
   border: none;
   background: none;
@@ -4424,6 +4425,11 @@ div[class^='highlight'] pre {
   font-weight: bold;
   padding: 0 6px;
 }
+
+.sidebar ul {
+  margin-left: 2.0em;
+} 
+
 .rst-content .footnote-reference, .rst-content .citation-reference {
   vertical-align: super;
   font-size: 90%;
@@ -4433,6 +4439,7 @@ div[class^='highlight'] pre {
   border: none;
   color: #999;
 }
+
 .rst-content table.docutils.citation td, .rst-content table.docutils.citation tr, .rst-content table.docutils.footnote td, .rst-content table.docutils.footnote tr {
   border: none;
   background-color: transparent !important;
@@ -4579,6 +4586,15 @@ div[class^='highlight'] pre {
 }
 .rst-content tt.download span:first-child:before, .rst-content code.download span:first-child:before {
   margin-right: 4px;
+}
+
+.docbws {
+  font-family: monospace;
+  color: #A79992;
+}
+
+.crt-size {
+  font-size: 0.85em;
 }
 
 @media screen and (max-width: 480px) {
@@ -4743,10 +4759,10 @@ span[id*='MathJax-Span'] {
   color: #333333;
 }
 .wy-menu-vertical li.toctree-l1.current li.toctree-l2 > ul, .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > ul {
-  display: none;
+  display: none; margin-left: 0.33em; padding-left: 0.22em;
 }
 .wy-menu-vertical li.toctree-l1.current li.toctree-l2.current > ul, .wy-menu-vertical li.toctree-l2.current li.toctree-l3.current > ul {
-  display: block;
+  display: block; margin-left: 0.33em; padding-left: 0.22em;
 }
 .wy-menu-vertical li.toctree-l2.current > a {
   background: #c9c9c9;
@@ -5017,6 +5033,7 @@ span[id*='MathJax-Span'] {
 
 footer {
   color: #999;
+  font-size: 0.81em;
 }
 footer p {
   margin-bottom: 12px;
@@ -5024,7 +5041,7 @@ footer p {
 footer span.commit code, footer span.commit .rst-content tt, .rst-content footer span.commit tt {
   padding: 0px;
   font-family: Monaco, Consolas, "Menlo", "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", "Courier New", Courier, monospace;
-  font-size: 1em;
+  font-size: 0.81em;
   background: none;
   border: none;
   color: #999;

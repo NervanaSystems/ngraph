@@ -36,7 +36,6 @@ Intel nGraph library
 
    frontends/neon/neon.rst
    frontends/tensorflow/tensorflow.rst
-   frontends/tensorflow/tensorflow-opts-ia.rst
    frontends/caffe2/caffe.rst
 
 .. toctree::

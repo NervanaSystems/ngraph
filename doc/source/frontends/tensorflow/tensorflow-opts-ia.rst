@@ -1,9 +1,8 @@
-
 .. tensorflow-opts-ia.rst:
 
 
-CPU optimizations
-=================
+Optimizing Tensorflow models on CPU
+===================================
 
 Optimizing deep learning models' performance on modern CPUs presents a
 number of challenges not very different from those seen when optimizing
