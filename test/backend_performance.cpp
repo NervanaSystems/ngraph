@@ -27,6 +27,7 @@
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/manager.hpp"
+#include "ngraph/runtime/utils.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "util/random.hpp"
@@ -59,13 +60,29 @@ static multimap<size_t, string>
     return rc;
 }
 
-// Starting point CPU: 1.2ms/iteration
-
-shared_ptr<runtime::TensorView> make_tensor(runtime::Backend& backend, const ValueType& value)
+shared_ptr<runtime::Value> make_value(runtime::Backend& backend, const ValueType& value)
 {
-    shared_ptr<runtime::TensorView> arg =
-        backend.make_primary_tensor_view(value.get_element_type(), value.get_shape());
-    return arg;
+    shared_ptr<runtime::Value> rc;
+    const TupleType* tuple = dynamic_cast<const TupleType*>(&value);
+    const TensorViewType* tensor = dynamic_cast<const TensorViewType*>(&value);
+    if (tuple)
+    {
+        vector<shared_ptr<runtime::Value>> elements;
+        for (auto value_type : tuple->get_element_types())
+        {
+            elements.push_back(make_value(backend, *value_type));
+        }
+        rc = backend.make_tuple(elements);
+    }
+    else if (tensor)
+    {
+        rc = backend.make_primary_tensor_view(value.get_element_type(), value.get_shape());
+    }
+    else
+    {
+        NGRAPH_INFO;
+    }
+    return rc;
 }
 
 void run_benchmark(const std::string& json_path, size_t iterations)
@@ -94,12 +111,25 @@ void run_benchmark(const std::string& json_path, size_t iterations)
     vector<shared_ptr<runtime::Value>> args;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
-        auto arg = make_tensor(*backend, *(param->get_value_type()));
-        rng.initialize(arg);
+        auto arg = make_value(*backend, *(param->get_value_type()));
+        auto tuple = dynamic_pointer_cast<runtime::Tuple>(arg);
+        auto tensor = dynamic_pointer_cast<runtime::TensorView>(arg);
+        if (tuple)
+        {
+            NGRAPH_INFO;
+            // Need to initialize this...maybe later
+        }
+        else if (tensor)
+        {
+            rng.initialize(tensor);
+        }
+        else
+        {
+        }
         args.push_back(arg);
     }
     shared_ptr<const ValueType> result_type = f->get_result_type();
-    auto result = make_tensor(*backend, *result_type);
+    auto result = make_value(*backend, *result_type);
 
     stopwatch t1;
     t1.start();
