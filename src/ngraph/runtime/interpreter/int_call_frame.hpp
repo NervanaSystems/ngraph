@@ -31,7 +31,6 @@
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
-#include "ngraph/ops/xla_get_tuple_element.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
@@ -343,13 +342,6 @@ private:
             std::shared_ptr<Function> function = node.get_function();
             call(function, args, out);
         }
-        else if (node_op == "XLAGetTupleElement")
-        {
-            auto gte = dynamic_cast<op::XLAGetTupleElement*>(&node);
-            kernel::copy<T>(reinterpret_cast<T*>(args[gte->get_n()]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
-        }
         else if (node_op == "Greater")
         {
             kernel::greater<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
@@ -564,15 +556,6 @@ private:
             kernel::tanh<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
-        }
-        else if (node_op == "XLATuple")
-        {
-            for (size_t i = 0; i < args.size(); ++i)
-            {
-                kernel::copy<T>(reinterpret_cast<T*>(args[i]->get_data_ptr()),
-                                reinterpret_cast<T*>(out[i]->get_data_ptr()),
-                                out[i]->get_element_count());
-            }
         }
         else
         {

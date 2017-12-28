@@ -27,7 +27,6 @@
 #include "ngraph/ops/convert.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/slice.hpp"
-#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/types/type.hpp"
 
 using namespace ngraph;

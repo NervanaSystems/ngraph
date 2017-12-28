@@ -425,20 +425,3 @@ TEST(copy, tanh)
 {
     ASSERT_TRUE(check_unary<op::Tanh>());
 }
-
-TEST(copy, tuple)
-{
-    Shape shape{1};
-    auto arg0 = make_shared<op::Parameter>(element::f32, shape);
-    auto arg1 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape),
-                                                make_shared<op::Parameter>(element::f32, shape)};
-
-    auto node = make_shared<op::XLATuple>(Nodes{arg0, arg1});
-    auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::XLATuple>(new_node);
-    ASSERT_NE(node_cast, nullptr);
-
-    ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_input_ops());
-}

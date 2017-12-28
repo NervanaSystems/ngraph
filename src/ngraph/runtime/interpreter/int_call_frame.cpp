@@ -14,8 +14,6 @@
 
 #include <algorithm>
 
-#include "ngraph/ops/xla_get_tuple_element.hpp"
-#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
@@ -119,38 +117,26 @@ void runtime::interpreter::INT_CallFrame::call(
             outputs.push_back(itv);
         }
 
-        auto tuple = dynamic_pointer_cast<op::XLATuple>(op);
-        if (tuple)
+        element::Type base_type;
+        element::Type secondary_type;
+        if (op->get_inputs().empty())
         {
-            for (size_t i = 0; i < inputs.size(); i++)
-            {
-                const element::Type& type = inputs[0]->get_tensor().get_element_type();
-                generate_calls(type, type, *op, {inputs[i]}, {outputs[i]});
-            }
+            base_type = op->get_element_type();
         }
         else
         {
-            element::Type base_type;
-            element::Type secondary_type;
-            if (op->get_inputs().empty())
-            {
-                base_type = op->get_element_type();
-            }
-            else
-            {
-                base_type = op->get_inputs().at(0).get_tensor().get_element_type();
-            }
-            secondary_type = op->get_element_type();
-
-            // Some ops have unusual intput/output types so handle those special cases here
-            if (op->description() == "Select")
-            {
-                base_type = op->get_inputs().at(1).get_tensor().get_element_type();
-                secondary_type = op->get_inputs().at(0).get_tensor().get_element_type();
-            }
-
-            generate_calls(base_type, secondary_type, *op, inputs, outputs);
+            base_type = op->get_inputs().at(0).get_tensor().get_element_type();
         }
+        secondary_type = op->get_element_type();
+
+        // Some ops have unusual intput/output types so handle those special cases here
+        if (op->description() == "Select")
+        {
+            base_type = op->get_inputs().at(1).get_tensor().get_element_type();
+            secondary_type = op->get_inputs().at(0).get_tensor().get_element_type();
+        }
+
+        generate_calls(base_type, secondary_type, *op, inputs, outputs);
 
         handle_output_alias(*op, output_alias_map, output_tvs);
 

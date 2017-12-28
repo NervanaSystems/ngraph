@@ -20,8 +20,6 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/xla_get_tuple_element.hpp"
-#include "ngraph/ops/xla_tuple.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -198,7 +196,6 @@ std::shared_ptr<Node> Node::get_input_op(size_t index)
 Nodes Node::get_input_ops() //const
 {
     Nodes result;
-    std::set<shared_ptr<op::XLATuple>> seen_tuples;
     for (auto& i : get_inputs())
     {
         {

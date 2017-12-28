@@ -22,10 +22,8 @@
 #include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/xla_function.hpp"
 
 using namespace std;
 

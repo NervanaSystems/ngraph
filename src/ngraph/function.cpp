@@ -16,7 +16,6 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -56,10 +55,6 @@ Function::Function(const std::shared_ptr<Node>& result,
                    const std::string& name)
     : Function(Nodes{result}, parameters, name)
 {
-    if (std::dynamic_pointer_cast<op::XLATuple>(result))
-    {
-        throw "Unexpected XLATuple in Function";
-    }
 }
 
 void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)

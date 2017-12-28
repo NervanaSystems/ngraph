@@ -14,7 +14,6 @@
 
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/function.hpp"
-#include "ngraph/xla_function.hpp"
 
 using namespace std;
 using namespace ngraph;
