@@ -14,16 +14,6 @@
 
 #pragma once
 
-#include <memory>
-#include <unordered_map>
+#include <string>
 
-#include "ngraph/function.hpp"
-#include "ngraph/json.hpp"
-#include "ngraph/node.hpp"
-
-namespace ngraph
-{
-    std::string serialize(std::shared_ptr<ngraph::Function>, size_t indent = 0);
-    std::shared_ptr<ngraph::Function> deserialize(std::istream&);
-    std::shared_ptr<ngraph::Function> deserialize(const std::string&);
-}
+std::string uncomment(const std::string& s);

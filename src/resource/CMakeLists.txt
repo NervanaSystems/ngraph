@@ -11,7 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIN_NGRAPH_LIBRARY")
+set (SRC
+    main.cpp
+    util.cpp
+    uncomment.cpp
+    header_rewrite.cpp
+)
 
-add_subdirectory(resource)
-add_subdirectory(ngraph)
+add_executable(resource_generator ${SRC})
+
+set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS
+    "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";")

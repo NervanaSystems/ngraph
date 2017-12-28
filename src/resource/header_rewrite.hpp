@@ -12,18 +12,6 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include <string>
 
-#include <memory>
-#include <unordered_map>
-
-#include "ngraph/function.hpp"
-#include "ngraph/json.hpp"
-#include "ngraph/node.hpp"
-
-namespace ngraph
-{
-    std::string serialize(std::shared_ptr<ngraph::Function>, size_t indent = 0);
-    std::shared_ptr<ngraph::Function> deserialize(std::istream&);
-    std::shared_ptr<ngraph::Function> deserialize(const std::string&);
-}
+const std::string rewrite_header(const std::string& s, const std::string& path);
