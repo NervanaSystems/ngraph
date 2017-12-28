@@ -44,6 +44,7 @@ namespace ngraph
                 }
                 const std::string& name() const { return m_name; }
                 size_t total_microseconds() const { return m_total_microseconds; }
+                size_t microseconds() const { return m_total_microseconds / m_call_count; }
                 size_t call_count() const { return m_call_count; }
             private:
                 std::string m_name;
