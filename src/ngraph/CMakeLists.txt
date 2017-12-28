@@ -71,8 +71,6 @@ set (SRC
     ops/tanh.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise.cpp
-    ops/xla_get_tuple_element.cpp
-    ops/xla_tuple.cpp
     pass/dump_sorted.cpp
     pass/graph_rewrite.cpp
     pass/liveness.cpp
@@ -98,7 +96,6 @@ set (SRC
     types/element_type.cpp
     types/type.cpp
     util.cpp
-    xla_function.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
