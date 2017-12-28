@@ -133,6 +133,16 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     MKLDNN_INCLUDE_DIR)
     find_package(ZLIB REQUIRED)
 
+    include(${TBB_ROOT}/cmake/TBBBuild.cmake)
+    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS compiler=clang tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
+              tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
+    find_package(TBB REQUIRED tbb)
+    if (NOT TBB_FOUND)
+        message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
+    else()
+        message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
+    endif()
+
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${MKLDNN_INCLUDE_DIR})
     link_directories(${LLVM_LIB_DIR} ${MKLDNN_LIB_DIR})
 
@@ -158,11 +168,10 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     # This must be kept in sync with the LLVM + Clang version in use
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS
-      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";")
-    set(NGRAPH_CPU_PCH_ENABLE 0 CACHE STRING "Enable pre-compiled headers in the CPU backend")
+      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";TBB_HEADERS_PATH=\"${TBB_ROOT}/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\";")
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
     set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-      "NGCPU_PCH=${NGRAPH_CPU_PCH_ENABLE};NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE}")
+      "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE}")
 endif()
 
 add_library(ngraph SHARED ${SRC})
@@ -183,6 +192,16 @@ if (NOT APPLE)
     # option so making this portable is still an open issue. As a note for the future,
     # this is not an issue on Windows and LLVM's lld does support --exclude-libs.
     set_target_properties(ngraph PROPERTIES LINK_FLAGS "-Wl,--exclude-libs,ALL")
+
+    # GCC invokes the linker with --as-needed by default which doesn't work for us
+    # because generated code needs to find symbols in these DSOs at runtime.
+    # The fix below is temporary and will be removed once we find a better way
+    # to do this because certain dependencies like the OpenMP runtime libraries
+    # _do_ need to be linked with --as-needed with a higher priority for the
+    # Intel OpenMP runtime so we don't mix libgomp and libiomp5
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--no-as-needed")
+    endif()
 endif()
 
 # Colon separated string for specified runtime plugin loading, this is made explicit s.t. if a
@@ -223,6 +242,10 @@ if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
     target_link_libraries(ngraph PRIVATE mkldnn)
 endif()
 
+if(NGRAPH_CPU_ENABLE)
+    target_link_libraries(ngraph PRIVATE ${TBB_IMPORTED_TARGETS})
+endif()
+
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
     target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
@@ -241,8 +264,19 @@ install(DIRECTORY
 )
 
 if (NOT APPLE)
-install(DIRECTORY
-    ${MKLDNN_LIB_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_LIB}"
-)
+    install(DIRECTORY
+        ${MKLDNN_LIB_DIR}/
+        DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
+    if (NGRAPH_CPU_ENABLE)
+        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
+            DESTINATION ${NGRAPH_INSTALL_LIB}
+            FILES_MATCHING PATTERN "libtbb.so.*"
+        )
+        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
+            DESTINATION ${NGRAPH_INSTALL_LIB}
+            FILES_MATCHING PATTERN "libtbb_debug.so.*"
+        )
+    endif()
 endif()
+
