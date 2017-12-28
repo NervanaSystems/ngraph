@@ -243,6 +243,16 @@ namespace ngraph
     }
 }
 
+size_t Node::get_num_outputs() const
+{
+    return m_outputs.size();
+}
+
+const element::Type& Node::get_element_type(size_t i) const
+{
+    return m_outputs.at(i).get_element_type();
+}
+
 const element::Type& Node::get_element_type() const
 {
     if (get_num_outputs() != 1)
@@ -252,6 +262,11 @@ const element::Type& Node::get_element_type() const
     return get_element_type(0);
 }
 
+const Shape& Node::get_shape(size_t i) const
+{
+    return m_outputs.at(i).get_shape();
+}
+
 const Shape& Node::get_shape() const
 {
     if (get_num_outputs() != 1)
@@ -259,6 +274,11 @@ const Shape& Node::get_shape() const
         throw ngraph_error("get_shape() must be called on a node with exactly one output.");
     }
     return get_shape(0);
+}
+
+shared_ptr<descriptor::TensorView> Node::get_output_tensor_view(size_t i) const
+{
+    return m_outputs.at(i).get_tensor_view();
 }
 
 shared_ptr<descriptor::TensorView> Node::get_output_tensor_view() const
@@ -271,6 +291,16 @@ shared_ptr<descriptor::TensorView> Node::get_output_tensor_view() const
     return get_output_tensor_view(0);
 }
 
+const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
+{
+    return m_outputs.at(i).get_inputs();
+}
+
+descriptor::Tensor& Node::get_output_tensor(size_t i) const
+{
+    return m_outputs.at(i).get_tensor();
+}
+
 descriptor::Tensor& Node::get_output_tensor() const
 {
     if (get_num_outputs() != 1)
@@ -278,6 +308,21 @@ descriptor::Tensor& Node::get_output_tensor() const
         throw ngraph_error("get_output_tensor() must be called on a node with exactly one output.");
     }
     return get_output_tensor(0);
+}
+
+size_t Node::get_num_inputs() const
+{
+    return m_inputs.size();
+}
+
+const element::Type& Node::get_input_element_type(size_t i) const
+{
+    return m_inputs.at(i).get_element_type();
+}
+
+const Shape& Node::get_input_shape(size_t i) const
+{
+    return m_inputs.at(i).get_shape();
 }
 
 bool Node::has_same_type(std::shared_ptr<const Node> node) const

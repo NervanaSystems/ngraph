@@ -45,17 +45,29 @@ namespace ngraph
 
         virtual ~Function() {}
     public:
+        /// Return the number of outputs for this function.
         size_t get_num_outputs() const;
+
+        /// Return the op that generates output i
         std::shared_ptr<Node> get_output_op(size_t i) const;
+
+        /// Return the element type of output i
         const element::Type& get_element_type(size_t i) const;
+
+        /// Return the shape of element i
         const Shape& get_shape(size_t i) const;
 
+        /// Return the function parameters
         const std::vector<std::shared_ptr<op::Parameter>>& get_parameters() const
         {
             return m_parameters;
         }
+
+        /// Return the ops that generate the results
         const std::vector<std::shared_ptr<Node>> get_results() const { return m_results; }
+        /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
+
         std::string get_name() const;
         void set_name(
             const std::string&
