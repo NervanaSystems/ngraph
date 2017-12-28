@@ -149,7 +149,7 @@ void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<N
     std::unordered_set<shared_ptr<Node>> instances_seen;
     deque<shared_ptr<Node>> stack;
 
-    for (size_t i = 0; i < p->get_num_outputs(); ++i)
+    for (size_t i = 0; i < p->get_output_size(); ++i)
     {
         stack.push_front(p->get_output_op(i));
     }
@@ -228,8 +228,8 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     NGRAPH_DEBUG << "Replacing target = " << target << " , " << target->get_name() << " , "
                  << "replacement = " << replacement << " , " << replacement->get_name();
 
-    assert(target->get_num_outputs() == replacement->get_num_outputs());
-    for (size_t i = 0; i < target->get_num_outputs(); i++)
+    assert(target->get_output_size() == replacement->get_output_size());
+    for (size_t i = 0; i < target->get_output_size(); i++)
     {
         std::set<ngraph::descriptor::Input*> copy_inputs{
             begin(target->get_output_inputs(i)),
@@ -339,7 +339,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
 
     // get cloned function result and parameters
     Nodes cloned_results;
-    for (size_t i = 0; i < func->get_num_outputs(); ++i)
+    for (size_t i = 0; i < func->get_output_size(); ++i)
     {
         cloned_results.push_back(node_map[func->get_output_op(i)]);
     }

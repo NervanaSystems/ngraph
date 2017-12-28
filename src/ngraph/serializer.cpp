@@ -234,7 +234,7 @@ static json write(const Function& f)
         function["parameters"].push_back(param->get_name());
     }
     // TODO Functions can return multiple results
-    for (size_t i = 0; i < f.get_num_outputs(); ++i)
+    for (size_t i = 0; i < f.get_output_size(); ++i)
     {
         function["result"].push_back(f.get_output_op(i)->get_name());
     }
@@ -546,7 +546,7 @@ static json write(const Node& n)
     {
         inputs.push_back(input.get_output().get_node()->get_name());
     }
-    for (size_t i = 0; i < n.get_num_outputs(); ++i)
+    for (size_t i = 0; i < n.get_output_size(); ++i)
     {
         outputs.push_back(n.get_output_tensor(i).get_name());
     }

@@ -46,7 +46,7 @@ namespace ngraph
                                 const std::vector<std::shared_ptr<runtime::TensorView>>& args,
                                 const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
-            Shape y_shape = f->get_shape(0);
+            Shape y_shape = f->get_output_shape(0);
 
             auto c_param = std::make_shared<op::Parameter>(element::from<T>(), y_shape);
             auto c_arg = backend->make_primary_tensor_view<T>(y_shape);

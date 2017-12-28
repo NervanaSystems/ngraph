@@ -23,10 +23,10 @@ op::GetOutputElement::GetOutputElement(const std::shared_ptr<Node>& arg, size_t 
     : Node("GetOutputElement", {arg})
     , m_n{n}
 {
-    if (m_n >= arg->get_num_outputs())
+    if (m_n >= arg->get_output_size())
     {
         throw ngraph_error("Indexing tuple beyond its size");
     }
 
-    set_value_type_checked(arg->get_element_type(n), arg->get_shape(n));
+    set_value_type_checked(arg->get_output_element_type(n), arg->get_output_shape(n));
 }

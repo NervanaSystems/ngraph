@@ -446,7 +446,7 @@ private:
                 auto ty = std::make_shared<runtime::interpreter::INT_TensorView>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "reduce_temp_y");
                 auto tr = std::make_shared<runtime::interpreter::INT_TensorView>(
-                    node.get_element_type(0), Shape{}, "reduce_temp_r");
+                    node.get_output_element_type(0), Shape{}, "reduce_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
                 call(reduction_function, {tx, ty}, {tr});
@@ -457,7 +457,7 @@ private:
                            reinterpret_cast<T*>(args[1]->get_data_ptr()),
                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
                            node.get_inputs().at(0).get_shape(),
-                           node.get_shape(0),
+                           node.get_output_shape(0),
                            reduce->get_reduction_axes(),
                            f);
         }

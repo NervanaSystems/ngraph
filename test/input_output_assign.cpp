@@ -27,7 +27,7 @@ TEST(input_output, param_tensor)
     Shape shape{2, 4};
     auto param = make_shared<op::Parameter>(et, shape);
 
-    ASSERT_EQ(param->get_num_outputs(), 1);
+    ASSERT_EQ(param->get_output_size(), 1);
     ASSERT_EQ(et, param->get_element_type());
     ASSERT_EQ(shape, param->get_shape());
 }
@@ -45,9 +45,9 @@ TEST(input_output, simple_output)
     nodes.push_back(add);
 
     // At this point, the add should have each input associated with the output of the appropriate parameter
-    ASSERT_EQ(1, add->get_num_outputs());
-    ASSERT_EQ(2, add->get_num_inputs());
-    for (size_t i = 0; i < add->get_num_inputs(); i++)
+    ASSERT_EQ(1, add->get_output_size());
+    ASSERT_EQ(2, add->get_input_size());
+    for (size_t i = 0; i < add->get_input_size(); i++)
     {
         ASSERT_EQ(add->get_input_op(i), nodes.at(i));
     }

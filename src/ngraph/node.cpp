@@ -240,37 +240,37 @@ namespace ngraph
     }
 }
 
-size_t Node::get_num_outputs() const
+size_t Node::get_output_size() const
 {
     return m_outputs.size();
 }
 
-const element::Type& Node::get_element_type(size_t i) const
+const element::Type& Node::get_output_element_type(size_t i) const
 {
     return m_outputs.at(i).get_element_type();
 }
 
 const element::Type& Node::get_element_type() const
 {
-    if (get_num_outputs() != 1)
+    if (get_output_size() != 1)
     {
         throw ngraph_error("get_element_type() must be called on a node with exactly one output.");
     }
-    return get_element_type(0);
+    return get_output_element_type(0);
 }
 
-const Shape& Node::get_shape(size_t i) const
+const Shape& Node::get_output_shape(size_t i) const
 {
     return m_outputs.at(i).get_shape();
 }
 
 const Shape& Node::get_shape() const
 {
-    if (get_num_outputs() != 1)
+    if (get_output_size() != 1)
     {
         throw ngraph_error("get_shape() must be called on a node with exactly one output.");
     }
-    return get_shape(0);
+    return get_output_shape(0);
 }
 
 shared_ptr<descriptor::TensorView> Node::get_output_tensor_view(size_t i) const
@@ -280,7 +280,7 @@ shared_ptr<descriptor::TensorView> Node::get_output_tensor_view(size_t i) const
 
 shared_ptr<descriptor::TensorView> Node::get_output_tensor_view() const
 {
-    if (get_num_outputs() != 1)
+    if (get_output_size() != 1)
     {
         throw ngraph_error(
             "get_output_tensor_view() must be called on a node with exactly one output.");
@@ -300,14 +300,14 @@ descriptor::Tensor& Node::get_output_tensor(size_t i) const
 
 descriptor::Tensor& Node::get_output_tensor() const
 {
-    if (get_num_outputs() != 1)
+    if (get_output_size() != 1)
     {
         throw ngraph_error("get_output_tensor() must be called on a node with exactly one output.");
     }
     return get_output_tensor(0);
 }
 
-size_t Node::get_num_inputs() const
+size_t Node::get_input_size() const
 {
     return m_inputs.size();
 }
@@ -324,13 +324,14 @@ const Shape& Node::get_input_shape(size_t i) const
 
 bool Node::has_same_type(std::shared_ptr<const Node> node) const
 {
-    if (get_num_outputs() != node->get_num_outputs())
+    if (get_output_size() != node->get_output_size())
     {
         return false;
     }
-    for (size_t i = 0; i < get_num_outputs(); ++i)
+    for (size_t i = 0; i < get_output_size(); ++i)
     {
-        if (get_element_type(i) != node->get_element_type(i) || get_shape(i) != node->get_shape(i))
+        if (get_output_element_type(i) != node->get_output_element_type(i) ||
+            get_output_shape(i) != node->get_output_shape(i))
         {
             return false;
         }

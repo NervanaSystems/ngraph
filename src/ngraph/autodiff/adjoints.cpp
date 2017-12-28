@@ -123,7 +123,7 @@ void autodiff::Adjoints::add_delta(const std::shared_ptr<Node>& x,
 {
     if (!x->has_same_type(delta))
     {
-        throw ngraph_error("Autodiff internal error: Mismatch on backprop and op.");
+        throw ngraph_error("Autodiff internal error: Mismatch on backprop and op in add_delta.");
     }
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)
@@ -142,11 +142,12 @@ void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
                                             const Coordinate& upper_bounds,
                                             const Strides& strides)
 {
-    if (x->get_num_outputs() != 1 || delta->get_num_outputs() != 1 ||
-        x->get_element_type(0) != delta->get_element_type(0) ||
-        x->get_shape(0).size() != delta->get_shape(0).size())
+    if (x->get_output_size() != 1 || delta->get_output_size() != 1 ||
+        x->get_output_element_type(0) != delta->get_output_element_type(0) ||
+        x->get_output_shape(0).size() != delta->get_output_shape(0).size())
     {
-        throw ngraph_error("Autodiff internal error: Mismatch on backprop and op.");
+        throw ngraph_error(
+            "Autodiff internal error: Mismatch on backprop and op in add_delta_to_slice.");
     }
 
     auto adjoint_it = m_adjoint_map.find(x.get());

@@ -34,7 +34,7 @@ namespace ngraph
                 {
                     try
                     {
-                        for (size_t i = 0; i < node->get_num_outputs(); ++i)
+                        for (size_t i = 0; i < node->get_output_size(); ++i)
                         {
                             auto tv = node->get_output_tensor_view(i);
                             if (nullptr == tv->get_tensor_view_layout())

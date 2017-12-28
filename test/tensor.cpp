@@ -121,7 +121,7 @@ TEST(tensor, output_flag)
 
     pass_manager.run_passes(f0);
 
-    for (size_t i = 0; i < f0->get_num_outputs(); ++i)
+    for (size_t i = 0; i < f0->get_output_size(); ++i)
     {
         EXPECT_TRUE(f0->get_output_op(i)->is_output());
     }

@@ -103,16 +103,16 @@ namespace ngraph
 
     public:
         /// Returns the number of outputs on the for the node.
-        size_t get_num_outputs() const;
+        size_t get_output_size() const;
 
         /// Returns the element type for output i
-        const element::Type& get_element_type(size_t i) const;
+        const element::Type& get_output_element_type(size_t i) const;
 
         /// Checks that there is exactly one output and returns its element type
         const element::Type& get_element_type() const;
 
         /// Returns the shape for output i
-        const Shape& get_shape(size_t i) const;
+        const Shape& get_output_shape(size_t i) const;
 
         /// Checks that there is exactly one output and returns its shape
         const Shape& get_shape() const;
@@ -133,7 +133,7 @@ namespace ngraph
         const std::set<descriptor::Input*>& get_output_inputs(size_t i) const;
 
         /// Returns the number of inputs for the op
-        size_t get_num_inputs() const;
+        size_t get_input_size() const;
 
         /// Returns the element type of input i
         const element::Type& get_input_element_type(size_t i) const;

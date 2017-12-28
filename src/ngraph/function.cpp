@@ -133,17 +133,17 @@ std::ostream& ngraph::operator<<(std::ostream& out, const Function& f)
     return out;
 }
 
-size_t Function::get_num_outputs() const
+size_t Function::get_output_size() const
 {
     return m_results.size();
 }
 
-const element::Type& Function::get_element_type(size_t i) const
+const element::Type& Function::get_output_element_type(size_t i) const
 {
     return m_results.at(i)->get_element_type();
 }
 
-const Shape& Function::get_shape(size_t i) const
+const Shape& Function::get_output_shape(size_t i) const
 {
     return m_results.at(i)->get_shape();
 }

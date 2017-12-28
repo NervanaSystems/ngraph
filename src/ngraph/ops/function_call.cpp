@@ -28,12 +28,12 @@ op::FunctionCall::FunctionCall(std::shared_ptr<Function> function,
     //TODO : [nikolayk] this needs to be rewritten as follows
     //for each i : FunctionCall->get_inputs.at(i).get_tensor_view_type ==
     //flatten(function_parms).at(i)
-    if (get_num_inputs() != function_params.size())
+    if (get_input_size() != function_params.size())
     {
         throw ngraph_error("Wrong number of arguments.");
     }
 
-    for (size_t i = 0; i < get_num_inputs(); i++)
+    for (size_t i = 0; i < get_input_size(); i++)
     {
         if (get_input_element_type(i) != function->get_parameters().at(i)->get_element_type() ||
             get_input_shape(i) != function->get_parameters().at(i)->get_shape())
@@ -42,8 +42,8 @@ op::FunctionCall::FunctionCall(std::shared_ptr<Function> function,
         }
     }
 
-    for (size_t i = 0; i < m_function->get_num_outputs(); ++i)
+    for (size_t i = 0; i < m_function->get_output_size(); ++i)
     {
-        add_output(function->get_element_type(i), function->get_shape(i));
+        add_output(function->get_output_element_type(i), function->get_output_shape(i));
     }
 }

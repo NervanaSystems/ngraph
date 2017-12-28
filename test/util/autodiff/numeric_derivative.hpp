@@ -41,7 +41,7 @@ namespace ngraph
                                T delta,
                                const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
-            Shape y_shape = f->get_shape(0);
+            Shape y_shape = f->get_output_shape(0);
 
             auto params = f->get_parameters();
 
