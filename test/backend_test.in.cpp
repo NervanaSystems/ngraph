@@ -4324,8 +4324,7 @@ TEST(${BACKEND_NAME}, abc_tbb)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
