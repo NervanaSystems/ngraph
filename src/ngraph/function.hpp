@@ -39,27 +39,9 @@ namespace ngraph
                  const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                  const std::string& name = "");
 
-        // Deprecated
-        Function(const Nodes& results,
-                 const std::vector<std::shared_ptr<const ValueType>>& result_types,
-                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                 const std::string& name = "")
-            : Function(results, parameters, name)
-        {
-        }
-
         Function(const std::shared_ptr<Node>& result,
                  const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                  const std::string& name = "");
-
-        // Deprecated
-        Function(const std::shared_ptr<Node>& result,
-                 const std::shared_ptr<const ValueType>& result_type,
-                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                 const std::string& name = "")
-            : Function(result, parameters, name)
-        {
-        }
 
         virtual ~Function() {}
     public:

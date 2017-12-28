@@ -212,17 +212,14 @@ TEST(util, traverse_functions)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto rt_f = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, rt_f, op::Parameters{A, B, C}, "f");
+    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C}, "f");
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
     auto Y = make_shared<op::Parameter>(element::f32, shape);
     auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto rt_g = make_shared<TensorViewType>(element::f32, shape);
     auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}) +
                                        make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}),
-                                   rt_g,
                                    op::Parameters{X, Y, Z},
                                    "g");
 
@@ -230,10 +227,8 @@ TEST(util, traverse_functions)
     auto X1 = make_shared<op::Parameter>(element::f32, shape);
     auto Y1 = make_shared<op::Parameter>(element::f32, shape);
     auto Z1 = make_shared<op::Parameter>(element::f32, shape);
-    auto rt_h = make_shared<TensorViewType>(element::f32, shape);
     auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}) +
                                        make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}),
-                                   rt_h,
                                    op::Parameters{X1, Y1, Z1},
                                    "h");
 
@@ -255,9 +250,8 @@ public:
 
     NodeMap node_map;
     std::list<std::shared_ptr<ngraph::Node>> nodes;
-    std::shared_ptr<TensorViewType> type = make_shared<TensorViewType>(element::f32, shape);
     std::shared_ptr<Function> func =
-        make_shared<Function>(AplusBtimesC, type, op::Parameters{A, B, C}, "f");
+        make_shared<Function>(AplusBtimesC, op::Parameters{A, B, C}, "f");
 
     void SetUp()
     {

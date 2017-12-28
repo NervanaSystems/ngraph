@@ -26,7 +26,4 @@ XLAFunction::XLAFunction(const std::shared_ptr<Node>& result,
                          const std::shared_ptr<const ValueType>& result_type,
                          const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                          const std::string& name)
-    : Function(Nodes{result},
-               std::vector<std::shared_ptr<const ValueType>>{result_type},
-               parameters,
-               name){};
+    : Function(Nodes{result}, parameters, name){};

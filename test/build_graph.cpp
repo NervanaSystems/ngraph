@@ -33,9 +33,7 @@ TEST(build_graph, build_simple)
     ASSERT_EQ(dot->get_input_ops()[0], arg2);
     ASSERT_EQ(dot->get_input_ops()[1], arg0);
 
-    auto result_type = make_shared<TensorViewType>(element::f32, Shape{32, 3});
-    auto cluster_0 =
-        make_shared<Function>(dot, result_type, op::Parameters{arg0, arg1, arg2, arg3});
+    auto cluster_0 = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg2, arg3});
 
     ASSERT_EQ(cluster_0->get_output_op(0), dot);
 }
@@ -131,12 +129,9 @@ TEST(build_graph, function_undeclared_parameters)
     auto dot = make_shared<op::Dot>(arg2, arg0);
     ASSERT_EQ(dot->get_input_ops()[0], arg2);
     ASSERT_EQ(dot->get_input_ops()[1], arg0);
-
-    auto result_type = make_shared<TensorViewType>(element::f32, Shape{32, 3});
-
     try
     {
-        auto f = make_shared<Function>(dot, result_type, op::Parameters{arg0, arg1, arg3});
+        auto f = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg3});
         // Should have thrown, so fail if it didn't
         FAIL() << "Undeclared parameter not detected.";
     }

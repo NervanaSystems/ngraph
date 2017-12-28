@@ -4186,8 +4186,7 @@ TEST(${BACKEND_NAME}, numeric_float_nan)
     auto shape = Shape{5};
     auto A = op::Constant::create(element::f32, shape, {-2.5f, 25.5f, 2.25f, NAN, 6.0f});
     auto B = op::Constant::create(element::f32, shape, {10.0f, 5.0f, 2.25f, 10.0f, NAN});
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4205,8 +4204,7 @@ TEST(${BACKEND_NAME}, numeric_double_nan)
     auto shape = Shape{5};
     auto A = op::Constant::create(element::f64, shape, {-2.5f, 25.5f, 2.25f, NAN, 6.0f});
     auto B = op::Constant::create(element::f64, shape, {10.0f, 5.0f, 2.25f, 10.0f, NAN});
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4224,8 +4222,7 @@ TEST(${BACKEND_NAME}, numeric_float_inf)
     auto shape = Shape{5};
     auto A = op::Constant::create(element::f32, shape, {-2.5f, 25.5f, 2.25f, INFINITY, 6.0f});
     auto B = op::Constant::create(element::f32, shape, {10.0f, 5.0f, 2.25f, 10.0f, -INFINITY});
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -4243,8 +4240,7 @@ TEST(${BACKEND_NAME}, numeric_double_inf)
     auto shape = Shape{5};
     auto A = op::Constant::create(element::f64, shape, {-2.5f, 25.5f, 2.25f, INFINITY, 6.0f});
     auto B = op::Constant::create(element::f64, shape, {10.0f, 5.0f, 2.25f, 10.0f, -INFINITY});
-    auto rt = make_shared<TensorViewType>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), rt, op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::Parameters{});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);

@@ -187,8 +187,7 @@ static void run_passes(pass::Manager& pass_manager,
                        std::vector<shared_ptr<op::Parameter>> parms)
 {
     auto shape = Shape{1};
-    auto rt = make_shared<TensorViewType>(element::i32, shape);
-    auto func = make_shared<Function>(graph, rt, op::Parameters{parms});
+    auto func = make_shared<Function>(graph, op::Parameters{parms});
     pass_manager.run_passes(func);
 }
 
