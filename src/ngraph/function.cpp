@@ -157,3 +157,12 @@ shared_ptr<Node> Function::get_output_op(size_t i) const
 {
     return m_results.at(i);
 }
+
+shared_ptr<Node> Function::get_result() const
+{
+    if (m_results.size() != 1)
+    {
+        throw ngraph_error("get_result() must be called on a function with exactly one result.");
+    }
+    return m_results.at(0);
+}

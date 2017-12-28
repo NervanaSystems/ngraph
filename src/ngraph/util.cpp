@@ -389,8 +389,8 @@ size_t ngraph::round_up(size_t size, size_t alignment)
     return size + alignment - remainder;
 }
 
-ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fprop,
-                                       std::shared_ptr<ngraph::XLAFunction> bprop,
+ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
+                                       std::shared_ptr<ngraph::Function> bprop,
                                        std::vector<std::shared_ptr<Node>> adjoints)
 {
     using namespace ngraph;
@@ -453,10 +453,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fpro
                          fprop_cache.fprop_output_nodes.begin(),
                          fprop_cache.fprop_output_nodes.end());
 
-    auto outTuple = std::make_shared<op::XLATuple>(fprop_outputs);
-    auto outTupleType = outTuple->get_value_type();
-    fprop_cache.fprop =
-        std::make_shared<XLAFunction>(outTuple, outTupleType, fprop->get_parameters());
+    fprop_cache.fprop = std::make_shared<Function>(fprop_outputs, fprop->get_parameters());
 
     // clone the nodes in bprop, replacing fprop-related nodes with the
     // intermediate parameters
@@ -480,8 +477,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fpro
     }
 
     // create the new bprop function
-    fprop_cache.bprop = std::make_shared<XLAFunction>(
-        cloned_result, cloned_result->get_value_type(), bprop_input_params);
+    fprop_cache.bprop = std::make_shared<Function>(Nodes{cloned_result}, bprop_input_params);
 
     return fprop_cache;
 }

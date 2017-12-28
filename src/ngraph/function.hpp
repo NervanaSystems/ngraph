@@ -72,7 +72,8 @@ namespace ngraph
         {
             return m_parameters;
         }
-
+        const std::vector<std::shared_ptr<Node>> get_results() const { return m_results; }
+        std::shared_ptr<Node> get_result() const;
         std::string get_name() const;
         void set_name(
             const std::string&
