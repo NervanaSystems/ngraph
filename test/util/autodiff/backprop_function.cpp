@@ -26,7 +26,6 @@
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convert.hpp"
-#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/types/type.hpp"
 
 using namespace ngraph;
@@ -40,8 +39,7 @@ std::shared_ptr<Function> autodiff::backprop_function(const std::shared_ptr<Func
     transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, Y_out](const std::shared_ptr<Node>& X) {
         return Y_out->backprop_node(X, C);
     });
-    auto result = std::make_shared<op::XLATuple>(dYdXs);
     std::vector<std::shared_ptr<op::Parameter>> params(Xs);
     params.push_back(C);
-    return std::make_shared<Function>(result, params);
+    return std::make_shared<Function>(dYdXs, params);
 }
