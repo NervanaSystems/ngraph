@@ -96,7 +96,11 @@ TEST(serialize, main)
 
 TEST(serialize, existing_models)
 {
-    vector<string> models = {"mxnet/mnist_mlp_forward.json", "mxnet/10_bucket_LSTM.json"};
+    vector<string> models = {
+        "mxnet/mnist_mlp_forward.json", "mxnet/10_bucket_LSTM.json",
+        //"mxnet/LSTM_backward.json",
+        //"mxnet/LSTM_forward.json"
+    };
 
     for (const string& model : models)
     {

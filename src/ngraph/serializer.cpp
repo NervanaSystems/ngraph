@@ -347,8 +347,10 @@ static shared_ptr<ngraph::Function>
         }
         else if (node_op == "Constant")
         {
-            auto& element_type = read_element_type(node_js.at("element_type"));
-            auto shape = node_js.at("shape").get<vector<size_t>>();
+            auto type_node_js =
+                node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
+            auto& element_type = read_element_type(type_node_js.at("element_type"));
+            auto shape = type_node_js.at("shape");
             auto value = node_js.at("value").get<vector<string>>();
             node = make_shared<op::Constant>(element_type, shape, value);
         }
@@ -437,8 +439,10 @@ static shared_ptr<ngraph::Function>
         }
         else if (node_op == "Parameter")
         {
-            auto& element_type = read_element_type(node_js.at("element_type"));
-            auto shape = node_js.at("shape");
+            auto type_node_js =
+                node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
+            auto& element_type = read_element_type(type_node_js.at("element_type"));
+            auto shape = type_node_js.at("shape");
             node = make_shared<op::Parameter>(element_type, shape);
         }
         else if (node_op == "Power")
