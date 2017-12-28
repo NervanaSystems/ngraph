@@ -323,9 +323,9 @@ using namespace ngraph::runtime;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         set<string> output_names;
-        for (const descriptor::Output* output : current_function->get_outputs())
+        for (shared_ptr<Node> op : current_function->get_results())
         {
-            shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
+            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
             output_names.insert(tv->get_tensor().get_name());
         }
         set<descriptor::TensorView*> constants;
