@@ -23,9 +23,9 @@ using namespace ngraph::runtime::cpu::kernels;
 // For the reference kernel this is based on, see ngraph/runtime/kernel/concat.hpp.
 //
 void ngraph::runtime::cpu::kernels::emit_concat(codegen::CodeWriter& writer,
-                                                std::string element_type,
-                                                const std::vector<std::string> args,
-                                                std::string out,
+                                                const std::string& element_type,
+                                                const std::vector<std::string>& args,
+                                                const std::string& out,
                                                 const std::vector<Shape>& in_shapes,
                                                 const Shape& out_shape,
                                                 size_t concatenation_axis)
@@ -50,16 +50,17 @@ void ngraph::runtime::cpu::kernels::emit_concat(codegen::CodeWriter& writer,
     }
 }
 
-void ngraph::runtime::cpu::kernels::emit_replace_slice(codegen::CodeWriter& writer,
-                                                       std::string element_type,
-                                                       std::string arg0, // replacement context
-                                                       std::string arg1, // replacement value
-                                                       std::string out,
-                                                       const Shape& arg1_shape,
-                                                       const Shape& out_shape,
-                                                       const Coordinate& lower_bounds,
-                                                       const Coordinate& upper_bounds,
-                                                       const Strides& strides)
+void ngraph::runtime::cpu::kernels::emit_replace_slice(
+    codegen::CodeWriter& writer,
+    const std::string& element_type,
+    const std::string& arg0, // replacement context
+    const std::string& arg1, // replacement value
+    const std::string& out,
+    const Shape& arg1_shape,
+    const Shape& out_shape,
+    const Coordinate& lower_bounds,
+    const Coordinate& upper_bounds,
+    const Strides& strides)
 {
     // Step 1: Copy the entire replacement context to the output.
     CoordinateTransform copy_transform(out_shape);

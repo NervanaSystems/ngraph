@@ -17,7 +17,6 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/common.hpp"
 
-using namespace std;
 namespace ngraph
 {
     namespace runtime
@@ -27,18 +26,18 @@ namespace ngraph
             namespace kernels
             {
                 void emit_concat(codegen::CodeWriter& writer,
-                                 std::string element_type,
-                                 const std::vector<std::string> args,
-                                 std::string out,
+                                 const std::string& element_type,
+                                 const std::vector<std::string>& args,
+                                 const std::string& out,
                                  const std::vector<Shape>& in_shapes,
                                  const Shape& out_shape,
-                                 size_t concatenation_axis);
+                                 const size_t concatenation_axis);
 
                 void emit_replace_slice(codegen::CodeWriter& writer,
-                                        std::string element_type,
-                                        std::string arg0, // replacement context
-                                        std::string arg1, // replacement value
-                                        std::string out,
+                                        const std::string& element_type,
+                                        const std::string& arg0, // replacement context
+                                        const std::string& arg1, // replacement value
+                                        const std::string& out,
                                         const Shape& arg1_shape,
                                         const Shape& out_shape,
                                         const Coordinate& lower_bounds,
