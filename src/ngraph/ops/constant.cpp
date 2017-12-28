@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <cmath>
 #include <cstdio>
 
 #include "ngraph/log.hpp"
@@ -25,11 +26,11 @@ template <typename T>
 std::string to_cpp_string(T value)
 {
     string rc;
-    if (isnan(value))
+    if (std::isnan(value))
     {
         rc = "NAN";
     }
-    else if (isinf(value))
+    else if (std::isinf(value))
     {
         if (value > 0)
         {

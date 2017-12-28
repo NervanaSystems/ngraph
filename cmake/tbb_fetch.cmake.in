@@ -11,14 +11,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set (SRC
-    main.cpp
-    util.cpp
-    uncomment.cpp
-    header_rewrite.cpp
+cmake_minimum_required(VERSION 3.1)
+
+include(ExternalProject)
+
+project(tbb-fetch NONE)
+
+ExternalProject_Add(
+    ext_tbb
+    GIT_REPOSITORY ${TBB_GIT_REPO_URL}
+    GIT_TAG ${TBB_GIT_TAG}
+    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/tbb/tbb-src"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    UPDATE_COMMAND ""
+    INSTALL_COMMAND ""
 )
-
-add_executable(resource_generator ${SRC})
-
-set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS
-    "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";TBB_HEADERS_PATH=\"${TBB_ROOT}/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";")
