@@ -76,7 +76,6 @@
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/ops/xla_get_tuple_element.hpp"
-#include "ngraph/ops/xla_get_tuple_element.hpp"
 #include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
@@ -571,13 +570,13 @@ using namespace ngraph::runtime;
 
     m_compiler->set_precompiled_header_source(pch_header_source);
 
-    auto llvm_module = m_compiler->compile(code);
+    auto codegen_module = m_compiler->compile(code);
 
-    if (llvm_module == nullptr)
+    if (codegen_module == nullptr)
     {
         throw runtime_error("function failed to compile");
     }
-    m_execution_engine->add_module(llvm_module);
+    m_execution_engine->add_module(codegen_module);
     m_execution_engine->finalize();
     m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(function_name);
     assert(m_compiled_function);
