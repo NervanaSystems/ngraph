@@ -37,12 +37,13 @@ TEST(builder_xla, simple)
     auto pB = make_shared<op::Parameter>(element::f32, shape);
     auto pC = make_shared<op::Parameter>(element::f32, shape);
 
-    auto ABC = make_shared<builder::Tuple>(Nodes{pA, pB, pC});
+    auto ABC = make_shared<xla::op::Tuple>(Nodes{pA, pB, pC});
 
-    auto A = builder::get_tuple_element(ABC, 0);
-    auto B = builder::get_tuple_element(ABC, 1);
-    auto C = builder::get_tuple_element(ABC, 2);
-    auto f = make_shared<Function>(Nodes{(A + B) * C}, op::Parameters{pA, pB, pC});
+    auto A = xla::op::get_tuple_element(ABC, 0);
+    auto B = xla::op::get_tuple_element(ABC, 1);
+    auto C = xla::op::get_tuple_element(ABC, 2);
+    auto f = make_shared<xla::XLAFunction>(Nodes{make_shared<xla::op::Tuple>(Nodes{(A + B) * C})},
+                                           Nodes{ABC});
 
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
@@ -56,21 +57,18 @@ TEST(builder_xla, simple)
     copy_data(b, vector<float>{5, 6, 7, 8});
     auto c = backend->make_primary_tensor_view(element::f32, shape);
     copy_data(c, vector<float>{9, 10, 11, 12});
-    //auto abc = runtime::make_tuple({a, b, c});
-    //auto bac = runtime::make_tuple({b, a, c});
-    //auto acb = runtime::make_tuple({a, c, b});
+    auto abc = xla::make_tuple({a, b, c});
+    auto bac = xla::make_tuple({b, a, c});
+    auto acb = xla::make_tuple({a, c, b});
     auto result = backend->make_primary_tensor_view(element::f32, shape);
-    //auto result_tuple = runtime::make_tuple({result});
+    auto result_tuple = xla::make_tuple({result});
 
-    //cf->call({abc}, {result_tuple});
-    cf->call({a, b, c}, {result});
+    xla::call(cf, {abc}, {result_tuple});
     EXPECT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
 
-    //cf->call({bac}, {result_tuple});
-    cf->call({b, a, c}, {result});
+    xla::call(cf, {bac}, {result_tuple});
     EXPECT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
 
-    //cf->call({acb}, {result_tuple});
-    cf->call({a, c, b}, {result});
+    xla::call(cf, {acb}, {result_tuple});
     EXPECT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector<float>());
 }
