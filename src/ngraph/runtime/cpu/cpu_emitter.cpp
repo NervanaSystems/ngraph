@@ -41,6 +41,8 @@
 using namespace std;
 using namespace ngraph;
 
+#define USE_LOOPS_OVER_EIGEN 1
+
 static string eigen_vector_format(const runtime::cpu::TensorViewWrapper& tvi)
 {
     return "fmt::V{" + to_string(tvi.get_size()) + "}";
@@ -67,6 +69,7 @@ void runtime::cpu::CPU_Emitter::EmitAdd(const ngraph::Node* n,
     // the right alignment instead of Eigen::Unaligned
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << "Eigen::Map<Eigen::Array<" << out[0].get_element_type().c_type_string() << ", "
           << out[0].get_size() << ", 1>, Eigen::Unaligned> out(" << out[0].get_name() << ");\n";
     m_out << "Eigen::Map<Eigen::Array<" << args[0].get_element_type().c_type_string() << ", "
@@ -74,7 +77,14 @@ void runtime::cpu::CPU_Emitter::EmitAdd(const ngraph::Node* n,
     m_out << "Eigen::Map<Eigen::Array<" << args[1].get_element_type().c_type_string() << ", "
           << args[1].get_size() << ", 1>, Eigen::Unaligned> arg1(" << args[1].get_name() << ");\n";
     m_out << "out = arg0 + arg1;\n";
-
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] + "
+          << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -164,9 +174,18 @@ void runtime::cpu::CPU_Emitter::EmitMultiply(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "   " << emit_array1d(args[0]) << " *\n"
           << "   " << emit_array1d(args[1]) << ";\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] * "
+          << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -319,9 +338,18 @@ void runtime::cpu::CPU_Emitter::EmitDivide(const ngraph::Node* n,
               << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
         m_out << "}\n";
     }
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << " /\n"
           << "    " << emit_array1d(args[1]) << ";\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] / "
+          << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -435,8 +463,16 @@ void runtime::cpu::CPU_Emitter::EmitNegative(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    -" << emit_array1d(args[0]) << ";\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = -" << args[0].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -474,9 +510,18 @@ void runtime::cpu::CPU_Emitter::EmitSubtract(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << " -\n"
           << "    " << emit_array1d(args[1]) << ";\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] - "
+          << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -580,7 +625,9 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto reshape = static_cast<const op::Reshape*>(n);
-
+    //     m_out << "{   // " << n->get_name() << "\n";
+    //     m_out.indent++;
+    // #if USE_LOOPS_OVER_EIGEN == 0
     auto arg_shape = args[0].get_shape();
     auto arg_rank = arg_shape.size();
 
@@ -643,6 +690,17 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
         throw ngraph_error(
             "Axis permutation in reshape is not implemented yet for tensors with rank>2");
     }
+    // #else
+    //     kernels::emit_reshape(m_out,
+    //                           args[0].get_element_type().c_type_string(),
+    //                           args[0].get_name(),
+    //                           out[0].get_name(),
+    //                           args[0].get_shape(),
+    //                           out[0].get_shape(),
+    //                           reshape->get_input_order());
+    // #endif
+    //     m_out.indent--;
+    //     m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitFunctionCall(
@@ -858,6 +916,9 @@ void runtime::cpu::CPU_Emitter::EmitSlice(const ngraph::Node* n,
 {
     const op::Slice* slice = static_cast<const op::Slice*>(n);
 
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     size_t arg_rank = args[0].get_shape().size();
 
     const Coordinate& lower_bounds = slice->get_lower_bounds();
@@ -917,6 +978,19 @@ void runtime::cpu::CPU_Emitter::EmitSlice(const ngraph::Node* n,
         m_out << "                         {" << join(slice->get_strides()) << "},\n";
         m_out << "                         {" << join(out[0].get_shape()) << "});\n";
     }
+#else
+    kernels::emit_slice(m_out,
+                        args[0].get_element_type().c_type_string(),
+                        args[0].get_name(),
+                        out[0].get_name(),
+                        args[0].get_shape(),
+                        out[0].get_shape(),
+                        slice->get_lower_bounds(),
+                        slice->get_upper_bounds(),
+                        slice->get_strides());
+#endif
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
@@ -924,6 +998,9 @@ void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     const op::Sum* sum = static_cast<const op::Sum*>(n);
+//     m_out << "{   // " << n->get_name() << "\n";
+//     m_out.indent++;
+// #if USE_LOOPS_OVER_EIGEN == 0
     const Shape& arg_shape = args[0].get_shape();
     size_t arg_rank = arg_shape.size();
     const AxisSet& reduction_axes = sum->get_reduction_axes();
@@ -975,6 +1052,17 @@ void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
         m_out << "                         {" << join(out[0].get_shape()) << "},\n";
         m_out << "                         {" << join(sum->get_reduction_axes()) << "});\n";
     }
+// #else
+//     kernels::emit_sum(m_out,
+//                       args[0].get_element_type().c_type_string(),
+//                       args[0].get_name(),
+//                       out[0].get_name(),
+//                       args[0].get_shape(),
+//                       out[0].get_shape(),
+//                       sum->get_reduction_axes());
+// #endif
+//     m_out.indent--;
+//     m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitExp(const ngraph::Node* n,
@@ -1031,8 +1119,17 @@ void runtime::cpu::CPU_Emitter::EmitCosh(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".cosh();\n";
+    m_out << "{   // " << n->get_name() << "\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = cosh(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1123,7 +1220,74 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
     const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto replace_slice = static_cast<const op::Slice*>(n);
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
+    auto& lower_bounds = replace_slice->get_lower_bounds();
+    auto& upper_bounds = replace_slice->get_upper_bounds();
 
+    bool strided = false;
+    for (size_t stride : replace_slice->get_strides())
+    {
+        if (stride != 1)
+        {
+            strided = true;
+            break;
+        }
+    }
+
+    // Scalar slice is necessarily just a copy.
+    if (!strided && arg0_rank == 0)
+    {
+        m_out << "{   // " << n->get_name() << " 1\n";
+        m_out.indent++;
+        m_out << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
+              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+        m_out.indent--;
+        m_out << "}\n";
+    }
+    else if (!strided && arg0_rank == 1)
+    {
+        m_out << "{   // " << n->get_name() << " 2\n";
+        m_out.indent++;
+        m_out << emit_vector(out[0]) << " =\n"
+              << "    " << emit_vector(args[0]) << ";\n"
+              << emit_vector(out[0]) << ".segment(\n"
+              << "    " << to_string(lower_bounds[0]) << ", "
+              << to_string(upper_bounds[0] - lower_bounds[0]) << ") =\n"
+              << "    " << emit_vector(args[1]) << ";\n";
+        m_out.indent--;
+        m_out << "}\n";
+    }
+    else if (!strided && arg0_rank == 2)
+    {
+        m_out << "{   // " << n->get_name() << " 3\n";
+        m_out.indent++;
+        m_out << emit_matrix(out[0]) << " =\n"
+              << "    " << emit_matrix(args[0]) << ";\n"
+              << emit_matrix(out[0]) << ".block(\n"
+              << "        " << to_string(lower_bounds[0]) << ",\n"
+              << "        " << to_string(lower_bounds[1]) << ",\n"
+              << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
+              << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ") =\n"
+              << "    " << emit_matrix(args[1]) << ";\n";
+        m_out.indent--;
+        m_out << "}\n";
+    }
+    // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
+    else
+    {
+        m_out << "kernel::replace_slice<" << out[0].get_type() << ">(" << args[0].get_name()
+              << ",\n";
+        m_out << "                         " << args[1].get_name() << ",\n";
+        m_out << "                         " << out[0].get_name() << ",\n";
+        m_out << "                         {" << join(args[1].get_shape()) << "},\n";
+        m_out << "                         {" << join(replace_slice->get_lower_bounds()) << "},\n";
+        m_out << "                         {" << join(replace_slice->get_upper_bounds()) << "},\n";
+        m_out << "                         {" << join(replace_slice->get_strides()) << "},\n";
+        m_out << "                         {" << join(out[0].get_shape()) << "});\n";
+    }
+#else
     kernels::emit_replace_slice(m_out,
                                 args[0].get_element_type().c_type_string(),
                                 args[0].get_name(),
@@ -1134,6 +1298,9 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
                                 replace_slice->get_lower_bounds(),
                                 replace_slice->get_upper_bounds(),
                                 replace_slice->get_strides());
+#endif
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitOneHot(const ngraph::Node* n,

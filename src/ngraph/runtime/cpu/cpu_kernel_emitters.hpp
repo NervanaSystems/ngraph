@@ -43,6 +43,29 @@ namespace ngraph
                                         const Coordinate& lower_bounds,
                                         const Coordinate& upper_bounds,
                                         const Strides& strides);
+                void emit_slice(codegen::CodeWriter& writer,
+                                const std::string& element_type,
+                                const std::string& arg0, // replacement context
+                                const std::string& out,
+                                const Shape& arg0_shape,
+                                const Shape& out_shape,
+                                const Coordinate& lower_bounds,
+                                const Coordinate& upper_bounds,
+                                const Strides& strides);
+                void emit_reshape(codegen::CodeWriter& writer,
+                                  const std::string& element_type,
+                                  const std::string& arg0, // replacement context
+                                  const std::string& out,
+                                  const Shape& arg0_shape,
+                                  const Shape& out_shape,
+                                  const AxisVector& arg0_axis_order);
+                // void emit_sum(codegen::CodeWriter& writer,
+                //               const std::string& element_type,
+                //               const std::string& arg0, // replacement context
+                //               const std::string& out,
+                //               const Shape& arg0_shape,
+                //               const Shape& out_shape,
+                //               const AxisSet& reduction_axes);
             }
         }
     }

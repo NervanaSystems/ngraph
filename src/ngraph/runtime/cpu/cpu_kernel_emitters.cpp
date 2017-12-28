@@ -72,3 +72,66 @@ void ngraph::runtime::cpu::kernels::emit_replace_slice(
 
     emit_pointwise_copy(writer, element_type, arg1, out, input_transform, output_transform);
 }
+
+void ngraph::runtime::cpu::kernels::emit_slice(codegen::CodeWriter& writer,
+                                               const std::string& element_type,
+                                               const std::string& arg0, // replacement context
+                                               const std::string& out,
+                                               const Shape& arg0_shape,
+                                               const Shape& out_shape,
+                                               const Coordinate& lower_bounds,
+                                               const Coordinate& upper_bounds,
+                                               const Strides& strides)
+{
+    CoordinateTransform input_transform(arg0_shape, lower_bounds, upper_bounds, strides);
+    CoordinateTransform output_transform(out_shape);
+
+    emit_pointwise_copy(writer, element_type, arg0, out, input_transform, output_transform);
+}
+
+void ngraph::runtime::cpu::kernels::emit_reshape(codegen::CodeWriter& writer,
+                                                 const std::string& element_type,
+                                                 const std::string& arg0, // replacement context
+                                                 const std::string& out,
+                                                 const Shape& arg0_shape,
+                                                 const Shape& out_shape,
+                                                 const AxisVector& arg0_axis_order)
+{
+    for (auto x : arg0_axis_order)
+        std::cout << x << ",";
+    std::cout << std::endl;
+    Shape in_start_corner(arg0_shape.size(), 0); // (0,...0)
+    Shape in_strides(arg0_shape.size(), 1);      // (1,...,1)
+
+    CoordinateTransform input_transform(
+        arg0_shape, in_start_corner, arg0_shape, in_strides, arg0_axis_order);
+
+    CoordinateTransform output_transform(out_shape);
+    std::cout << "emit_pointwise_copy" << std::endl;
+    emit_pointwise_copy(writer, element_type, arg0, out, input_transform, output_transform);
+}
+
+// void ngraph::runtime::cpu::kernels::emit_sum(codegen::CodeWriter& writer,
+//                                              const std::string& element_type,
+//                                              const std::string& arg0, // replacement context
+//                                              const std::string& out,
+//                                              const Shape& arg0_shape,
+//                                              const Shape& out_shape,
+//                                              const AxisSet& reduction_axes)
+// {
+//     CoordinateTransform output_transform(out_shape);
+
+//     for (Coordinate output_coord : output_transform)
+//     {
+//         out[output_transform.index(output_coord)] = 0;
+//     }
+
+//     CoordinateTransform input_transform(in_shape);
+
+//     for (Coordinate input_coord : input_transform)
+//     {
+//         Coordinate output_coord = project_coordinate(input_coord, reduction_axes);
+
+//         out[output_transform.index(output_coord)] += arg[input_transform.index(input_coord)];
+//     }
+// }
