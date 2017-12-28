@@ -17,6 +17,7 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/common.hpp"
 
+using namespace std;
 namespace ngraph
 {
     namespace runtime
@@ -32,6 +33,17 @@ namespace ngraph
                                  const std::vector<Shape>& in_shapes,
                                  const Shape& out_shape,
                                  size_t concatenation_axis);
+
+                void emit_replace_slice(codegen::CodeWriter& writer,
+                                        std::string element_type,
+                                        std::string arg0, // replacement context
+                                        std::string arg1, // replacement value
+                                        std::string out,
+                                        const Shape& arg1_shape,
+                                        const Shape& out_shape,
+                                        const Coordinate& lower_bounds,
+                                        const Coordinate& upper_bounds,
+                                        const Strides& strides);
             }
         }
     }

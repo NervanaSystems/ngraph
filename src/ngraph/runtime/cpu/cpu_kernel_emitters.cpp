@@ -49,3 +49,25 @@ void ngraph::runtime::cpu::kernels::emit_concat(codegen::CodeWriter& writer,
         concatenation_pos += in_shapes[i][concatenation_axis];
     }
 }
+
+void ngraph::runtime::cpu::kernels::emit_replace_slice(codegen::CodeWriter& writer,
+                                                       std::string element_type,
+                                                       std::string arg0, // replacement context
+                                                       std::string arg1, // replacement value
+                                                       std::string out,
+                                                       const Shape& arg1_shape,
+                                                       const Shape& out_shape,
+                                                       const Coordinate& lower_bounds,
+                                                       const Coordinate& upper_bounds,
+                                                       const Strides& strides)
+{
+    // Step 1: Copy the entire replacement context to the output.
+    CoordinateTransform copy_transform(out_shape);
+    emit_pointwise_copy(writer, element_type, arg0, out, copy_transform, copy_transform);
+
+    // Step 2: Overwrite the slice for replacement.
+    CoordinateTransform input_transform(arg1_shape);
+    CoordinateTransform output_transform(out_shape, lower_bounds, upper_bounds, strides);
+
+    emit_pointwise_copy(writer, element_type, arg1, out, input_transform, output_transform);
+}

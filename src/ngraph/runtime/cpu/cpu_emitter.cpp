@@ -1124,72 +1124,16 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
 {
     auto replace_slice = static_cast<const op::Slice*>(n);
 
-    size_t arg0_rank = args[0].get_shape().size();
-
-    auto& lower_bounds = replace_slice->get_lower_bounds();
-    auto& upper_bounds = replace_slice->get_upper_bounds();
-
-    bool strided = false;
-    for (size_t stride : replace_slice->get_strides())
-    {
-        if (stride != 1)
-        {
-            strided = true;
-            break;
-        }
-    }
-
-    // Scalar slice is necessarily just a copy.
-    if (!strided && arg0_rank == 0)
-    {
-        m_out << "{   // " << n->get_name() << " 1\n";
-        m_out.indent++;
-        m_out << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
-              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-        m_out.indent--;
-        m_out << "}\n";
-    }
-    else if (!strided && arg0_rank == 1)
-    {
-        m_out << "{   // " << n->get_name() << " 2\n";
-        m_out.indent++;
-        m_out << emit_vector(out[0]) << " =\n"
-              << "    " << emit_vector(args[0]) << ";\n"
-              << emit_vector(out[0]) << ".segment(\n"
-              << "    " << to_string(lower_bounds[0]) << ", "
-              << to_string(upper_bounds[0] - lower_bounds[0]) << ") =\n"
-              << "    " << emit_vector(args[1]) << ";\n";
-        m_out.indent--;
-        m_out << "}\n";
-    }
-    else if (!strided && arg0_rank == 2)
-    {
-        m_out << "{   // " << n->get_name() << " 3\n";
-        m_out.indent++;
-        m_out << emit_matrix(out[0]) << " =\n"
-              << "    " << emit_matrix(args[0]) << ";\n"
-              << emit_matrix(out[0]) << ".block(\n"
-              << "        " << to_string(lower_bounds[0]) << ",\n"
-              << "        " << to_string(lower_bounds[1]) << ",\n"
-              << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
-              << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ") =\n"
-              << "    " << emit_matrix(args[1]) << ";\n";
-        m_out.indent--;
-        m_out << "}\n";
-    }
-    // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
-    else
-    {
-        m_out << "kernel::replace_slice<" << out[0].get_type() << ">(" << args[0].get_name()
-              << ",\n";
-        m_out << "                         " << args[1].get_name() << ",\n";
-        m_out << "                         " << out[0].get_name() << ",\n";
-        m_out << "                         {" << join(args[1].get_shape()) << "},\n";
-        m_out << "                         {" << join(replace_slice->get_lower_bounds()) << "},\n";
-        m_out << "                         {" << join(replace_slice->get_upper_bounds()) << "},\n";
-        m_out << "                         {" << join(replace_slice->get_strides()) << "},\n";
-        m_out << "                         {" << join(out[0].get_shape()) << "});\n";
-    }
+    kernels::emit_replace_slice(m_out,
+                                args[0].get_element_type().c_type_string(),
+                                args[0].get_name(),
+                                args[1].get_name(),
+                                out[0].get_name(),
+                                args[1].get_shape(),
+                                out[0].get_shape(),
+                                replace_slice->get_lower_bounds(),
+                                replace_slice->get_upper_bounds(),
+                                replace_slice->get_strides());
 }
 
 void runtime::cpu::CPU_Emitter::EmitOneHot(const ngraph::Node* n,
