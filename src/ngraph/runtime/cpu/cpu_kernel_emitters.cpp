@@ -36,17 +36,18 @@ std::string emit_bracketed_string(std::vector<T> data)
     return ss.str();
 }
 
-std::string recast_tmp_var(codegen::CodeWriter& writer, const std::string& element_type,
-                           const std::string& arg_name, const Shape& arg_shape,
-                           const std::string& tmp_name) {
-  std::string nd_name = writer.generate_temporary_name(tmp_name);
-  std::string bracketed_shape = emit_bracketed_string(arg_shape);
+std::string recast_tmp_var(codegen::CodeWriter& writer,
+                           const std::string& element_type,
+                           const std::string& arg_name,
+                           const Shape& arg_shape,
+                           const std::string& tmp_name)
+{
+    std::string nd_name = writer.generate_temporary_name(tmp_name);
+    std::string bracketed_shape = emit_bracketed_string(arg_shape);
 
-  writer << element_type << "(&" << nd_name << ")"
-         << bracketed_shape << " = *reinterpret_cast<"
-         << element_type << "(*)" << bracketed_shape << ">("
-         << arg_name << ");\n";
-  return nd_name;
+    writer << element_type << "(&" << nd_name << ")" << bracketed_shape << " = *reinterpret_cast<"
+           << element_type << "(*)" << bracketed_shape << ">(" << arg_name << ");\n";
+    return nd_name;
 }
 
 void ngraph::runtime::cpu::kernels::emit_broadcast(codegen::CodeWriter& writer,
@@ -206,18 +207,38 @@ void ngraph::runtime::cpu::kernels::emit_reshape(codegen::CodeWriter& writer,
                                                  const Shape& out_shape,
                                                  const AxisVector& arg0_axis_order)
 {
-    for (auto x : arg0_axis_order)
-        std::cout << x << ",";
-    std::cout << std::endl;
-    Shape in_start_corner(arg0_shape.size(), 0); // (0,...0)
-    Shape in_strides(arg0_shape.size(), 1);      // (1,...,1)
+    // size_t size = 1;
+    // for (auto x : out_shape)
+    // {
+    //   if (x != 0) size *= x;
+    // }
 
-    CoordinateTransform input_transform(
-        arg0_shape, in_start_corner, arg0_shape, in_strides, arg0_axis_order);
+    // auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
+    // auto dest_nd_name = recast_tmp_var(writer, element_type, out, {size}, "dest_nd");
 
-    CoordinateTransform output_transform(out_shape);
-    std::cout << "emit_pointwise_copy" << std::endl;
-    emit_pointwise_copy(writer, element_type, arg0, out, input_transform, output_transform);
+    // std::vector<std::string> index_vars;
+    // for (size_t i = 0; i < arg0_shape.size(); i++)
+    // {
+    //     std::string index_var = writer.generate_temporary_name("i");
+
+    //     writer << start_index_loop(index_var, 0, arg0_shape[arg0_axis_order[i]], i == 0);
+    //     writer.indent++;
+
+    //     index_vars.push_back(index_var);
+    // }
+
+    // writer << dest_nd_name << "[ 0 ";
+    // for (size_t i = 0; i < arg0_shape.size(); i++)
+    // {
+    //     writer << " + " << arg0_shape[i] << " * " << index_vars[i];
+    // }
+    // writer << "] = " << source_nd_name << emit_bracketed_string(index_vars)
+    //        << ";\n";
+    // for (size_t i = arg0_shape.size(); i-- > 0;)
+    // {
+    //     writer.indent--;
+    //     writer << end_index_loop(index_vars[i]);
+    // }
 }
 
 void ngraph::runtime::cpu::kernels::emit_sum(codegen::CodeWriter& writer,
