@@ -134,24 +134,35 @@ op::SelectAndScatter::SelectAndScatter(const std::shared_ptr<Node>& arg_selectee
         throw ngraph_error("Selection function has wrong number of parameters (should be two)");
     }
 
-    if (*(selection_function_params.at(0)->get_value_type()) != *(arg_init->get_value_type()))
+    if (selection_function_params.at(0)->get_element_type() != arg_init->get_element_type())
     {
-        throw ngraph_error("Parameter 0 of selection function has wrong type");
+        throw ngraph_error("Parameter 0 of selection function has wrong element type");
     }
-    if (*(selection_function_params.at(1)->get_value_type()) != *(arg_init->get_value_type()))
+    if (selection_function_params.at(1)->get_element_type() != arg_init->get_element_type())
     {
-        throw ngraph_error("Parameter 1 of selection function has wrong type");
+        throw ngraph_error("Parameter 1 of selection function has wrong element type");
+    }
+    if (selection_function_params.at(0)->get_shape() != Shape{})
+    {
+        throw ngraph_error("Parameter 0 of selection function is not a scalar");
+    }
+    if (selection_function_params.at(1)->get_shape() != Shape{})
+    {
+        throw ngraph_error("Parameter 1 of selection function is not a scalar");
     }
 
-    if (m_selection_function->get_result_types().size() > 1)
+    if (m_selection_function->get_output_size() > 1)
     {
         throw ngraph_error("Single-output selection function was expected");
     }
-    auto selection_function_result_type = m_selection_function->get_result_types().at(0);
 
-    if (*(selection_function_result_type) != TensorViewType(element::boolean, Shape{}))
+    if (m_selection_function->get_output_element_type(0) != element::boolean)
     {
-        throw ngraph_error("Return type from selection function is not a boolean scalar");
+        throw ngraph_error("Return element type from selection function is not boolean");
+    }
+    if (m_selection_function->get_output_shape(0) != Shape{})
+    {
+        throw ngraph_error("Return shape from selection function is not a scalar");
     }
 
     //
@@ -164,24 +175,37 @@ op::SelectAndScatter::SelectAndScatter(const std::shared_ptr<Node>& arg_selectee
         throw ngraph_error("Scatter function has wrong number of parameters (should be two)");
     }
 
-    if (*(scatter_function_params.at(0)->get_value_type()) != *(arg_init->get_value_type()))
+    if (scatter_function_params.at(0)->get_element_type() != arg_init->get_element_type())
     {
-        throw ngraph_error("Parameter 0 of scatter function has wrong type");
+        throw ngraph_error("Parameter 0 of scatter function has wrong element type");
     }
-    if (*(scatter_function_params.at(1)->get_value_type()) != *(arg_init->get_value_type()))
+    if (scatter_function_params.at(1)->get_element_type() != arg_init->get_element_type())
     {
-        throw ngraph_error("Parameter 1 of scatter function has wrong type");
+        throw ngraph_error("Parameter 1 of scatter function has wrong element type");
     }
 
-    if (m_scatter_function->get_result_types().size() > 1)
+    if (scatter_function_params.at(0)->get_shape() != Shape{})
+    {
+        throw ngraph_error("Parameter 0 of scatter function is not a scalar");
+    }
+    if (scatter_function_params.at(1)->get_shape() != Shape{})
+    {
+        throw ngraph_error("Parameter 1 of scatter function is not a scalar");
+    }
+
+    if (m_scatter_function->get_output_size() > 1)
     {
         throw ngraph_error("Single-output scatter function was expected");
     }
-    auto scatter_function_result_type = m_scatter_function->get_result_types().at(0);
 
-    if (*(scatter_function_result_type) != *(arg_init->get_value_type()))
+    if (m_scatter_function->get_output_element_type(0) != arg_init->get_element_type())
     {
-        throw ngraph_error("Return type from scatter does not match the init value type");
+        throw ngraph_error(
+            "Return element type from scatter function does not match the init value type");
+    }
+    if (m_scatter_function->get_output_shape(0) != Shape{})
+    {
+        throw ngraph_error("Return shape from scatter function is not a scalar");
     }
 
     //

@@ -56,10 +56,7 @@ TEST(topological_sort, basic)
     auto r0 = make_shared<op::Add>(t3, t4);
     ASSERT_NE(nullptr, r0);
 
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    ASSERT_NE(nullptr, rt);
-
-    auto f0 = make_shared<Function>(r0, rt, args);
+    auto f0 = make_shared<Function>(r0, args);
     ASSERT_NE(nullptr, f0);
 
     ASSERT_EQ(2, r0->get_input_ops().size());
@@ -116,8 +113,7 @@ TEST(benchmark, topological_sort)
         args.push_back(in_2);
         result = make_cell(result, in_1, in_2);
     }
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f0 = make_shared<Function>(result, rt, args);
+    auto f0 = make_shared<Function>(result, args);
 
     timer.start();
     pass::Manager pass_manager;
@@ -145,17 +141,14 @@ TEST(topological_sort, collect_functions)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto rt_f = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, rt_f, op::Parameters{A, B, C}, "f");
+    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C}, "f");
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
     auto Y = make_shared<op::Parameter>(element::f32, shape);
     auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto rt_g = make_shared<TensorViewType>(element::f32, shape);
     auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}) +
                                        make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}),
-                                   rt_g,
                                    op::Parameters{X, Y, Z},
                                    "g");
 
@@ -163,10 +156,8 @@ TEST(topological_sort, collect_functions)
     auto X1 = make_shared<op::Parameter>(element::f32, shape);
     auto Y1 = make_shared<op::Parameter>(element::f32, shape);
     auto Z1 = make_shared<op::Parameter>(element::f32, shape);
-    auto rt_h = make_shared<TensorViewType>(element::f32, shape);
     auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}) +
                                        make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}),
-                                   rt_h,
                                    op::Parameters{X1, Y1, Z1},
                                    "h");
 
@@ -195,9 +186,8 @@ TEST(topological_sort, unused_function_arg)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto rt_f = make_shared<TensorViewType>(element::f32, shape);
     auto result = A + C + C;
-    auto f = make_shared<Function>(result, rt_f, op::Parameters{A, B, C}, "f");
+    auto f = make_shared<Function>(result, op::Parameters{A, B, C}, "f");
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();

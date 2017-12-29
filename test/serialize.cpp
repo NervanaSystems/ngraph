@@ -17,6 +17,7 @@
 
 #include "gtest/gtest.h"
 
+#include "ngraph/file_util.hpp"
 #include "ngraph/json.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
@@ -32,31 +33,6 @@ static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
     tv->write(data.data(), 0, data_size);
 }
 
-TEST(serialize, tuple)
-{
-    auto shape = Shape{2, 2};
-    auto tensor_view_type = make_shared<TensorViewType>(element::i64, shape);
-
-    auto A = make_shared<op::Parameter>(tensor_view_type);
-    auto B = make_shared<op::Parameter>(tensor_view_type);
-    auto C = make_shared<op::Parameter>(tensor_view_type);
-
-    auto ttt =
-        make_shared<TupleType>(ValueTypes{tensor_view_type, tensor_view_type, tensor_view_type});
-
-    auto f = make_shared<XLAFunction>(
-        make_shared<op::XLATuple>(Nodes{(A + B), (A - B), (C * A)}), ttt, op::Parameters{A, B, C});
-
-    string js = serialize(f);
-    {
-        ofstream f("serialize_function_tuple.js");
-        f << js;
-    }
-
-    istringstream in(js);
-    shared_ptr<Function> sfunc = deserialize(in);
-}
-
 TEST(serialize, main)
 {
     // First create "f(A,B,C) = (A+B)*C".
@@ -64,17 +40,14 @@ TEST(serialize, main)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto rt_f = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, rt_f, op::Parameters{A, B, C}, "f");
+    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C}, "f");
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
     auto Y = make_shared<op::Parameter>(element::f32, shape);
     auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto rt_g = make_shared<TensorViewType>(element::f32, shape);
     auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}) +
                                        make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}),
-                                   rt_g,
                                    op::Parameters{X, Y, Z},
                                    "g");
 
@@ -82,14 +55,12 @@ TEST(serialize, main)
     auto X1 = make_shared<op::Parameter>(element::f32, shape);
     auto Y1 = make_shared<op::Parameter>(element::f32, shape);
     auto Z1 = make_shared<op::Parameter>(element::f32, shape);
-    auto rt_h = make_shared<TensorViewType>(element::f32, shape);
     auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}) +
                                        make_shared<op::FunctionCall>(g, Nodes{X1, Y1, Z1}),
-                                   rt_h,
                                    op::Parameters{X1, Y1, Z1},
                                    "h");
 
-    string js = serialize(h);
+    string js = serialize(h, 4);
 
     {
         ofstream f("serialize_function.js");
@@ -121,4 +92,20 @@ TEST(serialize, main)
 
     cf->call({x, z, y}, {result});
     EXPECT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector<float>());
+}
+
+TEST(serialize, existing_models)
+{
+    vector<string> models = {"mxnet/mnist_mlp_forward.json",
+                             "mxnet/10_bucket_LSTM.json",
+                             "mxnet/LSTM_backward.json",
+                             "mxnet/LSTM_forward.json"};
+
+    for (const string& model : models)
+    {
+        const string json_path = file_util::path_join(SERIALIZED_ZOO, model);
+        const string json_string = file_util::read_file_to_string(json_path);
+        stringstream ss(json_string);
+        shared_ptr<Function> f = ngraph::deserialize(ss);
+    }
 }

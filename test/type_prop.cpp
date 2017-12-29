@@ -27,9 +27,10 @@ TEST(type_prop, broadcast_deduce)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto bc = make_shared<op::Broadcast>(param, Shape{2, 3, 4}, AxisSet{1});
-    auto bc_vt = bc->get_value_type();
-    ASSERT_EQ(*bc_vt, TensorViewType(element::f32, Shape{2, 3, 4}));
+    Shape bc_shape{2, 3, 4};
+    auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1});
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), bc_shape);
 }
 
 TEST(type_prop, broadcast_deduce_incorrect)
@@ -39,7 +40,7 @@ TEST(type_prop, broadcast_deduce_incorrect)
     try
     {
         auto bc = make_shared<op::Broadcast>(param, Shape{2, 4, 3}, AxisSet{1});
-        bc->assert_value_type(element::f32, Shape{2, 3, 4});
+        bc->set_value_type_checked(element::f32, Shape{2, 3, 4});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
@@ -54,27 +55,6 @@ TEST(type_prop, broadcast_deduce_incorrect)
     }
 }
 
-TEST(type_prop, broadcast_bad_arguments)
-{
-    try
-    {
-        // Check for bad arguments
-        auto param = make_shared<op::Parameter>(make_shared<TupleType>());
-        auto bc = make_shared<op::Broadcast>(param, Shape{2, 4, 3}, AxisSet{1});
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Tuple argument to broadcast not detected.";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(error.what(),
-                  std::string("Arguments for node type \"Broadcast\" must be tensor views"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
 TEST(type_prop, concat_deduce)
 {
     // Deduce type
@@ -82,8 +62,8 @@ TEST(type_prop, concat_deduce)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 7, 4});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 2, 4});
     auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 1);
-    auto c_vt = c->get_value_type();
-    ASSERT_EQ(*c_vt, TensorViewType(element::f32, Shape{2, 12, 4}));
+    ASSERT_EQ(c->get_element_type(), element::f32);
+    ASSERT_EQ(c->get_shape(), (Shape{2, 12, 4}));
 }
 
 TEST(type_prop, concat_deduce_incorrect)
@@ -95,7 +75,7 @@ TEST(type_prop, concat_deduce_incorrect)
     try
     {
         auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 1);
-        c->assert_value_type(element::f32, Shape{2, 14, 4});
+        c->set_value_type_checked(element::f32, (Shape{2, 14, 4}));
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
@@ -185,8 +165,8 @@ TEST(type_prop, concat_deduce_axis_barely_in_bounds)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 8});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 12});
     auto c = make_shared<op::Concat>(Nodes{param0, param1, param2}, 2);
-    auto c_vt = c->get_value_type();
-    ASSERT_EQ(*c_vt, TensorViewType(element::f32, Shape{2, 3, 24}));
+    ASSERT_EQ(c->get_element_type(), element::f32);
+    ASSERT_EQ(c->get_shape(), (Shape{2, 3, 24}));
 }
 
 TEST(type_prop, concat_deduce_elem_type_mismatch)
@@ -215,8 +195,8 @@ TEST(type_prop, convert_deduce)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
     auto c = make_shared<op::Convert>(param, element::i32);
-    auto c_vt = c->get_value_type();
-    ASSERT_EQ(*c_vt, TensorViewType(element::i32, Shape{2, 3, 4}));
+    ASSERT_EQ(c->get_element_type(), element::i32);
+    ASSERT_EQ(c->get_shape(), (Shape{2, 3, 4}));
 }
 
 TEST(type_prop, convert_deduce_incorrect)
@@ -226,7 +206,7 @@ TEST(type_prop, convert_deduce_incorrect)
     try
     {
         auto c = make_shared<op::Convert>(param, element::i32);
-        c->assert_value_type(element::i32, Shape{2, 14, 4});
+        c->set_value_type_checked(element::i32, Shape{2, 14, 4});
         // Should have thrown, so fail if it didn't
         FAIL() << "Deduced type should disagree with specified type";
     }
@@ -246,8 +226,8 @@ TEST(type_prop, dot_deduce_scalar_2d)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{4, 5});
     auto bc = make_shared<op::Dot>(param1, param2);
-    auto bc_vt = bc->get_value_type();
-    ASSERT_EQ(*bc_vt, TensorViewType(element::f32, Shape{4, 5}));
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{4, 5}));
 }
 
 TEST(type_prop, dot_deduce_2d_scalar)
@@ -256,8 +236,8 @@ TEST(type_prop, dot_deduce_2d_scalar)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{4, 5});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{});
     auto bc = make_shared<op::Dot>(param1, param2);
-    auto bc_vt = bc->get_value_type();
-    ASSERT_EQ(*bc_vt, TensorViewType(element::f32, Shape{4, 5}));
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{4, 5}));
 }
 
 TEST(type_prop, dot_deduce_scalar_scalar)
@@ -266,8 +246,8 @@ TEST(type_prop, dot_deduce_scalar_scalar)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{});
     auto bc = make_shared<op::Dot>(param1, param2);
-    auto bc_vt = bc->get_value_type();
-    ASSERT_EQ(*bc_vt, TensorViewType(element::f32, Shape{}));
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{}));
 }
 
 TEST(type_prop, dot_deduce_scalar_1d)
@@ -276,8 +256,8 @@ TEST(type_prop, dot_deduce_scalar_1d)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{6});
     auto bc = make_shared<op::Dot>(param1, param2);
-    auto bc_vt = bc->get_value_type();
-    ASSERT_EQ(*bc_vt, TensorViewType(element::f32, Shape{6}));
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{6}));
 }
 
 TEST(type_prop, dot_deduce_1d)
@@ -286,8 +266,8 @@ TEST(type_prop, dot_deduce_1d)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{4});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{4});
     auto bc = make_shared<op::Dot>(param1, param2);
-    auto bc_vt = bc->get_value_type();
-    ASSERT_EQ(*bc_vt, TensorViewType(element::f32, Shape{}));
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{}));
 }
 
 TEST(type_prop, dot_deduce_2d)
@@ -296,8 +276,8 @@ TEST(type_prop, dot_deduce_2d)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{4, 2});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 3});
     auto bc = make_shared<op::Dot>(param1, param2);
-    auto bc_vt = bc->get_value_type();
-    ASSERT_EQ(*bc_vt, TensorViewType(element::f32, Shape{4, 3}));
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{4, 3}));
 }
 
 TEST(type_prop, dot_deduce_different_rank)
@@ -306,8 +286,8 @@ TEST(type_prop, dot_deduce_different_rank)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 8, 4, 2});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 1, 3});
     auto bc = make_shared<op::Dot>(param1, param2);
-    auto bc_vt = bc->get_value_type();
-    ASSERT_EQ(*bc_vt, TensorViewType(element::f32, Shape{2, 8, 4, 1, 3}));
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{2, 8, 4, 1, 3}));
 }
 
 TEST(type_prop, dot_deduce_element_type_mismatch)
@@ -359,47 +339,16 @@ void test_binary(std::string node_type,
                  shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr<Node>& y))
 {
     // Check for bad arguments
-    auto tp0_param = make_shared<op::Parameter>(make_shared<TupleType>());
-    auto tp1_param = make_shared<op::Parameter>(make_shared<TupleType>());
-    auto tv0_2_4_param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto tv0_2_4_param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto tv0_2_4_param_2 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{2, 4}));
-    auto tv0_4_2_param =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{4, 2}));
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(element::i32, Shape{2, 4});
+    auto tv0_4_2_param = make_shared<op::Parameter>(element::f32, Shape{4, 2});
 
-    auto test_binary_bad_arguments_tuple = [&](const shared_ptr<Node>& x,
-                                               const shared_ptr<Node>& y) {
-        try
-        {
-            auto node = f(x, y);
-            //node->get_value_type();
-            // Should have thrown, so fail if it didn't
-            FAIL() << "Tuple argument not detected.";
-        }
-        catch (const ngraph_error& error)
-        {
-            EXPECT_EQ(
-                error.what(),
-                std::string("Arguments for node type \"" + node_type + "\" must be tensor views"));
-        }
-        catch (...)
-        {
-            FAIL() << "Deduced type check failed for unexpected reason";
-        }
-    };
-
-    test_binary_bad_arguments_tuple(tp0_param, tp1_param);
-    test_binary_bad_arguments_tuple(tp0_param, tv0_2_4_param_0);
-    test_binary_bad_arguments_tuple(tv0_2_4_param_0, tp0_param);
     auto test_binary_bad_arguments_view_shapes = [&](const shared_ptr<Node>& x,
                                                      const shared_ptr<Node>& y) {
         try
         {
             auto node = f(x, y);
-            node->get_value_type();
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
@@ -419,7 +368,6 @@ void test_binary(std::string node_type,
         try
         {
             auto node = f(x, y);
-            node->get_value_type();
             // Should have thrown, so fail if it didn't
             FAIL() << "Incompatible view arguments not detected.";
         }
@@ -438,7 +386,7 @@ void test_binary(std::string node_type,
 
     auto test_binary_good_arguments = [&](const shared_ptr<Node>& x, const shared_ptr<Node>& y) {
         auto node = f(x, y);
-        EXPECT_EQ(*node->get_value_type(), *node->get_input_ops()[0]->get_value_type());
+        EXPECT_TRUE(node->has_same_type(node->get_input_ops()[0]));
     };
     test_binary_good_arguments(tv0_2_4_param_0, tv0_2_4_param_1);
 }
@@ -477,21 +425,17 @@ TEST(type_prop, subtract_bad_arguments)
 
 TEST(type_prop, comparison_good)
 {
-    auto tv0_2_4_param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto tv0_2_4_param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto eq = make_shared<op::Equal>(tv0_2_4_param_0, tv0_2_4_param_1);
-    TensorViewType expected_type{element::boolean, Shape{2, 4}};
-    EXPECT_EQ(*eq->get_value_type(), expected_type);
+    EXPECT_EQ(eq->get_element_type(), element::boolean);
+    EXPECT_EQ(eq->get_shape(), (Shape{2, 4}));
 }
 
 TEST(type_prop, binary_arithmetic_bad_argument_element_types)
 {
-    auto tv0_2_4_param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::boolean, Shape{2, 4}));
-    auto tv0_2_4_param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::boolean, Shape{2, 4}));
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
     try
     {
         auto bc = make_shared<op::Add>(tv0_2_4_param_0, tv0_2_4_param_1);
@@ -511,8 +455,7 @@ TEST(type_prop, binary_arithmetic_bad_argument_element_types)
 
 TEST(type_prop, unary_arithmetic_bad_argument_element_types)
 {
-    auto tv0_2_4_param =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::boolean, Shape{2, 4}));
+    auto tv0_2_4_param = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
     try
     {
         auto bc = make_shared<op::Negative>(tv0_2_4_param);
@@ -532,25 +475,19 @@ TEST(type_prop, unary_arithmetic_bad_argument_element_types)
 
 TEST(type_prop, select_deduce)
 {
-    auto tv0_2_4_param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::boolean, Shape{2, 4}));
-    auto tv0_2_4_param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto tv0_2_4_param_2 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
-    auto bc_vt = bc->get_value_type();
-    ASSERT_EQ(*bc_vt, TensorViewType(element::f32, Shape{2, 4}));
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{2, 4}));
 }
 
 TEST(type_prop, select_shape_mismatch_a)
 {
-    auto tv0_2_4_param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::boolean, Shape{3, 5}));
-    auto tv0_2_4_param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto tv0_2_4_param_2 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{3, 5});
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     try
     {
         auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
@@ -569,12 +506,9 @@ TEST(type_prop, select_shape_mismatch_a)
 
 TEST(type_prop, select_shape_mismatch_b)
 {
-    auto tv0_2_4_param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::boolean, Shape{2, 4}));
-    auto tv0_2_4_param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3, 5}));
-    auto tv0_2_4_param_2 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::f32, Shape{3, 5});
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     try
     {
         auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
@@ -593,12 +527,9 @@ TEST(type_prop, select_shape_mismatch_b)
 
 TEST(type_prop, select_shape_mismatch_c)
 {
-    auto tv0_2_4_param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::boolean, Shape{2, 4}));
-    auto tv0_2_4_param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto tv0_2_4_param_2 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3, 5}));
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(element::f32, Shape{3, 5});
     try
     {
         auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
@@ -617,12 +548,9 @@ TEST(type_prop, select_shape_mismatch_c)
 
 TEST(type_prop, select_elem_mismatch_a)
 {
-    auto tv0_2_4_param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto tv0_2_4_param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto tv0_2_4_param_2 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     try
     {
         auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
@@ -643,12 +571,9 @@ TEST(type_prop, select_elem_mismatch_a)
 
 TEST(type_prop, select_elem_mismatch_bc)
 {
-    auto tv0_2_4_param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::boolean, Shape{2, 4}));
-    auto tv0_2_4_param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto tv0_2_4_param_2 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{2, 4}));
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto tv0_2_4_param_2 = make_shared<op::Parameter>(element::i32, Shape{2, 4});
     try
     {
         auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
@@ -667,38 +592,38 @@ TEST(type_prop, select_elem_mismatch_bc)
 
 TEST(type_prop, reduce_deduce)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
-    ASSERT_EQ(*(r0->get_value_type()), TensorViewType(element::f32, Shape{4}));
+    ASSERT_EQ(r0->get_element_type(), element::f32);
+    ASSERT_EQ(r0->get_shape(), (Shape{4}));
 
     auto r1 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{1});
-    ASSERT_EQ(*(r1->get_value_type()), TensorViewType(element::f32, Shape{2}));
+    ASSERT_EQ(r1->get_element_type(), element::f32);
+    ASSERT_EQ(r1->get_shape(), (Shape{2}));
 
     auto r01 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0, 1});
-    ASSERT_EQ(*(r01->get_value_type()), TensorViewType(element::f32, Shape{}));
+    ASSERT_EQ(r01->get_element_type(), element::f32);
+    ASSERT_EQ(r01->get_shape(), (Shape{}));
 
     auto r_none = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{});
-    ASSERT_EQ(*(r_none->get_value_type()), TensorViewType(element::f32, Shape{2, 4}));
+    ASSERT_EQ(r_none->get_element_type(), element::f32);
+    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
 }
 
 TEST(type_prop, reduce_nonscalar)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     try
     {
@@ -718,15 +643,12 @@ TEST(type_prop, reduce_nonscalar)
 
 TEST(type_prop, reduce_elem_type_mismatch)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::boolean, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto param_1 = make_shared<op::Parameter>(element::boolean, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     try
     {
@@ -745,28 +667,55 @@ TEST(type_prop, reduce_elem_type_mismatch)
     }
 }
 
-TEST(type_prop, reduce_function_return_type_mismatch)
+TEST(type_prop, reduce_function_return_element_type_mismatch)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Equal>(f_param_0, f_param_1), rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
     try
     {
         auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
         // Should have thrown, so fail if it didn't
-        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+        FAIL() << "Did not detect incorrect element return type for reduction function";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Return element type from reduction function does not match expected"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_function_return_shape_mismatch)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(f_param_0 + f_param_1, Shape{1}, AxisSet{0}),
+        op::Parameters{f_param_0, f_param_1});
+
+    try
+    {
+        auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect return shape for reduction function";
     }
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Return type from reduction function does not match expected"));
+                  std::string("Return shape from reduction function is not a scalar"));
     }
     catch (...)
     {
@@ -776,15 +725,12 @@ TEST(type_prop, reduce_function_return_type_mismatch)
 
 TEST(type_prop, reduce_function_arg0_type_mismatch)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::boolean, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::boolean, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_1, op::Parameters{f_param_0, f_param_1});
 
     try
     {
@@ -804,15 +750,12 @@ TEST(type_prop, reduce_function_arg0_type_mismatch)
 
 TEST(type_prop, reduce_function_arg1_type_mismatch)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::boolean, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::boolean, Shape{});
+    auto f = make_shared<Function>(f_param_0, op::Parameters{f_param_0, f_param_1});
 
     try
     {
@@ -832,16 +775,14 @@ TEST(type_prop, reduce_function_arg1_type_mismatch)
 
 TEST(type_prop, reduce_function_arg_count_mismatch)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(
-        f_param_0 + f_param_1 + f_param_2, rt, op::Parameters{f_param_0, f_param_1, f_param_2});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1 + f_param_2,
+                                   op::Parameters{f_param_0, f_param_1, f_param_2});
 
     try
     {
@@ -862,14 +803,12 @@ TEST(type_prop, reduce_function_arg_count_mismatch)
 
 TEST(type_prop, reduce_axis_oob)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     try
     {
@@ -894,8 +833,7 @@ TEST(type_prop, function_call_deduce)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto rt_f = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>((A + B * C), rt_f, op::Parameters{A, B, C});
+    auto f = make_shared<Function>((A + B * C), op::Parameters{A, B, C});
 
     // Now make "f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -904,87 +842,93 @@ TEST(type_prop, function_call_deduce)
     auto r = make_shared<op::FunctionCall>(f, Nodes{X, Y, Z});
     auto r_p_r = r + r;
 
-    auto r_p_r_vt = r_p_r->get_value_type();
-    ASSERT_EQ(*r_p_r_vt, TensorViewType(element::f32, shape));
+    ASSERT_EQ(r_p_r->get_element_type(), element::f32);
+    ASSERT_EQ(r_p_r->get_shape(), shape);
 }
 
 TEST(type_prop, reshape_deduce_s2v)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{});
     auto r = make_shared<op::Reshape>(param, AxisVector{}, Shape{1});
-    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::f32, Shape{1}));
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_EQ(r->get_shape(), (Shape{1}));
 }
 
 TEST(type_prop, reshape_deduce_s2m)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{});
     auto r = make_shared<op::Reshape>(param, AxisVector{}, Shape{1, 1});
-    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::f32, Shape{1, 1}));
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_EQ(r->get_shape(), (Shape{1, 1}));
 }
 
 TEST(type_prop, reshape_deduce_s2t)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{});
     auto r = make_shared<op::Reshape>(param, AxisVector{}, Shape{1, 1, 1});
-    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::f32, Shape{1, 1, 1}));
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_EQ(r->get_shape(), (Shape{1, 1, 1}));
 }
 
 TEST(type_prop, reshape_deduce_v2s)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{1}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{1});
     auto r = make_shared<op::Reshape>(param, AxisVector{0}, Shape{});
-    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::f32, Shape{}));
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_EQ(r->get_shape(), (Shape{}));
 }
 
 TEST(type_prop, reshape_deduce_m2s)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{1, 1}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{1, 1});
     auto r = make_shared<op::Reshape>(param, AxisVector{0, 1}, Shape{});
-    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::f32, Shape{}));
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_EQ(r->get_shape(), (Shape{}));
 }
 
 TEST(type_prop, reshape_deduce_t2s)
 {
-    auto param =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{1, 1, 1}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1});
     auto r = make_shared<op::Reshape>(param, AxisVector{0, 1, 2}, Shape{});
-    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::f32, Shape{}));
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_EQ(r->get_shape(), (Shape{}));
 }
 
 TEST(type_prop, reshape_deduce_m2v_01)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3, 4}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 4});
     auto r = make_shared<op::Reshape>(param, AxisVector{0, 1}, Shape{12});
-    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::f32, Shape{12}));
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_EQ(r->get_shape(), (Shape{12}));
 }
 
 TEST(type_prop, reshape_deduce_m2v_10)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3, 4}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 4});
     auto r = make_shared<op::Reshape>(param, AxisVector{1, 0}, Shape{12});
-    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::f32, Shape{12}));
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_EQ(r->get_shape(), (Shape{12}));
 }
 
 TEST(type_prop, reshape_deduce_t2v_012)
 {
-    auto param =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3, 4, 5}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
     auto r = make_shared<op::Reshape>(param, AxisVector{0, 1, 2}, Shape{60});
-    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::f32, Shape{60}));
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_EQ(r->get_shape(), (Shape{60}));
 }
 
 TEST(type_prop, reshape_deduce_t2v_120)
 {
-    auto param =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3, 4, 5}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
     auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0}, Shape{60});
-    ASSERT_EQ(*(r->get_value_type()), TensorViewType(element::f32, Shape{60}));
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_EQ(r->get_shape(), (Shape{60}));
 }
 
 TEST(type_prop, reshape_deduce_not_enough_axes)
 {
-    auto param =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3, 4, 5}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
     try
     {
         auto r = make_shared<op::Reshape>(param, AxisVector{1, 0}, Shape{60});
@@ -1005,8 +949,7 @@ TEST(type_prop, reshape_deduce_not_enough_axes)
 
 TEST(type_prop, reshape_deduce_too_many_axes)
 {
-    auto param =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3, 4, 5}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
     try
     {
         auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0, 3}, Shape{60});
@@ -1027,8 +970,7 @@ TEST(type_prop, reshape_deduce_too_many_axes)
 
 TEST(type_prop, reshape_deduce_duplicate_axes)
 {
-    auto param =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3, 4, 5}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
     try
     {
         auto r = make_shared<op::Reshape>(param, AxisVector{1, 1, 0}, Shape{60});
@@ -1049,8 +991,7 @@ TEST(type_prop, reshape_deduce_duplicate_axes)
 
 TEST(type_prop, reshape_deduce_wrong_output_shape)
 {
-    auto param =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3, 4, 5}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
     try
     {
         auto r = make_shared<op::Reshape>(param, AxisVector{1, 2, 0}, Shape{3, 3, 3});
@@ -1071,63 +1012,71 @@ TEST(type_prop, reshape_deduce_wrong_output_shape)
 
 TEST(type_prop, slice_deduce_vector)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6});
     auto sl = make_shared<op::Slice>(param, Coordinate{2}, Coordinate{5});
-    ASSERT_EQ(*(sl->get_value_type()), TensorViewType(element::f32, Shape{3}));
+    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_shape(), (Shape{3}));
 }
 
 TEST(type_prop, slice_deduce_matrix)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7});
-    ASSERT_EQ(*(sl->get_value_type()), TensorViewType(element::f32, Shape{3, 6}));
+    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_shape(), (Shape{3, 6}));
 }
 
 TEST(type_prop, slice_deduce_matrix_strided)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7}, Shape{3, 2});
-    ASSERT_EQ(*(sl->get_value_type()), TensorViewType(element::f32, Shape{1, 3}));
+    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_shape(), (Shape{1, 3}));
 }
 
 TEST(type_prop, slice_deduce_matrix_strided_uneven)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7}, Shape{3, 4});
-    ASSERT_EQ(*(sl->get_value_type()), TensorViewType(element::f32, Shape{1, 2}));
+    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_shape(), (Shape{1, 2}));
 }
 
 TEST(type_prop, slice_deduce_vector_edge)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6});
     auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{6});
-    ASSERT_EQ(*(sl->get_value_type()), TensorViewType(element::f32, Shape{6}));
+    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_shape(), (Shape{6}));
 }
 
 TEST(type_prop, slice_deduce_matrix_edge)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{6, 8});
-    ASSERT_EQ(*(sl->get_value_type()), TensorViewType(element::f32, Shape{6, 8}));
+    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_shape(), (Shape{6, 8}));
 }
 
 TEST(type_prop, slice_deduce_matrix_zero_cols)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{6, 0});
-    ASSERT_EQ(*(sl->get_value_type()), TensorViewType(element::f32, Shape{6, 0}));
+    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_shape(), (Shape{6, 0}));
 }
 
 TEST(type_prop, slice_deduce_matrix_zero_zero)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{0, 0});
-    ASSERT_EQ(*(sl->get_value_type()), TensorViewType(element::f32, Shape{0, 0}));
+    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_shape(), (Shape{0, 0}));
 }
 
 TEST(type_prop, slice_deduce_vector_invalid_strides)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6});
     try
     {
         auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{7}, Shape{1, 2});
@@ -1148,7 +1097,7 @@ TEST(type_prop, slice_deduce_vector_invalid_strides)
 
 TEST(type_prop, slice_deduce_vector_edge_upper_oob)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6});
     try
     {
         auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{7});
@@ -1167,7 +1116,7 @@ TEST(type_prop, slice_deduce_vector_edge_upper_oob)
 
 TEST(type_prop, slice_deduce_matrix_edge_upper_oob)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     try
     {
         auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{6, 9});
@@ -1186,7 +1135,7 @@ TEST(type_prop, slice_deduce_matrix_edge_upper_oob)
 
 TEST(type_prop, slice_deduce_vector_lower_above_upper)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6});
     try
     {
         auto sl = make_shared<op::Slice>(param, Coordinate{3}, Coordinate{2});
@@ -1205,7 +1154,7 @@ TEST(type_prop, slice_deduce_vector_lower_above_upper)
 
 TEST(type_prop, slice_deduce_matrix_lower_above_upper)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     try
     {
         auto sl = make_shared<op::Slice>(param, Coordinate{0, 5}, Coordinate{6, 4});
@@ -1224,7 +1173,7 @@ TEST(type_prop, slice_deduce_matrix_lower_above_upper)
 
 TEST(type_prop, slice_deduce_matrix_lower_missing)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     try
     {
         auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{5, 5});
@@ -1233,10 +1182,9 @@ TEST(type_prop, slice_deduce_matrix_lower_missing)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Number of lower bounds provided for slice does not match number of input axes"));
+        EXPECT_EQ(error.what(),
+                  std::string("Number of lower bounds provided for slice does "
+                              "not match number of input axes"));
     }
     catch (...)
     {
@@ -1246,7 +1194,7 @@ TEST(type_prop, slice_deduce_matrix_lower_missing)
 
 TEST(type_prop, slice_deduce_matrix_upper_missing)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     try
     {
         auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{5});
@@ -1255,10 +1203,9 @@ TEST(type_prop, slice_deduce_matrix_upper_missing)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Number of upper bounds provided for slice does not match number of input axes"));
+        EXPECT_EQ(error.what(),
+                  std::string("Number of upper bounds provided for slice does "
+                              "not match number of input axes"));
     }
     catch (...)
     {
@@ -1268,7 +1215,7 @@ TEST(type_prop, slice_deduce_matrix_upper_missing)
 
 TEST(type_prop, slice_deduce_matrix_lower_extra)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     try
     {
         auto sl = make_shared<op::Slice>(param, Coordinate{0, 0, 0}, Coordinate{5, 5});
@@ -1277,10 +1224,9 @@ TEST(type_prop, slice_deduce_matrix_lower_extra)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Number of lower bounds provided for slice does not match number of input axes"));
+        EXPECT_EQ(error.what(),
+                  std::string("Number of lower bounds provided for slice does "
+                              "not match number of input axes"));
     }
     catch (...)
     {
@@ -1290,7 +1236,7 @@ TEST(type_prop, slice_deduce_matrix_lower_extra)
 
 TEST(type_prop, slice_deduce_matrix_upper_extra)
 {
-    auto param = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     try
     {
         auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{5, 5, 5});
@@ -1299,10 +1245,9 @@ TEST(type_prop, slice_deduce_matrix_upper_extra)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Number of upper bounds provided for slice does not match number of input axes"));
+        EXPECT_EQ(error.what(),
+                  std::string("Number of upper bounds provided for slice does "
+                              "not match number of input axes"));
     }
     catch (...)
     {
@@ -1313,25 +1258,29 @@ TEST(type_prop, slice_deduce_matrix_upper_extra)
 TEST(type_prop, scalar_constant_deduce_float32)
 {
     auto c = op::Constant::create(element::f32, Shape{}, {208});
-    ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::f32, Shape{}));
+    ASSERT_EQ(c->get_element_type(), element::f32);
+    ASSERT_EQ(c->get_shape(), (Shape{}));
 }
 
 TEST(type_prop, scalar_constant_deduce_bool)
 {
     auto c = op::Constant::create(element::boolean, Shape{}, {1});
-    ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::boolean, Shape{}));
+    ASSERT_EQ(c->get_element_type(), element::boolean);
+    ASSERT_EQ(c->get_shape(), (Shape{}));
 }
 
 TEST(type_prop, tensor_constant_deduce_float32)
 {
     auto c = op::Constant::create(element::f32, Shape{2, 2}, {208, 208, 208, 208});
-    ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::f32, Shape{2, 2}));
+    ASSERT_EQ(c->get_element_type(), element::f32);
+    ASSERT_EQ(c->get_shape(), (Shape{2, 2}));
 }
 
 TEST(type_prop, tensor_constant_deduce_bool)
 {
     auto c = op::Constant::create(element::boolean, Shape{2, 2}, {1, 1, 1, 1});
-    ASSERT_EQ(*(c->get_value_type()), TensorViewType(element::boolean, Shape{2, 2}));
+    ASSERT_EQ(c->get_element_type(), element::boolean);
+    ASSERT_EQ(c->get_shape(), (Shape{2, 2}));
 }
 
 TEST(type_prop, tensor_constant_bad_count)
@@ -1355,86 +1304,82 @@ TEST(type_prop, tensor_constant_bad_count)
 
 TEST(type_prop, replace_slice_deduce_vector)
 {
-    auto param0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6}));
-    auto param1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{3});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{2}, Coordinate{5});
-    ASSERT_EQ(*(rsl->get_value_type()), TensorViewType(element::f32, Shape{6}));
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_shape(), (Shape{6}));
 }
 
 TEST(type_prop, replace_slice_deduce_matrix)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3, 6}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{3, 6});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{2, 1}, Coordinate{5, 7});
-    ASSERT_EQ(*(rsl->get_value_type()), TensorViewType(element::f32, Shape{6, 8}));
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_shape(), (Shape{6, 8}));
 }
 
 TEST(type_prop, replace_slice_deduce_matrix_strided)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{1, 3}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{1, 3});
     auto rsl = make_shared<op::ReplaceSlice>(
         param0, param1, Coordinate{2, 1}, Coordinate{5, 7}, Shape{3, 2});
-    ASSERT_EQ(*(rsl->get_value_type()), TensorViewType(element::f32, Shape{6, 8}));
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_shape(), (Shape{6, 8}));
 }
 
 TEST(type_prop, replace_slice_deduce_matrix_strided_uneven)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{1, 2}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{1, 2});
     auto rsl = make_shared<op::ReplaceSlice>(
         param0, param1, Coordinate{2, 1}, Coordinate{5, 7}, Shape{3, 4});
-    ASSERT_EQ(*(rsl->get_value_type()), TensorViewType(element::f32, Shape{6, 8}));
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_shape(), (Shape{6, 8}));
 }
 
 TEST(type_prop, replace_slice_deduce_vector_edge)
 {
-    auto param0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6}));
-    auto param1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0}, Coordinate{6});
-    ASSERT_EQ(*(rsl->get_value_type()), TensorViewType(element::f32, Shape{6}));
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_shape(), (Shape{6}));
 }
 
 TEST(type_prop, replace_slice_deduce_matrix_edge)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{6, 8});
-    ASSERT_EQ(*(rsl->get_value_type()), TensorViewType(element::f32, Shape{6, 8}));
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_shape(), (Shape{6, 8}));
 }
 
 TEST(type_prop, replace_slice_deduce_matrix_zero_cols)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 0}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 0});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{6, 0});
-    ASSERT_EQ(*(rsl->get_value_type()), TensorViewType(element::f32, Shape{6, 8}));
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_shape(), (Shape{6, 8}));
 }
 
 TEST(type_prop, replace_slice_deduce_matrix_zero_zero)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{0, 0}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{0, 0});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{0, 0});
-    ASSERT_EQ(*(rsl->get_value_type()), TensorViewType(element::f32, Shape{6, 8}));
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_shape(), (Shape{6, 8}));
 }
 
 TEST(type_prop, replace_slice_deduce_vector_invalid_strides)
 {
-    auto param0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6}));
-    auto param1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{4}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{4});
     try
     {
         auto sl = make_shared<op::ReplaceSlice>(
@@ -1456,10 +1401,8 @@ TEST(type_prop, replace_slice_deduce_vector_invalid_strides)
 
 TEST(type_prop, replace_slice_deduce_matrix_arg_rank_mismatch)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3, 6, 5}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{3, 6, 5});
     try
     {
         auto rsl =
@@ -1479,10 +1422,8 @@ TEST(type_prop, replace_slice_deduce_matrix_arg_rank_mismatch)
 
 TEST(type_prop, replace_slice_deduce_matrix_arg_element_type_mismatch)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{3, 6}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::i32, Shape{3, 6});
     try
     {
         auto rsl =
@@ -1503,10 +1444,8 @@ TEST(type_prop, replace_slice_deduce_matrix_arg_element_type_mismatch)
 
 TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3, 6}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{3, 6});
     try
     {
         auto rsl =
@@ -1527,10 +1466,8 @@ TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch)
 
 TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch_strided)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{4, 6}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{4, 6});
     try
     {
         auto rsl = make_shared<op::ReplaceSlice>(
@@ -1551,8 +1488,8 @@ TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch_strided)
 
 TEST(type_prop, replace_slice_deduce_vector_edge_upper_oob)
 {
-    auto param0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6}));
-    auto param1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{7}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{7});
     try
     {
         auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0}, Coordinate{7});
@@ -1571,10 +1508,8 @@ TEST(type_prop, replace_slice_deduce_vector_edge_upper_oob)
 
 TEST(type_prop, replace_slice_deduce_matrix_edge_upper_oob)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 9}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 9});
     try
     {
         auto rsl =
@@ -1594,8 +1529,8 @@ TEST(type_prop, replace_slice_deduce_matrix_edge_upper_oob)
 
 TEST(type_prop, replace_slice_deduce_vector_lower_above_upper)
 {
-    auto param0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6}));
-    auto param1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{0}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{0});
     try
     {
         auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{3}, Coordinate{2});
@@ -1614,10 +1549,8 @@ TEST(type_prop, replace_slice_deduce_vector_lower_above_upper)
 
 TEST(type_prop, replace_slice_deduce_matrix_lower_above_upper)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 0}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 0});
     try
     {
         auto rsl =
@@ -1637,10 +1570,8 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_above_upper)
 
 TEST(type_prop, replace_slice_deduce_matrix_lower_missing)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 6}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 6});
     try
     {
         auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0}, Coordinate{5, 5});
@@ -1649,10 +1580,9 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_missing)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Number of lower bounds provided for slice does not match number of input axes"));
+        EXPECT_EQ(error.what(),
+                  std::string("Number of lower bounds provided for slice does "
+                              "not match number of input axes"));
     }
     catch (...)
     {
@@ -1662,10 +1592,8 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_missing)
 
 TEST(type_prop, replace_slice_deduce_matrix_upper_missing)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 6}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 6});
     try
     {
         auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{5});
@@ -1674,10 +1602,9 @@ TEST(type_prop, replace_slice_deduce_matrix_upper_missing)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Number of upper bounds provided for slice does not match number of input axes"));
+        EXPECT_EQ(error.what(),
+                  std::string("Number of upper bounds provided for slice does "
+                              "not match number of input axes"));
     }
     catch (...)
     {
@@ -1687,10 +1614,8 @@ TEST(type_prop, replace_slice_deduce_matrix_upper_missing)
 
 TEST(type_prop, replace_slice_deduce_matrix_lower_extra)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 6}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 6});
     try
     {
         auto rsl =
@@ -1700,10 +1625,9 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_extra)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Number of lower bounds provided for slice does not match number of input axes"));
+        EXPECT_EQ(error.what(),
+                  std::string("Number of lower bounds provided for slice does "
+                              "not match number of input axes"));
     }
     catch (...)
     {
@@ -1713,10 +1637,8 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_extra)
 
 TEST(type_prop, replace_slice_deduce_matrix_upper_extra)
 {
-    auto param0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 8}));
-    auto param1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{6, 6}));
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 6});
     try
     {
         auto rsl =
@@ -1726,10 +1648,9 @@ TEST(type_prop, replace_slice_deduce_matrix_upper_extra)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Number of upper bounds provided for slice does not match number of input axes"));
+        EXPECT_EQ(error.what(),
+                  std::string("Number of upper bounds provided for slice does "
+                              "not match number of input axes"));
     }
     catch (...)
     {
@@ -1741,56 +1662,56 @@ TEST(type_prop, one_hot_deduce_scalar)
 {
     auto param = make_shared<op::Parameter>(element::i32, Shape{});
     auto oh = make_shared<op::OneHot>(param, Shape{9}, 0);
-    auto oh_vt = oh->get_value_type();
-    ASSERT_EQ(*oh_vt, TensorViewType(element::i32, Shape{9}));
+    ASSERT_EQ(oh->get_element_type(), element::i32);
+    ASSERT_EQ(oh->get_shape(), (Shape{9}));
 }
 
 TEST(type_prop, one_hot_deduce_vector_0)
 {
     auto param = make_shared<op::Parameter>(element::i32, Shape{8});
     auto oh = make_shared<op::OneHot>(param, Shape{9, 8}, 0);
-    auto oh_vt = oh->get_value_type();
-    ASSERT_EQ(*oh_vt, TensorViewType(element::i32, Shape{9, 8}));
+    ASSERT_EQ(oh->get_element_type(), element::i32);
+    ASSERT_EQ(oh->get_shape(), (Shape{9, 8}));
 }
 
 TEST(type_prop, one_hot_deduce_vector_1)
 {
     auto param = make_shared<op::Parameter>(element::i32, Shape{8});
     auto oh = make_shared<op::OneHot>(param, Shape{8, 9}, 1);
-    auto oh_vt = oh->get_value_type();
-    ASSERT_EQ(*oh_vt, TensorViewType(element::i32, Shape{8, 9}));
+    ASSERT_EQ(oh->get_element_type(), element::i32);
+    ASSERT_EQ(oh->get_shape(), (Shape{8, 9}));
 }
 
 TEST(type_prop, one_hot_deduce_matrix_0)
 {
     auto param = make_shared<op::Parameter>(element::i32, Shape{12, 24});
     auto oh = make_shared<op::OneHot>(param, Shape{2, 12, 24}, 0);
-    auto oh_vt = oh->get_value_type();
-    ASSERT_EQ(*oh_vt, TensorViewType(element::i32, Shape{2, 12, 24}));
+    ASSERT_EQ(oh->get_element_type(), element::i32);
+    ASSERT_EQ(oh->get_shape(), (Shape{2, 12, 24}));
 }
 
 TEST(type_prop, one_hot_deduce_matrix_1)
 {
     auto param = make_shared<op::Parameter>(element::i32, Shape{12, 24});
     auto oh = make_shared<op::OneHot>(param, Shape{12, 2, 24}, 1);
-    auto oh_vt = oh->get_value_type();
-    ASSERT_EQ(*oh_vt, TensorViewType(element::i32, Shape{12, 2, 24}));
+    ASSERT_EQ(oh->get_element_type(), element::i32);
+    ASSERT_EQ(oh->get_shape(), (Shape{12, 2, 24}));
 }
 
 TEST(type_prop, one_hot_deduce_matrix_2)
 {
     auto param = make_shared<op::Parameter>(element::i32, Shape{12, 24});
     auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 2}, 2);
-    auto oh_vt = oh->get_value_type();
-    ASSERT_EQ(*oh_vt, TensorViewType(element::i32, Shape{12, 24, 2}));
+    ASSERT_EQ(oh->get_element_type(), element::i32);
+    ASSERT_EQ(oh->get_shape(), (Shape{12, 24, 2}));
 }
 
 TEST(type_prop, one_hot_deduce_floating_point)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{12, 24});
     auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 8}, 2);
-    auto oh_vt = oh->get_value_type();
-    ASSERT_EQ(*oh_vt, TensorViewType(element::f32, Shape{12, 24, 8}));
+    ASSERT_EQ(oh->get_element_type(), element::f32);
+    ASSERT_EQ(oh->get_shape(), (Shape{12, 24, 8}));
 }
 
 TEST(type_prop, one_hot_deduce_axis_oob)
@@ -1839,8 +1760,8 @@ TEST(type_prop, conv_1d_deduce)
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
     auto conv = make_shared<op::Convolution>(param0, param1);
-    auto conv_vt = conv->get_value_type();
-    EXPECT_EQ(*conv_vt, TensorViewType(element::f32, Shape{64, 128, 91}));
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
@@ -1865,8 +1786,8 @@ TEST(type_prop, conv_1d_deduce_strided)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
     auto move_strides = Strides{2};
     auto conv = make_shared<op::Convolution>(param0, param1, move_strides);
-    auto conv_vt = conv->get_value_type();
-    EXPECT_EQ(*conv_vt, TensorViewType(element::f32, Shape{64, 128, 46}));
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 46}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
@@ -1891,8 +1812,8 @@ TEST(type_prop, conv_1d_deduce_strided_small_uneven)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2});
     auto move_strides = Strides{2};
     auto conv = make_shared<op::Convolution>(param0, param1, move_strides);
-    auto conv_vt = conv->get_value_type();
-    EXPECT_EQ(*conv_vt, TensorViewType(element::f32, Shape{64, 128, 2}));
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 2}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
@@ -1917,8 +1838,8 @@ TEST(type_prop, conv_1d_deduce_strided_small_even)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2});
     auto move_strides = Strides{2};
     auto conv = make_shared<op::Convolution>(param0, param1, move_strides);
-    auto conv_vt = conv->get_value_type();
-    EXPECT_EQ(*conv_vt, TensorViewType(element::f32, Shape{64, 128, 3}));
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 3}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
@@ -1944,8 +1865,8 @@ TEST(type_prop, conv_1d_deduce_dilated)
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
     auto conv = make_shared<op::Convolution>(param0, param1, move_strides, dilate_strides);
-    auto conv_vt = conv->get_value_type();
-    EXPECT_EQ(*conv_vt, TensorViewType(element::f32, Shape{64, 128, 82}));
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 82}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{2});
@@ -1969,8 +1890,8 @@ TEST(type_prop, conv_2d_deduce)
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
     auto conv = make_shared<op::Convolution>(param0, param1);
-    auto conv_vt = conv->get_value_type();
-    EXPECT_EQ(*conv_vt, TensorViewType(element::f32, Shape{64, 128, 91, 131}));
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{1, 1}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
@@ -1995,8 +1916,8 @@ TEST(type_prop, conv_2d_deduce_strided)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
     auto move_strides = Strides{2, 3};
     auto conv = make_shared<op::Convolution>(param0, param1, move_strides);
-    auto conv_vt = conv->get_value_type();
-    EXPECT_EQ(*conv_vt, TensorViewType(element::f32, Shape{64, 128, 46, 44}));
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 46, 44}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
@@ -2022,8 +1943,8 @@ TEST(type_prop, conv_2d_deduce_strided_dilated)
     auto move_strides = Strides{2, 3};
     auto dilate_strides = Strides{3, 2};
     auto conv = make_shared<op::Convolution>(param0, param1, move_strides, dilate_strides);
-    auto conv_vt = conv->get_value_type();
-    EXPECT_EQ(*conv_vt, TensorViewType(element::f32, Shape{64, 128, 37, 38}));
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 37, 38}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2}));
@@ -2049,8 +1970,8 @@ TEST(type_prop, conv_2d_deduce_strided_dilated_small)
     auto move_strides = Strides{2, 3};
     auto dilate_strides = Strides{3, 2};
     auto conv = make_shared<op::Convolution>(param0, param1, move_strides, dilate_strides);
-    auto conv_vt = conv->get_value_type();
-    EXPECT_EQ(*conv_vt, TensorViewType(element::f32, Shape{64, 128, 2, 2}));
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 2, 2}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2}));
@@ -2076,8 +1997,8 @@ TEST(type_prop, conv_3d_deduce_strided_dilated_small)
     auto move_strides = Strides{2, 3, 4};
     auto dilate_strides = Strides{3, 2, 2};
     auto conv = make_shared<op::Convolution>(param0, param1, move_strides, dilate_strides);
-    auto conv_vt = conv->get_value_type();
-    EXPECT_EQ(*conv_vt, TensorViewType(element::f32, Shape{64, 128, 2, 2, 2}));
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 2, 2, 2}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3, 4}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2, 2}));
@@ -2472,8 +2393,9 @@ TEST(type_prop, reverse_0d_deduce)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{});
     auto rev = make_shared<op::Reverse>(param, AxisSet{});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{}));
 }
 
 TEST(type_prop, reverse_1d_deduce_nochange)
@@ -2481,8 +2403,9 @@ TEST(type_prop, reverse_1d_deduce_nochange)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5});
     auto rev = make_shared<op::Reverse>(param, AxisSet{});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5}));
 }
 
 TEST(type_prop, reverse_1d_deduce_0)
@@ -2490,8 +2413,9 @@ TEST(type_prop, reverse_1d_deduce_0)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5}));
 }
 
 TEST(type_prop, reverse_2d_deduce_nochange)
@@ -2499,8 +2423,9 @@ TEST(type_prop, reverse_2d_deduce_nochange)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6});
     auto rev = make_shared<op::Reverse>(param, AxisSet{});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5, 6}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6}));
 }
 
 TEST(type_prop, reverse_2d_deduce_0)
@@ -2508,8 +2433,9 @@ TEST(type_prop, reverse_2d_deduce_0)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5, 6}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6}));
 }
 
 TEST(type_prop, reverse_2d_deduce_1)
@@ -2517,8 +2443,9 @@ TEST(type_prop, reverse_2d_deduce_1)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6});
     auto rev = make_shared<op::Reverse>(param, AxisSet{1});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5, 6}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6}));
 }
 
 TEST(type_prop, reverse_2d_deduce_01)
@@ -2526,8 +2453,9 @@ TEST(type_prop, reverse_2d_deduce_01)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0, 1});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5, 6}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6}));
 }
 
 TEST(type_prop, reverse_3d_deduce_nochange)
@@ -2535,8 +2463,9 @@ TEST(type_prop, reverse_3d_deduce_nochange)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5, 6, 7}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_0)
@@ -2544,8 +2473,9 @@ TEST(type_prop, reverse_3d_deduce_0)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5, 6, 7}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_1)
@@ -2553,8 +2483,9 @@ TEST(type_prop, reverse_3d_deduce_1)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{1});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5, 6, 7}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_2)
@@ -2562,8 +2493,9 @@ TEST(type_prop, reverse_3d_deduce_2)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{2});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5, 6, 7}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_01)
@@ -2571,8 +2503,9 @@ TEST(type_prop, reverse_3d_deduce_01)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0, 1});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5, 6, 7}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_02)
@@ -2580,8 +2513,9 @@ TEST(type_prop, reverse_3d_deduce_02)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0, 2});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5, 6, 7}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_12)
@@ -2589,8 +2523,9 @@ TEST(type_prop, reverse_3d_deduce_12)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{1, 2});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5, 6, 7}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_012)
@@ -2598,8 +2533,9 @@ TEST(type_prop, reverse_3d_deduce_012)
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0, 1, 2});
-    auto rev_vt = rev->get_value_type();
-    EXPECT_EQ(*rev_vt, TensorViewType(element::f32, Shape{5, 6, 7}));
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_oob)
@@ -2625,101 +2561,97 @@ TEST(type_prop, reverse_3d_deduce_oob)
 
 TEST(type_prop, reduce_window_deduce_1d)
 {
-    auto param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4};
     Strides move_strides{1};
 
     auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
-    ASSERT_EQ(*(rw->get_value_type()), TensorViewType(element::f32, Shape{13}));
+    ASSERT_EQ(rw->get_element_type(), element::f32);
+    ASSERT_EQ(rw->get_shape(), (Shape{13}));
 }
 
 TEST(type_prop, reduce_window_deduce_1d_strided_even)
 {
-    auto param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4};
     Strides move_strides{4};
 
     auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
-    ASSERT_EQ(*(rw->get_value_type()), TensorViewType(element::f32, Shape{4}));
+    ASSERT_EQ(rw->get_element_type(), element::f32);
+    ASSERT_EQ(rw->get_shape(), (Shape{4}));
 }
 
 TEST(type_prop, reduce_window_deduce_1d_strided_uneven)
 {
-    auto param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4};
     Strides move_strides{4};
 
     auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
-    ASSERT_EQ(*(rw->get_value_type()), TensorViewType(element::f32, Shape{4}));
+    ASSERT_EQ(rw->get_element_type(), element::f32);
+    ASSERT_EQ(rw->get_shape(), (Shape{4}));
 }
 
 TEST(type_prop, reduce_window_deduce_2d_strided_uneven)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4, 2};
     Strides move_strides{4, 3};
 
     auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
-    ASSERT_EQ(*(rw->get_value_type()), TensorViewType(element::f32, Shape{4, 3}));
+    ASSERT_EQ(rw->get_element_type(), element::f32);
+    ASSERT_EQ(rw->get_shape(), (Shape{4, 3}));
 }
 
 TEST(type_prop, reduce_window_deduce_3d_strided_uneven)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
 
     auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
-    ASSERT_EQ(*(rw->get_value_type()), TensorViewType(element::f32, Shape{4, 3, 6}));
+    ASSERT_EQ(rw->get_element_type(), element::f32);
+    ASSERT_EQ(rw->get_shape(), (Shape{4, 3, 6}));
 }
 
 TEST(type_prop, reduce_window_deduce_non_scalar_init)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{3}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{3});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -2743,14 +2675,12 @@ TEST(type_prop, reduce_window_deduce_non_scalar_init)
 
 TEST(type_prop, reduce_window_deduce_different_element_types)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::i32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -2775,14 +2705,12 @@ TEST(type_prop, reduce_window_deduce_different_element_types)
 
 TEST(type_prop, reduce_window_deduce_bad_window_shape)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4, 2};
     Strides move_strides{4, 3, 2};
@@ -2806,14 +2734,12 @@ TEST(type_prop, reduce_window_deduce_bad_window_shape)
 
 TEST(type_prop, reduce_window_deduce_bad_move_strides)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3};
@@ -2838,14 +2764,12 @@ TEST(type_prop, reduce_window_deduce_bad_move_strides)
 
 TEST(type_prop, reduce_window_deduce_zero_length_axis)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4, 0, 4};
     Strides move_strides{4, 3, 2};
@@ -2869,14 +2793,12 @@ TEST(type_prop, reduce_window_deduce_zero_length_axis)
 
 TEST(type_prop, reduce_window_deduce_zero_length_stride)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 0, 2};
@@ -2900,14 +2822,12 @@ TEST(type_prop, reduce_window_deduce_zero_length_stride)
 
 TEST(type_prop, reduce_window_deduce_window_too_big)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4, 11, 4};
     Strides move_strides{4, 3, 2};
@@ -2931,16 +2851,14 @@ TEST(type_prop, reduce_window_deduce_window_too_big)
 
 TEST(type_prop, reduce_window_deduce_param_count)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(
-        f_param_0 + f_param_1, rt, op::Parameters{f_param_0, f_param_1, f_param_2});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1,
+                                   op::Parameters{f_param_0, f_param_1, f_param_2});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -2963,16 +2881,14 @@ TEST(type_prop, reduce_window_deduce_param_count)
     }
 }
 
-TEST(type_prop, reduce_window_deduce_param_0_wrong_type)
+TEST(type_prop, reduce_window_deduce_param_0_wrong_element_type)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_1, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::i32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_1, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -2986,7 +2902,8 @@ TEST(type_prop, reduce_window_deduce_param_0_wrong_type)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Parameter 0 of reduction function has wrong type"));
+        EXPECT_EQ(error.what(),
+                  std::string("Parameter 0 of reduction function has wrong element type"));
     }
     catch (...)
     {
@@ -2994,16 +2911,43 @@ TEST(type_prop, reduce_window_deduce_param_0_wrong_type)
     }
 }
 
-TEST(type_prop, reduce_window_deduce_param_1_wrong_type)
+TEST(type_prop, reduce_window_deduce_param_0_wrong_shape)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_0, rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Parameter 0 wrong type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 0 of reduction function is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_param_1_wrong_element_type)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::i32, Shape{});
+    auto f = make_shared<Function>(f_param_0, op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -3017,7 +2961,37 @@ TEST(type_prop, reduce_window_deduce_param_1_wrong_type)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Parameter 1 of reduction function has wrong type"));
+        EXPECT_EQ(error.what(),
+                  std::string("Parameter 1 of reduction function has wrong element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_param_1_wrong_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto f = make_shared<Function>(f_param_0, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Parameter 1 wrong type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 1 of reduction function is not a scalar"));
     }
     catch (...)
     {
@@ -3027,16 +3001,12 @@ TEST(type_prop, reduce_window_deduce_param_1_wrong_type)
 
 TEST(type_prop, reduce_window_deduce_multi_output)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto rts = std::vector<std::shared_ptr<const ValueType>>{rt, rt};
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(Nodes{f_param_0 + f_param_1, f_param_0 * f_param_1},
-                                   rts,
                                    op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
@@ -3059,17 +3029,14 @@ TEST(type_prop, reduce_window_deduce_multi_output)
     }
 }
 
-TEST(type_prop, reduce_window_reduction_function_return_type_mismatch)
+TEST(type_prop, reduce_window_reduction_function_return_element_type_mismatch)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{18, 10, 15}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto rt = make_shared<TensorViewType>(element::i32, Shape{});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Convert>(f_param_0 + f_param_1, element::i32),
-                                   rt,
                                    op::Parameters{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
@@ -3080,12 +3047,45 @@ TEST(type_prop, reduce_window_reduction_function_return_type_mismatch)
         auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Reduction function return type mismatch not detected";
+        FAIL() << "Reduction function return element type mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Return element type from reduction function does not match expected"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_reduction_function_return_shape_mismatch)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(f_param_0 + f_param_1, Shape{1}, AxisSet{0}),
+        op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Reduction function return shape mismatch not detected";
     }
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Return type from reduction function does not match expected"));
+                  std::string("Return shape from reduction function is not a scalar"));
     }
     catch (...)
     {
@@ -3095,161 +3095,138 @@ TEST(type_prop, reduce_window_reduction_function_return_type_mismatch)
 
 TEST(type_prop, select_and_scatter_deduce_1d)
 {
-    auto param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16}));
-    auto param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{13}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{13});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{4};
     Strides move_strides{1};
 
     auto sas = make_shared<op::SelectAndScatter>(
         param_0, param_1, param_2, f, g, window_shape, move_strides);
-    ASSERT_EQ(*(sas->get_value_type()), TensorViewType(element::f32, Shape{16}));
+    ASSERT_EQ(sas->get_element_type(), element::f32);
+    ASSERT_EQ(sas->get_shape(), (Shape{16}));
 }
 
 TEST(type_prop, select_and_scatter_deduce_2d)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{13, 14}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{13, 14});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{4, 5};
     Strides move_strides{1, 1};
 
     auto sas = make_shared<op::SelectAndScatter>(
         param_0, param_1, param_2, f, g, window_shape, move_strides);
-    ASSERT_EQ(*(sas->get_value_type()), TensorViewType(element::f32, Shape{16, 18}));
+    ASSERT_EQ(sas->get_element_type(), element::f32);
+    ASSERT_EQ(sas->get_shape(), (Shape{16, 18}));
 }
 
 TEST(type_prop, select_and_scatter_deduce_3d)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{13, 14, 9}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{13, 14, 9});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{4, 5, 2};
     Strides move_strides{1, 1, 1};
 
     auto sas = make_shared<op::SelectAndScatter>(
         param_0, param_1, param_2, f, g, window_shape, move_strides);
-    ASSERT_EQ(*(sas->get_value_type()), TensorViewType(element::f32, Shape{16, 18, 10}));
+    ASSERT_EQ(sas->get_element_type(), element::f32);
+    ASSERT_EQ(sas->get_shape(), (Shape{16, 18, 10}));
 }
 
 TEST(type_prop, select_and_scatter_deduce_3d_strided)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{4, 3, 2}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{4, 3, 2};
     Strides move_strides{4, 6, 5};
 
     auto sas = make_shared<op::SelectAndScatter>(
         param_0, param_1, param_2, f, g, window_shape, move_strides);
-    ASSERT_EQ(*(sas->get_value_type()), TensorViewType(element::f32, Shape{16, 18, 10}));
+    ASSERT_EQ(sas->get_element_type(), element::f32);
+    ASSERT_EQ(sas->get_shape(), (Shape{16, 18, 10}));
 }
 
 TEST(type_prop, select_and_scatter_deduce_3d_strided_uneven)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
 
     auto sas = make_shared<op::SelectAndScatter>(
         param_0, param_1, param_2, f, g, window_shape, move_strides);
-    ASSERT_EQ(*(sas->get_value_type()), TensorViewType(element::f32, Shape{16, 18, 10}));
+    ASSERT_EQ(sas->get_element_type(), element::f32);
+    ASSERT_EQ(sas->get_shape(), (Shape{16, 18, 10}));
 }
 
 TEST(type_prop, select_and_scatter_deduce_init_not_scalar)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{4}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{4});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -3274,23 +3251,18 @@ TEST(type_prop, select_and_scatter_deduce_init_not_scalar)
 
 TEST(type_prop, select_and_scatter_deduce_init_elem_type_wrong)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::i32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -3316,23 +3288,18 @@ TEST(type_prop, select_and_scatter_deduce_init_elem_type_wrong)
 
 TEST(type_prop, select_and_scatter_deduce_source_elem_type_wrong)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::i32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -3358,23 +3325,18 @@ TEST(type_prop, select_and_scatter_deduce_source_elem_type_wrong)
 
 TEST(type_prop, select_and_scatter_deduce_source_window_shape_wrong_rank)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5};
     Strides move_strides{6, 6, 3};
@@ -3400,23 +3362,18 @@ TEST(type_prop, select_and_scatter_deduce_source_window_shape_wrong_rank)
 
 TEST(type_prop, select_and_scatter_deduce_source_window_strides_wrong_rank)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6};
@@ -3442,23 +3399,18 @@ TEST(type_prop, select_and_scatter_deduce_source_window_strides_wrong_rank)
 
 TEST(type_prop, select_and_scatter_deduce_source_window_shape_zero_length_axis)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 0, 3};
     Strides move_strides{6, 6, 3};
@@ -3483,23 +3435,18 @@ TEST(type_prop, select_and_scatter_deduce_source_window_shape_zero_length_axis)
 
 TEST(type_prop, select_and_scatter_deduce_source_window_strides_zero_length_axis)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 0, 3};
@@ -3524,23 +3471,18 @@ TEST(type_prop, select_and_scatter_deduce_source_window_strides_zero_length_axis
 
 TEST(type_prop, select_and_scatter_deduce_source_window_too_big)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 19, 3};
     Strides move_strides{6, 6, 3};
@@ -3565,23 +3507,18 @@ TEST(type_prop, select_and_scatter_deduce_source_window_too_big)
 
 TEST(type_prop, select_and_scatter_deduce_source_tensor_wrong_shape)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 4, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -3606,25 +3543,19 @@ TEST(type_prop, select_and_scatter_deduce_source_tensor_wrong_shape)
 
 TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_count)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_2 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   f_rt,
                                    op::Parameters{f_param_0, f_param_1, f_param_2});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -3648,25 +3579,20 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_count)
     }
 }
 
-TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_0_type)
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_0_element_type)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_1, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::i32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_1, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -3677,11 +3603,12 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_0_type)
             param_0, param_1, param_2, f, g, window_shape, move_strides);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Wrong type for selection function parameter 0 not detected";
+        FAIL() << "Wrong element type for selection function parameter 0 not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Parameter 0 of selection function has wrong type"));
+        EXPECT_EQ(error.what(),
+                  std::string("Parameter 0 of selection function has wrong element type"));
     }
     catch (...)
     {
@@ -3689,25 +3616,20 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_0_type)
     }
 }
 
-TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_1_type)
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_0_shape)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_0), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_1, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -3718,11 +3640,84 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_1_type)
             param_0, param_1, param_2, f, g, window_shape, move_strides);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Wrong type for selection function parameter 1 not detected";
+        FAIL() << "Wrong shape for selection function parameter 0 not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Parameter 1 of selection function has wrong type"));
+        EXPECT_EQ(error.what(), std::string("Parameter 0 of selection function is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_1_element_type)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::i32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_0),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong element type for selection function parameter 1 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Parameter 1 of selection function has wrong element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_1_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_0),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong shape for selection function parameter 1 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 1 of selection function is not a scalar"));
     }
     catch (...)
     {
@@ -3732,27 +3727,20 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_1_type)
 
 TEST(type_prop, select_and_scatter_deduce_selection_function_multi_output)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f_rts = std::vector<std::shared_ptr<const ValueType>>{f_rt, f_rt};
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(
         std::vector<std::shared_ptr<Node>>{make_shared<op::Greater>(f_param_0, f_param_1),
                                            make_shared<op::Greater>(f_param_0, f_param_1)},
-        f_rts,
         op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -3775,25 +3763,59 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_multi_output)
     }
 }
 
-TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_result_type)
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_result_element_type)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::f32, Shape{});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong selection function result element type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Return element type from selection function is not boolean"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_result_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(
-        make_shared<op::Add>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+        make_shared<op::Broadcast>(
+            make_shared<op::Greater>(f_param_0, f_param_1), Shape{1}, AxisSet{0}),
+        op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -3809,7 +3831,7 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_result_type)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Return type from selection function is not a boolean scalar"));
+                  std::string("Return shape from selection function is not a scalar"));
     }
     catch (...)
     {
@@ -3819,24 +3841,20 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_result_type)
 
 TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_count)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g = make_shared<Function>(
-        g_param_0 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1, g_param_2});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1,
+                                   op::Parameters{g_param_0, g_param_1, g_param_2});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -3860,25 +3878,20 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_count)
     }
 }
 
-TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_0_type)
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_0_element_type)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_1 + g_param_1, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::i32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_1 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -3889,11 +3902,12 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_0_type)
             param_0, param_1, param_2, f, g, window_shape, move_strides);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Wrong type for scatter function parameter 0 not detected";
+        FAIL() << "Wrong element type for scatter function parameter 0 not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Parameter 0 of scatter function has wrong type"));
+        EXPECT_EQ(error.what(),
+                  std::string("Parameter 0 of scatter function has wrong element type"));
     }
     catch (...)
     {
@@ -3901,25 +3915,20 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_0_type)
     }
 }
 
-TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_1_type)
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_0_shape)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::i32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_0, g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_1 + g_param_1, op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -3930,11 +3939,84 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_1_type)
             param_0, param_1, param_2, f, g, window_shape, move_strides);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Wrong type for scatter function parameter 1 not detected";
+        FAIL() << "Wrong shape for scatter function parameter 0 not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Parameter 1 of scatter function has wrong type"));
+        EXPECT_EQ(error.what(), std::string("Parameter 0 of scatter function is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_1_element_type)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::i32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_0, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong element type for scatter function parameter 1 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Parameter 1 of scatter function has wrong element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_1_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto g = make_shared<Function>(g_param_0 + g_param_0, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong shape for scatter function parameter 1 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 1 of scatter function is not a scalar"));
     }
     catch (...)
     {
@@ -3944,25 +4026,19 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_1_type)
 
 TEST(type_prop, select_and_scatter_deduce_scatter_function_multi_output)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::f32, Shape{});
-    auto g_rts = std::vector<std::shared_ptr<const ValueType>>{g_rt, g_rt};
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g = make_shared<Function>(
         std::vector<std::shared_ptr<Node>>{g_param_0 + g_param_1, g_param_0 + g_param_1},
-        g_rts,
         op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
@@ -3986,25 +4062,21 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_multi_output)
     }
 }
 
-TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_result_type)
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_result_element_type)
 {
-    auto param_0 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{16, 18, 10}));
-    auto param_1 =
-        make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{2, 3, 3}));
-    auto param_2 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto f_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto f = make_shared<Function>(
-        make_shared<op::Greater>(f_param_0, f_param_1), f_rt, op::Parameters{f_param_0, f_param_1});
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
 
-    auto g_param_0 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_param_1 = make_shared<op::Parameter>(make_shared<TensorViewType>(element::f32, Shape{}));
-    auto g_rt = make_shared<TensorViewType>(element::boolean, Shape{});
-    auto g = make_shared<Function>(
-        make_shared<op::Greater>(g_param_0, g_param_1), g_rt, op::Parameters{g_param_0, g_param_1});
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(make_shared<op::Greater>(g_param_0, g_param_1),
+                                   op::Parameters{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -4015,12 +4087,52 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_result_type)
             param_0, param_1, param_2, f, g, window_shape, move_strides);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Wrong scatter function result type not detected";
+        FAIL() << "Wrong scatter function result element type not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Return type from scatter does not match the init value type"));
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Return element type from scatter function does not match the init value type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_result_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(
+        make_shared<op::Broadcast>(g_param_0 + g_param_1, Shape{1}, AxisSet{0}),
+        op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong scatter function result shape not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Return shape from scatter function is not a scalar"));
     }
     catch (...)
     {

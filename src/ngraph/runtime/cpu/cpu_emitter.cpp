@@ -573,19 +573,6 @@ void runtime::cpu::CPU_Emitter::EmitConstant(const ngraph::Node* n,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    auto c = static_cast<const op::Constant*>(n);
-    auto c_value_strings = c->get_value_strings();
-    auto type = out[0].get_type();
-
-    m_out << "{   // " << n->get_name() << " EmitConstant\n";
-    m_out.indent++;
-    for (size_t i = 0; i < c_value_strings.size(); i++)
-    {
-        m_out << out[0].get_name() << "[" << i << "] = static_cast<" << type << ">("
-              << c_value_strings[i] << ");\n";
-    }
-    m_out.indent--;
-    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,

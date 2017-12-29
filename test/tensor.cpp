@@ -40,8 +40,7 @@ TEST(tensor, size)
     {
         auto arg0 = make_shared<op::Parameter>(element::f32, Shape{2, 3});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto rt = make_shared<TensorViewType>(element::f32, Shape{2, 3});
-        auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
+        auto f0 = make_shared<Function>(add, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -54,8 +53,7 @@ TEST(tensor, size)
     {
         auto arg0 = make_shared<op::Parameter>(element::f32, Shape{});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto rt = make_shared<TensorViewType>(element::f32, Shape{});
-        auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
+        auto f0 = make_shared<Function>(add, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -68,8 +66,7 @@ TEST(tensor, size)
     {
         auto arg0 = make_shared<op::Parameter>(element::f32, Shape{1});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto rt = make_shared<TensorViewType>(element::f32, Shape{1});
-        auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
+        auto f0 = make_shared<Function>(add, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -83,7 +80,7 @@ TEST(tensor, size)
 template <typename T>
 void test_read_write(const std::vector<T>& x)
 {
-    auto manager = ngraph::runtime::Manager::get("NGVM");
+    auto manager = ngraph::runtime::Manager::get("INTERPRETER");
     auto backend = manager->allocate_backend();
 
     auto a = backend->make_primary_tensor_view(element::from<T>(), Shape{2, x.size()});
@@ -120,15 +117,12 @@ TEST(tensor, output_flag)
 
     auto arg0 = make_shared<op::Parameter>(element::f32, Shape{1});
     auto add = make_shared<op::Add>(arg0, arg0);
-    auto rt = make_shared<TensorViewType>(element::f32, Shape{1});
-    auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
+    auto f0 = make_shared<Function>(add, op::Parameters{arg0});
 
     pass_manager.run_passes(f0);
 
-    EXPECT_TRUE(f0->get_result()->is_output());
-    for (descriptor::Output& output : f0->get_result()->get_outputs())
+    for (size_t i = 0; i < f0->get_output_size(); ++i)
     {
-        const Tensor& t = output.get_tensor();
-        EXPECT_TRUE(t.is_output());
+        EXPECT_TRUE(f0->get_output_op(i)->is_output());
     }
 }

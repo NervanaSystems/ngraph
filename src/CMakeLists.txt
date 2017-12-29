@@ -13,5 +13,5 @@
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIN_NGRAPH_LIBRARY")
 
-add_subdirectory( ngraph )
-
+add_subdirectory(resource)
+add_subdirectory(ngraph)

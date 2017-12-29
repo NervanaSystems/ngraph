@@ -13,7 +13,6 @@
 // ----------------------------------------------------------------------------
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
-#include <llvm/ExecutionEngine/SectionMemoryManager.h>
 
 #include "ngraph/codegen/execution_engine.hpp"
 
@@ -32,17 +31,17 @@ codegen::ExecutionEngine::~ExecutionEngine()
     }
 }
 
-bool codegen::ExecutionEngine::add_module(std::unique_ptr<llvm::Module>& module)
+bool codegen::ExecutionEngine::add_module(std::unique_ptr<ngraph::codegen::Module>& module)
 {
     if (module)
     {
         if (!m_execution_engine)
         {
-            m_execution_engine.reset(llvm::EngineBuilder(move(module))
+            m_execution_engine.reset(llvm::EngineBuilder(module->take_module())
                                          .setEngineKind(llvm::EngineKind::JIT)
                                          .setOptLevel(llvm::CodeGenOpt::Aggressive)
                                          .setMCPU(llvm::sys::getHostCPUName())
-                                         .setCodeModel(llvm::CodeModel::Medium)
+                                         //  .setCodeModel(llvm::CodeModel::Medium)
                                          .setErrorStr(&m_jit_error)
                                          .create());
 
@@ -73,4 +72,9 @@ void codegen::ExecutionEngine::finalize()
             "Error in finalize: " +
             (m_jit_error.empty() ? "Could not create an execution engine" : m_jit_error));
     }
+}
+
+void* codegen::ExecutionEngine::get_pointer_to_named_function(const std::string& func_name)
+{
+    return m_execution_engine->getPointerToNamedFunction(func_name);
 }

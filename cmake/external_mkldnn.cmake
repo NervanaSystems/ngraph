@@ -17,34 +17,6 @@ include(ExternalProject)
 # Fetch and install MKL-DNN
 #----------------------------------------------------------------------------------------------------------
 
-set(MKLDNN_BUILD_COMMAND_EXTRA_FLAGS ""
-    CACHE STRING "Additional flags to supply to '${CMAKE_MAKE_PROGRAM}' when building MKLDNN."
-    )
-
-set(MKLDNN_CMAKE_EXTRA_FLAGS ""
-    CACHE STRING "Additional flags to supply to 'cmake' when building the MKLDNN build."
-    )
-
-# CMake is a terrible language when it comes to lists and strings.  Here's the behavior we *want*:
-#   1. CMake's user enters a space-separated list of additional command-line argments to be supplied
-#      to the 'make' invocation that builds MKL-DNN.
-#
-#   2. When that 'make' invocation occurs, each of thoise command-line arguments is a separate token
-#      on the command-line of the 'make' invocation.
-#
-# To avoid CMake grouping all of those command-line arguments together into a single, quote-
-# delimited string on the 'make' command-line, we need to temporarily convert the user-specified,
-# space-separated string into a CMake semicolon-separated list.
-separate_arguments(MKLDNN_BUILD_COMMAND_EXTRA_FLAGS_LIST UNIX_COMMAND
-    "${MKLDNN_BUILD_COMMAND_EXTRA_FLAGS}"
-    )
-
-separate_arguments(MKLDNN_CMAKE_EXTRA_FLAGS_LIST UNIX_COMMAND
-    "${MKLDNN_CMAKE_EXTRA_FLAGS}"
-    )
-
-#----------------------------------------------------------------------------------------------------------
-
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
     set(MKLDNN_GIT_REPO_URL https://github.com/01org/mkl-dnn)
@@ -61,9 +33,9 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             # Uncomment below with any in-flight MKL-DNN patches
             # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
             CMAKE_ARGS
+                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR}
-                ${MKLDNN_CMAKE_EXTRA_FLAGS_LIST}
-            BUILD_COMMAND "${CMAKE_MAKE_PROGRAM}" ${MKLDNN_BUILD_COMMAND_EXTRA_FLAGS_LIST}
             )
     else()
         ExternalProject_Add(
@@ -73,11 +45,11 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             UPDATE_COMMAND ""
             # Uncomment below with any in-flight MKL-DNN patches
             # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
-            BUILD_BYPRODUCTS "${MKLDNN_INSTALL_DIR}/include/mkldnn.hpp"
             CMAKE_ARGS
+                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR}
-                ${MKLDNN_CMAKE_EXTRA_FLAGS_LIST}
-            BUILD_COMMAND "${CMAKE_MAKE_PROGRAM}" ${MKLDNN_BUILD_COMMAND_EXTRA_FLAGS_LIST}
+            BUILD_BYPRODUCTS "${MKLDNN_INSTALL_DIR}/include/mkldnn.hpp"
             )
     endif()
 

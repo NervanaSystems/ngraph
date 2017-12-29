@@ -200,8 +200,7 @@ TEST(copy, FunctionCall)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto rt = make_shared<TensorViewType>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
 
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape);
@@ -218,26 +217,6 @@ TEST(copy, FunctionCall)
     ASSERT_TRUE(nullptr != new_node);
     ASSERT_TRUE(new_args == new_node->get_input_ops());
     ASSERT_TRUE(node_cast->get_functions()[0] == f);
-}
-
-TEST(copy, GetTupleElement)
-{
-    Shape shape{1};
-    size_t n = 0;
-    auto tuple_type = make_shared<TupleType>(
-        vector<shared_ptr<const ValueType>>{make_shared<TensorViewType>(element::f32, shape)});
-    auto arg0 = make_shared<op::Parameter>(tuple_type);
-
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(tuple_type)};
-
-    auto node = make_shared<op::XLAGetTupleElement>(arg0, n);
-    auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::XLAGetTupleElement>(new_node);
-    ASSERT_NE(node_cast, nullptr);
-
-    ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_input_ops());
-    ASSERT_TRUE(node_cast->get_n() == n);
 }
 
 TEST(copy, greater_eq)
@@ -300,7 +279,7 @@ TEST(copy, parameter)
 
     ASSERT_TRUE(nullptr != new_node);
     ASSERT_TRUE(new_node->get_input_ops().size() == 0);
-    ASSERT_TRUE(node->get_value_type() == new_node->get_value_type());
+    ASSERT_TRUE(node->has_same_type(new_node));
 }
 
 TEST(copy, power)
@@ -313,8 +292,7 @@ TEST(copy, reduce)
     Shape scalar_shape{};
     auto A = make_shared<op::Parameter>(element::f32, scalar_shape);
     auto B = make_shared<op::Parameter>(element::f32, scalar_shape);
-    auto rt = make_shared<TensorViewType>(element::f32, scalar_shape);
-    auto f = make_shared<Function>(A + B, rt, op::Parameters{A, B});
+    auto f = make_shared<Function>(A + B, op::Parameters{A, B});
 
     Shape shape{4, 3};
     AxisSet axes{1};
@@ -446,21 +424,4 @@ TEST(copy, tan)
 TEST(copy, tanh)
 {
     ASSERT_TRUE(check_unary<op::Tanh>());
-}
-
-TEST(copy, tuple)
-{
-    Shape shape{1};
-    auto arg0 = make_shared<op::Parameter>(element::f32, shape);
-    auto arg1 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape),
-                                                make_shared<op::Parameter>(element::f32, shape)};
-
-    auto node = make_shared<op::XLATuple>(Nodes{arg0, arg1});
-    auto new_node = node->copy_with_new_args(new_args);
-    auto node_cast = dynamic_pointer_cast<op::XLATuple>(new_node);
-    ASSERT_NE(node_cast, nullptr);
-
-    ASSERT_TRUE(nullptr != new_node);
-    ASSERT_TRUE(new_args == new_node->get_input_ops());
 }

@@ -17,18 +17,13 @@
 #include <functional>
 #include <memory>
 #include <string>
-
-#include <clang/CodeGen/CodeGenAction.h>
-
-#include <llvm/ExecutionEngine/MCJIT.h> // forces JIT to link in
-#include <llvm/ExecutionEngine/SectionMemoryManager.h>
-#include <llvm/Option/Arg.h>
+#include <vector>
 
 namespace ngraph
 {
     namespace codegen
     {
-        class module;
+        class Module;
         class Compiler;
         class StaticCompiler;
         class HeaderCache;
@@ -39,11 +34,21 @@ namespace clang
 {
     class HeaderSearchOptions;
     class CompilerInstance;
+    class CodeGenAction;
 }
 
-class ngraph::codegen::module
+namespace llvm
+{
+    class Module;
+}
+
+class ngraph::codegen::Module
 {
 public:
+    Module(std::unique_ptr<llvm::Module> module);
+    ~Module();
+    std::unique_ptr<llvm::Module> take_module();
+
 private:
     std::unique_ptr<llvm::Module> m_module;
 };
@@ -55,13 +60,13 @@ public:
     ~Compiler();
     void set_precompiled_header_source(const std::string& source);
     void add_header_search_path(const std::string& path);
-    std::unique_ptr<llvm::Module> compile(const std::string& source);
+    std::unique_ptr<ngraph::codegen::Module> compile(const std::string& source);
     std::unique_ptr<clang::CodeGenAction>& get_compiler_action() { return compiler_action; }
 private:
     std::unique_ptr<clang::CodeGenAction> compiler_action;
 };
 
-class ngraph::codegen::StaticCompiler : public llvm::SectionMemoryManager
+class ngraph::codegen::StaticCompiler
 {
 public:
     StaticCompiler();
@@ -75,8 +80,8 @@ public:
     }
     void add_header_search_path(const std::string& path);
 
-    std::unique_ptr<llvm::Module> compile(std::unique_ptr<clang::CodeGenAction>& compiler_action,
-                                          const std::string& source);
+    std::unique_ptr<ngraph::codegen::Module>
+        compile(std::unique_ptr<clang::CodeGenAction>& compiler_action, const std::string& source);
     void generate_pch(const std::string& source);
 
 private:
@@ -89,26 +94,7 @@ private:
     std::string m_precomiled_header_source;
 
     bool is_version_number(const std::string& path);
-    void use_cached_files();
-};
-
-class ngraph::codegen::HeaderCache
-{
-public:
-    bool is_valid() const { return m_headers_valid; }
-    bool set_valid() { return m_headers_valid = true; }
-    void add_path(const std::string& path) { m_include_paths.push_back(path); }
-    void add_file(const std::string& path, std::unique_ptr<llvm::MemoryBuffer>& code)
-    {
-        m_headers.insert(std::make_pair(path, std::move(code)));
-    }
-    const std::map<std::string, std::unique_ptr<llvm::MemoryBuffer>>& get_header_map() const
-    {
-        return m_headers;
-    }
-    const std::vector<std::string>& get_include_paths() const { return m_include_paths; }
-private:
-    std::map<std::string, std::unique_ptr<llvm::MemoryBuffer>> m_headers;
-    std::vector<std::string> m_include_paths;
-    bool m_headers_valid;
+    void configure_search_path();
+    void load_header_search_path_from_resource();
+    void load_headers_from_resource();
 };
