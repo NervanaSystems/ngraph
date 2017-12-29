@@ -639,9 +639,9 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto reshape = static_cast<const op::Reshape*>(n);
-    //     m_out << "{   // " << n->get_name() << "\n";
-    //     m_out.indent++;
-    // #if USE_LOOPS_OVER_EIGEN == 0
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     auto arg_shape = args[0].get_shape();
     auto arg_rank = arg_shape.size();
 
@@ -704,17 +704,17 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
         throw ngraph_error(
             "Axis permutation in reshape is not implemented yet for tensors with rank>2");
     }
-    // #else
-    //     kernels::emit_reshape(m_out,
-    //                           args[0].get_element_type().c_type_string(),
-    //                           args[0].get_name(),
-    //                           out[0].get_name(),
-    //                           args[0].get_shape(),
-    //                           out[0].get_shape(),
-    //                           reshape->get_input_order());
-    // #endif
-    //     m_out.indent--;
-    //     m_out << "}\n";
+#else
+    kernels::emit_reshape(m_out,
+                          args[0].get_element_type().c_type_string(),
+                          args[0].get_name(),
+                          out[0].get_name(),
+                          args[0].get_shape(),
+                          out[0].get_shape(),
+                          reshape->get_input_order());
+#endif
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitFunctionCall(

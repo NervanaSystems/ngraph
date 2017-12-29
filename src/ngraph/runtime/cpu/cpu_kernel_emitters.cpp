@@ -207,38 +207,50 @@ void ngraph::runtime::cpu::kernels::emit_reshape(codegen::CodeWriter& writer,
                                                  const Shape& out_shape,
                                                  const AxisVector& arg0_axis_order)
 {
-    // size_t size = 1;
-    // for (auto x : out_shape)
-    // {
-    //   if (x != 0) size *= x;
-    // }
+    size_t size = 1;
+    for (auto x : out_shape)
+    {
+      if (x != 0) size *= x;
+    }
 
-    // auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
-    // auto dest_nd_name = recast_tmp_var(writer, element_type, out, {size}, "dest_nd");
+    auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
+    auto dest_nd_name = recast_tmp_var(writer, element_type, out, {size}, "dest_nd");
 
-    // std::vector<std::string> index_vars;
-    // for (size_t i = 0; i < arg0_shape.size(); i++)
-    // {
-    //     std::string index_var = writer.generate_temporary_name("i");
+    std::vector<std::string> index_vars;
+    for (size_t i = 0; i < arg0_shape.size(); i++)
+    {
+        std::string index_var = writer.generate_temporary_name("i");
 
-    //     writer << start_index_loop(index_var, 0, arg0_shape[arg0_axis_order[i]], i == 0);
-    //     writer.indent++;
+        writer << start_index_loop(index_var, 0, arg0_shape[arg0_axis_order[i]], i == 0);
+        writer.indent++;
 
-    //     index_vars.push_back(index_var);
-    // }
+        index_vars.push_back(index_var);
+    }
 
-    // writer << dest_nd_name << "[ 0 ";
-    // for (size_t i = 0; i < arg0_shape.size(); i++)
-    // {
-    //     writer << " + " << arg0_shape[i] << " * " << index_vars[i];
-    // }
-    // writer << "] = " << source_nd_name << emit_bracketed_string(index_vars)
-    //        << ";\n";
-    // for (size_t i = arg0_shape.size(); i-- > 0;)
-    // {
-    //     writer.indent--;
-    //     writer << end_index_loop(index_vars[i]);
-    // }
+    writer << dest_nd_name << "[ 0";
+    for (size_t i = 0; i < arg0_shape.size(); i++)
+    {
+        writer << " + " << index_vars[i];
+        for (auto j = i+1; j < arg0_shape.size(); j++)
+        {
+            if (arg0_shape[j] >0)
+            {
+                writer << " * " << arg0_shape[arg0_axis_order[j]];
+            }
+        }
+    }
+    writer << "] = " << source_nd_name;
+    for (size_t i = 0; i< arg0_shape.size(); i++)
+    {
+        writer<< "[" << index_vars[arg0_axis_order[i]] << "]";
+    }
+    writer << ";\n";
+
+    for (size_t i = arg0_shape.size(); i-- > 0;)
+    {
+        writer.indent--;
+        writer << end_index_loop(index_vars[i]);
+    }
 }
 
 void ngraph::runtime::cpu::kernels::emit_sum(codegen::CodeWriter& writer,
