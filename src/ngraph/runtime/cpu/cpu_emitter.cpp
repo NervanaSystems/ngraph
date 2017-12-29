@@ -1245,7 +1245,7 @@ void runtime::cpu::CPU_Emitter::EmitTanh(const ngraph::Node* n,
     // by models
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN != 0
+#if PREFER_EIGEN == 0
     m_out << "#pragma omp parallel for\n";
 #endif
     m_out << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
@@ -1522,7 +1522,7 @@ void runtime::cpu::CPU_Emitter::EmitCeiling(const ngraph::Node* n,
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
     size_t element_count = out[0].get_size();
-#if USE_LOOPS_OVER_EIGEN != 0
+#if PREFER_EIGEN == 0
     m_out << "#pragma omp parallel for\n";
 #endif
     m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
@@ -1540,7 +1540,7 @@ void runtime::cpu::CPU_Emitter::EmitFloor(const ngraph::Node* n,
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
     size_t element_count = out[0].get_size();
-#if USE_LOOPS_OVER_EIGEN != 0
+#if PREFER_EIGEN == 0
     m_out << "#pragma omp parallel for\n";
 #endif
     m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
@@ -1558,7 +1558,7 @@ void runtime::cpu::CPU_Emitter::EmitSqrt(const ngraph::Node* n,
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
     size_t element_count = out[0].get_size();
-#if USE_LOOPS_OVER_EIGEN != 0
+#if PREFER_EIGEN == 0
     m_out << "#pragma omp parallel for\n";
 #endif
     m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
