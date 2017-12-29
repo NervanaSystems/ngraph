@@ -25,6 +25,13 @@ namespace ngraph
         {
             namespace kernels
             {
+                void emit_broadcast(codegen::CodeWriter& writer,
+                                    const std::string& element_type,
+                                    const std::string& arg0, // replacement context
+                                    const std::string& out,
+                                    const Shape& arg0_shape,
+                                    const Shape& out_shape,
+                                    const AxisSet& broadcast_axes);
                 void emit_concat(codegen::CodeWriter& writer,
                                  const std::string& element_type,
                                  const std::vector<std::string>& args,
@@ -59,13 +66,13 @@ namespace ngraph
                                   const Shape& arg0_shape,
                                   const Shape& out_shape,
                                   const AxisVector& arg0_axis_order);
-                // void emit_sum(codegen::CodeWriter& writer,
-                //               const std::string& element_type,
-                //               const std::string& arg0, // replacement context
-                //               const std::string& out,
-                //               const Shape& arg0_shape,
-                //               const Shape& out_shape,
-                //               const AxisSet& reduction_axes);
+                void emit_sum(codegen::CodeWriter& writer,
+                              const std::string& element_type,
+                              const std::string& arg0, // replacement context
+                              const std::string& out,
+                              const Shape& arg0_shape,
+                              const Shape& out_shape,
+                              const AxisSet& reduction_axes);
             }
         }
     }

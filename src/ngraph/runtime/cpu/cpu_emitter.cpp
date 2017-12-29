@@ -532,6 +532,9 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
 {
     auto broadcast = static_cast<const op::Broadcast*>(n);
 
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
 
@@ -597,6 +600,17 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
         m_out << "                         {" << join(result_shape) << "},\n";
         m_out << "                         {" << join(broadcast->get_broadcast_axes()) << "});\n";
     }
+#else
+    kernels::emit_broadcast(m_out,
+                            args[0].get_element_type().c_type_string(),
+                            args[0].get_name(),
+                            out[0].get_name(),
+                            args[0].get_shape(),
+                            out[0].get_shape(),
+                            broadcast->get_broadcast_axes());
+#endif
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitConvert(const ngraph::Node* n,
@@ -998,9 +1012,9 @@ void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     const op::Sum* sum = static_cast<const op::Sum*>(n);
-//     m_out << "{   // " << n->get_name() << "\n";
-//     m_out.indent++;
-// #if USE_LOOPS_OVER_EIGEN == 0
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     const Shape& arg_shape = args[0].get_shape();
     size_t arg_rank = arg_shape.size();
     const AxisSet& reduction_axes = sum->get_reduction_axes();
@@ -1052,17 +1066,17 @@ void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
         m_out << "                         {" << join(out[0].get_shape()) << "},\n";
         m_out << "                         {" << join(sum->get_reduction_axes()) << "});\n";
     }
-// #else
-//     kernels::emit_sum(m_out,
-//                       args[0].get_element_type().c_type_string(),
-//                       args[0].get_name(),
-//                       out[0].get_name(),
-//                       args[0].get_shape(),
-//                       out[0].get_shape(),
-//                       sum->get_reduction_axes());
-// #endif
-//     m_out.indent--;
-//     m_out << "}\n";
+#else
+    kernels::emit_sum(m_out,
+                      args[0].get_element_type().c_type_string(),
+                      args[0].get_name(),
+                      out[0].get_name(),
+                      args[0].get_shape(),
+                      out[0].get_shape(),
+                      sum->get_reduction_axes());
+#endif
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitExp(const ngraph::Node* n,
@@ -1156,6 +1170,9 @@ void runtime::cpu::CPU_Emitter::EmitTanh(const ngraph::Node* n,
     // by models
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN != 0
+    m_out << "#pragma omp parallel for\n";
+#endif
     m_out << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
     m_out << "{\n";
     m_out << "    " << out[0].get_name() << "[i] = tanh(" << args[0].get_name() << "[i]);\n";
