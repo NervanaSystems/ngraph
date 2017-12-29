@@ -210,7 +210,8 @@ void ngraph::runtime::cpu::kernels::emit_reshape(codegen::CodeWriter& writer,
     size_t size = 1;
     for (auto x : out_shape)
     {
-      if (x != 0) size *= x;
+        if (x != 0)
+            size *= x;
     }
 
     auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
@@ -231,18 +232,18 @@ void ngraph::runtime::cpu::kernels::emit_reshape(codegen::CodeWriter& writer,
     for (size_t i = 0; i < arg0_shape.size(); i++)
     {
         writer << " + " << index_vars[i];
-        for (auto j = i+1; j < arg0_shape.size(); j++)
+        for (auto j = i + 1; j < arg0_shape.size(); j++)
         {
-            if (arg0_shape[j] >0)
+            if (arg0_shape[j] > 0)
             {
                 writer << " * " << arg0_shape[arg0_axis_order[j]];
             }
         }
     }
     writer << "] = " << source_nd_name;
-    for (size_t i = 0; i< arg0_shape.size(); i++)
+    for (size_t i = 0; i < arg0_shape.size(); i++)
     {
-        writer<< "[" << index_vars[arg0_axis_order[i]] << "]";
+        writer << "[" << index_vars[arg0_axis_order[i]] << "]";
     }
     writer << ";\n";
 
@@ -295,23 +296,38 @@ void ngraph::runtime::cpu::kernels::emit_sum(codegen::CodeWriter& writer,
         for (size_t i = 0; i < arg0_shape.size(); i++)
         {
             std::string index_var = writer.generate_temporary_name("i");
-
-            writer << start_index_loop(index_var, 0, arg0_shape[i], i == 0);
-            writer.indent++;
-
             index_vars.push_back(index_var);
         }
-
         std::vector<std::string> out_indexes;
+        size_t outer_arg_index = -1;
         for (size_t i = 0; i < index_vars.size(); ++i)
         {
             if (reduction_axes.count(i) == 0)
             {
+                if (out_indexes.size() == 0)
+                {
+                    outer_arg_index = i;
+                }
                 out_indexes.push_back(index_vars[i]);
             }
         }
 
-        writer << "#pragma omp atomic\n";
+        if (outer_arg_index != -1)
+        {
+            writer << start_index_loop(
+                index_vars[outer_arg_index], 0, arg0_shape[outer_arg_index], true);
+            writer.indent++;
+        }
+        for (size_t i = 0; i < arg0_shape.size(); i++)
+        {
+            if (i != outer_arg_index)
+            {
+                std::string index_var = index_vars[i];
+                writer << start_index_loop(index_var, 0, arg0_shape[i], false);
+                writer.indent++;
+            }
+        }
+
         writer << dest_nd_name << emit_bracketed_string(out_indexes) << " += " << source_nd_name
                << emit_bracketed_string(index_vars) << ";\n";
 
