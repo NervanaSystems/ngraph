@@ -70,7 +70,7 @@ void ngraph::runtime::cpu::kernels::emit_broadcast(codegen::CodeWriter& writer,
     {
         if (broadcast_axes.count(i) == 0)
         {
-          source_indexes.push_back(index_vars[i]);
+            source_indexes.push_back(index_vars[i]);
         }
     }
 
