@@ -33,23 +33,7 @@ using namespace ngraph;
 size_t default_reduction_axes_count(const std::shared_ptr<Node>& arg0,
                                     const std::shared_ptr<Node>& arg1)
 {
-    auto arg0_value_type = arg0->get_value_type();
-    auto arg0_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(arg0_value_type);
-    if (nullptr == arg0_tensor_view_type)
-    {
-        throw ngraph_error("Dot arg0 does not have tensor view type");
-    }
-    auto arg0_shape = arg0_tensor_view_type->get_shape();
-
-    auto arg1_value_type = arg1->get_value_type();
-    auto arg1_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(arg1_value_type);
-    if (nullptr == arg1_tensor_view_type)
-    {
-        throw ngraph_error("Dot arg1 does not have tensor view type");
-    }
-    auto arg1_shape = arg1_tensor_view_type->get_shape();
-
-    if (arg0_shape.size() == 0 || arg1_shape.size() == 0)
+    if (arg0->get_shape().size() == 0 || arg1->get_shape().size() == 0)
     {
         return 0;
     }

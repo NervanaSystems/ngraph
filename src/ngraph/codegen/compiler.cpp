@@ -31,6 +31,8 @@
 #include <clang/Lex/Preprocessor.h>
 #include <clang/Lex/PreprocessorOptions.h>
 #include <llvm/ADT/Statistic.h>
+#include <llvm/ExecutionEngine/MCJIT.h> // forces JIT to link in
+#include <llvm/IR/Module.h>
 #include <llvm/LinkAllPasses.h>
 #include <llvm/Option/Arg.h>
 #include <llvm/Option/ArgList.h>
@@ -72,6 +74,20 @@ using namespace ngraph::codegen;
 static StaticCompiler s_static_compiler;
 static std::mutex m_mutex;
 
+ngraph::codegen::Module::Module(std::unique_ptr<llvm::Module> module)
+    : m_module(move(module))
+{
+}
+
+ngraph::codegen::Module::~Module()
+{
+}
+
+std::unique_ptr<llvm::Module> ngraph::codegen::Module::take_module()
+{
+    return move(m_module);
+}
+
 Compiler::Compiler()
 {
 }
@@ -90,7 +106,7 @@ void Compiler::add_header_search_path(const std::string& path)
     s_static_compiler.add_header_search_path(path);
 }
 
-std::unique_ptr<llvm::Module> Compiler::compile(const std::string& source)
+std::unique_ptr<ngraph::codegen::Module> Compiler::compile(const std::string& source)
 {
     lock_guard<mutex> lock(m_mutex);
     return s_static_compiler.compile(compiler_action, source);
@@ -231,7 +247,7 @@ void StaticCompiler::add_header_search_path(const string& path)
     }
 }
 
-std::unique_ptr<llvm::Module>
+std::unique_ptr<ngraph::codegen::Module>
     StaticCompiler::compile(std::unique_ptr<clang::CodeGenAction>& compiler_action,
                             const string& source)
 {
@@ -264,7 +280,7 @@ std::unique_ptr<llvm::Module>
 
     m_compiler->getInvocation().getPreprocessorOpts().clearRemappedFiles();
 
-    return rc;
+    return unique_ptr<ngraph::codegen::Module>(new ngraph::codegen::Module(move(rc)));
 }
 
 void StaticCompiler::generate_pch(const string& source)

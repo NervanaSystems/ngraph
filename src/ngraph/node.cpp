@@ -20,8 +20,6 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/xla_get_tuple_element.hpp"
-#include "ngraph/ops/xla_tuple.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -50,63 +48,34 @@ Node::Node(const std::string& node_type, const std::vector<shared_ptr<Node>>& ar
     }
 }
 
-Node::~Node()
+void Node::set_value_type_checked(const element::Type& element_type, const Shape& shape)
 {
-}
-
-void Node::assert_value_type(const shared_ptr<const ValueType>& value_type) const
-{
-    if (*m_value_type != *value_type)
+    if (m_outputs.size() == 0)
+    {
+        add_output(element_type, shape);
+    }
+    if (element_type != get_element_type() || shape != get_shape())
     {
         throw ngraph_error("Setting value type to a different ValueType");
     }
 }
 
-void Node::set_value_type_checked(const element::Type& element_type, const Shape& shape)
+void Node::add_output(const element::Type& element_type, const Shape& shape)
 {
-    set_value_type_checked(make_shared<TensorViewType>(element_type, shape));
+    shared_ptr<TensorViewType> tensor_view_type = make_shared<TensorViewType>(element_type, shape);
+    size_t i = m_outputs.size();
+    auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
+        tensor_view_type,
+        ngraph::descriptor::Tensor::make_tensor_name(this, i),
+        is_output(),
+        is_parameter(),
+        is_constant());
+    m_outputs.emplace_back(this, i, tensor_view_descriptor);
 }
 
 void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
 {
-    if (nullptr == m_value_type)
-    {
-        if (nullptr != value_type)
-        {
-            m_value_type = value_type;
-            vector<std::shared_ptr<const TensorViewType>> tensor_view_types;
-            m_value_type->collect_tensor_views(tensor_view_types);
-            size_t i = 0;
-            for (auto tvt : tensor_view_types)
-            {
-                auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
-                    tvt,
-                    ngraph::descriptor::Tensor::make_tensor_name(this, i),
-                    is_output(),
-                    is_parameter(),
-                    is_constant());
-                m_outputs.emplace_back(this, i, tensor_view_descriptor);
-                i++;
-            }
-        }
-    }
-    else
-    {
-        if (*m_value_type != *value_type)
-        {
-            throw ngraph_error("Setting value type to a different ValueType");
-        }
-    }
-}
-
-std::shared_ptr<const ValueType> Node::get_value_type()
-{
-    return m_value_type;
-}
-
-const std::shared_ptr<const ValueType> Node::get_value_type() const
-{
-    return m_value_type;
+    set_value_type_checked(value_type->get_element_type(), value_type->get_shape());
 }
 
 std::deque<descriptor::Output>& Node::get_outputs()
@@ -227,7 +196,6 @@ std::shared_ptr<Node> Node::get_input_op(size_t index)
 Nodes Node::get_input_ops() //const
 {
     Nodes result;
-    std::set<shared_ptr<op::XLATuple>> seen_tuples;
     for (auto& i : get_inputs())
     {
         {
@@ -270,4 +238,103 @@ namespace ngraph
         }
         return out;
     }
+}
+
+size_t Node::get_output_size() const
+{
+    return m_outputs.size();
+}
+
+const element::Type& Node::get_output_element_type(size_t i) const
+{
+    return m_outputs.at(i).get_element_type();
+}
+
+const element::Type& Node::get_element_type() const
+{
+    if (get_output_size() != 1)
+    {
+        throw ngraph_error("get_element_type() must be called on a node with exactly one output.");
+    }
+    return get_output_element_type(0);
+}
+
+const Shape& Node::get_output_shape(size_t i) const
+{
+    return m_outputs.at(i).get_shape();
+}
+
+const Shape& Node::get_shape() const
+{
+    if (get_output_size() != 1)
+    {
+        throw ngraph_error("get_shape() must be called on a node with exactly one output.");
+    }
+    return get_output_shape(0);
+}
+
+shared_ptr<descriptor::TensorView> Node::get_output_tensor_view(size_t i) const
+{
+    return m_outputs.at(i).get_tensor_view();
+}
+
+shared_ptr<descriptor::TensorView> Node::get_output_tensor_view() const
+{
+    if (get_output_size() != 1)
+    {
+        throw ngraph_error(
+            "get_output_tensor_view() must be called on a node with exactly one output.");
+    }
+    return get_output_tensor_view(0);
+}
+
+const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
+{
+    return m_outputs.at(i).get_inputs();
+}
+
+descriptor::Tensor& Node::get_output_tensor(size_t i) const
+{
+    return m_outputs.at(i).get_tensor();
+}
+
+descriptor::Tensor& Node::get_output_tensor() const
+{
+    if (get_output_size() != 1)
+    {
+        throw ngraph_error("get_output_tensor() must be called on a node with exactly one output.");
+    }
+    return get_output_tensor(0);
+}
+
+size_t Node::get_input_size() const
+{
+    return m_inputs.size();
+}
+
+const element::Type& Node::get_input_element_type(size_t i) const
+{
+    return m_inputs.at(i).get_element_type();
+}
+
+const Shape& Node::get_input_shape(size_t i) const
+{
+    return m_inputs.at(i).get_shape();
+}
+
+bool Node::has_same_type(std::shared_ptr<const Node> node) const
+{
+    if (get_output_size() != node->get_output_size())
+    {
+        return false;
+    }
+    for (size_t i = 0; i < get_output_size(); ++i)
+    {
+        if (get_output_element_type(i) != node->get_output_element_type(i) ||
+            get_output_shape(i) != node->get_output_shape(i))
+        {
+            return false;
+        }
+    }
+    return true;
 }

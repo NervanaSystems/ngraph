@@ -209,9 +209,9 @@ namespace ngraph
         {
             Nodes result;
 
-            for (auto& output : node->get_outputs())
+            for (size_t i = 0; i < node->get_output_size(); ++i)
             {
-                for (auto input : output.get_inputs())
+                for (auto input : node->get_output_inputs(i))
                 {
                     result.push_back(input->get_node());
                 }

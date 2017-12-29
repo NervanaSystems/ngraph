@@ -17,19 +17,23 @@
 #include "ngraph/ops/parameter.hpp"
 
 using namespace std;
-using namespace ngraph::op;
+using namespace ngraph;
 
-Parameter::Parameter(const std::shared_ptr<const ValueType>& value_type)
+op::Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& shape)
     : Node("Parameter", {})
 {
-    set_value_type_checked(value_type);
+    add_output(element_type, shape);
 }
 
-Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& shape)
-    : Parameter(make_shared<TensorViewType>(element_type, shape))
+shared_ptr<Node> op::Parameter::copy_with_new_args(const vector<shared_ptr<Node>>& new_args) const
 {
+    if (new_args.size() != 0)
+        throw ngraph_error("Incorrect number of new arguments");
+    const descriptor::Output& output = get_outputs().at(0);
+    return make_shared<Parameter>(output.get_element_type(), output.get_shape());
 }
 
-void Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+void op::Parameter::generate_adjoints(autodiff::Adjoints& adjoints,
+                                      const std::shared_ptr<Node>& delta)
 {
 }

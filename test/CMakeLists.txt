@@ -24,6 +24,7 @@ include_directories(
 set (SRC
     builder.cpp
     builder_autobroadcast.cpp
+    builder_xla.cpp
     build_graph.cpp
     copy.cpp
     eigen.cpp
@@ -77,6 +78,10 @@ if(NGRAPH_GPU_ENABLE)
         cudnn.cpp)
     # Disabled for testing
     # set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
+endif()
+
+if(NGRAPH_ARGON_ENABLE)
+    set(BACKEND_NAMES ${BACKEND_NAMES} "ARGON")
 endif()
 
 foreach(BACKEND_NAME ${BACKEND_NAMES})
