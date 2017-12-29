@@ -379,7 +379,7 @@ using namespace ngraph::runtime;
         size_t arg_index = 0;
         for (shared_ptr<op::Parameter> param : current_function->get_parameters())
         {
-            for (size_t i = 0; i < param->get_num_outputs(); ++i)
+            for (size_t i = 0; i < param->get_output_size(); ++i)
             {
                 shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
                 const element::Type& et = tv->get_tensor_view_type()->get_element_type();
@@ -396,7 +396,7 @@ using namespace ngraph::runtime;
         size_t output_index = 0;
         unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
         vector<size_t> aliases;
-        for (size_t i = 0; i < current_function->get_num_outputs(); ++i)
+        for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
             shared_ptr<Node> op = current_function->get_output_op(i);
             shared_ptr<descriptor::TensorView> otv = op->get_output_tensor_view();
@@ -410,7 +410,7 @@ using namespace ngraph::runtime;
         }
 
         output_index = 0;
-        for (size_t i = 0; i < current_function->get_num_outputs(); ++i)
+        for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
             shared_ptr<Node> op = current_function->get_output_op(i);
             shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();

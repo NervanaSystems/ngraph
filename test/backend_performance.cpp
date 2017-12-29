@@ -27,7 +27,6 @@
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/manager.hpp"
-#include "ngraph/runtime/utils.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "util/random.hpp"
@@ -91,14 +90,18 @@ void run_benchmark(const std::string& json_path, size_t iterations)
         rng.initialize(tensor);
         args.push_back(tensor);
     }
-    shared_ptr<const ValueType> result_type = f->get_result_type();
-    auto result = backend->make_primary_tensor_view(f->get_element_type(), f->get_shape());
+    vector<shared_ptr<runtime::TensorView>> results;
+    for (shared_ptr<Node> out : f->get_results())
+    {
+        auto result = backend->make_primary_tensor_view(out->get_element_type(), out->get_shape());
+        results.push_back(result);
+    }
 
     stopwatch t1;
     t1.start();
     for (size_t i = 0; i < static_cast<size_t>(iterations); i++)
     {
-        cf->tensor_call(args, {result});
+        cf->tensor_call(args, results);
     }
     t1.stop();
     float time = t1.get_milliseconds();
@@ -189,8 +192,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         vector<std::shared_ptr<Node>> params_as_nodes(n_arrays);
         for (size_t i = 0; i < n_arrays; i++)
         {
-            auto param = make_shared<op::Parameter>(
-                make_shared<TensorViewType>(element::f32, shape_of_each_array));
+            auto param = make_shared<op::Parameter>(element::f32, shape_of_each_array);
             params[i] = param;
             params_as_nodes[i] = param;
         }
