@@ -37,7 +37,7 @@ bool codegen::ExecutionEngine::add_module(std::unique_ptr<ngraph::codegen::Modul
     {
         if (!m_execution_engine)
         {
-            m_execution_engine.reset(llvm::EngineBuilder(move(module->take_module()))
+            m_execution_engine.reset(llvm::EngineBuilder(module->take_module())
                                          .setEngineKind(llvm::EngineKind::JIT)
                                          .setOptLevel(llvm::CodeGenOpt::Aggressive)
                                          .setMCPU(llvm::sys::getHostCPUName())
