@@ -36,6 +36,19 @@ std::string emit_bracketed_string(std::vector<T> data)
     return ss.str();
 }
 
+std::string recast_tmp_var(codegen::CodeWriter& writer, const std::string& element_type,
+                           const std::string& arg_name, const Shape& arg_shape,
+                           const std::string& tmp_name) {
+  std::string nd_name = writer.generate_temporary_name(tmp_name);
+  std::string bracketed_shape = emit_bracketed_string(arg_shape);
+
+  writer << element_type << "(&" << nd_name << ")"
+         << bracketed_shape << " = *reinterpret_cast<"
+         << element_type << "(*)" << bracketed_shape << ">("
+         << arg_name << ");\n";
+  return nd_name;
+}
+
 void ngraph::runtime::cpu::kernels::emit_broadcast(codegen::CodeWriter& writer,
                                                    const std::string& element_type,
                                                    const std::string& arg0, // replacement context
@@ -44,15 +57,8 @@ void ngraph::runtime::cpu::kernels::emit_broadcast(codegen::CodeWriter& writer,
                                                    const Shape& out_shape,
                                                    const AxisSet& broadcast_axes)
 {
-    std::string source_nd_name = writer.generate_temporary_name("source_nd");
-    std::string dest_nd_name = writer.generate_temporary_name("dest_nd");
-
-    writer << element_type << "(&" << source_nd_name << ")" << emit_bracketed_string(arg0_shape)
-           << " = *reinterpret_cast<" << element_type << "(*)" << emit_bracketed_string(arg0_shape)
-           << ">(" << arg0 << ");\n";
-    writer << element_type << "(&" << dest_nd_name << ")" << emit_bracketed_string(out_shape)
-           << " = *reinterpret_cast<" << element_type << "(*)" << emit_bracketed_string(out_shape)
-           << ">(" << out << ");\n";
+    auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
+    auto dest_nd_name = recast_tmp_var(writer, element_type, out, out_shape, "dest_nd");
 
     std::vector<std::string> index_vars;
     for (size_t i = 0; i < out_shape.size(); i++)
@@ -150,15 +156,8 @@ void ngraph::runtime::cpu::kernels::emit_slice(codegen::CodeWriter& writer,
 {
     std::vector<std::string> index_vars;
 
-    std::string source_nd_name = writer.generate_temporary_name("source_nd");
-    std::string dest_nd_name = writer.generate_temporary_name("dest_nd");
-
-    writer << element_type << "(&" << source_nd_name << ")" << emit_bracketed_string(arg0_shape)
-           << " = *reinterpret_cast<" << element_type << "(*)" << emit_bracketed_string(arg0_shape)
-           << ">(" << arg0 << ");\n";
-    writer << element_type << "(&" << dest_nd_name << ")" << emit_bracketed_string(out_shape)
-           << " = *reinterpret_cast<" << element_type << "(*)" << emit_bracketed_string(out_shape)
-           << ">(" << out << ");\n";
+    auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
+    auto dest_nd_name = recast_tmp_var(writer, element_type, out, out_shape, "dest_nd");
 
     for (size_t i = 0; i < out_shape.size(); i++)
     {
@@ -229,15 +228,9 @@ void ngraph::runtime::cpu::kernels::emit_sum(codegen::CodeWriter& writer,
                                              const Shape& out_shape,
                                              const AxisSet& reduction_axes)
 {
-    std::string source_nd_name = writer.generate_temporary_name("source_nd");
-    std::string dest_nd_name = writer.generate_temporary_name("dest_nd");
+    auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
+    auto dest_nd_name = recast_tmp_var(writer, element_type, out, out_shape, "dest_nd");
 
-    writer << element_type << "(&" << source_nd_name << ")" << emit_bracketed_string(arg0_shape)
-           << " = *reinterpret_cast<" << element_type << "(*)" << emit_bracketed_string(arg0_shape)
-           << ">(" << arg0 << ");\n";
-    writer << element_type << "(&" << dest_nd_name << ")" << emit_bracketed_string(out_shape)
-           << " = *reinterpret_cast<" << element_type << "(*)" << emit_bracketed_string(out_shape)
-           << ">(" << out << ");\n";
     if (out_shape.size() == 0)
     {
         writer << dest_nd_name << " = 0;\n";
@@ -285,6 +278,7 @@ void ngraph::runtime::cpu::kernels::emit_sum(codegen::CodeWriter& writer,
             }
         }
 
+        writer << "#pragma omp atomic\n";
         writer << dest_nd_name << emit_bracketed_string(out_indexes) << " += " << source_nd_name
                << emit_bracketed_string(index_vars) << ";\n";
 
