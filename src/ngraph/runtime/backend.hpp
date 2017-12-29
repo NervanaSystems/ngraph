@@ -59,10 +59,6 @@ namespace ngraph
             {
                 return make_primary_tensor_view(element::from<T>(), shape);
             }
-
-            /// @brief Construct a tuple handle from a sequence of values.
-            virtual std::shared_ptr<ngraph::runtime::Tuple>
-                make_tuple(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& elements);
         };
     }
 }

@@ -16,6 +16,7 @@ set (SRC
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
+    builder/xla_tuple.cpp
     common.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
@@ -25,7 +26,6 @@ set (SRC
     descriptor/primary_tensor_view.cpp
     descriptor/tensor.cpp
     descriptor/tensor_view.cpp
-    descriptor/tuple.cpp
     file_util.cpp
     function.cpp
     log.cpp
@@ -71,8 +71,6 @@ set (SRC
     ops/tanh.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise.cpp
-    ops/xla_get_tuple_element.cpp
-    ops/xla_tuple.cpp
     pass/dump_sorted.cpp
     pass/graph_rewrite.cpp
     pass/liveness.cpp
@@ -85,7 +83,6 @@ set (SRC
     pass/visualize_tree.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
-    runtime/backend.cpp
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp
     runtime/interpreter/int_external_function.cpp
@@ -94,14 +91,11 @@ set (SRC
     runtime/interpreter/int_tensor_view.cpp
     runtime/manager.cpp
     runtime/tensor_view.cpp
-    runtime/tuple.cpp
-    runtime/utils.cpp
     serializer.cpp
     shape.cpp
     types/element_type.cpp
     types/type.cpp
     util.cpp
-    xla_function.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)

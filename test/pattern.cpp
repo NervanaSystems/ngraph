@@ -101,15 +101,8 @@ public:
                          << pattern_map[pattern];
             ASSERT_TRUE(const_node);
 
-            auto pattern_value_type =
-                dynamic_pointer_cast<const TensorViewType>(pattern_map[pattern]->get_value_type());
-            auto const_node_value_type =
-                dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
-            ASSERT_TRUE(pattern_value_type && const_node);
-
-            if (pattern_value_type->get_element_type() !=
-                    const_node_value_type->get_element_type() ||
-                pattern_value_type->get_shape() != const_node_value_type->get_shape())
+            if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
+                pattern_map[pattern]->get_shape() != const_node->get_shape())
             {
                 NGRAPH_DEBUG << "TYPE/SHAPE";
                 return;
@@ -156,15 +149,8 @@ public:
                          << pattern_map[pattern];
             ASSERT_NE(nullptr, const_node);
 
-            auto pattern_value_type =
-                dynamic_pointer_cast<const TensorViewType>(pattern_map[pattern]->get_value_type());
-            auto const_node_value_type =
-                dynamic_pointer_cast<const TensorViewType>(const_node->get_value_type());
-            ASSERT_TRUE(pattern_value_type && const_node);
-
-            if (pattern_value_type->get_element_type() !=
-                    const_node_value_type->get_element_type() ||
-                pattern_value_type->get_shape() != const_node_value_type->get_shape())
+            if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
+                pattern_map[pattern]->get_shape() != const_node->get_shape())
             {
                 NGRAPH_DEBUG << "TYPE/SHAPE";
                 return;
@@ -201,8 +187,7 @@ static void run_passes(pass::Manager& pass_manager,
                        std::vector<shared_ptr<op::Parameter>> parms)
 {
     auto shape = Shape{1};
-    auto rt = make_shared<TensorViewType>(element::i32, shape);
-    auto func = make_shared<Function>(graph, rt, op::Parameters{parms});
+    auto func = make_shared<Function>(graph, op::Parameters{parms});
     pass_manager.run_passes(func);
 }
 
@@ -224,9 +209,7 @@ TEST(pattern, graph_rewrite)
         ASSERT_EQ(graph->get_input_ops().at(1), a);
         ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
                   &a->get_outputs().at(0)); //graph's input points to a's output
-        ASSERT_TRUE(sum->get_outputs()
-                        .at(0)
-                        .get_inputs()
+        ASSERT_TRUE(sum->get_output_inputs(0)
                         .empty()); //graph's input is removed from sum's output.get_inputs()
         ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
             &graph->get_inputs().at(1))); //a's output feeds into graph's input

@@ -30,7 +30,6 @@ namespace ngraph
 {
     class Node;
     class Function;
-    class XLAFunction;
     class stopwatch;
 
     namespace runtime
@@ -278,8 +277,8 @@ namespace ngraph
     */
     struct FpropCache
     {
-        std::shared_ptr<XLAFunction> fprop;
-        std::shared_ptr<XLAFunction> bprop;
+        std::shared_ptr<Function> fprop;
+        std::shared_ptr<Function> bprop;
         std::vector<std::shared_ptr<Node>> fprop_output_nodes;
     };
 
@@ -291,7 +290,7 @@ namespace ngraph
     * The last argument is the adjoints coming into the bprop function, the output
     * bprop function will have these nodes as the first N input parameters
     **/
-    FpropCache cache_fprop(std::shared_ptr<XLAFunction> fprop,
-                           std::shared_ptr<XLAFunction> bprop,
+    FpropCache cache_fprop(std::shared_ptr<Function> fprop,
+                           std::shared_ptr<Function> bprop,
                            std::vector<std::shared_ptr<Node>> adjoints);
 } // end namespace ngraph

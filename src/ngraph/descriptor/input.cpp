@@ -37,6 +37,11 @@ void Input::replace_output(Output& new_output)
     m_output = &new_output;
 }
 
+void Input::replace_output(std::shared_ptr<Node> node, size_t i)
+{
+    replace_output(node->m_outputs.at(i));
+}
+
 std::shared_ptr<Node> Input::get_node()
 {
     return m_node->shared_from_this();
