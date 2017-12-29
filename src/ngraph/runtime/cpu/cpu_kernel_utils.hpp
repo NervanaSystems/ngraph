@@ -24,7 +24,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace kernels
+            namespace kernel
             {
                 std::vector<std::string>
                     emit_multi_indices(CoordinateTransform& trans,

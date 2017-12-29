@@ -23,7 +23,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace kernels
+            namespace kernel
             {
                 void emit_broadcast(codegen::CodeWriter& writer,
                                     const std::string& element_type,

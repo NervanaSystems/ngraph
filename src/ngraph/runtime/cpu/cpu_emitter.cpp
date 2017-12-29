@@ -41,7 +41,7 @@
 using namespace std;
 using namespace ngraph;
 
-#define USE_LOOPS_OVER_EIGEN 1
+#define PREFER_EIGEN 0
 
 static string eigen_vector_format(const runtime::cpu::TensorViewWrapper& tvi)
 {
@@ -69,7 +69,7 @@ void runtime::cpu::CPU_Emitter::EmitAdd(const ngraph::Node* n,
     // the right alignment instead of Eigen::Unaligned
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << "Eigen::Map<Eigen::Array<" << out[0].get_element_type().c_type_string() << ", "
           << out[0].get_size() << ", 1>, Eigen::Unaligned> out(" << out[0].get_name() << ");\n";
     m_out << "Eigen::Map<Eigen::Array<" << args[0].get_element_type().c_type_string() << ", "
@@ -174,7 +174,7 @@ void runtime::cpu::CPU_Emitter::EmitMultiply(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "   " << emit_array1d(args[0]) << " *\n"
           << "   " << emit_array1d(args[1]) << ";\n";
@@ -226,7 +226,7 @@ void runtime::cpu::CPU_Emitter::EmitAbs(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n";
     m_out << "Eigen::abs(" << emit_array1d(args[0]) << ");\n";
 #else
@@ -319,13 +319,13 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
                 arg_shapes.push_back(arg.get_shape());
             }
 
-            kernels::emit_concat(m_out,
-                                 args[0].get_element_type().c_type_string(),
-                                 arg_names,
-                                 out[0].get_name(),
-                                 arg_shapes,
-                                 result_shape,
-                                 axis);
+            kernel::emit_concat(m_out,
+                                args[0].get_element_type().c_type_string(),
+                                arg_names,
+                                out[0].get_name(),
+                                arg_shapes,
+                                result_shape,
+                                axis);
         }
     }
 }
@@ -346,7 +346,7 @@ void runtime::cpu::CPU_Emitter::EmitDivide(const ngraph::Node* n,
               << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
         m_out << "}\n";
     }
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << " /\n"
           << "    " << emit_array1d(args[1]) << ";\n";
@@ -433,7 +433,7 @@ void runtime::cpu::CPU_Emitter::EmitLog(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    Eigen::log(" << emit_array1d(args[0]) << ");\n";
 #else
@@ -453,7 +453,7 @@ void runtime::cpu::CPU_Emitter::EmitMaximum(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "        " << emit_array1d(args[0]) << ".max(\n"
           << "        " << emit_array1d(args[1]) << ");\n";
@@ -476,7 +476,7 @@ void runtime::cpu::CPU_Emitter::EmitMinimum(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".min(\n"
           << "    " << emit_array1d(args[1]) << ");\n";
@@ -499,7 +499,7 @@ void runtime::cpu::CPU_Emitter::EmitNegative(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    -" << emit_array1d(args[0]) << ";\n";
 #else
@@ -546,7 +546,7 @@ void runtime::cpu::CPU_Emitter::EmitSubtract(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << " -\n"
           << "    " << emit_array1d(args[1]) << ";\n";
@@ -570,7 +570,7 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
 
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
 
@@ -637,13 +637,13 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
         m_out << "                         {" << join(broadcast->get_broadcast_axes()) << "});\n";
     }
 #else
-    kernels::emit_broadcast(m_out,
-                            args[0].get_element_type().c_type_string(),
-                            args[0].get_name(),
-                            out[0].get_name(),
-                            args[0].get_shape(),
-                            out[0].get_shape(),
-                            broadcast->get_broadcast_axes());
+    kernel::emit_broadcast(m_out,
+                           args[0].get_element_type().c_type_string(),
+                           args[0].get_name(),
+                           out[0].get_name(),
+                           args[0].get_shape(),
+                           out[0].get_shape(),
+                           broadcast->get_broadcast_axes());
 #endif
     m_out.indent--;
     m_out << "}\n";
@@ -677,7 +677,7 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
     auto reshape = static_cast<const op::Reshape*>(n);
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     auto arg_shape = args[0].get_shape();
     auto arg_rank = arg_shape.size();
 
@@ -741,13 +741,13 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
             "Axis permutation in reshape is not implemented yet for tensors with rank>2");
     }
 #else
-    kernels::emit_reshape(m_out,
-                          args[0].get_element_type().c_type_string(),
-                          args[0].get_name(),
-                          out[0].get_name(),
-                          args[0].get_shape(),
-                          out[0].get_shape(),
-                          reshape->get_input_order());
+    kernel::emit_reshape(m_out,
+                         args[0].get_element_type().c_type_string(),
+                         args[0].get_name(),
+                         out[0].get_name(),
+                         args[0].get_shape(),
+                         out[0].get_shape(),
+                         reshape->get_input_order());
 #endif
     m_out.indent--;
     m_out << "}\n";
@@ -968,7 +968,7 @@ void runtime::cpu::CPU_Emitter::EmitSlice(const ngraph::Node* n,
 
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     size_t arg_rank = args[0].get_shape().size();
 
     const Coordinate& lower_bounds = slice->get_lower_bounds();
@@ -1029,15 +1029,15 @@ void runtime::cpu::CPU_Emitter::EmitSlice(const ngraph::Node* n,
         m_out << "                         {" << join(out[0].get_shape()) << "});\n";
     }
 #else
-    kernels::emit_slice(m_out,
-                        args[0].get_element_type().c_type_string(),
-                        args[0].get_name(),
-                        out[0].get_name(),
-                        args[0].get_shape(),
-                        out[0].get_shape(),
-                        slice->get_lower_bounds(),
-                        slice->get_upper_bounds(),
-                        slice->get_strides());
+    kernel::emit_slice(m_out,
+                       args[0].get_element_type().c_type_string(),
+                       args[0].get_name(),
+                       out[0].get_name(),
+                       args[0].get_shape(),
+                       out[0].get_shape(),
+                       slice->get_lower_bounds(),
+                       slice->get_upper_bounds(),
+                       slice->get_strides());
 #endif
     m_out.indent--;
     m_out << "}\n";
@@ -1050,7 +1050,7 @@ void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
     const op::Sum* sum = static_cast<const op::Sum*>(n);
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     const Shape& arg_shape = args[0].get_shape();
     size_t arg_rank = arg_shape.size();
     const AxisSet& reduction_axes = sum->get_reduction_axes();
@@ -1103,13 +1103,13 @@ void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
         m_out << "                         {" << join(sum->get_reduction_axes()) << "});\n";
     }
 #else
-    kernels::emit_sum(m_out,
-                      args[0].get_element_type().c_type_string(),
-                      args[0].get_name(),
-                      out[0].get_name(),
-                      args[0].get_shape(),
-                      out[0].get_shape(),
-                      sum->get_reduction_axes());
+    kernel::emit_sum(m_out,
+                     args[0].get_element_type().c_type_string(),
+                     args[0].get_name(),
+                     out[0].get_name(),
+                     args[0].get_shape(),
+                     out[0].get_shape(),
+                     sum->get_reduction_axes());
 #endif
     m_out.indent--;
     m_out << "}\n";
@@ -1121,7 +1121,7 @@ void runtime::cpu::CPU_Emitter::EmitExp(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".exp();\n";
 #else
@@ -1141,7 +1141,7 @@ void runtime::cpu::CPU_Emitter::EmitSin(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".sin();\n";
 #else
@@ -1161,7 +1161,7 @@ void runtime::cpu::CPU_Emitter::EmitSinh(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".sinh();\n";
 #else
@@ -1181,7 +1181,7 @@ void runtime::cpu::CPU_Emitter::EmitCos(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".cos();\n";
 #else
@@ -1201,7 +1201,7 @@ void runtime::cpu::CPU_Emitter::EmitCosh(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".cosh();\n";
 #else
@@ -1221,7 +1221,7 @@ void runtime::cpu::CPU_Emitter::EmitTan(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".tan();\n";
 #else
@@ -1262,7 +1262,7 @@ void runtime::cpu::CPU_Emitter::EmitAsin(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".asin();\n";
 #else
@@ -1282,7 +1282,7 @@ void runtime::cpu::CPU_Emitter::EmitAcos(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".acos();\n";
 #else
@@ -1302,7 +1302,7 @@ void runtime::cpu::CPU_Emitter::EmitAtan(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".atan();\n";
 #else
@@ -1338,7 +1338,7 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
     auto replace_slice = static_cast<const op::Slice*>(n);
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
-#if USE_LOOPS_OVER_EIGEN == 0
+#if PREFER_EIGEN == 1
     size_t arg0_rank = args[0].get_shape().size();
 
     auto& lower_bounds = replace_slice->get_lower_bounds();
@@ -1406,16 +1406,16 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
         m_out << "                         {" << join(out[0].get_shape()) << "});\n";
     }
 #else
-    kernels::emit_replace_slice(m_out,
-                                args[0].get_element_type().c_type_string(),
-                                args[0].get_name(),
-                                args[1].get_name(),
-                                out[0].get_name(),
-                                args[1].get_shape(),
-                                out[0].get_shape(),
-                                replace_slice->get_lower_bounds(),
-                                replace_slice->get_upper_bounds(),
-                                replace_slice->get_strides());
+    kernel::emit_replace_slice(m_out,
+                               args[0].get_element_type().c_type_string(),
+                               args[0].get_name(),
+                               args[1].get_name(),
+                               out[0].get_name(),
+                               args[1].get_shape(),
+                               out[0].get_shape(),
+                               replace_slice->get_lower_bounds(),
+                               replace_slice->get_upper_bounds(),
+                               replace_slice->get_strides());
 #endif
     m_out.indent--;
     m_out << "}\n";

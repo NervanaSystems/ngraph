@@ -18,7 +18,7 @@
 #include "ngraph/runtime/cpu/cpu_kernel_utils.hpp"
 
 using namespace ngraph;
-using namespace ngraph::runtime::cpu::kernels;
+using namespace ngraph::runtime::cpu::kernel;
 
 // Function to take a vector of data, say 1,2,3 and return
 // a string representing multi-index access, i.e "[1][2][3]"
@@ -92,13 +92,13 @@ void close_for_loops(codegen::CodeWriter& writer, const std::vector<std::string>
     }
 }
 
-void ngraph::runtime::cpu::kernels::emit_broadcast(codegen::CodeWriter& writer,
-                                                   const std::string& element_type,
-                                                   const std::string& arg0, // replacement context
-                                                   const std::string& out,
-                                                   const Shape& arg0_shape,
-                                                   const Shape& out_shape,
-                                                   const AxisSet& broadcast_axes)
+void ngraph::runtime::cpu::kernel::emit_broadcast(codegen::CodeWriter& writer,
+                                                  const std::string& element_type,
+                                                  const std::string& arg0, // replacement context
+                                                  const std::string& out,
+                                                  const Shape& arg0_shape,
+                                                  const Shape& out_shape,
+                                                  const AxisSet& broadcast_axes)
 {
     // create input and output arrays
     auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
@@ -126,13 +126,13 @@ void ngraph::runtime::cpu::kernels::emit_broadcast(codegen::CodeWriter& writer,
 //
 // For the reference kernel this is based on, see ngraph/runtime/kernel/concat.hpp.
 //
-void ngraph::runtime::cpu::kernels::emit_concat(codegen::CodeWriter& writer,
-                                                const std::string& element_type,
-                                                const std::vector<std::string>& args,
-                                                const std::string& out,
-                                                const std::vector<Shape>& in_shapes,
-                                                const Shape& out_shape,
-                                                size_t concatenation_axis)
+void ngraph::runtime::cpu::kernel::emit_concat(codegen::CodeWriter& writer,
+                                               const std::string& element_type,
+                                               const std::vector<std::string>& args,
+                                               const std::string& out,
+                                               const std::vector<Shape>& in_shapes,
+                                               const Shape& out_shape,
+                                               size_t concatenation_axis)
 {
     size_t concatenation_pos = 0;
 
@@ -154,7 +154,7 @@ void ngraph::runtime::cpu::kernels::emit_concat(codegen::CodeWriter& writer,
     }
 }
 
-void ngraph::runtime::cpu::kernels::emit_replace_slice(
+void ngraph::runtime::cpu::kernel::emit_replace_slice(
     codegen::CodeWriter& writer,
     const std::string& element_type,
     const std::string& arg0, // replacement context
@@ -177,15 +177,15 @@ void ngraph::runtime::cpu::kernels::emit_replace_slice(
     emit_pointwise_copy(writer, element_type, arg1, out, input_transform, output_transform);
 }
 
-void ngraph::runtime::cpu::kernels::emit_slice(codegen::CodeWriter& writer,
-                                               const std::string& element_type,
-                                               const std::string& arg0, // replacement context
-                                               const std::string& out,
-                                               const Shape& arg0_shape,
-                                               const Shape& out_shape,
-                                               const Coordinate& lower_bounds,
-                                               const Coordinate& upper_bounds,
-                                               const Strides& strides)
+void ngraph::runtime::cpu::kernel::emit_slice(codegen::CodeWriter& writer,
+                                              const std::string& element_type,
+                                              const std::string& arg0, // replacement context
+                                              const std::string& out,
+                                              const Shape& arg0_shape,
+                                              const Shape& out_shape,
+                                              const Coordinate& lower_bounds,
+                                              const Coordinate& upper_bounds,
+                                              const Strides& strides)
 {
     // create input and output arrays
     auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
@@ -221,13 +221,13 @@ void ngraph::runtime::cpu::kernels::emit_slice(codegen::CodeWriter& writer,
     close_for_loops(writer, index_vars);
 }
 
-void ngraph::runtime::cpu::kernels::emit_reshape(codegen::CodeWriter& writer,
-                                                 const std::string& element_type,
-                                                 const std::string& arg0, // replacement context
-                                                 const std::string& out,
-                                                 const Shape& arg0_shape,
-                                                 const Shape& out_shape,
-                                                 const AxisVector& arg0_axis_order)
+void ngraph::runtime::cpu::kernel::emit_reshape(codegen::CodeWriter& writer,
+                                                const std::string& element_type,
+                                                const std::string& arg0, // replacement context
+                                                const std::string& out,
+                                                const Shape& arg0_shape,
+                                                const Shape& out_shape,
+                                                const AxisVector& arg0_axis_order)
 {
     // get the total number of elements
     size_t size = 1;
@@ -274,13 +274,13 @@ void ngraph::runtime::cpu::kernels::emit_reshape(codegen::CodeWriter& writer,
     close_for_loops(writer, index_vars);
 }
 
-void ngraph::runtime::cpu::kernels::emit_sum(codegen::CodeWriter& writer,
-                                             const std::string& element_type,
-                                             const std::string& arg0, // replacement context
-                                             const std::string& out,
-                                             const Shape& arg0_shape,
-                                             const Shape& out_shape,
-                                             const AxisSet& reduction_axes)
+void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
+                                            const std::string& element_type,
+                                            const std::string& arg0, // replacement context
+                                            const std::string& out,
+                                            const Shape& arg0_shape,
+                                            const Shape& out_shape,
+                                            const AxisSet& reduction_axes)
 {
     // create input and output arrays
     auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");

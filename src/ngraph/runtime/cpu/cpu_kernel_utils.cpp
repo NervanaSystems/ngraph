@@ -19,7 +19,7 @@
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
-using namespace ngraph::runtime::cpu::kernels;
+using namespace ngraph::runtime::cpu::kernel;
 
 //
 // Given a coordinate transform and a vector of index expressions relative to
@@ -38,8 +38,8 @@ using namespace ngraph::runtime::cpu::kernels;
 //
 //
 std::vector<std::string>
-    ngraph::runtime::cpu::kernels::emit_multi_indices(CoordinateTransform& trans,
-                                                      const std::vector<std::string>& index_vars)
+    ngraph::runtime::cpu::kernel::emit_multi_indices(CoordinateTransform& trans,
+                                                     const std::vector<std::string>& index_vars)
 {
     std::vector<std::string> result;
 
@@ -91,8 +91,8 @@ std::vector<std::string>
 //
 //
 std::string
-    ngraph::runtime::cpu::kernels::emit_linear_index(CoordinateTransform& trans,
-                                                     const std::vector<std::string>& index_vars)
+    ngraph::runtime::cpu::kernel::emit_linear_index(CoordinateTransform& trans,
+                                                    const std::vector<std::string>& index_vars)
 {
     std::vector<std::string> multi_indices = emit_multi_indices(trans, index_vars);
 
@@ -123,10 +123,10 @@ std::string
 //
 // Optionally emits an OpenMP parallel pragma, if "omp" is true.
 //
-std::string ngraph::runtime::cpu::kernels::start_index_loop(const std::string& index_var,
-                                                            size_t start,
-                                                            size_t end,
-                                                            bool omp)
+std::string ngraph::runtime::cpu::kernel::start_index_loop(const std::string& index_var,
+                                                           size_t start,
+                                                           size_t end,
+                                                           bool omp)
 {
     std::stringstream ss;
 
@@ -145,7 +145,7 @@ std::string ngraph::runtime::cpu::kernels::start_index_loop(const std::string& i
 //
 // Ends an indexing loop on the index variable [index_var].
 //
-std::string ngraph::runtime::cpu::kernels::end_index_loop(const std::string& index_var)
+std::string ngraph::runtime::cpu::kernel::end_index_loop(const std::string& index_var)
 {
     std::stringstream ss;
 
@@ -154,7 +154,7 @@ std::string ngraph::runtime::cpu::kernels::end_index_loop(const std::string& ind
     return ss.str();
 }
 
-std::string ngraph::runtime::cpu::kernels::emit_nd_sizes(CoordinateTransform& trans)
+std::string ngraph::runtime::cpu::kernel::emit_nd_sizes(CoordinateTransform& trans)
 {
     std::stringstream ss;
 
@@ -166,8 +166,8 @@ std::string ngraph::runtime::cpu::kernels::emit_nd_sizes(CoordinateTransform& tr
     return ss.str();
 }
 
-std::string ngraph::runtime::cpu::kernels::emit_nd_index(CoordinateTransform& trans,
-                                                         const std::vector<std::string>& index_vars)
+std::string ngraph::runtime::cpu::kernel::emit_nd_index(CoordinateTransform& trans,
+                                                        const std::vector<std::string>& index_vars)
 {
     std::stringstream ss;
 
@@ -183,12 +183,12 @@ std::string ngraph::runtime::cpu::kernels::emit_nd_index(CoordinateTransform& tr
 // Emits a pointwise copy from source_buffer mediated by in_trans, to
 // dest_buffer mediated by dest_trans.
 //
-void ngraph::runtime::cpu::kernels::emit_pointwise_copy(codegen::CodeWriter& writer,
-                                                        const std::string& element_type,
-                                                        const std::string& source_buffer,
-                                                        const std::string& dest_buffer,
-                                                        CoordinateTransform& source_trans,
-                                                        CoordinateTransform& dest_trans)
+void ngraph::runtime::cpu::kernel::emit_pointwise_copy(codegen::CodeWriter& writer,
+                                                       const std::string& element_type,
+                                                       const std::string& source_buffer,
+                                                       const std::string& dest_buffer,
+                                                       CoordinateTransform& source_trans,
+                                                       CoordinateTransform& dest_trans)
 {
     std::vector<std::string> index_vars;
 
