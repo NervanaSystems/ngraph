@@ -97253,33 +97253,6 @@
       "strides" : [ 1, 1, 1 ],
       "upper_bounds" : [ 32, 1, 200 ],
       "value_type" : {"element_type" : "float", "shape" : [ 32, 60, 200 ]}
-    },
-    {
-      "inputs" : [
-        "ReplaceSlice_26083", "Add_26081", "Add_26073", "Add_26079",
-        "Add_26071", "Add_26025", "Add_26008", "Add_26024", "Add_26006",
-        "Reshape_19528", "Sum_18536"
-      ],
-      "name" : "XLATuple_26084",
-      "op" : "XLATuple",
-      "outputs" : [
-        "XLATuple_26084", "XLATuple_26084", "XLATuple_26084", "XLATuple_26084",
-        "XLATuple_26084", "XLATuple_26084", "XLATuple_26084", "XLATuple_26084",
-        "XLATuple_26084", "XLATuple_26084", "XLATuple_26084"
-      ],
-      "value_type" : [
-        {"element_type" : "float", "shape" : [ 32, 60, 200 ]},
-        {"element_type" : "float", "shape" : [ 800, 200 ]},
-        {"element_type" : "float", "shape" : [800]},
-        {"element_type" : "float", "shape" : [ 800, 200 ]},
-        {"element_type" : "float", "shape" : [800]},
-        {"element_type" : "float", "shape" : [ 800, 200 ]},
-        {"element_type" : "float", "shape" : [800]},
-        {"element_type" : "float", "shape" : [ 800, 200 ]},
-        {"element_type" : "float", "shape" : [800]},
-        {"element_type" : "float", "shape" : [ 10000, 200 ]},
-        {"element_type" : "float", "shape" : [10000]}
-      ]
     }
   ],
   "parameters" : [
@@ -98445,7 +98418,17 @@
     "Parameter_18254", "Parameter_15445", "Parameter_17499", "Parameter_15724",
     "Parameter_17502", "Parameter_17503", "Parameter_17505"
   ],
-  "result" : ["XLATuple_26084"],
+  "result" : ["ReplaceSlice_26083",
+    "Add_26081",
+    "Add_26073",
+    "Add_26079",
+    "Add_26071",
+    "Add_26025",
+    "Add_26008",
+    "Add_26024",
+    "Add_26006",
+    "Reshape_19528",
+    "Sum_18536"],
   "value_type" : [
     {"element_type" : "float", "shape" : [ 32, 60, 200 ]},
     {"element_type" : "float", "shape" : [ 800, 200 ]},
