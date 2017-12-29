@@ -226,8 +226,16 @@ void runtime::cpu::CPU_Emitter::EmitAbs(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n";
     m_out << "Eigen::abs(" << emit_array1d(args[0]) << ");\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = std::abs(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -425,8 +433,16 @@ void runtime::cpu::CPU_Emitter::EmitLog(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    Eigen::log(" << emit_array1d(args[0]) << ");\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = log(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -437,9 +453,19 @@ void runtime::cpu::CPU_Emitter::EmitMaximum(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "        " << emit_array1d(args[0]) << ".max(\n"
           << "        " << emit_array1d(args[1]) << ");\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > "
+          << args[1].get_name() << "[i] ? " << args[0].get_name() << "[i] : " << args[1].get_name()
+          << "[i] ;\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -450,9 +476,19 @@ void runtime::cpu::CPU_Emitter::EmitMinimum(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".min(\n"
           << "    " << emit_array1d(args[1]) << ");\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
+          << args[1].get_name() << "[i] ? " << args[0].get_name() << "[i] : " << args[1].get_name()
+          << "[i] ;\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1105,8 +1141,16 @@ void runtime::cpu::CPU_Emitter::EmitSin(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".sin();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = sin(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1117,8 +1161,16 @@ void runtime::cpu::CPU_Emitter::EmitSinh(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".sinh();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = sinh(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1129,8 +1181,16 @@ void runtime::cpu::CPU_Emitter::EmitCos(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".cos();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = cos(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1161,8 +1221,16 @@ void runtime::cpu::CPU_Emitter::EmitTan(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".tan();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = tan(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1194,8 +1262,16 @@ void runtime::cpu::CPU_Emitter::EmitAsin(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".asin();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = asin(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1206,8 +1282,16 @@ void runtime::cpu::CPU_Emitter::EmitAcos(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".acos();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = acos(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1218,8 +1302,16 @@ void runtime::cpu::CPU_Emitter::EmitAtan(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".atan();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = atan(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1430,6 +1522,9 @@ void runtime::cpu::CPU_Emitter::EmitCeiling(const ngraph::Node* n,
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
     size_t element_count = out[0].get_size();
+#if USE_LOOPS_OVER_EIGEN != 0
+    m_out << "#pragma omp parallel for\n";
+#endif
     m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
     m_out << "{\n";
     m_out << "    " << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
@@ -1445,6 +1540,9 @@ void runtime::cpu::CPU_Emitter::EmitFloor(const ngraph::Node* n,
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
     size_t element_count = out[0].get_size();
+#if USE_LOOPS_OVER_EIGEN != 0
+    m_out << "#pragma omp parallel for\n";
+#endif
     m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
     m_out << "{\n";
     m_out << "    " << out[0].get_name() << "[i] = floor(" << args[0].get_name() << "[i]);\n";
@@ -1460,6 +1558,9 @@ void runtime::cpu::CPU_Emitter::EmitSqrt(const ngraph::Node* n,
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
     size_t element_count = out[0].get_size();
+#if USE_LOOPS_OVER_EIGEN != 0
+    m_out << "#pragma omp parallel for\n";
+#endif
     m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
     m_out << "{\n";
     m_out << "    " << out[0].get_name() << "[i] = sqrt(" << args[0].get_name() << "[i]);\n";

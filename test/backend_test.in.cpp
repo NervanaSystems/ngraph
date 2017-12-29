@@ -1208,7 +1208,7 @@ TEST(${BACKEND_NAME}, log)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ(loga, result->get_vector<float>());
+    EXPECT_TRUE(test::all_close(loga, result->get_vector<float>()));
 }
 
 TEST(${BACKEND_NAME}, maximum)
