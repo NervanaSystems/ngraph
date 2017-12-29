@@ -22,10 +22,8 @@
 #include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/xla_function.hpp"
 
 using namespace std;
 
@@ -151,9 +149,9 @@ void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<N
     std::unordered_set<shared_ptr<Node>> instances_seen;
     deque<shared_ptr<Node>> stack;
 
-    for (auto r : p->get_results())
+    for (size_t i = 0; i < p->get_output_size(); ++i)
     {
-        stack.push_front(r);
+        stack.push_front(p->get_output_op(i));
     }
 
     for (auto param : p->get_parameters())
@@ -230,16 +228,15 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     NGRAPH_DEBUG << "Replacing target = " << target << " , " << target->get_name() << " , "
                  << "replacement = " << replacement << " , " << replacement->get_name();
 
-    assert(target->get_outputs().size() == replacement->get_outputs().size());
-    for (size_t i = 0; i < target->get_outputs().size(); i++)
+    assert(target->get_output_size() == replacement->get_output_size());
+    for (size_t i = 0; i < target->get_output_size(); i++)
     {
-        auto& target_output = target->get_outputs().at(i);
         std::set<ngraph::descriptor::Input*> copy_inputs{
-            begin(target_output.get_inputs()),
-            end(target_output.get_inputs())}; //replace_output modifies target_output->m_inputs
+            begin(target->get_output_inputs(i)),
+            end(target->get_output_inputs(i))}; //replace_output modifies target_output->m_inputs
         for (auto input : copy_inputs)
         {
-            input->replace_output(replacement->get_outputs().at(i));
+            input->replace_output(replacement, i);
         }
     }
 
@@ -341,7 +338,11 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     clone_nodes(func->get_ops(), node_map);
 
     // get cloned function result and parameters
-    auto cloned_result = node_map[func->get_result()];
+    Nodes cloned_results;
+    for (size_t i = 0; i < func->get_output_size(); ++i)
+    {
+        cloned_results.push_back(node_map[func->get_output_op(i)]);
+    }
     std::vector<std::shared_ptr<op::Parameter>> cloned_params;
     for (auto param : func->get_parameters())
     {
@@ -349,8 +350,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     }
 
     // create and return cloned function
-    return std::make_shared<ngraph::Function>(
-        cloned_result, func->get_result_type(), cloned_params);
+    return std::make_shared<ngraph::Function>(cloned_results, cloned_params);
 }
 
 void* ngraph::aligned_alloc(size_t alignment, size_t size)
@@ -387,8 +387,8 @@ size_t ngraph::round_up(size_t size, size_t alignment)
     return size + alignment - remainder;
 }
 
-ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fprop,
-                                       std::shared_ptr<ngraph::XLAFunction> bprop,
+ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
+                                       std::shared_ptr<ngraph::Function> bprop,
                                        std::vector<std::shared_ptr<Node>> adjoints)
 {
     using namespace ngraph;
@@ -446,22 +446,23 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fpro
     }
 
     // create the new outputs for fprop and the new fprop function
-    std::vector<std::shared_ptr<Node>> fprop_outputs{fprop->get_results()};
+    Nodes fprop_outputs{fprop->get_results()};
     fprop_outputs.insert(fprop_outputs.end(),
                          fprop_cache.fprop_output_nodes.begin(),
                          fprop_cache.fprop_output_nodes.end());
 
-    auto outTuple = std::make_shared<op::XLATuple>(fprop_outputs);
-    auto outTupleType = outTuple->get_value_type();
-    fprop_cache.fprop =
-        std::make_shared<XLAFunction>(outTuple, outTupleType, fprop->get_parameters());
+    fprop_cache.fprop = std::make_shared<Function>(fprop_outputs, fprop->get_parameters());
 
     // clone the nodes in bprop, replacing fprop-related nodes with the
     // intermediate parameters
     ngraph::clone_nodes(bprop->get_ops(), node_param_map);
 
     // get cloned bprop results
-    auto cloned_result = node_param_map[bprop->get_result()];
+    Nodes cloned_results;
+    for (auto node : bprop->get_results())
+    {
+        cloned_results.push_back(node_param_map[node]);
+    }
 
     // get clone bprop parameters
     op::Parameters bprop_input_params;
@@ -478,8 +479,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::XLAFunction> fpro
     }
 
     // create the new bprop function
-    fprop_cache.bprop = std::make_shared<XLAFunction>(
-        cloned_result, cloned_result->get_value_type(), bprop_input_params);
+    fprop_cache.bprop = std::make_shared<Function>(cloned_results, bprop_input_params);
 
     return fprop_cache;
 }

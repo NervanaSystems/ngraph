@@ -10,10 +10,9 @@ std::shared_ptr<ngraph::op::Parameter> getParamFromShape(const ngraph::Shape& sh
     return std::make_shared<ngraph::op::Parameter>(ngraph::element::f32, shape);
 }
 
-inline ngraph::Shape getShapeFromParam(const shared_ptr<ngraph::Node>& node)
+inline const ngraph::Shape& getShapeFromParam(const shared_ptr<ngraph::Node>& node)
 {
-    auto type = std::dynamic_pointer_cast<const ngraph::TensorViewType>(node->get_value_type());
-    return type->get_shape();
+    return node->get_shape();
 }
 
 // input shapes are equal so AutoBroadcast does nothing

@@ -23,16 +23,10 @@ op::GetOutputElement::GetOutputElement(const std::shared_ptr<Node>& arg, size_t 
     : Node("GetOutputElement", {arg})
     , m_n{n}
 {
-    if (arg->get_outputs().size() < 1)
-    {
-        throw ngraph_error("Argument should have at least one output tensor");
-    }
-
-    if (m_n >= arg->get_outputs().size())
+    if (m_n >= arg->get_output_size())
     {
         throw ngraph_error("Indexing tuple beyond its size");
     }
 
-    auto& output = arg->get_outputs().at(n);
-    set_value_type_checked(output.get_element_type(), output.get_shape());
+    set_value_type_checked(arg->get_output_element_type(n), arg->get_output_shape(n));
 }

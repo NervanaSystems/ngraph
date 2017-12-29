@@ -75,9 +75,6 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/ops/xla_get_tuple_element.hpp"
-#include "ngraph/ops/xla_get_tuple_element.hpp"
-#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/liveness.hpp"
@@ -88,7 +85,6 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -110,8 +106,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::EmitDot},
     {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::EmitMultiply},
     {TI(ngraph::op::Parameter), &runtime::cpu::CPU_Emitter::EmitNop},
-    {TI(ngraph::op::XLAGetTupleElement), &runtime::cpu::CPU_Emitter::EmitGetOutputElement},
-    {TI(ngraph::op::XLATuple), &runtime::cpu::CPU_Emitter::EmitTuple},
     {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::EmitAbs},
     {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::EmitConcat},
     {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::EmitDivide},
@@ -324,9 +318,9 @@ using namespace ngraph::runtime;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         set<string> output_names;
-        for (const descriptor::Output* output : current_function->get_outputs())
+        for (shared_ptr<Node> op : current_function->get_results())
         {
-            shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
+            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
             output_names.insert(tv->get_tensor().get_name());
         }
         set<descriptor::TensorView*> constants;
@@ -385,9 +379,9 @@ using namespace ngraph::runtime;
         size_t arg_index = 0;
         for (shared_ptr<op::Parameter> param : current_function->get_parameters())
         {
-            for (const descriptor::Output& output : param->get_outputs())
+            for (size_t i = 0; i < param->get_output_size(); ++i)
             {
-                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
                 const element::Type& et = tv->get_tensor_view_type()->get_element_type();
                 string type = et.c_type_string();
                 writer << "" << type << "* " << tv->get_tensor().get_name() << " = static_cast<"
@@ -402,9 +396,10 @@ using namespace ngraph::runtime;
         size_t output_index = 0;
         unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
         vector<size_t> aliases;
-        for (const descriptor::Output* output : current_function->get_outputs())
+        for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
-            shared_ptr<descriptor::TensorView> otv = output->get_tensor_view();
+            shared_ptr<Node> op = current_function->get_output_op(i);
+            shared_ptr<descriptor::TensorView> otv = op->get_output_tensor_view();
             vector<size_t>& al = output_alias_map[otv.get()];
             al.push_back(output_index);
             if (al.size() > 1)
@@ -415,9 +410,10 @@ using namespace ngraph::runtime;
         }
 
         output_index = 0;
-        for (const descriptor::Output* output : current_function->get_outputs())
+        for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
-            shared_ptr<descriptor::TensorView> tv = output->get_tensor_view();
+            shared_ptr<Node> op = current_function->get_output_op(i);
+            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
             const element::Type& et = tv->get_tensor_view_type()->get_element_type();
             bool parameter_as_output = false;
             for (shared_ptr<op::Parameter> param : current_function->get_parameters())
@@ -571,13 +567,13 @@ using namespace ngraph::runtime;
 
     m_compiler->set_precompiled_header_source(pch_header_source);
 
-    auto llvm_module = m_compiler->compile(code);
+    auto codegen_module = m_compiler->compile(code);
 
-    if (llvm_module == nullptr)
+    if (codegen_module == nullptr)
     {
         throw runtime_error("function failed to compile");
     }
-    m_execution_engine->add_module(llvm_module);
+    m_execution_engine->add_module(codegen_module);
     m_execution_engine->finalize();
     m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(function_name);
     assert(m_compiled_function);

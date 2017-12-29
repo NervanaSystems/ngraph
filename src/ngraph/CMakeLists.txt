@@ -16,6 +16,7 @@ set (SRC
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
+    builder/xla_tuple.cpp
     common.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
@@ -25,7 +26,6 @@ set (SRC
     descriptor/primary_tensor_view.cpp
     descriptor/tensor.cpp
     descriptor/tensor_view.cpp
-    descriptor/tuple.cpp
     file_util.cpp
     function.cpp
     log.cpp
@@ -71,8 +71,6 @@ set (SRC
     ops/tanh.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise.cpp
-    ops/xla_get_tuple_element.cpp
-    ops/xla_tuple.cpp
     pass/dump_sorted.cpp
     pass/graph_rewrite.cpp
     pass/liveness.cpp
@@ -85,7 +83,6 @@ set (SRC
     pass/visualize_tree.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
-    runtime/backend.cpp
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp
     runtime/interpreter/int_external_function.cpp
@@ -94,14 +91,11 @@ set (SRC
     runtime/interpreter/int_tensor_view.cpp
     runtime/manager.cpp
     runtime/tensor_view.cpp
-    runtime/tuple.cpp
-    runtime/utils.cpp
     serializer.cpp
     shape.cpp
     types/element_type.cpp
     types/type.cpp
     util.cpp
-    xla_function.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
@@ -178,6 +172,10 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
       "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE}")
 endif()
 
+if (NGRAPH_ARGON_ENABLE)
+    link_directories(${ARGON_LIB_DIR})
+endif()
+
 add_library(ngraph SHARED ${SRC})
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     # Generate the resource file containing all headers used by the codegen compiler
@@ -212,23 +210,16 @@ endif()
 # plugin is specified at compile time but the corresponding library could not be resolved at run-
 # time, an error will be generated.
 # E.g. assume compiling with Argon and Xpu, then -DRUNTIME_PLUGIN_LIBS="libargon.so:libxpu.so".
+
+if (NGRAPH_ARGON_ENABLE)
+    set(RUNTIME_PLUGIN_LIBS "libargon.so")  # TODO: currently hardcoded argon lib name if enabled
+endif()
+
 if (DEFINED RUNTIME_PLUGIN_LIBS)
-    target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS=${RUNTIME_PLUGIN_LIBS})
+    target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS="${RUNTIME_PLUGIN_LIBS}")
 else()
     target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS="")
 endif()
-
-# This is used to ensure that libngraph.so and libargon.so are in the same directory for dlopen.
-# Effective at build time. Does not affect `make install` logics.
-if (DEFINED COMMON_LIBRARY_OUTPUT_DIRECTORY)
-    set_target_properties(ngraph PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${COMMON_LIBRARY_OUTPUT_DIRECTORY})
-else()
-    set_target_properties(ngraph PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-endif()
-message(STATUS "LIBRARY_OUTPUT_DIRECTORY set to: ${COMMON_LIBRARY_OUTPUT_DIRECTORY}")
-
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
@@ -254,6 +245,12 @@ if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
     target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
+# Argon
+if (NGRAPH_ARGON_ENABLE)
+    target_link_libraries(ngraph PRIVATE argon)
+    add_dependencies(ngraph ext_argon)
+    add_dependencies(ext_argon ext_llvm)
+endif()
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...

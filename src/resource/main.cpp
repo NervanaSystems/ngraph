@@ -154,7 +154,7 @@ int main(int argc, char** argv)
         out << "#include <vector>\n";
         out << "namespace ngraph\n";
         out << "{\n";
-        out << "    uint8_t header_resources[] =\n";
+        out << "    static const uint8_t header_resources[] =\n";
         out << "    {\n";
         vector<pair<size_t, size_t>> offset_size_list;
         size_t offset = 0;

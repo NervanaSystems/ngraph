@@ -55,7 +55,7 @@ nervana_aeon.egg-info/
 *.swp
 *.swo
 
-build*/
+build/
 
 # makeenv and test intermediate files
 tmp/

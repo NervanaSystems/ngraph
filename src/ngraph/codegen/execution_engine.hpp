@@ -16,9 +16,7 @@
 
 #include <memory>
 
-#include <llvm/ExecutionEngine/MCJIT.h> // forces JIT to link in
-#include <llvm/ExecutionEngine/SectionMemoryManager.h>
-#include <llvm/Option/Arg.h>
+#include "ngraph/codegen/compiler.hpp"
 
 namespace ngraph
 {
@@ -28,27 +26,32 @@ namespace ngraph
     }
 }
 
+namespace llvm
+{
+    class Module;
+    class ExecutionEngine;
+}
+
 class ngraph::codegen::ExecutionEngine
 {
 public:
     ExecutionEngine();
     ~ExecutionEngine();
 
-    bool add_module(std::unique_ptr<llvm::Module>& module);
+    bool add_module(std::unique_ptr<ngraph::codegen::Module>& module);
     void finalize();
 
     template <typename ftype>
     std::function<ftype> find_function(const std::string& func_name)
     {
-        auto f = m_execution_engine->getPointerToNamedFunction(func_name);
-
-        return f_cast<ftype>(f);
+        return f_cast<ftype>(get_pointer_to_named_function(func_name));
     }
 
 private:
     std::unique_ptr<llvm::ExecutionEngine> m_execution_engine;
     std::string m_jit_error;
 
+    void* get_pointer_to_named_function(const std::string& func_name);
     template <typename signature>
     std::function<signature> f_cast(void* f)
     {
