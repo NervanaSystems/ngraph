@@ -172,6 +172,10 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
       "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE}")
 endif()
 
+if (NGRAPH_ARGON_ENABLE)
+    link_directories(${ARGON_LIB_DIR})
+endif()
+
 add_library(ngraph SHARED ${SRC})
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     # Generate the resource file containing all headers used by the codegen compiler
@@ -206,23 +210,16 @@ endif()
 # plugin is specified at compile time but the corresponding library could not be resolved at run-
 # time, an error will be generated.
 # E.g. assume compiling with Argon and Xpu, then -DRUNTIME_PLUGIN_LIBS="libargon.so:libxpu.so".
+
+if (NGRAPH_ARGON_ENABLE)
+    set(RUNTIME_PLUGIN_LIBS "libargon.so")  # TODO: currently hardcoded argon lib name if enabled
+endif()
+
 if (DEFINED RUNTIME_PLUGIN_LIBS)
-    target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS=${RUNTIME_PLUGIN_LIBS})
+    target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS="${RUNTIME_PLUGIN_LIBS}")
 else()
     target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS="")
 endif()
-
-# This is used to ensure that libngraph.so and libargon.so are in the same directory for dlopen.
-# Effective at build time. Does not affect `make install` logics.
-if (DEFINED COMMON_LIBRARY_OUTPUT_DIRECTORY)
-    set_target_properties(ngraph PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${COMMON_LIBRARY_OUTPUT_DIRECTORY})
-else()
-    set_target_properties(ngraph PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-endif()
-message(STATUS "LIBRARY_OUTPUT_DIRECTORY set to: ${COMMON_LIBRARY_OUTPUT_DIRECTORY}")
-
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
@@ -248,6 +245,12 @@ if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
     target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
+# Argon
+if (NGRAPH_ARGON_ENABLE)
+    target_link_libraries(ngraph PRIVATE argon)
+    add_dependencies(ngraph ext_argon)
+    add_dependencies(ext_argon ext_llvm)
+endif()
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
