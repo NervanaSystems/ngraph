@@ -183,8 +183,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // shape and element type as the nodes in fprop
     NodeMap node_param_map;
     ngraph::traverse_nodes(fprop, [&node_param_map](std::shared_ptr<Node> node) {
-        node_param_map[node] =
-            std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape());
+        node_param_map.get(
+            std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape()));
     });
 
     // Traverse bprop to find all of the nodes in the graph
@@ -247,7 +247,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     Nodes cloned_results;
     for (auto node : bprop->get_results())
     {
-        cloned_results.push_back(node_param_map[node]);
+        cloned_results.push_back(node_param_map.get(node));
     }
 
     // get clone bprop parameters
@@ -255,13 +255,14 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     for (auto param : adjoints)
     {
         bprop_input_params.push_back(
-            std::dynamic_pointer_cast<op::Parameter>(node_param_map[param]));
+            std::dynamic_pointer_cast<op::Parameter>(node_param_map.get(param)));
     }
 
     // add the cached fprop nodes as inputs to bprop
     for (auto x : fprop_cache.fprop_output_nodes)
     {
-        bprop_input_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_param_map[x]));
+        bprop_input_params.push_back(
+            std::dynamic_pointer_cast<op::Parameter>(node_param_map.get(x)));
     }
 
     // create the new bprop function

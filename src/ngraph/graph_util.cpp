@@ -201,7 +201,7 @@ void ngraph::NodeMap::add(std::shared_ptr<ngraph::Node> orig,
     m_node_map[orig] = replacement;
 }
 
-std::shared_ptr<ngraph::Node> ngraph::NodeMap::operator[](std::shared_ptr<ngraph::Node> orig) const
+std::shared_ptr<ngraph::Node> ngraph::NodeMap::get(std::shared_ptr<ngraph::Node> orig) const
 {
     if (!exists(orig))
     {
@@ -223,7 +223,7 @@ std::list<std::shared_ptr<ngraph::Node>>
             Nodes cloned_args;
             for (auto arg : node->get_input_ops())
             {
-                cloned_args.push_back(node_map[arg]);
+                cloned_args.push_back(node_map.get(arg));
             }
             node_map.add(node, node->copy_with_new_args(cloned_args));
         }
@@ -234,7 +234,7 @@ std::list<std::shared_ptr<ngraph::Node>>
     std::list<std::shared_ptr<ngraph::Node>> cloned_nodes;
     for (auto node : nodes)
     {
-        cloned_nodes.push_back(node_map[node]);
+        cloned_nodes.push_back(node_map.get(node));
     }
     return cloned_nodes;
 }
@@ -246,11 +246,11 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     clone_nodes(func->get_ops(), node_map);
 
     // get cloned function result and parameters
-    auto cloned_result = node_map[func->get_result()];
+    auto cloned_result = node_map.get(func->get_result());
     std::vector<std::shared_ptr<op::Parameter>> cloned_params;
     for (auto param : func->get_parameters())
     {
-        cloned_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_map[param]));
+        cloned_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_map.get(param)));
     }
 
     // create and return cloned function

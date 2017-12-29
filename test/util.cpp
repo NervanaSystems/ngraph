@@ -290,11 +290,11 @@ TEST_F(CloneTest, clone_nodes_full)
     auto cloned_nodes = clone_nodes(nodes, node_map);
     ASSERT_TRUE(CompareNodes(nodes, cloned_nodes, node_map));
 
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map[A]));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map[B]));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map[C]));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Add>(node_map[AplusB]));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Multiply>(node_map[AplusBtimesC]));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(A)));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(B)));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(C)));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Add>(node_map.get(AplusB)));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Multiply>(node_map.get(AplusBtimesC)));
 
     auto sorted_nodes = topological_sort(nodes);
     auto sorted_cloned_nodes = topological_sort(cloned_nodes);
@@ -305,13 +305,13 @@ TEST_F(CloneTest, clone_nodes_partial)
 {
     // map A -> A' prior to clone
     auto Aprime = make_shared<op::Parameter>(element::f32, shape);
-    node_map[A] = Aprime;
+    node_map.add(A, Aprime);
 
     auto cloned_nodes = clone_nodes(nodes, node_map);
     ASSERT_TRUE(CompareNodes(nodes, cloned_nodes, node_map));
 
     // ensure A -> A' after clone
-    ASSERT_EQ(Aprime, node_map[A]);
+    ASSERT_EQ(Aprime, node_map.get(A));
 }
 
 TEST_F(CloneTest, clone_function_full)

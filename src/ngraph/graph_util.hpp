@@ -60,7 +60,7 @@ namespace ngraph
 
         // get replacement node from original node
         // throws ngrah_error if key does not exist
-        std::shared_ptr<ngraph::Node> operator[](std::shared_ptr<ngraph::Node> orig) const;
+        std::shared_ptr<ngraph::Node> get(std::shared_ptr<ngraph::Node> orig) const;
 
         // returns true if original node is already mapped
         bool exists(std::shared_ptr<ngraph::Node> orig) const
