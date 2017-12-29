@@ -76,7 +76,7 @@ namespace ngraph
                                                       m_window_movement_strides);
             }
 
-            /// \return The function to use for reduction.
+            /// \return A singleton vector containing the function to use for reduction.
             std::vector<std::shared_ptr<Function>> get_functions() const override
             {
                 return std::vector<std::shared_ptr<Function>>{m_reduction_function};

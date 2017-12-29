@@ -103,7 +103,7 @@ namespace ngraph
                     new_args.at(0), new_args.at(1), m_reduction_function, m_reduction_axes);
             }
 
-            /// \return The function to use for reduction.
+            /// \return A singleton vector containing the function to use for reduction.
             std::vector<std::shared_ptr<Function>> get_functions() const override
             {
                 return std::vector<std::shared_ptr<Function>>{m_reduction_function};
