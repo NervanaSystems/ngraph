@@ -38,8 +38,7 @@ TEST(liveness, constant)
 {
     auto shape = Shape{1};
     auto c = op::Constant::create(element::i32, shape, {5});
-    auto rt = make_shared<TensorViewType>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::Negative>(c), rt, op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Negative>(c), op::Parameters{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();

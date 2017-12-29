@@ -44,7 +44,7 @@ namespace ngraph
                                    Predicate pred = nullptr)
                 {
                     auto label = std::make_shared<Label>(Nodes{}, pred);
-                    label->set_value_type_checked(node->get_value_type());
+                    label->add_output(node->get_element_type(), node->get_shape());
                     return label;
                 }
 
@@ -61,7 +61,7 @@ namespace ngraph
                                                    Predicate pred = nullptr)
                 {
                     auto label = std::make_shared<Label>(Nodes{node}, pred);
-                    label->set_value_type_checked(node->get_value_type());
+                    label->add_output(node->get_element_type(), node->get_shape());
                     return label;
                 }
 

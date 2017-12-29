@@ -16,7 +16,6 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -25,7 +24,6 @@ using namespace ngraph;
 atomic<size_t> Function::m_next_instance_id(0);
 
 Function::Function(const Nodes& results,
-                   const std::vector<std::shared_ptr<const ValueType>>& result_types,
                    const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                    const std::string& name)
     : m_results(results)
@@ -35,23 +33,6 @@ Function::Function(const Nodes& results,
     , m_temporary_pool_size(0)
     , m_instance_id(m_next_instance_id.fetch_add(1))
 {
-    for (size_t i = 0; i < m_results.size(); i++)
-    {
-        if (nullptr == m_results.at(i)->get_value_type())
-        {
-            throw ngraph_error("Internal nGraph error: result->get_value_type() == nullptr");
-        }
-
-        if (nullptr != result_types.at(i) &&
-            (*result_types.at(i) != *(m_results.at(i)->get_value_type())))
-        {
-            std::stringstream ss;
-            ss << "Function result node's value type " << (*(m_results.at(i)->get_value_type()))
-               << " does not match declared return type " << (*(result_types.at(i)));
-            throw ngraph_error(ss.str());
-        }
-    }
-
     traverse_nodes(this, [&](shared_ptr<Node> node) {
         m_ops.push_back(node);
 
@@ -72,70 +53,14 @@ Function::Function(const Nodes& results,
 Function::Function(const std::shared_ptr<Node>& result,
                    const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                    const std::string& name)
-    : Function(result, nullptr, parameters, name)
+    : Function(Nodes{result}, parameters, name)
 {
-}
-
-Function::Function(const std::shared_ptr<Node>& result,
-                   const std::shared_ptr<const ValueType>& result_type,
-                   const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                   const std::string& name)
-    : Function(Nodes{result},
-               std::vector<std::shared_ptr<const ValueType>>{result_type},
-               parameters,
-               name)
-{
-    if (std::dynamic_pointer_cast<op::XLATuple>(result))
-    {
-        throw "Unexpected XLATuple in Function";
-    }
-}
-
-std::vector<std::shared_ptr<const ValueType>> Function::get_result_types() const
-{
-    std::vector<std::shared_ptr<const ValueType>> result_types{};
-    for (auto r : m_results)
-    {
-        result_types.push_back(r->get_value_type());
-    }
-    return result_types;
-}
-
-std::shared_ptr<const ValueType> Function::get_result_type() const
-{
-    if (m_results.size() > 1)
-    {
-        throw "get_result_type was called on a function with multiple non-tuple outputs!";
-    }
-    return m_results[0]->get_value_type();
-}
-
-std::shared_ptr<Node> Function::get_result() //TODO: push up to XLAFunction
-{
-    if (m_results.size() > 1)
-    {
-        throw "get_result was called on a function with multiple non-tuple outputs!";
-    }
-    return m_results[0];
 }
 
 void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)
 {
     m_ordered_ops = ordered_ops;
     m_ordered_ops_valid = true;
-}
-
-std::vector<descriptor::Output*> Function::get_outputs()
-{
-    std::vector<descriptor::Output*> outputs;
-    for (auto rn : m_results)
-    {
-        for (auto& output : rn->get_outputs())
-        {
-            outputs.push_back(&output);
-        }
-    }
-    return outputs;
 }
 
 std::list<shared_ptr<Node>>& Function::get_ops()
@@ -206,4 +131,33 @@ std::ostream& ngraph::operator<<(std::ostream& out, const Function& f)
 {
     out << "Function(" << f.get_name() << ")";
     return out;
+}
+
+size_t Function::get_output_size() const
+{
+    return m_results.size();
+}
+
+const element::Type& Function::get_output_element_type(size_t i) const
+{
+    return m_results.at(i)->get_element_type();
+}
+
+const Shape& Function::get_output_shape(size_t i) const
+{
+    return m_results.at(i)->get_shape();
+}
+
+shared_ptr<Node> Function::get_output_op(size_t i) const
+{
+    return m_results.at(i);
+}
+
+shared_ptr<Node> Function::get_result() const
+{
+    if (m_results.size() != 1)
+    {
+        throw ngraph_error("get_result() must be called on a function with exactly one result.");
+    }
+    return m_results.at(0);
 }

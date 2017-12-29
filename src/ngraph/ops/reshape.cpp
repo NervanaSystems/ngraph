@@ -71,14 +71,7 @@ op::Reshape::Reshape(const std::shared_ptr<Node>& arg,
 void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints,
                                     const std::shared_ptr<Node>& delta)
 {
-    auto x = get_input_op(0);
-    auto x_type = x->get_value_type();
-    auto x_tensor_view_type = dynamic_pointer_cast<const TensorViewType>(x_type);
-    if (nullptr == x_type)
-    {
-        throw ngraph_error("Argument to reshape is not a tensor view");
-    }
-    auto x_shape = x_tensor_view_type->get_shape();
+    auto x_shape = get_inputs().at(0).get_shape();
     auto x_rank = x_shape.size();
     Shape permuted_x_shape(x_rank);
     AxisVector x_input_order(x_rank);
@@ -104,5 +97,5 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints,
         reshape = make_shared<op::Reshape>(reshape, x_input_order, x_shape);
     }
 
-    adjoints.add_delta(x, reshape);
+    adjoints.add_delta(get_input_op(0), reshape);
 }

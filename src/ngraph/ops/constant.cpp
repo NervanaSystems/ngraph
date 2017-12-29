@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <cmath>
 #include <cstdio>
 
 #include "ngraph/log.hpp"
@@ -20,6 +21,32 @@
 
 using namespace ngraph;
 using namespace std;
+
+template <typename T>
+std::string to_cpp_string(T value)
+{
+    string rc;
+    if (std::isnan(value))
+    {
+        rc = "NAN";
+    }
+    else if (std::isinf(value))
+    {
+        if (value > 0)
+        {
+            rc = "INFINITY";
+        }
+        else
+        {
+            rc = "-INFINITY";
+        }
+    }
+    else
+    {
+        rc = to_string(value);
+    }
+    return rc;
+}
 
 op::Constant::~Constant()
 {
@@ -44,14 +71,14 @@ std::vector<std::string> op::Constant::get_value_strings() const
     {
         for (float value : get_vector<float>())
         {
-            rc.push_back(to_string(value));
+            rc.push_back(to_cpp_string(value));
         }
     }
     else if (m_element_type == element::f64)
     {
         for (double value : get_vector<double>())
         {
-            rc.push_back(to_string(value));
+            rc.push_back(to_cpp_string(value));
         }
     }
     else if (m_element_type == element::i8)
@@ -72,7 +99,6 @@ std::vector<std::string> op::Constant::get_value_strings() const
     {
         for (int32_t value : get_vector<int32_t>())
         {
-            NGRAPH_INFO << value;
             rc.push_back(to_string(value));
         }
     }
@@ -119,11 +145,22 @@ std::vector<std::string> op::Constant::get_value_strings() const
     return rc;
 }
 
-template <>
-void op::Constant::write_to_buffer<std::string>(const element::Type& target_type,
-                                                const Shape& target_shape,
-                                                const std::vector<std::string>& source,
-                                                void* target,
-                                                size_t target_element_count)
+//
+// We have to open up namespace blocks here to work around a problem with gcc:
+//
+// https://stackoverflow.com/questions/25594644/warning-specialization-of-template-in-different-namespace
+//
+namespace ngraph
 {
+    namespace op
+    {
+        template <>
+        void Constant::write_to_buffer<std::string>(const element::Type& target_type,
+                                                    const Shape& target_shape,
+                                                    const std::vector<std::string>& source,
+                                                    void* target,
+                                                    size_t target_element_count)
+        {
+        }
+    }
 }

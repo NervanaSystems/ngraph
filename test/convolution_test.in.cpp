@@ -64,13 +64,11 @@ static bool all_close_d(const std::vector<double>& a,
 TEST(${BACKEND_NAME}, convolution_2d_1image)
 {
     auto shape_a = Shape{1, 1, 3, 5};
-    auto A = make_shared<op::Parameter>(element::Float64::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
     auto shape_b = Shape{2, 1, 2, 2};
-    auto B = make_shared<op::Parameter>(element::Float64::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{1, 2, 2, 4};
-    auto result_type = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Convolution>(A, B, Strides{1, 1}, Strides{1, 1}),
-                                   result_type,
                                    op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -79,11 +77,11 @@ TEST(${BACKEND_NAME}, convolution_2d_1image)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f64, shape_a);
     copy_data(a, vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
-    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    auto b = backend->make_primary_tensor_view(element::f64, shape_b);
     copy_data(b, vector<double>{1, 2, 3, 4, 5, 6, 7, 8});
-    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+    auto result = backend->make_primary_tensor_view(element::f64, shape_r);
 
     vector<double> expected_result{
         51, 61, 71, 81, 101, 111, 121, 131, 115, 141, 167, 193, 245, 271, 297, 323};
@@ -95,13 +93,11 @@ TEST(${BACKEND_NAME}, convolution_2d_1image)
 TEST(${BACKEND_NAME}, convolution_2d_2images)
 {
     auto shape_a = Shape{2, 1, 3, 5};
-    auto A = make_shared<op::Parameter>(element::Float64::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
     auto shape_b = Shape{2, 1, 2, 2};
-    auto B = make_shared<op::Parameter>(element::Float64::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{2, 2, 2, 4};
-    auto result_type = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Convolution>(A, B, Strides{1, 1}, Strides{1, 1}),
-                                   result_type,
                                    op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -110,12 +106,12 @@ TEST(${BACKEND_NAME}, convolution_2d_2images)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f64, shape_a);
     copy_data(a, vector<double>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
                                 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30});
-    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    auto b = backend->make_primary_tensor_view(element::f64, shape_b);
     copy_data(b, vector<double>{1, 2, 3, 4, 5, 6, 7, 8});
-    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+    auto result = backend->make_primary_tensor_view(element::f64, shape_r);
 
     vector<double> expected_result{51,  61,  71,  81,  101, 111, 121, 131, 115, 141, 167,
                                    193, 245, 271, 297, 323, 201, 211, 221, 231, 251, 261,
@@ -128,13 +124,11 @@ TEST(${BACKEND_NAME}, convolution_2d_2images)
 TEST(${BACKEND_NAME}, convolution_2d_2images_strided)
 {
     auto shape_a = Shape{2, 1, 3, 5};
-    auto A = make_shared<op::Parameter>(element::Float64::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
     auto shape_b = Shape{2, 1, 2, 2};
-    auto B = make_shared<op::Parameter>(element::Float64::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{2, 2, 1, 2};
-    auto result_type = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Convolution>(A, B, Strides{2, 2}, Strides{1, 1}),
-                                   result_type,
                                    op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -143,12 +137,12 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_strided)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f64, shape_a);
     copy_data(a, vector<double>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
                                 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30});
-    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    auto b = backend->make_primary_tensor_view(element::f64, shape_b);
     copy_data(b, vector<double>{1, 2, 3, 4, 5, 6, 7, 8});
-    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+    auto result = backend->make_primary_tensor_view(element::f64, shape_r);
 
     vector<double> expected_result{51, 71, 115, 167, 201, 221, 505, 557};
 
@@ -159,13 +153,11 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_strided)
 TEST(${BACKEND_NAME}, convolution_2d_2images_dilated)
 {
     auto shape_a = Shape{2, 1, 3, 5};
-    auto A = make_shared<op::Parameter>(element::Float64::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
     auto shape_b = Shape{2, 1, 2, 2};
-    auto B = make_shared<op::Parameter>(element::Float64::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{2, 2, 1, 3};
-    auto result_type = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
     auto f = make_shared<Function>(make_shared<op::Convolution>(A, B, Strides{1, 1}, Strides{2, 2}),
-                                   result_type,
                                    op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -174,12 +166,12 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_dilated)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f64, shape_a);
     copy_data(a, vector<double>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
                                 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30});
-    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    auto b = backend->make_primary_tensor_view(element::f64, shape_b);
     copy_data(b, vector<double>{1, 2, 3, 4, 5, 6, 7, 8});
-    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+    auto result = backend->make_primary_tensor_view(element::f64, shape_r);
 
     vector<double> expected_result{92, 102, 112, 204, 230, 256, 242, 252, 262, 594, 620, 646};
 
@@ -190,14 +182,12 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_dilated)
 TEST(${BACKEND_NAME}, convolution_3d_2images)
 {
     auto shape_a = Shape{2, 1, 3, 5, 8};
-    auto A = make_shared<op::Parameter>(element::Float64::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
     auto shape_b = Shape{2, 1, 2, 2, 3};
-    auto B = make_shared<op::Parameter>(element::Float64::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{2, 2, 2, 4, 6};
-    auto result_type = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
     auto f = make_shared<Function>(
         make_shared<op::Convolution>(A, B, Strides{1, 1, 1}, Strides{1, 1, 1}),
-        result_type,
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -206,7 +196,7 @@ TEST(${BACKEND_NAME}, convolution_3d_2images)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f64, shape_a);
     copy_data(a,
               vector<double>{
                   1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,  16,
@@ -224,10 +214,10 @@ TEST(${BACKEND_NAME}, convolution_3d_2images)
                   193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208,
                   209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224,
                   225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240});
-    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    auto b = backend->make_primary_tensor_view(element::f64, shape_b);
     copy_data(b, vector<double>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
                                 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24});
-    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+    auto result = backend->make_primary_tensor_view(element::f64, shape_r);
 
     vector<double> expected_result{
         2828,  2906,  2984,  3062,  3140,  3218,  3452,  3530,  3608,  3686,  3764,  3842,  4076,
@@ -253,14 +243,12 @@ TEST(${BACKEND_NAME}, convolution_3d_2images)
 TEST(${BACKEND_NAME}, convolution_4d_2images)
 {
     auto shape_a = Shape{2, 1, 3, 5, 8, 7};
-    auto A = make_shared<op::Parameter>(element::Float64::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
     auto shape_b = Shape{2, 1, 2, 2, 3, 1};
-    auto B = make_shared<op::Parameter>(element::Float64::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{2, 2, 2, 4, 6, 7};
-    auto result_type = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
     auto f = make_shared<Function>(
         make_shared<op::Convolution>(A, B, Strides{1, 1, 1, 1}, Strides{1, 1, 1, 1}),
-        result_type,
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -269,7 +257,7 @@ TEST(${BACKEND_NAME}, convolution_4d_2images)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f64, shape_a);
     copy_data(
         a,
         vector<double>{
@@ -393,10 +381,10 @@ TEST(${BACKEND_NAME}, convolution_4d_2images)
             1639, 1640, 1641, 1642, 1643, 1644, 1645, 1646, 1647, 1648, 1649, 1650, 1651, 1652,
             1653, 1654, 1655, 1656, 1657, 1658, 1659, 1660, 1661, 1662, 1663, 1664, 1665, 1666,
             1667, 1668, 1669, 1670, 1671, 1672, 1673, 1674, 1675, 1676, 1677, 1678, 1679, 1680});
-    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    auto b = backend->make_primary_tensor_view(element::f64, shape_b);
     copy_data(b, vector<double>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
                                 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24});
-    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+    auto result = backend->make_primary_tensor_view(element::f64, shape_r);
 
     vector<double> expected_result{
         19328,  19406,  19484,  19562,  19640,  19718,  19796,  19874,  19952,  20030,  20108,
@@ -530,14 +518,12 @@ TEST(${BACKEND_NAME}, convolution_4d_2images)
 TEST(${BACKEND_NAME}, convolution_4d_4images)
 {
     auto shape_a = Shape{4, 3, 3, 5, 8, 7};
-    auto A = make_shared<op::Parameter>(element::Float64::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
     auto shape_b = Shape{4, 3, 2, 2, 3, 1};
-    auto B = make_shared<op::Parameter>(element::Float64::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{4, 4, 2, 4, 6, 7};
-    auto result_type = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
     auto f = make_shared<Function>(
         make_shared<op::Convolution>(A, B, Strides{1, 1, 1, 1}, Strides{1, 1, 1, 1}),
-        result_type,
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -546,7 +532,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f64, shape_a);
     copy_data(
         a,
         vector<double>{
@@ -1390,7 +1376,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images)
             10045, 10046, 10047, 10048, 10049, 10050, 10051, 10052, 10053, 10054, 10055, 10056,
             10057, 10058, 10059, 10060, 10061, 10062, 10063, 10064, 10065, 10066, 10067, 10068,
             10069, 10070, 10071, 10072, 10073, 10074, 10075, 10076, 10077, 10078, 10079, 10080});
-    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    auto b = backend->make_primary_tensor_view(element::f64, shape_b);
     copy_data(
         b, vector<double>{1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,
                           16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,
@@ -1402,7 +1388,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images)
                           106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
                           121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135,
                           136, 137, 138, 139, 140, 141, 142, 143, 144});
-    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+    auto result = backend->make_primary_tensor_view(element::f64, shape_r);
 
     vector<double> expected_result{
         935376,   936042,   936708,   937374,   938040,   938706,   939372,   940038,   940704,
@@ -2011,14 +1997,12 @@ TEST(${BACKEND_NAME}, convolution_4d_4images)
 TEST(${BACKEND_NAME}, convolution_4d_4images_strided)
 {
     auto shape_a = Shape{4, 3, 3, 5, 8, 7};
-    auto A = make_shared<op::Parameter>(element::Float64::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
     auto shape_b = Shape{4, 3, 2, 2, 3, 1};
-    auto B = make_shared<op::Parameter>(element::Float64::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{4, 4, 1, 4, 2, 4};
-    auto result_type = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
     auto f = make_shared<Function>(
         make_shared<op::Convolution>(A, B, Strides{2, 1, 3, 2}, Strides{1, 1, 1, 1}),
-        result_type,
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -2027,7 +2011,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f64, shape_a);
     copy_data(
         a,
         vector<double>{
@@ -2871,7 +2855,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided)
             10045, 10046, 10047, 10048, 10049, 10050, 10051, 10052, 10053, 10054, 10055, 10056,
             10057, 10058, 10059, 10060, 10061, 10062, 10063, 10064, 10065, 10066, 10067, 10068,
             10069, 10070, 10071, 10072, 10073, 10074, 10075, 10076, 10077, 10078, 10079, 10080});
-    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    auto b = backend->make_primary_tensor_view(element::f64, shape_b);
     copy_data(
         b, vector<double>{1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,
                           16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,
@@ -2883,7 +2867,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided)
                           106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
                           121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135,
                           136, 137, 138, 139, 140, 141, 142, 143, 144});
-    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+    auto result = backend->make_primary_tensor_view(element::f64, shape_r);
 
     vector<double> expected_result{
         935376,   936708,   938040,   939372,   949362,   950694,   952026,   953358,   972672,
@@ -2951,14 +2935,12 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided)
 TEST(${BACKEND_NAME}, convolution_4d_4images_dilated)
 {
     auto shape_a = Shape{4, 3, 3, 5, 8, 7};
-    auto A = make_shared<op::Parameter>(element::Float64::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
     auto shape_b = Shape{4, 3, 2, 2, 3, 1};
-    auto B = make_shared<op::Parameter>(element::Float64::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{4, 4, 1, 4, 2, 7};
-    auto result_type = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
     auto f = make_shared<Function>(
         make_shared<op::Convolution>(A, B, Strides{1, 1, 1, 1}, Strides{2, 1, 3, 2}),
-        result_type,
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -2967,7 +2949,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_dilated)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f64, shape_a);
     copy_data(
         a,
         vector<double>{
@@ -3811,7 +3793,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_dilated)
             10045, 10046, 10047, 10048, 10049, 10050, 10051, 10052, 10053, 10054, 10055, 10056,
             10057, 10058, 10059, 10060, 10061, 10062, 10063, 10064, 10065, 10066, 10067, 10068,
             10069, 10070, 10071, 10072, 10073, 10074, 10075, 10076, 10077, 10078, 10079, 10080});
-    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    auto b = backend->make_primary_tensor_view(element::f64, shape_b);
     copy_data(
         b, vector<double>{1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,
                           16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,
@@ -3823,7 +3805,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_dilated)
                           106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
                           121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135,
                           136, 137, 138, 139, 140, 141, 142, 143, 144});
-    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+    auto result = backend->make_primary_tensor_view(element::f64, shape_r);
 
     vector<double> expected_result{
         1053396,  1054062,  1054728,  1055394,  1056060,  1056726,  1057392,  1058058,  1058724,
@@ -3934,14 +3916,12 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_dilated)
 TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated)
 {
     auto shape_a = Shape{4, 3, 8, 8, 8, 8};
-    auto A = make_shared<op::Parameter>(element::Float64::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
     auto shape_b = Shape{4, 3, 2, 2, 3, 1};
-    auto B = make_shared<op::Parameter>(element::Float64::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{4, 4, 2, 4, 1, 3};
-    auto result_type = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
     auto f = make_shared<Function>(
         make_shared<op::Convolution>(A, B, Strides{3, 2, 2, 3}, Strides{2, 1, 3, 2}),
-        result_type,
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -3950,7 +3930,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f64, shape_a);
     copy_data(
         a,
         vector<double>{
@@ -8050,7 +8030,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated)
             49117, 49118, 49119, 49120, 49121, 49122, 49123, 49124, 49125, 49126, 49127, 49128,
             49129, 49130, 49131, 49132, 49133, 49134, 49135, 49136, 49137, 49138, 49139, 49140,
             49141, 49142, 49143, 49144, 49145, 49146, 49147, 49148, 49149, 49150, 49151, 49152});
-    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    auto b = backend->make_primary_tensor_view(element::f64, shape_b);
     copy_data(
         b, vector<double>{1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,
                           16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,
@@ -8062,7 +8042,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated)
                           106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
                           121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135,
                           136, 137, 138, 139, 140, 141, 142, 143, 144});
-    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+    auto result = backend->make_primary_tensor_view(element::f64, shape_r);
 
     vector<double> expected_result{
         4344138,   4346136,   4348134,   4429386,   4431384,   4433382,   4514634,   4516632,

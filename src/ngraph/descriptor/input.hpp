@@ -59,6 +59,7 @@ namespace ngraph
             // @return the tensor of the connected output
             Tensor& get_tensor();
 
+            void replace_output(std::shared_ptr<Node> node, size_t i);
             void replace_output(Output& output);
 
         protected:

@@ -34,6 +34,22 @@ const element::Type element::u16(16, false, false, "uint16_t");
 const element::Type element::u32(32, false, false, "uint32_t");
 const element::Type element::u64(64, false, false, "uint64_t");
 
+std::vector<const element::Type*> element::Type::get_known_types()
+{
+    std::vector<const element::Type*> rc = {&element::boolean,
+                                            &element::f32,
+                                            &element::f64,
+                                            &element::i8,
+                                            &element::i16,
+                                            &element::i32,
+                                            &element::i64,
+                                            &element::u8,
+                                            &element::u16,
+                                            &element::u32,
+                                            &element::u64};
+    return rc;
+}
+
 element::Type::Type()
     : m_bitwidth{0}
     , m_is_real{0}

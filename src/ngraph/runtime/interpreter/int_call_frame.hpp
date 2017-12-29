@@ -32,7 +32,6 @@
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
-#include "ngraph/ops/xla_get_tuple_element.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
@@ -65,6 +64,7 @@
 #include "ngraph/runtime/kernel/minimum.hpp"
 #include "ngraph/runtime/kernel/multiply.hpp"
 #include "ngraph/runtime/kernel/negate.hpp"
+#include "ngraph/runtime/kernel/not.hpp"
 #include "ngraph/runtime/kernel/not_equal.hpp"
 #include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/kernel/power.hpp"
@@ -121,6 +121,10 @@ private:
     void call(std::shared_ptr<Function> function,
               const std::vector<std::shared_ptr<runtime::interpreter::INT_TensorView>>& input_tvs,
               const std::vector<std::shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs);
+    void handle_output_alias(
+        const Node& node,
+        const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>& output_alias_map,
+        const std::vector<std::shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs);
 
     std::shared_ptr<ExternalFunction> m_external_function;
     std::shared_ptr<Function> m_function;
@@ -340,13 +344,6 @@ private:
             std::shared_ptr<Function> function = node.get_function();
             call(function, args, out);
         }
-        else if (node_op == "XLAGetTupleElement")
-        {
-            auto gte = dynamic_cast<op::XLAGetTupleElement*>(&node);
-            kernel::copy<T>(reinterpret_cast<T*>(args[gte->get_n()]->get_data_ptr()),
-                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                            out[0]->get_element_count());
-        }
         else if (node_op == "Greater")
         {
             kernel::greater<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
@@ -419,6 +416,12 @@ private:
                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
                               out[0]->get_element_count());
         }
+        else if (node_op == "Not")
+        {
+            kernel::logical_not(reinterpret_cast<char*>(args[0]->get_data_ptr()),
+                                reinterpret_cast<char*>(out[0]->get_data_ptr()),
+                                out[0]->get_element_count());
+        }
         else if (node_op == "NotEqual")
         {
             kernel::not_equal<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
@@ -450,29 +453,13 @@ private:
             ngraph::op::Reduce* reduce = dynamic_cast<ngraph::op::Reduce*>(&node);
             std::shared_ptr<ngraph::Function> reduction_function = reduce->get_function();
 
-            auto in_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(
-                node.get_input_op(0)->get_value_type());
-            if (in_tensor_view_type == nullptr)
-            {
-                throw std::runtime_error("encountered non-tensor view type as input to reduce");
-            }
-
-            auto out_tensor_view_type =
-                std::dynamic_pointer_cast<const TensorViewType>(node.get_value_type());
-            if (out_tensor_view_type == nullptr)
-            {
-                throw std::runtime_error("reduce has non-tensor view output type");
-            }
-
-            std::function<T(T, T)> f =
-                [this, in_tensor_view_type, out_tensor_view_type, reduction_function](T x,
-                                                                                      T y) -> T {
+            std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
                 auto tx = std::make_shared<runtime::interpreter::INT_TensorView>(
-                    in_tensor_view_type->get_element_type(), Shape{}, "reduce_temp_x");
+                    node.get_inputs().at(0).get_element_type(), Shape{}, "reduce_temp_x");
                 auto ty = std::make_shared<runtime::interpreter::INT_TensorView>(
-                    in_tensor_view_type->get_element_type(), Shape{}, "reduce_temp_y");
+                    node.get_inputs().at(1).get_element_type(), Shape{}, "reduce_temp_y");
                 auto tr = std::make_shared<runtime::interpreter::INT_TensorView>(
-                    in_tensor_view_type->get_element_type(), Shape{}, "reduce_temp_r");
+                    node.get_output_element_type(0), Shape{}, "reduce_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
                 call(reduction_function, {tx, ty}, {tr});
@@ -482,8 +469,8 @@ private:
             kernel::reduce(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                            reinterpret_cast<T*>(args[1]->get_data_ptr()),
                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                           in_tensor_view_type->get_shape(),
-                           out_tensor_view_type->get_shape(),
+                           node.get_inputs().at(0).get_shape(),
+                           node.get_output_shape(0),
                            reduce->get_reduction_axes(),
                            f);
         }
@@ -582,15 +569,6 @@ private:
             kernel::tanh<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
-        }
-        else if (node_op == "XLATuple")
-        {
-            for (size_t i = 0; i < args.size(); ++i)
-            {
-                kernel::copy<T>(reinterpret_cast<T*>(args[i]->get_data_ptr()),
-                                reinterpret_cast<T*>(out[i]->get_data_ptr()),
-                                out[i]->get_element_count());
-            }
         }
         else
         {

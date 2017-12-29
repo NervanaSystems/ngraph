@@ -43,12 +43,7 @@ std::shared_ptr<Node> Output::get_node() const
     return m_node->shared_from_this();
 }
 
-const Tensor& Output::get_tensor() const
-{
-    return m_tensor_view->get_tensor();
-}
-
-Tensor& Output::get_tensor()
+Tensor& Output::get_tensor() const
 {
     return m_tensor_view->get_tensor();
 }

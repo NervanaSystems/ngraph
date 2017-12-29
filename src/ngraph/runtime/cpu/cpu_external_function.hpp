@@ -69,10 +69,15 @@ namespace ngraph
                                               Node* node,
                                               const std::vector<TensorViewWrapper>& in,
                                               const std::vector<TensorViewWrapper>& out);
+                void handle_output_alias(
+                    codegen::CodeWriter& writer,
+                    const Node&,
+                    const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>&);
 
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
+                bool m_use_tbb;
             };
         }
     }

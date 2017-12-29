@@ -65,7 +65,6 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/liveness.hpp"
@@ -75,7 +74,6 @@
 #include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_external_function.hpp"
-#include "ngraph/runtime/utils.hpp"
 
 using namespace std;
 using namespace ngraph;

@@ -32,6 +32,12 @@ namespace ngraph
     class Function;
     class stopwatch;
 
+    namespace runtime
+    {
+        class Backend;
+        class Value;
+    }
+
     template <typename T>
     std::string join(const T& v, const std::string& sep = ", ")
     {
@@ -244,28 +250,8 @@ namespace ngraph
     std::list<std::shared_ptr<Node>>
         topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
 
-    // maps original to replacement nodes e.g. for clone utilities
-    // performs index checking on access
-    class NodeMap
-    {
-    public:
-        // map original node to replcacement node
-        // throws ngraph_error if key already exists
-        void Add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> replacement);
-
-        // get replacement node from original node
-        // throws ngrah_error if key does not exist
-        std::shared_ptr<ngraph::Node> operator[](std::shared_ptr<ngraph::Node> orig) const;
-
-        // returns true if original node is already mapped
-        bool Exists(std::shared_ptr<ngraph::Node> orig) const
-        {
-            return (node_map_.count(orig) != 0);
-        }
-
-    private:
-        std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>> node_map_;
-    };
+    using NodeMap =
+        std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>;
 
     // input nodes are cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
@@ -282,4 +268,29 @@ namespace ngraph
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
     size_t round_up(size_t size, size_t alignment);
+
+    /*
+    * Return type struct for cache_fprop, with the modified fprop and bprop
+    * functions
+    * and a list of the nodes that have been appended to fprop output/bprop
+    * input
+    */
+    struct FpropCache
+    {
+        std::shared_ptr<Function> fprop;
+        std::shared_ptr<Function> bprop;
+        std::vector<std::shared_ptr<Node>> fprop_output_nodes;
+    };
+
+    /**
+    * This utility takes forward-propogation and back-propogation XLAunctions
+    * and turns them into clone functions where the intermediate values of 
+    * the forward prop are added to the output of fprop and the input of the bprop
+    * to avoid repeat calcualtions.
+    * The last argument is the adjoints coming into the bprop function, the output
+    * bprop function will have these nodes as the first N input parameters
+    **/
+    FpropCache cache_fprop(std::shared_ptr<Function> fprop,
+                           std::shared_ptr<Function> bprop,
+                           std::vector<std::shared_ptr<Node>> adjoints);
 } // end namespace ngraph

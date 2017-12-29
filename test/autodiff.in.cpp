@@ -106,9 +106,9 @@ TEST(${BACKEND_NAME}, backwards_abs)
     auto shape = Shape{2, 3};
 
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Abs>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Abs>(X),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)
@@ -136,10 +136,9 @@ TEST(${BACKEND_NAME}, backwards_add)
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            X0 + X1, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(X0 + X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
@@ -156,10 +155,10 @@ TEST(${BACKEND_NAME}, backwards_add_nested)
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            (X0 + X1) + (X1 + X0), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>((X0 + X1) + (X1 + X0),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
@@ -175,9 +174,8 @@ TEST(${BACKEND_NAME}, backwards_broadcast0)
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Broadcast>(X0, Shape{2, 3}, AxisSet{0}),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
@@ -193,9 +191,8 @@ TEST(${BACKEND_NAME}, backwards_broadcast1)
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Broadcast>(X0, Shape{3, 2}, AxisSet{1}),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
@@ -208,21 +205,17 @@ TEST(${BACKEND_NAME}, backwards_concat_vector)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape_0 = Shape{3};
-    auto x0 = rng.initialize(
-        backend->make_primary_tensor_view(element::Float32::element_type(), shape_0));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_0));
     auto shape_1 = Shape{2};
-    auto x1 = rng.initialize(
-        backend->make_primary_tensor_view(element::Float32::element_type(), shape_1));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_1));
     auto shape_2 = Shape{1};
-    auto x2 = rng.initialize(
-        backend->make_primary_tensor_view(element::Float32::element_type(), shape_2));
+    auto x2 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape_0);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape_1);
-        auto X2 = make_shared<op::Parameter>(element::Float32::element_type(), shape_2);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape_1);
+        auto X2 = make_shared<op::Parameter>(element::f32, shape_2);
         return make_shared<Function>(make_shared<op::Concat>(Nodes{X0, X1, X2}, 0),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
     EXPECT_TRUE(
@@ -236,21 +229,17 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_0)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape_0 = Shape{3, 2};
-    auto x0 = rng.initialize(
-        backend->make_primary_tensor_view(element::Float32::element_type(), shape_0));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_0));
     auto shape_1 = Shape{2, 2};
-    auto x1 = rng.initialize(
-        backend->make_primary_tensor_view(element::Float32::element_type(), shape_1));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_1));
     auto shape_2 = Shape{1, 2};
-    auto x2 = rng.initialize(
-        backend->make_primary_tensor_view(element::Float32::element_type(), shape_2));
+    auto x2 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape_0);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape_1);
-        auto X2 = make_shared<op::Parameter>(element::Float32::element_type(), shape_2);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape_1);
+        auto X2 = make_shared<op::Parameter>(element::f32, shape_2);
         return make_shared<Function>(make_shared<op::Concat>(Nodes{X0, X1, X2}, 0),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
     EXPECT_TRUE(
@@ -264,21 +253,17 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_1)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     auto shape_0 = Shape{2, 3};
-    auto x0 = rng.initialize(
-        backend->make_primary_tensor_view(element::Float32::element_type(), shape_0));
+    auto x0 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_0));
     auto shape_1 = Shape{2, 2};
-    auto x1 = rng.initialize(
-        backend->make_primary_tensor_view(element::Float32::element_type(), shape_1));
+    auto x1 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_1));
     auto shape_2 = Shape{2, 1};
-    auto x2 = rng.initialize(
-        backend->make_primary_tensor_view(element::Float32::element_type(), shape_2));
+    auto x2 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape_0);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape_1);
-        auto X2 = make_shared<op::Parameter>(element::Float32::element_type(), shape_2);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape_1);
+        auto X2 = make_shared<op::Parameter>(element::f32, shape_2);
         return make_shared<Function>(make_shared<op::Concat>(Nodes{X0, X1, X2}, 1),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
     EXPECT_TRUE(
@@ -298,9 +283,9 @@ TEST(${BACKEND_NAME}, backwards_ceiling)
     auto shape = Shape{2, 3};
 
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Ceiling>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Ceiling>(X),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)
@@ -330,9 +315,9 @@ TEST(${BACKEND_NAME}, backwards_cos)
     test::Uniform<float> rng(-10.0f, 10.0f);
     auto shape = Shape{2, 3};
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Cos>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Cos>(X),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)
@@ -351,9 +336,9 @@ TEST(${BACKEND_NAME}, backwards_cosh)
     test::Uniform<float> rng(-10.0f, 10.0f);
     auto shape = Shape{2, 3};
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Cosh>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Cosh>(X),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)
@@ -378,10 +363,9 @@ TEST(${BACKEND_NAME}, backwards_divide)
     auto x2 = rng2.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            X0 / X1, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(X0 / X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
@@ -401,10 +385,9 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape1);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape0);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape1);
         return make_shared<Function>(make_shared<op::Dot>(X0, X1),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
@@ -423,10 +406,9 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape1);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape0);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape1);
         return make_shared<Function>(make_shared<op::Dot>(X0, X1),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
@@ -445,10 +427,9 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape1);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape0);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape1);
         return make_shared<Function>(make_shared<op::Dot>(X0, X1),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
@@ -467,10 +448,9 @@ TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape1);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape0);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape1);
         return make_shared<Function>(make_shared<op::Dot>(X0, X1),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
@@ -489,10 +469,9 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_vector)
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape1);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape0);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape1);
         return make_shared<Function>(make_shared<op::Dot>(X0, X1),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
@@ -511,10 +490,9 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape1);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape0);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape1);
         return make_shared<Function>(make_shared<op::Dot>(X0, X1),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
@@ -523,7 +501,7 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
 
 TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
 {
-    auto manager = runtime::Manager::get("NGVM");
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
@@ -533,10 +511,9 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
     auto make_graph = [shape0, shape1]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape0);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape1);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape0);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape1);
         return make_shared<Function>(make_shared<op::Dot>(X0, X1, 2),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
@@ -553,9 +530,9 @@ TEST(${BACKEND_NAME}, backwards_exp)
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Exp>(X0), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0});
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Exp>(X0),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
@@ -573,9 +550,9 @@ TEST(${BACKEND_NAME}, backwards_floor)
     auto shape = Shape{2, 3};
 
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Floor>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Floor>(X),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)
@@ -607,9 +584,9 @@ TEST(${BACKEND_NAME}, backwards_log)
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Log>(X0), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0});
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Log>(X0),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
@@ -625,10 +602,9 @@ TEST(${BACKEND_NAME}, backwards_maximum)
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Maximum>(X0, X1),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
@@ -646,10 +622,9 @@ TEST(${BACKEND_NAME}, backwards_minimum)
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Minimum>(X0, X1),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
@@ -667,10 +642,9 @@ TEST(${BACKEND_NAME}, backwards_multiply)
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            X0 * X1, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(X0 * X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
@@ -686,8 +660,8 @@ TEST(${BACKEND_NAME}, backwards_negative)
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(-X0, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0});
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(-X0, std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
@@ -701,8 +675,8 @@ TEST(${BACKEND_NAME}, backwards_parameter)
     auto shape = Shape{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(X0, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0});
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(X0, std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
 }
@@ -717,10 +691,9 @@ TEST(${BACKEND_NAME}, backwards_power)
     auto shape = Shape{2, 3};
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(std::make_shared<op::Power>(X0, X1),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
 
@@ -758,11 +731,10 @@ TEST(${BACKEND_NAME}, backwards_replace_slice)
     auto shape_x = Shape{5, 5};
     auto shape_y = Shape{2, 2};
     auto make_graph = [shape_x, shape_y]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape_x);
-        auto Y = make_shared<op::Parameter>(element::Float32::element_type(), shape_y);
+        auto X = make_shared<op::Parameter>(element::f32, shape_x);
+        auto Y = make_shared<op::Parameter>(element::f32, shape_y);
         return make_shared<Function>(
             make_shared<op::ReplaceSlice>(X, Y, Coordinate{2, 3}, Coordinate{4, 5}),
-            nullptr,
             std::vector<std::shared_ptr<op::Parameter>>{X, Y});
     };
 
@@ -786,9 +758,8 @@ TEST(${BACKEND_NAME}, backwards_reshape)
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Reshape>(X0, AxisVector{1, 0}, Shape{4, 3}),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x0}, .01f, .01f));
@@ -802,17 +773,16 @@ TEST(${BACKEND_NAME}, backwards_select)
     test::Uniform<float> rng(-10.0f, 10.0f);
     auto shape = Shape{2, 3};
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Bool::element_type(), shape);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        auto X2 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X0 = make_shared<op::Parameter>(element::boolean, shape);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape);
+        auto X2 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Select>(X0, X1, X2),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
     for (auto i = 0; i < 100; i++)
     {
-        auto x0 = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
+        auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
         x0->write(vector<char>{0, 1, 0, 1, 0, 1});
         auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
         auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
@@ -836,17 +806,16 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
     test::Uniform<float> rng(-10.0f, 10.0f);
     auto shape = Shape{2, 3};
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Bool::element_type(), shape);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        auto X2 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X0 = make_shared<op::Parameter>(element::boolean, shape);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape);
+        auto X2 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Select>(X0, X1 + X2, X2 - X1),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
     for (auto i = 0; i < 100; i++)
     {
-        auto x0 = backend->make_primary_tensor_view(element::Bool::element_type(), shape);
+        auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
         x0->write(vector<char>{0, 1, 0, 1, 0, 1});
         auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
         auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
@@ -874,9 +843,9 @@ TEST(${BACKEND_NAME}, backwards_sign)
     auto shape = Shape{2, 3};
 
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Sign>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Sign>(X),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)
@@ -901,9 +870,9 @@ TEST(${BACKEND_NAME}, backwards_sin)
     test::Uniform<float> rng(-10.0f, 10.0f);
     auto shape = Shape{2, 3};
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Sin>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Sin>(X),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)
@@ -922,9 +891,9 @@ TEST(${BACKEND_NAME}, backwards_sinh)
     test::Uniform<float> rng(-10.0f, 10.0f);
     auto shape = Shape{2, 3};
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Sinh>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Sinh>(X),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)
@@ -943,9 +912,8 @@ TEST(${BACKEND_NAME}, backwards_slice)
     test::Uniform<float> rng(-10.0f, 10.0f);
     auto shape = Shape{5, 5};
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Slice>(X, Coordinate{2, 3}, Coordinate{4, 5}),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
@@ -966,9 +934,9 @@ TEST(${BACKEND_NAME}, backwards_sqrt)
     test::Uniform<float> rng(0.1f, 10.0f);
     auto shape = Shape{2, 3};
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Sqrt>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Sqrt>(X),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)
@@ -990,10 +958,9 @@ TEST(${BACKEND_NAME}, backwards_subtract)
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            X0 - X1, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(X0 - X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
@@ -1009,9 +976,8 @@ TEST(${BACKEND_NAME}, backwards_sum_v2s)
     auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0}),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
@@ -1027,9 +993,8 @@ TEST(${BACKEND_NAME}, backwards_sum_m2s)
     auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0, 1}),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
@@ -1045,9 +1010,8 @@ TEST(${BACKEND_NAME}, backwards_sum_m2v_0)
     auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0}),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
@@ -1063,9 +1027,8 @@ TEST(${BACKEND_NAME}, backwards_sum_m2v_1)
     auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
+        auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{1}),
-                                     nullptr,
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
@@ -1086,9 +1049,9 @@ TEST(${BACKEND_NAME}, backwards_tan)
     auto shape = Shape{2, 3};
 
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Tan>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Tan>(X),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)
@@ -1113,9 +1076,9 @@ TEST(${BACKEND_NAME}, backwards_tanh)
     test::Uniform<float> rng(-10.0f, 10.0f);
     auto shape = Shape{2, 3};
     auto make_graph = [shape]() {
-        auto X = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            make_shared<op::Tanh>(X), nullptr, std::vector<std::shared_ptr<op::Parameter>>{X});
+        auto X = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::Tanh>(X),
+                                     std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
     for (auto i = 0; i < 100; i++)
@@ -1138,11 +1101,11 @@ TEST(${BACKEND_NAME}, backwards_abc)
     auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
-        auto X0 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        auto X1 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        auto X2 = make_shared<op::Parameter>(element::Float32::element_type(), shape);
-        return make_shared<Function>(
-            (X0 + X1) * X2, nullptr, std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
+        auto X0 = make_shared<op::Parameter>(element::f32, shape);
+        auto X1 = make_shared<op::Parameter>(element::f32, shape);
+        auto X2 = make_shared<op::Parameter>(element::f32, shape);
+        return make_shared<Function>((X0 + X1) * X2,
+                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));

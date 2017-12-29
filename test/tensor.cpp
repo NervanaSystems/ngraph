@@ -38,10 +38,9 @@ TEST(tensor, size)
     pass_manager.register_pass<pass::Liveness>();
 
     {
-        auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{2, 3});
+        auto arg0 = make_shared<op::Parameter>(element::f32, Shape{2, 3});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{2, 3});
-        auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
+        auto f0 = make_shared<Function>(add, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -52,10 +51,9 @@ TEST(tensor, size)
     }
 
     {
-        auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{});
+        auto arg0 = make_shared<op::Parameter>(element::f32, Shape{});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{});
-        auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
+        auto f0 = make_shared<Function>(add, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -66,10 +64,9 @@ TEST(tensor, size)
     }
 
     {
-        auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+        auto arg0 = make_shared<op::Parameter>(element::f32, Shape{1});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{1});
-        auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
+        auto f0 = make_shared<Function>(add, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -80,15 +77,13 @@ TEST(tensor, size)
     }
 }
 
-template <typename ET>
-void test_read_write(const std::vector<typename ET::type>& x)
+template <typename T>
+void test_read_write(const std::vector<T>& x)
 {
-    using T = typename ET::type;
-
-    auto manager = ngraph::runtime::Manager::get("NGVM");
+    auto manager = ngraph::runtime::Manager::get("INTERPRETER");
     auto backend = manager->allocate_backend();
 
-    auto a = backend->make_primary_tensor_view(ET::element_type(), Shape{2, x.size()});
+    auto a = backend->make_primary_tensor_view(element::from<T>(), Shape{2, x.size()});
 
     std::vector<T> result(2 * x.size());
 
@@ -98,7 +93,7 @@ void test_read_write(const std::vector<typename ET::type>& x)
     std::copy(x.begin(), x.end(), result.begin() + x.size());
 
     std::vector<T> af_vector(2 * x.size());
-    a->read(af_vector.data(), 0, af_vector.size() * sizeof(typename ET::type));
+    a->read(af_vector.data(), 0, af_vector.size() * sizeof(T));
     ASSERT_EQ(af_vector, result);
 
     std::vector<T> result1(x.size());
@@ -110,8 +105,8 @@ void test_read_write(const std::vector<typename ET::type>& x)
 
 TEST(tensor, read_write)
 {
-    test_read_write<element::Float32>({1.0, 3.0, 5.0});
-    test_read_write<element::Int64>({-1, 2, 4});
+    test_read_write<float>({1.0, 3.0, 5.0});
+    test_read_write<int64_t>({-1, 2, 4});
 }
 
 TEST(tensor, output_flag)
@@ -120,17 +115,14 @@ TEST(tensor, output_flag)
     pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.register_pass<pass::Liveness>();
 
-    auto arg0 = make_shared<op::Parameter>(element::Float32::element_type(), Shape{1});
+    auto arg0 = make_shared<op::Parameter>(element::f32, Shape{1});
     auto add = make_shared<op::Add>(arg0, arg0);
-    auto rt = make_shared<TensorViewType>(element::Float32::element_type(), Shape{1});
-    auto f0 = make_shared<Function>(add, rt, op::Parameters{arg0});
+    auto f0 = make_shared<Function>(add, op::Parameters{arg0});
 
     pass_manager.run_passes(f0);
 
-    EXPECT_TRUE(f0->get_result()->is_output());
-    for (descriptor::Output& output : f0->get_result()->get_outputs())
+    for (size_t i = 0; i < f0->get_output_size(); ++i)
     {
-        const Tensor& t = output.get_tensor();
-        EXPECT_TRUE(t.is_output());
+        EXPECT_TRUE(f0->get_output_op(i)->is_output());
     }
 }
