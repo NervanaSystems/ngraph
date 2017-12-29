@@ -36,12 +36,6 @@ namespace ngraph
     {
     public:
         Function(const Nodes& results,
-                 const std::vector<std::shared_ptr<const ValueType>>& result_types,
-                 const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                 const std::string& name = "");
-
-        Function(const std::shared_ptr<Node>& result,
-                 const std::shared_ptr<const ValueType>& result_type,
                  const std::vector<std::shared_ptr<op::Parameter>>& parameters,
                  const std::string& name = "");
 
@@ -50,19 +44,29 @@ namespace ngraph
                  const std::string& name = "");
 
         virtual ~Function() {}
-        std::shared_ptr<Node> get_result();
+    public:
+        /// Return the number of outputs for this function.
+        size_t get_output_size() const;
 
-        const Nodes& get_results() const { return m_results; }
-        std::vector<descriptor::Output*> get_outputs();
+        /// Return the op that generates output i
+        std::shared_ptr<Node> get_output_op(size_t i) const;
 
+        /// Return the element type of output i
+        const element::Type& get_output_element_type(size_t i) const;
+
+        /// Return the shape of element i
+        const Shape& get_output_shape(size_t i) const;
+
+        /// Return the function parameters
         const std::vector<std::shared_ptr<op::Parameter>>& get_parameters() const
         {
             return m_parameters;
         }
 
-        std::shared_ptr<const ValueType> get_result_type() const;
-
-        std::vector<std::shared_ptr<const ValueType>> get_result_types() const;
+        /// Return the ops that generate the results
+        const std::vector<std::shared_ptr<Node>> get_results() const { return m_results; }
+        /// Check that there is a single result and return it.
+        std::shared_ptr<Node> get_result() const;
 
         std::string get_name() const;
         void set_name(
@@ -83,7 +87,6 @@ namespace ngraph
         Nodes m_results;
         std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;
         std::string m_name;
-        std::vector<std::shared_ptr<const ValueType>> m_result_types;
         bool m_ordered_ops_valid;
         std::list<std::shared_ptr<Node>> m_ordered_ops;
         size_t m_temporary_pool_size;

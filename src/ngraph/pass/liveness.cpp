@@ -49,9 +49,9 @@ bool pass::Liveness::run_on_call_graph(list<shared_ptr<Node>>& ops)
         }
 
         unordered_set<Tensor*> output_tensor_decls;
-        for (Output& output_decl : node->get_outputs())
+        for (size_t i = 0; i < node->get_output_size(); ++i)
         {
-            Tensor& tensor = output_decl.get_tensor();
+            Tensor& tensor = node->get_output_tensor(i);
             if (is_temporary(tensor))
             {
                 output_tensor_decls.insert(&tensor);

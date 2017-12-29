@@ -33,11 +33,9 @@ TEST(build_graph, build_simple)
     ASSERT_EQ(dot->get_input_ops()[0], arg2);
     ASSERT_EQ(dot->get_input_ops()[1], arg0);
 
-    auto result_type = make_shared<TensorViewType>(element::f32, Shape{32, 3});
-    auto cluster_0 =
-        make_shared<Function>(dot, result_type, op::Parameters{arg0, arg1, arg2, arg3});
+    auto cluster_0 = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg2, arg3});
 
-    ASSERT_EQ(cluster_0->get_result(), dot);
+    ASSERT_EQ(cluster_0->get_output_op(0), dot);
 }
 
 // Check upcasting from ValueType.
@@ -78,9 +76,9 @@ TEST(build_graph, literal)
     //auto float0 = FloatConstant::make(3.0);
     vector<float> float_t{3.0};
     auto float0 = make_shared<op::Constant>(element::f32, Shape{}, float_t);
-    auto float_scalar_type = make_shared<TensorViewType>(element::f32, Shape{});
     ASSERT_EQ(float0->get_vector<float>(), std::vector<float>{3.0});
-    ASSERT_EQ(*float0->get_value_type(), *float_scalar_type);
+    ASSERT_EQ(float0->get_element_type(), element::f32);
+    ASSERT_EQ(float0->get_shape(), Shape{});
     auto d = make_shared<op::Dot>(float0, float0);
     ASSERT_EQ(d->get_input_ops().at(0), float0);
     ASSERT_EQ(d->get_input_ops().at(1), float0);
@@ -89,8 +87,8 @@ TEST(build_graph, literal)
     auto int32_0 = make_shared<op::Constant>(element::i32, Shape{}, int32);
     auto int32_scalar_type = make_shared<TensorViewType>(element::i32, Shape{});
     ASSERT_EQ(int32_0->get_vector<int32_t>(), std::vector<int>{3});
-    ASSERT_EQ(*int32_0->get_value_type(), *int32_scalar_type);
-    ASSERT_NE(*int32_0->get_value_type(), *float_scalar_type);
+    ASSERT_EQ(int32_0->get_element_type(), element::i32);
+    ASSERT_EQ(int32_0->get_shape(), Shape{});
 }
 
 TEST(build_graph, tensor)
@@ -100,8 +98,8 @@ TEST(build_graph, tensor)
     Shape shape{2, 3};
     vector<float> float_t(shape_size(shape), 0);
     auto float0 = make_shared<op::Constant>(element::f32, shape, float_t);
-    auto float_tensor_type = make_shared<TensorViewType>(element::f32, shape);
-    ASSERT_EQ(*float0->get_value_type(), *float_tensor_type);
+    ASSERT_EQ(float0->get_element_type(), element::f32);
+    ASSERT_EQ(float0->get_shape(), shape);
     auto d = make_shared<op::Add>(float0, float0);
     ASSERT_EQ(d->get_input_ops().at(0), float0);
     ASSERT_EQ(d->get_input_ops().at(1), float0);
@@ -109,9 +107,8 @@ TEST(build_graph, tensor)
     Shape ishape{3, 5};
     vector<int32_t> idata(shape_size(ishape), 0);
     auto int32_0 = make_shared<op::Constant>(element::i32, ishape, idata);
-    auto int32_tensor_type = make_shared<TensorViewType>(element::i32, ishape);
-    ASSERT_EQ(*int32_0->get_value_type(), *int32_tensor_type);
-    ASSERT_NE(*int32_0->get_value_type(), *float_tensor_type);
+    ASSERT_EQ(int32_0->get_element_type(), element::i32);
+    ASSERT_EQ(int32_0->get_shape(), ishape);
 }
 
 // Check argument inverses
@@ -132,12 +129,9 @@ TEST(build_graph, function_undeclared_parameters)
     auto dot = make_shared<op::Dot>(arg2, arg0);
     ASSERT_EQ(dot->get_input_ops()[0], arg2);
     ASSERT_EQ(dot->get_input_ops()[1], arg0);
-
-    auto result_type = make_shared<TensorViewType>(element::f32, Shape{32, 3});
-
     try
     {
-        auto f = make_shared<Function>(dot, result_type, op::Parameters{arg0, arg1, arg3});
+        auto f = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg3});
         f->get_ops();
         // Should have thrown, so fail if it didn't
         FAIL() << "Undeclared parameter not detected.";
@@ -150,59 +144,4 @@ TEST(build_graph, function_undeclared_parameters)
     {
         FAIL() << "Function construction failed for unexpected reason";
     }
-}
-
-// Check functions with incorrect declared return types
-TEST(build_graph, function_incorrect_return_type)
-{
-    // Function with 4 parameters
-    auto arg0 = make_shared<op::Parameter>(element::f32, Shape{7, 3});
-    auto arg1 = make_shared<op::Parameter>(element::f32, Shape{3});
-    auto arg2 = make_shared<op::Parameter>(element::f32, Shape{32, 7});
-    auto arg3 = make_shared<op::Parameter>(element::f32, Shape{32, 7});
-    auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
-    auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
-    auto dot = make_shared<op::Dot>(arg2, arg0);
-    ASSERT_EQ(dot->get_input_ops()[0], arg2);
-    ASSERT_EQ(dot->get_input_ops()[1], arg0);
-
-    auto incorrect_result_type = make_shared<TensorViewType>(element::i32, Shape{32, 3});
-
-    try
-    {
-        auto f = make_shared<Function>(
-            dot, incorrect_result_type, op::Parameters{arg0, arg1, arg2, arg3});
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Incorrect result type not detected.";
-    }
-    catch (const ngraph_error& error)
-    {
-        EXPECT_EQ(
-            error.what(),
-            std::string("Function result node's value type does not match declared return type"));
-    }
-    catch (...)
-    {
-        FAIL() << "Function construction failed for unexpected reason";
-    }
-}
-
-// Check functions with no declared return type
-TEST(build_graph, function_no_declared_return_type)
-{
-    // Function with 4 parameters
-    auto arg0 = make_shared<op::Parameter>(element::f32, Shape{7, 3});
-    auto arg1 = make_shared<op::Parameter>(element::f32, Shape{3});
-    auto arg2 = make_shared<op::Parameter>(element::f32, Shape{32, 7});
-    auto arg3 = make_shared<op::Parameter>(element::f32, Shape{32, 7});
-    auto broadcast_1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
-    auto b1 = make_shared<op::Broadcast>(arg3, Shape{10, 32, 7}, AxisSet{0});
-    auto dot = make_shared<op::Dot>(arg2, arg0);
-    ASSERT_EQ(dot->get_input_ops()[0], arg2);
-    ASSERT_EQ(dot->get_input_ops()[1], arg0);
-
-    auto f = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg2, arg3});
-    auto f_rt = f->get_result_type();
-
-    ASSERT_EQ(*f_rt, TensorViewType(element::f32, Shape{32, 3}));
 }

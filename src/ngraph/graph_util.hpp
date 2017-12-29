@@ -56,20 +56,31 @@ namespace ngraph
     public:
         // map original node to replcacement node
         // throws ngraph_error if key already exists
-        void Add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> replacement);
+        void add(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> replacement);
 
         // get replacement node from original node
         // throws ngrah_error if key does not exist
         std::shared_ptr<ngraph::Node> operator[](std::shared_ptr<ngraph::Node> orig) const;
 
         // returns true if original node is already mapped
-        bool Exists(std::shared_ptr<ngraph::Node> orig) const
+        bool exists(std::shared_ptr<ngraph::Node> orig) const
         {
-            return (node_map_.count(orig) != 0);
+            return (m_node_map.count(orig) != 0);
+        }
+
+        const std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>&
+            get_node_map() const
+        {
+            return m_node_map;
+        }
+        std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>&
+            get_node_map()
+        {
+            return m_node_map;
         }
 
     private:
-        std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>> node_map_;
+        std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>> m_node_map;
     };
 
     // input nodes are cloned and returned

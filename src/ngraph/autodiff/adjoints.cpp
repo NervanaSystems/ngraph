@@ -27,7 +27,6 @@
 #include "ngraph/ops/convert.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/slice.hpp"
-#include "ngraph/ops/xla_tuple.hpp"
 #include "ngraph/types/type.hpp"
 
 using namespace ngraph;
@@ -122,7 +121,10 @@ std::shared_ptr<Node> autodiff::Adjoints::get(const std::shared_ptr<Node>& x)
 void autodiff::Adjoints::add_delta(const std::shared_ptr<Node>& x,
                                    const std::shared_ptr<Node>& delta)
 {
-    assert(*x->get_value_type() == *delta->get_value_type());
+    if (!x->has_same_type(delta))
+    {
+        throw ngraph_error("Autodiff internal error: Mismatch on backprop and op in add_delta.");
+    }
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)
     {
@@ -140,13 +142,13 @@ void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
                                             const Coordinate& upper_bounds,
                                             const Strides& strides)
 {
-    auto x_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(x->get_value_type());
-    auto delta_tensor_view_type =
-        std::dynamic_pointer_cast<const TensorViewType>(delta->get_value_type());
-    assert(nullptr != x_tensor_view_type);
-    assert(nullptr != delta_tensor_view_type);
-    assert(x_tensor_view_type->get_element_type() == delta_tensor_view_type->get_element_type());
-    assert(x_tensor_view_type->get_shape().size() == delta_tensor_view_type->get_shape().size());
+    if (x->get_output_size() != 1 || delta->get_output_size() != 1 ||
+        x->get_output_element_type(0) != delta->get_output_element_type(0) ||
+        x->get_output_shape(0).size() != delta->get_output_shape(0).size())
+    {
+        throw ngraph_error(
+            "Autodiff internal error: Mismatch on backprop and op in add_delta_to_slice.");
+    }
 
     auto adjoint_it = m_adjoint_map.find(x.get());
     if (m_adjoint_map.end() == adjoint_it)

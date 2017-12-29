@@ -16,6 +16,7 @@ set (SRC
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
     builder/reduce_ops.cpp
+    builder/xla_tuple.cpp
     common.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
@@ -25,7 +26,6 @@ set (SRC
     descriptor/primary_tensor_view.cpp
     descriptor/tensor.cpp
     descriptor/tensor_view.cpp
-    descriptor/tuple.cpp
     file_util.cpp
     function.cpp
     log.cpp
@@ -71,8 +71,6 @@ set (SRC
     ops/tanh.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise.cpp
-    ops/xla_get_tuple_element.cpp
-    ops/xla_tuple.cpp
     pass/dump_sorted.cpp
     pass/graph_rewrite.cpp
     pass/liveness.cpp
@@ -85,7 +83,6 @@ set (SRC
     pass/visualize_tree.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
-    runtime/backend.cpp
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp
     runtime/interpreter/int_external_function.cpp
@@ -94,15 +91,12 @@ set (SRC
     runtime/interpreter/int_tensor_view.cpp
     runtime/manager.cpp
     runtime/tensor_view.cpp
-    runtime/tuple.cpp
-    runtime/utils.cpp
     serializer.cpp
     shape.cpp
     types/element_type.cpp
     types/type.cpp
     util.cpp
     graph_util.cpp
-    xla_function.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
@@ -138,6 +132,16 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     MKLDNN_INCLUDE_DIR)
     find_package(ZLIB REQUIRED)
 
+    include(${TBB_ROOT}/cmake/TBBBuild.cmake)
+    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS compiler=clang tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
+              tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
+    find_package(TBB REQUIRED tbb)
+    if (NOT TBB_FOUND)
+        message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
+    else()
+        message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
+    endif()
+
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${MKLDNN_INCLUDE_DIR})
     link_directories(${LLVM_LIB_DIR} ${MKLDNN_LIB_DIR})
 
@@ -163,14 +167,27 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     # This must be kept in sync with the LLVM + Clang version in use
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS
-      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";")
-    set(NGRAPH_CPU_PCH_ENABLE 0 CACHE STRING "Enable pre-compiled headers in the CPU backend")
+      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";TBB_HEADERS_PATH=\"${TBB_ROOT}/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\";")
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
     set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-      "NGCPU_PCH=${NGRAPH_CPU_PCH_ENABLE};NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE}")
+      "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE}")
+endif()
+
+if (NGRAPH_ARGON_ENABLE)
+    link_directories(${ARGON_LIB_DIR})
 endif()
 
 add_library(ngraph SHARED ${SRC})
+if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
+    # Generate the resource file containing all headers used by the codegen compiler
+    add_custom_target(header_resource
+        resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
+        DEPENDS resource_generator eigen ext_llvm ext_mkldnn
+        BYPRODUCTS
+    )
+    add_dependencies(ngraph header_resource)
+    include_directories(${CMAKE_BINARY_DIR})
+endif()
 
 if (NOT APPLE)
     # NGraph links against one or more libraries (ex. LLVM) but we don't want to
@@ -178,29 +195,32 @@ if (NOT APPLE)
     # option so making this portable is still an open issue. As a note for the future,
     # this is not an issue on Windows and LLVM's lld does support --exclude-libs.
     set_target_properties(ngraph PROPERTIES LINK_FLAGS "-Wl,--exclude-libs,ALL")
+
+    # GCC invokes the linker with --as-needed by default which doesn't work for us
+    # because generated code needs to find symbols in these DSOs at runtime.
+    # The fix below is temporary and will be removed once we find a better way
+    # to do this because certain dependencies like the OpenMP runtime libraries
+    # _do_ need to be linked with --as-needed with a higher priority for the
+    # Intel OpenMP runtime so we don't mix libgomp and libiomp5
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--no-as-needed")
+    endif()
 endif()
 
 # Colon separated string for specified runtime plugin loading, this is made explicit s.t. if a
 # plugin is specified at compile time but the corresponding library could not be resolved at run-
 # time, an error will be generated.
 # E.g. assume compiling with Argon and Xpu, then -DRUNTIME_PLUGIN_LIBS="libargon.so:libxpu.so".
+
+if (NGRAPH_ARGON_ENABLE)
+    set(RUNTIME_PLUGIN_LIBS "libargon.so")  # TODO: currently hardcoded argon lib name if enabled
+endif()
+
 if (DEFINED RUNTIME_PLUGIN_LIBS)
-    target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS=${RUNTIME_PLUGIN_LIBS})
+    target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS="${RUNTIME_PLUGIN_LIBS}")
 else()
     target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS="")
 endif()
-
-# This is used to ensure that libngraph.so and libargon.so are in the same directory for dlopen.
-# Effective at build time. Does not affect `make install` logics.
-if (DEFINED COMMON_LIBRARY_OUTPUT_DIRECTORY)
-    set_target_properties(ngraph PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${COMMON_LIBRARY_OUTPUT_DIRECTORY})
-else()
-    set_target_properties(ngraph PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-endif()
-message(STATUS "LIBRARY_OUTPUT_DIRECTORY set to: ${COMMON_LIBRARY_OUTPUT_DIRECTORY}")
-
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
@@ -218,10 +238,20 @@ if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
     target_link_libraries(ngraph PRIVATE mkldnn)
 endif()
 
+if(NGRAPH_CPU_ENABLE)
+    target_link_libraries(ngraph PRIVATE ${TBB_IMPORTED_TARGETS})
+endif()
+
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
     target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
+# Argon
+if (NGRAPH_ARGON_ENABLE)
+    target_link_libraries(ngraph PRIVATE argon)
+    add_dependencies(ngraph ext_argon)
+    add_dependencies(ext_argon ext_llvm)
+endif()
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
@@ -235,48 +265,20 @@ install(DIRECTORY
     FILES_MATCHING PATTERN "*.hpp"
 )
 
-# External
-# Requirements:
-# - In NGraph, there are multiple include paths set for different external projects.
-# - However, we want one single include path for external projects from the TF bridge side, while
-#   making sure that the `#include` files can still be resolved.
-# - Therefore, when `make install`, the include directory will be "flattened" for each external
-#   projects respectively.
-
-install(DIRECTORY
-    ${EIGEN_INCLUDE_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_INCLUDE}"
-)
 if (NOT APPLE)
-install(DIRECTORY
-    ${MKLDNN_INCLUDE_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_INCLUDE}"
-)
-install(DIRECTORY
-    ${MKLDNN_LIB_DIR}/
-    DESTINATION "${NGRAPH_INSTALL_LIB}"
-)
-endif()
-if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
-    MKLDNN_INCLUDE_DIR)
-    # Currently this is required for Argon codegen. To avoid this, we'll need to decouple LLVM from
-    # compiler.hpp
     install(DIRECTORY
-        ${LLVM_INCLUDE_DIR}/
-        DESTINATION "${NGRAPH_INSTALL_INCLUDE}"
-    )
-    install(DIRECTORY
-        ${LLVM_LIB_DIR}/
+        ${MKLDNN_LIB_DIR}/
         DESTINATION "${NGRAPH_INSTALL_LIB}"
-)
+    )
+    if (NGRAPH_CPU_ENABLE)
+        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
+            DESTINATION ${NGRAPH_INSTALL_LIB}
+            FILES_MATCHING PATTERN "libtbb.so.*"
+        )
+        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
+            DESTINATION ${NGRAPH_INSTALL_LIB}
+            FILES_MATCHING PATTERN "libtbb_debug.so.*"
+        )
+    endif()
 endif()
 
-add_dependencies(ngraph eigen)
-
-if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_INCLUDE_DIR)
-    add_dependencies(ngraph ext_llvm)
-endif()
-
-if(NGRAPH_CPU_ENABLE AND MKLDNN_INCLUDE_DIR)
-    add_dependencies(ngraph ext_mkldnn)
-endif()

@@ -14,32 +14,6 @@
 
 #pragma once
 
-#include <atomic>
-#include <initializer_list>
-#include <list>
-#include <memory>
 #include <string>
-#include <vector>
 
-#include "ngraph/descriptor/output.hpp"
-#include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/function.hpp"
-#include "ngraph/log.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/ops/op.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/types/type.hpp"
-
-namespace ngraph
-{
-    class XLAFunction : public Function
-    {
-    public:
-        XLAFunction(const std::shared_ptr<Node>& result,
-                    const std::shared_ptr<const ValueType>& result_type,
-                    const std::vector<std::shared_ptr<op::Parameter>>& parameters,
-                    const std::string& name = "");
-
-        virtual ~XLAFunction() {}
-    };
-}
+std::string uncomment(const std::string& s);

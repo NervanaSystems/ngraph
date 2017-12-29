@@ -12,21 +12,6 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include <string>
 
-#include <memory>
-#include <vector>
-
-#include "ngraph/runtime/tuple.hpp"
-#include "ngraph/runtime/value.hpp"
-#include "ngraph/types/element_type.hpp"
-
-namespace ngraph
-{
-    namespace runtime
-    {
-        /// @brief Framework constructor of a tuple from a sequence of values.
-        std::shared_ptr<ngraph::runtime::Tuple>
-            make_tuple(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& elements);
-    }
-}
+const std::string rewrite_header(const std::string& s, const std::string& path);

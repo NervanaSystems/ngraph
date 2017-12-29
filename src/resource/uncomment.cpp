@@ -12,16 +12,37 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <memory>
+#include <iostream>
+#include <sstream>
 
-#include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/runtime/tuple.hpp"
+#include "uncomment.hpp"
 
-using namespace ngraph::runtime;
+using namespace std;
 
-std::shared_ptr<ngraph::runtime::Tuple>
-    Backend::make_tuple(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& elements)
+// start 23,749,645 in 1,912 files
+
+void skip_comment(istream& s)
 {
-    return std::make_shared<ngraph::runtime::Tuple>(elements);
+}
+
+string uncomment(const string& s)
+{
+    stringstream out;
+    for (size_t i = 0; i < s.size(); i++)
+    {
+        char c = s[i];
+        if (i < s.size() - 1 && c == '/' && s[i + 1] == '/')
+        {
+            while (i < s.size() && c != '\n')
+            {
+                c = s[++i];
+            }
+            out << "\n";
+        }
+        else
+        {
+            out << c;
+        }
+    }
+    return out.str();
 }

@@ -75,12 +75,7 @@ op::Concat::Concat(const Nodes& args, size_t concatenation_axis)
 
 void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {
-    auto value_type = get_value_type();
-    auto tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(value_type);
-
-    assert(nullptr != tensor_view_type);
-
-    auto concat_result_shape = tensor_view_type->get_shape();
+    auto concat_result_shape = get_outputs().at(0).get_shape();
 
     Coordinate arg_delta_slice_lower = Coordinate(concat_result_shape.size(), 0);
     Coordinate arg_delta_slice_upper = concat_result_shape;
@@ -90,10 +85,7 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const std::shar
 
     for (auto arg : get_input_ops())
     {
-        auto arg_value_type = arg->get_value_type();
-        auto arg_tensor_view_type = std::dynamic_pointer_cast<const TensorViewType>(arg_value_type);
-        assert(nullptr != arg_tensor_view_type);
-        auto arg_shape = arg_tensor_view_type->get_shape();
+        auto arg_shape = arg->get_shape();
 
         auto slice_width = arg_shape[m_concatenation_axis];
 

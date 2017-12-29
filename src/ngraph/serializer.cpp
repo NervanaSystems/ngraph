@@ -46,6 +46,7 @@
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/remainder.hpp"
+#include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/sign.hpp"
@@ -56,8 +57,7 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/ops/xla_tuple.hpp"
-#include "ngraph/xla_function.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -68,7 +68,6 @@ static std::shared_ptr<ngraph::Function>
 
 static json write(const ngraph::Function&);
 static json write(const ngraph::Node&);
-static json write(const ngraph::element::Type&);
 
 // This stupidity is caused by the fact that we do not pass element types
 // by value but by reference even though they can be compared. There is no reason to pass
@@ -160,69 +159,23 @@ static const element::Type& read_element_type(const json& j)
     return to_ref(element::Type(bitwidth, is_real, is_signed, c_type_string));
 }
 
-static json write_value_type(std::shared_ptr<const ValueType> vt)
+static json write_tensor_type(const element::Type& element_type, const Shape& shape)
 {
     json j;
-    if (auto tt = std::dynamic_pointer_cast<const ngraph::TupleType>(vt))
-    {
-        for (auto e : tt->get_element_types())
-        {
-            j.push_back(write_value_type(e));
-        }
-    }
-    else if (auto tvt = std::dynamic_pointer_cast<const ngraph::TensorViewType>(vt))
-    {
-        j["element_type"] = write_element_type(tvt->get_element_type());
-        j["shape"] = tvt->get_shape();
-    }
+    j["element_type"] = write_element_type(element_type);
+    j["shape"] = shape;
     return j;
 }
 
-static std::shared_ptr<const ValueType>
-    extract_type_shape(const json& j, const string& type, const string& sshape)
+static std::shared_ptr<const TensorViewType>
+    read_tensor_type(const json& j, const string& type, const string& sshape)
 {
     const element::Type& et = read_element_type(j.at(type));
     Shape shape =
         j.count(sshape)
             ? j.at(sshape).get<vector<size_t>>()
-            : Shape{} /*HACK, so we could call read_value_type uniformly @ each callsite*/;
-    auto tvt = make_shared<TensorViewType>(et, shape);
-    return tvt;
-}
-
-static std::shared_ptr<const ValueType> read_value_type(const json& j)
-{
-    std::shared_ptr<const ValueType> rc;
-    if (j.is_array())
-    {
-        std::vector<std::shared_ptr<const ValueType>> vts;
-
-        for (auto& e : j)
-        {
-            vts.push_back(read_value_type(e));
-        }
-        rc = make_shared<const TupleType>(vts);
-    }
-    else
-    {
-        rc = extract_type_shape(j, "element_type", "shape");
-    }
-    return rc;
-}
-
-static std::shared_ptr<const ValueType>
-    read_value_type(const json& j, const string& type, const string& sshape)
-{
-    std::shared_ptr<const ValueType> rc;
-    if (j.count("value_type")) //new serialization format supporting tuples
-    {
-        rc = read_value_type(j.at("value_type"));
-    }
-    else
-    {
-        rc = extract_type_shape(j, type, sshape);
-    }
-    return rc;
+            : Shape{} /*HACK, so we could call read_tensor_type uniformly @ each callsite*/;
+    return make_shared<TensorViewType>(et, shape);
 }
 
 string ngraph::serialize(shared_ptr<ngraph::Function> func, size_t indent)
@@ -250,9 +203,15 @@ string ngraph::serialize(shared_ptr<ngraph::Function> func, size_t indent)
 
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
 {
-    json js = json::array();
+    std::stringstream ss;
+    ss << in.rdbuf();
+    return deserialize(ss.str());
+}
+
+shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
+{
+    json js = json::parse(s);
     shared_ptr<Function> rc;
-    in >> js;
     unordered_map<string, shared_ptr<Function>> function_map;
     for (json func : js)
     {
@@ -270,12 +229,16 @@ static json write(const Function& f)
 {
     json function;
     function["name"] = f.get_name();
-    function["value_type"] = write_value_type(f.get_result_type());
+
     for (auto param : f.get_parameters())
     {
         function["parameters"].push_back(param->get_name());
     }
-    function["result"].push_back(f.get_results().at(0)->get_name());
+    // TODO Functions can return multiple results
+    for (size_t i = 0; i < f.get_output_size(); ++i)
+    {
+        function["result"].push_back(f.get_output_op(i)->get_name());
+    }
 
     list<shared_ptr<Node>> result_list;
     {
@@ -325,15 +288,13 @@ static shared_ptr<ngraph::Function>
     shared_ptr<ngraph::Function> rc;
 
     string func_name = func_js.at("name").get<string>();
-    vector<string> func_result = func_js.at("result").get<vector<string>>();
     vector<string> func_parameters = func_js.at("parameters").get<vector<string>>();
-    const auto& rvt = read_value_type(func_js, "result_type", "result_shape");
+    vector<string> func_result = func_js.at("result").get<vector<string>>();
     unordered_map<string, shared_ptr<Node>> node_map;
     for (json node_js : func_js.at("ops"))
     {
         string node_name = node_js.at("name").get<string>();
         string node_op = node_js.at("op").get<string>();
-        auto nvt = read_value_type(node_js, "element_type", "shape");
         vector<string> node_inputs = node_js.at("inputs").get<vector<string>>();
         vector<string> node_outputs = node_js.at("outputs").get<vector<string>>();
         shared_ptr<Node> node;
@@ -387,13 +348,16 @@ static shared_ptr<ngraph::Function>
         }
         else if (node_op == "Constant")
         {
-            auto shape = node_js.at("shape").get<vector<size_t>>();
+            auto type_node_js =
+                node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
+            auto& element_type = read_element_type(type_node_js.at("element_type"));
+            auto shape = type_node_js.at("shape");
             auto value = node_js.at("value").get<vector<string>>();
-            node = make_shared<op::Constant>(nvt->get_element_type(), shape, value);
+            node = make_shared<op::Constant>(element_type, shape, value);
         }
         else if (node_op == "Convert")
         {
-            auto target_type = read_element_type(node_js.at("target_type"));
+            auto& target_type = read_element_type(node_js.at("target_type"));
             node = make_shared<op::Convert>(args[0], target_type);
         }
         else if (node_op == "Cos")
@@ -476,8 +440,11 @@ static shared_ptr<ngraph::Function>
         }
         else if (node_op == "Parameter")
         {
-            auto shape = node_js.at("shape");
-            node = make_shared<op::Parameter>(nvt->get_element_type(), shape);
+            auto type_node_js =
+                node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
+            auto& element_type = read_element_type(type_node_js.at("element_type"));
+            auto shape = type_node_js.at("shape");
+            node = make_shared<op::Parameter>(element_type, shape);
         }
         else if (node_op == "Power")
         {
@@ -491,6 +458,14 @@ static shared_ptr<ngraph::Function>
         else if (node_op == "Remainder")
         {
             node = make_shared<op::Remainder>(args[0], args[1]);
+        }
+        else if (node_op == "ReplaceSlice")
+        {
+            auto lower_bounds = node_js.at("lower_bounds").get<vector<size_t>>();
+            auto upper_bounds = node_js.at("upper_bounds").get<vector<size_t>>();
+            auto strides = node_js.at("strides").get<vector<size_t>>();
+            node = make_shared<op::ReplaceSlice>(
+                args[0], args[1], lower_bounds, upper_bounds, strides);
         }
         else if (node_op == "Reshape")
         {
@@ -538,10 +513,6 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Tanh>(args[0]);
         }
-        else if (node_op == "XLATuple")
-        {
-            node = make_shared<op::XLATuple>(args);
-        }
         else
         {
             stringstream ss;
@@ -551,14 +522,18 @@ static shared_ptr<ngraph::Function>
         node_map[node_name] = node;
     }
 
-    auto result = node_map.at(func_result[0]);
+    std::vector<std::shared_ptr<Node>> result;
+    for (auto result_name : func_result)
+    {
+        result.push_back(node_map.at(result_name));
+    }
     std::vector<std::shared_ptr<op::Parameter>> params;
     for (auto param_name : func_parameters)
     {
         params.push_back(dynamic_pointer_cast<op::Parameter>(node_map.at(param_name)));
     }
 
-    rc = make_shared<XLAFunction>(result, rvt, params, func_name);
+    rc = make_shared<Function>(result, params, func_name);
     function_map[func_name] = rc;
 
     return rc;
@@ -569,16 +544,16 @@ static json write(const Node& n)
     json node;
     node["name"] = n.get_name();
     node["op"] = n.description();
-    node["value_type"] = write_value_type(n.get_value_type());
+    // TODO Multiple outputs
     json inputs = json::array();
     json outputs = json::array();
     for (const descriptor::Input& input : n.get_inputs())
     {
         inputs.push_back(input.get_output().get_node()->get_name());
     }
-    for (const descriptor::Output& output : n.get_outputs())
+    for (size_t i = 0; i < n.get_output_size(); ++i)
     {
-        outputs.push_back(output.get_node()->get_name());
+        outputs.push_back(n.get_output_tensor(i).get_name());
     }
     node["inputs"] = inputs;
     node["outputs"] = outputs;
@@ -618,6 +593,7 @@ static json write(const Node& n)
         auto tmp = dynamic_cast<const op::Constant*>(&n);
         node["value"] = tmp->get_value_strings();
         node["shape"] = tmp->get_shape();
+        node["element_type"] = write_element_type(tmp->get_element_type());
     }
     else if (node_op == "Convert")
     {
@@ -686,6 +662,7 @@ static json write(const Node& n)
     {
         auto tmp = dynamic_cast<const op::Parameter*>(&n);
         node["shape"] = tmp->get_shape();
+        node["element_type"] = write_element_type(tmp->get_element_type());
     }
     else if (node_op == "Power")
     {
@@ -698,6 +675,13 @@ static json write(const Node& n)
     }
     else if (node_op == "Remainder")
     {
+    }
+    else if (node_op == "ReplaceSlice")
+    {
+        auto tmp = dynamic_cast<const op::ReplaceSlice*>(&n);
+        node["lower_bounds"] = tmp->get_lower_bounds();
+        node["upper_bounds"] = tmp->get_upper_bounds();
+        node["strides"] = tmp->get_strides();
     }
     else if (node_op == "Reshape")
     {
@@ -736,9 +720,6 @@ static json write(const Node& n)
     {
     }
     else if (node_op == "Tanh")
-    {
-    }
-    else if (node_op == "XLATuple")
     {
     }
 

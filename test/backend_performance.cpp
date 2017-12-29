@@ -41,96 +41,113 @@ static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
     tv->write(data.data(), 0, data_size);
 }
 
-// Starting point CPU: 1.2ms/iteration
-
-shared_ptr<runtime::TensorView> make_tensor(runtime::Backend& backend, const ValueType& value)
+static multimap<size_t, string>
+    agregate_timing(const vector<runtime::cpu::PerformanceCounter>& perf_data)
 {
-    shared_ptr<runtime::TensorView> arg =
-        backend.make_primary_tensor_view(value.get_element_type(), value.get_shape());
-    return arg;
+    unordered_map<string, size_t> timing;
+    for (const runtime::cpu::PerformanceCounter& p : perf_data)
+    {
+        string op = p.name().substr(0, p.name().find('_'));
+        timing[op] += p.microseconds();
+    }
+
+    multimap<size_t, string> rc;
+    for (const pair<string, size_t>& t : timing)
+    {
+        rc.insert({t.second, t.first});
+    }
+    return rc;
 }
 
-TEST(benchmark, mxnet_mnist_mlp_forward)
+void run_benchmark(const std::string& json_path, size_t iterations)
 {
+    bool emit_timing = (std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr);
+    if (!emit_timing)
+    {
+        cout << "To get per-op timing set the environment variable NGRAPH_CPU_EMIT_TIMING\n";
+    }
+
     test::Uniform<float> rng{-1, 1, 0};
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> f = ngraph::deserialize(ss);
 
-    auto manager = runtime::Manager::get("CPU");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    vector<shared_ptr<runtime::Value>> args;
-    for (shared_ptr<op::Parameter> param : f->get_parameters())
-    {
-        auto arg = make_tensor(*backend, *(param->get_value_type()));
-        rng.initialize(arg);
-        args.push_back(arg);
-    }
-    shared_ptr<const ValueType> result_type = f->get_result_type();
-    auto result = make_tensor(*backend, *result_type);
-
-    stopwatch t1;
-    t1.start();
-    float count = 1000;
-    for (size_t i = 0; i < static_cast<size_t>(count); i++)
-    {
-        cf->call(args, {result});
-    }
-    t1.stop();
-    float time = t1.get_milliseconds();
-    cout << time / count << "ms per iteration\n";
-}
-
-TEST(benchmark, mxnet_10_bucket_lstm)
-{
-    test::Uniform<float> rng{-1, 1, 0};
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/10_bucket_LSTM.json");
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> f = ngraph::deserialize(ss);
-
+    stopwatch build_time;
+    build_time.start();
     auto manager = runtime::Manager::get("CPU");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
     runtime::cpu::CPU_CallFrame* cpu_cf = static_cast<runtime::cpu::CPU_CallFrame*>(cf.get());
+    build_time.stop();
+    cout << "build_time " << build_time.get_milliseconds() << "ms" << endl;
 
-    vector<shared_ptr<runtime::Value>> args;
+    vector<shared_ptr<runtime::TensorView>> args;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
-        auto arg = make_tensor(*backend, *(param->get_value_type()));
-        rng.initialize(arg);
-        args.push_back(arg);
+        auto tensor =
+            backend->make_primary_tensor_view(param->get_element_type(), param->get_shape());
+        rng.initialize(tensor);
+        args.push_back(tensor);
     }
-    shared_ptr<const ValueType> result_type = f->get_result_type();
-    auto result = make_tensor(*backend, *result_type);
+    vector<shared_ptr<runtime::TensorView>> results;
+    for (shared_ptr<Node> out : f->get_results())
+    {
+        auto result = backend->make_primary_tensor_view(out->get_element_type(), out->get_shape());
+        results.push_back(result);
+    }
 
     stopwatch t1;
     t1.start();
-    float count = 10;
-    for (size_t i = 0; i < static_cast<size_t>(count); i++)
+    for (size_t i = 0; i < static_cast<size_t>(iterations); i++)
     {
-        cf->call(args, {result});
+        cf->tensor_call(args, results);
     }
     t1.stop();
     float time = t1.get_milliseconds();
-    cout << time / count << "ms per iteration\n";
+    cout << time / iterations << "ms per iteration" << endl;
 
-    vector<runtime::cpu::PerformanceCounter> perf_data = cpu_cf->get_performance_data();
-    sort(
-        perf_data.begin(),
-        perf_data.end(),
-        [](const runtime::cpu::PerformanceCounter& p1, const runtime::cpu::PerformanceCounter& p2) {
-            return p1.total_microseconds() > p2.total_microseconds();
-        });
-    for (const runtime::cpu::PerformanceCounter& p : perf_data)
+    if (emit_timing)
     {
-        NGRAPH_INFO << p.name() << ", " << p.total_microseconds();
+        vector<runtime::cpu::PerformanceCounter> perf_data = cpu_cf->get_performance_data();
+        sort(perf_data.begin(),
+             perf_data.end(),
+             [](const runtime::cpu::PerformanceCounter& p1,
+                const runtime::cpu::PerformanceCounter& p2) {
+                 return p1.total_microseconds() > p2.total_microseconds();
+             });
+        multimap<size_t, string> timing = agregate_timing(perf_data);
+        for (auto it = timing.rbegin(); it != timing.rend(); it++)
+        {
+            cout.imbue(locale(""));
+            cout << setw(15) << left << it->second << " " << setw(10) << right << it->first
+                 << "us\n";
+        }
     }
+}
+
+TEST(benchmark, mxnet_mnist_mlp_forward)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
+    run_benchmark(json_path, 1000);
+}
+
+TEST(benchmark, mxnet_10_bucket_lstm)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/10_bucket_LSTM.json");
+    run_benchmark(json_path, 10);
+}
+
+TEST(benchmark, mxnet_lstm_backward)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/LSTM_backward.json");
+    run_benchmark(json_path, 10);
+}
+
+TEST(benchmark, mxnet_lstm_forward)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/LSTM_forward.json");
+    run_benchmark(json_path, 10);
 }
 
 //
@@ -175,8 +192,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         vector<std::shared_ptr<Node>> params_as_nodes(n_arrays);
         for (size_t i = 0; i < n_arrays; i++)
         {
-            auto param = make_shared<op::Parameter>(
-                make_shared<TensorViewType>(element::f32, shape_of_each_array));
+            auto param = make_shared<op::Parameter>(element::f32, shape_of_each_array);
             params[i] = param;
             params_as_nodes[i] = param;
         }

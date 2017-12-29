@@ -191,23 +191,23 @@ std::list<std::shared_ptr<ngraph::Node>>
     return result_list;
 }
 
-void ngraph::NodeMap::Add(std::shared_ptr<ngraph::Node> orig,
+void ngraph::NodeMap::add(std::shared_ptr<ngraph::Node> orig,
                           std::shared_ptr<ngraph::Node> replacement)
 {
-    if (Exists(orig))
+    if (exists(orig))
     {
         throw ngraph_error("NodeMap: key already exists");
     }
-    node_map_[orig] = replacement;
+    m_node_map[orig] = replacement;
 }
 
 std::shared_ptr<ngraph::Node> ngraph::NodeMap::operator[](std::shared_ptr<ngraph::Node> orig) const
 {
-    if (!Exists(orig))
+    if (!exists(orig))
     {
         throw ngraph_error("NodeMap: key does not exist");
     }
-    return node_map_.at(orig);
+    return m_node_map.at(orig);
 }
 
 std::list<std::shared_ptr<ngraph::Node>>
@@ -217,7 +217,7 @@ std::list<std::shared_ptr<ngraph::Node>>
     auto sorted_nodes = topological_sort(nodes);
     for (auto node : sorted_nodes)
     {
-        if (!node_map.Exists(node))
+        if (!node_map.exists(node))
         {
             // get (already) cloned arguments and clone the node
             Nodes cloned_args;
@@ -225,7 +225,7 @@ std::list<std::shared_ptr<ngraph::Node>>
             {
                 cloned_args.push_back(node_map[arg]);
             }
-            node_map.Add(node, node->copy_with_new_args(cloned_args));
+            node_map.add(node, node->copy_with_new_args(cloned_args));
         }
     }
 
@@ -254,6 +254,5 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     }
 
     // create and return cloned function
-    return std::make_shared<ngraph::Function>(
-        cloned_result, func->get_result_type(), cloned_params);
+    return std::make_shared<ngraph::Function>(cloned_result, cloned_params);
 }

@@ -19,7 +19,6 @@
 
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/manager.hpp"
-#include "ngraph/runtime/tuple.hpp"
 #include "ngraph/runtime/value.hpp"
 #include "ngraph/types/element_type.hpp"
 
@@ -42,10 +41,7 @@ namespace ngraph
                                T delta,
                                const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
-            auto y = f->get_result();
-
-            Shape y_shape =
-                std::dynamic_pointer_cast<const TensorViewType>(y->get_value_type())->get_shape();
+            Shape y_shape = f->get_output_shape(0);
 
             auto params = f->get_parameters();
 
@@ -55,9 +51,7 @@ namespace ngraph
             for (auto param : indep_params)
             {
                 Shape s = y_shape;
-                auto param_shape =
-                    std::dynamic_pointer_cast<const TensorViewType>(param->get_value_type())
-                        ->get_shape();
+                auto param_shape = param->get_shape();
                 s.insert(s.end(), param_shape.begin(), param_shape.end());
                 results.push_back(backend->make_primary_tensor_view<T>(s));
             }
