@@ -269,19 +269,35 @@ void ngraph::runtime::cpu::kernels::emit_sum(codegen::CodeWriter& writer,
         for (size_t i = 0; i < arg0_shape.size(); i++)
         {
             std::string index_var = writer.generate_temporary_name("i");
-
-            writer << start_index_loop(index_var, 0, arg0_shape[i], i == 0);
-            writer.indent++;
-
             index_vars.push_back(index_var);
         }
-
         std::vector<std::string> out_indexes;
+        size_t outer_arg_index = -1;
         for (size_t i = 0; i < index_vars.size(); ++i)
         {
             if (reduction_axes.count(i) == 0)
             {
+                if (out_indexes.size() == 0)
+                {
+                    outer_arg_index = i;
+                }
                 out_indexes.push_back(index_vars[i]);
+            }
+        }
+
+        if (outer_arg_index != -1)
+        {
+            writer << start_index_loop(
+                index_vars[outer_arg_index], 0, arg0_shape[outer_arg_index], true);
+            writer.indent++;
+        }
+        for (size_t i = 0; i < arg0_shape.size(); i++)
+        {
+            if (i != outer_arg_index)
+            {
+                std::string index_var = index_vars[i];
+                writer << start_index_loop(index_var, 0, arg0_shape[i], false);
+                writer.indent++;
             }
         }
 
