@@ -1085,8 +1085,17 @@ void runtime::cpu::CPU_Emitter::EmitExp(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if USE_LOOPS_OVER_EIGEN == 0
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".exp();\n";
+    m_out << "{   // " << n->get_name() << "\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = exp(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
