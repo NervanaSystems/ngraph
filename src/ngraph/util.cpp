@@ -20,6 +20,7 @@
 #include <unordered_set>
 
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/backend.hpp"
@@ -138,221 +139,6 @@ size_t ngraph::hash_combine(const std::vector<size_t>& list)
     return seed;
 }
 
-void ngraph::traverse_nodes(std::shared_ptr<ngraph::Function> p,
-                            std::function<void(shared_ptr<Node>)> f)
-{
-    traverse_nodes(p.get(), f);
-}
-
-void ngraph::traverse_nodes(ngraph::Function* p, std::function<void(shared_ptr<Node>)> f)
-{
-    std::unordered_set<shared_ptr<Node>> instances_seen;
-    deque<shared_ptr<Node>> stack;
-
-    for (size_t i = 0; i < p->get_output_size(); ++i)
-    {
-        stack.push_front(p->get_output_op(i));
-    }
-
-    for (auto param : p->get_parameters())
-    {
-        stack.push_front(param);
-    }
-
-    while (stack.size() > 0)
-    {
-        shared_ptr<Node> n = stack.front();
-        if (instances_seen.count(n) == 0)
-        {
-            instances_seen.insert(n);
-            f(n);
-        }
-        stack.pop_front();
-        for (auto arg : n->get_input_ops())
-        {
-            if (instances_seen.count(arg) == 0)
-            {
-                stack.push_front(arg);
-            }
-        }
-    }
-}
-
-void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
-                                std::function<void(shared_ptr<Function>)> f)
-{
-    std::unordered_set<shared_ptr<Function>> instances_seen;
-    deque<shared_ptr<Function>> stack;
-
-    stack.push_front(p);
-
-    while (stack.size() > 0)
-    {
-        shared_ptr<Function> func = stack.front();
-        if (instances_seen.find(func) == instances_seen.end())
-        {
-            instances_seen.insert(func);
-            f(func);
-        }
-        stack.pop_front();
-        for (shared_ptr<Node> op : func->get_ops())
-        {
-            shared_ptr<Function> fp = op->get_function();
-            if (fp)
-            {
-                stack.push_front(fp);
-            }
-        }
-    }
-}
-
-void ngraph::free_nodes(shared_ptr<Function> p)
-{
-    std::deque<Node*> sorted_list;
-
-    traverse_nodes(p, [&](shared_ptr<Node> n) { sorted_list.push_front(n.get()); });
-
-    for (Node* n : sorted_list)
-    {
-        n->clear_arguments();
-    }
-}
-
-void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
-{
-    if (target->is_output()) //this restriction can be lifted when we find an use case for it
-    {
-        return;
-    }
-    //fix input/output descriptors
-    NGRAPH_DEBUG << "Replacing target = " << target << " , " << target->get_name() << " , "
-                 << "replacement = " << replacement << " , " << replacement->get_name();
-
-    assert(target->get_output_size() == replacement->get_output_size());
-    for (size_t i = 0; i < target->get_output_size(); i++)
-    {
-        std::set<ngraph::descriptor::Input*> copy_inputs{
-            begin(target->get_output_inputs(i)),
-            end(target->get_output_inputs(i))}; //replace_output modifies target_output->m_inputs
-        for (auto input : copy_inputs)
-        {
-            input->replace_output(replacement, i);
-        }
-    }
-
-    //fix users and arguments
-    replace_node_users_arguments(target, replacement);
-}
-
-void ngraph::replace_node_users_arguments(std::shared_ptr<Node> target,
-                                          std::shared_ptr<Node> replacement)
-{
-    NGRAPH_DEBUG << "Replacing target = " << target << " , " << target->get_name() << " , "
-                 << "replacement = " << replacement << " , " << replacement->get_name();
-
-    NGRAPH_DEBUG << "user = " << replacement << " , " << replacement->get_name();
-    for (auto user : target->users())
-    {
-        auto& args = const_cast<ngraph::Nodes&>(user->get_arguments_FOR_GRAPH_REWRITE_ONLY());
-        auto it = std::find(begin(args), end(args), target);
-        assert(it != end(args));
-        //NGRAPH_DEBUG << "Replaced " << *it << " w/ " << replacement << " in args of " << user << " , args = " << &args;
-        it = args.erase(it);
-        args.insert(it, replacement);
-        const_cast<std::multiset<Node*>&>(replacement->users()).insert(user);
-    }
-    const_cast<std::multiset<Node*>&>(target->users()).clear();
-}
-
-std::list<std::shared_ptr<ngraph::Node>>
-    ngraph::topological_sort(const std::list<std::shared_ptr<Node>>& nodes)
-{
-    deque<ngraph::Node*> independent_nodes;
-    unordered_map<const ngraph::Node*, size_t> node_depencency_count;
-    unordered_map<ngraph::Node*, shared_ptr<ngraph::Node>> node_map;
-
-    for (auto node : nodes)
-    {
-        node_map[node.get()] = node;
-        node_depencency_count[node.get()] = node->get_input_ops().size();
-        if (node->get_input_ops().size() == 0)
-        {
-            independent_nodes.push_back(node.get());
-        }
-    }
-
-    list<shared_ptr<ngraph::Node>> result_list;
-    while (independent_nodes.size() > 0)
-    {
-        auto independent_node = independent_nodes.front();
-        result_list.push_back(node_map[independent_node]);
-        independent_nodes.pop_front();
-
-        for (auto user : independent_node->users())
-        {
-            node_depencency_count[user] -= 1;
-            size_t count = node_depencency_count[user];
-            if (count == 0)
-            {
-                independent_nodes.push_back(user);
-            }
-        }
-    }
-
-    return result_list;
-}
-
-std::list<std::shared_ptr<ngraph::Node>>
-    ngraph::clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map)
-{
-    // for each node in topological order
-    auto sorted_nodes = topological_sort(nodes);
-    for (auto node : sorted_nodes)
-    {
-        if (node_map.count(node) == 0)
-        {
-            // get (already) cloned arguments and clone the node
-            Nodes cloned_args;
-            for (auto arg : node->get_input_ops())
-            {
-                cloned_args.push_back(node_map[arg]);
-            }
-            node_map[node] = node->copy_with_new_args(cloned_args);
-        }
-    }
-
-    // create and return list of cloned nodes
-    // order matches input list (not necessarily topological)
-    std::list<std::shared_ptr<ngraph::Node>> cloned_nodes;
-    for (auto node : nodes)
-    {
-        cloned_nodes.push_back(node_map[node]);
-    }
-    return cloned_nodes;
-}
-
-std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph::Function> func,
-                                                         NodeMap& node_map)
-{
-    // clone function operations
-    clone_nodes(func->get_ops(), node_map);
-
-    // get cloned function result and parameters
-    Nodes cloned_results;
-    for (size_t i = 0; i < func->get_output_size(); ++i)
-    {
-        cloned_results.push_back(node_map[func->get_output_op(i)]);
-    }
-    std::vector<std::shared_ptr<op::Parameter>> cloned_params;
-    for (auto param : func->get_parameters())
-    {
-        cloned_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_map[param]));
-    }
-
-    // create and return cloned function
-    return std::make_shared<ngraph::Function>(cloned_results, cloned_params);
-}
-
 void* ngraph::aligned_alloc(size_t alignment, size_t size)
 {
 #ifdef __APPLE__
@@ -397,8 +183,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // shape and element type as the nodes in fprop
     NodeMap node_param_map;
     ngraph::traverse_nodes(fprop, [&node_param_map](std::shared_ptr<Node> node) {
-        node_param_map[node] =
-            std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape());
+        node_param_map.get(
+            std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape()));
     });
 
     // Traverse bprop to find all of the nodes in the graph
@@ -425,7 +211,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // and store those nodes that aren't needed in bprop
     FpropCache fprop_cache;
     std::vector<std::shared_ptr<Node>> unused_nodes;
-    for (auto kv : node_param_map)
+    for (auto kv : node_param_map.get_node_map())
     {
         // if it's not in bprop, mark it unused
         if (in_bprop.count(kv.first) == 0)
@@ -442,7 +228,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // erase all unused nodes form the map
     for (auto node : unused_nodes)
     {
-        node_param_map.erase(node);
+        node_param_map.get_node_map().erase(node);
     }
 
     // create the new outputs for fprop and the new fprop function
@@ -461,7 +247,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     Nodes cloned_results;
     for (auto node : bprop->get_results())
     {
-        cloned_results.push_back(node_param_map[node]);
+        cloned_results.push_back(node_param_map.get(node));
     }
 
     // get clone bprop parameters
@@ -469,13 +255,14 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     for (auto param : adjoints)
     {
         bprop_input_params.push_back(
-            std::dynamic_pointer_cast<op::Parameter>(node_param_map[param]));
+            std::dynamic_pointer_cast<op::Parameter>(node_param_map.get(param)));
     }
 
     // add the cached fprop nodes as inputs to bprop
     for (auto x : fprop_cache.fprop_output_nodes)
     {
-        bprop_input_params.push_back(std::dynamic_pointer_cast<op::Parameter>(node_param_map[x]));
+        bprop_input_params.push_back(
+            std::dynamic_pointer_cast<op::Parameter>(node_param_map.get(x)));
     }
 
     // create the new bprop function
