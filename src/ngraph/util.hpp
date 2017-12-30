@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <deque>
 #include <functional>
 #include <iostream>
 #include <list>
@@ -24,6 +25,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace ngraph
@@ -234,36 +236,6 @@ namespace ngraph
     {
         return (x == 0 ? 0 : (1 + (x - 1) / y));
     }
-
-    void traverse_nodes(Function* p, std::function<void(std::shared_ptr<Node>)> f);
-    void traverse_nodes(std::shared_ptr<Function> p, std::function<void(std::shared_ptr<Node>)> f);
-    void traverse_functions(std::shared_ptr<Function> p,
-                            std::function<void(std::shared_ptr<Function>)> f);
-
-    void free_nodes(std::shared_ptr<Function>);
-
-    void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
-
-    void replace_node_users_arguments(std::shared_ptr<Node> target,
-                                      std::shared_ptr<Node> replacement);
-
-    std::list<std::shared_ptr<Node>>
-        topological_sort(const std::list<std::shared_ptr<Node>>& nodes);
-
-    using NodeMap =
-        std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>;
-
-    // input nodes are cloned and returned
-    // NodeMap input may contain default node mapping i.e. pre-cloned nodes
-    // NodeMap output (by reference) fully maps input and cloned nodes
-    std::list<std::shared_ptr<ngraph::Node>>
-        clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map);
-
-    // input function is cloned and returned
-    // NodeMap input may contain default node mapping i.e. pre-cloned nodes
-    // NodeMap output (by reference) fully maps input and cloned function ops
-    std::shared_ptr<ngraph::Function> clone_function(std::shared_ptr<ngraph::Function> func,
-                                                     NodeMap& node_map);
 
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);

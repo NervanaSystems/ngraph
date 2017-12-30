@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/serializer.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/acos.hpp"
 #include "ngraph/ops/add.hpp"

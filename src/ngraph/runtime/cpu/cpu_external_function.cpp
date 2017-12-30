@@ -29,6 +29,7 @@
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/acos.hpp"
