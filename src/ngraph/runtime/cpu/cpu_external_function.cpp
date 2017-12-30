@@ -300,7 +300,7 @@ using namespace ngraph::runtime;
             {
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 auto c_value_strings = c->get_value_strings();
-                writer << tv->get_tensor().get_element_type().c_type_string() << " "
+                writer << "static " << tv->get_tensor().get_element_type().c_type_string() << " "
                        << tv->get_tensor().get_name() << "[" << c_value_strings.size() << "] =\n";
                 writer << "{\n";
                 for (size_t i = 0; i < c_value_strings.size(); i++)
@@ -349,20 +349,27 @@ using namespace ngraph::runtime;
         }
 
         bool temporaries_used = false;
+        size_t worst_case_tmp_size = 0;
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
             if (node->liveness_new_list.size() > 0)
             {
                 temporaries_used = true;
-                break;
+                for (descriptor::Tensor* tensor : node->liveness_new_list)
+                {
+                    worst_case_tmp_size += tensor->size();
+                }
             }
         }
         if (temporaries_used)
         {
             size_t temp_pool_size = current_function->get_temporary_pool_size();
             writer << "// Allocate the memory pool\n";
+            writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
+            writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
             writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
                    << ngraph::runtime::cpu::alignment << ");\n";
+            writer << "size_t pool_base_ptr = (size_t)memory_handler.get_ptr();\n";
             writer << "\n";
 
             writer << "// Define temporary tensors\n";
@@ -372,8 +379,8 @@ using namespace ngraph::runtime;
                 {
                     writer << tensor->get_element_type().c_type_string() << "* "
                            << tensor->get_name() << " = ("
-                           << tensor->get_element_type().c_type_string()
-                           << "*)(memory_handler.get_ptr(" << tensor->get_pool_offset() << "));\n";
+                           << tensor->get_element_type().c_type_string() << "*)(pool_base_ptr + "
+                           << tensor->get_pool_offset() << ");\n";
                 }
             }
             writer << "\n";
@@ -388,8 +395,8 @@ using namespace ngraph::runtime;
                 shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
                 const element::Type& et = tv->get_tensor_view_type()->get_element_type();
                 string type = et.c_type_string();
-                writer << "" << type << "* " << tv->get_tensor().get_name() << " = static_cast<"
-                       << type << "*>(inputs[" << arg_index << "]);\n";
+                writer << type << "* " << tv->get_tensor().get_name() << " = (" << type
+                       << "*)(inputs[" << arg_index << "]);\n";
                 arg_index++;
             }
         }
@@ -483,7 +490,8 @@ using namespace ngraph::runtime;
                 if (m_use_tbb)
                 {
                     writer << "tbb::flow::continue_node<tbb::flow::continue_msg> flowgraph_node_"
-                           << node->get_name() << "(G, [&](const tbb::flow::continue_msg &msg) {\n";
+                           << node->get_name()
+                           << "(G, [&](const tbb::flow::continue_msg &msg)\n{\n";
                     writer.indent++;
                 }
                 if (m_emit_timing)
@@ -644,5 +652,5 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
     const std::vector<TensorViewWrapper>& in,
     const std::vector<TensorViewWrapper>& out)
 {
-    writer << "timer_" << node->get_name() << ".stop();\n\n";
+    writer << "timer_" << node->get_name() << ".stop();\n";
 }
