@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <list>
 #include <memory>
 
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
@@ -34,8 +36,6 @@ Function::Function(const Nodes& results,
     , m_instance_id(m_next_instance_id.fetch_add(1))
 {
     traverse_nodes(this, [&](shared_ptr<Node> node) {
-        m_ops.push_back(node);
-
         std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
         if (nullptr != p)
         {
@@ -61,16 +61,6 @@ void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)
 {
     m_ordered_ops = ordered_ops;
     m_ordered_ops_valid = true;
-}
-
-std::list<shared_ptr<Node>>& Function::get_ops()
-{
-    return m_ops;
-}
-
-const std::list<shared_ptr<Node>>& Function::get_ops() const
-{
-    return m_ops;
 }
 
 std::list<shared_ptr<Node>>& Function::get_ordered_ops()
@@ -160,4 +150,25 @@ shared_ptr<Node> Function::get_result() const
         throw ngraph_error("get_result() must be called on a function with exactly one result.");
     }
     return m_results.at(0);
+}
+
+std::list<shared_ptr<Node>> Function::get_ops() const
+{
+    std::list<std::shared_ptr<Node>> ops;
+    traverse_nodes(this, [&](shared_ptr<Node> node) {
+        ops.push_back(node);
+
+        std::shared_ptr<op::Parameter> p = std::dynamic_pointer_cast<op::Parameter>(node);
+        if (nullptr != p)
+        {
+            auto it = std::find_if(m_parameters.begin(),
+                                   m_parameters.end(),
+                                   [p](std::shared_ptr<op::Parameter> q) { return (p == q); });
+            if (it == m_parameters.end())
+            {
+                throw ngraph_error("Function references undeclared parameter");
+            }
+        }
+    });
+    return ops;
 }

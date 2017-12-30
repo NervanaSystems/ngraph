@@ -97,6 +97,7 @@ set (SRC
     types/element_type.cpp
     types/type.cpp
     util.cpp
+    graph_util.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)
