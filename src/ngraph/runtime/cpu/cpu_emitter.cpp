@@ -28,6 +28,7 @@
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_output_element.hpp"
+#include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -1598,6 +1599,23 @@ void runtime::cpu::CPU_Emitter::EmitNot(const ngraph::Node* n,
     m_out << "kernel::logical_not(" << args[0].get_name() << ",\n"
           << "                    " << out[0].get_name() << ",\n"
           << "                    " << out[0].get_size() << ");\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitMaxPool(const ngraph::Node* n,
+                                            const vector<runtime::cpu::TensorViewWrapper>& args,
+                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto max_pool = static_cast<const op::MaxPool*>(n);
+
+    auto arg_shape = args[0].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    m_out << "kernel::max_pool<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    m_out << "                 " << out[0].get_name() << ",\n";
+    m_out << "                 {" << join(arg_shape) << "},\n";
+    m_out << "                 {" << join(result_shape) << "},\n";
+    m_out << "                 {" << join(max_pool->get_window_shape()) << "},\n";
+    m_out << "                 {" << join(max_pool->get_window_movement_strides()) << "});\n";
 }
 
 //------------------------------------------------------------------------------------------------

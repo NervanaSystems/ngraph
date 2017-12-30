@@ -48,6 +48,7 @@ set (SRC
     ops/function_call.cpp
     ops/get_output_element.cpp
     ops/log.cpp
+    ops/max_pool.cpp
     ops/maximum.cpp
     ops/minimum.cpp
     ops/multiply.cpp
