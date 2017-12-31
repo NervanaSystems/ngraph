@@ -153,6 +153,52 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::EmitMaxPool},
 };
 
+static bool identical_ops(const Node& n1, const Node& n2)
+{
+    bool rc = true;
+    if (n1.description() == n2.description())
+    {
+        const deque<descriptor::Input>& i1 = n1.get_inputs();
+        const deque<descriptor::Input>& i2 = n2.get_inputs();
+        const deque<descriptor::Output>& o1 = n1.get_outputs();
+        const deque<descriptor::Output>& o2 = n2.get_outputs();
+        if (i1.size() == i2.size() && o1.size() == o2.size())
+        {
+            for (size_t i = 0; i < i1.size(); i++)
+            {
+                if (i1[i].get_shape() != i2[i].get_shape())
+                {
+                    rc = false;
+                }
+                // if (i1[i].get_strides() != i2[i].get_strides())
+                // {
+                //     rc = false;
+                // }
+            }
+            for (size_t i = 0; i < o1.size(); i++)
+            {
+                if (o1[i].get_shape() != o2[i].get_shape())
+                {
+                    rc = false;
+                }
+                // if (o1[i].get_strides() != o2[i].get_strides())
+                // {
+                //     rc = false;
+                // }
+            }
+        }
+        else
+        {
+            rc = false;
+        }
+    }
+    else
+    {
+        rc = false;
+    }
+    return rc;
+}
+
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
@@ -318,6 +364,84 @@ using namespace ngraph::runtime;
         writer << "extern \"C\" void " << f->get_name() << "(void** inputs, void** outputs);\n";
     }
     writer << "\n";
+
+    unordered_set<Node*> matched_ops;
+    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
+    {
+        const list<shared_ptr<Node>>& tmp = current_function->get_ordered_ops();
+        vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
+        for (size_t i = 0; i < op_list.size() - 1; i++)
+        {
+            if (op_list[i]->is_constant() || op_list[i]->is_parameter())
+            {
+                continue;
+            }
+            if (contains(matched_ops, op_list[i].get()))
+            {
+                continue;
+            }
+            bool match = false;
+            for (size_t j = i + 1; j < op_list.size(); j++)
+            {
+                if (identical_ops(*op_list[i], *op_list[j]))
+                {
+                    matched_ops.insert(op_list[j].get());
+                    match = true;
+                }
+            }
+            if (match)
+            {
+                matched_ops.insert(op_list[i].get());
+                NGRAPH_INFO << op_list[i]->get_name();
+                writer << "static void func_" << op_list[i]->get_name() << "(";
+                writer.indent++;
+                // Work around a compiler warning (*node inside typeid may have effects
+                // with shared pointers, which is fine here but clang doesn't like it.)
+                auto& n = *op_list[i];
+                auto handler = dispatcher.find(type_index(typeid(n)));
+                vector<TensorViewWrapper> in;
+                size_t arg_index = 0;
+                set<string> arg_names;
+                for (const descriptor::Input& input : n.get_inputs())
+                {
+                    const descriptor::Output& output = input.get_output();
+                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                    TensorViewWrapper tvw{tv};
+                    if (!contains(arg_names, tvw.get_name()))
+                    {
+                        arg_names.insert(tvw.get_name());
+                        if (arg_index++ > 0)
+                        {
+                            writer << ",";
+                        }
+                        writer << "\n";
+                        writer << tvw.get_type() << "* " << tvw.get_name();
+                    }
+                    in.push_back(tvw);
+                }
+                vector<TensorViewWrapper> out;
+                for (const descriptor::Output& output : n.get_outputs())
+                {
+                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                    TensorViewWrapper tvw{tv};
+                    if (arg_index++ > 0)
+                    {
+                        writer << ",";
+                    }
+                    writer << "\n";
+                    writer << tvw.get_type() << "* " << tvw.get_name();
+                    out.push_back(tvw);
+                }
+                writer.indent--;
+                writer << "\n)\n";
+                writer << "{\n";
+                writer.indent++;
+                handler->second(&emitter, &n, in, out);
+                writer.indent--;
+                writer << "}\n";
+            }
+        }
+    }
 
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
@@ -489,7 +613,8 @@ using namespace ngraph::runtime;
             {
                 if (m_use_tbb)
                 {
-                    writer << "tbb::flow::continue_node<tbb::flow::continue_msg> flowgraph_node_"
+                    writer << "tbb::flow::continue_node<tbb::flow::continue_msg> "
+                              "flowgraph_node_"
                            << node->get_name()
                            << "(G, [&](const tbb::flow::continue_msg &msg)\n{\n";
                     writer.indent++;
