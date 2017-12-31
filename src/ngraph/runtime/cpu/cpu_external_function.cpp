@@ -27,6 +27,7 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -366,6 +367,7 @@ using namespace ngraph::runtime;
     writer << "\n";
 
     unordered_set<Node*> matched_ops;
+    unordered_map<Node*, string> match_functions;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         const list<shared_ptr<Node>>& tmp = current_function->get_ordered_ops();
@@ -392,8 +394,9 @@ using namespace ngraph::runtime;
             if (match)
             {
                 matched_ops.insert(op_list[i].get());
-                NGRAPH_INFO << op_list[i]->get_name();
-                writer << "static void func_" << op_list[i]->get_name() << "(";
+                string func_name = "func_" + op_list[i]->get_name();
+                match_functions[op_list[i].get()] = func_name;
+                writer << "static void " << func_name << "(";
                 writer.indent++;
                 // Work around a compiler warning (*node inside typeid may have effects
                 // with shared pointers, which is fine here but clang doesn't like it.)
@@ -406,7 +409,7 @@ using namespace ngraph::runtime;
                 {
                     const descriptor::Output& output = input.get_output();
                     shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                    TensorViewWrapper tvw{tv};
+                    TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
                     if (!contains(arg_names, tvw.get_name()))
                     {
                         arg_names.insert(tvw.get_name());
@@ -423,7 +426,7 @@ using namespace ngraph::runtime;
                 for (const descriptor::Output& output : n.get_outputs())
                 {
                     shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                    TensorViewWrapper tvw{tv};
+                    TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
                     if (arg_index++ > 0)
                     {
                         writer << ",";
@@ -626,7 +629,32 @@ using namespace ngraph::runtime;
             }
 
             // Emit operation body
-            handler->second(&emitter, node.get(), in, out);
+            string func_name;
+            for (const pair<Node*, string>& p : match_functions)
+            {
+                if (identical_ops(*p.first, *node))
+                {
+                    func_name = p.second;
+                    break;
+                }
+            }
+            if (func_name.empty())
+            {
+                handler->second(&emitter, node.get(), in, out);
+            }
+            else
+            {
+                vector<string> names;
+                for (const TensorViewWrapper& tv : in)
+                {
+                    names.push_back(tv.get_name());
+                }
+                for (const TensorViewWrapper& tv : out)
+                {
+                    names.push_back(tv.get_name());
+                }
+                writer << func_name << "(" << join(names) << ");\n";
+            }
 
             // Emit operation epilogue
             if (!node->is_parameter() && !node->is_constant())
