@@ -355,6 +355,7 @@ using namespace ngraph::runtime;
                     writer << "    " << c_value_strings[i] << ",\n";
                 }
                 writer << "};\n\n";
+                m_variable_name_map[tv->get_tensor().get_name()] = tv->get_tensor().get_name();
             }
         }
     }
@@ -504,10 +505,14 @@ using namespace ngraph::runtime;
             {
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
-                    writer << tensor->get_element_type().c_type_string() << "* "
-                           << tensor->get_name() << " = ("
-                           << tensor->get_element_type().c_type_string() << "*)(pool_base_ptr + "
-                           << tensor->get_pool_offset() << ");\n";
+                    // writer << tensor->get_element_type().c_type_string() << "* "
+                    //        << tensor->get_name() << " = ("
+                    //        << tensor->get_element_type().c_type_string() << "*)(pool_base_ptr + "
+                    //        << tensor->get_pool_offset() << ");\n";
+                    stringstream ss;
+                    ss << "((" << tensor->get_element_type().c_type_string()
+                       << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
+                    m_variable_name_map[tensor->get_name()] = ss.str();
                 }
             }
             writer << "\n";
@@ -522,8 +527,11 @@ using namespace ngraph::runtime;
                 shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
                 const element::Type& et = tv->get_tensor_view_type()->get_element_type();
                 string type = et.c_type_string();
-                writer << type << "* " << tv->get_tensor().get_name() << " = (" << type
-                       << "*)(inputs[" << arg_index << "]);\n";
+                // writer << type << "* " << tv->get_tensor().get_name() << " = (" << type
+                //        << "*)(inputs[" << arg_index << "]);\n";
+                stringstream ss;
+                ss << "((" << type << "*)(inputs[" << arg_index << "]))";
+                m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
                 arg_index++;
             }
         }
@@ -580,8 +588,12 @@ using namespace ngraph::runtime;
                 else
                 {
                     string type = et.c_type_string();
-                    writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<"
-                           << type << "*>(outputs[" << output_index << "]);\n";
+                    // writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<"
+                    //        << type << "*>(outputs[" << output_index << "]);\n";
+                    // writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<"
+                    stringstream ss;
+                    ss << "((" << type << "*)(outputs[" << output_index << "]))";
+                    m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
                 }
             }
             output_index++;
@@ -602,13 +614,15 @@ using namespace ngraph::runtime;
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                in.push_back(TensorViewWrapper(tv));
+                in.push_back(
+                    TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
             }
             vector<TensorViewWrapper> out;
             for (const descriptor::Output& output : node->get_outputs())
             {
                 shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                out.push_back(TensorViewWrapper(tv));
+                out.push_back(
+                    TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
             }
 
             // Emit operation prologue
