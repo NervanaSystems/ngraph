@@ -99,6 +99,8 @@ namespace ngraph
             size_t get_batch_size() const { return m_batch_size; }
             /// \return The number of image dimensions.
             size_t get_image_dimension_count() const { return m_image_dimension_count; }
+            bool is_functionally_identical(const Node&) const override;
+
         protected:
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;
