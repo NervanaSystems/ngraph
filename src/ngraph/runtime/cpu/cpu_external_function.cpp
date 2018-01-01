@@ -100,6 +100,38 @@ public:
     StaticInitializers() { ngraph::file_util::remove_directory(s_output_dir); }
 };
 
+static string emit_string_array(const vector<string>& s, size_t max_line_length)
+{
+    stringstream ss;
+    stringstream line;
+    for (size_t i = 0; i < s.size(); i++)
+    {
+        if (i != 0)
+        {
+            line << ",";
+        }
+        stringstream value;
+        value << s[i];
+        string value_string = value.str();
+        if (static_cast<size_t>(line.tellp()) + value_string.size() + 1 <= max_line_length)
+        {
+            if (i > 0)
+            {
+                line << " ";
+            }
+            line << value_string;
+        }
+        else
+        {
+            ss << line.str() << "\n";
+            line.str("");
+            line << value_string;
+        }
+    }
+    ss << line.str();
+    return ss.str();
+}
+
 static StaticInitializers s_static_initializers;
 
 #define TI(x) type_index(typeid(x))
@@ -167,25 +199,29 @@ static bool identical_ops(const Node& n1, const Node& n2)
         {
             for (size_t i = 0; i < i1.size(); i++)
             {
-                if (i1[i].get_shape() != i2[i].get_shape())
+                auto tvl1 = i1[i].get_output().get_tensor_view()->get_tensor_view_layout();
+                auto tvl2 = i2[i].get_output().get_tensor_view()->get_tensor_view_layout();
+                if (tvl1->get_shape() != tvl2->get_shape())
                 {
                     rc = false;
                 }
-                // if (i1[i].get_strides() != i2[i].get_strides())
-                // {
-                //     rc = false;
-                // }
+                else if (*tvl1 != *tvl2)
+                {
+                    rc = false;
+                }
             }
             for (size_t i = 0; i < o1.size(); i++)
             {
-                if (o1[i].get_shape() != o2[i].get_shape())
+                auto tvl1 = o1[i].get_tensor_view()->get_tensor_view_layout();
+                auto tvl2 = o2[i].get_tensor_view()->get_tensor_view_layout();
+                if (tvl1->get_shape() != tvl2->get_shape())
                 {
                     rc = false;
                 }
-                // if (o1[i].get_strides() != o2[i].get_strides())
-                // {
-                //     rc = false;
-                // }
+                else if (*tvl1 != *tvl2)
+                {
+                    rc = false;
+                }
             }
         }
         else
@@ -350,11 +386,10 @@ using namespace ngraph::runtime;
                 writer << "static " << tv->get_tensor().get_element_type().c_type_string() << " "
                        << tv->get_tensor().get_name() << "[" << c_value_strings.size() << "] =\n";
                 writer << "{\n";
-                for (size_t i = 0; i < c_value_strings.size(); i++)
-                {
-                    writer << "    " << c_value_strings[i] << ",\n";
-                }
-                writer << "};\n\n";
+                writer.indent++;
+                writer << emit_string_array(c_value_strings, 100 - writer.indent * 4);
+                writer.indent--;
+                writer << "\n};\n\n";
                 m_variable_name_map[tv->get_tensor().get_name()] = tv->get_tensor().get_name();
             }
         }
