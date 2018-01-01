@@ -186,56 +186,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::EmitMaxPool},
 };
 
-static bool identical_ops(const Node& n1, const Node& n2)
-{
-    bool rc = true;
-    if (n1.description() == n2.description())
-    {
-        const deque<descriptor::Input>& i1 = n1.get_inputs();
-        const deque<descriptor::Input>& i2 = n2.get_inputs();
-        const deque<descriptor::Output>& o1 = n1.get_outputs();
-        const deque<descriptor::Output>& o2 = n2.get_outputs();
-        if (i1.size() == i2.size() && o1.size() == o2.size())
-        {
-            for (size_t i = 0; i < i1.size(); i++)
-            {
-                auto tvl1 = i1[i].get_output().get_tensor_view()->get_tensor_view_layout();
-                auto tvl2 = i2[i].get_output().get_tensor_view()->get_tensor_view_layout();
-                if (tvl1->get_shape() != tvl2->get_shape())
-                {
-                    rc = false;
-                }
-                else if (*tvl1 != *tvl2)
-                {
-                    rc = false;
-                }
-            }
-            for (size_t i = 0; i < o1.size(); i++)
-            {
-                auto tvl1 = o1[i].get_tensor_view()->get_tensor_view_layout();
-                auto tvl2 = o2[i].get_tensor_view()->get_tensor_view_layout();
-                if (tvl1->get_shape() != tvl2->get_shape())
-                {
-                    rc = false;
-                }
-                else if (*tvl1 != *tvl2)
-                {
-                    rc = false;
-                }
-            }
-        }
-        else
-        {
-            rc = false;
-        }
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
-}
-
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : ngraph::runtime::ExternalFunction(function, release_function)
@@ -421,7 +371,7 @@ using namespace ngraph::runtime;
             bool match = false;
             for (size_t j = i + 1; j < op_list.size(); j++)
             {
-                if (identical_ops(*op_list[i], *op_list[j]))
+                if (op_list[i]->is_functionally_identical(*op_list[j]))
                 {
                     matched_ops.insert(op_list[j].get());
                     match = true;
@@ -682,7 +632,7 @@ using namespace ngraph::runtime;
             string func_name;
             for (const pair<Node*, string>& p : match_functions)
             {
-                if (identical_ops(*p.first, *node))
+                if (p.first->is_functionally_identical(*node))
                 {
                     func_name = p.second;
                     break;
