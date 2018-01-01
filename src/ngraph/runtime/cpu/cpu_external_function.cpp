@@ -606,7 +606,8 @@ using namespace ngraph::runtime;
                     {
                         parameter_as_output = true;
                         writer << "memcpy(static_cast<" << et.c_type_string() << "*>(outputs["
-                               << output_index << "]), " << ptv->get_tensor().get_name() << ", "
+                               << output_index << "]), "
+                               << m_variable_name_map[ptv->get_tensor().get_name()] << ", "
                                << ptv->get_tensor().size() << ");\n";
                         break;
                     }
