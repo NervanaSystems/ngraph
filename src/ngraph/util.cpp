@@ -183,8 +183,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // shape and element type as the nodes in fprop
     NodeMap node_param_map;
     ngraph::traverse_nodes(fprop, [&node_param_map](std::shared_ptr<Node> node) {
-        node_param_map.get(
-            std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape()));
+        node_param_map.add(
+            node, std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape()));
     });
 
     // Traverse bprop to find all of the nodes in the graph
