@@ -40,10 +40,14 @@ and more.
 Additionally, installing neon™ equips your system with several example scripts 
 that can be used to construct or customize models on a clean and simple frontend:
 
-- ``examples/minst/mnist_mlp.py``: Multi-layer perceptron on the MNIST digits dataset.
-- ``examples/cifar10/cifar10_mlp.py``: Multi-layer perceptron on the CIFAR10 dataset.
-- ``examples/cifar10/cifar10_conv.py``: Convolutional neural networks applied to the CIFAR10 dataset.
-- ``examples/ptb/char_rnn.py``: Character-level RNN language model on the Penn Treebank dataset.
+- ``examples/minst/mnist_mlp.py``: Multi-layer perceptron on the MNIST digits 
+  dataset.
+- ``examples/cifar10/cifar10_mlp.py``: Multi-layer perceptron on the CIFAR10 
+  dataset.
+- ``examples/cifar10/cifar10_conv.py``: Convolutional neural networks applied 
+   to the CIFAR10 dataset.
+- ``examples/ptb/char_rnn.py``: Character-level RNN language model on the Penn 
+   Treebank dataset.
 
 
 For details on model-specific optimizations or integrations using the neon 
