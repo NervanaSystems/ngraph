@@ -27,13 +27,14 @@ Intel nGraph library
    build-a-functiongraph.rst
    axes.rst
    autodiff.rst
-   adding_new_ops.rst
+   adding-new-ops.rst
 
 .. toctree::
    :maxdepth: 1
    :caption: Frontends
    :name: frontends 
 
+   frontends/about-frontends.rst
    frontends/neon/neon.rst
    frontends/tensorflow/tensorflow.rst
    frontends/caffe2/caffe.rst
@@ -42,13 +43,11 @@ Intel nGraph library
    :maxdepth: 2
    :caption: Backend Components
 
-   backends/index.rst
+   backends/about-backends.rst
    backends/argon/argon.rst
    backends/cpu/cpu.rst
    backends/gpu/gpu.rst
    backends/hetr/hetr.rst
-   transformer_usage.rst
-   transformer_implementation.rst
    tensors.rst
 
 .. toctree::

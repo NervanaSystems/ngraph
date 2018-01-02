@@ -35,6 +35,8 @@ may indicate specific components of the trademarked assets.
   
 * Intel® nGraph™
 
+* Intel® nGraph™ library 
+
     * nGraph library
     * ``ngraph`` API
     * ``ngraph`` library

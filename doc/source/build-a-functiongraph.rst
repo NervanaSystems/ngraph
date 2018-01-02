@@ -1,4 +1,4 @@
-.. build-a-functiongraph-on-libngraph:
+.. build-a-functiongraph:
 
 Build a function graph on the nGraph library
 #############################################

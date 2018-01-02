@@ -1,7 +1,9 @@
+
 .. build-the-libngraph.rst
 
-Building the Intel nGraph library
-#################################
+Building the Intel® nGraph™ library 
+###################################
+
 
 Build Environments
 ==================
@@ -13,7 +15,6 @@ Build Environments
 
    Ubuntu 16.04 (LTS) 64-bit, CLang 3.9, CMake 3.5.1 + GNU Make, supported, `build-essential cmake clang-3.9`
    Ubuntu 16.04 (LTS) 64-bit, CLang 4.0, CMake 3.5.1 + GNU Make, officially unsupported, `build-essential cmake clang-4.0`
-   Clear Linux OS for Intel Architecture, CLang 5.0.1, CMake 3.10.1 + GNU Make, supported, install bundle `machine-learning-basic`
 
 
 Steps

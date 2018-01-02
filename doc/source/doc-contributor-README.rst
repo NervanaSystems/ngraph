@@ -35,7 +35,7 @@ our wiki.
 
 .. note:: Please do not submit Jupyter* notebook code to the Intel nGraph library 
    repos; best practice is to maintain any project-specific examples, tests, or 
-   walk-throughs separately. Alternatively you may wish to upstream documentation 
+   walk-throughs separately. Alternatively, you may wish to upstream documentation 
    contributions directly to whatever frontend framework supports the rendering and 
    reproducibility of your example.
 
@@ -55,13 +55,13 @@ source file (``.rst``):
 
 ::
 
-  .. literalinclude:: ../../examples/dqn/dqn_atari.py
-     :language: python
+  .. literalinclude:: ../../test/models/mxnet/10_bucket_LSTM.json
+     :language: json
      :lines: 12-30
 
 And the raw code will render as follows
 
-.. literalinclude:: ../../examples/dqn/dqn_atari.py
+  .. literalinclude:: ../../test/models/mxnet/10_bucket_LSTM.json
    :language: python
    :lines: 12-30 
 

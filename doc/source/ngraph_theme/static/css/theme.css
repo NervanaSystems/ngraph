@@ -3613,15 +3613,17 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 }
 
 a {
-  color: #2980B9;
+  color: #456b76;
   text-decoration: none;
   cursor: pointer;
 }
 a:hover {
-  color: #3091d1;
+  color: #456b76;
+  background-color: #eff7f9;
+
 }
 a:visited {
-  color: #9B59B6;
+  color: #456b76;
 }
 
 html {
@@ -3793,11 +3795,11 @@ code.code-large, .rst-content tt.code-large {
 .wy-plain-list-decimal, .rst-content .section ol, .rst-content ol.arabic, article ol {
   list-style: decimal;
   line-height: 24px;
-  margin-bottom: 24px;
+  margin-bottom: 0.5em;
 }
 .wy-plain-list-decimal li, .rst-content .section ol li, .rst-content ol.arabic li, article ol li {
   list-style: decimal;
-  margin-left: 24px;
+  margin-left: 20px;
 }
 .wy-plain-list-decimal li p:last-child, .rst-content .section ol li p:last-child, .rst-content ol.arabic li p:last-child, article ol li p:last-child {
   margin-bottom: 0;
@@ -3835,7 +3837,7 @@ code, p.caption, caption-text {
   font-family: sans-serif, monospace;
   color: #A79992;
   font-size: 0.95em;
-  line-height: 1.07em;
+  line-height: 1.11em;
   }
 
   .code-block-caption { 
