@@ -20,6 +20,7 @@
 #include "memory_visualize.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/util.hpp"
 

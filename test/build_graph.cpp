@@ -132,6 +132,7 @@ TEST(build_graph, function_undeclared_parameters)
     try
     {
         auto f = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg3});
+        f->get_ops();
         // Should have thrown, so fail if it didn't
         FAIL() << "Undeclared parameter not detected.";
     }

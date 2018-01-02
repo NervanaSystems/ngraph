@@ -48,6 +48,7 @@ set (SRC
     ops/function_call.cpp
     ops/get_output_element.cpp
     ops/log.cpp
+    ops/max_pool.cpp
     ops/maximum.cpp
     ops/minimum.cpp
     ops/multiply.cpp
@@ -96,6 +97,7 @@ set (SRC
     types/element_type.cpp
     types/type.cpp
     util.cpp
+    graph_util.cpp
     )
 
 message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/ops)

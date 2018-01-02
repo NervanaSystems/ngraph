@@ -100,7 +100,21 @@ const element::Type& TupleType::get_element_type() const
 
 std::ostream& ngraph::operator<<(std::ostream& out, const ValueType& obj)
 {
-    out << "ValueType()";
+    auto tvt = dynamic_cast<const TensorViewType*>(&obj);
+    auto tup = dynamic_cast<const TupleType*>(&obj);
+
+    if (tvt != nullptr)
+    {
+        out << *tvt;
+    }
+    else if (tup != nullptr)
+    {
+        out << *tup;
+    }
+    else
+    {
+        out << "ValueType()";
+    }
     return out;
 }
 

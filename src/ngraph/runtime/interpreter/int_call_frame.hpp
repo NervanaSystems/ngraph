@@ -19,12 +19,14 @@
 #include <vector>
 
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/dot.hpp"
+#include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -58,6 +60,7 @@
 #include "ngraph/runtime/kernel/less.hpp"
 #include "ngraph/runtime/kernel/less_eq.hpp"
 #include "ngraph/runtime/kernel/log.hpp"
+#include "ngraph/runtime/kernel/max_pool.hpp"
 #include "ngraph/runtime/kernel/maximum.hpp"
 #include "ngraph/runtime/kernel/minimum.hpp"
 #include "ngraph/runtime/kernel/multiply.hpp"
@@ -382,6 +385,17 @@ private:
                                reinterpret_cast<T*>(args[1]->get_data_ptr()),
                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
                                out[0]->get_element_count());
+        }
+        else if (node_op == "MaxPool")
+        {
+            ngraph::op::MaxPool* max_pool = dynamic_cast<ngraph::op::MaxPool*>(&node);
+
+            kernel::max_pool<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                args[0]->get_shape(),
+                                out[0]->get_shape(),
+                                max_pool->get_window_shape(),
+                                max_pool->get_window_movement_strides());
         }
         else if (node_op == "Minimum")
         {
