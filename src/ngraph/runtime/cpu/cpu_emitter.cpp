@@ -369,9 +369,18 @@ void runtime::cpu::CPU_Emitter::EmitEqual(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    (" << emit_array1d(args[0]) << " ==\n"
           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+          << "[i] == " << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -382,9 +391,18 @@ void runtime::cpu::CPU_Emitter::EmitGreater(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << " xxx\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    (" << emit_array1d(args[0]) << " >\n"
           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > "
+          << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -395,9 +413,18 @@ void runtime::cpu::CPU_Emitter::EmitGreaterEq(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    (" << emit_array1d(args[0]) << " >=\n"
           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+          << "[i] >= " << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -408,9 +435,18 @@ void runtime::cpu::CPU_Emitter::EmitLess(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    (" << emit_array1d(args[0]) << " <\n"
           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
+          << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -421,9 +457,18 @@ void runtime::cpu::CPU_Emitter::EmitLessEq(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    (" << emit_array1d(args[0]) << " <=\n"
           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+          << "[i] <= " << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -520,9 +565,18 @@ void runtime::cpu::CPU_Emitter::EmitNotEqual(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    (" << emit_array1d(args[0]) << " !=\n"
           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+          << "[i] != " << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
