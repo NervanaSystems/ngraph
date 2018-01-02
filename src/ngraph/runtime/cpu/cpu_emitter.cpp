@@ -1323,11 +1323,21 @@ void runtime::cpu::CPU_Emitter::EmitPower(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " = \n";
     m_out.indent++;
     m_out << emit_array1d(args[0]) << ".pow(\n ";
     m_out << emit_array1d(args[1]) << ");\n";
-    m_out.indent -= 2;
+    m_out.indent--;
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = pow(" << args[0].get_name() << "[i], "
+          << args[1].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
+    m_out.indent--;
     m_out << "}\n";
 }
 
