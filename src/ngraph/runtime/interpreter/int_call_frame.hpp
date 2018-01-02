@@ -110,13 +110,15 @@ public:
     ///
     /// Tuples will be expanded into their tensor views to build the call frame.
     void call(const std::vector<std::shared_ptr<runtime::Value>>& inputs,
-              const std::vector<std::shared_ptr<runtime::Value>>& outputs);
+              const std::vector<std::shared_ptr<runtime::Value>>& outputs) override;
+
+    std::vector<PerformanceCounter> get_performance_data() const override;
 
 private:
     /// @brief Invoke the function with tuples pre-expanded to their underlying
     /// tensor views.
     void tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
-                     const std::vector<std::shared_ptr<TensorView>>& outputs);
+                     const std::vector<std::shared_ptr<TensorView>>& outputs) override;
     void tensor_call(const std::vector<std::shared_ptr<INT_TensorView>>& inputs,
                      const std::vector<std::shared_ptr<INT_TensorView>>& outputs);
     void call(std::shared_ptr<Function> function,
@@ -129,6 +131,9 @@ private:
 
     std::shared_ptr<ExternalFunction> m_external_function;
     std::shared_ptr<Function> m_function;
+    bool m_emit_timing;
+    std::unordered_map<const Node*, stopwatch> m_timer_map;
+
     void generate_calls(const element::Type& base_type,
                         const element::Type& secondary_type,
                         ngraph::Node& op,

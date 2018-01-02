@@ -13,6 +13,8 @@
 // ----------------------------------------------------------------------------
 
 #include <algorithm>
+#include <cstdlib>
+#include <iomanip>
 
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_tensor_view.hpp"
@@ -24,6 +26,7 @@ runtime::interpreter::INT_CallFrame::INT_CallFrame(shared_ptr<ExternalFunction> 
                                                    shared_ptr<Function> func)
     : m_external_function(external_function)
     , m_function(func)
+    , m_emit_timing(std::getenv("NGRAPH_INTERPRETER_EMIT_TIMING") != nullptr)
 {
 }
 
@@ -136,7 +139,16 @@ void runtime::interpreter::INT_CallFrame::call(
             secondary_type = op->get_inputs().at(0).get_tensor().get_element_type();
         }
 
+        if (m_emit_timing)
+        {
+            m_timer_map[op.get()].start();
+        }
         generate_calls(base_type, secondary_type, *op, inputs, outputs);
+        if (m_emit_timing)
+        {
+            stopwatch& timer = m_timer_map[op.get()];
+            timer.stop();
+        }
 
         handle_output_alias(*op, output_alias_map, output_tvs);
 
@@ -279,4 +291,17 @@ void runtime::interpreter::INT_CallFrame::call(const vector<shared_ptr<runtime::
     }
 
     tensor_call(inputs, outputs);
+}
+
+vector<runtime::PerformanceCounter>
+    runtime::interpreter::INT_CallFrame::get_performance_data() const
+{
+    vector<runtime::PerformanceCounter> rc;
+    for (const pair<const Node*, stopwatch> p : m_timer_map)
+    {
+        rc.emplace_back(p.first->get_name().c_str(),
+                        p.second.get_total_microseconds(),
+                        p.second.get_call_count());
+    }
+    return rc;
 }
