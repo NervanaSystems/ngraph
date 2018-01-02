@@ -45,13 +45,13 @@ namespace ngraph
 
         size_t index(const Coordinate& c) const;
         bool in_bounds(const Coordinate& c) const;
-        Coordinate get_target_shape() const;
+        const Coordinate& get_target_shape() const;
 
-        Shape get_source_shape() { return m_source_shape; }
-        Coordinate get_source_start_corner() { return m_source_start_corner; }
-        Coordinate get_source_end_corner() { return m_source_end_corner; }
-        Strides get_source_strides() { return m_source_strides; }
-        AxisVector get_source_axis_order() { return m_source_axis_order; }
+        const Shape& get_source_shape() const { return m_source_shape; }
+        const Coordinate& get_source_start_corner() const { return m_source_start_corner; }
+        const Coordinate& get_source_end_corner() const { return m_source_end_corner; }
+        const Strides& get_source_strides() const { return m_source_strides; }
+        const AxisVector& get_source_axis_order() const { return m_source_axis_order; }
         class Iterator
         {
         public:

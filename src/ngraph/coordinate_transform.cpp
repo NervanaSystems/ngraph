@@ -230,7 +230,7 @@ bool CoordinateTransform::in_bounds(const Coordinate& c) const
     return true;
 }
 
-Coordinate CoordinateTransform::get_target_shape() const
+const Coordinate& CoordinateTransform::get_target_shape() const
 {
     return m_target_shape;
 }
