@@ -71,7 +71,10 @@ release = '0.5.1'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = 'en,fi,ja'
+language = 'en'
+
+#   'da', 'de', 'en', 'es', 'fi', 'fr', 'hu', 'it', 'ja'
+#   'nl', 'no', 'pt', 'ro', 'ru', 'sv', 'tr'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -158,7 +161,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'IntelnGraphlibrary.tex', 'Intel nGraph library Documentation',
+    (master_doc, 'IntelnGraphlibrary.tex', 'Intel nGraph library',
      'Intel Corporation', 'manual'),
 ]
 
@@ -168,7 +171,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'intelngraphlibrary', 'Intel nGraph library Documentation',
+    (master_doc, 'intelngraphlibrary', 'Intel nGraph library',
      [author], 1)
 ]
 
@@ -179,9 +182,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'IntelnGraphlibrary', 'Intel nGraph library Documentation',
-     author, 'IntelnGraphlibrary', 'One line description of project.',
+    (master_doc, 'IntelnGraphlibrary', 'Intel nGraph library',
+     author, 'IntelnGraphlibrary', 'Documentation for Intel nGraph library code base',
      'Miscellaneous'),
 ]
 
-
+html_add_permalinks = ""

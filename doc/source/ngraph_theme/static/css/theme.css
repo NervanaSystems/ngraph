@@ -3812,13 +3812,13 @@ code.code-large, .rst-content tt.code-large {
 }
 
 pre, .codeblock, pre.literal-block, .rst-content .literal-block, .rst-content pre.literal-block, div[class^='highlight'] {
-  border: 0.03em solid #dfeef1;
-  padding: 0.0em;
+  border: 0.05em solid #dfeef1;
+  padding: 0.01em;
   caption-side: bottom; 
   overflow-x: auto;
   font-size: 0.97em;
-  line-height: 1.21em;
-  background: #e1e1e1;
+  line-height: 1.013em;
+  background: #efeeed;
   margin: 1px 0 20px 0;
 }
 
@@ -3854,7 +3854,7 @@ div[class^='highlight'] pre {
   margin: 0;
   padding: 12px 12px;
   font-family: Monaco, Consolas, "Lucida Console", monospace;
-  font-size: 1.01em;
+  font-size: 1.03em;
   line-height: 1.13;
   display: block;
   overflow: wrap;
