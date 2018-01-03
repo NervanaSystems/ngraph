@@ -303,7 +303,7 @@ void CoordinateTransform::Iterator::operator+=(size_t n)
     }
 }
 
-Coordinate& CoordinateTransform::Iterator::operator*()
+Coordinate CoordinateTransform::Iterator::operator*()
 {
     return m_coordinate;
 }
