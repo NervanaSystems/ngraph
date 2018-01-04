@@ -75,6 +75,16 @@ build_docker: build_docker_image
 
 # Build
 
+doc:
+	# temporary html docs build until cmake docs commands are developed 
+	docker run --rm --tty \
+            ${VOLUME} \
+	    ${DOCKER_RUN_ENV} \
+            --env RUN_UID="$(shell id -u)" \
+            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/doc; env VERBOSE=1 make html 2>&1 | tee make_html.log" \
+            "build_ngraph_cpp:${DBUILD_VERSION}" \
+	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
+
 build_all: build_gcc build_clang
 
 build_gcc: build_docker_image
