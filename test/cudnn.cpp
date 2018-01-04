@@ -251,7 +251,6 @@ const auto str = R"(
 
 TEST(cudnn, abc)
 {
-
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);

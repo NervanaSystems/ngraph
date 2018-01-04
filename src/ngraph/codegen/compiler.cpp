@@ -321,7 +321,6 @@ void StaticCompiler::configure_search_path()
     add_header_search_path("/usr/include/x86_64-linux-gnu");
     add_header_search_path("/usr/include");
 
-
     // Search for headers in
     //    /usr/include/x86_64-linux-gnu/c++/N.N
     //    /usr/include/c++/N.N
