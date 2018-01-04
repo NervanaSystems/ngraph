@@ -43,7 +43,7 @@ MaxFn = Function(Maximum(MaxParam1, MaxParam2),
 
 
 def makeScalarConstant(scalar, shape=[], axis_set={}):
-    constant_tensor = utils.make_tensor([])
+    constant_tensor = utils.make_tensor_float32([])
     constant_tensor.write(util.numpy_to_c(np.array([scalar], dtype=np.float32)), 0, 4)
     constant_op = Float32Constant([], constant_tensor)
     constant_broadcast = Broadcast(constant_op, shape, axis_set)
