@@ -28,7 +28,6 @@ namespace ngraph
     {
         namespace gpu
         {
-
             class GPU_CallFrame;
             class GPU_ExternalFunction;
 
@@ -41,7 +40,7 @@ namespace ngraph
             {
             public:
                 GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction> external_function,
-                             std::shared_ptr<Function> func);
+                              std::shared_ptr<Function> func);
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///

@@ -30,12 +30,12 @@ namespace ngraph
     {
         namespace gpu
         {
-          class GPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
-                                     public std::enable_shared_from_this<GPU_ExternalFunction>
+            class GPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
+                                         public std::enable_shared_from_this<GPU_ExternalFunction>
             {
             public:
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                 bool release_function = true);
+                                     bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
             protected:

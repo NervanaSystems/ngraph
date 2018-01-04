@@ -23,7 +23,7 @@ using namespace ngraph;
 using namespace std;
 
 runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& element_type,
-                                           const Shape& shape)
+                                             const Shape& shape)
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
           std::make_shared<ngraph::TensorViewType>(element_type, shape),
           "external",
