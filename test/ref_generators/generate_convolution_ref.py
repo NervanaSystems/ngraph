@@ -74,7 +74,7 @@ def tuple_times(t1,t2):
 #    Returns:
 #    output_batch     : [N ][Co][D'1]...[D'n]
 #
-# Where the D's are computed according to TensorFlow-style "valid" convolution rules.
+# Where the D's are computed according to TensorFlow-style "valid" convolution rules, but *after* padding.
 # See https://www.tensorflow.org/api_docs/python/tf/nn/convolution.
 #
 def convolution_ref(img_batch, filter, move_strides, dilation_strides, before_pads, after_pads):
@@ -85,11 +85,9 @@ def convolution_ref(img_batch, filter, move_strides, dilation_strides, before_pa
     assert(len(dilation_strides) == len(img_batch.shape) - 2)
 
     # Pad the input batch.
-    pads = ()
-    for (before,after) in zip (before_pads,after_pads):
-        pads = pads + ((int(before),int(after)),)
-
-    img_batch = np.pad(img_batch, pads, mode='constant')
+    before_pads = (0,0) + before_pads  # Have to add values for the image and channel dims.
+    after_pads = (0,0) + after_pads    # Have to add values for the image and channel dims.
+    img_batch = np.pad(img_batch, zip(before_pads,after_pads), mode='constant', constant_values=0)
 
     img_count = img_batch.shape[0]                # N
     ci_count = img_batch.shape[1]                 # Ci
@@ -172,13 +170,12 @@ def emit_test(t,f):
 TEST (${BACKEND_NAME}, %s)
 {
     auto shape_a = Shape{%s};
-    auto A = make_shared<op::Parameter>(element::Float64::element_type(), shape_a);
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
     auto shape_b = Shape{%s};
-    auto B = make_shared<op::Parameter>(element::Float64::element_type(), shape_b);
+    auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{%s};
-    auto result_type = make_shared<TensorViewType>(element::Float64::element_type(), shape_r);
     auto f = make_shared<Function>(
-        make_shared<op::Convolution>(A, B, Strides{%s}, Strides{%s}, Shape{%s}, Shape{%s}), result_type, op::Parameters{A, B});
+        make_shared<op::Convolution>(A, B, Strides{%s}, Strides{%s}, Shape{%s}, Shape{%s}), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -186,11 +183,11 @@ TEST (${BACKEND_NAME}, %s)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::Float64::element_type(), shape_a);
+    auto a = backend->make_primary_tensor_view(element::f64, shape_a);
     copy_data(a, vector<double>{%s});
-    auto b = backend->make_primary_tensor_view(element::Float64::element_type(), shape_b);
+    auto b = backend->make_primary_tensor_view(element::f64, shape_b);
     copy_data(b, vector<double>{%s});
-    auto result = backend->make_primary_tensor_view(element::Float64::element_type(), shape_r);
+    auto result = backend->make_primary_tensor_view(element::f64, shape_r);
 
     vector<double> expected_result{%s};
 

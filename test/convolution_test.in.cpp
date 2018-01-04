@@ -68,8 +68,9 @@ TEST(${BACKEND_NAME}, convolution_2d_1image)
     auto shape_b = Shape{2, 1, 2, 2};
     auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{1, 2, 2, 4};
-    auto f = make_shared<Function>(make_shared<op::Convolution>(A, B, Strides{1, 1}, Strides{1, 1}),
-                                   op::Parameters{A, B});
+    auto f = make_shared<Function>(
+        make_shared<op::Convolution>(A, B, Strides{1, 1}, Strides{1, 1}, Shape{0, 0}, Shape{0, 0}),
+        op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -97,8 +98,9 @@ TEST(${BACKEND_NAME}, convolution_2d_2images)
     auto shape_b = Shape{2, 1, 2, 2};
     auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{2, 2, 2, 4};
-    auto f = make_shared<Function>(make_shared<op::Convolution>(A, B, Strides{1, 1}, Strides{1, 1}),
-                                   op::Parameters{A, B});
+    auto f = make_shared<Function>(
+        make_shared<op::Convolution>(A, B, Strides{1, 1}, Strides{1, 1}, Shape{0, 0}, Shape{0, 0}),
+        op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -128,8 +130,9 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_strided)
     auto shape_b = Shape{2, 1, 2, 2};
     auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{2, 2, 1, 2};
-    auto f = make_shared<Function>(make_shared<op::Convolution>(A, B, Strides{2, 2}, Strides{1, 1}),
-                                   op::Parameters{A, B});
+    auto f = make_shared<Function>(
+        make_shared<op::Convolution>(A, B, Strides{2, 2}, Strides{1, 1}, Shape{0, 0}, Shape{0, 0}),
+        op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -157,8 +160,9 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_dilated)
     auto shape_b = Shape{2, 1, 2, 2};
     auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{2, 2, 1, 3};
-    auto f = make_shared<Function>(make_shared<op::Convolution>(A, B, Strides{1, 1}, Strides{2, 2}),
-                                   op::Parameters{A, B});
+    auto f = make_shared<Function>(
+        make_shared<op::Convolution>(A, B, Strides{1, 1}, Strides{2, 2}, Shape{0, 0}, Shape{0, 0}),
+        op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -187,7 +191,8 @@ TEST(${BACKEND_NAME}, convolution_3d_2images)
     auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{2, 2, 2, 4, 6};
     auto f = make_shared<Function>(
-        make_shared<op::Convolution>(A, B, Strides{1, 1, 1}, Strides{1, 1, 1}),
+        make_shared<op::Convolution>(
+            A, B, Strides{1, 1, 1}, Strides{1, 1, 1}, Shape{0, 0, 0}, Shape{0, 0, 0}),
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -248,7 +253,8 @@ TEST(${BACKEND_NAME}, convolution_4d_2images)
     auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{2, 2, 2, 4, 6, 7};
     auto f = make_shared<Function>(
-        make_shared<op::Convolution>(A, B, Strides{1, 1, 1, 1}, Strides{1, 1, 1, 1}),
+        make_shared<op::Convolution>(
+            A, B, Strides{1, 1, 1, 1}, Strides{1, 1, 1, 1}, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0}),
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -523,7 +529,8 @@ TEST(${BACKEND_NAME}, convolution_4d_4images)
     auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{4, 4, 2, 4, 6, 7};
     auto f = make_shared<Function>(
-        make_shared<op::Convolution>(A, B, Strides{1, 1, 1, 1}, Strides{1, 1, 1, 1}),
+        make_shared<op::Convolution>(
+            A, B, Strides{1, 1, 1, 1}, Strides{1, 1, 1, 1}, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0}),
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -2002,7 +2009,8 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided)
     auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{4, 4, 1, 4, 2, 4};
     auto f = make_shared<Function>(
-        make_shared<op::Convolution>(A, B, Strides{2, 1, 3, 2}, Strides{1, 1, 1, 1}),
+        make_shared<op::Convolution>(
+            A, B, Strides{2, 1, 3, 2}, Strides{1, 1, 1, 1}, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0}),
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -2940,7 +2948,8 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_dilated)
     auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{4, 4, 1, 4, 2, 7};
     auto f = make_shared<Function>(
-        make_shared<op::Convolution>(A, B, Strides{1, 1, 1, 1}, Strides{2, 1, 3, 2}),
+        make_shared<op::Convolution>(
+            A, B, Strides{1, 1, 1, 1}, Strides{2, 1, 3, 2}, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0}),
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -3921,7 +3930,8 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated)
     auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{4, 4, 2, 4, 1, 3};
     auto f = make_shared<Function>(
-        make_shared<op::Convolution>(A, B, Strides{3, 2, 2, 3}, Strides{2, 1, 3, 2}),
+        make_shared<op::Convolution>(
+            A, B, Strides{3, 2, 2, 3}, Strides{2, 1, 3, 2}, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0}),
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
