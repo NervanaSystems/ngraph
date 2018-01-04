@@ -2387,3 +2387,2202 @@ TEST(type_prop, conv_invalid_movement_stride_0)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, max_pool_1d_deduce)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
+    auto window_shape = Shape{10};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 91}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{1});
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), Shape{100});
+    EXPECT_EQ(max_pool->get_output_image_shape(), Shape{91});
+
+    EXPECT_EQ(max_pool->get_window_shape(), Shape{10});
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
+}
+
+TEST(type_prop, max_pool_1d_deduce_strided)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
+    auto window_shape = Shape{10};
+    auto move_strides = Strides{2};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+
+    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 46}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), Shape{100});
+    EXPECT_EQ(max_pool->get_output_image_shape(), Shape{46});
+
+    EXPECT_EQ(max_pool->get_window_shape(), Shape{10});
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
+}
+
+TEST(type_prop, max_pool_1d_deduce_strided_small_uneven)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});
+    auto window_shape = Shape{2};
+    auto move_strides = Strides{2};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+
+    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 2}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), Shape{5});
+    EXPECT_EQ(max_pool->get_output_image_shape(), Shape{2});
+
+    EXPECT_EQ(max_pool->get_window_shape(), Shape{2});
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
+}
+
+TEST(type_prop, max_pool_1d_deduce_strided_small_even)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 6});
+    auto window_shape = Shape{2};
+    auto move_strides = Strides{2};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+
+    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 3}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), Shape{6});
+    EXPECT_EQ(max_pool->get_output_image_shape(), Shape{3});
+
+    EXPECT_EQ(max_pool->get_window_shape(), Shape{2});
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
+}
+
+TEST(type_prop, max_pool_2d_deduce)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto window_shape = Shape{10, 20};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 91, 131}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{1, 1}));
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), (Shape{100, 150}));
+    EXPECT_EQ(max_pool->get_output_image_shape(), (Shape{91, 131}));
+
+    EXPECT_EQ(max_pool->get_window_shape(), (Shape{10, 20}));
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 2);
+}
+
+TEST(type_prop, max_pool_2d_deduce_strided)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto window_shape = Shape{10, 20};
+    auto move_strides = Strides{2, 3};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+
+    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 46, 44}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{2, 3}));
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), (Shape{100, 150}));
+    EXPECT_EQ(max_pool->get_output_image_shape(), (Shape{46, 44}));
+
+    EXPECT_EQ(max_pool->get_window_shape(), (Shape{10, 20}));
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 2);
+}
+
+TEST(type_prop, max_pool_3d_deduce_strided_small)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 7, 8, 10});
+    auto window_shape = Shape{2, 3, 2};
+    auto move_strides = Strides{2, 3, 4};
+    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+
+    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 3, 2, 3}));
+
+    EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{2, 3, 4}));
+
+    EXPECT_EQ(max_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(max_pool->get_input_image_shape(), (Shape{7, 8, 10}));
+    EXPECT_EQ(max_pool->get_output_image_shape(), (Shape{3, 2, 3}));
+
+    EXPECT_EQ(max_pool->get_window_shape(), (Shape{2, 3, 2}));
+
+    EXPECT_EQ(max_pool->get_batch_size(), 64);
+    EXPECT_EQ(max_pool->get_image_dimension_count(), 3);
+}
+
+TEST(type_prop, max_pool_invalid_0d_input)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{});
+    auto window_shape = Shape{};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid 0D input not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Max pool image batch input must have rank of at "
+                              "least 3 (one batch axis, one channel axis, at "
+                              "least one image dimension)."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_1d_input)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto window_shape = Shape{};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid 1D input not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Max pool image batch input must have rank of at "
+                              "least 3 (one batch axis, one channel axis, at "
+                              "least one image dimension)."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_2d_input)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 6});
+    auto window_shape = Shape{};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid 2D input not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Max pool image batch input must have rank of at "
+                              "least 3 (one batch axis, one channel axis, at "
+                              "least one image dimension)."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_0_batch_size)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{0, 6, 1});
+    auto window_shape = Shape{1};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with 0 batch size not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Max pool image batch size is zero."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_0_channels)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 0, 1});
+    auto window_shape = Shape{1};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with 0 channels not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Max pool requires at least one image depth channel."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_many)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto window_shape = Shape{3, 3, 3};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with too many window dimensions not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Max pool window shape rank does not match number of image dimensions."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_few)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto window_shape = Shape{3};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with too few window dimensions not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Max pool window shape rank does not match number of image dimensions."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_movement_stride_rank)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto window_shape = Shape{3, 3};
+    auto move_strides = Strides{2, 3, 8};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with wrong movement stride rank not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Max pool window movement stride rank does not "
+                              "match number of image dimensions."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_input_image_size_0)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 0, 10});
+    auto window_shape = Shape{3, 3};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with zero-length image axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Max pool input image dimension is zero."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_window_size_0)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto window_shape = Shape{3, 0};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with zero-length window axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Max pool window shape has a zero-length axis."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_dilated_too_large)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 8, 8});
+    auto window_shape = Shape{9, 9};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with oversized window not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Max pool window shape is larger than the image."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, max_pool_invalid_movement_stride_0)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto window_shape = Shape{3, 3};
+    auto move_strides = Strides{0, 1};
+    try
+    {
+        auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with 0-length movement stride axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Max pool window axis movement stride is zero."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reverse_0d_deduce)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{}));
+}
+
+TEST(type_prop, reverse_1d_deduce_nochange)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5}));
+}
+
+TEST(type_prop, reverse_1d_deduce_0)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{0});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5}));
+}
+
+TEST(type_prop, reverse_2d_deduce_nochange)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6}));
+}
+
+TEST(type_prop, reverse_2d_deduce_0)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{0});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6}));
+}
+
+TEST(type_prop, reverse_2d_deduce_1)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{1});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6}));
+}
+
+TEST(type_prop, reverse_2d_deduce_01)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{0, 1});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6}));
+}
+
+TEST(type_prop, reverse_3d_deduce_nochange)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+}
+
+TEST(type_prop, reverse_3d_deduce_0)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{0});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+}
+
+TEST(type_prop, reverse_3d_deduce_1)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{1});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+}
+
+TEST(type_prop, reverse_3d_deduce_2)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{2});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+}
+
+TEST(type_prop, reverse_3d_deduce_01)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{0, 1});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+}
+
+TEST(type_prop, reverse_3d_deduce_02)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{0, 2});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+}
+
+TEST(type_prop, reverse_3d_deduce_12)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{1, 2});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+}
+
+TEST(type_prop, reverse_3d_deduce_012)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
+    auto rev = make_shared<op::Reverse>(param, AxisSet{0, 1, 2});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+}
+
+TEST(type_prop, reverse_3d_deduce_oob)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
+    try
+    {
+        auto rev = make_shared<op::Reverse>(param, AxisSet{0, 3, 2});
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Axis out of bounds not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Reverse axis 3 is out of bounds (input rank is 3)."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_1d)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4};
+    Strides move_strides{1};
+
+    auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+    ASSERT_EQ(rw->get_element_type(), element::f32);
+    ASSERT_EQ(rw->get_shape(), (Shape{13}));
+}
+
+TEST(type_prop, reduce_window_deduce_1d_strided_even)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4};
+    Strides move_strides{4};
+
+    auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+    ASSERT_EQ(rw->get_element_type(), element::f32);
+    ASSERT_EQ(rw->get_shape(), (Shape{4}));
+}
+
+TEST(type_prop, reduce_window_deduce_1d_strided_uneven)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4};
+    Strides move_strides{4};
+
+    auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+    ASSERT_EQ(rw->get_element_type(), element::f32);
+    ASSERT_EQ(rw->get_shape(), (Shape{4}));
+}
+
+TEST(type_prop, reduce_window_deduce_2d_strided_uneven)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2};
+    Strides move_strides{4, 3};
+
+    auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+    ASSERT_EQ(rw->get_element_type(), element::f32);
+    ASSERT_EQ(rw->get_shape(), (Shape{4, 3}));
+}
+
+TEST(type_prop, reduce_window_deduce_3d_strided_uneven)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+    ASSERT_EQ(rw->get_element_type(), element::f32);
+    ASSERT_EQ(rw->get_shape(), (Shape{4, 3, 6}));
+}
+
+TEST(type_prop, reduce_window_deduce_non_scalar_init)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{3});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Non-scalar initial value not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Argument for initial value is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_different_element_types)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::i32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Different element types not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Element types for reductee and initial values do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_bad_window_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Bad window shape not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Window shape has different rank from input tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_bad_move_strides)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Bad window movement strides not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Window movement strides have different rank from input tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_zero_length_axis)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 0, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Zero-length window axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Window shape has a zero-length axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_zero_length_stride)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 0, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Zero-length window movement stride not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Window movement stride for some axis is zero"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_window_too_big)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 11, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Window too big not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Reduction window is bigger than input"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_param_count)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_0 + f_param_1,
+                                   op::Parameters{f_param_0, f_param_1, f_param_2});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Too many reduction function parameters not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Reduction function has wrong number of parameters (should be two)"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_param_0_wrong_element_type)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::i32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Parameter 0 wrong type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Parameter 0 of reduction function has wrong element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_param_0_wrong_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(f_param_1, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Parameter 0 wrong type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 0 of reduction function is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_param_1_wrong_element_type)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::i32, Shape{});
+    auto f = make_shared<Function>(f_param_0, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Parameter 1 wrong type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Parameter 1 of reduction function has wrong element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_param_1_wrong_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto f = make_shared<Function>(f_param_0, op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Parameter 1 wrong type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 1 of reduction function is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_deduce_multi_output)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(Nodes{f_param_0 + f_param_1, f_param_0 * f_param_1},
+                                   op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Multiple-output reduction function not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Single-output reduction function was expected"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_reduction_function_return_element_type_mismatch)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Convert>(f_param_0 + f_param_1, element::i32),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Reduction function return element type mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Return element type from reduction function does not match expected"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reduce_window_reduction_function_return_shape_mismatch)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{18, 10, 15});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(f_param_0 + f_param_1, Shape{1}, AxisSet{0}),
+        op::Parameters{f_param_0, f_param_1});
+
+    Shape window_shape{4, 2, 4};
+    Strides move_strides{4, 3, 2};
+
+    try
+    {
+        auto rw = make_shared<op::ReduceWindow>(param_0, param_1, f, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Reduction function return shape mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Return shape from reduction function is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_1d)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{13});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{4};
+    Strides move_strides{1};
+
+    auto sas = make_shared<op::SelectAndScatter>(
+        param_0, param_1, param_2, f, g, window_shape, move_strides);
+    ASSERT_EQ(sas->get_element_type(), element::f32);
+    ASSERT_EQ(sas->get_shape(), (Shape{16}));
+}
+
+TEST(type_prop, select_and_scatter_deduce_2d)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{13, 14});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{4, 5};
+    Strides move_strides{1, 1};
+
+    auto sas = make_shared<op::SelectAndScatter>(
+        param_0, param_1, param_2, f, g, window_shape, move_strides);
+    ASSERT_EQ(sas->get_element_type(), element::f32);
+    ASSERT_EQ(sas->get_shape(), (Shape{16, 18}));
+}
+
+TEST(type_prop, select_and_scatter_deduce_3d)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{13, 14, 9});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{4, 5, 2};
+    Strides move_strides{1, 1, 1};
+
+    auto sas = make_shared<op::SelectAndScatter>(
+        param_0, param_1, param_2, f, g, window_shape, move_strides);
+    ASSERT_EQ(sas->get_element_type(), element::f32);
+    ASSERT_EQ(sas->get_shape(), (Shape{16, 18, 10}));
+}
+
+TEST(type_prop, select_and_scatter_deduce_3d_strided)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{4, 3, 2};
+    Strides move_strides{4, 6, 5};
+
+    auto sas = make_shared<op::SelectAndScatter>(
+        param_0, param_1, param_2, f, g, window_shape, move_strides);
+    ASSERT_EQ(sas->get_element_type(), element::f32);
+    ASSERT_EQ(sas->get_shape(), (Shape{16, 18, 10}));
+}
+
+TEST(type_prop, select_and_scatter_deduce_3d_strided_uneven)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    auto sas = make_shared<op::SelectAndScatter>(
+        param_0, param_1, param_2, f, g, window_shape, move_strides);
+    ASSERT_EQ(sas->get_element_type(), element::f32);
+    ASSERT_EQ(sas->get_shape(), (Shape{16, 18, 10}));
+}
+
+TEST(type_prop, select_and_scatter_deduce_init_not_scalar)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{4});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Non-scalar init value not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Argument for initial value is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_init_elem_type_wrong)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::i32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect init element type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Element types for selectee and initial values do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_elem_type_wrong)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::i32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect source tensor element type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Element types for selectee and source tensors do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_window_shape_wrong_rank)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong window shape rank not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Window shape has different rank from selectee tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_window_strides_wrong_rank)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong window strides rank not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Window movement strides have different rank from selectee tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_window_shape_zero_length_axis)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 0, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Zero-length window shape axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Window shape has a zero-length axis"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_window_strides_zero_length_axis)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 0, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Zero-length window strides axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Window movement stride for some axis is zero"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_window_too_big)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 19, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Window too big not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Reduction window is bigger than selectee tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_source_tensor_wrong_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong source tensor shape not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Source tensor does not have expected shape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_count)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1, f_param_2});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong selection function parameter count not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Selection function has wrong number of parameters (should be two)"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_0_element_type)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::i32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_1, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong element type for selection function parameter 0 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Parameter 0 of selection function has wrong element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_0_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_1, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong shape for selection function parameter 0 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 0 of selection function is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_1_element_type)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::i32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_0),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong element type for selection function parameter 1 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Parameter 1 of selection function has wrong element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_1_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_0),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong shape for selection function parameter 1 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 1 of selection function is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_multi_output)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(
+        std::vector<std::shared_ptr<Node>>{make_shared<op::Greater>(f_param_0, f_param_1),
+                                           make_shared<op::Greater>(f_param_0, f_param_1)},
+        op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Multi-output selection function not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Single-output selection function was expected"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_result_element_type)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong selection function result element type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Return element type from selection function is not boolean"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_result_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(
+        make_shared<op::Broadcast>(
+            make_shared<op::Greater>(f_param_0, f_param_1), Shape{1}, AxisSet{0}),
+        op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong selection function result type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Return shape from selection function is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_count)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_1,
+                                   op::Parameters{g_param_0, g_param_1, g_param_2});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong scatter function parameter count not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Scatter function has wrong number of parameters (should be two)"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_0_element_type)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::i32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_1 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong element type for scatter function parameter 0 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Parameter 0 of scatter function has wrong element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_0_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(g_param_1 + g_param_1, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong shape for scatter function parameter 0 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 0 of scatter function is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_1_element_type)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::i32, Shape{});
+    auto g = make_shared<Function>(g_param_0 + g_param_0, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong element type for scatter function parameter 1 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Parameter 1 of scatter function has wrong element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_1_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto g = make_shared<Function>(g_param_0 + g_param_0, op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong shape for scatter function parameter 1 not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Parameter 1 of scatter function is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_multi_output)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(
+        std::vector<std::shared_ptr<Node>>{g_param_0 + g_param_1, g_param_0 + g_param_1},
+        op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Multi-output scatter function not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Single-output scatter function was expected"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_result_element_type)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(make_shared<op::Greater>(g_param_0, g_param_1),
+                                   op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong scatter function result element type not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Return element type from scatter function does not match the init value type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_result_shape)
+{
+    auto param_0 = make_shared<op::Parameter>(element::f32, Shape{16, 18, 10});
+    auto param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto param_2 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
+                                   op::Parameters{f_param_0, f_param_1});
+
+    auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto g = make_shared<Function>(
+        make_shared<op::Broadcast>(g_param_0 + g_param_1, Shape{1}, AxisSet{0}),
+        op::Parameters{g_param_0, g_param_1});
+
+    Shape window_shape{5, 5, 3};
+    Strides move_strides{6, 6, 3};
+
+    try
+    {
+        auto sas = make_shared<op::SelectAndScatter>(
+            param_0, param_1, param_2, f, g, window_shape, move_strides);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong scatter function result shape not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Return shape from scatter function is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}

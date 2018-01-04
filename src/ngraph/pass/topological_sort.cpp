@@ -16,11 +16,11 @@
 #include <unordered_map>
 
 #include "ngraph/function.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
-#include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;

@@ -4218,6 +4218,191 @@ TEST(${BACKEND_NAME}, DISABLED_parameter_to_output)
     EXPECT_EQ((vector<float>{1, -2, 0, -4.8f}), result->get_vector<float>());
 }
 
+TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
+{
+    auto shape_a = Shape{1, 1, 14};
+    auto window_shape = Shape{3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{1, 1, 12};
+    auto f = make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 3>{{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}}}.get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}}).get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
+{
+    auto shape_a = Shape{2, 1, 14};
+    auto window_shape = Shape{3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{2, 1, 12};
+    auto f = make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}},
+                                       {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>(
+                   {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}, {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
+{
+    auto shape_a = Shape{2, 2, 14};
+    auto window_shape = Shape{3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{2, 2, 12};
+    auto f = make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0},
+                                        {0, 0, 0, 2, 0, 0, 2, 3, 0, 1, 2, 0, 1, 0}},
+
+                                       {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2},
+                                        {2, 1, 0, 0, 1, 0, 2, 0, 0, 0, 1, 1, 2, 0}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>(
+                   {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}, {0, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 1}},
+
+                    {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}, {2, 1, 1, 1, 2, 2, 2, 0, 1, 1, 2, 2}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
+{
+    auto shape_a = Shape{2, 2, 5, 5};
+    auto window_shape = Shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{2, 2, 4, 3};
+    auto f = make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1}, // img 0 chan 0
+                                         {0, 3, 2, 0, 0},
+                                         {2, 0, 0, 0, 1},
+                                         {2, 0, 1, 1, 2},
+                                         {0, 2, 1, 0, 0}},
+
+                                        {{0, 0, 0, 2, 0}, // img 0 chan 1
+                                         {0, 2, 3, 0, 1},
+                                         {2, 0, 1, 0, 2},
+                                         {3, 1, 0, 0, 0},
+                                         {2, 0, 0, 0, 0}}},
+
+                                       {{{0, 2, 1, 1, 0}, // img 1 chan 0
+                                         {0, 0, 2, 0, 1},
+                                         {0, 0, 1, 2, 3},
+                                         {2, 0, 0, 3, 0},
+                                         {0, 0, 0, 0, 0}},
+
+                                        {{2, 1, 0, 0, 1}, // img 1 chan 1
+                                         {0, 2, 0, 0, 0},
+                                         {1, 1, 2, 0, 2},
+                                         {1, 1, 1, 0, 1},
+                                         {1, 0, 0, 0, 2}}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{3, 3, 2}, // img 0 chan 0
+                                          {3, 3, 2},
+                                          {2, 1, 2},
+                                          {2, 2, 2}},
+
+                                         {{3, 3, 3}, // img 0 chan 1
+                                          {3, 3, 3},
+                                          {3, 1, 2},
+                                          {3, 1, 0}}},
+
+                                        {{{2, 2, 2}, // img 1 chan 0
+                                          {2, 2, 3},
+                                          {2, 3, 3},
+                                          {2, 3, 3}},
+
+                                         {{2, 2, 1}, // img 1 chan 1
+                                          {2, 2, 2},
+                                          {2, 2, 2},
+                                          {1, 1, 2}}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
+{
+    auto shape_a = Shape{1, 1, 8, 8};
+    auto window_shape = Shape{2, 3};
+    auto window_movement_strides = Strides{3, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{1, 1, 3, 3};
+    auto f = make_shared<Function>(
+        make_shared<op::MaxPool>(A, window_shape, window_movement_strides), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1, 2, 0, 0},
+                                         {0, 3, 2, 0, 0, 0, 1, 0},
+                                         {2, 0, 0, 0, 1, 0, 0, 0},
+                                         {2, 0, 1, 1, 2, 2, 3, 0},
+                                         {0, 2, 1, 0, 0, 0, 1, 0},
+                                         {2, 0, 3, 1, 0, 0, 0, 0},
+                                         {1, 2, 0, 0, 0, 1, 2, 0},
+                                         {1, 0, 2, 0, 0, 0, 1, 0}}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
+              result->get_vector<float>());
+}
+
 TEST(${BACKEND_NAME}, not)
 {
     auto shape = Shape{2, 2};
@@ -4238,7 +4423,7 @@ TEST(${BACKEND_NAME}, not)
     EXPECT_EQ((vector<char>{0, 1, 0, 1}), result->get_vector<char>());
 }
 
-TEST(${BACKEND_NAME}, reverse_0d)
+TEST(${BACKEND_NAME}, DISABLED_reverse_0d)
 {
     auto shape = Shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4258,7 +4443,7 @@ TEST(${BACKEND_NAME}, reverse_0d)
     EXPECT_EQ((vector<float>{6}), result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_1d_nochange)
+TEST(${BACKEND_NAME}, DISABLED_reverse_1d_nochange)
 {
     auto shape = Shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4278,7 +4463,7 @@ TEST(${BACKEND_NAME}, reverse_1d_nochange)
     EXPECT_EQ((vector<float>{0, 1, 2, 3, 4, 5, 6, 7}), result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_1d_0)
+TEST(${BACKEND_NAME}, DISABLED_reverse_1d_0)
 {
     auto shape = Shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4298,7 +4483,7 @@ TEST(${BACKEND_NAME}, reverse_1d_0)
     EXPECT_EQ((vector<float>{7, 6, 5, 4, 3, 2, 1, 0}), result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_2d_nochange)
+TEST(${BACKEND_NAME}, DISABLED_reverse_2d_nochange)
 {
     auto shape = Shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4321,7 +4506,7 @@ TEST(${BACKEND_NAME}, reverse_2d_nochange)
         result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_2d_0)
+TEST(${BACKEND_NAME}, DISABLED_reverse_2d_0)
 {
     auto shape = Shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4344,7 +4529,7 @@ TEST(${BACKEND_NAME}, reverse_2d_0)
         result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_2d_1)
+TEST(${BACKEND_NAME}, DISABLED_reverse_2d_1)
 {
     auto shape = Shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4367,7 +4552,7 @@ TEST(${BACKEND_NAME}, reverse_2d_1)
         result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_2d_01)
+TEST(${BACKEND_NAME}, DISABLED_reverse_2d_01)
 {
     auto shape = Shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4390,7 +4575,7 @@ TEST(${BACKEND_NAME}, reverse_2d_01)
         result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_nochange)
+TEST(${BACKEND_NAME}, DISABLED_reverse_3d_nochange)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4416,7 +4601,7 @@ TEST(${BACKEND_NAME}, reverse_3d_nochange)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_0)
+TEST(${BACKEND_NAME}, DISABLED_reverse_3d_0)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4442,7 +4627,7 @@ TEST(${BACKEND_NAME}, reverse_3d_0)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_1)
+TEST(${BACKEND_NAME}, DISABLED_reverse_3d_1)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4468,7 +4653,7 @@ TEST(${BACKEND_NAME}, reverse_3d_1)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_2)
+TEST(${BACKEND_NAME}, DISABLED_reverse_3d_2)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4494,7 +4679,7 @@ TEST(${BACKEND_NAME}, reverse_3d_2)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_01)
+TEST(${BACKEND_NAME}, DISABLED_reverse_3d_01)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4520,7 +4705,7 @@ TEST(${BACKEND_NAME}, reverse_3d_01)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_02)
+TEST(${BACKEND_NAME}, DISABLED_reverse_3d_02)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4546,7 +4731,7 @@ TEST(${BACKEND_NAME}, reverse_3d_02)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_12)
+TEST(${BACKEND_NAME}, DISABLED_reverse_3d_12)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4572,7 +4757,7 @@ TEST(${BACKEND_NAME}, reverse_3d_12)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, reverse_3d_012)
+TEST(${BACKEND_NAME}, DISABLED_reverse_3d_012)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);

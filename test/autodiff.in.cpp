@@ -1111,7 +1111,7 @@ TEST(${BACKEND_NAME}, backwards_abc)
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
-TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
+TEST(${BACKEND_NAME}, DISABLED_backwards_reverse_3d_02)
 {
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();

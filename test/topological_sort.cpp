@@ -19,13 +19,13 @@
 
 #include "gtest/gtest.h"
 
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
-#include "ngraph/util.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
