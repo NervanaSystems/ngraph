@@ -14,7 +14,15 @@
 
 #pragma once
 
-#include "ngraph/runtime/manager.hpp"
+#include <functional>
+#include <memory>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
+
+#include "ngraph/function.hpp"
+#include "ngraph/runtime/external_function.hpp"
+#include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 
 namespace ngraph
 {
@@ -22,16 +30,19 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPUManager : public Manager
+          class GPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
+                                     public std::enable_shared_from_this<GPU_ExternalFunction>
             {
             public:
-                virtual std::shared_ptr<Backend> allocate_backend() override;
+                GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                                 bool release_function = true);
+                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
-                virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
-                    compile(const std::shared_ptr<ngraph::Function>& fun) override;
+            protected:
+                void compile();
 
-                static Factory factory;
+                std::shared_ptr<ngraph::Function> m_function;
             };
-        };
+        }
     }
 }

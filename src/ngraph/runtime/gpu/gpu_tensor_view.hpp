@@ -25,16 +25,16 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPUTensorView;
+            class GPU_TensorView;
         }
     }
 }
 
-class ngraph::runtime::gpu::GPUTensorView : public ngraph::runtime::TensorView
+class ngraph::runtime::gpu::GPU_TensorView : public ngraph::runtime::TensorView
 {
 public:
-    GPUTensorView(const ngraph::element::Type& element_type, const Shape& shape);
-    virtual ~GPUTensorView();
+    GPU_TensorView(const ngraph::element::Type& element_type, const Shape& shape);
+    virtual ~GPU_TensorView();
 
     char* get_data_ptr();
     const char* get_data_ptr() const;

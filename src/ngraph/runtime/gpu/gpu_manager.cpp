@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/runtime/gpu/manager.hpp"
-#include "ngraph/runtime/gpu/backend.hpp"
-#include "ngraph/runtime/gpu/external_function.hpp"
+#include "ngraph/runtime/gpu/gpu_manager.hpp"
+#include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "ngraph/runtime/gpu/gpu_external_function.hpp"
 
 using namespace ngraph::runtime::gpu;
 
-std::shared_ptr<ngraph::runtime::Backend> GPUManager::allocate_backend()
+std::shared_ptr<ngraph::runtime::Backend> GPU_Manager::allocate_backend()
 {
-    return std::make_shared<GPUBackend>();
+    return std::make_shared<GPU_Backend>();
 }
 
 std::shared_ptr<ngraph::runtime::ExternalFunction>
-    GPUManager::compile(const std::shared_ptr<ngraph::Function>& fun)
+    GPU_Manager::compile(const std::shared_ptr<ngraph::Function>& fun)
 {
-    return std::make_shared<ExternalFunction>(fun);
+    return std::make_shared<GPU_ExternalFunction>(fun);
 }
 
-ngraph::runtime::Manager::Factory GPUManager::factory = ngraph::runtime::Manager::register_factory(
+ngraph::runtime::Manager::Factory GPU_Manager::factory = ngraph::runtime::Manager::register_factory(
     "GPU", [](const std::string& name) -> std::shared_ptr<ngraph::runtime::Manager> {
-        return std::make_shared<GPUManager>();
+        return std::make_shared<GPU_Manager>();
     });

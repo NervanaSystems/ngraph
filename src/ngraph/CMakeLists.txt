@@ -187,11 +187,11 @@ endif()
         # Add sources for the GPU backend
         # and all its dependencies
         set(SRC ${SRC}
-            runtime/gpu/call_frame.cpp
-            runtime/gpu/backend.cpp
-            runtime/gpu/manager.cpp
-            runtime/gpu/external_function.cpp
-            runtime/gpu/tensor_view.cpp
+            runtime/gpu/gpu_call_frame.cpp
+            runtime/gpu/gpu_backend.cpp
+            runtime/gpu/gpu_manager.cpp
+            runtime/gpu/gpu_external_function.cpp
+            runtime/gpu/gpu_tensor_view.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADERS_PATH=\"${CUDA_INCLUDE_DIRS}\";")

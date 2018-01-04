@@ -28,17 +28,19 @@ namespace ngraph
     {
         namespace gpu
         {
-            class ExternalFunction;
+
+            class GPU_CallFrame;
+            class GPU_ExternalFunction;
 
             using EntryPoint_t = void(void** inputs, void** outputs);
 
             using EntryPoint = std::function<EntryPoint_t>;
 
             // Compile and execute graphs
-            class GPUCallFrame : public ngraph::runtime::CallFrame
+            class GPU_CallFrame : public ngraph::runtime::CallFrame
             {
             public:
-                GPUCallFrame(std::shared_ptr<ExternalFunction> external_function,
+                GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction> external_function,
                              std::shared_ptr<Function> func);
 
                 /// @brief Invoke the function with values matching the signature of the function.
@@ -53,7 +55,7 @@ namespace ngraph
                                  const std::vector<std::shared_ptr<TensorView>>& outputs);
 
             protected:
-                std::shared_ptr<ExternalFunction> m_external_function;
+                std::shared_ptr<GPU_ExternalFunction> m_external_function;
                 std::shared_ptr<Function> m_function;
             };
         }

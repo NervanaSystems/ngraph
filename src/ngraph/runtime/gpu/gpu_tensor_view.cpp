@@ -16,13 +16,13 @@
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
-#include "ngraph/runtime/gpu/backend.hpp"
-#include "ngraph/runtime/gpu/tensor_view.hpp"
+#include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-runtime::gpu::GPUTensorView::GPUTensorView(const ngraph::element::Type& element_type,
+runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape)
     : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
           std::make_shared<ngraph::TensorViewType>(element_type, shape),
@@ -51,7 +51,7 @@ runtime::gpu::GPUTensorView::GPUTensorView(const ngraph::element::Type& element_
     }
 }
 
-runtime::gpu::GPUTensorView::~GPUTensorView()
+runtime::gpu::GPU_TensorView::~GPU_TensorView()
 {
     if (m_allocated_buffer_pool != nullptr)
     {
@@ -59,17 +59,17 @@ runtime::gpu::GPUTensorView::~GPUTensorView()
     }
 }
 
-char* runtime::gpu::GPUTensorView::get_data_ptr()
+char* runtime::gpu::GPU_TensorView::get_data_ptr()
 {
     return m_aligned_buffer_pool;
 }
 
-const char* runtime::gpu::GPUTensorView::get_data_ptr() const
+const char* runtime::gpu::GPU_TensorView::get_data_ptr() const
 {
     return m_aligned_buffer_pool;
 }
 
-void runtime::gpu::GPUTensorView::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::gpu::GPU_TensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
     if (tensor_offset + n > m_buffer_size)
     {
@@ -78,7 +78,7 @@ void runtime::gpu::GPUTensorView::write(const void* source, size_t tensor_offset
     char* target = get_data_ptr();
 }
 
-void runtime::gpu::GPUTensorView::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::gpu::GPU_TensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
     if (tensor_offset + n > m_buffer_size)
     {
