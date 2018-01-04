@@ -42,33 +42,33 @@ TEST(cudnn, compileTest)
 #include "cuda.h"
 
 
-void checkCudaErrors(CUresult err) {
+void check_cuda_errors(CUresult err) {
   assert(err == CUDA_SUCCESS);
 }
 
 /// main - Program entry point
 int main(int argc, char **argv) {
   CUdevice    device;
-  CUmodule    cudaModule;
+  CUmodule    cuda_module;
   CUcontext   context;
   CUfunction  function;
   CUlinkState linker;
-  int         devCount;
+  int         dev_count;
 
   // CUDA initialization
-  checkCudaErrors(cuInit(0));
-  checkCudaErrors(cuDeviceGetCount(&devCount));
-  checkCudaErrors(cuDeviceGet(&device, 0));
+  check_cuda_errors(cuInit(0));
+  check_cuda_errors(cuDeviceGetCount(&dev_count));
+  check_cuda_errors(cuDeviceGet(&device, 0));
 
   char name[128];
-  checkCudaErrors(cuDeviceGetName(name, 128, device));
+  check_cuda_errors(cuDeviceGetName(name, 128, device));
   std::cout << "Using CUDA Device [0]: " << name << "\n";
 
-  int devMajor, devMinor;
-  checkCudaErrors(cuDeviceComputeCapability(&devMajor, &devMinor, device));
+  int dev_major, dev_minor;
+  check_cuda_errors(cuDeviceComputeCapability(&dev_major, &dev_minor, device));
   std::cout << "Device Compute Capability: "
-            << devMajor << "." << devMinor << "\n";
-  if (devMajor < 2) {
+            << dev_major << "." << dev_minor << "\n";
+  if (dev_major < 2) {
     std::cerr << "ERROR: Device 0 is not SM 2.0 or greater\n";
     return 1;
   }
@@ -171,76 +171,76 @@ const auto str = R"(
 )";
 
   // Create driver context
-  checkCudaErrors(cuCtxCreate(&context, 0, device));
+  check_cuda_errors(cuCtxCreate(&context, 0, device));
 
   // Create module for object
-  checkCudaErrors(cuModuleLoadDataEx(&cudaModule, str, 0, 0, 0));
+  check_cuda_errors(cuModuleLoadDataEx(&cuda_module, str, 0, 0, 0));
 
   // Get kernel function
-  checkCudaErrors(cuModuleGetFunction(&function, cudaModule, "_Z7ew_multPfS_S_"));
+  check_cuda_errors(cuModuleGetFunction(&function, cuda_module, "_Z7ew_multPfS_S_"));
 
   // Device data
-  CUdeviceptr devBufferA;
-  CUdeviceptr devBufferB;
-  CUdeviceptr devBufferC;
+  CUdeviceptr dev_bufferA;
+  CUdeviceptr dev_bufferB;
+  CUdeviceptr dev_bufferC;
 
-  checkCudaErrors(cuMemAlloc(&devBufferA, sizeof(float)*16));
-  checkCudaErrors(cuMemAlloc(&devBufferB, sizeof(float)*16));
-  checkCudaErrors(cuMemAlloc(&devBufferC, sizeof(float)*16));
+  check_cuda_errors(cuMemAlloc(&dev_bufferA, sizeof(float)*16));
+  check_cuda_errors(cuMemAlloc(&dev_bufferB, sizeof(float)*16));
+  check_cuda_errors(cuMemAlloc(&dev_bufferC, sizeof(float)*16));
 
-  float* hostA = new float[16];
-  float* hostB = new float[16];
-  float* hostC = new float[16];
+  float* host_A = new float[16];
+  float* host_B = new float[16];
+  float* host_C = new float[16];
 
   // Populate input
   for (unsigned i = 0; i != 16; ++i) {
-    hostA[i] = (float)i;
-    hostB[i] = (float)(2*i);
-    hostC[i] = 0.0f;
+    host_A[i] = (float)i;
+    host_B[i] = (float)(2*i);
+    host_C[i] = 0.0f;
   }
 
-  checkCudaErrors(cuMemcpyHtoD(devBufferA, &hostA[0], sizeof(float)*16));
-  checkCudaErrors(cuMemcpyHtoD(devBufferB, &hostB[0], sizeof(float)*16));
+  check_cuda_errors(cuMemcpyHtoD(dev_bufferA, &host_A[0], sizeof(float)*16));
+  check_cuda_errors(cuMemcpyHtoD(dev_bufferB, &host_B[0], sizeof(float)*16));
 
 
-  unsigned blockSizeX = 16;
-  unsigned blockSizeY = 1;
-  unsigned blockSizeZ = 1;
-  unsigned gridSizeX  = 1;
-  unsigned gridSizeY  = 1;
-  unsigned gridSizeZ  = 1;
+  unsigned block_size_X = 16;
+  unsigned block_size_Y = 1;
+  unsigned block_size_Z = 1;
+  unsigned grid_size_X  = 1;
+  unsigned grid_size_Y  = 1;
+  unsigned grid_size_Z  = 1;
 
   // Kernel parameters
-  void *KernelParams[] = { &devBufferA, &devBufferB, &devBufferC };
+  void *kernel_params[] = { &dev_bufferA, &dev_bufferB, &dev_bufferC };
 
   std::cout << "Launching kernel\n";
 
   // Kernel launch
-  checkCudaErrors(cuLaunchKernel(function, gridSizeX, gridSizeY, gridSizeZ,
-                                 blockSizeX, blockSizeY, blockSizeZ,
-                                 0, NULL, KernelParams, NULL));
+  check_cuda_errors(cuLaunchKernel(function, grid_size_X, grid_size_Y, grid_size_Z,
+                                 block_size_X, block_size_Y, block_size_Z,
+                                 0, NULL, kernel_params, NULL));
 
   // Retrieve device data
-  checkCudaErrors(cuMemcpyDtoH(&hostC[0], devBufferC, sizeof(float)*16));
+  check_cuda_errors(cuMemcpyDtoH(&host_C[0], dev_bufferC, sizeof(float)*16));
 
 
   std::cout << "Results:\n";
   for (unsigned i = 0; i != 16; ++i) {
-    std::cout << hostA[i] << " + " << hostB[i] << " = " << hostC[i] << "\n";
+    std::cout << host_A[i] << " + " << host_B[i] << " = " << host_C[i] << "\n";
   }
 
 
   // Clean up after ourselves
-  delete [] hostA;
-  delete [] hostB;
-  delete [] hostC;
+  delete [] host_A;
+  delete [] host_B;
+  delete [] host_C;
 
   // Clean-up
-  checkCudaErrors(cuMemFree(devBufferA));
-  checkCudaErrors(cuMemFree(devBufferB));
-  checkCudaErrors(cuMemFree(devBufferC));
-  checkCudaErrors(cuModuleUnload(cudaModule));
-  checkCudaErrors(cuCtxDestroy(context));
+  check_cuda_errors(cuMemFree(dev_bufferA));
+  check_cuda_errors(cuMemFree(dev_bufferB));
+  check_cuda_errors(cuMemFree(dev_bufferC));
+  check_cuda_errors(cuModuleUnload(cuda_module));
+  check_cuda_errors(cuCtxDestroy(context));
 
   return 0;
 })###";
