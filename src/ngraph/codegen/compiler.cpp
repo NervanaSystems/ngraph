@@ -321,9 +321,6 @@ void StaticCompiler::configure_search_path()
     add_header_search_path("/usr/include/x86_64-linux-gnu");
     add_header_search_path("/usr/include");
 
-#ifdef CUDA_HEADER_PATHS
-    add_header_search_path(CUDA_HEADER_PATHS);
-#endif
 
     // Search for headers in
     //    /usr/include/x86_64-linux-gnu/c++/N.N
@@ -357,6 +354,11 @@ void StaticCompiler::configure_search_path()
     add_header_search_path(TBB_HEADERS_PATH);
     add_header_search_path(NGRAPH_HEADERS_PATH);
     add_header_search_path(INSTALLED_HEADERS_PATH);
+#endif
+
+#ifdef CUDA_HEADER_PATHS
+    // Only needed for GPU backend
+    add_header_search_path(CUDA_HEADER_PATHS);
 #endif
 }
 
