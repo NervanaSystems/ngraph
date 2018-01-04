@@ -251,14 +251,12 @@ const auto str = R"(
 
 TEST(cudnn, abc)
 {
-    using f32 = element::Float32;
 
     auto shape = Shape{2, 2};
-    auto A = make_shared<op::Parameter>(f32::element_type(), shape);
-    auto B = make_shared<op::Parameter>(f32::element_type(), shape);
-    auto C = make_shared<op::Parameter>(f32::element_type(), shape);
-    auto rt = make_shared<TensorViewType>(f32::element_type(), shape);
-    auto f = make_shared<Function>((A + B) * C, rt, op::Parameters{A, B, C});
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
 
     auto manager = runtime::Manager::get("GPU");
     auto external = manager->compile(f);
