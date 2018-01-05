@@ -644,6 +644,8 @@ static json write(const Node& n)
         auto tmp = dynamic_cast<const op::Convolution*>(&n);
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
     }
     else if (node_op == "Cos")
     {
