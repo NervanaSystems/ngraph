@@ -37,10 +37,9 @@ Node::Node(const std::string& node_type, const std::vector<shared_ptr<Node>>& ar
     for (auto arg : m_arguments)
     {
         arg->m_users.insert(this);
-        size_t arg_index = 0;
         for (descriptor::Output& output : arg->get_outputs())
         {
-            m_inputs.emplace_back(this, argno, arg_index++, output);
+            m_inputs.emplace_back(this, argno, output);
         }
         argno++;
     }
