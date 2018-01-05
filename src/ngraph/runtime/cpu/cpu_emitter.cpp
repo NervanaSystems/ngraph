@@ -33,6 +33,7 @@
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
@@ -1378,6 +1379,22 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(const ngraph::Node* n,
     m_out << "                 {" << join(result_shape) << "},\n";
     m_out << "                 {" << join(max_pool->get_window_shape()) << "},\n";
     m_out << "                 {" << join(max_pool->get_window_movement_strides()) << "});\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitReverse(const ngraph::Node* n,
+                                            const vector<runtime::cpu::TensorViewWrapper>& args,
+                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto reverse = static_cast<const op::Reverse*>(n);
+
+    auto arg_shape = args[0].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    m_out << "kernel::reverse<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    m_out << "                " << out[0].get_name() << ",\n";
+    m_out << "                {" << join(arg_shape) << "},\n";
+    m_out << "                {" << join(result_shape) << "},\n";
+    m_out << "                {" << join(reverse->get_reversed_axes()) << "});\n";
 }
 
 //------------------------------------------------------------------------------------------------

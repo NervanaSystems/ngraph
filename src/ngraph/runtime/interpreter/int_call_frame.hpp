@@ -31,6 +31,7 @@
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/call_frame.hpp"
@@ -72,6 +73,7 @@
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
+#include "ngraph/runtime/kernel/reverse.hpp"
 #include "ngraph/runtime/kernel/select.hpp"
 #include "ngraph/runtime/kernel/sign.hpp"
 #include "ngraph/runtime/kernel/sin.hpp"
@@ -506,7 +508,12 @@ private:
         }
         else if (node_op == "Reverse")
         {
-            // TODO: Implement this. Stubbed out for because XLA bridge folks need it.
+            ngraph::op::Reverse* reverse = dynamic_cast<ngraph::op::Reverse*>(&node);
+            kernel::reverse(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                            args[0]->get_shape(),
+                            out[0]->get_shape(),
+                            reverse->get_reversed_axes());
         }
         else if (node_op == "Select")
         {

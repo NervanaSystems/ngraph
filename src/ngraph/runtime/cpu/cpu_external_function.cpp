@@ -67,6 +67,7 @@
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
 #include "ngraph/ops/sign.hpp"
 #include "ngraph/ops/sin.hpp"
@@ -151,6 +152,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Convolution), &runtime::cpu::CPU_Emitter::EmitConvolution},
     {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::EmitNot},
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::EmitMaxPool},
+    {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::EmitReverse},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
@@ -204,6 +206,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
+#include "ngraph/runtime/kernel/reverse.hpp"
 #include "ngraph/runtime/kernel/slice.hpp"
 #include "ngraph/runtime/kernel/sum.hpp"
 #include "ngraph/util.hpp"

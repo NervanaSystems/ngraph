@@ -4423,7 +4423,7 @@ TEST(${BACKEND_NAME}, not)
     EXPECT_EQ((vector<char>{0, 1, 0, 1}), result->get_vector<char>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_0d)
+TEST(${BACKEND_NAME}, reverse_0d)
 {
     auto shape = Shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4443,7 +4443,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_0d)
     EXPECT_EQ((vector<float>{6}), result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_1d_nochange)
+TEST(${BACKEND_NAME}, reverse_1d_nochange)
 {
     auto shape = Shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4463,7 +4463,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_1d_nochange)
     EXPECT_EQ((vector<float>{0, 1, 2, 3, 4, 5, 6, 7}), result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_1d_0)
+TEST(${BACKEND_NAME}, reverse_1d_0)
 {
     auto shape = Shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4483,7 +4483,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_1d_0)
     EXPECT_EQ((vector<float>{7, 6, 5, 4, 3, 2, 1, 0}), result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_2d_nochange)
+TEST(${BACKEND_NAME}, reverse_2d_nochange)
 {
     auto shape = Shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4506,7 +4506,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_2d_nochange)
         result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_2d_0)
+TEST(${BACKEND_NAME}, reverse_2d_0)
 {
     auto shape = Shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4529,7 +4529,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_2d_0)
         result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_2d_1)
+TEST(${BACKEND_NAME}, reverse_2d_1)
 {
     auto shape = Shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4552,7 +4552,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_2d_1)
         result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_2d_01)
+TEST(${BACKEND_NAME}, reverse_2d_01)
 {
     auto shape = Shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4575,7 +4575,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_2d_01)
         result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_3d_nochange)
+TEST(${BACKEND_NAME}, reverse_3d_nochange)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4601,7 +4601,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_3d_nochange)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_3d_0)
+TEST(${BACKEND_NAME}, reverse_3d_0)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4627,7 +4627,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_3d_0)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_3d_1)
+TEST(${BACKEND_NAME}, reverse_3d_1)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4653,7 +4653,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_3d_1)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_3d_2)
+TEST(${BACKEND_NAME}, reverse_3d_2)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4679,7 +4679,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_3d_2)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_3d_01)
+TEST(${BACKEND_NAME}, reverse_3d_01)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4705,7 +4705,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_3d_01)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_3d_02)
+TEST(${BACKEND_NAME}, reverse_3d_02)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4731,7 +4731,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_3d_02)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_3d_12)
+TEST(${BACKEND_NAME}, reverse_3d_12)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -4757,7 +4757,7 @@ TEST(${BACKEND_NAME}, DISABLED_reverse_3d_12)
               result->get_vector<float>());
 }
 
-TEST(${BACKEND_NAME}, DISABLED_reverse_3d_012)
+TEST(${BACKEND_NAME}, reverse_3d_012)
 {
     auto shape = Shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
