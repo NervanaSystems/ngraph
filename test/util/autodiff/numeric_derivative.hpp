@@ -19,7 +19,6 @@
 
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/manager.hpp"
-#include "ngraph/runtime/value.hpp"
 #include "ngraph/types/element_type.hpp"
 
 namespace ngraph
