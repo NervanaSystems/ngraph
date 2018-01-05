@@ -354,6 +354,11 @@ void StaticCompiler::configure_search_path()
     add_header_search_path(NGRAPH_HEADERS_PATH);
     add_header_search_path(INSTALLED_HEADERS_PATH);
 #endif
+
+#ifdef CUDA_HEADER_PATHS
+    // Only needed for GPU backend
+    add_header_search_path(CUDA_HEADER_PATHS);
+#endif
 }
 
 void StaticCompiler::load_header_search_path_from_resource()
