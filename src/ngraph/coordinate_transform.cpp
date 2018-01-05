@@ -131,7 +131,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     }
 }
 
-static Shape default_padding(size_t n_axes)
+Shape CoordinateTransform::default_padding(size_t n_axes)
 {
     return Shape(n_axes, 0);
 }
@@ -151,7 +151,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
 {
 }
 
-static AxisVector default_axis_order(size_t n_axes)
+AxisVector CoordinateTransform::default_axis_order(size_t n_axes)
 {
     AxisVector result(n_axes);
     size_t n = 0;
@@ -174,7 +174,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
 {
 }
 
-static Strides default_source_strides(size_t n_axes)
+Strides CoordinateTransform::default_source_strides(size_t n_axes)
 {
     return AxisVector(n_axes, 1);
 }
@@ -192,12 +192,12 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
 {
 }
 
-static Coordinate default_source_start_corner(size_t n_axes)
+Coordinate CoordinateTransform::default_source_start_corner(size_t n_axes)
 {
     return Coordinate(n_axes, 0);
 }
 
-static Coordinate default_source_end_corner(const Shape& source_shape)
+Coordinate CoordinateTransform::default_source_end_corner(const Shape& source_shape)
 {
     return source_shape;
 }

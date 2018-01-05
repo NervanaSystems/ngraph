@@ -86,6 +86,11 @@ namespace ngraph
         Iterator end() noexcept { return Iterator(m_target_shape, true); }
     private:
         size_t index_source(const Coordinate& c) const;
+        static Shape default_padding(size_t n_axes);
+        static AxisVector default_axis_order(size_t n_axes);
+        static Strides default_source_strides(size_t n_axes);
+        static Coordinate default_source_start_corner(size_t n_axes);
+        static Coordinate default_source_end_corner(const Shape& source_shape);
 
         Shape m_source_shape;
         Shape m_source_start_corner;
