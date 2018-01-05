@@ -25,7 +25,7 @@ std::shared_ptr<const ngraph::descriptor::TensorView> TensorView::get_tensor_vie
     return m_descriptor;
 }
 
-std::shared_ptr<ngraph::descriptor::Value> TensorView::get_descriptor() const
+std::shared_ptr<ngraph::descriptor::TensorView> TensorView::get_descriptor() const
 {
     return m_descriptor;
 }

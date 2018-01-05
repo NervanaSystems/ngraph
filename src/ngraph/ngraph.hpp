@@ -54,7 +54,6 @@
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/descriptor/value.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"

@@ -16,7 +16,6 @@
 
 #include <memory>
 
-#include "ngraph/descriptor/value.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -36,7 +35,7 @@ namespace ngraph
         class TensorView;
 
         /// @brief Compile-time descriptor of a first-class value that is a view of a tensor.
-        class TensorView : public Value
+        class TensorView
         {
             TensorView(const TensorView&) = delete;
             TensorView& operator=(const TensorView&) = delete;
@@ -52,7 +51,7 @@ namespace ngraph
             virtual const Tensor& get_tensor() const = 0;
             virtual Tensor& get_tensor() = 0;
 
-            virtual std::shared_ptr<const ValueType> get_value_type() const override;
+            virtual std::shared_ptr<const ValueType> get_value_type() const;
 
             const std::string& get_name() const { return m_name; }
             std::shared_ptr<const TensorViewType> get_tensor_view_type() const
@@ -71,9 +70,8 @@ namespace ngraph
                 m_tensor_view_layout = tensor_view_layout;
             }
 
-            virtual void
-                collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
-                                     const std::shared_ptr<TensorView>& value) const override
+            virtual void collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
+                                              const std::shared_ptr<TensorView>& value) const
             {
                 views.push_back(value);
             }

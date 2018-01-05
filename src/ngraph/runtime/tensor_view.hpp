@@ -45,7 +45,7 @@ namespace ngraph
             std::shared_ptr<const ngraph::descriptor::TensorView>
                 get_tensor_view_descriptor() const;
 
-            virtual std::shared_ptr<ngraph::descriptor::Value> get_descriptor() const;
+            virtual std::shared_ptr<descriptor::TensorView> get_descriptor() const;
 
             virtual void collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
                                               const std::shared_ptr<TensorView>& value) const;
