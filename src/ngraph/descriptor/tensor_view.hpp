@@ -71,10 +71,11 @@ namespace ngraph
                 m_tensor_view_layout = tensor_view_layout;
             }
 
-            virtual void collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
-                                              const std::shared_ptr<Value>& value) const override
+            virtual void
+                collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
+                                     const std::shared_ptr<TensorView>& value) const override
             {
-                views.push_back(std::static_pointer_cast<TensorView>(value));
+                views.push_back(value);
             }
 
         protected:
