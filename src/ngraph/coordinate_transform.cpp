@@ -273,7 +273,8 @@ bool CoordinateTransform::in_bounds(const Coordinate& c) const
     return true;
 }
 
-// Check if a coordinate is in the padding of the source space.
+// Check if a coordinate corresponds to one of the padding elements that has been added to
+// the source space.
 bool CoordinateTransform::in_padding(const Coordinate& c) const
 {
     if (c.size() != m_n_axes)
