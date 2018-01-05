@@ -30,15 +30,15 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
                                          const Coordinate& source_end_corner,
                                          const Strides& source_strides,
                                          const AxisVector& source_axis_order,
-                                         const Shape& source_before_padding,
-                                         const Shape& source_after_padding)
+                                         const Shape& source_padding_below,
+                                         const Shape& source_padding_above)
     : m_source_shape(source_shape)
     , m_source_start_corner(source_start_corner)
     , m_source_end_corner(source_end_corner)
     , m_source_strides(source_strides)
     , m_source_axis_order(source_axis_order)
-    , m_source_before_padding(source_before_padding)
-    , m_source_after_padding(source_after_padding)
+    , m_source_padding_below(source_padding_below)
+    , m_source_padding_above(source_padding_above)
 {
     m_n_axes = source_shape.size();
 
@@ -65,12 +65,12 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
         throw std::domain_error(
             "Source axis order does not have the same number of axes as the source space shape");
     }
-    if (m_n_axes != source_before_padding.size())
+    if (m_n_axes != source_padding_below.size())
     {
         throw std::domain_error(
             "Before-padding shape does not have the same number of axes as the source space shape");
     }
-    if (m_n_axes != source_after_padding.size())
+    if (m_n_axes != source_padding_above.size())
     {
         throw std::domain_error(
             "After-padding shape does not have the same number of axes as the source space shape");
@@ -90,7 +90,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     for (size_t i = 0; i < m_n_axes; i++)
     {
         if (source_start_corner[i] >=
-                source_shape[i] + source_before_padding[i] + source_after_padding[i] &&
+                source_shape[i] + source_padding_below[i] + source_padding_above[i] &&
             !(source_start_corner[i] == 0 && source_shape[i] == 0))
         {
             std::stringstream ss;
@@ -103,7 +103,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     for (size_t i = 0; i < m_n_axes; i++)
     {
         if (source_end_corner[i] >
-            source_shape[i] + source_before_padding[i] + source_after_padding[i])
+            source_shape[i] + source_padding_below[i] + source_padding_above[i])
         {
             std::stringstream ss;
 
@@ -248,7 +248,7 @@ Coordinate CoordinateTransform::to_source_coordinate(const Coordinate& c) const
     {
         result[m_source_axis_order[axis]] = c[axis] * m_source_strides[axis] +
                                             m_source_start_corner[axis] -
-                                            m_source_before_padding[axis];
+                                            m_source_padding_below[axis];
     }
 
     return result;
@@ -284,8 +284,8 @@ bool CoordinateTransform::in_padding(const Coordinate& c) const
     for (size_t axis = 0; axis < m_n_axes; axis++)
     {
         size_t padded_pos = c[axis] * m_source_strides[axis] + m_source_start_corner[axis];
-        if (padded_pos < m_source_before_padding[axis] ||
-            padded_pos >= m_source_before_padding[axis] + m_source_shape[axis])
+        if (padded_pos < m_source_padding_below[axis] ||
+            padded_pos >= m_source_padding_below[axis] + m_source_shape[axis])
         {
             return true;
         }

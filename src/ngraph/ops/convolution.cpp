@@ -22,13 +22,13 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
                              const std::shared_ptr<Node>& filters,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
-                             const Shape& before_padding,
-                             const Shape& after_padding)
+                             const Shape& padding_below,
+                             const Shape& padding_above)
     : RequiresTensorViewArgs("Convolution", {image_batch, filters})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
-    , m_before_padding(before_padding)
-    , m_after_padding(after_padding)
+    , m_padding_below(padding_below)
+    , m_padding_above(padding_above)
 {
     auto& image_batch_shape = get_inputs().at(0).get_shape();
     auto& filters_shape = get_inputs().at(1).get_shape();
@@ -92,18 +92,18 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
     }
 
     //
-    // Make sure before- and after-padding shapes have same rank as Di.
+    // Make sure padding-below and padding-above shapes have same rank as Di.
     //
-    if (m_before_padding.size() != m_image_dimension_count)
+    if (m_padding_below.size() != m_image_dimension_count)
     {
         throw ngraph_error(
-            "Convolution before-padding rank does not match number of image dimensions.");
+            "Convolution padding-below rank does not match number of image dimensions.");
     }
 
-    if (m_after_padding.size() != m_image_dimension_count)
+    if (m_padding_above.size() != m_image_dimension_count)
     {
         throw ngraph_error(
-            "Convolution after-padding rank does not match number of image dimensions.");
+            "Convolution padding-above rank does not match number of image dimensions.");
     }
 
     //
@@ -112,8 +112,8 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
     for (size_t i = 0; i < m_image_dimension_count; i++)
     {
         m_input_image_shape.push_back(image_batch_shape[1 + 1 + i]);
-        m_padded_input_image_shape.push_back(before_padding[i] + image_batch_shape[1 + 1 + i] +
-                                             after_padding[i]);
+        m_padded_input_image_shape.push_back(padding_below[i] + image_batch_shape[1 + 1 + i] +
+                                             padding_above[i]);
 
         if (m_padded_input_image_shape[i] == 0)
         {
@@ -253,8 +253,8 @@ std::shared_ptr<Node>
                                          new_args.at(1),
                                          m_window_movement_strides,
                                          m_window_dilation_strides,
-                                         m_before_padding,
-                                         m_after_padding);
+                                         m_padding_below,
+                                         m_padding_above);
 }
 
 /*

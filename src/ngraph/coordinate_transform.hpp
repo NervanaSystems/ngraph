@@ -31,8 +31,8 @@ namespace ngraph
                             const Coordinate& source_end_corner,
                             const Strides& source_strides,
                             const AxisVector& source_axis_order,
-                            const Shape& source_before_padding,
-                            const Shape& source_after_padding);
+                            const Shape& source_padding_below,
+                            const Shape& source_padding_above);
 
         CoordinateTransform(const Shape& source_shape,
                             const Coordinate& source_start_corner,
@@ -92,8 +92,8 @@ namespace ngraph
         Shape m_source_end_corner;
         Strides m_source_strides;
         AxisVector m_source_axis_order;
-        Shape m_source_before_padding;
-        Shape m_source_after_padding;
+        Shape m_source_padding_below;
+        Shape m_source_padding_above;
 
         Shape m_target_shape;
         size_t m_n_axes;

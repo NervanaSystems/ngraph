@@ -35,8 +35,8 @@ namespace ngraph
                              const Shape& out_shape,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
-                             const Shape& before_padding,
-                             const Shape& after_padding)
+                             const Shape& padding_below,
+                             const Shape& padding_above)
             {
                 // At the outermost level we will walk over every output coordinate O.
                 CoordinateTransform output_transform(out_shape);
@@ -73,8 +73,8 @@ namespace ngraph
                     Shape input_batch_transform_start(2 + n_image_dimensions);
                     Shape input_batch_transform_end(2 + n_image_dimensions);
                     Shape input_batch_transform_strides(2 + n_image_dimensions, 1);
-                    Shape input_batch_before_padding(2 + n_image_dimensions, 0);
-                    Shape input_batch_after_padding(2 + n_image_dimensions, 0);
+                    Shape input_batch_padding_below(2 + n_image_dimensions, 0);
+                    Shape input_batch_padding_above(2 + n_image_dimensions, 0);
 
                     input_batch_transform_start[0] = img_index;
                     input_batch_transform_end[0] = img_index + 1;
@@ -85,15 +85,15 @@ namespace ngraph
                     {
                         size_t dilation_stride = window_dilation_strides[i - 2];
                         size_t movement_stride = window_movement_strides[i - 2];
-                        size_t before_pad = before_padding[i - 2];
-                        size_t after_pad = after_padding[i - 2];
+                        size_t before_pad = padding_below[i - 2];
+                        size_t after_pad = padding_above[i - 2];
 
                         input_batch_transform_start[i] = movement_stride * out_coord[i];
                         input_batch_transform_end[i] = input_batch_transform_start[i] +
                                                        (arg1_shape[i] - 1) * dilation_stride + 1;
                         input_batch_transform_strides[i] = dilation_stride;
-                        input_batch_before_padding[i] = before_pad;
-                        input_batch_after_padding[i] = after_pad;
+                        input_batch_padding_below[i] = before_pad;
+                        input_batch_padding_above[i] = after_pad;
                     }
 
                     AxisVector input_batch_axis_order(2 + n_image_dimensions);
@@ -107,8 +107,8 @@ namespace ngraph
                                                               input_batch_transform_end,
                                                               input_batch_transform_strides,
                                                               input_batch_axis_order,
-                                                              input_batch_before_padding,
-                                                              input_batch_after_padding);
+                                                              input_batch_padding_below,
+                                                              input_batch_padding_above);
 
                     // Simultaneously with iterating I, for the filters we need to iterate the coordinate:
                     //

@@ -34,8 +34,8 @@ namespace ngraph
         ///
         /// 3. <i>(the window movement strides)</i> a vector of positive integers \f$(s_1,\dots,s_n)\f$ (default is all ones),
         /// 4. <i>(the window dilation strides)</i> a vector of positive integers \f$(l_1,\dots,l_n)\f$ (default is all ones),
-        /// 5. <i>(the before-padding)</i> a vector of non-negative integers \f$(p_1,\dots,p_n)\f$ (default is all zeros), and
-        /// 6. <i>(the after-padding)</i> a vector of non-negative integers \f$(q_1,\dots,q_n)\f$ (default is all zeros).
+        /// 5. <i>(the padding below)</i> a vector of non-negative integers \f$(p_1,\dots,p_n)\f$ (default is all zeros), and
+        /// 6. <i>(the padding above)</i> a vector of non-negative integers \f$(q_1,\dots,q_n)\f$ (default is all zeros).
         ///
         /// The output has the shape \f$(N,C_\textit{out},d'_1,\dots,d'_n)\f$, where \f$d'_n = \lceil \frac{d_i + p_i + q_i - l_i(d^f_i - 1)}{s_i} \rceil\f$.
         ///
@@ -60,16 +60,16 @@ namespace ngraph
             /// \param filters The node producing the filters tensor.
             /// \param window_movement_strides The window movement strides.
             /// \param window_dilation_strides The window dilation strides.
-            /// \param before_padding The before-padding sizes.
-            /// \param after_padding The after-padding sizes.
+            /// \param padding_below The padding-below sizes.
+            /// \param padding_above The padding-above sizes.
             Convolution(const std::shared_ptr<Node>& image_batch,
                         const std::shared_ptr<Node>& filters,
                         const Strides& window_movement_strides,
                         const Strides& window_dilation_strides,
-                        const Shape& before_padding,
-                        const Shape& after_padding);
+                        const Shape& padding_below,
+                        const Shape& padding_above);
 
-            /// \brief Constructs a batched convolution operation with no padding (i.e., before and after padding are 0 everywhere).
+            /// \brief Constructs a batched convolution operation with no padding (i.e., padding above and below are 0 everywhere).
             ///
             /// \param image_batch The node producing the input image batch tensor.
             /// \param filters The node producing the filters tensor.
@@ -103,10 +103,10 @@ namespace ngraph
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             /// \return The window dilation strides.
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
-            /// \return The before-padding sizes.
-            const Shape& get_before_padding() const { return m_before_padding; }
-            /// \return The after-padding sizes.
-            const Strides& get_after_padding() const { return m_after_padding; }
+            /// \return The padding-below sizes.
+            const Shape& get_padding_below() const { return m_padding_below; }
+            /// \return The padding-above sizes.
+            const Strides& get_padding_above() const { return m_padding_above; }
             /// \return The number of input channels.
             size_t get_input_channel_count() const { return m_input_channel_count; }
             /// \return The number of output channels.
@@ -128,8 +128,8 @@ namespace ngraph
         protected:
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;
-            Shape m_before_padding;
-            Shape m_after_padding;
+            Shape m_padding_below;
+            Shape m_padding_above;
 
             // TODO: Some of these values should probably be computed dynamically rather than stored here.
             size_t m_input_channel_count;

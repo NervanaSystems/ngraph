@@ -1352,8 +1352,8 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(const ngraph::Node* n,
           << "},\n";
     m_out << "                         {" << join(convolution->get_window_dilation_strides())
           << "},\n";
-    m_out << "                         {" << join(convolution->get_before_padding()) << "},\n";
-    m_out << "                         {" << join(convolution->get_after_padding()) << "});\n";
+    m_out << "                         {" << join(convolution->get_padding_below()) << "},\n";
+    m_out << "                         {" << join(convolution->get_padding_above()) << "});\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitNot(const ngraph::Node* n,
