@@ -33,12 +33,13 @@ Node::Node(const std::string& node_type, const std::vector<shared_ptr<Node>>& ar
     , m_arguments(arguments)
 {
     // Add this node as a user of each argument.
+    size_t i = 0;
     for (auto arg : m_arguments)
     {
         arg->m_users.insert(this);
         for (descriptor::Output& output : arg->get_outputs())
         {
-            m_inputs.emplace_back(this, output);
+            m_inputs.emplace_back(this, i++, output);
         }
     }
 }

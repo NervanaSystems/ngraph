@@ -20,8 +20,9 @@
 using namespace ngraph;
 using namespace descriptor;
 
-Input::Input(Node* node, Output& output)
+Input::Input(Node* node, size_t index, Output& output)
     : m_node(node)
+    , m_index(index)
     , m_output(&output)
 {
     output.add_input(this);
