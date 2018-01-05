@@ -24,7 +24,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        class PrimaryTensorView;
         class Value;
 
         // A VM for executing lightly-compiled graph functions.
