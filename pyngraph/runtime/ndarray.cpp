@@ -15,7 +15,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 //#include <string>
-#include "ngraph/runtime/ndarray.hpp"
+//#include "ngraph/runtime/ndarray.hpp"
 #include "pyngraph/runtime/ndarray.hpp"
 
 namespace py = pybind11;
