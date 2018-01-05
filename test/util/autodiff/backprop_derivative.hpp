@@ -29,15 +29,10 @@ namespace ngraph
     {
         class Backend;
         class Manager;
-    }
+    } // namespace runtime
 
     namespace autodiff
     {
-        /// @brief Returns a FunctionSpec for the backprop derivative of its argument.
-        /// @param f is f(X_i...)
-        /// @returns f'(X_i..., c) where f'(x_i, ..., c)_j is backprop for X_j
-        std::shared_ptr<Function> backprop_function(const std::shared_ptr<Function>& f);
-
         template <typename T>
         std::vector<std::shared_ptr<runtime::TensorView>>
             backprop_derivative(const std::shared_ptr<runtime::Manager>& manager,
@@ -46,71 +41,124 @@ namespace ngraph
                                 const std::vector<std::shared_ptr<runtime::TensorView>>& args,
                                 const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
+            // y = f(X)
+            // using X (upper case) to denote all paramenters of f
+            // using x (lower case) to denote an individual paramemter of f a.k.a. Xj
+            // NOTE: using X* to denote all x "of interest" represented by indep_params
             Shape y_shape = f->get_output_shape(0);
 
+            // adjoint
             auto c_param = std::make_shared<op::Parameter>(element::from<T>(), y_shape);
             auto c_arg = backend->make_primary_tensor_view<T>(y_shape);
-            auto params = f->get_parameters();
 
-            std::vector<std::shared_ptr<Node>> deriv_nodes;
-            std::vector<std::shared_ptr<runtime::TensorView>> bprops;
+            // df/dX*
+            // return value for f'(X, c)
+            std::vector<std::shared_ptr<Node>> df_output_params;
+            std::vector<std::shared_ptr<runtime::TensorView>> df_output_args;
+
+            // return value for this function
             std::vector<std::shared_ptr<runtime::TensorView>> results;
 
-            for (auto param : indep_params)
+            // for each x "of interest"
+            for (auto x : indep_params)
             {
-                Shape s = y_shape;
-                auto param_shape = param->get_shape();
-                s.insert(s.end(), param_shape.begin(), param_shape.end());
-                results.push_back(backend->make_primary_tensor_view<T>(s));
-                bprops.push_back(backend->make_primary_tensor_view<T>(param_shape));
-                deriv_nodes.push_back(f->get_output_op(0)->backprop_node(param, c_param));
+                auto x_shape = x->get_shape();
+
+                // each element of y has a derivative with respect to each element of x
+                // hence, create a y by x sized tensor for this result
+                auto y_by_x_shape = y_shape;
+                y_by_x_shape.insert(y_by_x_shape.end(), x_shape.begin(), x_shape.end());
+                results.push_back(backend->make_primary_tensor_view<T>(y_by_x_shape));
+
+                // add df/dx to df/dX*
+                df_output_params.push_back(f->get_output_op(0)->backprop_node(x, c_param));
+                df_output_args.push_back(backend->make_primary_tensor_view<T>(x_shape));
             }
 
-            std::vector<std::shared_ptr<op::Parameter>> df_params = params;
-            df_params.push_back(c_param);
-            auto df = std::make_shared<Function>(deriv_nodes, df_params);
+            // (X, c)
+            // input to f'(X, c)
+            std::vector<std::shared_ptr<op::Parameter>> df_input_params = f->get_parameters();
+            df_input_params.push_back(c_param);
 
-            auto external = manager->compile(df);
+            // df/dX* = f'(X, c)
+            auto df = std::make_shared<Function>(df_output_params, df_input_params);
+
+            // create fprop cache
+            // creates modified forward function -> (y, cached) = f(x)
+            // creates modified backward function -> df/dX* = f'(c, cached)
+            auto fprop_cache = cache_fprop(f, df, {c_param});
+
+            // modified f outputs
+            std::vector<std::shared_ptr<ngraph::runtime::TensorView>> f_output_args;
+            f_output_args.push_back(backend->make_primary_tensor_view<T>(y_shape));
+
+            // modified f' inputs
+            std::vector<std::shared_ptr<ngraph::runtime::TensorView>> df_input_args;
+            df_input_args.push_back(c_arg);
+
+            // add cached nodes to both modified f outputs and modified f' inputs
+            for (auto node : fprop_cache.fprop_output_nodes)
+            {
+                auto tv = backend->make_primary_tensor_view<T>(node->get_shape());
+                df_input_args.push_back(tv);
+                f_output_args.push_back(tv);
+            }
+
+            // compile and run modified (y, cached) = f(x)
+            auto cache_fwd = manager->compile(fprop_cache.fprop);
+            auto cache_fwd_cf = backend->make_call_frame(cache_fwd);
+            cache_fwd_cf->tensor_call(args, f_output_args);
+
+            // compile modified df/dX* = f'(c, cached)
+            auto external = manager->compile(fprop_cache.bprop);
             auto cf = backend->make_call_frame(external);
 
-            // We compute the derivatives chunk by chunk
-            std::vector<typename std::vector<T>::iterator> result_pos;
+            // create storage for results
+            // * outer vector size = number of x "of interest"
+            // * inner vector size = number of elements in y * number of elements in x
             std::vector<std::vector<T>> result_vect;
+            std::vector<typename std::vector<T>::iterator> result_pos;
             for (auto result : results)
             {
-                result_vect.push_back(result->get_vector<T>()); // storage for results
+                result_vect.push_back(result->get_vector<T>());
                 result_pos.push_back(result_vect.back().begin());
             }
 
-            std::vector<std::shared_ptr<ngraph::runtime::TensorView>> args_tv;
-            args_tv.insert(args_tv.begin(), args.begin(), args.end());
-            args_tv.push_back(c_arg);
-
-            std::vector<std::shared_ptr<ngraph::runtime::TensorView>> bprops_tv;
-            bprops_tv.insert(bprops_tv.begin(), bprops.begin(), bprops.end());
-
+            // get adjoint and force to all elements to zero
             auto c_vec = c_arg->template get_vector<T>();
             fill(c_vec.begin(), c_vec.end(), 0);
+
+            // for each element of the adjoint
+            // same as saying for each element of y
             for (size_t i = 0; i < c_vec.size(); i++)
             {
+                // set a single adjoint element
                 c_vec[i] = 1;
                 c_arg->write(c_vec);
-                cf->tensor_call(args_tv, bprops_tv);
+
+                // call modified df/dX* = f'(c, cached)
+                cf->tensor_call(df_input_args, df_output_args);
+
+                // reset the adjoint element
                 c_vec[i] = 0;
                 c_arg->write(c_vec);
+
+                // for each result
+                // same as saying for each x "of interest"
                 for (size_t j = 0; j < results.size(); j++)
                 {
-                    auto bprop_vec = bprops[j]->get_vector<T>();
-                    result_pos[j] = std::copy(bprop_vec.begin(), bprop_vec.end(), result_pos[j]);
+                    // copy df/dx to storage for this element of y
+                    auto dfdx = df_output_args[j]->get_vector<T>();
+                    result_pos[j] = std::copy(dfdx.begin(), dfdx.end(), result_pos[j]);
                 }
             }
 
-            // Copy results from temp to result vector
+            // copy storage to results and return
             for (size_t j = 0; j < results.size(); j++)
             {
                 results[j]->write(result_vect[j]);
             }
             return results;
         }
-    }
-}
+    } // namespace autodiff
+} // namespace ngraph
