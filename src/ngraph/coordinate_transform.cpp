@@ -68,12 +68,12 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     if (m_n_axes != source_padding_below.size())
     {
         throw std::domain_error(
-            "Before-padding shape does not have the same number of axes as the source space shape");
+            "Padding-below shape does not have the same number of axes as the source space shape");
     }
     if (m_n_axes != source_padding_above.size())
     {
         throw std::domain_error(
-            "After-padding shape does not have the same number of axes as the source space shape");
+            "Padding-above shape does not have the same number of axes as the source space shape");
     }
 
     AxisVector all_axes(m_n_axes);
