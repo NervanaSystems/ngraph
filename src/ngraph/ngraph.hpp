@@ -113,7 +113,6 @@
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/manager.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/runtime/value.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/types/type.hpp"

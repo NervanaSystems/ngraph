@@ -52,18 +52,18 @@ void runtime::cpu::CPU_CallFrame::tensor_call(
 }
 
 void runtime::cpu::CPU_CallFrame::call(
-    const std::vector<std::shared_ptr<ngraph::runtime::Value>>& arguments,
-    const std::vector<std::shared_ptr<ngraph::runtime::Value>>& results)
+    const std::vector<std::shared_ptr<runtime::TensorView>>& arguments,
+    const std::vector<std::shared_ptr<runtime::TensorView>>& results)
 {
     // TODO: Check types of args and result
-    vector<shared_ptr<ngraph::runtime::TensorView>> inputs;
-    for (shared_ptr<ngraph::runtime::Value> argument : arguments)
+    vector<shared_ptr<runtime::TensorView>> inputs;
+    for (shared_ptr<runtime::TensorView> argument : arguments)
     {
         argument->collect_tensor_views(inputs, argument);
     }
 
-    vector<shared_ptr<ngraph::runtime::TensorView>> outputs;
-    for (shared_ptr<ngraph::runtime::Value> result : results)
+    vector<shared_ptr<runtime::TensorView>> outputs;
+    for (shared_ptr<runtime::TensorView> result : results)
     {
         result->collect_tensor_views(outputs, result);
     }

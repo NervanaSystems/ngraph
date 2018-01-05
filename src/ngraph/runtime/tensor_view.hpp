@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/runtime/value.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
 
@@ -31,7 +30,7 @@ namespace ngraph
 
     namespace runtime
     {
-        class TensorView : public Value
+        class TensorView
         {
         protected:
             TensorView(const std::shared_ptr<ngraph::descriptor::TensorView>& descriptor)
@@ -46,10 +45,10 @@ namespace ngraph
             std::shared_ptr<const ngraph::descriptor::TensorView>
                 get_tensor_view_descriptor() const;
 
-            virtual std::shared_ptr<ngraph::descriptor::Value> get_descriptor() const override;
+            virtual std::shared_ptr<ngraph::descriptor::Value> get_descriptor() const;
 
             virtual void collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
-                                              const std::shared_ptr<Value>& value) const override;
+                                              const std::shared_ptr<TensorView>& value) const;
 
             const ngraph::Shape& get_shape() const;
             const ngraph::Strides& get_strides() const;

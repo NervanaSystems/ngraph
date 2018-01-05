@@ -24,8 +24,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        class Value;
-
         // A VM for executing lightly-compiled graph functions.
         class CallFrame
         {
@@ -34,9 +32,8 @@ namespace ngraph
             /// @brief Invoke the function with values matching the signature of the function.
             ///
             /// Tuples will be expanded into their tensor views to build the call frame.
-            virtual void
-                call(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
-                     const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outputs) = 0;
+            virtual void call(const std::vector<std::shared_ptr<runtime::TensorView>>& inputs,
+                              const std::vector<std::shared_ptr<runtime::TensorView>>& outputs) = 0;
 
             /// @brief Invoke the function with tuples pre-expanded to their underlying tensor views.
             virtual void tensor_call(const TensorViewPtrs& inputs,
