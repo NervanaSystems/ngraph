@@ -249,8 +249,12 @@ std::shared_ptr<Node>
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return std::make_shared<Convolution>(
-        new_args.at(0), new_args.at(1), m_window_movement_strides, m_window_dilation_strides);
+    return std::make_shared<Convolution>(new_args.at(0),
+                                         new_args.at(1),
+                                         m_window_movement_strides,
+                                         m_window_dilation_strides,
+                                         m_before_padding,
+                                         m_after_padding);
 }
 
 /*

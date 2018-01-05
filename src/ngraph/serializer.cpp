@@ -370,8 +370,14 @@ static shared_ptr<ngraph::Function>
                 node_js.at("window_movement_strides").get<vector<size_t>>();
             auto window_dilation_strides =
                 node_js.at("window_dilation_strides").get<vector<size_t>>();
-            node = make_shared<op::Convolution>(
-                args[0], args[1], window_movement_strides, window_dilation_strides);
+            auto before_padding = node_js.at("before_padding").get<vector<size_t>>();
+            auto after_padding = node_js.at("after_padding").get<vector<size_t>>();
+            node = make_shared<op::Convolution>(args[0],
+                                                args[1],
+                                                window_movement_strides,
+                                                window_dilation_strides,
+                                                before_padding,
+                                                after_padding);
         }
         else if (node_op == "Cos")
         {
