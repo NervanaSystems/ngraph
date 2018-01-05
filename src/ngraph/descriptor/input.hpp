@@ -34,15 +34,12 @@ namespace ngraph
 
         public:
             /// @param node The node that owns this input
-            /// @param argno The position of the argument with this tensor
             /// @param output The output that supplies a value for this input
-            Input(Node* node, size_t argno, Output& output);
+            Input(Node* node, Output& output);
 
             /// @return the node that this is an input of
             std::shared_ptr<Node> get_node();
 
-            /// @return the position of the node argument that uses this input
-            size_t get_argno() const { return m_argno; }
             // @return the connected output
             const Output& get_output() const { return *m_output; }
             // @return the connected output
@@ -74,8 +71,7 @@ namespace ngraph
             const element::Type& get_element_type() const;
 
         protected:
-            Node* m_node;   // The node we are an input for
-            size_t m_argno; // Arg number for this input
+            Node* m_node; // The node we are an input for
             Output* m_output;
 
         private:
