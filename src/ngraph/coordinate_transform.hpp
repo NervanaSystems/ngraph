@@ -30,6 +30,14 @@ namespace ngraph
                             const Coordinate& source_start_corner,
                             const Coordinate& source_end_corner,
                             const Strides& source_strides,
+                            const AxisVector& source_axis_order,
+                            const Shape& source_padding_below,
+                            const Shape& source_padding_above);
+
+        CoordinateTransform(const Shape& source_shape,
+                            const Coordinate& source_start_corner,
+                            const Coordinate& source_end_corner,
+                            const Strides& source_strides,
                             const AxisVector& source_axis_order);
 
         CoordinateTransform(const Shape& source_shape,
@@ -45,6 +53,8 @@ namespace ngraph
 
         size_t index(const Coordinate& c) const;
         bool in_bounds(const Coordinate& c) const;
+        bool in_padding(const Coordinate& c) const;
+        Coordinate to_source_coordinate(const Coordinate& c) const;
         Coordinate get_target_shape() const;
 
         Shape get_source_shape() { return m_source_shape; }
@@ -75,14 +85,20 @@ namespace ngraph
         Iterator begin() noexcept { return Iterator(m_target_shape); }
         Iterator end() noexcept { return Iterator(m_target_shape, true); }
     private:
-        Coordinate to_source_coordinate(const Coordinate& c) const;
         size_t index_source(const Coordinate& c) const;
+        static Shape default_padding(size_t n_axes);
+        static AxisVector default_axis_order(size_t n_axes);
+        static Strides default_source_strides(size_t n_axes);
+        static Coordinate default_source_start_corner(size_t n_axes);
+        static Coordinate default_source_end_corner(const Shape& source_shape);
 
         Shape m_source_shape;
         Shape m_source_start_corner;
         Shape m_source_end_corner;
         Strides m_source_strides;
         AxisVector m_source_axis_order;
+        Shape m_source_padding_below;
+        Shape m_source_padding_above;
 
         Shape m_target_shape;
         size_t m_n_axes;
