@@ -141,6 +141,10 @@ namespace ngraph
             Shape m_window_virtual_shape;
             size_t m_batch_size;
             size_t m_image_dimension_count;
+
+        private:
+            static Shape default_padding(const std::shared_ptr<Node>& image_batch);
+            static Strides default_strides(const std::shared_ptr<Node>& image_batch);
         };
     }
 }

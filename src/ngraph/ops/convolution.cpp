@@ -180,7 +180,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
     set_value_type_checked(get_inputs().at(0).get_element_type(), result_shape);
 }
 
-static Shape default_padding(const std::shared_ptr<Node>& image_batch)
+Shape op::Convolution::default_padding(const std::shared_ptr<Node>& image_batch)
 {
     auto& image_batch_shape = image_batch->get_shape();
     if (image_batch_shape.size() < 3)
@@ -206,7 +206,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
 {
 }
 
-static Strides default_strides(const std::shared_ptr<Node>& image_batch)
+Strides op::Convolution::default_strides(const std::shared_ptr<Node>& image_batch)
 {
     auto& image_batch_shape = image_batch->get_shape();
     if (image_batch_shape.size() < 3)

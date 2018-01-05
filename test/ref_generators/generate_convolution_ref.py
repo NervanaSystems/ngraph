@@ -68,8 +68,8 @@ def tuple_times(t1,t2):
 #    filter           : [Co][Ci][W1]...[Wn]
 #    move_strides     = (s1,...,sn)
 #    dilation_strides = (l1,...,ln)
-#    before_pads      = (p1,...,pn)
-#    after_pads       = (q1,...,qn)
+#    below_pads       = (p1,...,pn)
+#    above_pads       = (q1,...,qn)
 #
 #    Returns:
 #    output_batch     : [N ][Co][D'1]...[D'n]
@@ -77,7 +77,7 @@ def tuple_times(t1,t2):
 # Where the D's are computed according to TensorFlow-style "valid" convolution rules, but *after* padding.
 # See https://www.tensorflow.org/api_docs/python/tf/nn/convolution.
 #
-def convolution_ref(img_batch, filter, move_strides, dilation_strides, before_pads, after_pads):
+def convolution_ref(img_batch, filter, move_strides, dilation_strides, below_pads, above_pads):
     assert(len(img_batch.shape) == len(filter.shape))
     assert(len(img_batch.shape) > 2)
     assert(img_batch.shape[1] == filter.shape[1])
@@ -85,9 +85,9 @@ def convolution_ref(img_batch, filter, move_strides, dilation_strides, before_pa
     assert(len(dilation_strides) == len(img_batch.shape) - 2)
 
     # Pad the input batch.
-    before_pads = (0,0) + before_pads  # Have to add values for the image and channel dims.
-    after_pads = (0,0) + after_pads    # Have to add values for the image and channel dims.
-    img_batch = np.pad(img_batch, zip(before_pads,after_pads), mode='constant', constant_values=0)
+    below_pads = (0,0) + below_pads  # Have to add values for the image and channel dims.
+    above_pads = (0,0) + above_pads  # Have to add values for the image and channel dims.
+    img_batch = np.pad(img_batch, zip(below_pads,above_pads), mode='constant', constant_values=0)
 
     img_count = img_batch.shape[0]                # N
     ci_count = img_batch.shape[1]                 # Ci
@@ -160,11 +160,11 @@ def data_str(data):
     return result
 
 def emit_test(t,f):
-    test_name, input_batch_data, filter_data, move_strides, dilation_strides, before_pads, after_pads = t
+    test_name, input_batch_data, filter_data, move_strides, dilation_strides, below_pads, above_pads = t
 
     print ("Generating convolution test '%s'..." % test_name)
 
-    output_batch_data = convolution_ref(input_batch_data,filter_data,move_strides,dilation_strides,before_pads,after_pads)
+    output_batch_data = convolution_ref(input_batch_data,filter_data,move_strides,dilation_strides,below_pads,above_pads)
 
     template = '''
 TEST (${BACKEND_NAME}, %s)
@@ -202,13 +202,13 @@ TEST (${BACKEND_NAME}, %s)
                          shape_str(output_batch_data.shape),
                          shape_str(move_strides),
                          shape_str(dilation_strides),
-                         shape_str(before_pads),
-                         shape_str(after_pads),
+                         shape_str(below_pads),
+                         shape_str(above_pads),
                          data_str(input_batch_data),
                          data_str(filter_data),
                          data_str(output_batch_data)));
 
-#         test name                                input image batch              filters                        stride    dilation  before-pad  after-pad
+#         test name                                input image batch              filters                        stride    dilation  below-pads  above-pads
 tests = [
          ("convolution_2d_1image",                 shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0)),
          ("convolution_2d_1image_padded_1_1x1_1",  shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (1,1),      (1,1)),

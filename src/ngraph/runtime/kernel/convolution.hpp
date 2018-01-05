@@ -85,15 +85,15 @@ namespace ngraph
                     {
                         size_t dilation_stride = window_dilation_strides[i - 2];
                         size_t movement_stride = window_movement_strides[i - 2];
-                        size_t before_pad = padding_below[i - 2];
-                        size_t after_pad = padding_above[i - 2];
+                        size_t below_pad = padding_below[i - 2];
+                        size_t above_pad = padding_above[i - 2];
 
                         input_batch_transform_start[i] = movement_stride * out_coord[i];
                         input_batch_transform_end[i] = input_batch_transform_start[i] +
                                                        (arg1_shape[i] - 1) * dilation_stride + 1;
                         input_batch_transform_strides[i] = dilation_stride;
-                        input_batch_padding_below[i] = before_pad;
-                        input_batch_padding_above[i] = after_pad;
+                        input_batch_padding_below[i] = below_pad;
+                        input_batch_padding_above[i] = above_pad;
                     }
 
                     AxisVector input_batch_axis_order(2 + n_image_dimensions);
