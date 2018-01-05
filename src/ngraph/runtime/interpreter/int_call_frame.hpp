@@ -287,7 +287,9 @@ private:
                                    args[1]->get_shape(),
                                    out[0]->get_shape(),
                                    c->get_window_movement_strides(),
-                                   c->get_window_dilation_strides());
+                                   c->get_window_dilation_strides(),
+                                   c->get_padding_below(),
+                                   c->get_padding_above());
         }
         else if (node_op == "Cos")
         {
