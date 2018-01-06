@@ -352,6 +352,9 @@ using namespace ngraph::runtime;
     }
     writer << "\n";
 
+    // This for loop creates a collection of functions that are called more than once
+    // and emitting them as globally callable functions.
+    // ops implement the is_functionally_identical method
     unordered_set<Node*> matched_ops;
     unordered_map<Node*, string> match_functions;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
@@ -485,25 +488,20 @@ using namespace ngraph::runtime;
             writer << "size_t pool_base_ptr = (size_t)memory_handler.get_ptr();\n";
             writer << "\n";
 
-            writer << "// Define temporary tensors\n";
+            // Add temporaries to the variable name map
             for (shared_ptr<Node> node : current_function->get_ordered_ops())
             {
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
-                    // writer << tensor->get_element_type().c_type_string() << "* "
-                    //        << tensor->get_name() << " = ("
-                    //        << tensor->get_element_type().c_type_string() << "*)(pool_base_ptr + "
-                    //        << tensor->get_pool_offset() << ");\n";
                     stringstream ss;
                     ss << "((" << tensor->get_element_type().c_type_string()
                        << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
                     m_variable_name_map[tensor->get_name()] = ss.str();
                 }
             }
-            writer << "\n";
         }
 
-        writer << "// Define inputs\n";
+        // Add inputs to the variable name map
         size_t arg_index = 0;
         for (shared_ptr<op::Parameter> param : current_function->get_parameters())
         {
@@ -512,18 +510,14 @@ using namespace ngraph::runtime;
                 shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
                 const element::Type& et = tv->get_tensor_view_type()->get_element_type();
                 string type = et.c_type_string();
-                // writer << type << "* " << tv->get_tensor().get_name() << " = (" << type
-                //        << "*)(inputs[" << arg_index << "]);\n";
                 stringstream ss;
                 ss << "((" << type << "*)(inputs[" << arg_index << "]))";
                 m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
                 arg_index++;
             }
         }
-        writer << "\n";
 
-        writer << "// Define outputs\n";
-        // create alias list
+        // create output alias map
         size_t output_index = 0;
         unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
         vector<size_t> aliases;
@@ -540,6 +534,7 @@ using namespace ngraph::runtime;
             output_index++;
         }
 
+        // Add outputs to the variable name map
         output_index = 0;
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
@@ -584,7 +579,6 @@ using namespace ngraph::runtime;
             }
             output_index++;
         }
-        writer << "\n";
 
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
