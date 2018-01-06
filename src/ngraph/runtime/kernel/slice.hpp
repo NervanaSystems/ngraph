@@ -39,10 +39,9 @@ namespace ngraph
 
                 CoordinateTransform::Iterator output_it = output_transform.begin();
 
-                for (const Coordinate& in_coord : input_transform)
+                for (Coordinate in_coord : input_transform)
                 {
-                    const Coordinate& out_coord = *output_it;
-                    ++output_it;
+                    Coordinate out_coord = *output_it++;
 
                     out[output_transform.index(out_coord)] = arg[input_transform.index(in_coord)];
                 }

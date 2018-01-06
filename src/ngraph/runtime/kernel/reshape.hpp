@@ -43,10 +43,9 @@ namespace ngraph
                 CoordinateTransform output_transform(out_shape);
                 CoordinateTransform::Iterator output_it = output_transform.begin();
 
-                for (const Coordinate& input_coord : input_transform)
+                for (Coordinate input_coord : input_transform)
                 {
-                    const Coordinate& output_coord = *output_it;
-                    ++output_it;
+                    Coordinate output_coord = *output_it++;
 
                     out[output_transform.index(output_coord)] =
                         arg[input_transform.index(input_coord)];

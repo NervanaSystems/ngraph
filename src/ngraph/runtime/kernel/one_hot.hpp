@@ -34,7 +34,7 @@ namespace ngraph
                 // Step 1: Zero out the output.
                 CoordinateTransform output_transform(out_shape);
 
-                for (const Coordinate& output_coord : output_transform)
+                for (Coordinate output_coord : output_transform)
                 {
                     out[output_transform.index(output_coord)] = 0;
                 }
@@ -43,7 +43,7 @@ namespace ngraph
                 // are encountered.
                 CoordinateTransform input_transform(in_shape);
 
-                for (const Coordinate& input_coord : input_transform)
+                for (Coordinate input_coord : input_transform)
                 {
                     T val = arg[input_transform.index(input_coord)];
 

@@ -54,7 +54,7 @@ namespace ngraph
 
                     CoordinateTransform::Iterator output_chunk_it = output_chunk_transform.begin();
 
-                    for (const Coordinate& input_coord : input_transform)
+                    for (Coordinate input_coord : input_transform)
                     {
                         size_t input_index = input_transform.index(input_coord);
                         size_t output_chunk_index = output_chunk_transform.index(*output_chunk_it);

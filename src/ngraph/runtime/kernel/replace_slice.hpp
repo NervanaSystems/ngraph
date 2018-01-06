@@ -38,7 +38,7 @@ namespace ngraph
                 // Step 1: Copy the entire replacement context to the output.
                 CoordinateTransform copy_transform(out_shape);
 
-                for (const Coordinate& copy_coord : copy_transform)
+                for (Coordinate copy_coord : copy_transform)
                 {
                     out[copy_transform.index(copy_coord)] = arg0[copy_transform.index(copy_coord)];
                 }
@@ -50,10 +50,9 @@ namespace ngraph
 
                 CoordinateTransform::Iterator output_it = output_transform.begin();
 
-                for (const Coordinate& input_coord : input_transform)
+                for (Coordinate input_coord : input_transform)
                 {
-                    const Coordinate& output_coord = *output_it;
-                    ++output_it;
+                    Coordinate output_coord = *output_it++;
 
                     out[output_transform.index(output_coord)] =
                         arg1[input_transform.index(input_coord)];

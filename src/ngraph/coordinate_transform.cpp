@@ -295,7 +295,7 @@ bool CoordinateTransform::in_padding(const Coordinate& c) const
     return false;
 }
 
-const Coordinate& CoordinateTransform::get_target_shape() const
+Coordinate CoordinateTransform::get_target_shape() const
 {
     return m_target_shape;
 }
