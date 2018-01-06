@@ -13,28 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include <pybind11/pybind11.h>
-#include "pyngraph/ops/add.hpp"
-#include "pyngraph/ops/broadcast.hpp"
-#include "pyngraph/ops/constant.hpp"
-#include "pyngraph/ops/convert.hpp"
-#include "pyngraph/ops/divide.hpp"
-#include "pyngraph/ops/dot.hpp"
-#include "pyngraph/ops/exp.hpp"
-#include "pyngraph/ops/greater.hpp"
-#include "pyngraph/ops/less.hpp"
-#include "pyngraph/ops/log.hpp"
-#include "pyngraph/ops/maximum.hpp"
-#include "pyngraph/ops/minimum.hpp"
-#include "pyngraph/ops/multiply.hpp"
-#include "pyngraph/ops/negative.hpp"
-#include "pyngraph/ops/op.hpp"
-#include "pyngraph/ops/one_hot.hpp"
-#include "pyngraph/ops/parameter.hpp"
-#include "pyngraph/ops/reduce.hpp"
-#include "pyngraph/ops/reshape.hpp"
-#include "pyngraph/ops/subtract.hpp"
-#include "pyngraph/ops/sum.hpp"
 
 namespace py = pybind11;
 
-void regmodule_pyngraph_op(py::module m);
+void regclass_pyngraph_op_Less(py::module m);

@@ -43,10 +43,12 @@ void regmodule_pyngraph_op(py::module m){
     regclass_pyngraph_op_Dot(m_op);
     regclass_pyngraph_op_Exp(m_op);
     regclass_pyngraph_op_Greater(m_op);
+    regclass_pyngraph_op_Less(m_op);
     regclass_pyngraph_op_Log(m_op);
     regclass_pyngraph_op_Maximum(m_op);
     regclass_pyngraph_op_Minimum(m_op);
     regclass_pyngraph_op_Multiply(m_op);
+    regclass_pyngraph_op_Negative(m_op);
     regclass_pyngraph_op_Parameter(m_op);
     regclass_pyngraph_op_OneHot(m_op);
     regclass_pyngraph_op_Reduce(m_op);
