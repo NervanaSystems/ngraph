@@ -12,24 +12,23 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <memory>
+#include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "ngraph/runtime/external_function.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 
-#include "ngraph/ops/convert.hpp"
-#include "ngraph/ops/greater.hpp"
-#include "ngraph/ops/maximum.hpp"
-#include "ngraph/ops/multiply.hpp"
-#include "ngraph/types/element_type.hpp"
-
-using namespace std;
 using namespace ngraph;
+using namespace std;
 
-void ngraph::op::Maximum::generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const std::shared_ptr<Node>& delta)
+std::shared_ptr<ngraph::runtime::CallFrame> runtime::gpu::GPU_Backend::make_call_frame(
+    const std::shared_ptr<ExternalFunction>& external_function)
 {
-    auto x = get_input_op(0);
-    auto y = get_input_op(1);
-    adjoints.add_delta(
-        x, delta * make_shared<op::Convert>(make_shared<op::Greater>(x, y), x->get_element_type()));
-    adjoints.add_delta(
-        y, delta * make_shared<op::Convert>(make_shared<op::Greater>(y, x), y->get_element_type()));
+    return external_function->make_call_frame();
+}
+
+std::shared_ptr<ngraph::runtime::TensorView>
+    runtime::gpu::GPU_Backend::make_primary_tensor_view(const ngraph::element::Type& element_type,
+                                                        const Shape& shape)
+{
+    auto rc = make_shared<runtime::gpu::GPU_TensorView>(element_type, shape);
+    return dynamic_pointer_cast<runtime::TensorView>(rc);
 }

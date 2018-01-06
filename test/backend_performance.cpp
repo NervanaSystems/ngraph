@@ -218,7 +218,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         auto backend = manager->allocate_backend();
         auto cf = backend->make_call_frame(external);
 
-        vector<shared_ptr<runtime::Value>> input_vals;
+        vector<shared_ptr<runtime::TensorView>> input_vals;
 
         for (size_t i = 0; i < n_arrays; i++)
         {

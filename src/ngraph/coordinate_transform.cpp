@@ -29,12 +29,16 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
                                          const Coordinate& source_start_corner,
                                          const Coordinate& source_end_corner,
                                          const Strides& source_strides,
-                                         const AxisVector& source_axis_order)
+                                         const AxisVector& source_axis_order,
+                                         const Shape& source_padding_below,
+                                         const Shape& source_padding_above)
     : m_source_shape(source_shape)
     , m_source_start_corner(source_start_corner)
     , m_source_end_corner(source_end_corner)
     , m_source_strides(source_strides)
     , m_source_axis_order(source_axis_order)
+    , m_source_padding_below(source_padding_below)
+    , m_source_padding_above(source_padding_above)
 {
     m_n_axes = source_shape.size();
 
@@ -61,6 +65,16 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
         throw std::domain_error(
             "Source axis order does not have the same number of axes as the source space shape");
     }
+    if (m_n_axes != source_padding_below.size())
+    {
+        throw std::domain_error(
+            "Padding-below shape does not have the same number of axes as the source space shape");
+    }
+    if (m_n_axes != source_padding_above.size())
+    {
+        throw std::domain_error(
+            "Padding-above shape does not have the same number of axes as the source space shape");
+    }
 
     AxisVector all_axes(m_n_axes);
     size_t n = 0;
@@ -75,7 +89,8 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
 
     for (size_t i = 0; i < m_n_axes; i++)
     {
-        if (source_start_corner[i] >= source_shape[i] &&
+        if (source_start_corner[i] >=
+                source_shape[i] + source_padding_below[i] + source_padding_above[i] &&
             !(source_start_corner[i] == 0 && source_shape[i] == 0))
         {
             std::stringstream ss;
@@ -87,7 +102,8 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
 
     for (size_t i = 0; i < m_n_axes; i++)
     {
-        if (source_end_corner[i] > source_shape[i])
+        if (source_end_corner[i] >
+            source_shape[i] + source_padding_below[i] + source_padding_above[i])
         {
             std::stringstream ss;
 
@@ -115,7 +131,27 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     }
 }
 
-static AxisVector default_axis_order(size_t n_axes)
+Shape CoordinateTransform::default_padding(size_t n_axes)
+{
+    return Shape(n_axes, 0);
+}
+
+CoordinateTransform::CoordinateTransform(const Shape& source_shape,
+                                         const Coordinate& source_start_corner,
+                                         const Coordinate& source_end_corner,
+                                         const Strides& source_strides,
+                                         const AxisVector& source_axis_order)
+    : CoordinateTransform(source_shape,
+                          source_start_corner,
+                          source_end_corner,
+                          source_strides,
+                          source_axis_order,
+                          default_padding(source_shape.size()),
+                          default_padding(source_shape.size()))
+{
+}
+
+AxisVector CoordinateTransform::default_axis_order(size_t n_axes)
 {
     AxisVector result(n_axes);
     size_t n = 0;
@@ -132,11 +168,13 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
                           source_start_corner,
                           source_end_corner,
                           source_strides,
-                          default_axis_order(source_shape.size()))
+                          default_axis_order(source_shape.size()),
+                          default_padding(source_shape.size()),
+                          default_padding(source_shape.size()))
 {
 }
 
-static Strides default_source_strides(size_t n_axes)
+Strides CoordinateTransform::default_source_strides(size_t n_axes)
 {
     return AxisVector(n_axes, 1);
 }
@@ -148,16 +186,18 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
                           source_start_corner,
                           source_end_corner,
                           default_source_strides(source_shape.size()),
-                          default_axis_order(source_shape.size()))
+                          default_axis_order(source_shape.size()),
+                          default_padding(source_shape.size()),
+                          default_padding(source_shape.size()))
 {
 }
 
-static Coordinate default_source_start_corner(size_t n_axes)
+Coordinate CoordinateTransform::default_source_start_corner(size_t n_axes)
 {
     return Coordinate(n_axes, 0);
 }
 
-static Coordinate default_source_end_corner(const Shape& source_shape)
+Coordinate CoordinateTransform::default_source_end_corner(const Shape& source_shape)
 {
     return source_shape;
 }
@@ -167,7 +207,9 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape)
                           default_source_start_corner(source_shape.size()),
                           default_source_end_corner(source_shape),
                           default_source_strides(source_shape.size()),
-                          default_axis_order(source_shape.size()))
+                          default_axis_order(source_shape.size()),
+                          default_padding(source_shape.size()),
+                          default_padding(source_shape.size()))
 {
 }
 
@@ -204,8 +246,9 @@ Coordinate CoordinateTransform::to_source_coordinate(const Coordinate& c) const
 
     for (size_t axis = 0; axis < m_n_axes; axis++)
     {
-        result[m_source_axis_order[axis]] =
-            c[axis] * m_source_strides[axis] + m_source_start_corner[axis];
+        result[m_source_axis_order[axis]] = c[axis] * m_source_strides[axis] +
+                                            m_source_start_corner[axis] -
+                                            m_source_padding_below[axis];
     }
 
     return result;
@@ -228,6 +271,28 @@ bool CoordinateTransform::in_bounds(const Coordinate& c) const
     }
 
     return true;
+}
+
+// Check if a coordinate corresponds to one of the padding elements that has been added to
+// the source space.
+bool CoordinateTransform::in_padding(const Coordinate& c) const
+{
+    if (c.size() != m_n_axes)
+    {
+        throw std::domain_error("Coordinate rank does not match the coordinate transform rank");
+    }
+
+    for (size_t axis = 0; axis < m_n_axes; axis++)
+    {
+        size_t padded_pos = c[axis] * m_source_strides[axis] + m_source_start_corner[axis];
+        if (padded_pos < m_source_padding_below[axis] ||
+            padded_pos >= m_source_padding_below[axis] + m_source_shape[axis])
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 const Coordinate& CoordinateTransform::get_target_shape() const

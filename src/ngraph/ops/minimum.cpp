@@ -29,8 +29,8 @@ void ngraph::op::Minimum::generate_adjoints(autodiff::Adjoints& adjoints,
     auto x = get_input_op(0);
     auto y = get_input_op(1);
 
-    adjoints.add_delta(x,
-                       delta * make_shared<op::Convert>(make_shared<op::Less>(x, y), element::f32));
-    adjoints.add_delta(y,
-                       delta * make_shared<op::Convert>(make_shared<op::Less>(y, x), element::f32));
+    adjoints.add_delta(
+        x, delta * make_shared<op::Convert>(make_shared<op::Less>(x, y), x->get_element_type()));
+    adjoints.add_delta(
+        y, delta * make_shared<op::Convert>(make_shared<op::Less>(y, x), y->get_element_type()));
 }

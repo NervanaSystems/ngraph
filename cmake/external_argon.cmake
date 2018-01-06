@@ -30,7 +30,17 @@ include(ExternalProject)
 if (NGRAPH_ARGON_ENABLE)
     # Repository
     set(ARGON_CMAKE_GIT_REPOSITORY git@github.com:NervanaSystems/argon-transformer.git)
-    set(ARGON_CMAKE_GIT_TAG yixing/reverse-build)
+
+    # Set argon_transformer tag
+    # Notes:
+    # - Before we have ngraph CI job for argon transformer, ngraph master might not be
+    #   compatible with argon transformer. To ensure compatibility, checkout the ngraph commit point
+    #   where the following `ARGON_CMAKE_GIT_TAG` is set and build ngraph with argon using this
+    #   commit.
+    # - After we have ngraph CI job for argon transformer, ngraph master will be compatible with
+    #   argon transformer guaranteed by CI.
+    set(ARGON_CMAKE_GIT_TAG ec0b55008755b4d18474ac50216ef8cbf0f11598) # Tue Jan 2 2018
+
     set(ARGON_CMAKE_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/argon)
     if (NOT DEFINED PREBUILD_ARGON_PATH)
         set(PREBUILD_ARGON_PATH "")

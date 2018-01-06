@@ -275,17 +275,18 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
     tensor_call(args, out);
 }
 
-void runtime::interpreter::INT_CallFrame::call(const vector<shared_ptr<runtime::Value>>& arguments,
-                                               const vector<shared_ptr<runtime::Value>>& results)
+void runtime::interpreter::INT_CallFrame::call(
+    const vector<shared_ptr<runtime::TensorView>>& arguments,
+    const vector<shared_ptr<runtime::TensorView>>& results)
 {
     vector<shared_ptr<runtime::TensorView>> inputs;
-    for (shared_ptr<runtime::Value> argument : arguments)
+    for (shared_ptr<runtime::TensorView> argument : arguments)
     {
         argument->collect_tensor_views(inputs, argument);
     }
 
     vector<shared_ptr<runtime::TensorView>> outputs;
-    for (shared_ptr<runtime::Value> result : results)
+    for (shared_ptr<runtime::TensorView> result : results)
     {
         result->collect_tensor_views(outputs, result);
     }

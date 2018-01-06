@@ -13,23 +13,34 @@
 // ----------------------------------------------------------------------------
 
 #include <memory>
+#include <string>
+#include <unordered_map>
 
-#include "ngraph/ops/convert.hpp"
-#include "ngraph/ops/greater.hpp"
-#include "ngraph/ops/maximum.hpp"
-#include "ngraph/ops/multiply.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/runtime/gpu/gpu_call_frame.hpp"
+#include "ngraph/runtime/gpu/gpu_external_function.hpp"
 
 using namespace std;
+using namespace ngraph::runtime::gpu;
 using namespace ngraph;
 
-void ngraph::op::Maximum::generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const std::shared_ptr<Node>& delta)
+ngraph::runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
+    const std::shared_ptr<ngraph::Function>& function, bool release_function)
+    : runtime::ExternalFunction(function, release_function)
+    , m_function(function)
 {
-    auto x = get_input_op(0);
-    auto y = get_input_op(1);
-    adjoints.add_delta(
-        x, delta * make_shared<op::Convert>(make_shared<op::Greater>(x, y), x->get_element_type()));
-    adjoints.add_delta(
-        y, delta * make_shared<op::Convert>(make_shared<op::Greater>(y, x), y->get_element_type()));
+}
+
+void runtime::gpu::GPU_ExternalFunction::compile()
+{
+}
+
+shared_ptr<runtime::CallFrame> runtime::gpu::GPU_ExternalFunction::make_call_frame()
+{
+    if (!m_is_compiled)
+    {
+        compile();
+    }
+
+    return make_shared<runtime::gpu::GPU_CallFrame>(shared_from_this(), m_function);
 }

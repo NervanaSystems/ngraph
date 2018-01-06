@@ -12,24 +12,26 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <memory>
+#pragma once
 
-#include "ngraph/ops/convert.hpp"
-#include "ngraph/ops/greater.hpp"
-#include "ngraph/ops/maximum.hpp"
-#include "ngraph/ops/multiply.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/runtime/manager.hpp"
 
-using namespace std;
-using namespace ngraph;
-
-void ngraph::op::Maximum::generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const std::shared_ptr<Node>& delta)
+namespace ngraph
 {
-    auto x = get_input_op(0);
-    auto y = get_input_op(1);
-    adjoints.add_delta(
-        x, delta * make_shared<op::Convert>(make_shared<op::Greater>(x, y), x->get_element_type()));
-    adjoints.add_delta(
-        y, delta * make_shared<op::Convert>(make_shared<op::Greater>(y, x), y->get_element_type()));
+    namespace runtime
+    {
+        namespace gpu
+        {
+            class GPU_Manager : public Manager
+            {
+            public:
+                virtual std::shared_ptr<Backend> allocate_backend() override;
+
+                virtual std::shared_ptr<ngraph::runtime::ExternalFunction>
+                    compile(const std::shared_ptr<ngraph::Function>& fun) override;
+
+                static Factory factory;
+            };
+        };
+    }
 }

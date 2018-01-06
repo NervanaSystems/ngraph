@@ -12,24 +12,29 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <memory>
+#pragma once
 
-#include "ngraph/ops/convert.hpp"
-#include "ngraph/ops/greater.hpp"
-#include "ngraph/ops/maximum.hpp"
-#include "ngraph/ops/multiply.hpp"
-#include "ngraph/types/element_type.hpp"
+#include "ngraph/runtime/backend.hpp"
 
-using namespace std;
-using namespace ngraph;
-
-void ngraph::op::Maximum::generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const std::shared_ptr<Node>& delta)
+namespace ngraph
 {
-    auto x = get_input_op(0);
-    auto y = get_input_op(1);
-    adjoints.add_delta(
-        x, delta * make_shared<op::Convert>(make_shared<op::Greater>(x, y), x->get_element_type()));
-    adjoints.add_delta(
-        y, delta * make_shared<op::Convert>(make_shared<op::Greater>(y, x), y->get_element_type()));
+    namespace runtime
+    {
+        namespace gpu
+        {
+            static size_t alignment = 64;
+
+            class GPU_Backend : public Backend
+            {
+            public:
+                std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame(
+                    const std::shared_ptr<ngraph::runtime::ExternalFunction>& external_function)
+                    override;
+
+                std::shared_ptr<ngraph::runtime::TensorView>
+                    make_primary_tensor_view(const ngraph::element::Type& element_type,
+                                             const Shape& shape) override;
+            };
+        }
+    }
 }
