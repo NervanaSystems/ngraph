@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#pragma once
+
 #include <pybind11/pybind11.h>
 #include "pyngraph/ops/add.hpp"
 #include "pyngraph/ops/broadcast.hpp"
