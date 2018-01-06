@@ -41,7 +41,7 @@ namespace ngraph
                 // At the outermost level we will walk over every output coordinate O.
                 CoordinateTransform output_transform(out_shape);
 
-                for (Coordinate out_coord : output_transform)
+                for (const Coordinate& out_coord : output_transform)
                 {
                     // Our output coordinate O will have the form:
                     //
@@ -145,12 +145,15 @@ namespace ngraph
 
                     CoordinateTransform::Iterator input_it = input_batch_transform.begin();
                     CoordinateTransform::Iterator filter_it = filter_transform.begin();
+                    CoordinateTransform::Iterator input_it_end = input_batch_transform.end();
+                    CoordinateTransform::Iterator filter_it_end = filter_transform.end();
 
-                    while (input_it != input_batch_transform.end() &&
-                           filter_it != filter_transform.end())
+                    while (input_it != input_it_end && filter_it != filter_it_end)
                     {
-                        Coordinate input_batch_coord = *input_it++;
-                        Coordinate filter_coord = *filter_it++;
+                        const Coordinate& input_batch_coord = *input_it;
+                        const Coordinate& filter_coord = *filter_it;
+                        ++input_it;
+                        ++filter_it;
                         T v = input_batch_transform.in_padding(input_batch_coord)
                                   ? 0
                                   : arg0[input_batch_transform.index(input_batch_coord)];

@@ -147,6 +147,27 @@ op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg, const Shape& window_shape
 {
 }
 
+bool op::MaxPool::is_functionally_identical(const Node& other) const
+{
+    bool rc = true;
+    if (Node::is_functionally_identical(other))
+    {
+        const MaxPool& rhs = dynamic_cast<const MaxPool&>(other);
+        rc &= m_window_shape == rhs.m_window_shape;
+        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
+        rc &= m_channel_count == rhs.m_channel_count;
+        rc &= m_input_image_shape == rhs.m_input_image_shape;
+        rc &= m_output_image_shape == rhs.m_output_image_shape;
+        rc &= m_batch_size == rhs.m_batch_size;
+        rc &= m_image_dimension_count == rhs.m_image_dimension_count;
+    }
+    else
+    {
+        rc = false;
+    }
+    return rc;
+}
+
 /*
 void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {

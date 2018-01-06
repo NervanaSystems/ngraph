@@ -57,6 +57,8 @@ namespace ngraph
 
             /// \return The function to be called.
             std::shared_ptr<Function> get_function() const override { return m_function; }
+            bool is_functionally_identical(const Node&) const override;
+
         protected:
             std::shared_ptr<Function> m_function;
         };
