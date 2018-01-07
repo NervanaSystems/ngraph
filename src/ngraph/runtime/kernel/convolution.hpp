@@ -18,6 +18,7 @@
 
 #include "ngraph/common.hpp"
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -33,7 +34,9 @@ namespace ngraph
                              const Shape& arg1_shape,
                              const Shape& out_shape,
                              const Strides& window_movement_strides,
-                             const Strides& window_dilation_strides)
+                             const Strides& window_dilation_strides,
+                             const Shape& padding_below,
+                             const Shape& padding_above)
             {
                 // At the outermost level we will walk over every output coordinate O.
                 CoordinateTransform output_transform(out_shape);
@@ -60,6 +63,9 @@ namespace ngraph
                     // with strides:
                     //
                     //   (1,l_1,...,l_n).
+                    //
+                    // Note that we are iterating within the *padded* image batch, so further down we must check
+                    // the current coordinate is in the padding.
 
                     size_t n_image_dimensions = arg0_shape.size() - 2;
                     size_t n_input_channels = arg0_shape[1];
@@ -67,6 +73,8 @@ namespace ngraph
                     Shape input_batch_transform_start(2 + n_image_dimensions);
                     Shape input_batch_transform_end(2 + n_image_dimensions);
                     Shape input_batch_transform_strides(2 + n_image_dimensions, 1);
+                    Shape input_batch_padding_below(2 + n_image_dimensions, 0);
+                    Shape input_batch_padding_above(2 + n_image_dimensions, 0);
 
                     input_batch_transform_start[0] = img_index;
                     input_batch_transform_end[0] = img_index + 1;
@@ -77,17 +85,30 @@ namespace ngraph
                     {
                         size_t dilation_stride = window_dilation_strides[i - 2];
                         size_t movement_stride = window_movement_strides[i - 2];
+                        size_t below_pad = padding_below[i - 2];
+                        size_t above_pad = padding_above[i - 2];
 
                         input_batch_transform_start[i] = movement_stride * out_coord[i];
                         input_batch_transform_end[i] = input_batch_transform_start[i] +
                                                        (arg1_shape[i] - 1) * dilation_stride + 1;
                         input_batch_transform_strides[i] = dilation_stride;
+                        input_batch_padding_below[i] = below_pad;
+                        input_batch_padding_above[i] = above_pad;
                     }
+
+                    AxisVector input_batch_axis_order(2 + n_image_dimensions);
+                    size_t n = 0;
+                    std::generate(input_batch_axis_order.begin(),
+                                  input_batch_axis_order.end(),
+                                  [&n]() -> size_t { return n++; });
 
                     CoordinateTransform input_batch_transform(arg0_shape,
                                                               input_batch_transform_start,
                                                               input_batch_transform_end,
-                                                              input_batch_transform_strides);
+                                                              input_batch_transform_strides,
+                                                              input_batch_axis_order,
+                                                              input_batch_padding_below,
+                                                              input_batch_padding_above);
 
                     // Simultaneously with iterating I, for the filters we need to iterate the coordinate:
                     //
@@ -130,8 +151,10 @@ namespace ngraph
                     {
                         Coordinate input_batch_coord = *input_it++;
                         Coordinate filter_coord = *filter_it++;
-                        result += arg0[input_batch_transform.index(input_batch_coord)] *
-                                  arg1[filter_transform.index(filter_coord)];
+                        T v = input_batch_transform.in_padding(input_batch_coord)
+                                  ? 0
+                                  : arg0[input_batch_transform.index(input_batch_coord)];
+                        result += v * arg1[filter_transform.index(filter_coord)];
                     }
 
                     out[output_transform.index(out_coord)] = result;

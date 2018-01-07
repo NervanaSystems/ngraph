@@ -25,15 +25,15 @@ std::shared_ptr<const ngraph::descriptor::TensorView> TensorView::get_tensor_vie
     return m_descriptor;
 }
 
-std::shared_ptr<ngraph::descriptor::Value> TensorView::get_descriptor() const
+std::shared_ptr<ngraph::descriptor::TensorView> TensorView::get_descriptor() const
 {
     return m_descriptor;
 }
 
 void TensorView::collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
-                                      const std::shared_ptr<Value>& value) const
+                                      const std::shared_ptr<TensorView>& value) const
 {
-    views.push_back(std::static_pointer_cast<TensorView>(value));
+    views.push_back(value);
 }
 
 const ngraph::Shape& TensorView::get_shape() const
