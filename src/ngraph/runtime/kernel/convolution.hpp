@@ -155,8 +155,8 @@ namespace ngraph
                                   ? 0
                                   : arg0[input_batch_transform.index(input_batch_coord)];
                         result += v * arg1[filter_transform.index(filter_coord)];
-                        input_it++;
-                        filter_it++;
+                        ++input_it;
+                        ++filter_it;
                     }
 
                     out[output_transform.index(out_coord)] = result;

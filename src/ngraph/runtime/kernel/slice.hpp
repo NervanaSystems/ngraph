@@ -45,7 +45,7 @@ namespace ngraph
 
                     out[output_transform.index(out_coord)] = arg[input_transform.index(in_coord)];
 
-                    output_it++;
+                    ++output_it;
                 }
             }
         }
