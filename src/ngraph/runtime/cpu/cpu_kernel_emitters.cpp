@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 #include <algorithm>
+#include <map>
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
@@ -241,17 +242,29 @@ void ngraph::runtime::cpu::kernel::emit_reshape(codegen::CodeWriter& writer,
     auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
     auto dest_nd_name = recast_tmp_var(writer, element_type, out, {size}, "dest_nd");
 
+    std::map<size_t, size_t> input_to_loop_pos;
+    std::map<size_t, size_t> loop_to_input_pos;
     // loop over the input in the order of arg0_axis_order
+    int input_pos = 0;
     Shape ordered_input_shape;
     for (size_t i = 0; i < arg0_shape.size(); i++)
     {
         ordered_input_shape.push_back(arg0_shape[arg0_axis_order[i]]);
+        input_to_loop_pos[input_pos] = arg0_axis_order[i];
+        input_pos += 1;
     }
+
+    for (auto kv : input_to_loop_pos)
+    {
+        loop_to_input_pos[kv.second] = kv.first;
+    }
+
     auto index_vars = open_for_loops(writer, ordered_input_shape);
 
     // write the output reshape as a 1D array by calculating the
     // position of the input iterators in the output array
     writer << dest_nd_name << "[ 0";
+
     for (size_t i = 0; i < arg0_shape.size(); i++)
     {
         writer << " + " << index_vars[i];
@@ -267,7 +280,7 @@ void ngraph::runtime::cpu::kernel::emit_reshape(codegen::CodeWriter& writer,
 
     for (size_t i = 0; i < arg0_shape.size(); i++)
     {
-        writer << "[" << index_vars[arg0_axis_order[i]] << "]";
+        writer << "[" << index_vars[loop_to_input_pos[i]] << "]";
     }
     writer << ";\n";
 
