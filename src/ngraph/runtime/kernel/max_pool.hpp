@@ -36,7 +36,7 @@ namespace ngraph
                 // At the outermost level we will walk over every output coordinate O.
                 CoordinateTransform output_transform(out_shape);
 
-                for (Coordinate out_coord : output_transform)
+                for (const Coordinate& out_coord : output_transform)
                 {
                     // Our output coordinate O will have the form:
                     //
@@ -88,7 +88,7 @@ namespace ngraph
                                    ? -std::numeric_limits<T>::infinity()
                                    : std::numeric_limits<T>::min();
 
-                    for (Coordinate input_batch_coord : input_batch_transform)
+                    for (const Coordinate& input_batch_coord : input_batch_transform)
                     {
                         T x = arg[input_batch_transform.index(input_batch_coord)];
                         result = x > result ? x : result;

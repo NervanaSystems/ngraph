@@ -74,7 +74,7 @@ void run_benchmark(const std::string& json_path, size_t iterations)
 
     stopwatch build_time;
     build_time.start();
-    auto manager = runtime::Manager::get("CPU");
+    auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
@@ -147,7 +147,7 @@ TEST(benchmark, mxnet_lstm_backward)
 TEST(benchmark, mxnet_lstm_forward)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/LSTM_forward.json");
-    run_benchmark(json_path, 10);
+    run_benchmark(json_path, 1);
 }
 
 //
