@@ -152,10 +152,14 @@ class BuildExt(build_ext):
         ct = self.compiler.compiler_type
         for ext in self.extensions:
             ext.extra_compile_args += [cpp_flag(self.compiler)]
-            if has_flag(self.compiler, '-fvisibility=hidden'):
-                ext.extra_compile_args += ['-fvisibility=hidden']
+            if has_flag(self.compiler, '-frtti'):
+                ext.extra_compile_args += ['-frtti']
             if sys.platform == 'darwin':
                 ext.extra_compile_args += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
+            else:
+                if has_flag(self.compiler, '-fvisibility=hidden'):
+                    ext.extra_compile_args += ['-fvisibility=hidden']
+
             # else:
             #    ext.extra_link_args += ["-shared"]
             ext.extra_link_args += ["-Wl,-rpath,%s"%(NGRAPH_CPP_LIBRARY_DIR)]
