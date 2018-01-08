@@ -22,27 +22,16 @@ namespace ngraph {
 namespace op {
 namespace {
 
-template <typename T>
-static void declareParameterizedConstant(py::module & mod, std::string const & suffix) {
-    using Class = ParameterizedConstant<T>;
-    using PyClass = py::class_<Class, std::shared_ptr<Class>, ConstantBase>;
-
-    PyClass cls(mod, ("ParameterizedConstant" + suffix).c_str());
-    cls.def(py::init<const ngraph::Shape&, std::shared_ptr<ngraph::runtime::ParameterizedTensorView<T>>& >());
-
-}
-
-}
-
-PYBIND11_MODULE(ParameterizedConstant, mod) {
+PYBIND11_MODULE(Constant, mod) {
 
     py::module::import("nwrapper.ngraph.Node");
-    py::module::import("nwrapper.ngraph.runtime.ParameterizedTensorView");
-    using ET = ngraph::element::TraitedType<float>;
 
-    py::class_<ConstantBase, std::shared_ptr<ConstantBase>, Node> constantBase(mod, "ConstantBase");
+    using Class = Constant;
+    using PyClass = py::class_<Class, std::shared_ptr<Class>, Node>;
 
-    declareParameterizedConstant<ET>(mod, "F");
+    PyClass cls(mod, ("Constant"));
+    cls.def(py::init<const element::Type&, Shape, const std::vector<float>&>());
+}
 }
 
 }}  // ngraph

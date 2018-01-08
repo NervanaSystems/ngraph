@@ -37,12 +37,18 @@ PYBIND11_MODULE(Node, mod) {
     node.def("__mul__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
                 return a * b;
                }, py::is_operator());
+    node.def("__div__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
+                return a/b;
+               }, py::is_operator());
     node.def("__truediv__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
                 return a/b;
                }, py::is_operator());
+
+    node.def("get_output_size", &Node::get_output_size);
+    node.def("get_output_element_type", &Node::get_output_element_type);
+    node.def("get_element_type", &Node::get_element_type);
+    node.def("get_output_shape", &Node::get_output_shape);
     node.def("get_shape", &Node::get_shape);
-    node.def("get_value_type", (std::shared_ptr<const ValueType> (Node::*)()) &Node::get_value_type);
-    node.def("get_value_type", (const std::shared_ptr<const ValueType> (Node::*)() const) &Node::get_value_type);
 }
 
 }  // ngraph

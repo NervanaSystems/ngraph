@@ -104,7 +104,7 @@ ext_modules = [Extension('nwrapper.ngraph.types.TraitedType',
                         ['nwrapper/ngraph/ops/reduce.cpp'], include_dirs),
                Extension('nwrapper.ngraph.ops.OneHot',
                         ['nwrapper/ngraph/ops/one_hot.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.ParameterizedConstant',
+               Extension('nwrapper.ngraph.ops.Constant',
                         ['nwrapper/ngraph/ops/constant.cpp'], include_dirs),
                Extension('nwrapper.ngraph.runtime.Utils',
                         ['nwrapper/ngraph/runtime/utils.cpp'], include_dirs)]
