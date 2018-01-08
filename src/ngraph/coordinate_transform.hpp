@@ -70,7 +70,7 @@ namespace ngraph
             void operator++();
             Iterator operator++(int);
             void operator+=(size_t n);
-            Coordinate operator*();
+            const Coordinate& operator*() const;
             bool operator!=(const Iterator& it);
             bool operator==(const Iterator& it);
 
