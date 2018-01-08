@@ -111,8 +111,8 @@ public:
     /// @brief Invoke the function with values matching the signature of the function.
     ///
     /// Tuples will be expanded into their tensor views to build the call frame.
-    void call(const std::vector<std::shared_ptr<runtime::Value>>& inputs,
-              const std::vector<std::shared_ptr<runtime::Value>>& outputs);
+    void call(const std::vector<std::shared_ptr<runtime::TensorView>>& inputs,
+              const std::vector<std::shared_ptr<runtime::TensorView>>& outputs);
 
 private:
     /// @brief Invoke the function with tuples pre-expanded to their underlying
@@ -289,7 +289,9 @@ private:
                                    args[1]->get_shape(),
                                    out[0]->get_shape(),
                                    c->get_window_movement_strides(),
-                                   c->get_window_dilation_strides());
+                                   c->get_window_dilation_strides(),
+                                   c->get_padding_below(),
+                                   c->get_padding_above());
         }
         else if (node_op == "Cos")
         {

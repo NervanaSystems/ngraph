@@ -32,8 +32,6 @@ namespace ngraph
         class ExternalFunction;
         class CallFrame;
         class TensorView;
-        class Tuple;
-        class Value;
 
         /// @brief Interface to a generic backend.
         ///
