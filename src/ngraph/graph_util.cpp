@@ -85,8 +85,7 @@ void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
         stack.pop_front();
         for (shared_ptr<Node> op : func->get_ops())
         {
-            shared_ptr<Function> fp = op->get_function();
-            if (fp)
+            for (shared_ptr<Function> fp : op->get_functions())
             {
                 stack.push_front(fp);
             }

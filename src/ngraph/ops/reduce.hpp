@@ -103,8 +103,11 @@ namespace ngraph
                     new_args.at(0), new_args.at(1), m_reduction_function, m_reduction_axes);
             }
 
-            /// \return The function to use for reduction.
-            std::shared_ptr<Function> get_function() const override { return m_reduction_function; }
+            /// \return A one-element vector containing the function to use for reduction.
+            std::vector<std::shared_ptr<Function>> get_functions() const override
+            {
+                return std::vector<std::shared_ptr<Function>>{m_reduction_function};
+            }
             /// \return The axis positions (0-based) to be eliminated through reduction.
             const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
             bool is_functionally_identical(const Node&) const override;

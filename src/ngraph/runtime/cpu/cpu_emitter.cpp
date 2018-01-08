@@ -33,6 +33,7 @@
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
@@ -652,7 +653,7 @@ void runtime::cpu::CPU_Emitter::EmitFunctionCall(
     const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto function_call = static_cast<const op::FunctionCall*>(n);
-    shared_ptr<Function> function = function_call->get_function();
+    shared_ptr<Function> function = function_call->get_functions()[0];
 
     m_out << "{   // Call " << function->get_name() << "\n";
     m_out.indent++;
@@ -672,7 +673,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(const ngraph::Node* n,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto reduce = static_cast<const op::Reduce*>(n);
-    auto reduction_function = reduce->get_function();
+    auto reduction_function = reduce->get_functions()[0];
 
     auto reductee_shape = args[0].get_shape();
 
@@ -1380,6 +1381,22 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(const ngraph::Node* n,
     m_out << "                 {" << join(result_shape) << "},\n";
     m_out << "                 {" << join(max_pool->get_window_shape()) << "},\n";
     m_out << "                 {" << join(max_pool->get_window_movement_strides()) << "});\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitReverse(const ngraph::Node* n,
+                                            const vector<runtime::cpu::TensorViewWrapper>& args,
+                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto reverse = static_cast<const op::Reverse*>(n);
+
+    auto arg_shape = args[0].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    m_out << "kernel::reverse<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    m_out << "                " << out[0].get_name() << ",\n";
+    m_out << "                {" << join(arg_shape) << "},\n";
+    m_out << "                {" << join(result_shape) << "},\n";
+    m_out << "                {" << join(reverse->get_reversed_axes()) << "});\n";
 }
 
 //------------------------------------------------------------------------------------------------

@@ -81,7 +81,11 @@ op::Reduce::Reduce(const std::shared_ptr<Node>& arg_reductee,
     }
     if (m_reduction_function->get_output_element_type(0) != arg_init->get_element_type())
     {
-        throw ngraph_error("Return type from reduction function does not match expected");
+        throw ngraph_error("Return element type from reduction function does not match expected");
+    }
+    if (m_reduction_function->get_output_shape(0) != Shape{})
+    {
+        throw ngraph_error("Return shape from reduction function is not a scalar");
     }
 
     add_output(input_reductee.get_element_type(), result_shape);

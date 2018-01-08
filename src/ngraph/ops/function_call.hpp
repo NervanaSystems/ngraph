@@ -56,8 +56,12 @@ namespace ngraph
             }
 
             /// \return The function to be called.
-            std::shared_ptr<Function> get_function() const override { return m_function; }
             bool is_functionally_identical(const Node&) const override;
+            /// \return A singleton vector containing the function to be called.
+            std::vector<std::shared_ptr<Function>> get_functions() const override
+            {
+                return std::vector<std::shared_ptr<Function>>{m_function};
+            }
 
         protected:
             std::shared_ptr<Function> m_function;
