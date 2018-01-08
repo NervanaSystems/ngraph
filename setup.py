@@ -74,8 +74,7 @@ if "NGRAPH_CPP_BUILD_PATH" in os.environ:
     NGRAPH_CPP_INCLUDE_DIR = os.environ["NGRAPH_CPP_BUILD_PATH"] + "/include"
     NGRAPH_CPP_LIBRARY_DIR = os.environ["NGRAPH_CPP_BUILD_PATH"] + "/lib"
 else:
-    print("NGRAPH_CPP_BUILD_PATH must be defined exiting")
-    exit()
+    raise RuntimeError('NGRAPH_CPP_BUILD_PATH must be defined')
 
 
 sources = ['pyngraph/function.cpp',
