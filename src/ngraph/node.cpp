@@ -214,9 +214,9 @@ std::shared_ptr<Node> Node::backprop_node(const std::shared_ptr<Node>& x,
     return adjoints_it->second.get(x);
 }
 
-std::shared_ptr<Function> Node::get_function() const
+std::vector<std::shared_ptr<Function>> Node::get_functions() const
 {
-    return nullptr;
+    return std::vector<std::shared_ptr<Function>>{};
 }
 
 namespace ngraph
