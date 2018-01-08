@@ -67,9 +67,9 @@ namespace ngraph
                 // for the dotted axes.
                 CoordinateTransform dot_axes_transform(dot_axis_sizes);
 
-                for (Coordinate arg0_projected_coord : arg0_projected_transform)
+                for (const Coordinate& arg0_projected_coord : arg0_projected_transform)
                 {
-                    for (Coordinate arg1_projected_coord : arg1_projected_transform)
+                    for (const Coordinate& arg1_projected_coord : arg1_projected_transform)
                     {
                         // The output coordinate is just the concatenation of the projected coordinates.
                         Coordinate out_coord(arg0_projected_coord.size() +
@@ -87,16 +87,15 @@ namespace ngraph
                         size_t out_index = output_transform.index(out_coord);
 
                         // Walk along the dotted axes.
-                        for (Coordinate dot_axis_positions : dot_axes_transform)
+                        Coordinate arg0_coord(arg0_shape.size());
+                        Coordinate arg1_coord(arg1_shape.size());
+                        auto arg0_it = std::copy(arg0_projected_coord.begin(),
+                                                 arg0_projected_coord.end(),
+                                                 arg0_coord.begin());
+                        for (const Coordinate& dot_axis_positions : dot_axes_transform)
                         {
                             // In order to find the points to multiply together, we need to inject our current
                             // positions along the dotted axes back into the projected arg0 and arg1 coordinates.
-                            Coordinate arg0_coord(arg0_shape.size());
-                            Coordinate arg1_coord(arg1_shape.size());
-
-                            auto arg0_it = std::copy(arg0_projected_coord.begin(),
-                                                     arg0_projected_coord.end(),
-                                                     arg0_coord.begin());
                             std::copy(
                                 dot_axis_positions.begin(), dot_axis_positions.end(), arg0_it);
 

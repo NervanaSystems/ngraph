@@ -4421,6 +4421,367 @@ TEST(${BACKEND_NAME}, not)
     EXPECT_EQ((vector<char>{0, 1, 0, 1}), result->get_vector<char>());
 }
 
+TEST(${BACKEND_NAME}, reverse_0d)
+{
+    auto shape = Shape{};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{6});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{6}), result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_1d_nochange)
+{
+    auto shape = Shape{8};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{0, 1, 2, 3, 4, 5, 6, 7}), result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_1d_0)
+{
+    auto shape = Shape{8};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{0, 1, 2, 3, 4, 5, 6, 7});
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((vector<float>{7, 6, 5, 4, 3, 2, 1, 0}), result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_2d_nochange)
+{
+    auto shape = Shape{4, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 2>({{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}).get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ(
+        (test::NDArray<float, 2>({{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}).get_vector()),
+        result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_2d_0)
+{
+    auto shape = Shape{4, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 2>({{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}).get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ(
+        (test::NDArray<float, 2>({{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}}).get_vector()),
+        result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_2d_1)
+{
+    auto shape = Shape{4, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 2>({{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}).get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ(
+        (test::NDArray<float, 2>({{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}}).get_vector()),
+        result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_2d_01)
+{
+    auto shape = Shape{4, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 2>({{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}).get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ(
+        (test::NDArray<float, 2>({{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}}).get_vector()),
+        result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_3d_nochange)
+{
+    auto shape = Shape{2, 4, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
+                                       {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
+                                        {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_3d_0)
+{
+    auto shape = Shape{2, 4, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
+                                       {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}},
+                                        {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_3d_1)
+{
+    auto shape = Shape{2, 4, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
+                                       {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}},
+                                        {{21, 22, 23}, {18, 19, 20}, {15, 16, 17}, {12, 13, 14}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_3d_2)
+{
+    auto shape = Shape{2, 4, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{2}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
+                                       {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}},
+                                        {{14, 13, 12}, {17, 16, 15}, {20, 19, 18}, {23, 22, 21}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_3d_01)
+{
+    auto shape = Shape{2, 4, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
+                                       {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{21, 22, 23}, {18, 19, 20}, {15, 16, 17}, {12, 13, 14}},
+                                        {{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_3d_02)
+{
+    auto shape = Shape{2, 4, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 2}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
+                                       {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{14, 13, 12}, {17, 16, 15}, {20, 19, 18}, {23, 22, 21}},
+                                        {{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_3d_12)
+{
+    auto shape = Shape{2, 4, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1, 2}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
+                                       {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}},
+                                        {{23, 22, 21}, {20, 19, 18}, {17, 16, 15}, {14, 13, 12}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reverse_3d_012)
+{
+    auto shape = Shape{2, 4, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1, 2}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
+                                       {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{23, 22, 21}, {20, 19, 18}, {17, 16, 15}, {14, 13, 12}},
+                                        {{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
 TEST(${BACKEND_NAME}, numeric_float_nan)
 {
     auto shape = Shape{5};
