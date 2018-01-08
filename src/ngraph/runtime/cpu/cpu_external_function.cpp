@@ -358,7 +358,6 @@ using namespace ngraph::runtime;
     // This for loop creates a collection of functions that are called more than once
     // and emitting them as globally callable functions.
     // ops implement the is_functionally_identical method
-    unordered_set<Node*> matched_ops;
     unordered_map<Node*, string> match_functions;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
@@ -370,25 +369,26 @@ using namespace ngraph::runtime;
             {
                 continue;
             }
-            if (contains(matched_ops, op_list[i].get()))
+            if (contains_key(match_functions, op_list[i].get()))
             {
                 continue;
             }
-            bool match = false;
+            string match_function_name;
             for (size_t j = i + 1; j < op_list.size(); j++)
             {
                 if (op_list[i]->is_functionally_identical(*op_list[j]))
                 {
-                    matched_ops.insert(op_list[j].get());
-                    match = true;
+                    if (match_function_name.empty())
+                    {
+                        match_function_name = "func_" + op_list[i]->get_name();
+                        match_functions.insert({op_list[i].get(), match_function_name});
+                    }
+                    match_functions.insert({op_list[j].get(), match_function_name});
                 }
             }
-            if (match)
+            if (!match_function_name.empty())
             {
-                matched_ops.insert(op_list[i].get());
-                string func_name = "func_" + op_list[i]->get_name();
-                match_functions[op_list[i].get()] = func_name;
-                writer << "static void " << func_name << "(";
+                writer << "static void " << match_function_name << "(";
                 writer.indent++;
                 // Work around a compiler warning (*node inside typeid may have effects
                 // with shared pointers, which is fine here but clang doesn't like it.)
@@ -572,9 +572,6 @@ using namespace ngraph::runtime;
                 else
                 {
                     string type = et.c_type_string();
-                    // writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<"
-                    //        << type << "*>(outputs[" << output_index << "]);\n";
-                    // writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<"
                     stringstream ss;
                     ss << "((" << type << "*)(outputs[" << output_index << "]))";
                     m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
@@ -627,13 +624,10 @@ using namespace ngraph::runtime;
 
             // Emit operation body
             string func_name;
-            for (const pair<Node*, string>& p : match_functions)
+            auto it = match_functions.find(node.get());
+            if (it != match_functions.end())
             {
-                if (p.first->is_functionally_identical(*node))
-                {
-                    func_name = p.second;
-                    break;
-                }
+                func_name = it->second;
             }
             if (func_name.empty())
             {
