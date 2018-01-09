@@ -70,7 +70,7 @@ def tuple_times(t1,t2):
 #    filter_dilation  = (l1,...,ln)
 #    below_pads       = (p1,...,pn)
 #    above_pads       = (q1,...,qn)
-#    image_dilation   = (TODO)
+#    image_dilation   = (g1,...,gn)
 #
 #    Returns:
 #    output_batch     : [N ][Co][D'1]...[D'n]
