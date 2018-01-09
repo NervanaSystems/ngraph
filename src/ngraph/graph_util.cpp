@@ -112,9 +112,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
         return;
     }
     //fix input/output descriptors
-    NGRAPH_DEBUG << "Replacing target = " << target << " , " << target->get_name() << " , "
-                 << "replacement = " << replacement << " , " << replacement->get_name();
-
     assert(target->get_outputs().size() == replacement->get_outputs().size());
     for (size_t i = 0; i < target->get_outputs().size(); i++)
     {
@@ -135,16 +132,11 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
 void ngraph::replace_node_users_arguments(std::shared_ptr<Node> target,
                                           std::shared_ptr<Node> replacement)
 {
-    NGRAPH_DEBUG << "Replacing target = " << target << " , " << target->get_name() << " , "
-                 << "replacement = " << replacement << " , " << replacement->get_name();
-
-    NGRAPH_DEBUG << "user = " << replacement << " , " << replacement->get_name();
     for (auto user : target->users())
     {
         auto& args = const_cast<ngraph::Nodes&>(user->get_arguments_FOR_GRAPH_REWRITE_ONLY());
         auto it = std::find(begin(args), end(args), target);
         assert(it != end(args));
-        //NGRAPH_DEBUG << "Replaced " << *it << " w/ " << replacement << " in args of " << user << " , args = " << &args;
         it = args.erase(it);
         args.insert(it, replacement);
         const_cast<std::multiset<Node*>&>(replacement->users()).insert(user);

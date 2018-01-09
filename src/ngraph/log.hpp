@@ -109,13 +109,13 @@ namespace nervana
                         __LINE__,                                                                  \
                         __PRETTY_FUNCTION__)                                                       \
         .stream()
-/*
-	#define NGRAPH_DEBUG                                                                               \
-		nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_DEBUG,                                        \
-							nervana::get_file_name(__FILE__),                                          \
-							__LINE__,                                                                  \
-							__PRETTY_FUNCTION__)                                                       \
-			.stream()
-	*/
+
+//#define NGRAPH_DEBUG                                                                               \
+//    nervana::log_helper(nervana::LOG_TYPE::_LOG_TYPE_DEBUG,                                        \
+//                        nervana::get_file_name(__FILE__),                                          \
+//                        __LINE__,                                                                  \
+//                        __PRETTY_FUNCTION__)                                                       \
+//        .stream()
+
 #define NGRAPH_DEBUG nervana::get_nil_stream()
 }
