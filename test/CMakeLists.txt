@@ -46,6 +46,7 @@ set (SRC
     util/test_tools.cpp
     util.cpp
     uuid.cpp
+    mlsl.cpp
 )
 
 add_subdirectory(models)
