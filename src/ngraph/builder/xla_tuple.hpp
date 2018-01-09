@@ -87,7 +87,7 @@ namespace ngraph
         };
 
         /// Convenience function for making a runtime tuple.
-        std::shared_ptr<XLATuple> make_tuple(const XLAValues& elements)
+        inline std::shared_ptr<XLATuple> make_tuple(const XLAValues& elements)
         {
             return std::make_shared<XLATuple>(elements);
         }
