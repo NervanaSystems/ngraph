@@ -86,11 +86,6 @@ def convolution_ref(img_batch, filter, move_strides, filter_dilation, below_pads
     assert(len(filter_dilation) == len(img_batch.shape) - 2)
     assert(len(image_dilation) == len(img_batch.shape) - 2)
 
-    # Pad the input batch.
-    below_pads = (0,0) + below_pads  # Have to add values for the image and channel dims.
-    above_pads = (0,0) + above_pads  # Have to add values for the image and channel dims.
-    img_batch = np.pad(img_batch, zip(below_pads,above_pads), mode='constant', constant_values=0)
-
     # dilate the input batch
     new_img_shape = (np.array(img_batch.shape[2:]) - 1) * image_dilation + 1
     new_img_batch_shape = list(np.array(img_batch.shape[:2])) + list(new_img_shape)
@@ -108,6 +103,11 @@ def convolution_ref(img_batch, filter, move_strides, filter_dilation, below_pads
                 assert(False)
 
     img_batch = new_img_batch
+
+    # Pad the input batch.
+    below_pads = (0,0) + below_pads  # Have to add values for the image and channel dims.
+    above_pads = (0,0) + above_pads  # Have to add values for the image and channel dims.
+    img_batch = np.pad(img_batch, zip(below_pads,above_pads), mode='constant', constant_values=0)
 
     img_count = img_batch.shape[0]                # N
     ci_count = img_batch.shape[1]                 # Ci

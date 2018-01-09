@@ -85,8 +85,7 @@ namespace ngraph
                         const Strides& window_movement_strides,
                         const Strides& window_dilation_strides,
                         const Shape& padding_below,
-                        const Shape& padding_above,
-                        const Strides& image_dilation = Strides{1, 1});
+                        const Shape& padding_above);
 
             /// \brief Constructs a batched convolution operation with no padding or image dilation (i.e., padding above and below are 0 everywhere, and all image dilation strides are 1).
             ///
@@ -176,5 +175,5 @@ namespace ngraph
             static Strides default_strides(const std::shared_ptr<Node>& image_batch);
             static Shape default_padding(const std::shared_ptr<Node>& image_batch);
         };
-    }
-}
+    } // namespace op
+} // namespace ngraph

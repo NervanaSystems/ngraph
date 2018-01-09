@@ -656,7 +656,7 @@ TEST (${BACKEND_NAME}, convolution_4d_4images_strided_dilated_padded_same) // te
                             result->get_vector<double>()));
 }
 
-TEST (${BACKEND_NAME}, convolution_2d_1image_dilated) // test_name
+TEST (${BACKEND_NAME}, convolution_2d_1image_img_dilated) // test_name
 {
     auto shape_a = Shape{1,1,3,5}; // input_batch_data.shape
     auto A = make_shared<op::Parameter>(element::f64, shape_a);
