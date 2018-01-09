@@ -257,6 +257,30 @@ std::shared_ptr<Node>
                                          m_padding_above);
 }
 
+bool op::Convolution::is_functionally_identical(const Node& other) const
+{
+    bool rc = true;
+    if (Node::is_functionally_identical(other))
+    {
+        const Convolution& rhs = dynamic_cast<const Convolution&>(other);
+        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
+        rc &= m_window_dilation_strides == rhs.m_window_dilation_strides;
+        rc &= m_input_channel_count == rhs.m_input_channel_count;
+        rc &= m_output_channel_count == rhs.m_output_channel_count;
+        rc &= m_input_image_shape == rhs.m_input_image_shape;
+        rc &= m_output_image_shape == rhs.m_output_image_shape;
+        rc &= m_window_physical_shape == rhs.m_window_physical_shape;
+        rc &= m_window_virtual_shape == rhs.m_window_virtual_shape;
+        rc &= m_batch_size == rhs.m_batch_size;
+        rc &= m_image_dimension_count == rhs.m_image_dimension_count;
+    }
+    else
+    {
+        rc = false;
+    }
+    return rc;
+}
+
 /*
 void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {

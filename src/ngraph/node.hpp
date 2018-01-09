@@ -160,6 +160,8 @@ namespace ngraph
         // True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
 
+        virtual bool is_functionally_identical(const Node&) const;
+
     protected:
         void add_output(const element::Type& element_type, const Shape& shape);
         void assert_argument_list_equivalency(const Nodes& b);
