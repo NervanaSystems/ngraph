@@ -31,6 +31,7 @@
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/reverse.hpp"
@@ -1397,6 +1398,41 @@ void runtime::cpu::CPU_Emitter::EmitReverse(const ngraph::Node* n,
     m_out << "                {" << join(arg_shape) << "},\n";
     m_out << "                {" << join(result_shape) << "},\n";
     m_out << "                {" << join(reverse->get_reversed_axes()) << "});\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitReduceWindow(
+    const ngraph::Node* n,
+    const vector<runtime::cpu::TensorViewWrapper>& args,
+    const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto reduce_window = static_cast<const op::ReduceWindow*>(n);
+
+    auto arg_reductee_shape = args[0].get_shape();
+    auto result_shape = out[0].get_shape();
+    auto reduction_function = reduce_window->get_functions()[0];
+    auto& f_result_element_type = out[0].get_element_type();
+
+    string type = f_result_element_type.c_type_string();
+    m_out << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    m_out.indent++;
+    m_out << "\n";
+    m_out << type << " result;\n";
+    m_out << "void* args[] = {&x, &y};\n";
+    m_out << "void* out[] = {&result};\n";
+    m_out << reduction_function->get_name() << "(args, out);\n";
+    m_out << "return result;\n";
+    m_out.indent--;
+    m_out << "};\n";
+
+    m_out << "kernel::reduce_window<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    m_out << "                      " << args[1].get_name() << ",\n";
+    m_out << "                      " << out[0].get_name() << ",\n";
+    m_out << "                      {" << join(arg_reductee_shape) << "},\n";
+    m_out << "                      {" << join(result_shape) << "},\n";
+    m_out << "                      f,\n";
+    m_out << "                      {" << join(reduce_window->get_window_shape()) << "},\n";
+    m_out << "                      {" << join(reduce_window->get_window_movement_strides())
+          << "});\n";
 }
 
 //------------------------------------------------------------------------------------------------
