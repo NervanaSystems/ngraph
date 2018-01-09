@@ -143,3 +143,18 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_
     auto x_reshaped_dot_delta = make_shared<Dot>(x_reshaped, delta, I_shape.size()); // JK
     adjoints.add_delta(y, x_reshaped_dot_delta);
 }
+
+bool op::Dot::is_functionally_identical(const Node& other) const
+{
+    bool rc = true;
+    if (Node::is_functionally_identical(other))
+    {
+        const Dot& rhs = dynamic_cast<const Dot&>(other);
+        rc &= m_reduction_axes_count == rhs.m_reduction_axes_count;
+    }
+    else
+    {
+        rc = false;
+    }
+    return rc;
+}

@@ -110,6 +110,8 @@ namespace ngraph
             }
             /// \return The axis positions (0-based) to be eliminated through reduction.
             const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
+            bool is_functionally_identical(const Node&) const override;
+
         protected:
             std::shared_ptr<Function> m_reduction_function;
             AxisSet m_reduction_axes;
