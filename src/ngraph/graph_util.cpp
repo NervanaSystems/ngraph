@@ -144,7 +144,8 @@ void ngraph::replace_node_users_arguments(std::shared_ptr<Node> target,
         auto& args = const_cast<ngraph::Nodes&>(user->get_arguments_FOR_GRAPH_REWRITE_ONLY());
         auto it = std::find(begin(args), end(args), target);
         assert(it != end(args));
-        NGRAPH_DEBUG << "Replaced " << *it << " w/ " << replacement << " in args of " << user->get_name() << " , args = " << &args;
+        NGRAPH_DEBUG << "Replaced " << *it << " w/ " << replacement << " in args of "
+                     << user->get_name() << " , args = " << &args;
         it = args.erase(it);
         args.insert(it, replacement);
         const_cast<std::multiset<Node*>&>(replacement->users()).insert(user);
