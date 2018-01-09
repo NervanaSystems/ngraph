@@ -14,14 +14,12 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
+#include <string>
 #include <vector>
 
-#include "ngraph/function.hpp"
-#include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/runtime/external_function.hpp"
+#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/runtime/gpu/gpu_external_function.hpp"
 
 namespace ngraph
 {
@@ -29,23 +27,17 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPU_CallFrame;
-            class GPU_ExternalFunction;
-
-            using EntryPoint_t = void(void** inputs, void** outputs);
-
-            using EntryPoint = std::function<EntryPoint_t>;
-
-            // Compile and execute graphs
-            class GPU_CallFrame : public ngraph::runtime::CallFrame
+            class GPU_Emitter
             {
             public:
-              GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction> external_function,
-                            std::shared_ptr<Function> func);
-
+                GPU_Emitter()
+                    : m_out()
+                {
+                }
+                std::string get_code() { return m_out.get_code(); }
+                codegen::CodeWriter& get_code_writer() { return m_out; }
             protected:
-                std::shared_ptr<GPU_ExternalFunction> m_external_function;
-                std::shared_ptr<Function> m_function;
+                codegen::CodeWriter m_out;
             };
         }
     }

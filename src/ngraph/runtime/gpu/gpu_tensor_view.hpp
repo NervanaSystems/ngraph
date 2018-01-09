@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cuda.h>
 #include <memory>
 
 #include "ngraph/runtime/tensor_view.hpp"
@@ -36,9 +37,6 @@ public:
     GPU_TensorView(const ngraph::element::Type& element_type, const Shape& shape);
     virtual ~GPU_TensorView();
 
-    char* get_data_ptr();
-    const char* get_data_ptr() const;
-
     /// @brief Write bytes directly into the tensor
     /// @param p Pointer to source of data
     /// @param tensor_offset Offset into tensor storage to begin writing. Must be element-aligned.
@@ -52,7 +50,7 @@ public:
     void read(void* p, size_t tensor_offset, size_t n) const override;
 
 private:
-    char* m_allocated_buffer_pool;
-    char* m_aligned_buffer_pool;
+    CUdeviceptr dev_buffer;
+    // At some point need to deal with alignment
     size_t m_buffer_size;
 };

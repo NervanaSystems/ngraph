@@ -14,14 +14,10 @@
 
 #pragma once
 
-#include <functional>
 #include <memory>
-#include <typeindex>
-#include <typeinfo>
-#include <unordered_map>
 
-#include "ngraph/function.hpp"
-#include "ngraph/runtime/external_function.hpp"
+#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/types/element_type.hpp"
 
 namespace ngraph
 {
@@ -29,16 +25,24 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
-                                         public std::enable_shared_from_this<GPU_ExternalFunction>
-            {
-            public:
-                GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     bool release_function = true);
-
-            protected:
-                std::shared_ptr<ngraph::Function> m_compiled_function;
-            };
+            class GPU_TensorViewWrapper;
         }
     }
 }
+
+class ngraph::runtime::gpu::GPU_TensorViewWrapper
+{
+public:
+    GPU_TensorViewWrapper(const std::shared_ptr<descriptor::TensorView>&);
+
+    size_t get_size() const;
+    const std::vector<size_t>& get_shape() const;
+    const std::vector<size_t>& get_strides() const;
+    const element::Type& get_element_type() const;
+    const std::string& get_name() const;
+    const std::string& get_type() const;
+    bool is_output() const;
+
+private:
+    std::shared_ptr<descriptor::TensorView> m_tensor_view;
+};

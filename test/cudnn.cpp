@@ -22,7 +22,10 @@
 #include <cudnn.h>
 
 #include "ngraph/codegen/compiler.hpp"
+#include "ngraph/runtime/gpu/gpu_external_function.hpp"
+
 #include "ngraph/ngraph.hpp"
+#include "util/ndarray.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -249,6 +252,13 @@ const auto str = R"(
     auto module = compiler.compile(source);
 }
 
+template <typename T>
+static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
+{
+    size_t data_size = data.size() * sizeof(T);
+    tv->write(data.data(), 0, data_size);
+}
+
 TEST(cudnn, abc)
 {
     auto shape = Shape{2, 2};
@@ -261,4 +271,30 @@ TEST(cudnn, abc)
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a =
+        backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> b =
+        backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> c =
+        backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> result =
+        backend->make_primary_tensor_view(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
+
+    cf->call({a, b, c}, {result});
+    EXPECT_EQ(result->get_vector<float>(),
+              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+
+    cf->call({b, a, c}, {result});
+    EXPECT_EQ(result->get_vector<float>(),
+              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+
+    cf->call({a, c, b}, {result});
+    EXPECT_EQ(result->get_vector<float>(),
+              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 }

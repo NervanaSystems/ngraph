@@ -190,9 +190,11 @@ endif()
         set(SRC ${SRC}
             runtime/gpu/gpu_call_frame.cpp
             runtime/gpu/gpu_backend.cpp
-            runtime/gpu/gpu_manager.cpp
+            runtime/gpu/gpu_emitter.cpp
             runtime/gpu/gpu_external_function.cpp
+            runtime/gpu/gpu_manager.cpp
             runtime/gpu/gpu_tensor_view.cpp
+            runtime/gpu/gpu_tensor_view_wrapper.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
@@ -265,7 +267,7 @@ if(NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+    target_link_libraries(ngraph PRIVATE cuda)
 endif()
 
 # Argon

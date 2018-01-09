@@ -12,6 +12,10 @@
 // see the license for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <cstdlib>
+#include <fstream>
+
+
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 
 using namespace std;
@@ -21,16 +25,5 @@ GPU_CallFrame::GPU_CallFrame(shared_ptr<GPU_ExternalFunction> external_function,
                              shared_ptr<Function> func)
     : m_external_function(external_function)
     , m_function(func)
-{
-}
-
-void GPU_CallFrame::call(const vector<shared_ptr<Value>>& input_tvs,
-                         const vector<shared_ptr<Value>>& output_tvs)
-
-{
-}
-
-void GPU_CallFrame::tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
-                                const std::vector<std::shared_ptr<TensorView>>& outputs)
 {
 }
