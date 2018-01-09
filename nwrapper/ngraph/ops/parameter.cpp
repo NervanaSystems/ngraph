@@ -24,7 +24,7 @@ namespace ngraph {
 
 PYBIND11_MODULE(Parameter, mod) {
 
-    py::module::import("nwrapper.ngraph.types.TraitedType");
+    py::module::import("nwrapper.ngraph.types.Type");
     py::module::import("nwrapper.ngraph.Node");
     py::class_<op::Parameter, std::shared_ptr<op::Parameter>, Node> parameter(mod, "Parameter");
 

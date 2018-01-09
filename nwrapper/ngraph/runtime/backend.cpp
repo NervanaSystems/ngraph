@@ -30,13 +30,19 @@ PYBIND11_MODULE(Backend, mod) {
     py::module::import("nwrapper.ngraph.runtime.CallFrame");
     py::module::import("nwrapper.ngraph.runtime.TensorView");
 
-    using ET = ngraph::element::TraitedType<float>;
-
     py::class_<Backend, std::shared_ptr<Backend>> backend(mod, "Backend");
 
     backend.def("make_call_frame", &Backend::make_call_frame);
-    backend.def("make_primary_tensor_view", (std::shared_ptr<ngraph::runtime::TensorView> (Backend::*) (const ngraph::element::Type& , const ngraph::Shape& )) &Backend::make_primary_tensor_view);
-    backend.def("make_primary_tensor_view", (std::shared_ptr<ngraph::runtime::TensorView> (Backend::*) (const ngraph::Shape& )) &Backend::make_primary_tensor_view<ET>);
+    backend.def("make_primary_tensor_view",
+                (std::shared_ptr<ngraph::runtime::TensorView>
+                    (Backend::*)
+                    (const ngraph::element::Type& , const ngraph::Shape& ))
+                &Backend::make_primary_tensor_view);
+    backend.def("make_primary_tensor_view",
+                (std::shared_ptr<ngraph::runtime::TensorView>
+                    (Backend::*)
+                    (const ngraph::Shape&))
+                &Backend::make_primary_tensor_view<float>);
 }
 
 }}  // ngraph

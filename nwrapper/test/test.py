@@ -16,14 +16,14 @@
 import numpy as np
 
 import nwrapper.ngraph.Util as Util
-import nwrapper.ngraph.types.TraitedType as TraitedType
+import nwrapper.ngraph.types.Type as Type
 import nwrapper.ngraph.ops.Parameter as Parameter
 import nwrapper.ngraph.types.TensorViewType as TensorViewType
 import nwrapper.ngraph.Function as Function
 import nwrapper.ngraph.runtime.Manager as Manager
-import nwrapper.ngraph.runtime.ParameterizedTensorView as ParameterizedTensorView
+import nwrapper.ngraph.runtime.TensorView as TensorView
 
-element_type = TraitedType.TraitedTypeF.element_type()
+element_type = Type.f32
 shape = [2,2]
 A = Parameter.Parameter(element_type, shape)
 B = Parameter.Parameter(element_type, shape)
