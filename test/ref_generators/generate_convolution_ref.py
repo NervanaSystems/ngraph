@@ -187,13 +187,13 @@ def emit_test(t,f):
     output_batch_data = convolution_ref(input_batch_data,filter_data,move_strides,filter_dilation,below_pads,above_pads,image_dilation)
 
     template = '''
-TEST (${BACKEND_NAME}, %s) // test_name
+TEST (${BACKEND_NAME}, %s)
 {
-    auto shape_a = Shape{%s}; // input_batch_data.shape
+    auto shape_a = Shape{%s};
     auto A = make_shared<op::Parameter>(element::f64, shape_a);
-    auto shape_b = Shape{%s}; // filter_data.shape
+    auto shape_b = Shape{%s};
     auto B = make_shared<op::Parameter>(element::f64, shape_b);
-    auto shape_r = Shape{%s}; // output_batch_data.shape
+    auto shape_r = Shape{%s};
     auto f = make_shared<Function>(
         make_shared<op::Convolution>(A, B, 
                                      Strides{%s},  // move_strides
@@ -210,12 +210,12 @@ TEST (${BACKEND_NAME}, %s) // test_name
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f64, shape_a);
-    copy_data(a, vector<double>{%s}); // input_batch_data
+    copy_data(a, vector<double>{%s});
     auto b = backend->make_primary_tensor_view(element::f64, shape_b);
-    copy_data(b, vector<double>{%s}); // filter_data
+    copy_data(b, vector<double>{%s});
     auto result = backend->make_primary_tensor_view(element::f64, shape_r);
 
-    vector<double> expected_result{%s}; // output_batch_data
+    vector<double> expected_result{%s};
 
     cf->call({a, b}, {result});
     EXPECT_TRUE(all_close_d(vector<double>{expected_result},
