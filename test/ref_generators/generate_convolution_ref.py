@@ -67,9 +67,10 @@ def tuple_times(t1,t2):
 #    img_batch        : [N ][Ci][D1]...[Dn], n > 0
 #    filter           : [Co][Ci][W1]...[Wn]
 #    move_strides     = (s1,...,sn)
-#    dilation_strides = (l1,...,ln)
+#    filter_dilation  = (l1,...,ln)
 #    below_pads       = (p1,...,pn)
 #    above_pads       = (q1,...,qn)
+#    image_dilation   = (TODO)
 #
 #    Returns:
 #    output_batch     : [N ][Co][D'1]...[D'n]
@@ -77,12 +78,13 @@ def tuple_times(t1,t2):
 # Where the D's are computed according to TensorFlow-style "valid" convolution rules, but *after* padding.
 # See https://www.tensorflow.org/api_docs/python/tf/nn/convolution.
 #
-def convolution_ref(img_batch, filter, move_strides, dilation_strides, below_pads, above_pads):
+def convolution_ref(img_batch, filter, move_strides, filter_dilation, below_pads, above_pads, image_dilation):
     assert(len(img_batch.shape) == len(filter.shape))
     assert(len(img_batch.shape) > 2)
     assert(img_batch.shape[1] == filter.shape[1])
     assert(len(move_strides) == len(img_batch.shape) - 2)
-    assert(len(dilation_strides) == len(img_batch.shape) - 2)
+    assert(len(filter_dilation) == len(img_batch.shape) - 2)
+    assert(len(image_dilation) == len(img_batch.shape) - 2) // TODO: Copy/paste.  Is this right?
 
     # Pad the input batch.
     below_pads = (0,0) + below_pads  # Have to add values for the image and channel dims.
@@ -97,13 +99,13 @@ def convolution_ref(img_batch, filter, move_strides, dilation_strides, below_pad
 
     # This is not used in computation but we will calculate it for a check to make sure the window fits.
     window_physical_shape = []
-    for (d_in,d_virt,dil) in zip(input_img_shape,window_virtual_shape,dilation_strides):
+    for (d_in,d_virt,dil) in zip(input_img_shape,window_virtual_shape,filter_dilation):
         d_phys = (d_virt - 1) * dil + 1
         assert(d_phys <= input_img_shape)
         window_physical_shape.append(d_phys)
 
     output_img_shape = []  # D'1,...,D'n
-    for (d_in,d_win,dil,mov) in zip (input_img_shape,window_virtual_shape,dilation_strides,move_strides):
+    for (d_in,d_win,dil,mov) in zip (input_img_shape,window_virtual_shape,filter_dilation,move_strides):
         d_out = int(math.ceil((float(d_in) - (float(d_win) - 1.0) * float(dil))/float(mov))) # Formula is taken from TF's definition for VALID convolution.
         assert(d_out > 0)
         output_img_shape.append(d_out)
@@ -126,7 +128,7 @@ def convolution_ref(img_batch, filter, move_strides, dilation_strides, below_pad
             ci, filter_pos = filter_index[0], filter_index[1:]
 
             # Build up the coordinate within the space N,Ci,D1,...,Dn that we need to read from in the input batch.
-            input_index = (img,ci) + (tuple_plus(tuple_times(output_pos,move_strides),tuple_times(filter_pos,dilation_strides)))
+            input_index = (img,ci) + (tuple_plus(tuple_times(output_pos,move_strides),tuple_times(filter_pos,filter_dilation)))
 
             # Add to the sum-of-products.
             output_batch[output_index] = output_batch[output_index] + filter[(co,) + filter_index] * img_batch[input_index]
@@ -160,22 +162,28 @@ def data_str(data):
     return result
 
 def emit_test(t,f):
-    test_name, input_batch_data, filter_data, move_strides, dilation_strides, below_pads, above_pads = t
+    test_name, input_batch_data, filter_data, move_strides, filter_dilation, below_pads, above_pads, image_dilation = t
 
     print ("Generating convolution test '%s'..." % test_name)
 
-    output_batch_data = convolution_ref(input_batch_data,filter_data,move_strides,dilation_strides,below_pads,above_pads)
+    output_batch_data = convolution_ref(input_batch_data,filter_data,move_strides,filter_dilation,below_pads,above_pads,image_dilation)
 
     template = '''
-TEST (${BACKEND_NAME}, %s)
+TEST (${BACKEND_NAME}, %s) // test_name
 {
-    auto shape_a = Shape{%s};
+    auto shape_a = Shape{%s}; // input_batch_data.shape
     auto A = make_shared<op::Parameter>(element::f64, shape_a);
-    auto shape_b = Shape{%s};
+    auto shape_b = Shape{%s}; // filter_data.shape
     auto B = make_shared<op::Parameter>(element::f64, shape_b);
-    auto shape_r = Shape{%s};
+    auto shape_r = Shape{%s}; // output_batch_data.shape
     auto f = make_shared<Function>(
-        make_shared<op::Convolution>(A, B, Strides{%s}, Strides{%s}, Shape{%s}, Shape{%s}), op::Parameters{A, B});
+        make_shared<op::Convolution>(A, B, 
+                                     Strides{%s},  // move_strides
+                                     Strides{%s},  // filter_dilation
+                                     Shape{%s},    // below_pads
+                                     Shape{%s},    // above_pads
+                                     Strides{%s}), // image_dilation
+        op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -184,12 +192,12 @@ TEST (${BACKEND_NAME}, %s)
 
     // Create some tensors for input/output
     auto a = backend->make_primary_tensor_view(element::f64, shape_a);
-    copy_data(a, vector<double>{%s});
+    copy_data(a, vector<double>{%s}); // input_batch_data
     auto b = backend->make_primary_tensor_view(element::f64, shape_b);
-    copy_data(b, vector<double>{%s});
+    copy_data(b, vector<double>{%s}); // filter_data
     auto result = backend->make_primary_tensor_view(element::f64, shape_r);
 
-    vector<double> expected_result{%s};
+    vector<double> expected_result{%s}; // output_batch_data
 
     cf->call({a, b}, {result});
     EXPECT_TRUE(all_close_d(vector<double>{expected_result},
@@ -201,35 +209,37 @@ TEST (${BACKEND_NAME}, %s)
                          shape_str(filter_data.shape),
                          shape_str(output_batch_data.shape),
                          shape_str(move_strides),
-                         shape_str(dilation_strides),
+                         shape_str(filter_dilation),
                          shape_str(below_pads),
                          shape_str(above_pads),
+                         shape_str(image_dilation),
                          data_str(input_batch_data),
                          data_str(filter_data),
                          data_str(output_batch_data)));
 
-#         test name                                input image batch              filters                        stride    dilation  below-pads  above-pads
+#                                                                                                                          filter                           image
+#         test name                                input image batch              filters                        stride    dilation  below-pads  above-pads dilation
 tests = [
-         ("convolution_2d_1image",                 shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0)),
-         ("convolution_2d_1image_padded_1_1x1_1",  shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (1,1),      (1,1)),
-         ("convolution_2d_1image_padded_2_3x4_5",  shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (2,3),      (4,5)),
-         ("convolution_2d_2images",                shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0)),
-         ("convolution_2d_2images_strided",        shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (2,2),    (1,1),    (0,0),      (0,0)),
-         ("convolution_2d_2images_strided_padded", shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (2,2),    (1,1),    (4,2),      (5,7)),
+         ("convolution_2d_1image",                 shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (1,1)),
+         ("convolution_2d_1image_padded_1_1x1_1",  shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (1,1),      (1,1),     (1,1)),
+         ("convolution_2d_1image_padded_2_3x4_5",  shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (2,3),      (4,5),     (1,1)),
+         ("convolution_2d_2images",                shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (1,1)),
+         ("convolution_2d_2images_strided",        shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (2,2),    (1,1),    (0,0),      (0,0),     (1,1)),
+         ("convolution_2d_2images_strided_padded", shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (2,2),    (1,1),    (4,2),      (5,7),     (1,1)),
          ("convolution_2d_2images_strided_padded_same",
-                                                   shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (2,2),    (1,1),    (2,2),      (2,2)),
-         ("convolution_2d_2images_dilated",        shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (2,2),    (0,0),      (0,0)),
-         ("convolution_2d_2images_dilated_padded", shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (2,2),    (4,2),      (5,7)),
-         ("convolution_3d_2images",                shaped_linspace((2,1,3,5,8)),  shaped_linspace((2,1,2,2,3)),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0)),
-         ("convolution_4d_2images",                shaped_linspace((2,1,3,5,8,7)),shaped_linspace((2,1,2,2,3,1)),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0)),
-         ("convolution_4d_4images",                shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0)),
-         ("convolution_4d_4images_strided",        shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(2,1,3,2),(1,1,1,1),(0,0,0,0),  (0,0,0,0)),
-         ("convolution_4d_4images_dilated",        shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(1,1,1,1),(2,1,3,2),(0,0,0,0),  (0,0,0,0)),
-         ("convolution_4d_4images_strided_dilated",shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(0,0,0,0),  (0,0,0,0)),
+                                                   shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (2,2),    (1,1),    (2,2),      (2,2),     (1,1)),
+         ("convolution_2d_2images_dilated",        shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (2,2),    (0,0),      (0,0),     (1,1)),
+         ("convolution_2d_2images_dilated_padded", shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (2,2),    (4,2),      (5,7),     (1,1)),
+         ("convolution_3d_2images",                shaped_linspace((2,1,3,5,8)),  shaped_linspace((2,1,2,2,3)),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),   (1,1,1)),
+         ("convolution_4d_2images",                shaped_linspace((2,1,3,5,8,7)),shaped_linspace((2,1,2,2,3,1)),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0), (1,1,1,1)),
+         ("convolution_4d_4images",                shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0), (1,1,1,1)),
+         ("convolution_4d_4images_strided",        shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(2,1,3,2),(1,1,1,1),(0,0,0,0),  (0,0,0,0), (1,1,1,1)),
+         ("convolution_4d_4images_dilated",        shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(1,1,1,1),(2,1,3,2),(0,0,0,0),  (0,0,0,0), (1,1,1,1)),
+         ("convolution_4d_4images_strided_dilated",shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(0,0,0,0),  (0,0,0,0), (1,1,1,1)),
          ("convolution_4d_4images_strided_dilated_padded",
-                                                   shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(2,4,6,8),  (1,3,5,7)),
+                                                   shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(2,4,6,8),  (1,3,5,7), (1,1,1,1)),
          ("convolution_4d_4images_strided_dilated_padded_same",
-                                                   shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(3,3,3,3),  (3,3,3,3)),
+                                                   shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(3,3,3,3),  (3,3,3,3), (1,1,1,1)),
         ]
 
 def main():

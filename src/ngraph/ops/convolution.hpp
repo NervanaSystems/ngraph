@@ -67,7 +67,8 @@ namespace ngraph
                         const Strides& window_movement_strides,
                         const Strides& window_dilation_strides,
                         const Shape& padding_below,
-                        const Shape& padding_above);
+                        const Shape& padding_above,
+                        const Strides& image_dilation = Strides{1, 1});
 
             /// \brief Constructs a batched convolution operation with no padding (i.e., padding above and below are 0 everywhere).
             ///

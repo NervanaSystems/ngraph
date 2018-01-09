@@ -23,7 +23,8 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
                              const Shape& padding_below,
-                             const Shape& padding_above)
+                             const Shape& padding_above,
+                             const Strides& image_dilation)
     : RequiresTensorViewArgs("Convolution", {image_batch, filters})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
