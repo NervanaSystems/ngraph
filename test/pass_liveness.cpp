@@ -25,7 +25,6 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 
 #include "util/test_tools.hpp"
@@ -41,7 +40,6 @@ TEST(liveness, constant)
     auto f = make_shared<Function>(make_shared<op::Negative>(c), op::Parameters{});
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(f);
 
@@ -64,7 +62,6 @@ TEST(liveness, liveness)
     pass::Manager pass_manager;
 
     pass_manager.register_pass<pass::VisualizeTree>(image);
-    pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::DumpSorted>(dump_file);
 

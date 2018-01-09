@@ -31,7 +31,7 @@ bool ngraph::pass::GraphRewrite::run_matchers_on_nodes_list(
     return rewritten;
 }
 
-bool ngraph::pass::GraphRewrite::run_on_call_graph(std::list<std::shared_ptr<Node>>& nodes)
+bool ngraph::pass::GraphRewrite::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
 {
     return run_matchers_on_nodes_list(nodes, m_matchers);
 }

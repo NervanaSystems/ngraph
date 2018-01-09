@@ -70,7 +70,6 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
-#include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
 #include "ngraph/runtime/interpreter/int_external_function.hpp"
@@ -108,7 +107,6 @@ void runtime::interpreter::ExternalFunction::compile()
     string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::TopologicalSort>();
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
