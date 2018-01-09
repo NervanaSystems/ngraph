@@ -299,9 +299,13 @@ bool op::Convolution::is_functionally_identical(const Node& other) const
         const Convolution& rhs = dynamic_cast<const Convolution&>(other);
         rc &= m_window_movement_strides == rhs.m_window_movement_strides;
         rc &= m_window_dilation_strides == rhs.m_window_dilation_strides;
+        rc &= m_padding_below == rhs.m_padding_below;
+        rc &= m_padding_above == rhs.m_padding_above;
+        rc &= m_image_dilation_strides == rhs.m_image_dilation_strides;
         rc &= m_input_channel_count == rhs.m_input_channel_count;
         rc &= m_output_channel_count == rhs.m_output_channel_count;
-        rc &= m_input_image_shape == rhs.m_input_image_shape;
+        rc &= m_input_image_physical_shape == rhs.m_input_image_physical_shape;
+        rc &= m_input_image_virtual_shape == rhs.m_input_image_virtual_shape;
         rc &= m_output_image_shape == rhs.m_output_image_shape;
         rc &= m_window_physical_shape == rhs.m_window_physical_shape;
         rc &= m_window_virtual_shape == rhs.m_window_virtual_shape;
