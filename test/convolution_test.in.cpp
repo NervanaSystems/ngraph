@@ -655,3 +655,38 @@ TEST (${BACKEND_NAME}, convolution_4d_4images_strided_dilated_padded_same) // te
     EXPECT_TRUE(all_close_d(vector<double>{expected_result},
                             result->get_vector<double>()));
 }
+
+TEST (${BACKEND_NAME}, convolution_2d_1image_dilated) // test_name
+{
+    auto shape_a = Shape{1,1,3,5}; // input_batch_data.shape
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
+    auto shape_b = Shape{2,1,2,2}; // filter_data.shape
+    auto B = make_shared<op::Parameter>(element::f64, shape_b);
+    auto shape_r = Shape{1,2,4,8}; // output_batch_data.shape
+    auto f = make_shared<Function>(
+        make_shared<op::Convolution>(A, B, 
+                                     Strides{1,1},  // move_strides
+                                     Strides{1,1},  // filter_dilation
+                                     Shape{0,0},    // below_pads
+                                     Shape{0,0},    // above_pads
+                                     Strides{2,2}), // image_dilation
+        op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f64, shape_a);
+    copy_data(a, vector<double>{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}); // input_batch_data
+    auto b = backend->make_primary_tensor_view(element::f64, shape_b);
+    copy_data(b, vector<double>{1,2,3,4,5,6,7,8}); // filter_data
+    auto result = backend->make_primary_tensor_view(element::f64, shape_r);
+
+    vector<double> expected_result{1,4,2,6,3,8,4,10,18,28,21,32,24,36,27,40,6,14,7,16,8,18,9,20,33,48,36,52,39,56,42,60,5,12,10,18,15,24,20,30,42,56,49,64,56,72,63,80,30,42,35,48,40,54,45,60,77,96,84,104,91,112,98,120}; // output_batch_data
+
+    cf->call({a, b}, {result});
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result},
+                            result->get_vector<double>()));
+}

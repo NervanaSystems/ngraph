@@ -84,12 +84,30 @@ def convolution_ref(img_batch, filter, move_strides, filter_dilation, below_pads
     assert(img_batch.shape[1] == filter.shape[1])
     assert(len(move_strides) == len(img_batch.shape) - 2)
     assert(len(filter_dilation) == len(img_batch.shape) - 2)
-    assert(len(image_dilation) == len(img_batch.shape) - 2) // TODO: Copy/paste.  Is this right?
+    assert(len(image_dilation) == len(img_batch.shape) - 2)
 
     # Pad the input batch.
     below_pads = (0,0) + below_pads  # Have to add values for the image and channel dims.
     above_pads = (0,0) + above_pads  # Have to add values for the image and channel dims.
     img_batch = np.pad(img_batch, zip(below_pads,above_pads), mode='constant', constant_values=0)
+
+    # dilate the input batch
+    new_img_shape = (np.array(img_batch.shape[2:]) - 1) * image_dilation + 1
+    new_img_batch_shape = list(np.array(img_batch.shape[:2])) + list(new_img_shape)
+    new_img_batch = np.zeros(new_img_batch_shape)
+
+    for n in range(0, new_img_batch_shape[0]) :
+        for c in range(0, new_img_batch_shape[1]) :
+            if new_img_batch.ndim == 4:
+                new_img_batch[n, c, 0::image_dilation[0], 0::image_dilation[1]] = img_batch[n][c]
+            elif new_img_batch.ndim == 5:
+                new_img_batch[n, c, 0::image_dilation[0], 0::image_dilation[1], 0::image_dilation[2]] = img_batch[n][c]
+            elif new_img_batch.ndim == 6:
+                new_img_batch[n, c, 0::image_dilation[0], 0::image_dilation[1], 0::image_dilation[2], 0::image_dilation[3]] = img_batch[n][c]
+            else:
+                assert(False)
+
+    img_batch = new_img_batch
 
     img_count = img_batch.shape[0]                # N
     ci_count = img_batch.shape[1]                 # Ci
@@ -240,6 +258,7 @@ tests = [
                                                    shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(2,4,6,8),  (1,3,5,7), (1,1,1,1)),
          ("convolution_4d_4images_strided_dilated_padded_same",
                                                    shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(3,3,3,3),  (3,3,3,3), (1,1,1,1)),
+         ("convolution_2d_1image_img_dilated",     shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
         ]
 
 def main():
