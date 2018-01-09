@@ -27,6 +27,7 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -99,6 +100,38 @@ class StaticInitializers
 public:
     StaticInitializers() { ngraph::file_util::remove_directory(s_output_dir); }
 };
+
+static string emit_string_array(const vector<string>& s, size_t max_line_length)
+{
+    stringstream ss;
+    stringstream line;
+    for (size_t i = 0; i < s.size(); i++)
+    {
+        if (i != 0)
+        {
+            line << ",";
+        }
+        stringstream value;
+        value << s[i];
+        string value_string = value.str();
+        if (static_cast<size_t>(line.tellp()) + value_string.size() + 1 <= max_line_length)
+        {
+            if (i > 0)
+            {
+                line << " ";
+            }
+            line << value_string;
+        }
+        else
+        {
+            ss << line.str() << "\n";
+            line.str("");
+            line << value_string;
+        }
+    }
+    ss << line.str();
+    return ss.str();
+}
 
 static StaticInitializers s_static_initializers;
 
@@ -303,14 +336,14 @@ using namespace ngraph::runtime;
             {
                 shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
                 auto c_value_strings = c->get_value_strings();
-                writer << tv->get_tensor().get_element_type().c_type_string() << " "
+                writer << "static " << tv->get_tensor().get_element_type().c_type_string() << " "
                        << tv->get_tensor().get_name() << "[" << c_value_strings.size() << "] =\n";
                 writer << "{\n";
-                for (size_t i = 0; i < c_value_strings.size(); i++)
-                {
-                    writer << "    " << c_value_strings[i] << ",\n";
-                }
-                writer << "};\n\n";
+                writer.indent++;
+                writer << emit_string_array(c_value_strings, 100 - writer.indent * 4);
+                writer.indent--;
+                writer << "\n};\n\n";
+                m_variable_name_map[tv->get_tensor().get_name()] = tv->get_tensor().get_name();
             }
         }
     }
@@ -321,6 +354,89 @@ using namespace ngraph::runtime;
         writer << "extern \"C\" void " << f->get_name() << "(void** inputs, void** outputs);\n";
     }
     writer << "\n";
+
+    // This for loop creates a collection of functions that are called more than once
+    // and emitting them as globally callable functions.
+    // ops implement the is_functionally_identical method
+    unordered_map<Node*, string> match_functions;
+    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
+    {
+        const list<shared_ptr<Node>>& tmp = current_function->get_ordered_ops();
+        vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
+        for (size_t i = 0; i < op_list.size() - 1; i++)
+        {
+            if (op_list[i]->is_constant() || op_list[i]->is_parameter())
+            {
+                continue;
+            }
+            if (contains_key(match_functions, op_list[i].get()))
+            {
+                continue;
+            }
+            string match_function_name;
+            for (size_t j = i + 1; j < op_list.size(); j++)
+            {
+                if (op_list[i]->is_functionally_identical(*op_list[j]))
+                {
+                    if (match_function_name.empty())
+                    {
+                        match_function_name = "func_" + op_list[i]->get_name();
+                        match_functions.insert({op_list[i].get(), match_function_name});
+                    }
+                    match_functions.insert({op_list[j].get(), match_function_name});
+                }
+            }
+            if (!match_function_name.empty())
+            {
+                writer << "static void " << match_function_name << "(";
+                writer.indent++;
+                // Work around a compiler warning (*node inside typeid may have effects
+                // with shared pointers, which is fine here but clang doesn't like it.)
+                auto& n = *op_list[i];
+                auto handler = dispatcher.find(type_index(typeid(n)));
+                vector<TensorViewWrapper> in;
+                size_t arg_index = 0;
+                set<string> arg_names;
+                for (const descriptor::Input& input : n.get_inputs())
+                {
+                    const descriptor::Output& output = input.get_output();
+                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                    TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
+                    if (!contains(arg_names, tvw.get_name()))
+                    {
+                        arg_names.insert(tvw.get_name());
+                        if (arg_index++ > 0)
+                        {
+                            writer << ",";
+                        }
+                        writer << "\n";
+                        writer << tvw.get_type() << "* " << tvw.get_name();
+                    }
+                    in.push_back(tvw);
+                }
+                vector<TensorViewWrapper> out;
+                for (const descriptor::Output& output : n.get_outputs())
+                {
+                    shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                    TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
+                    if (arg_index++ > 0)
+                    {
+                        writer << ",";
+                    }
+                    writer << "\n";
+                    writer << tvw.get_type() << "* " << tvw.get_name();
+                    out.push_back(tvw);
+                }
+                writer.indent--;
+                writer << "\n)\n";
+                writer << "{\n";
+                writer.indent++;
+                handler->second(&emitter, &n, in, out);
+                writer.indent--;
+                writer << "}\n";
+            }
+        }
+    }
 
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
@@ -352,37 +468,43 @@ using namespace ngraph::runtime;
         }
 
         bool temporaries_used = false;
+        size_t worst_case_tmp_size = 0;
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
             if (node->liveness_new_list.size() > 0)
             {
                 temporaries_used = true;
-                break;
+                for (descriptor::Tensor* tensor : node->liveness_new_list)
+                {
+                    worst_case_tmp_size += tensor->size();
+                }
             }
         }
         if (temporaries_used)
         {
             size_t temp_pool_size = current_function->get_temporary_pool_size();
             writer << "// Allocate the memory pool\n";
+            writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
+            writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
             writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
                    << ngraph::runtime::cpu::alignment << ");\n";
+            writer << "size_t pool_base_ptr = (size_t)memory_handler.get_ptr();\n";
             writer << "\n";
 
-            writer << "// Define temporary tensors\n";
+            // Add temporaries to the variable name map
             for (shared_ptr<Node> node : current_function->get_ordered_ops())
             {
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
-                    writer << tensor->get_element_type().c_type_string() << "* "
-                           << tensor->get_name() << " = ("
-                           << tensor->get_element_type().c_type_string()
-                           << "*)(memory_handler.get_ptr(" << tensor->get_pool_offset() << "));\n";
+                    stringstream ss;
+                    ss << "((" << tensor->get_element_type().c_type_string()
+                       << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
+                    m_variable_name_map[tensor->get_name()] = ss.str();
                 }
             }
-            writer << "\n";
         }
 
-        writer << "// Define inputs\n";
+        // Add inputs to the variable name map
         size_t arg_index = 0;
         for (shared_ptr<op::Parameter> param : current_function->get_parameters())
         {
@@ -391,15 +513,14 @@ using namespace ngraph::runtime;
                 shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
                 const element::Type& et = tv->get_tensor_view_type()->get_element_type();
                 string type = et.c_type_string();
-                writer << "" << type << "* " << tv->get_tensor().get_name() << " = static_cast<"
-                       << type << "*>(inputs[" << arg_index << "]);\n";
+                stringstream ss;
+                ss << "((" << type << "*)(inputs[" << arg_index << "]))";
+                m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
                 arg_index++;
             }
         }
-        writer << "\n";
 
-        writer << "// Define outputs\n";
-        // create alias list
+        // create output alias map
         size_t output_index = 0;
         unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
         vector<size_t> aliases;
@@ -416,6 +537,7 @@ using namespace ngraph::runtime;
             output_index++;
         }
 
+        // Add outputs to the variable name map
         output_index = 0;
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
@@ -432,7 +554,8 @@ using namespace ngraph::runtime;
                     {
                         parameter_as_output = true;
                         writer << "memcpy(static_cast<" << et.c_type_string() << "*>(outputs["
-                               << output_index << "]), " << ptv->get_tensor().get_name() << ", "
+                               << output_index << "]), "
+                               << m_variable_name_map[ptv->get_tensor().get_name()] << ", "
                                << ptv->get_tensor().size() << ");\n";
                         break;
                     }
@@ -449,13 +572,13 @@ using namespace ngraph::runtime;
                 else
                 {
                     string type = et.c_type_string();
-                    writer << type << "* " << tv->get_tensor().get_name() << " = static_cast<"
-                           << type << "*>(outputs[" << output_index << "]);\n";
+                    stringstream ss;
+                    ss << "((" << type << "*)(outputs[" << output_index << "]))";
+                    m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
                 }
             }
             output_index++;
         }
-        writer << "\n";
 
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
@@ -471,13 +594,15 @@ using namespace ngraph::runtime;
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                in.push_back(TensorViewWrapper(tv));
+                in.push_back(
+                    TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
             }
             vector<TensorViewWrapper> out;
             for (const descriptor::Output& output : node->get_outputs())
             {
                 shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                out.push_back(TensorViewWrapper(tv));
+                out.push_back(
+                    TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
             }
 
             // Emit operation prologue
@@ -485,8 +610,10 @@ using namespace ngraph::runtime;
             {
                 if (m_use_tbb)
                 {
-                    writer << "tbb::flow::continue_node<tbb::flow::continue_msg> flowgraph_node_"
-                           << node->get_name() << "(G, [&](const tbb::flow::continue_msg &msg) {\n";
+                    writer << "tbb::flow::continue_node<tbb::flow::continue_msg> "
+                              "flowgraph_node_"
+                           << node->get_name()
+                           << "(G, [&](const tbb::flow::continue_msg &msg)\n{\n";
                     writer.indent++;
                 }
                 if (m_emit_timing)
@@ -496,7 +623,29 @@ using namespace ngraph::runtime;
             }
 
             // Emit operation body
-            handler->second(&emitter, node.get(), in, out);
+            string func_name;
+            auto it = match_functions.find(node.get());
+            if (it != match_functions.end())
+            {
+                func_name = it->second;
+            }
+            if (func_name.empty())
+            {
+                handler->second(&emitter, node.get(), in, out);
+            }
+            else
+            {
+                vector<string> names;
+                for (const TensorViewWrapper& tv : in)
+                {
+                    names.push_back(tv.get_name());
+                }
+                for (const TensorViewWrapper& tv : out)
+                {
+                    names.push_back(tv.get_name());
+                }
+                writer << func_name << "(" << join(names) << ");\n";
+            }
 
             // Emit operation epilogue
             if (!node->is_parameter() && !node->is_constant())
@@ -647,5 +796,5 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
     const std::vector<TensorViewWrapper>& in,
     const std::vector<TensorViewWrapper>& out)
 {
-    writer << "timer_" << node->get_name() << ".stop();\n\n";
+    writer << "timer_" << node->get_name() << ".stop();\n";
 }

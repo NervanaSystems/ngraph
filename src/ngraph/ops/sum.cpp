@@ -60,3 +60,18 @@ void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_
 
     adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, m_reduction_axes));
 }
+
+bool op::Sum::is_functionally_identical(const Node& other) const
+{
+    bool rc = true;
+    if (Node::is_functionally_identical(other))
+    {
+        const Sum& slice = dynamic_cast<const Sum&>(other);
+        rc &= m_reduction_axes == slice.m_reduction_axes;
+    }
+    else
+    {
+        rc = false;
+    }
+    return rc;
+}

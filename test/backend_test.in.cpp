@@ -1208,7 +1208,7 @@ TEST(${BACKEND_NAME}, log)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ(loga, result->get_vector<float>());
+    EXPECT_TRUE(test::all_close(loga, result->get_vector<float>()));
 }
 
 TEST(${BACKEND_NAME}, maximum)
@@ -2615,7 +2615,7 @@ TEST(${BACKEND_NAME}, cosh)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return coshf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, result->get_vector<float>());
+    EXPECT_TRUE(test::all_close(input, result->get_vector<float>()));
 }
 
 TEST(${BACKEND_NAME}, tanh)

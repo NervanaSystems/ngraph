@@ -79,6 +79,8 @@ namespace ngraph
             const AxisVector& get_input_order() const { return m_input_order; }
             /// \return The shape of the output tensor.
             const Shape& get_output_shape() const { return m_output_shape; }
+            bool is_functionally_identical(const Node&) const override;
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
