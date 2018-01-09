@@ -29,13 +29,18 @@ void regclass_pyngraph_Function(py::module m) {
 
     py::class_<ngraph::Function, std::shared_ptr<ngraph::Function>> function(m, "Function");
 
-    function.def(py::init<const ngraph::Nodes&, const std::vector<std::shared_ptr<const ngraph::ValueType>>&,
-                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&, const std::string&>());
-    function.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<const ngraph::ValueType>&,
+    function.def(py::init<const ngraph::Nodes&,
                           const std::vector<std::shared_ptr<ngraph::op::Parameter>>&, const std::string&>());
     function.def(py::init<const std::shared_ptr<ngraph::Node>&,
                           const std::vector<std::shared_ptr<ngraph::op::Parameter>>&, const std::string&>());
-    function.def("get_result_type", &ngraph::Function::get_result_type);
+    function.def("get_output_size", &ngraph::Function::get_output_size);
+    function.def("get_output_op", &ngraph::Function::get_output_op);
+    function.def("get_output_element_type", &ngraph::Function::get_output_element_type);
+    function.def("get_output_shape", &ngraph::Function::get_output_shape);
+    function.def("get_parameters", &ngraph::Function::get_parameters);
     function.def("get_results", &ngraph::Function::get_results);
+    function.def("get_result", &ngraph::Function::get_result);
+    function.def("get_name", &ngraph::Function::get_name);
+    function.def("set_name", &ngraph::Function::set_name);
 }
 

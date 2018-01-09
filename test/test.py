@@ -16,20 +16,19 @@
 import numpy as np
 
 import pyngraph.util as util
-from pyngraph import Float32, TensorViewType, Function
+from pyngraph import Type, Function
 from pyngraph.op import Parameter
 from pyngraph.runtime import Manager
 
-element_type = Float32.element_type()
+element_type = Type.f32()
 
 shape = [2,2]
 A = Parameter(element_type, shape)
 B = Parameter(element_type, shape)
 C = Parameter(element_type, shape)
-value_type = TensorViewType(element_type, shape)
 parameter_list = [A, B, C]
-function = Function((A + B) * C, value_type, parameter_list, 'test')
-manager = Manager.get('NGVM');
+function = Function([(A + B) * C], parameter_list, 'test')
+manager = Manager.get('INTERPRETER')
 external = manager.compile(function)
 backend = manager.allocate_backend()
 cf = backend.make_call_frame(external)

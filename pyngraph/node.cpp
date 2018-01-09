@@ -38,12 +38,17 @@ void regclass_pyngraph_Node(py::module m){
     node.def("__mul__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
                 return a * b;
                }, py::is_operator());
+    node.def("__div__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
+                return a / b;
+               }, py::is_operator());
     node.def("__truediv__", [](const std::shared_ptr<ngraph::Node>& a, const std::shared_ptr<ngraph::Node> b) {
                 return a / b;
                }, py::is_operator());
 
+    node.def("get_output_size", &ngraph::Node::get_output_size);
+    node.def("get_output_element_type", &ngraph::Node::get_output_element_type);
+    node.def("get_element_type", &ngraph::Node::get_element_type);
+    node.def("get_output_shape", &ngraph::Node::get_output_shape);
     node.def("get_shape", &ngraph::Node::get_shape);
-    node.def("get_value_type", (std::shared_ptr<const ngraph::ValueType> (ngraph::Node::*)()) &ngraph::Node::get_value_type);
-    node.def("get_value_type", (const std::shared_ptr<const ngraph::ValueType> (ngraph::Node::*)() const) &ngraph::Node::get_value_type);
 }
 

@@ -27,17 +27,7 @@ void regmodule_pyngraph_op(py::module m){
     regclass_pyngraph_op_BinaryElementwiseArithmetic(m_op);
     regclass_pyngraph_op_Add(m_op);
     regclass_pyngraph_op_Broadcast(m_op);
-    regclass_pyngraph_op_ConstantBase(m_op);
-    regclass_pyngraph_op_Float32Constant(m_op);
-    //regclass_pyngraph_op_Float64Constant(m_op);
-    regclass_pyngraph_op_Int8Constant(m_op);
-    //regclass_pyngraph_op_Int16Constant(m_op);
-    regclass_pyngraph_op_Int32Constant(m_op);
-    regclass_pyngraph_op_Int64Constant(m_op);
-    regclass_pyngraph_op_UInt8Constant(m_op);
-    //regclass_pyngraph_op_UInt16Constant(m_op);
-    regclass_pyngraph_op_UInt32Constant(m_op);
-    regclass_pyngraph_op_UInt64Constant(m_op);
+    regclass_pyngraph_op_Constant(m_op);
     regclass_pyngraph_op_Convert(m_op);
     regclass_pyngraph_op_Divide(m_op);
     regclass_pyngraph_op_Dot(m_op);

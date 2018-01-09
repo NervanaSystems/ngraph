@@ -16,16 +16,15 @@
 import numpy as np
 
 import pyngraph.util as util
-import pyngraph.runtime.utils as utils
-from pyngraph import Float32, Int32, Function, TensorViewType
+from pyngraph import Type, Function, TensorViewType
 from pyngraph.op import Parameter, Maximum, Reshape, Dot, Broadcast
-from pyngraph.op import Float32Constant, Exp, Log, Sum
+from pyngraph.op import Constant, Exp, Log, Sum
 from pyngraph.op import Greater, Convert, Reduce
 from pyngraph.op import OneHot
 
 
-float_element_type = Float32.element_type()
-int_element_type = Int32.element_type()
+float_element_type = Type.f32()
+int_element_type = Type.i32()
 bz = 53
 lr = 0.2
 
@@ -35,23 +34,20 @@ LabelOneHot = Convert((OneHot(Label, [bz, 10], 1)), float_element_type)
 
 MaxParam1 = Parameter(float_element_type, [])
 MaxParam2 = Parameter(float_element_type, [])
-MaxOutput = TensorViewType(float_element_type, [])
-MaxFn = Function(Maximum(MaxParam1, MaxParam2),
-                 MaxOutput,
+MaxFn = Function([Maximum(MaxParam1, MaxParam2)],
                  [MaxParam1, MaxParam2],
                  'mnist')
 
 
-def makeScalarConstant(scalar, shape=[], axis_set={}):
-    constant_tensor = utils.make_tensor_float32([])
-    constant_tensor.write(util.numpy_to_c(np.array([scalar], dtype=np.float32)), 0, 4)
-    constant_op = Float32Constant([], constant_tensor)
+def makeScalarConstant(elem_type, scalar, shape=[], axis_set={}):
+    scalar_shape = []
+    constant_op = Constant(elem_type, scalar_shape, [scalar])
     constant_broadcast = Broadcast(constant_op, shape, axis_set)
     return constant_broadcast
 
 
 def makeFloat32Constant(scalar, shape=[], axis_set={}):
-    return makeScalarConstant(scalar, shape, axis_set)
+    return makeScalarConstant(Type.f32(), scalar, shape, axis_set)
 
 
 def makeFloat32ConstantLike(scalar, op):

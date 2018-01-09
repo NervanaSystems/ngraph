@@ -18,14 +18,4 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_ConstantBase(py::module m);
-void regclass_pyngraph_op_Float32Constant(py::module m);
-//void regclass_pyngraph_op_Float64Constant(py::module m);
-void regclass_pyngraph_op_Int8Constant(py::module m);
-//void regclass_pyngraph_op_Int16Constant(py::module m);
-void regclass_pyngraph_op_Int32Constant(py::module m);
-void regclass_pyngraph_op_Int64Constant(py::module m);
-void regclass_pyngraph_op_UInt8Constant(py::module m);
-//void regclass_pyngraph_op_UInt16Constant(py::module m);
-void regclass_pyngraph_op_UInt32Constant(py::module m);
-void regclass_pyngraph_op_UInt64Constant(py::module m);
+void regclass_pyngraph_op_Constant(py::module m);

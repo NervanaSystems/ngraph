@@ -21,15 +21,4 @@ void regmodule_pyngraph_types(py::module m){
     regclass_pyngraph_ValueType(m);
     regclass_pyngraph_TensorViewType(m);
     regclass_pyngraph_Type(m);
-    regclass_pyngraph_Bool(m);
-    regclass_pyngraph_Float32(m);
-    regclass_pyngraph_Float64(m);
-    regclass_pyngraph_Int8(m);
-    //regclass_pyngraph_Int16(m);
-    regclass_pyngraph_Int32(m);
-    regclass_pyngraph_Int64(m);
-    regclass_pyngraph_UInt8(m);
-    //regclass_pyngraph_UInt16(m);
-    regclass_pyngraph_UInt32(m);
-    regclass_pyngraph_UInt64(m);
 }
