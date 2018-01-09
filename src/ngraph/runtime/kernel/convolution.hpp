@@ -162,6 +162,7 @@ namespace ngraph
                         T v = input_batch_transform.has_source_coordinate(input_batch_coord)
                                   ? arg0[input_batch_transform.index(input_batch_coord)]
                                   : 0;
+
                         result += v * arg1[filter_transform.index(filter_coord)];
 
                         ++input_it;

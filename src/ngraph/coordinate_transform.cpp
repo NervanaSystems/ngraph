@@ -334,7 +334,8 @@ bool CoordinateTransform::has_source_coordinate(const Coordinate& c_target) cons
         size_t pos_depadded = pos_deshifted - m_target_padding_below[target_axis];
 
         // If we are in the above-padding, we have no source coordinate.
-        if (pos_depadded >= m_source_shape[source_axis])
+        if (pos_depadded >=
+            ((m_source_shape[source_axis] - 1) * m_target_dilation_strides[target_axis]) + 1)
         {
             return false;
         }

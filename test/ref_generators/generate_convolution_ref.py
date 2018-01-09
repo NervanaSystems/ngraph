@@ -258,7 +258,25 @@ tests = [
                                                    shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(2,4,6,8),  (1,3,5,7), (1,1,1,1)),
          ("convolution_4d_4images_strided_dilated_padded_same",
                                                    shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(3,3,3,3),  (3,3,3,3), (1,1,1,1)),
-         ("convolution_2d_1image_img_dilated",     shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
+         ("convolution_2d_1image_1o1i_img_dilated",shaped_linspace((1,1,3,5)),    shaped_linspace((1,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
+         ("convolution_2d_1image_2o1i_img_dilated",shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
+         ("convolution_2d_1image_2o2i_img_dilated",shaped_linspace((1,2,3,5)),    shaped_linspace((2,2,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
+         ("convolution_2d_1image_5o3i_img_dilated",shaped_linspace((1,3,3,5)),    shaped_linspace((5,3,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
+         ("convolution_2d_8image_5o3i_img_dilated",shaped_linspace((8,3,3,5)),    shaped_linspace((5,3,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
+         ("convolution_2d_8image_large_5o3i_img_dilated",
+                                                   shaped_linspace((8,3,16,16)),  shaped_linspace((5,3,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
+         ("convolution_2d_8image_large_5o3i_uneven_filter_img_dilated",
+                                                   shaped_linspace((8,3,16,16)),  shaped_linspace((5,3,2,3)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
+         ("convolution_2d_8image_large_5o3i_uneven_filter_uneven_img_dilation_img_dilated",
+                                                   shaped_linspace((8,3,16,16)),  shaped_linspace((5,3,2,3)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,3)),
+         ("convolution_3d_2image_large_5o3i_uneven_filter_uneven_img_dilation_img_dilated",
+                                                   shaped_linspace((2,3,8,8,8)),  shaped_linspace((5,3,2,3,4)),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),   (2,3,2)),
+         ("convolution_3d_1image_large_5o3i_padded_uneven_filter_uneven_img_dilation_img_dilated",
+                                                   shaped_linspace((1,3,8,8,8)),  shaped_linspace((5,3,2,3,4)),  (1,1,1),  (1,1,1),  (2,1,2),    (1,2,3),   (2,3,2)),
+         ("convolution_3d_2image_large_5o3i_padded_strided_uneven_filter_uneven_img_dilation_img_dilated",
+                                                   shaped_linspace((2,3,8,8,8)),  shaped_linspace((5,3,2,3,4)),  (2,3,2),  (1,1,1),  (2,1,2),    (1,2,3),   (2,3,2)),
+         ("convolution_3d_2image_large_5o3i_padded_strided_uneven_filter_uneven_img_dilation_filter_dilated_img_dilated",
+                                                   shaped_linspace((2,3,8,8,8)),  shaped_linspace((5,3,2,3,4)),  (2,3,2),  (3,2,2),  (2,1,2),    (1,2,3),   (2,3,2)),
         ]
 
 def main():
@@ -318,6 +336,7 @@ static bool all_close_d(const std::vector<double>& a,
                         double atol = 1e-8)
 {
     assert(a.size() == b.size());
+
     for (size_t i = 0; i < a.size(); ++i)
     {
         if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]))
