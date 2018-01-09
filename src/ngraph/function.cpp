@@ -56,7 +56,6 @@ Function::Function(const std::shared_ptr<Node>& result,
 {
 }
 
-//std::list<shared_ptr<Node>>& Function::get_ordered_ops()
 std::list<shared_ptr<Node>> Function::get_ordered_ops()
 {
     return topological_sort(get_ops());
