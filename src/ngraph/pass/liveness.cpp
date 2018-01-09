@@ -28,7 +28,7 @@ using namespace std;
 using namespace ngraph;
 using namespace ngraph::descriptor;
 
-bool pass::Liveness::run_on_call_graph(list<shared_ptr<Node>>& ops)
+bool pass::Liveness::run_on_call_graph(const list<shared_ptr<Node>>& ops)
 {
     unordered_set<Tensor*> currently_live;
 
