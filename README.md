@@ -4,7 +4,7 @@
 
 Follow these steps to install the ngraph's python wrapper and its prerequisites.
 
-```
+
 ### private-ngraph-cpp
 
 Download the required version of private-ngraph-cpp and install it.
