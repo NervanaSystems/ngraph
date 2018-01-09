@@ -23,8 +23,8 @@ from pyngraph.op import Greater, Convert, Reduce
 from pyngraph.op import OneHot
 
 
-float_element_type = Type.f32()
-int_element_type = Type.i32()
+float_element_type = Type.f32
+int_element_type = Type.i32
 bz = 53
 lr = 0.2
 
@@ -47,7 +47,7 @@ def makeScalarConstant(elem_type, scalar, shape=[], axis_set={}):
 
 
 def makeFloat32Constant(scalar, shape=[], axis_set={}):
-    return makeScalarConstant(Type.f32(), scalar, shape, axis_set)
+    return makeScalarConstant(Type.f32, scalar, shape, axis_set)
 
 
 def makeFloat32ConstantLike(scalar, op):

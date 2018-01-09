@@ -20,7 +20,7 @@ from pyngraph import Type, Function
 from pyngraph.op import Parameter
 from pyngraph.runtime import Manager
 
-element_type = Type.f32()
+element_type = Type.f32
 
 shape = [2,2]
 A = Parameter(element_type, shape)
