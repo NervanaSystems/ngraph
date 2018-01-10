@@ -33,7 +33,7 @@ namespace ngraph
 class ngraph::runtime::gpu::GPU_TensorViewWrapper
 {
 public:
-    GPU_TensorViewWrapper(const std::shared_ptr<descriptor::TensorView>&);
+  GPU_TensorViewWrapper(const std::shared_ptr<descriptor::TensorView>&, const std::string& alias = "");
 
     size_t get_size() const;
     const std::vector<size_t>& get_shape() const;
@@ -45,4 +45,5 @@ public:
 
 private:
     std::shared_ptr<descriptor::TensorView> m_tensor_view;
+    std::string m_alias;
 };

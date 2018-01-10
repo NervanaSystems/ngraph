@@ -20,8 +20,9 @@ using namespace std;
 using namespace ngraph;
 
 runtime::gpu::GPU_TensorViewWrapper::GPU_TensorViewWrapper(
-    const shared_ptr<descriptor::TensorView>& tv)
+    const shared_ptr<descriptor::TensorView>& tv, const string& alias)
     : m_tensor_view(tv)
+    , m_alias(alias)
 {
 }
 
@@ -47,7 +48,14 @@ const element::Type& runtime::gpu::GPU_TensorViewWrapper::get_element_type() con
 
 const std::string& runtime::gpu::GPU_TensorViewWrapper::get_name() const
 {
-    return m_tensor_view->get_tensor().get_name();
+    if (m_alias.empty())
+    {
+        return m_tensor_view->get_tensor().get_name();
+    }
+    else
+    {
+        return m_alias;
+    }
 }
 
 const std::string& runtime::gpu::GPU_TensorViewWrapper::get_type() const
