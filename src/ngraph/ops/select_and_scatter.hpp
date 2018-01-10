@@ -108,6 +108,8 @@ namespace ngraph
             const Shape& get_window_shape() const { return m_window_shape; }
             /// \return The window movement strides.
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
+            bool is_functionally_identical(const Node&) const override;
+
         protected:
             std::shared_ptr<Function> m_selection_function;
             std::shared_ptr<Function> m_scatter_function;
