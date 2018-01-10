@@ -83,7 +83,6 @@ set (SRC
     pass/memory_layout.cpp
     pass/memory_visualize.cpp
     pass/pass.cpp
-    pass/topological_sort.cpp
     pass/visualize_tree.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
