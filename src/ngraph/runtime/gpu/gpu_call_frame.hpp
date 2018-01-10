@@ -21,12 +21,13 @@
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/call_frame.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/runtime/external_function.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
+        class PrimaryTensorView;
+
         namespace gpu
         {
             class GPU_CallFrame;
@@ -40,12 +41,27 @@ namespace ngraph
             class GPU_CallFrame : public ngraph::runtime::CallFrame
             {
             public:
-              GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction> external_function,
-                            std::shared_ptr<Function> func);
+                GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction> external_function,
+                               EntryPoint compiled_function);
+
+                /// @brief Invoke the function with values matching the signature of the function.
+                ///
+                /// Tuples will be expanded into their tensor views to build the call frame.
+                void
+                    call(const std::vector<std::shared_ptr<runtime::TensorView>>& inputs,
+                         const std::vector<std::shared_ptr<runtime::TensorView>>& outputs) override;
+
+                /// @brief Invoke the function with tuples pre-expanded to their underlying
+                /// tensor views.
+                void tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
+                                 const std::vector<std::shared_ptr<TensorView>>& outputs) override;
+
+                std::vector<ngraph::runtime::PerformanceCounter>
+                    get_performance_data() const override;
 
             protected:
                 std::shared_ptr<GPU_ExternalFunction> m_external_function;
-                std::shared_ptr<Function> m_function;
+                EntryPoint m_compiled_function;
             };
         }
     }
