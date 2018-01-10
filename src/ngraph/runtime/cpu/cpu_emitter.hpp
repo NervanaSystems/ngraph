@@ -60,6 +60,7 @@ namespace ngraph
                 static void EMITTER_DECL(EmitSelect);
                 static void EMITTER_DECL(EmitSubtract);
                 static void EMITTER_DECL(EmitBroadcast);
+                static void EMITTER_DECL(EmitCblasGemm);
                 static void EMITTER_DECL(EmitConvert);
                 static void EMITTER_DECL(EmitConstant);
                 static void EMITTER_DECL(EmitReshape);

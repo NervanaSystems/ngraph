@@ -191,7 +191,7 @@ namespace ngraph
             return false;
         }
 
-        void Matcher::process_match(::ngraph::pattern::gr_callback_fn callback)
+        std::shared_ptr<Node> Matcher::process_match(::ngraph::pattern::gr_callback_fn callback)
         {
             gr_callback_fn cb = m_callback;
             if (callback)
@@ -201,7 +201,7 @@ namespace ngraph
 
             assert(cb);
             assert(this->m_match_root);
-            cb(*this);
+            return cb(*this);
         }
 
         static Nodes get_users(std::shared_ptr<Node> node)

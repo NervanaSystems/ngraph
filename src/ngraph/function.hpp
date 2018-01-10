@@ -78,6 +78,8 @@ namespace ngraph
         size_t get_instance_id() { return m_instance_id; }
         size_t get_temporary_pool_size();
         void set_temporary_pool_size(size_t);
+        void replace_output_op(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
+        void replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl);
 
     protected:
         Nodes m_results;

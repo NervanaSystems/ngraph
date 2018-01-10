@@ -23,6 +23,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
+#include "ngraph/ops/cblas_gemm.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convolution.hpp"
@@ -95,6 +96,58 @@ void runtime::cpu::CPU_Emitter::EmitAdd(codegen::CodeWriter& writer,
            << args[1].get_name() << "[i];\n";
     writer << "}\n";
 #endif
+    writer.indent--;
+    writer << "}\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitCblasGemm(codegen::CodeWriter& writer,
+                                              const ngraph::Node* node,
+                                              const vector<runtime::cpu::TensorViewWrapper>& args,
+                                              const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    const ngraph::op::CblasGemm* cg = static_cast<const ngraph::op::CblasGemm*>(node);
+
+    const Shape& arg0_shape = cg->get_arg0_shape(); //W
+    const Shape& arg1_shape = cg->get_arg1_shape(); //x
+    const Shape& arg2_shape = args[2].get_shape();  //bias (C)
+
+    static const char* ctranspose = "cblas::Transpose::Transpose, ";
+    static const char* cnotranspose = "cblas::Transpose::None, ";
+
+    size_t m = arg0_shape[0];
+    size_t n = arg1_shape[1];
+    size_t k = arg0_shape[1];
+    //
+    const char* tranpose_a = cnotranspose;
+    const char* tranpose_b = cnotranspose;
+    size_t lda = arg0_shape[1];
+    size_t ldb = arg1_shape[1];
+
+    if (cg->get_is_arg0_transposed())
+    {
+        tranpose_a = ctranspose;
+        m = arg0_shape[1];
+        k = arg0_shape[0];
+    }
+
+    if (cg->get_is_arg1_transposed())
+    {
+        tranpose_b = ctranspose;
+        n = arg1_shape[0];
+    }
+
+    writer << "{   // " << node->get_name() << "\n";
+    writer.indent++;
+
+    writer << "memcpy(" << out[0].get_name() << ", " << args[2].get_name() << ", "
+           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+
+    writer << "cblas::cblas_sgemm("
+           << "cblas::Layout::RowMajor, " << tranpose_a << tranpose_b << m << ", " << n << ", " << k
+           << ",\n"
+           << "        1.0f, " << args[0].get_name() << ", " << max(1UL, lda) << ", "
+           << args[1].get_name() << ", " << max(1UL, ldb) << ", 1.0f,\n"
+           << "        " << out[0].get_name() << ", " << max(1UL, arg2_shape[1]) << ");\n";
     writer.indent--;
     writer << "}\n";
 }

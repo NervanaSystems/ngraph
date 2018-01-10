@@ -28,6 +28,13 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+//
+#include "ngraph/file_util.hpp"
+#include "ngraph/json.hpp"
+#include "ngraph/ops/cblas_gemm.hpp"
+#include "ngraph/serializer.hpp"
+#include "ngraph/util.hpp"
+#include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -181,13 +188,14 @@ public:
             auto second_node = m.match_root()->get_input_ops().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
-            ASSERT_TRUE(const_node);
+            //ASSERT_TRUE(const_node);
 
+            std::shared_ptr<ngraph::Node> nn = nullptr;
             if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
                 pattern_map[pattern]->get_shape() != const_node->get_shape())
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";
-                return;
+                return nn;
             }
 
             auto const_values = const_node->get_vector<int32_t>();
@@ -197,9 +205,9 @@ public:
             if (!all_ones)
             {
                 NGRAPH_DEBUG << "Constant vector's values aren't equal to 1";
-                return;
+                return nn;
             }
-            ngraph::replace_node(m.match_root(), pattern_map[pattern]);
+            return pattern_map[pattern];
         };
 
         auto m = make_shared<TestMatcher>(pattern * iconst1, callback);
@@ -212,7 +220,7 @@ public:
         auto iconst0 = construct_constant_node(0);
         auto pattern = std::make_shared<pattern::op::Label>(iconst0);
 
-        ngraph::pattern::gr_callback_fn callback = [pattern](pattern::Matcher& m) {
+        auto callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_add_zero against "
                          << m.match_root()->get_name();
             assert(m.match_root()->get_input_ops().size() == 2);
@@ -225,13 +233,15 @@ public:
             auto second_node = m.match_root()->get_input_ops().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
-            ASSERT_NE(nullptr, const_node);
 
+            //ASSERT_NE(nullptr, const_node);
+
+            std::shared_ptr<ngraph::Node> nn = nullptr;
             if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
                 pattern_map[pattern]->get_shape() != const_node->get_shape())
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";
-                return;
+                return nn;
             }
 
             auto const_values = const_node->get_vector<int>();
@@ -241,10 +251,10 @@ public:
             if (!all_zeros)
             {
                 NGRAPH_DEBUG << "Constant vector's values aren't equal to 0";
-                return;
+                return nn;
             }
 
-            ngraph::replace_node(m.match_root(), pattern_map[pattern]);
+            return pattern_map[pattern];
         };
 
         auto m = make_shared<TestMatcher>(pattern + iconst0, callback);
@@ -261,8 +271,9 @@ public:
             auto reduce = std::dynamic_pointer_cast<op::Reduce>(m.match_root());
             auto reducee = reduce->get_inputs().at(0).get_output().get_node();
             NGRAPH_DEBUG << "reducee = " << reducee->get_name();
-            auto sum = std::make_shared<op::Sum>(reducee, reduce->get_reduction_axes());
-            ngraph::replace_node(reduce, sum);
+            auto sum =
+                std::shared_ptr<ngraph::Node>(new op::Sum(reducee, reduce->get_reduction_axes()));
+            return sum;
         };
 
         auto m = make_shared<TestMatcher>(sum_pattern, callback);
@@ -290,8 +301,26 @@ TEST(pattern, graph_rewrite)
 {
     auto shape = Shape{};
     pass::Manager pass_manager;
-
     pass_manager.register_pass<TestGraphRewrite>();
+
+    {
+        auto a = make_shared<op::Parameter>(element::i32, shape);
+        auto b = make_shared<op::Parameter>(element::i32, shape);
+        auto c = make_shared<op::Parameter>(element::i32, shape);
+        auto iconst0 = construct_constant_node(0);
+        auto graph_a = a + iconst0;
+        auto graph_b = b + iconst0;
+
+        auto f = std::make_shared<Function>(ngraph::Nodes{a, b, graph_a, c, graph_b},
+                                            op::Parameters{a, b, c});
+        pass_manager.run_passes(f);
+
+        ASSERT_TRUE(graph_a->get_output_inputs(0).empty());
+        ASSERT_TRUE(graph_b->get_output_inputs(0).empty());
+
+        auto expected = ngraph::Nodes{a, b, a, c, b};
+        ASSERT_TRUE(f->get_results() == expected);
+    }
 
     {
         auto a = make_shared<op::Parameter>(element::i32, shape);
@@ -486,4 +515,142 @@ TEST(pattern, sum)
 
     ASSERT_TRUE(n.match(nested_reduce_label, nested_sum_graph));
     ASSERT_EQ(n.get_pattern_map()[reduce_label], sum_graph);
+}
+
+TEST(pattern, gemms)
+{
+    auto shape_w = Shape{2, 4};
+    auto shape_x = Shape{4, 1};
+    auto shape_b = Shape{1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_w);
+    auto B = make_shared<op::Parameter>(element::f32, shape_x);
+    auto C = make_shared<op::Parameter>(element::f32, shape_b);
+
+    auto dot = make_shared<op::Dot>(A, B);
+    auto broadcast = make_shared<op::Broadcast>(C, dot->get_shape(), AxisSet{0});
+    auto add = dot + broadcast;
+
+    auto W = std::make_shared<pattern::op::Label>(A);
+    auto x = std::make_shared<pattern::op::Label>(B);
+
+    auto reshape_pred = [](std::shared_ptr<Node> n) {
+        return static_cast<bool>(std::dynamic_pointer_cast<op::Reshape>(n));
+    };
+
+    auto skip_w = std::make_shared<pattern::op::Any>(W, reshape_pred);
+    auto skip_x = std::make_shared<pattern::op::Any>(x, reshape_pred);
+
+    auto pdot = make_shared<op::Dot>(skip_w, skip_x);
+    auto b = std::make_shared<pattern::op::Label>(C);
+    auto pbroadcast = make_shared<op::Broadcast>(b, dot->get_shape(), AxisSet{0});
+    auto padd = pdot + pbroadcast;
+
+    TestMatcher n(nullptr);
+    ASSERT_TRUE(n.match(padd, add));
+    ASSERT_EQ(n.get_pattern_map()[W], A);
+    ASSERT_EQ(n.get_pattern_map()[x], B);
+    ASSERT_EQ(n.get_pattern_map()[b], C);
+
+    auto reshape_w = make_shared<op::Reshape>(A, AxisVector{1, 0}, W->get_shape());
+    auto reshape_x = make_shared<op::Reshape>(B, AxisVector{1, 0}, x->get_shape());
+    auto re_dot = make_shared<op::Dot>(reshape_w, reshape_x);
+    auto re_add = re_dot + broadcast;
+    ASSERT_TRUE(n.match(padd, re_add));
+    ASSERT_EQ(n.get_pattern_map()[W], A);
+    ASSERT_EQ(n.get_pattern_map()[x], B);
+    ASSERT_EQ(n.get_pattern_map()[b], C);
+
+    auto cg =
+        make_shared<op::CblasGemm>(W, x, broadcast, W->get_shape(), x->get_shape(), false, false);
+}
+
+TEST(pattern, gemm_impl)
+{
+    auto shapeA = Shape{3, 2};
+    auto shapeB = Shape{2, 3};
+    auto shapeC = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto B = make_shared<op::Parameter>(element::f32, shapeB);
+
+    auto reshape_w = make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{2, 3});
+    auto reshape_x = make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2});
+
+    auto one = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{1.0f});
+
+    auto broadcast = make_shared<op::Broadcast>(one, shapeC, AxisSet{0, 1});
+    auto cg =
+        make_shared<op::CblasGemm>(A, B, broadcast, A->get_shape(), B->get_shape(), true, true);
+
+    //auto re_dot = make_shared<op::Dot>(reshape_w, reshape_x);
+    //auto re_add = re_dot + broadcast;
+    //auto f = make_shared<Function>(re_add, op::Parameters{A,B});
+
+    auto f = make_shared<Function>(cg, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shapeA);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shapeB);
+    shared_ptr<runtime::TensorView> result =
+        backend->make_primary_tensor_view(element::f32, shapeC);
+
+    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f, 1.0f, 4.0f};
+    vector<float> dataB{3.0f, 3.0f, 3.0f, 9.0f, 9.0f, 9.0f};
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+
+    cf->call({a, b}, {result});
+
+    NGRAPH_DEBUG << " result  = " << vector_to_string(read_vector<float>(result)) << std::endl;
+}
+
+TEST(pattern, cpu_fusion_rewrite)
+{
+    auto shape = Shape{};
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CPUFusion>();
+
+    {
+        auto shape_w = Shape{2, 4};
+        auto shape_x = Shape{4, 1};
+        auto shape_b = Shape{1};
+        auto A = make_shared<op::Parameter>(element::f32, shape_w);
+        auto B = make_shared<op::Parameter>(element::f32, shape_x);
+        auto C = make_shared<op::Parameter>(element::f32, shape_b);
+
+        auto dot = make_shared<op::Dot>(A, B);
+        auto broadcast = make_shared<op::Broadcast>(C, dot->get_shape(), AxisSet{0});
+        auto add = dot + broadcast;
+        auto graph = make_shared<op::Abs>(add);
+        run_passes(pass_manager, graph, {A, B, C});
+        NGRAPH_DEBUG << "CBLAS_GEMM = " << graph->get_input_op(0)->get_name();
+        ASSERT_NE(std::dynamic_pointer_cast<op::CblasGemm>(graph->get_input_op(0)), nullptr);
+    }
+}
+
+TEST(pattern, cpu_fusion_rewrite_mlp)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CPUFusion>();
+    pass_manager.run_passes(func);
+
+    NGRAPH_DEBUG << " GET_OPS : ";
+    for (auto n : func->get_ops())
+    {
+        NGRAPH_DEBUG << "n = " << n->get_name();
+    }
+    NGRAPH_DEBUG << " GET_ORDERED_OPS : ";
+    for (auto n : func->get_ordered_ops())
+    {
+        NGRAPH_DEBUG << "n = " << n->get_name();
+    }
 }
