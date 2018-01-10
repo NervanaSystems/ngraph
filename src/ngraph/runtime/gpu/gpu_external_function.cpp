@@ -443,7 +443,7 @@ using namespace ngraph::runtime;
             shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
             output_names.insert(tv->get_tensor().get_name());
         }
-        set<descriptor::GPU_TensorView*> constants;
+        set<descriptor::TensorView*> constants;
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
             if (dynamic_cast<op::Constant*>(node.get()))
@@ -519,7 +519,7 @@ using namespace ngraph::runtime;
 
         // create output alias map
         size_t output_index = 0;
-        unordered_map<descriptor::GPU_TensorView*, vector<size_t>> output_alias_map;
+        unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
         vector<size_t> aliases;
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
@@ -741,7 +741,7 @@ using namespace ngraph::runtime;
 void runtime::gpu::GPU_ExternalFunction::handle_output_alias(
     codegen::CodeWriter& writer,
     const Node& node,
-    const unordered_map<descriptor::GPU_TensorView*, vector<size_t>>& output_alias_map)
+    const unordered_map<descriptor::TensorView*, vector<size_t>>& output_alias_map)
 {
     for (const descriptor::Output& output : node.get_outputs())
     {
