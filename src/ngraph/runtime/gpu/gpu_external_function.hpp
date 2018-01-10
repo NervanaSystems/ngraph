@@ -24,15 +24,15 @@
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
-#include "ngraph/runtime/base/base_call_frame.hpp"
-#include "ngraph/runtime/base/base_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/gpu/gpu_call_frame.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/external_function.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace base
+        namespace gpu
         {
             class GPU_ExternalFunction;
             class GPU_Emitter;
