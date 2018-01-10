@@ -40,8 +40,8 @@ namespace ngraph
 
             using OpFunction = std::function<void(GPU_Emitter*,
                                                   const ngraph::Node*,
-                                                  const std::vector<TensorViewWrapper>& inputs,
-                                                  const std::vector<TensorViewWrapper>& outputs)>;
+                                                  const std::vector<GPU_TensorViewWrapper>& inputs,
+                                                  const std::vector<GPU_TensorViewWrapper>& outputs)>;
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
@@ -63,12 +63,12 @@ namespace ngraph
             private:
                 void emit_debug_function_entry(codegen::CodeWriter& writer,
                                                Node* node,
-                                               const std::vector<TensorViewWrapper>& in,
-                                               const std::vector<TensorViewWrapper>& out);
+                                               const std::vector<GPU_TensorViewWrapper>& in,
+                                               const std::vector<GPU_TensorViewWrapper>& out);
                 void emit_debug_function_exit(codegen::CodeWriter& writer,
                                               Node* node,
-                                              const std::vector<TensorViewWrapper>& in,
-                                              const std::vector<TensorViewWrapper>& out);
+                                              const std::vector<GPU_TensorViewWrapper>& in,
+                                              const std::vector<GPU_TensorViewWrapper>& out);
                 void handle_output_alias(
                     codegen::CodeWriter& writer,
                     const Node&,

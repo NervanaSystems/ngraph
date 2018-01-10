@@ -209,7 +209,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::TopologicalSort>();
     // For now, just make everyone row-major.
-    pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
+    pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseGPU_TensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>(64);
     pass_manager.register_pass<pass::DumpSorted>(dump_filename);
@@ -393,14 +393,14 @@ using namespace ngraph::runtime;
                 // with shared pointers, which is fine here but clang doesn't like it.)
                 auto& n = *op_list[i];
                 auto handler = dispatcher.find(type_index(typeid(n)));
-                vector<TensorViewWrapper> in;
+                vector<GPU_TensorViewWrapper> in;
                 size_t arg_index = 0;
                 set<string> arg_names;
                 for (const descriptor::Input& input : n.get_inputs())
                 {
                     const descriptor::Output& output = input.get_output();
                     shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                    TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
+                    GPU_TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
                     if (!contains(arg_names, tvw.get_name()))
                     {
                         arg_names.insert(tvw.get_name());
@@ -413,11 +413,11 @@ using namespace ngraph::runtime;
                     }
                     in.push_back(tvw);
                 }
-                vector<TensorViewWrapper> out;
+                vector<GPU_TensorViewWrapper> out;
                 for (const descriptor::Output& output : n.get_outputs())
                 {
                     shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-                    TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
+                    GPU_TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
                     if (arg_index++ > 0)
                     {
                         writer << ",";
@@ -445,7 +445,7 @@ using namespace ngraph::runtime;
             shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
             output_names.insert(tv->get_tensor().get_name());
         }
-        set<descriptor::TensorView*> constants;
+        set<descriptor::GPU_TensorView*> constants;
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
             if (dynamic_cast<op::Constant*>(node.get()))
@@ -521,7 +521,7 @@ using namespace ngraph::runtime;
 
         // create output alias map
         size_t output_index = 0;
-        unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
+        unordered_map<descriptor::GPU_TensorView*, vector<size_t>> output_alias_map;
         vector<size_t> aliases;
         for (size_t i = 0; i < current_function->get_output_size(); ++i)
         {
@@ -588,20 +588,20 @@ using namespace ngraph::runtime;
             {
                 throw ngraph_error("Unhandled op during code generation : " + node->description());
             }
-            vector<TensorViewWrapper> in;
+            vector<GPU_TensorViewWrapper> in;
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
                 in.push_back(
-                    TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
+                    GPU_TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
             }
-            vector<TensorViewWrapper> out;
+            vector<GPU_TensorViewWrapper> out;
             for (const descriptor::Output& output : node->get_outputs())
             {
                 shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
                 out.push_back(
-                    TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
+                    GPU_TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
             }
 
             // Emit operation prologue
@@ -635,11 +635,11 @@ using namespace ngraph::runtime;
             else
             {
                 vector<string> names;
-                for (const TensorViewWrapper& tv : in)
+                for (const GPU_TensorViewWrapper& tv : in)
                 {
                     names.push_back(tv.get_name());
                 }
-                for (const TensorViewWrapper& tv : out)
+                for (const GPU_TensorViewWrapper& tv : out)
                 {
                     names.push_back(tv.get_name());
                 }
@@ -743,7 +743,7 @@ using namespace ngraph::runtime;
 void runtime::gpu::GPU_ExternalFunction::handle_output_alias(
     codegen::CodeWriter& writer,
     const Node& node,
-    const unordered_map<descriptor::TensorView*, vector<size_t>>& output_alias_map)
+    const unordered_map<descriptor::GPU_TensorView*, vector<size_t>>& output_alias_map)
 {
     for (const descriptor::Output& output : node.get_outputs())
     {
@@ -783,8 +783,8 @@ shared_ptr<ngraph::runtime::CallFrame> runtime::gpu::GPU_ExternalFunction::make_
 void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(
     codegen::CodeWriter& writer,
     Node* node,
-    const std::vector<TensorViewWrapper>& in,
-    const std::vector<TensorViewWrapper>& out)
+    const std::vector<GPU_TensorViewWrapper>& in,
+    const std::vector<GPU_TensorViewWrapper>& out)
 {
     writer << "timer_" << node->get_name() << ".start();\n";
 }
@@ -792,8 +792,8 @@ void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(
 void runtime::gpu::GPU_ExternalFunction::emit_debug_function_exit(
     codegen::CodeWriter& writer,
     Node* node,
-    const std::vector<TensorViewWrapper>& in,
-    const std::vector<TensorViewWrapper>& out)
+    const std::vector<GPU_TensorViewWrapper>& in,
+    const std::vector<GPU_TensorViewWrapper>& out)
 {
     writer << "timer_" << node->get_name() << ".stop();\n";
 }
