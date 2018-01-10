@@ -98,6 +98,7 @@ namespace ngraph
                 void EMITTER_DECL(EmitNot);
                 void EMITTER_DECL(EmitMaxPool);
                 void EMITTER_DECL(EmitReverse);
+                void EMITTER_DECL(EmitSelectAndScatter);
 
             private:
                 void generate_call(const std::vector<TensorViewWrapper>& args,

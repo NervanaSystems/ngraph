@@ -4902,3 +4902,115 @@ TEST(${BACKEND_NAME}, abc_tbb)
         unsetenv("NGRAPH_CPU_USE_TBB");
     }
 }
+
+//
+// From the XLA docs: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
+//
+TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
+{
+    auto shape_sel_a = Shape{};
+    auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
+    auto shape_sel_b = Shape{};
+    auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
+    auto sel_f =
+        make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B), op::Parameters{SEL_A, SEL_B});
+
+    auto shape_scatter_a = Shape{};
+    auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
+    auto shape_scatter_b = Shape{};
+    auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
+    auto scatter_f =
+        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+
+    auto shape_a = Shape{4, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{2, 2};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_c = Shape{};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    auto shape_r = Shape{4, 5};
+    auto window_shape = Shape{2, 3};
+    auto window_strides = Strides{2, 2};
+    auto f = make_shared<Function>(
+        make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
+        op::Parameters{A, B, C});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 2>(
+                  {{7, 2, 5, 3, 8}, {3, 8, 9, 3, 4}, {1, 5, 7, 5, 6}, {0, 6, 2, 10, 2}})
+                  .get_vector());
+    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    copy_data(b, test::NDArray<float, 2>({{2, 6}, {3, 1}}).get_vector());
+    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    copy_data(c, vector<float>{0});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b, c}, {result});
+    EXPECT_EQ((test::NDArray<float, 2>(
+                   {{0, 0, 0, 0, 0}, {0, 0, 8, 0, 0}, {0, 0, 3, 0, 0}, {0, 0, 0, 1, 0}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+//
+// From the XLA docs: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
+//
+TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
+{
+    auto shape_sel_a = Shape{};
+    auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
+    auto shape_sel_b = Shape{};
+    auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
+    auto sel_f =
+        make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B), op::Parameters{SEL_A, SEL_B});
+
+    auto shape_scatter_a = Shape{};
+    auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
+    auto shape_scatter_b = Shape{};
+    auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
+    auto scatter_f =
+        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+
+    auto shape_a = Shape{4, 6};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{2, 2};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_c = Shape{};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    auto shape_r = Shape{4, 6};
+    auto window_shape = Shape{2, 3};
+    auto window_strides = Strides{2, 3};
+    auto f = make_shared<Function>(
+        make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
+        op::Parameters{A, B, C});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 2>(
+                  {{7, 2, 5, 3, 10, 2}, {3, 8, 9, 3, 4, 2}, {1, 5, 7, 5, 6, 1}, {0, 6, 2, 7, 2, 8}})
+                  .get_vector());
+    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    copy_data(b, test::NDArray<float, 2>({{2, 6}, {3, 1}}).get_vector());
+    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    copy_data(c, vector<float>{0});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b, c}, {result});
+    EXPECT_EQ((test::NDArray<float, 2>(
+                   {{0, 0, 0, 0, 6, 0}, {0, 0, 2, 0, 0, 0}, {0, 0, 3, 0, 0, 0}, {0, 0, 0, 0, 0, 1}})
+                   .get_vector()),
+              result->get_vector<float>());
+}

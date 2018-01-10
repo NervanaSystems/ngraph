@@ -34,6 +34,7 @@
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/reverse.hpp"
+#include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
@@ -1720,6 +1721,58 @@ void runtime::cpu::CPU_Emitter::EmitReverse(const ngraph::Node* n,
     m_out << "                {" << join(arg_shape) << "},\n";
     m_out << "                {" << join(result_shape) << "},\n";
     m_out << "                {" << join(reverse->get_reversed_axes()) << "});\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
+    const ngraph::Node* n,
+    const vector<runtime::cpu::TensorViewWrapper>& args,
+    const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto select_and_scatter = static_cast<const op::SelectAndScatter*>(n);
+    auto selection_function = select_and_scatter->get_functions()[0];
+    auto scatter_function = select_and_scatter->get_functions()[1];
+
+    auto arg0_shape = args[0].get_shape();
+    auto arg1_shape = args[1].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    string type = n->get_output_element_type(0).c_type_string();
+
+    m_out << "auto f_select = [](" << type << " x, " << type << " y) -> char\n{";
+    m_out.indent++;
+    m_out << "\n";
+    m_out << "char result;\n";
+    m_out << "void* args[] = {&x, &y};\n";
+    m_out << "void* out[] = {&result};\n";
+    m_out << selection_function->get_name() << "(args, out);\n";
+    m_out << "return result;\n";
+    m_out.indent--;
+    m_out << "};\n";
+
+    m_out << "auto f_scatter = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    m_out.indent++;
+    m_out << "\n";
+    m_out << type << " result;\n";
+    m_out << "void* args[] = {&x, &y};\n";
+    m_out << "void* out[] = {&result};\n";
+    m_out << scatter_function->get_name() << "(args, out);\n";
+    m_out << "return result;\n";
+    m_out.indent--;
+    m_out << "};\n";
+
+    m_out << "kernel::select_and_scatter<" << out[0].get_type() << ">(" << args[0].get_name()
+          << ",\n";
+    m_out << "                " << args[1].get_name() << ",\n";
+    m_out << "                " << args[2].get_name() << ",\n";
+    m_out << "                " << out[0].get_name() << ",\n";
+    m_out << "                {" << join(arg0_shape) << "},\n";
+    m_out << "                {" << join(arg1_shape) << "},\n";
+    m_out << "                {" << join(result_shape) << "},\n";
+    m_out << "                f_select,\n";
+    m_out << "                f_scatter,\n";
+    m_out << "                {" << join(select_and_scatter->get_window_shape()) << "},\n";
+    m_out << "                {" << join(select_and_scatter->get_window_movement_strides())
+          << "});\n";
 }
 
 //------------------------------------------------------------------------------------------------
