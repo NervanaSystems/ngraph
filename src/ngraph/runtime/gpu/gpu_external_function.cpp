@@ -207,9 +207,9 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::TopologicalSort>();
+    // pass_manager.register_pass<pass::TopologicalSort>();
     // For now, just make everyone row-major.
-    pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseGPU_TensorViewLayout>>();
+    pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>(64);
     pass_manager.register_pass<pass::DumpSorted>(dump_filename);
@@ -223,8 +223,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 #include <cmath>
 
 #include <tbb/flow_graph.h>
-
-#include <Eigen/Dense>
 
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/gpu/gpu_eigen_utils.hpp"
