@@ -20,6 +20,12 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
+
+#define EMITTER_DECL(E)                                                                            \
+    E(const ngraph::Node* n,                                                                       \
+      const std::vector<ngraph::runtime::gpu::GPU_TensorViewWrapper>& args,                           \
+      const std::vector<ngraph::runtime::gpu::GPU_TensorViewWrapper>& out)
 
 namespace ngraph
 {
@@ -29,15 +35,78 @@ namespace ngraph
         {
             class GPU_Emitter
             {
+            protected:
+                codegen::CodeWriter m_out;
+                bool m_use_ref_kernels;
+
             public:
                 GPU_Emitter()
                     : m_out()
+                    , m_use_ref_kernels(std::getenv("NGRAPH_GPU_USE_REF_KERNELS") != nullptr)
                 {
                 }
                 std::string get_code() { return m_out.get_code(); }
                 codegen::CodeWriter& get_code_writer() { return m_out; }
-            protected:
-                codegen::CodeWriter m_out;
+                void EMITTER_DECL(EmitNop);
+                void EMITTER_DECL(EmitAdd);
+                void EMITTER_DECL(EmitDot);
+                void EMITTER_DECL(EmitMultiply);
+                void EMITTER_DECL(EmitGetOutputElement);
+                void EMITTER_DECL(EmitXLAGetTupleElement);
+                void EMITTER_DECL(EmitTuple);
+                void EMITTER_DECL(EmitAbs);
+                void EMITTER_DECL(EmitConcat);
+                void EMITTER_DECL(EmitDivide);
+                void EMITTER_DECL(EmitEqual);
+                void EMITTER_DECL(EmitGreater);
+                void EMITTER_DECL(EmitGreaterEq);
+                void EMITTER_DECL(EmitLess);
+                void EMITTER_DECL(EmitLessEq);
+                void EMITTER_DECL(EmitLog);
+                void EMITTER_DECL(EmitMaximum);
+                void EMITTER_DECL(EmitMinimum);
+                void EMITTER_DECL(EmitNegative);
+                void EMITTER_DECL(EmitNotEqual);
+                void EMITTER_DECL(EmitSelect);
+                void EMITTER_DECL(EmitSubtract);
+                void EMITTER_DECL(EmitBroadcast);
+                void EMITTER_DECL(EmitConvert);
+                void EMITTER_DECL(EmitConstant);
+                void EMITTER_DECL(EmitReshape);
+                void EMITTER_DECL(EmitFunctionCall);
+                void EMITTER_DECL(EmitReduce);
+                void EMITTER_DECL(EmitSign);
+                void EMITTER_DECL(EmitSlice);
+                void EMITTER_DECL(EmitSum);
+                void EMITTER_DECL(EmitExp);
+                void EMITTER_DECL(EmitSin);
+                void EMITTER_DECL(EmitSinh);
+                void EMITTER_DECL(EmitCos);
+                void EMITTER_DECL(EmitCosh);
+                void EMITTER_DECL(EmitTan);
+                void EMITTER_DECL(EmitTanh);
+                void EMITTER_DECL(EmitAsin);
+                void EMITTER_DECL(EmitAcos);
+                void EMITTER_DECL(EmitAtan);
+                void EMITTER_DECL(EmitPower);
+                void EMITTER_DECL(EmitReplaceSlice);
+                void EMITTER_DECL(EmitOneHot);
+                void EMITTER_DECL(EmitFloor);
+                void EMITTER_DECL(EmitCeiling);
+                void EMITTER_DECL(EmitSqrt);
+                void EMITTER_DECL(EmitConvolution);
+                void EMITTER_DECL(EmitNot);
+                void EMITTER_DECL(EmitMaxPool);
+                void EMITTER_DECL(EmitReverse);
+
+            private:
+                void generate_call(const std::vector<GPU_TensorViewWrapper>& args,
+                                   const std::vector<GPU_TensorViewWrapper>& out,
+                                   std::shared_ptr<Function> function);
+
+                std::string emit_vector(const GPU_TensorViewWrapper&, const std::string& name = "");
+                std::string emit_array1d(const GPU_TensorViewWrapper&, const std::string& name = "");
+                std::string emit_matrix(const GPU_TensorViewWrapper&, const std::string& name = "");
             };
         }
     }
