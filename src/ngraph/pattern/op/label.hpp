@@ -30,43 +30,37 @@ namespace ngraph
             class Label : public Pattern
             {
             public:
-                /// \brief creates a Label node from \sa node.
-                ///
-                /// this Label node can be bound to arbitrary nodes in an input graph
-                /// as long as provided \sa pred is satisfied and the node hasn't been previously bound to
-                /// a different node in the input graph
-                /// \code{.cpp}
-                /// auto pattern = pattern::op::Label::make_from_node(a); //a is op::Parameter
-                /// matcher.match(pattern, a));
-                /// \endcode
-                static std::shared_ptr<Label>
-                    make_from_node(const std::shared_ptr<ngraph::Node>& node,
-                                   Predicate pred = nullptr)
-                {
-                    auto label = std::make_shared<Label>(Nodes{}, pred);
-                    label->add_output(node->get_element_type(), node->get_shape());
-                    return label;
-                }
-
-                /// \brief creates a Label node containing a sub-pattern described by \sa node.
+                /// \brief creates a Label node containing a sub-pattern described by \sa type and \sa shape.
                 ///
                 /// this Label node can be bound only to the nodes in the input graph
-                /// that match the pattern specified by \sa node
+                /// that match the pattern specified by \sa wrapped_nodes
                 /// Example:
                 /// \code{.cpp}
                 /// auto add = a + b; //a and b are op::Parameter in this example
-                /// auto label = pattern::op::Label::wrap(add);
+                /// auto label = std::make_shared<pattern::op::Label>(element::f32, Shape{2,2} , nullptr, Nodes{add});
                 /// \endcode
-                static std::shared_ptr<Label> wrap(const std::shared_ptr<ngraph::Node>& node,
-                                                   Predicate pred = nullptr)
+                Label(const element::Type& type,
+                      const Shape s,
+                      Predicate pred = nullptr,
+                      const Nodes& wrapped_nodes = Nodes{})
+                    : Pattern("Label", wrapped_nodes, pred)
                 {
-                    auto label = std::make_shared<Label>(Nodes{node}, pred);
-                    label->add_output(node->get_element_type(), node->get_shape());
-                    return label;
+                    add_output(type, s);
                 }
 
-                Label(const Nodes& subgraph, Predicate pred)
-                    : Pattern("Label", Nodes{subgraph}, pred)
+                /// \brief creates a Label node containing a sub-pattern described by the type and shape of \sa node.
+                ///
+                /// this Label node can be bound only to the nodes in the input graph
+                /// that match the pattern specified by \sa wrapped_nodes
+                /// Example:
+                /// \code{.cpp}
+                /// auto add = a + b; //a and b are op::Parameter in this example
+                /// auto label = std::make_shared<pattern::op::Label>(add, nullptr, Nodes{add});
+                /// \endcode
+                Label(std::shared_ptr<Node> node,
+                      Predicate pred = nullptr,
+                      const Nodes& wrapped_nodes = Nodes{})
+                    : Label(node->get_element_type(), node->get_shape(), pred, wrapped_nodes)
                 {
                 }
             };
