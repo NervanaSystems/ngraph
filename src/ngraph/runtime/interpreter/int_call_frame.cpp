@@ -27,6 +27,7 @@ runtime::interpreter::INT_CallFrame::INT_CallFrame(shared_ptr<ExternalFunction> 
     : m_external_function(external_function)
     , m_function(func)
     , m_emit_timing(std::getenv("NGRAPH_INTERPRETER_EMIT_TIMING") != nullptr)
+    , m_nan_check(std::getenv("NGRAPH_INTERPRETER_NAN_CHECK") != nullptr)
 {
 }
 
@@ -35,6 +36,10 @@ void runtime::interpreter::INT_CallFrame::call(
     const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& input_tvs,
     const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs)
 {
+    if (m_nan_check)
+    {
+        perform_nan_check(input_tvs);
+    }
     unordered_map<descriptor::TensorView*, shared_ptr<runtime::interpreter::INT_TensorView>>
         tensor_map;
 
@@ -148,6 +153,10 @@ void runtime::interpreter::INT_CallFrame::call(
         {
             stopwatch& timer = m_timer_map[op.get()];
             timer.stop();
+        }
+        if (m_nan_check)
+        {
+            perform_nan_check(outputs, op.get());
         }
 
         handle_output_alias(*op, output_alias_map, output_tvs);
@@ -305,4 +314,53 @@ vector<runtime::PerformanceCounter>
                         p.second.get_call_count());
     }
     return rc;
+}
+
+void runtime::interpreter::INT_CallFrame::perform_nan_check(
+    const vector<shared_ptr<INT_TensorView>>& tvs, const Node* op)
+{
+    size_t arg_number = 1;
+    for (shared_ptr<INT_TensorView> tv : tvs)
+    {
+        const element::Type& type = tv->get_tensor().get_element_type();
+        if (type == element::f32)
+        {
+            const float* data = reinterpret_cast<float*>(tv->get_data_ptr());
+            for (size_t i = 0; i < tv->get_element_count(); i++)
+            {
+                if (isnan(data[i]))
+                {
+                    if (op)
+                    {
+                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
+                    }
+                    else
+                    {
+                        throw runtime_error("nan found in function's input tensor number " +
+                                            to_string(arg_number));
+                    }
+                }
+            }
+        }
+        else if (type == element::f64)
+        {
+            const double* data = reinterpret_cast<double*>(tv->get_data_ptr());
+            for (size_t i = 0; i < tv->get_element_count(); i++)
+            {
+                if (isnan(data[i]))
+                {
+                    if (op)
+                    {
+                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
+                    }
+                    else
+                    {
+                        throw runtime_error("nan found in function's input tensor number " +
+                                            to_string(arg_number));
+                    }
+                }
+            }
+        }
+        arg_number++;
+    }
 }
