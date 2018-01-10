@@ -133,8 +133,8 @@ bool sum_predicate(std::shared_ptr<Node> gn)
         }
 
         NGRAPH_DEBUG << "looking at function's result  "
-                     << r->get_function()->get_result()->get_name();
-        if (auto sum = std::dynamic_pointer_cast<op::Add>(r->get_function()->get_result()))
+                     << r->get_functions()[0]->get_result()->get_name();
+        if (auto sum = std::dynamic_pointer_cast<op::Add>(r->get_functions()[0]->get_result()))
         {
             auto parm1 = std::dynamic_pointer_cast<op::Parameter>(sum->get_input_op(0));
             auto parm2 = std::dynamic_pointer_cast<op::Parameter>(sum->get_input_op(1));
