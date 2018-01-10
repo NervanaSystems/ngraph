@@ -33,6 +33,7 @@
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
@@ -41,6 +42,8 @@
 
 using namespace std;
 using namespace ngraph;
+
+#define PREFER_EIGEN 0
 
 static string eigen_vector_format(const runtime::cpu::TensorViewWrapper& tvi)
 {
@@ -68,6 +71,7 @@ void runtime::cpu::CPU_Emitter::EmitAdd(const ngraph::Node* n,
     // the right alignment instead of Eigen::Unaligned
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << "Eigen::Map<Eigen::Array<" << out[0].get_element_type().c_type_string() << ", "
           << out[0].get_size() << ", 1>, Eigen::Unaligned> out(" << out[0].get_name() << ");\n";
     m_out << "Eigen::Map<Eigen::Array<" << args[0].get_element_type().c_type_string() << ", "
@@ -75,7 +79,14 @@ void runtime::cpu::CPU_Emitter::EmitAdd(const ngraph::Node* n,
     m_out << "Eigen::Map<Eigen::Array<" << args[1].get_element_type().c_type_string() << ", "
           << args[1].get_size() << ", 1>, Eigen::Unaligned> arg1(" << args[1].get_name() << ");\n";
     m_out << "out = arg0 + arg1;\n";
-
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] + "
+          << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -165,9 +176,18 @@ void runtime::cpu::CPU_Emitter::EmitMultiply(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "   " << emit_array1d(args[0]) << " *\n"
           << "   " << emit_array1d(args[1]) << ";\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] * "
+          << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -208,8 +228,16 @@ void runtime::cpu::CPU_Emitter::EmitAbs(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n";
     m_out << "Eigen::abs(" << emit_array1d(args[0]) << ");\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = std::abs(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -220,6 +248,7 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
 {
     auto result_shape = out[0].get_shape();
 
+#if PREFER_EIGEN == 1
     if (result_shape.size() == 1)
     {
         m_out << "{   // " << n->get_name() << "\n";
@@ -293,15 +322,35 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
                 arg_shapes.push_back(arg.get_shape());
             }
 
-            kernels::emit_concat(m_out,
-                                 args[0].get_element_type().c_type_string(),
-                                 arg_names,
-                                 out[0].get_name(),
-                                 arg_shapes,
-                                 result_shape,
-                                 axis);
+            kernel::emit_concat(m_out,
+                                args[0].get_element_type().c_type_string(),
+                                arg_names,
+                                out[0].get_name(),
+                                arg_shapes,
+                                result_shape,
+                                axis);
         }
     }
+#else
+    auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+
+    std::vector<std::string> arg_names;
+    std::vector<Shape> arg_shapes;
+
+    for (auto arg : args)
+    {
+        arg_names.push_back(arg.get_name());
+        arg_shapes.push_back(arg.get_shape());
+    }
+
+    kernel::emit_concat(m_out,
+                        args[0].get_element_type().c_type_string(),
+                        arg_names,
+                        out[0].get_name(),
+                        arg_shapes,
+                        result_shape,
+                        axis);
+#endif
 }
 
 void runtime::cpu::CPU_Emitter::EmitDivide(const ngraph::Node* n,
@@ -320,9 +369,18 @@ void runtime::cpu::CPU_Emitter::EmitDivide(const ngraph::Node* n,
               << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
         m_out << "}\n";
     }
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << " /\n"
           << "    " << emit_array1d(args[1]) << ";\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] / "
+          << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -333,9 +391,18 @@ void runtime::cpu::CPU_Emitter::EmitEqual(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    (" << emit_array1d(args[0]) << " ==\n"
           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+          << "[i] == " << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -346,9 +413,18 @@ void runtime::cpu::CPU_Emitter::EmitGreater(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << " xxx\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    (" << emit_array1d(args[0]) << " >\n"
           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > "
+          << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -359,9 +435,18 @@ void runtime::cpu::CPU_Emitter::EmitGreaterEq(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    (" << emit_array1d(args[0]) << " >=\n"
           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+          << "[i] >= " << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -372,9 +457,18 @@ void runtime::cpu::CPU_Emitter::EmitLess(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    (" << emit_array1d(args[0]) << " <\n"
           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
+          << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -385,9 +479,18 @@ void runtime::cpu::CPU_Emitter::EmitLessEq(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    (" << emit_array1d(args[0]) << " <=\n"
           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+          << "[i] <= " << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -398,8 +501,16 @@ void runtime::cpu::CPU_Emitter::EmitLog(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    Eigen::log(" << emit_array1d(args[0]) << ");\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = log(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -410,9 +521,19 @@ void runtime::cpu::CPU_Emitter::EmitMaximum(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "        " << emit_array1d(args[0]) << ".max(\n"
           << "        " << emit_array1d(args[1]) << ");\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > "
+          << args[1].get_name() << "[i] ? " << args[0].get_name() << "[i] : " << args[1].get_name()
+          << "[i] ;\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -423,9 +544,19 @@ void runtime::cpu::CPU_Emitter::EmitMinimum(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".min(\n"
           << "    " << emit_array1d(args[1]) << ");\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
+          << args[1].get_name() << "[i] ? " << args[0].get_name() << "[i] : " << args[1].get_name()
+          << "[i] ;\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -436,8 +567,16 @@ void runtime::cpu::CPU_Emitter::EmitNegative(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    -" << emit_array1d(args[0]) << ";\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = -" << args[0].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -448,9 +587,18 @@ void runtime::cpu::CPU_Emitter::EmitNotEqual(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    (" << emit_array1d(args[0]) << " !=\n"
           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+          << "[i] != " << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -475,9 +623,18 @@ void runtime::cpu::CPU_Emitter::EmitSubtract(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << " -\n"
           << "    " << emit_array1d(args[1]) << ";\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] - "
+          << args[1].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -488,6 +645,9 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
 {
     auto broadcast = static_cast<const op::Broadcast*>(n);
 
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+#if PREFER_EIGEN == 1
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
 
@@ -553,6 +713,17 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
         m_out << "                         {" << join(result_shape) << "},\n";
         m_out << "                         {" << join(broadcast->get_broadcast_axes()) << "});\n";
     }
+#else
+    kernel::emit_broadcast(m_out,
+                           args[0].get_element_type().c_type_string(),
+                           args[0].get_name(),
+                           out[0].get_name(),
+                           args[0].get_shape(),
+                           out[0].get_shape(),
+                           broadcast->get_broadcast_axes());
+#endif
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitConvert(const ngraph::Node* n,
@@ -581,7 +752,9 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto reshape = static_cast<const op::Reshape*>(n);
-
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+#if PREFER_EIGEN == 1
     auto arg_shape = args[0].get_shape();
     auto arg_rank = arg_shape.size();
 
@@ -644,6 +817,17 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
         throw ngraph_error(
             "Axis permutation in reshape is not implemented yet for tensors with rank>2");
     }
+#else
+    kernel::emit_reshape(m_out,
+                         args[0].get_element_type().c_type_string(),
+                         args[0].get_name(),
+                         out[0].get_name(),
+                         args[0].get_shape(),
+                         out[0].get_shape(),
+                         reshape->get_input_order());
+#endif
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitFunctionCall(
@@ -652,7 +836,7 @@ void runtime::cpu::CPU_Emitter::EmitFunctionCall(
     const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto function_call = static_cast<const op::FunctionCall*>(n);
-    shared_ptr<Function> function = function_call->get_function();
+    shared_ptr<Function> function = function_call->get_functions()[0];
 
     m_out << "{   // Call " << function->get_name() << "\n";
     m_out.indent++;
@@ -672,7 +856,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(const ngraph::Node* n,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto reduce = static_cast<const op::Reduce*>(n);
-    auto reduction_function = reduce->get_function();
+    auto reduction_function = reduce->get_functions()[0];
 
     auto reductee_shape = args[0].get_shape();
 
@@ -859,6 +1043,9 @@ void runtime::cpu::CPU_Emitter::EmitSlice(const ngraph::Node* n,
 {
     const op::Slice* slice = static_cast<const op::Slice*>(n);
 
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+#if PREFER_EIGEN == 1
     size_t arg_rank = args[0].get_shape().size();
 
     const Coordinate& lower_bounds = slice->get_lower_bounds();
@@ -918,6 +1105,19 @@ void runtime::cpu::CPU_Emitter::EmitSlice(const ngraph::Node* n,
         m_out << "                         {" << join(slice->get_strides()) << "},\n";
         m_out << "                         {" << join(out[0].get_shape()) << "});\n";
     }
+#else
+    kernel::emit_slice(m_out,
+                       args[0].get_element_type().c_type_string(),
+                       args[0].get_name(),
+                       out[0].get_name(),
+                       args[0].get_shape(),
+                       out[0].get_shape(),
+                       slice->get_lower_bounds(),
+                       slice->get_upper_bounds(),
+                       slice->get_strides());
+#endif
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
@@ -925,6 +1125,9 @@ void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     const op::Sum* sum = static_cast<const op::Sum*>(n);
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+#if PREFER_EIGEN == 1
     const Shape& arg_shape = args[0].get_shape();
     size_t arg_rank = arg_shape.size();
     const AxisSet& reduction_axes = sum->get_reduction_axes();
@@ -976,6 +1179,17 @@ void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
         m_out << "                         {" << join(out[0].get_shape()) << "},\n";
         m_out << "                         {" << join(sum->get_reduction_axes()) << "});\n";
     }
+#else
+    kernel::emit_sum(m_out,
+                     args[0].get_element_type().c_type_string(),
+                     args[0].get_name(),
+                     out[0].get_name(),
+                     args[0].get_shape(),
+                     out[0].get_shape(),
+                     sum->get_reduction_axes());
+#endif
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitExp(const ngraph::Node* n,
@@ -984,8 +1198,16 @@ void runtime::cpu::CPU_Emitter::EmitExp(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".exp();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = exp(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -996,8 +1218,16 @@ void runtime::cpu::CPU_Emitter::EmitSin(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".sin();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = sin(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1008,8 +1238,16 @@ void runtime::cpu::CPU_Emitter::EmitSinh(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".sinh();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = sinh(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1020,8 +1258,16 @@ void runtime::cpu::CPU_Emitter::EmitCos(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".cos();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = cos(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1032,8 +1278,16 @@ void runtime::cpu::CPU_Emitter::EmitCosh(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".cosh();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = cosh(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1044,8 +1298,16 @@ void runtime::cpu::CPU_Emitter::EmitTan(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".tan();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = tan(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1060,6 +1322,9 @@ void runtime::cpu::CPU_Emitter::EmitTanh(const ngraph::Node* n,
     // by models
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 0
+    m_out << "#pragma omp parallel for\n";
+#endif
     m_out << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
     m_out << "{\n";
     m_out << "    " << out[0].get_name() << "[i] = tanh(" << args[0].get_name() << "[i]);\n";
@@ -1074,8 +1339,16 @@ void runtime::cpu::CPU_Emitter::EmitAsin(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".asin();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = asin(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1086,8 +1359,16 @@ void runtime::cpu::CPU_Emitter::EmitAcos(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".acos();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = acos(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1098,8 +1379,16 @@ void runtime::cpu::CPU_Emitter::EmitAtan(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".atan();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = atan(" << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -1110,11 +1399,21 @@ void runtime::cpu::CPU_Emitter::EmitPower(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " = \n";
     m_out.indent++;
     m_out << emit_array1d(args[0]) << ".pow(\n ";
     m_out << emit_array1d(args[1]) << ");\n";
-    m_out.indent -= 2;
+    m_out.indent--;
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = pow(" << args[0].get_name() << "[i], "
+          << args[1].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
+    m_out.indent--;
     m_out << "}\n";
 }
 
@@ -1124,7 +1423,9 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
     const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto replace_slice = static_cast<const op::Slice*>(n);
-
+    m_out << "{   // " << n->get_name() << "\n";
+    m_out.indent++;
+#if PREFER_EIGEN == 1
     size_t arg0_rank = args[0].get_shape().size();
 
     auto& lower_bounds = replace_slice->get_lower_bounds();
@@ -1191,6 +1492,20 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
         m_out << "                         {" << join(replace_slice->get_strides()) << "},\n";
         m_out << "                         {" << join(out[0].get_shape()) << "});\n";
     }
+#else
+    kernel::emit_replace_slice(m_out,
+                               args[0].get_element_type().c_type_string(),
+                               args[0].get_name(),
+                               args[1].get_name(),
+                               out[0].get_name(),
+                               args[1].get_shape(),
+                               out[0].get_shape(),
+                               replace_slice->get_lower_bounds(),
+                               replace_slice->get_upper_bounds(),
+                               replace_slice->get_strides());
+#endif
+    m_out.indent--;
+    m_out << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitOneHot(const ngraph::Node* n,
@@ -1294,6 +1609,9 @@ void runtime::cpu::CPU_Emitter::EmitCeiling(const ngraph::Node* n,
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
     size_t element_count = out[0].get_size();
+#if PREFER_EIGEN == 0
+    m_out << "#pragma omp parallel for\n";
+#endif
     m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
     m_out << "{\n";
     m_out << "    " << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
@@ -1309,6 +1627,9 @@ void runtime::cpu::CPU_Emitter::EmitFloor(const ngraph::Node* n,
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
     size_t element_count = out[0].get_size();
+#if PREFER_EIGEN == 0
+    m_out << "#pragma omp parallel for\n";
+#endif
     m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
     m_out << "{\n";
     m_out << "    " << out[0].get_name() << "[i] = floor(" << args[0].get_name() << "[i]);\n";
@@ -1324,6 +1645,9 @@ void runtime::cpu::CPU_Emitter::EmitSqrt(const ngraph::Node* n,
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
     size_t element_count = out[0].get_size();
+#if PREFER_EIGEN == 0
+    m_out << "#pragma omp parallel for\n";
+#endif
     m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
     m_out << "{\n";
     m_out << "    " << out[0].get_name() << "[i] = sqrt(" << args[0].get_name() << "[i]);\n";
@@ -1351,7 +1675,9 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(const ngraph::Node* n,
     m_out << "                         {" << join(convolution->get_window_movement_strides())
           << "},\n";
     m_out << "                         {" << join(convolution->get_window_dilation_strides())
-          << "});\n";
+          << "},\n";
+    m_out << "                         {" << join(convolution->get_padding_below()) << "},\n";
+    m_out << "                         {" << join(convolution->get_padding_above()) << "});\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitNot(const ngraph::Node* n,
@@ -1378,6 +1704,22 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(const ngraph::Node* n,
     m_out << "                 {" << join(result_shape) << "},\n";
     m_out << "                 {" << join(max_pool->get_window_shape()) << "},\n";
     m_out << "                 {" << join(max_pool->get_window_movement_strides()) << "});\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitReverse(const ngraph::Node* n,
+                                            const vector<runtime::cpu::TensorViewWrapper>& args,
+                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto reverse = static_cast<const op::Reverse*>(n);
+
+    auto arg_shape = args[0].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    m_out << "kernel::reverse<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    m_out << "                " << out[0].get_name() << ",\n";
+    m_out << "                {" << join(arg_shape) << "},\n";
+    m_out << "                {" << join(result_shape) << "},\n";
+    m_out << "                {" << join(reverse->get_reversed_axes()) << "});\n";
 }
 
 //------------------------------------------------------------------------------------------------

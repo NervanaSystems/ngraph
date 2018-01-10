@@ -73,11 +73,7 @@ namespace ngraph
             const std::string&
                 name); //so we can use `dynamic_cast` in FunctionCall to double check if we are dealing with an XLA or regular function
         std::list<std::shared_ptr<Node>> get_ops() const;
-        std::list<std::shared_ptr<Node>>& get_ordered_ops();
-        const std::list<std::shared_ptr<Node>>& get_ordered_ops() const;
-        void set_ordered_ops(const std::list<std::shared_ptr<Node>>&);
-        void set_ordered_ops_valid() { m_ordered_ops_valid = true; }
-        void clear_ordered_ops_valid() { m_ordered_ops_valid = false; }
+        std::list<std::shared_ptr<Node>> get_ordered_ops();
         friend std::ostream& operator<<(std::ostream&, const Function&);
         size_t get_instance_id() { return m_instance_id; }
         size_t get_temporary_pool_size();
@@ -87,8 +83,6 @@ namespace ngraph
         Nodes m_results;
         std::vector<std::shared_ptr<ngraph::op::Parameter>> m_parameters;
         std::string m_name;
-        bool m_ordered_ops_valid;
-        std::list<std::shared_ptr<Node>> m_ordered_ops;
         size_t m_temporary_pool_size;
 
     private:

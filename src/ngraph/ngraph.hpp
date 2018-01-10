@@ -41,6 +41,12 @@
 /// @brief Convenience functions that create addional graph nodes to implement commonly-used
 ///        recipes, for example auto-broadcast.
 
+/// @namespace ngraph::xla
+/// @brief Code to facilitate nGraph's support for XLA/HLO.
+
+/// @namespace ngraph::xla::op
+/// @brief Operators specific to nGraph's support for XLA/HLO.
+
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/numpy_transpose.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
@@ -54,8 +60,6 @@
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/descriptor/tuple.hpp"
-#include "ngraph/descriptor/value.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
@@ -95,10 +99,13 @@
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
+#include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/sign.hpp"
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
@@ -113,7 +120,6 @@
 #include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/manager.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/runtime/value.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/types/type.hpp"

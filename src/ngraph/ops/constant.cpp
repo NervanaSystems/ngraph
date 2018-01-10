@@ -43,7 +43,9 @@ std::string to_cpp_string(T value)
     }
     else
     {
-        rc = to_string(value);
+        stringstream ss;
+        ss << value;
+        rc = ss.str();
     }
     return rc;
 }

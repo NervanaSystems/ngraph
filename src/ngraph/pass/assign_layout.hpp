@@ -28,7 +28,7 @@ namespace ngraph
         class AssignLayout : public CallGraphPass
         {
         public:
-            virtual bool run_on_call_graph(std::list<std::shared_ptr<Node>>& nodes) override
+            virtual bool run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override
             {
                 for (const std::shared_ptr<Node>& node : nodes)
                 {

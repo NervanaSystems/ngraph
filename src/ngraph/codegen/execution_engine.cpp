@@ -76,5 +76,6 @@ void codegen::ExecutionEngine::finalize()
 
 void* codegen::ExecutionEngine::get_pointer_to_named_function(const std::string& func_name)
 {
-    return m_execution_engine->getPointerToNamedFunction(func_name);
+    // set AbortOnFailure flag to false so call fails by returning nullptr
+    return m_execution_engine->getPointerToNamedFunction(func_name, false);
 }

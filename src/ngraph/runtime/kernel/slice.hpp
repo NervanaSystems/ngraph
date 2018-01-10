@@ -39,11 +39,13 @@ namespace ngraph
 
                 CoordinateTransform::Iterator output_it = output_transform.begin();
 
-                for (Coordinate in_coord : input_transform)
+                for (const Coordinate& in_coord : input_transform)
                 {
-                    Coordinate out_coord = *output_it++;
+                    const Coordinate& out_coord = *output_it;
 
                     out[output_transform.index(out_coord)] = arg[input_transform.index(in_coord)];
+
+                    ++output_it;
                 }
             }
         }

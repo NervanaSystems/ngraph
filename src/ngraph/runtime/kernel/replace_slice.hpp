@@ -50,12 +50,14 @@ namespace ngraph
 
                 CoordinateTransform::Iterator output_it = output_transform.begin();
 
-                for (Coordinate input_coord : input_transform)
+                for (const Coordinate& input_coord : input_transform)
                 {
-                    Coordinate output_coord = *output_it++;
+                    const Coordinate& output_coord = *output_it;
 
                     out[output_transform.index(output_coord)] =
                         arg1[input_transform.index(input_coord)];
+
+                    ++output_it;
                 }
             }
         }

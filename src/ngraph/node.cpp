@@ -18,6 +18,7 @@
 #include <typeinfo>
 
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/ops/parameter.hpp"
 
@@ -214,9 +215,9 @@ std::shared_ptr<Node> Node::backprop_node(const std::shared_ptr<Node>& x,
     return adjoints_it->second.get(x);
 }
 
-std::shared_ptr<Function> Node::get_function() const
+std::vector<std::shared_ptr<Function>> Node::get_functions() const
 {
-    return nullptr;
+    return std::vector<std::shared_ptr<Function>>{};
 }
 
 namespace ngraph
@@ -333,4 +334,54 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
         }
     }
     return true;
+}
+
+bool Node::is_functionally_identical(const Node& other) const
+{
+    bool rc = true;
+    if (this->description() == other.description())
+    {
+        const deque<descriptor::Input>& i1 = this->get_inputs();
+        const deque<descriptor::Input>& i2 = other.get_inputs();
+        const deque<descriptor::Output>& o1 = this->get_outputs();
+        const deque<descriptor::Output>& o2 = other.get_outputs();
+        if (i1.size() == i2.size() && o1.size() == o2.size())
+        {
+            for (size_t i = 0; i < i1.size(); i++)
+            {
+                auto tvl1 = i1[i].get_output().get_tensor_view()->get_tensor_view_layout();
+                auto tvl2 = i2[i].get_output().get_tensor_view()->get_tensor_view_layout();
+                if (tvl1->get_shape() != tvl2->get_shape())
+                {
+                    rc = false;
+                }
+                else if (*tvl1 != *tvl2)
+                {
+                    rc = false;
+                }
+            }
+            for (size_t i = 0; i < o1.size(); i++)
+            {
+                auto tvl1 = o1[i].get_tensor_view()->get_tensor_view_layout();
+                auto tvl2 = o2[i].get_tensor_view()->get_tensor_view_layout();
+                if (tvl1->get_shape() != tvl2->get_shape())
+                {
+                    rc = false;
+                }
+                else if (*tvl1 != *tvl2)
+                {
+                    rc = false;
+                }
+            }
+        }
+        else
+        {
+            rc = false;
+        }
+    }
+    else
+    {
+        rc = false;
+    }
+    return rc;
 }

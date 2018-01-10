@@ -155,10 +155,12 @@ namespace ngraph
         virtual std::shared_ptr<Node>
             copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const = 0;
 
-        virtual std::shared_ptr<Function> get_function() const;
+        virtual std::vector<std::shared_ptr<Function>> get_functions() const;
 
         // True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
+
+        virtual bool is_functionally_identical(const Node&) const;
 
     protected:
         void add_output(const element::Type& element_type, const Shape& shape);
