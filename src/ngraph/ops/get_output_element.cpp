@@ -30,3 +30,8 @@ op::GetOutputElement::GetOutputElement(const std::shared_ptr<Node>& arg, size_t 
 
     set_value_type_checked(arg->get_output_element_type(n), arg->get_output_shape(n));
 }
+
+bool op::GetOutputElement::is_functionally_identical(const Node& other) const
+{
+    return false;
+}

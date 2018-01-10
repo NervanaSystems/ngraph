@@ -64,6 +64,8 @@ namespace ngraph
 
             /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }
+            bool is_functionally_identical(const Node&) const override;
+
         protected:
             std::shared_ptr<XLANode> m_arg;
             size_t m_n;

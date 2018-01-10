@@ -53,3 +53,8 @@ const Nodes& op::XLAGetTupleElement::get_tuple_elements() const
 {
     return get_tuple_value()->get_tuple_elements();
 }
+
+bool op::XLAGetTupleElement::is_functionally_identical(const Node& other) const
+{
+    return false;
+}
