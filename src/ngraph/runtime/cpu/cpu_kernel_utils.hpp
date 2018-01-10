@@ -24,24 +24,27 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace kernels
+            namespace kernel
             {
-                std::vector<std::string> emit_multi_indices(CoordinateTransform trans,
-                                                            std::vector<std::string> index_vars);
-                std::string emit_linear_index(CoordinateTransform trans,
-                                              std::vector<std::string> index_vars);
-                std::string
-                    start_index_loop(std::string index_var, size_t start, size_t end, bool omp);
-                std::string end_index_loop(std::string index_var);
-                std::string emit_nd_sizes(CoordinateTransform trans);
-                std::string emit_nd_index(CoordinateTransform trans,
-                                          std::vector<std::string> index_vars);
+                std::vector<std::string>
+                    emit_multi_indices(CoordinateTransform& trans,
+                                       const std::vector<std::string>& index_vars);
+                std::string emit_linear_index(CoordinateTransform& trans,
+                                              const std::vector<std::string>& index_vars);
+                std::string start_index_loop(const std::string& index_var,
+                                             size_t start,
+                                             size_t end,
+                                             bool omp);
+                std::string end_index_loop(const std::string& index_var);
+                std::string emit_nd_sizes(CoordinateTransform& trans);
+                std::string emit_nd_index(CoordinateTransform& trans,
+                                          const std::vector<std::string>& index_vars);
                 void emit_pointwise_copy(codegen::CodeWriter& writer,
-                                         std::string element_type,
-                                         std::string source_buffer,
-                                         std::string dest_buffer,
-                                         CoordinateTransform source_trans,
-                                         CoordinateTransform dest_trans);
+                                         const std::string& element_type,
+                                         const std::string& source_buffer,
+                                         const std::string& dest_buffer,
+                                         CoordinateTransform& source_trans,
+                                         CoordinateTransform& dest_trans);
             }
         }
     }

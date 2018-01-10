@@ -2368,9 +2368,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
 //         198.,  270.,  206.,  278.,  214.,  286.,  199.,  271.,  207.,
 //         279.,  215.,  287.,  200.,  272.,  208.,  280.,  216.,  288.])
 //
-// Disabled because it doesn't work on CPU yet.
-//
-TEST(DISABLED_${BACKEND_NAME}, reshape_6d)
+TEST(${BACKEND_NAME}, reshape_6d)
 {
     vector<float> a_data(2 * 2 * 3 * 3 * 2 * 4);
     for (int i = 0; i < 2 * 2 * 3 * 3 * 2 * 4; i++)
