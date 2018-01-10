@@ -165,6 +165,7 @@ namespace ngraph
     protected:
         void add_output(const element::Type& element_type, const Shape& shape);
         void assert_argument_list_equivalency(const Nodes& b);
+        bool test_identical(const Node&) const;
 
         std::string m_node_type;
         std::multiset<Node*> m_users;
