@@ -49,6 +49,7 @@ namespace ngraph
                 codegen::CodeWriter& get_code_writer() { return m_out; }
                 void EMITTER_DECL(EmitNop);
                 void EMITTER_DECL(EmitAdd);
+                void EMITTER_DECL(EmitCblasGemm);
                 void EMITTER_DECL(EmitDot);
                 void EMITTER_DECL(EmitMultiply);
                 void EMITTER_DECL(EmitGetOutputElement);
