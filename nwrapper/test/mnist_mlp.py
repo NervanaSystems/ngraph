@@ -15,7 +15,7 @@
 # ----------------------------------------------------------------------------
 import numpy as np
 
-import nwrapper.ngraph.types.TraitedType as TraitedType
+import nwrapper.ngraph.types.Type as Type
 import nwrapper.ngraph.ops.Parameter as Parameter
 import nwrapper.ngraph.types.TensorViewType as TensorViewType
 import nwrapper.ngraph.Function as Function
@@ -23,8 +23,7 @@ import nwrapper.ngraph.ops.Maximum as Maximum
 import nwrapper.ngraph.ops.Reshape as Reshape
 import nwrapper.ngraph.ops.Dot as Dot
 import nwrapper.ngraph.ops.Broadcast as Broadcast
-import nwrapper.ngraph.runtime.Utils as Utils
-import nwrapper.ngraph.ops.ParameterizedConstant as ParameterizedConstant
+import nwrapper.ngraph.ops.Constant as Constant
 import nwrapper.ngraph.ops.Exp as Exp
 import nwrapper.ngraph.ops.Log as Log
 import nwrapper.ngraph.ops.Sum as Sum
@@ -34,8 +33,8 @@ import nwrapper.ngraph.ops.Reduce as Reduce
 import nwrapper.ngraph.Util as Util
 import nwrapper.ngraph.ops.OneHot as OneHot
 
-float_element_type = TraitedType.TraitedTypeF.element_type()
-int_element_type = TraitedType.TraitedTypeI.element_type()
+float_element_type = Type.f32
+int_element_type = Type.i32
 bz = 53
 lr = 0.2
 
@@ -46,18 +45,16 @@ LabelOneHot = Convert.Convert((OneHot.OneHot(Label, [bz, 10], 1)), float_element
 
 MaxParam1 = Parameter.Parameter(float_element_type, [])
 MaxParam2 = Parameter.Parameter(float_element_type, [])
-MaxOutput = TensorViewType.TensorViewType(float_element_type, []) 
-MaxFn = Function.Function(Maximum.Maximum(MaxParam1, MaxParam2), MaxOutput, [MaxParam1, MaxParam2], 'mnist')
+MaxFn = Function.Function([Maximum.Maximum(MaxParam1, MaxParam2)], [MaxParam1, MaxParam2], 'mnist')
 
-def makeScalarConstant(scalar, shape=[], axis_set={}):
-    constant_tensor = Utils.make_tensor([])
-    constant_tensor.write(Util.numpy_to_c(np.array([scalar], dtype=np.float32)), 0, 4)
-    constant_op = ParameterizedConstant.ParameterizedConstantF([], constant_tensor)
+def makeScalarConstant(elem_type, scalar, shape=[], axis_set={}):
+    scalar_shape = []
+    constant_op = Constant.Constant(elem_type, scalar_shape, [scalar])
     constant_broadcast = Broadcast.Broadcast(constant_op, shape, axis_set)
     return constant_broadcast
 
 def makeFloat32Constant(scalar, shape=[], axis_set={}):
-    return makeScalarConstant(scalar, shape, axis_set)
+    return makeScalarConstant(float_element_type, scalar, shape, axis_set)
 
 def makeFloat32ConstantLike(scalar, op):
     v = set()

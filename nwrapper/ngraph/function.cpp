@@ -29,12 +29,17 @@ PYBIND11_MODULE(Function, mod) {
 
     py::class_<Function, std::shared_ptr<Function>> function(mod, "Function");
 
-    function.def(py::init<const std::shared_ptr<Node>&, const std::shared_ptr<const ValueType>&,
+    function.def(py::init<const Nodes&,
                           const std::vector<std::shared_ptr<op::Parameter>>&, const std::string&>());
-    function.def(py::init<const Nodes&, const std::vector<std::shared_ptr<const ValueType>>&,
-                          const std::vector<std::shared_ptr<op::Parameter>>&, const std::string&>());
-    function.def("get_result_type", &Function::get_result_type);
+    function.def("get_output_size", &Function::get_output_size);
+    function.def("get_output_op", &Function::get_output_op);
+    function.def("get_output_element_type", &Function::get_output_element_type);
+    function.def("get_output_shape", &Function::get_output_shape);
+    function.def("get_parameters", &Function::get_parameters);
     function.def("get_results", &Function::get_results);
+    function.def("get_result", &Function::get_result);
+    function.def("get_name", &Function::get_name);
+    function.def("set_name", &Function::set_name);
 }
 
 }  // ngraph

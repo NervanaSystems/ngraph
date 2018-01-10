@@ -21,32 +21,33 @@
 namespace py = pybind11;
 namespace ngraph {
 namespace element {
-namespace {
 
-template <typename T>
-static void declareTraitedType(py::module & mod, std::string const & suffix) {
-    using Class = TraitedType<T>;
-    using PyClass = py::class_<Class, std::shared_ptr<Class>, Type>;
-
-    PyClass cls(mod, ("TraitedType" + suffix).c_str());
-
-    //cls.def(py::init<>());
-    cls.def_static("element_type", &Class::element_type,
-                   py::return_value_policy::reference);
-//    cls.def_static("read", (T (*) (const std::string&)) &Class::read);
-//    cls.def_static("read", (std::vector<T> (*) (const std::vector<std::string>&)) &Class::read);
-//    cls.def("make_primary_tensor_view", &Class::make_primary_tensor_view);
-}
-
-}
-
-PYBIND11_MODULE(TraitedType, mod) {
+PYBIND11_MODULE(Type, mod) {
 
     py::class_<Type, std::shared_ptr<Type>> type(mod, "Type");
 
-    declareTraitedType<float>(mod, "F");
-    declareTraitedType<double>(mod, "D");
-    declareTraitedType<int>(mod, "I");
+    type.def(py::init<>());
+
+    type.def("c_type_string", &Type::c_type_string);
+    type.def("size", &Type::size);
+    type.def("hash", &Type::hash);
+    type.def("is_real", &Type::is_real);
+    type.def("is_signed", &Type::is_signed);
+    type.def("bitwidth", &Type::bitwidth);
+    type.def_static("get_known_types", &Type::get_known_types);
+    type.def("get_is_real", &Type::get_is_real);
+
+    mod.attr("boolean") = element::boolean;
+    mod.attr("f32")     = element::f32;
+    mod.attr("f64")     = element::f64;
+    mod.attr("i8")      = element::i8;
+    mod.attr("i16")     = element::i16;
+    mod.attr("i32")     = element::i32;
+    mod.attr("i64")     = element::i64;
+    mod.attr("u8")      = element::u8;
+    mod.attr("u16")     = element::u16;
+    mod.attr("u32")     = element::u32;
+    mod.attr("u64")     = element::u64;
 }
 
 }}  // ngraph

@@ -44,7 +44,7 @@ include_dirs = [# Path to pybind11 headers
                 get_pybind_include(),
                 get_pybind_include(user=True)
                ]
-ext_modules = [Extension('nwrapper.ngraph.types.TraitedType',
+ext_modules = [Extension('nwrapper.ngraph.types.Type',
                         ['nwrapper/ngraph/types/element_type.cpp'], include_dirs),
                Extension('nwrapper.ngraph.ops.Parameter',
                         ['nwrapper/ngraph/ops/parameter.cpp'], include_dirs),
@@ -64,8 +64,6 @@ ext_modules = [Extension('nwrapper.ngraph.types.TraitedType',
                         ['nwrapper/ngraph/runtime/external_function.cpp'], include_dirs),
                Extension('nwrapper.ngraph.runtime.CallFrame',
                         ['nwrapper/ngraph/runtime/call_frame.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.runtime.ParameterizedTensorView',
-                        ['nwrapper/ngraph/runtime/parameterized_tensor_view.cpp'], include_dirs),
                Extension('nwrapper.ngraph.Util',
                         ['nwrapper/ngraph/util.cpp'], include_dirs),
                Extension('nwrapper.ngraph.ops.Op',
@@ -104,10 +102,8 @@ ext_modules = [Extension('nwrapper.ngraph.types.TraitedType',
                         ['nwrapper/ngraph/ops/reduce.cpp'], include_dirs),
                Extension('nwrapper.ngraph.ops.OneHot',
                         ['nwrapper/ngraph/ops/one_hot.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.ParameterizedConstant',
-                        ['nwrapper/ngraph/ops/constant.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.runtime.Utils',
-                        ['nwrapper/ngraph/runtime/utils.cpp'], include_dirs)]
+               Extension('nwrapper.ngraph.ops.Constant',
+                        ['nwrapper/ngraph/ops/constant.cpp'], include_dirs)]
 
 # As of Python 3.6, CCompiler has a `has_flag` m ethod.
 # cf http://bugs.python.org/issue26689

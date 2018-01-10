@@ -16,22 +16,21 @@
 import numpy as np
 
 import nwrapper.ngraph.Util as Util
-import nwrapper.ngraph.types.TraitedType as TraitedType
+import nwrapper.ngraph.types.Type as Type
 import nwrapper.ngraph.ops.Parameter as Parameter
 import nwrapper.ngraph.types.TensorViewType as TensorViewType
 import nwrapper.ngraph.Function as Function
 import nwrapper.ngraph.runtime.Manager as Manager
-import nwrapper.ngraph.runtime.ParameterizedTensorView as ParameterizedTensorView
+import nwrapper.ngraph.runtime.TensorView as TensorView
 
-element_type = TraitedType.TraitedTypeF.element_type()
+element_type = Type.f32
 shape = [2,2]
 A = Parameter.Parameter(element_type, shape)
 B = Parameter.Parameter(element_type, shape)
 C = Parameter.Parameter(element_type, shape)
-value_type = TensorViewType.TensorViewType(element_type, shape)
 parameter_list = [A, B, C]
-function = Function.Function((A + B) * C, value_type, parameter_list, 'test')
-manager = Manager.Manager.get('NGVM');
+function = Function.Function([(A + B) * C], parameter_list, 'test')
+manager = Manager.Manager.get('INTERPRETER');
 external = manager.compile(function)
 backend = manager.allocate_backend()
 cf = backend.make_call_frame(external)
