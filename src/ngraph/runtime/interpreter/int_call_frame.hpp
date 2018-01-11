@@ -29,6 +29,7 @@
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/reverse.hpp"
@@ -71,6 +72,7 @@
 #include "ngraph/runtime/kernel/one_hot.hpp"
 #include "ngraph/runtime/kernel/power.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
+#include "ngraph/runtime/kernel/reduce_window.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
 #include "ngraph/runtime/kernel/reverse.hpp"
@@ -491,7 +493,32 @@ private:
         }
         else if (node_op == "ReduceWindow")
         {
-            // TODO: Implement this. Stubbed out for because XLA bridge folks need it.
+            ngraph::op::ReduceWindow* reduce_window =
+                dynamic_cast<ngraph::op::ReduceWindow*>(&node);
+            std::shared_ptr<ngraph::Function> reduction_function =
+                reduce_window->get_functions()[0];
+
+            std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
+                auto tx = std::make_shared<runtime::interpreter::INT_TensorView>(
+                    node.get_inputs().at(0).get_element_type(), Shape{}, "reduce_window_temp_x");
+                auto ty = std::make_shared<runtime::interpreter::INT_TensorView>(
+                    node.get_inputs().at(1).get_element_type(), Shape{}, "reduce_window_temp_y");
+                auto tr = std::make_shared<runtime::interpreter::INT_TensorView>(
+                    node.get_output_element_type(0), Shape{}, "reduce_window_temp_r");
+                *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
+                *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
+                call(reduction_function, {tx, ty}, {tr});
+                return *(reinterpret_cast<T*>(tr->get_data_ptr()));
+            };
+
+            kernel::reduce_window(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                  reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                  reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                  node.get_inputs().at(0).get_shape(),
+                                  node.get_output_shape(0),
+                                  f,
+                                  reduce_window->get_window_shape(),
+                                  reduce_window->get_window_movement_strides());
         }
         // else if (node_op == "Remainder")
         // {
