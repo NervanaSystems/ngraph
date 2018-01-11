@@ -28,20 +28,7 @@
 include(ExternalProject)
 
 if (NGRAPH_ARGON_ENABLE)
-    # Repository
-    set(ARGON_CMAKE_GIT_REPOSITORY git@github.com:NervanaSystems/argon-transformer.git)
 
-    # Set argon_transformer tag
-    # Notes:
-    # - Before we have ngraph CI job for argon transformer, ngraph master might not be
-    #   compatible with argon transformer. To ensure compatibility, checkout the ngraph commit point
-    #   where the following `ARGON_CMAKE_GIT_TAG` is set and build ngraph with argon using this
-    #   commit.
-    # - After we have ngraph CI job for argon transformer, ngraph master will be compatible with
-    #   argon transformer guaranteed by CI.
-    set(ARGON_CMAKE_GIT_TAG 213f85d536d1525c8e83edb08164ae0aece749cf) # Thu Jan 11 2018
-
-    set(ARGON_CMAKE_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/argon)
     if (NOT DEFINED PREBUILD_ARGON_PATH)
         set(PREBUILD_ARGON_PATH "")
     endif()
@@ -51,41 +38,98 @@ if (NGRAPH_ARGON_ENABLE)
     message(STATUS "LLVM_INCLUDE_DIR: ${LLVM_INCLUDE_DIR}")
     message(STATUS "PREBUILD_ARGON_PATH: ${PREBUILD_ARGON_PATH}")
 
-    # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2
-    if (${CMAKE_VERSION} VERSION_LESS 3.2)
-        ExternalProject_Add(
-            ext_argon
-            GIT_REPOSITORY ${ARGON_CMAKE_GIT_REPOSITORY}
-            GIT_TAG ${ARGON_CMAKE_GIT_TAG}
-            PREFIX ${ARGON_CMAKE_PREFIX}
-            UPDATE_COMMAND ""
-            CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                       -DNGRAPH_INSTALL_PREFIX=${ARGON_CMAKE_PREFIX}
-                       -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
-                       -DARGON_AS_EXTERNAL=True
-                       -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
-                       -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
-            BUILD_ALWAYS 1
-        )
+    # e.g. configure with cmake -DCUSTOM_ARGON_TRANFORMER_DIR=$HOME/argon-transformer
+    if (DEFINED CUSTOM_ARGON_TRANSFORMER_DIR)
+        message(STATUS "CUSTOM_ARGON_TRANSFORMER_DIR: ${CUSTOM_ARGON_TRANSFORMER_DIR}")
+        set(ARGON_CMAKE_PREFIX ${CUSTOM_ARGON_TRANSFORMER_DIR}/argon)
+        set(ARGON_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/argon)
+
+        # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2
+        if (${CMAKE_VERSION} VERSION_LESS 3.2)
+            ExternalProject_Add(
+                ext_argon
+                SOURCE_DIR ${CUSTOM_ARGON_TRANSFORMER_DIR}
+                PREFIX ${ARGON_CMAKE_PREFIX}
+                UPDATE_COMMAND ""
+                CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                           -DNGRAPH_INSTALL_PREFIX=${ARGON_INSTALL_PREFIX}
+                           -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
+                           -DARGON_AS_EXTERNAL=True
+                           -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
+                           -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
+                BUILD_ALWAYS 1
+            )
+        else()
+            ExternalProject_Add(
+                ext_argon
+                SOURCE_DIR ${CUSTOM_ARGON_TRANSFORMER_DIR}
+                PREFIX ${ARGON_CMAKE_PREFIX}
+                UPDATE_COMMAND ""
+                CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                           -DNGRAPH_INSTALL_PREFIX=${ARGON_INSTALL_PREFIX}
+                           -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
+                           -DARGON_AS_EXTERNAL=True
+                           -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
+                           -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
+                BUILD_BYPRODUCTS ${ARGON_CMAKE_PREFIX}
+                BUILD_ALWAYS 1
+            )
+        endif()
+
+        ExternalProject_Get_Property(ext_argon source_dir)
+        set(ARGON_INCLUDE_DIR ${source_dir}/argon/src PARENT_SCOPE)
+        set(ARGON_LIB_DIR ${ARGON_INSTALL_PREFIX}/lib PARENT_SCOPE)
+
     else()
-        ExternalProject_Add(
-            ext_argon
-            GIT_REPOSITORY ${ARGON_CMAKE_GIT_REPOSITORY}
-            GIT_TAG ${ARGON_CMAKE_GIT_TAG}
-            PREFIX ${ARGON_CMAKE_PREFIX}
-            UPDATE_COMMAND ""
-            CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                       -DNGRAPH_INSTALL_PREFIX=${ARGON_CMAKE_PREFIX}
-                       -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
-                       -DARGON_AS_EXTERNAL=True
-                       -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
-                       -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
-            BUILD_BYPRODUCTS ${ARGON_CMAKE_PREFIX}
-            BUILD_ALWAYS 1
-        )
+        # Set argon_transformer tag
+        # Notes:
+        # - Before we have ngraph CI job for argon transformer, ngraph master might not be
+        #   compatible with argon transformer. To ensure compatibility, checkout the ngraph commit point
+        #   where the following `ARGON_CMAKE_GIT_TAG` is set and build ngraph with argon using this
+        #   commit.
+        # - After we have ngraph CI job for argon transformer, ngraph master will be compatible with
+        #   argon transformer guaranteed by CI.
+        set(ARGON_CMAKE_GIT_REPOSITORY git@github.com:NervanaSystems/argon-transformer.git)
+        set(ARGON_CMAKE_GIT_TAG de4f04fabdfda7edb5d11ef4457a74ce49908d91) # Wed Jan 17 2018
+        set(ARGON_CMAKE_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/argon)
+
+        # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2
+        if (${CMAKE_VERSION} VERSION_LESS 3.2)
+            ExternalProject_Add(
+                ext_argon
+                GIT_REPOSITORY ${ARGON_CMAKE_GIT_REPOSITORY}
+                GIT_TAG ${ARGON_CMAKE_GIT_TAG}
+                PREFIX ${ARGON_CMAKE_PREFIX}
+                UPDATE_COMMAND ""
+                CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                           -DNGRAPH_INSTALL_PREFIX=${ARGON_CMAKE_PREFIX}
+                           -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
+                           -DARGON_AS_EXTERNAL=True
+                           -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
+                           -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
+                BUILD_ALWAYS 1
+            )
+        else()
+            ExternalProject_Add(
+                ext_argon
+                GIT_REPOSITORY ${ARGON_CMAKE_GIT_REPOSITORY}
+                GIT_TAG ${ARGON_CMAKE_GIT_TAG}
+                PREFIX ${ARGON_CMAKE_PREFIX}
+                UPDATE_COMMAND ""
+                CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                           -DNGRAPH_INSTALL_PREFIX=${ARGON_CMAKE_PREFIX}
+                           -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
+                           -DARGON_AS_EXTERNAL=True
+                           -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
+                           -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
+                BUILD_BYPRODUCTS ${ARGON_CMAKE_PREFIX}
+                BUILD_ALWAYS 1
+            )
+        endif()
+
+        ExternalProject_Get_Property(ext_argon source_dir)
+        set(ARGON_INCLUDE_DIR ${source_dir}/argon/src PARENT_SCOPE)
+        set(ARGON_LIB_DIR ${ARGON_CMAKE_PREFIX}/lib PARENT_SCOPE)
     endif()
 
-    ExternalProject_Get_Property(ext_argon source_dir)
-    set(ARGON_INCLUDE_DIR ${source_dir}/argon/src PARENT_SCOPE)
-    set(ARGON_LIB_DIR ${ARGON_CMAKE_PREFIX}/lib PARENT_SCOPE)
 endif()
