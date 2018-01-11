@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-//#include "mpi.h"
+#include "mpi.h"
 //#include "mlsl.hpp"
 
 #include <gtest/gtest.h>

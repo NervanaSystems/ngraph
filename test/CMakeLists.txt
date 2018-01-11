@@ -11,10 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+find_package(MPI)
+message (STATUS "MPI_C_FOUND: ${MPI_C_FOUND}")
+message (STATUS "MPI_CXX_FOUND: ${MPI_CXX_FOUND}")
+
 include_directories(
     SYSTEM
     ${GTEST_INCLUDE_DIR}
     ${EIGEN_INCLUDE_DIR}
+    ${MPI_CXX_INCLUDE_PATH}
     )
 
 include_directories(
