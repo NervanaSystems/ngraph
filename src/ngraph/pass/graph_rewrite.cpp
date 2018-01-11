@@ -27,7 +27,7 @@ bool ngraph::pass::GraphRewrite::run_matchers_on_nodes_list(
         for (auto matcher : matchers)
         {
             NGRAPH_DEBUG << "Running matcher " << matcher << " on " << node << " , "
-                         << node->get_name();
+                         << node->get_name() << " , is_output = " << node->is_output();
             if (!node->is_output() /*this restriction can be lifted when we find an use case for it*/
                 &&
                 matcher->match(node))

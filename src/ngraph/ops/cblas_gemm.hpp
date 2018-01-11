@@ -63,7 +63,7 @@ namespace ngraph
                 NGRAPH_DEBUG << "W shape = " << vector_to_string(shape_w)
                              << " , x shape = " << vector_to_string(shape_x);
 
-                if (shape_w.at(dot_dimension_x) != shape_x.at(dot_dimension_w))
+                if (shape_w.at(dot_dimension_w) != shape_x.at(dot_dimension_x))
                 {
                     throw "product dimensions are not equal";
                 }
