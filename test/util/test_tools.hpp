@@ -25,3 +25,10 @@ namespace ngraph
 
 bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
+
+template <typename T>
+void copy_data(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::vector<T>& data)
+{
+    size_t data_size = data.size() * sizeof(T);
+    tv->write(data.data(), 0, data_size);
+}

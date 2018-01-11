@@ -364,3 +364,8 @@ void runtime::interpreter::INT_CallFrame::perform_nan_check(
         arg_number++;
     }
 }
+
+void runtime::interpreter::INT_CallFrame::set_nan_check(bool value)
+{
+    m_nan_check = value;
+}

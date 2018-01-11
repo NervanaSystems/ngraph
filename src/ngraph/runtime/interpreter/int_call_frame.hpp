@@ -115,6 +115,8 @@ public:
               const std::vector<std::shared_ptr<runtime::TensorView>>& outputs) override;
     std::vector<runtime::PerformanceCounter> get_performance_data() const override;
 
+    void set_nan_check(bool);
+
 private:
     /// @brief Invoke the function with tuples pre-expanded to their underlying
     /// tensor views.
