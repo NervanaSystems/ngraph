@@ -24,9 +24,9 @@
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
+#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
-#include "ngraph/runtime/external_function.hpp"
 
 namespace ngraph
 {
@@ -38,21 +38,22 @@ namespace ngraph
             class GPU_Emitter;
             class GPU_CallFrame;
 
-            using OpFunction = std::function<void(GPU_Emitter*,
-                                                  const ngraph::Node*,
-                                                  const std::vector<GPU_TensorViewWrapper>& inputs,
-                                                  const std::vector<GPU_TensorViewWrapper>& outputs)>;
+            using OpFunction =
+                std::function<void(GPU_Emitter*,
+                                   const ngraph::Node*,
+                                   const std::vector<GPU_TensorViewWrapper>& inputs,
+                                   const std::vector<GPU_TensorViewWrapper>& outputs)>;
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
             class GPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
-                                          public std::enable_shared_from_this<GPU_ExternalFunction>
+                                         public std::enable_shared_from_this<GPU_ExternalFunction>
             {
                 friend class GPU_CallFrame;
 
             public:
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                      bool release_function = true);
+                                     bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
             protected:

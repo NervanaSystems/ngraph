@@ -56,14 +56,14 @@ static string eigen_matrix_format(const ngraph::Shape& shape, const ngraph::Stri
 }
 
 void runtime::gpu::GPU_Emitter::EmitNop(const ngraph::Node* n,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
 }
 
 void runtime::gpu::GPU_Emitter::EmitAdd(const ngraph::Node* n,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -78,8 +78,8 @@ void runtime::gpu::GPU_Emitter::EmitAdd(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitDot(const ngraph::Node* n,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     const Shape& arg0_shape = args[0].get_shape();
     const Shape& arg1_shape = args[1].get_shape();
@@ -156,9 +156,10 @@ void runtime::gpu::GPU_Emitter::EmitDot(const ngraph::Node* n,
     }
 }
 
-void runtime::gpu::GPU_Emitter::EmitMultiply(const ngraph::Node* n,
-                                               const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                               const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+void runtime::gpu::GPU_Emitter::EmitMultiply(
+    const ngraph::Node* n,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -188,8 +189,8 @@ void runtime::gpu::GPU_Emitter::EmitGetOutputElement(
 }
 
 void runtime::gpu::GPU_Emitter::EmitTuple(const ngraph::Node* n,
-                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -203,8 +204,8 @@ void runtime::gpu::GPU_Emitter::EmitTuple(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitAbs(const ngraph::Node* n,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -218,8 +219,8 @@ void runtime::gpu::GPU_Emitter::EmitAbs(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitConcat(const ngraph::Node* n,
-                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     auto result_shape = out[0].get_shape();
 
@@ -244,8 +245,8 @@ void runtime::gpu::GPU_Emitter::EmitConcat(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitDivide(const ngraph::Node* n,
-                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -270,8 +271,8 @@ void runtime::gpu::GPU_Emitter::EmitDivide(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitEqual(const ngraph::Node* n,
-                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -286,8 +287,8 @@ void runtime::gpu::GPU_Emitter::EmitEqual(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitGreater(const ngraph::Node* n,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << " xxx\n";
     m_out.indent++;
@@ -319,8 +320,8 @@ void runtime::gpu::GPU_Emitter::EmitGreaterEq(
 }
 
 void runtime::gpu::GPU_Emitter::EmitLess(const ngraph::Node* n,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -335,8 +336,8 @@ void runtime::gpu::GPU_Emitter::EmitLess(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitLessEq(const ngraph::Node* n,
-                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -351,8 +352,8 @@ void runtime::gpu::GPU_Emitter::EmitLessEq(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitLog(const ngraph::Node* n,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -366,8 +367,8 @@ void runtime::gpu::GPU_Emitter::EmitLog(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitMaximum(const ngraph::Node* n,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -383,8 +384,8 @@ void runtime::gpu::GPU_Emitter::EmitMaximum(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitMinimum(const ngraph::Node* n,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -399,9 +400,10 @@ void runtime::gpu::GPU_Emitter::EmitMinimum(const ngraph::Node* n,
     m_out << "}\n";
 }
 
-void runtime::gpu::GPU_Emitter::EmitNegative(const ngraph::Node* n,
-                                               const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                               const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+void runtime::gpu::GPU_Emitter::EmitNegative(
+    const ngraph::Node* n,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -414,9 +416,10 @@ void runtime::gpu::GPU_Emitter::EmitNegative(const ngraph::Node* n,
     m_out << "}\n";
 }
 
-void runtime::gpu::GPU_Emitter::EmitNotEqual(const ngraph::Node* n,
-                                               const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                               const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+void runtime::gpu::GPU_Emitter::EmitNotEqual(
+    const ngraph::Node* n,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -431,8 +434,8 @@ void runtime::gpu::GPU_Emitter::EmitNotEqual(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitSelect(const ngraph::Node* n,
-                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -444,9 +447,10 @@ void runtime::gpu::GPU_Emitter::EmitSelect(const ngraph::Node* n,
     m_out << "}\n";
 }
 
-void runtime::gpu::GPU_Emitter::EmitSubtract(const ngraph::Node* n,
-                                               const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                               const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+void runtime::gpu::GPU_Emitter::EmitSubtract(
+    const ngraph::Node* n,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -481,8 +485,8 @@ void runtime::gpu::GPU_Emitter::EmitBroadcast(
 }
 
 void runtime::gpu::GPU_Emitter::EmitConvert(const ngraph::Node* n,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     auto& result_element_type = out[0].get_element_type();
 
@@ -498,15 +502,16 @@ void runtime::gpu::GPU_Emitter::EmitConvert(const ngraph::Node* n,
     m_out << "}\n";
 }
 
-void runtime::gpu::GPU_Emitter::EmitConstant(const ngraph::Node* n,
-                                               const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                               const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+void runtime::gpu::GPU_Emitter::EmitConstant(
+    const ngraph::Node* n,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
 }
 
 void runtime::gpu::GPU_Emitter::EmitReshape(const ngraph::Node* n,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     auto reshape = static_cast<const op::Reshape*>(n);
     m_out << "{   // " << n->get_name() << "\n";
@@ -544,8 +549,8 @@ void runtime::gpu::GPU_Emitter::EmitFunctionCall(
 // to what's seen there (for now atleast)
 
 void runtime::gpu::GPU_Emitter::EmitReduce(const ngraph::Node* n,
-                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     auto reduce = static_cast<const op::Reduce*>(n);
     auto reduction_function = reduce->get_functions()[0];
@@ -718,8 +723,8 @@ void runtime::gpu::GPU_Emitter::EmitReduce(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitSign(const ngraph::Node* n,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -734,8 +739,8 @@ void runtime::gpu::GPU_Emitter::EmitSign(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitSlice(const ngraph::Node* n,
-                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     const op::Slice* slice = static_cast<const op::Slice*>(n);
 
@@ -755,8 +760,8 @@ void runtime::gpu::GPU_Emitter::EmitSlice(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitSum(const ngraph::Node* n,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     const op::Sum* sum = static_cast<const op::Sum*>(n);
     m_out << "{   // " << n->get_name() << "\n";
@@ -773,8 +778,8 @@ void runtime::gpu::GPU_Emitter::EmitSum(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitExp(const ngraph::Node* n,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -788,8 +793,8 @@ void runtime::gpu::GPU_Emitter::EmitExp(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitSin(const ngraph::Node* n,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -803,8 +808,8 @@ void runtime::gpu::GPU_Emitter::EmitSin(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitSinh(const ngraph::Node* n,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -818,8 +823,8 @@ void runtime::gpu::GPU_Emitter::EmitSinh(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitCos(const ngraph::Node* n,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -833,8 +838,8 @@ void runtime::gpu::GPU_Emitter::EmitCos(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitCosh(const ngraph::Node* n,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -848,8 +853,8 @@ void runtime::gpu::GPU_Emitter::EmitCosh(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitTan(const ngraph::Node* n,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -863,8 +868,8 @@ void runtime::gpu::GPU_Emitter::EmitTan(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitTanh(const ngraph::Node* n,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -878,8 +883,8 @@ void runtime::gpu::GPU_Emitter::EmitTanh(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitAsin(const ngraph::Node* n,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -893,8 +898,8 @@ void runtime::gpu::GPU_Emitter::EmitAsin(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitAcos(const ngraph::Node* n,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -908,8 +913,8 @@ void runtime::gpu::GPU_Emitter::EmitAcos(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitAtan(const ngraph::Node* n,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -923,8 +928,8 @@ void runtime::gpu::GPU_Emitter::EmitAtan(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitPower(const ngraph::Node* n,
-                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -961,8 +966,8 @@ void runtime::gpu::GPU_Emitter::EmitReplaceSlice(
 }
 
 void runtime::gpu::GPU_Emitter::EmitOneHot(const ngraph::Node* n,
-                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     auto oh = static_cast<const op::OneHot*>(n);
 
@@ -1055,8 +1060,8 @@ void runtime::gpu::GPU_Emitter::EmitOneHot(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitCeiling(const ngraph::Node* n,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -1072,8 +1077,8 @@ void runtime::gpu::GPU_Emitter::EmitCeiling(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitFloor(const ngraph::Node* n,
-                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -1088,8 +1093,8 @@ void runtime::gpu::GPU_Emitter::EmitFloor(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitSqrt(const ngraph::Node* n,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
@@ -1129,8 +1134,8 @@ void runtime::gpu::GPU_Emitter::EmitConvolution(
 }
 
 void runtime::gpu::GPU_Emitter::EmitNot(const ngraph::Node* n,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     m_out << "kernel::logical_not(" << args[0].get_name() << ",\n"
           << "                    " << out[0].get_name() << ",\n"
@@ -1138,8 +1143,8 @@ void runtime::gpu::GPU_Emitter::EmitNot(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitMaxPool(const ngraph::Node* n,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     auto max_pool = static_cast<const op::MaxPool*>(n);
 
@@ -1155,8 +1160,8 @@ void runtime::gpu::GPU_Emitter::EmitMaxPool(const ngraph::Node* n,
 }
 
 void runtime::gpu::GPU_Emitter::EmitReverse(const ngraph::Node* n,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                              const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     auto reverse = static_cast<const op::Reverse*>(n);
 
@@ -1219,7 +1224,7 @@ static string format_name(const string& name)
 }
 
 string runtime::gpu::GPU_Emitter::emit_vector(const runtime::gpu::GPU_TensorViewWrapper& tvi,
-                                                const string& name)
+                                              const string& name)
 {
     stringstream ss;
 
@@ -1230,7 +1235,7 @@ string runtime::gpu::GPU_Emitter::emit_vector(const runtime::gpu::GPU_TensorView
 }
 
 string runtime::gpu::GPU_Emitter::emit_array1d(const runtime::gpu::GPU_TensorViewWrapper& tvi,
-                                                 const string& name)
+                                               const string& name)
 {
     stringstream ss;
 
@@ -1241,7 +1246,7 @@ string runtime::gpu::GPU_Emitter::emit_array1d(const runtime::gpu::GPU_TensorVie
 }
 
 string runtime::gpu::GPU_Emitter::emit_matrix(const runtime::gpu::GPU_TensorViewWrapper& tvi,
-                                                const string& name)
+                                              const string& name)
 {
     stringstream ss;
 

@@ -494,8 +494,8 @@ using namespace ngraph::runtime;
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
                     stringstream ss;
-                    ss << "((" << tensor->get_element_type().c_type_string()
-                       << "*)(pool_gpu_ptr + " << tensor->get_pool_offset() << "))";
+                    ss << "((" << tensor->get_element_type().c_type_string() << "*)(pool_gpu_ptr + "
+                       << tensor->get_pool_offset() << "))";
                     m_variable_name_map[tensor->get_name()] = ss.str();
                 }
             }
@@ -775,7 +775,7 @@ shared_ptr<ngraph::runtime::CallFrame> runtime::gpu::GPU_ExternalFunction::make_
     }
 
     return make_shared<ngraph::runtime::gpu::GPU_CallFrame>(shared_from_this(),
-                                                              m_compiled_function);
+                                                            m_compiled_function);
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(

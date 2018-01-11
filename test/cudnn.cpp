@@ -273,14 +273,10 @@ TEST(cudnn, abc)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    shared_ptr<runtime::TensorView> a =
-        backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> b =
-        backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> c =
-        backend->make_primary_tensor_view(element::f32, shape);
-    shared_ptr<runtime::TensorView> result =
-        backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> c = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
 
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());

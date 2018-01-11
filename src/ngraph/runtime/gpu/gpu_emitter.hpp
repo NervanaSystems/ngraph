@@ -24,7 +24,7 @@
 
 #define EMITTER_DECL(E)                                                                            \
     E(const ngraph::Node* n,                                                                       \
-      const std::vector<ngraph::runtime::gpu::GPU_TensorViewWrapper>& args,                           \
+      const std::vector<ngraph::runtime::gpu::GPU_TensorViewWrapper>& args,                        \
       const std::vector<ngraph::runtime::gpu::GPU_TensorViewWrapper>& out)
 
 namespace ngraph
@@ -105,7 +105,8 @@ namespace ngraph
                                    std::shared_ptr<Function> function);
 
                 std::string emit_vector(const GPU_TensorViewWrapper&, const std::string& name = "");
-                std::string emit_array1d(const GPU_TensorViewWrapper&, const std::string& name = "");
+                std::string emit_array1d(const GPU_TensorViewWrapper&,
+                                         const std::string& name = "");
                 std::string emit_matrix(const GPU_TensorViewWrapper&, const std::string& name = "");
             };
         }

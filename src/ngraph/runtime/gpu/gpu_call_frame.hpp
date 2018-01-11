@@ -42,7 +42,7 @@ namespace ngraph
             {
             public:
                 GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction> external_function,
-                               EntryPoint compiled_function);
+                              EntryPoint compiled_function);
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
