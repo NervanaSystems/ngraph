@@ -36,6 +36,7 @@ set (SRC
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    runtime_manager.cpp
     serialize.cpp
     pattern.cpp
     shape.cpp
