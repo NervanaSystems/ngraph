@@ -11,15 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-find_package(MPI)
-message (STATUS "MPI_C_FOUND: ${MPI_C_FOUND}")
-message (STATUS "MPI_CXX_FOUND: ${MPI_CXX_FOUND}")
-
 include_directories(
     SYSTEM
     ${GTEST_INCLUDE_DIR}
     ${EIGEN_INCLUDE_DIR}
-    ${MPI_CXX_INCLUDE_PATH}
     )
 
 include_directories(
@@ -51,7 +46,6 @@ set (SRC
     util/test_tools.cpp
     util.cpp
     uuid.cpp
-    mlsl.cpp
 )
 
 add_subdirectory(models)
@@ -64,6 +58,13 @@ add_subdirectory(models)
 #================================================================================================
 # TODO add interpreter back to unit tests when it works
 set(BACKEND_NAMES ${BACKEND_NAMES} "INTERPRETER")
+
+find_package(MPI)
+if(MPI_C_INCLUDE_PATH)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    set(SRC ${SRC} mlsl.cpp)
+endif()
 
 if(MKLDNN_INCLUDE_DIR)
     include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})
