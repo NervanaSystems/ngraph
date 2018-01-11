@@ -91,7 +91,16 @@ Manager::FactoryMap& Manager::get_factory_map()
 std::shared_ptr<Manager> Manager::get(const std::string& name)
 {
     Manager::load_plugins(RUNTIME_PLUGIN_LIBS);
-    return get_factory_map().at(name)(name);
+
+    auto iter = get_factory_map().find(name);
+
+    if (iter == get_factory_map().end())
+    {
+        throw ngraph_error("No nGraph runtime with name '" + name + "' has been registered.");
+    }
+
+    Factory& f = iter->second;
+    return f(name);
 }
 
 Manager::Factory Manager::register_factory(const std::string& name, Factory factory)
