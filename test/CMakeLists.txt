@@ -63,7 +63,7 @@ find_package(MPI)
 if(MPI_C_INCLUDE_PATH)
     include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
     link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    set(SRC ${SRC} mlsl.cpp)
+    set(SRC ${SRC} hetr.cpp)
 endif()
 
 if(MKLDNN_INCLUDE_DIR)

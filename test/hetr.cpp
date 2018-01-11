@@ -13,11 +13,9 @@
 // ----------------------------------------------------------------------------
 
 #include "mpi.h"
-//#include "mlsl.hpp"
 
 #include <gtest/gtest.h>
 
-//using namespace MLSL;
 using namespace std;
 
 TEST(intel_mpi, loadTest)
