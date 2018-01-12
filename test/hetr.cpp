@@ -18,7 +18,9 @@
 
 using namespace std;
 
-TEST(intel_mpi, loadTest)
+TEST(hetr, load_mpi_test)
 {
+    MPI::Status stat;
+    MPI::Init();
     SUCCEED(); 
 }

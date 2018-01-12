@@ -115,6 +115,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}
 
 add_executable(unit-test ${SRC})
 
+if(MPI_C_INCLUDE_PATH)
+    target_link_libraries(unit-test ${MPI_CXX_LIBRARIES})
+endif()
+
 if(MKLDNN_INCLUDE_DIR)
     target_link_libraries(unit-test mkldnn)
     add_dependencies(unit-test ext_mkldnn)
