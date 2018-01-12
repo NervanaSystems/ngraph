@@ -36,221 +36,217 @@ TEST(cudnn, loadTest)
     EXPECT_FLOAT_EQ(cudnn_version, CUDNN_VERSION);
 }
 
-TEST(cudnn, compileTest)
-{
-    const auto source = R"###(
-#include <cassert>
-#include <fstream>
-#include <iostream>
-#include "cuda.h"
+// TEST(cudnn, compileTest)
+// {
+//     const auto source = R"###(
+// #include <cassert>
+// #include <fstream>
+// #include <iostream>
+// #include "cuda.h"
 
+// void check_cuda_errors(CUresult err) {
+//   assert(err == CUDA_SUCCESS);
+// }
 
-void check_cuda_errors(CUresult err) {
-  assert(err == CUDA_SUCCESS);
-}
+// /// main - Program entry point
+// int main(int argc, char **argv) {
+//   CUdevice    device;
+//   CUmodule    cuda_module;
+//   CUcontext   context;
+//   CUfunction  function;
+//   CUlinkState linker;
+//   int         dev_count;
 
-/// main - Program entry point
-int main(int argc, char **argv) {
-  CUdevice    device;
-  CUmodule    cuda_module;
-  CUcontext   context;
-  CUfunction  function;
-  CUlinkState linker;
-  int         dev_count;
+//   // CUDA initialization
+//   check_cuda_errors(cuInit(0));
+//   check_cuda_errors(cuDeviceGetCount(&dev_count));
+//   check_cuda_errors(cuDeviceGet(&device, 0));
 
-  // CUDA initialization
-  check_cuda_errors(cuInit(0));
-  check_cuda_errors(cuDeviceGetCount(&dev_count));
-  check_cuda_errors(cuDeviceGet(&device, 0));
+//   char name[128];
+//   check_cuda_errors(cuDeviceGetName(name, 128, device));
+//   std::cout << "Using CUDA Device [0]: " << name << "\n";
 
-  char name[128];
-  check_cuda_errors(cuDeviceGetName(name, 128, device));
-  std::cout << "Using CUDA Device [0]: " << name << "\n";
+//   int dev_major, dev_minor;
+//   check_cuda_errors(cuDeviceComputeCapability(&dev_major, &dev_minor, device));
+//   std::cout << "Device Compute Capability: "
+//             << dev_major << "." << dev_minor << "\n";
+//   if (dev_major < 2) {
+//     std::cerr << "ERROR: Device 0 is not SM 2.0 or greater\n";
+//     return 1;
+//   }
 
-  int dev_major, dev_minor;
-  check_cuda_errors(cuDeviceComputeCapability(&dev_major, &dev_minor, device));
-  std::cout << "Device Compute Capability: "
-            << dev_major << "." << dev_minor << "\n";
-  if (dev_major < 2) {
-    std::cerr << "ERROR: Device 0 is not SM 2.0 or greater\n";
-    return 1;
-  }
+// const auto str = R"(
+//   .version 5.0
+//   .target sm_60
+//   .address_size 64
 
-const auto str = R"(
-  .version 5.0
-  .target sm_60
-  .address_size 64
+//     // .globl	_Z7ew_multPfS_S_ // -- Begin function _Z7ew_multPfS_S_
+//   .global .align 1 .b8 threadIdx[1];
+//                                           // @_Z7ew_multPfS_S_
+//   .visible .entry _Z7ew_multPfS_S_(
+//     .param .u64 _Z7ew_multPfS_S__param_0,
+//     .param .u64 _Z7ew_multPfS_S__param_1,
+//     .param .u64 _Z7ew_multPfS_S__param_2
+//   )
+//   {
+//     .local .align 8 .b8 	__local_depot0[24];
+//     .reg .b64 	%SP;
+//     .reg .b64 	%SPL;
+//     .reg .f32 	%f<4>;
+//     .reg .b32 	%r<2>;
+//     .reg .b64 	%rd<17>;
 
-    // .globl	_Z7ew_multPfS_S_ // -- Begin function _Z7ew_multPfS_S_
-  .global .align 1 .b8 threadIdx[1];
-                                          // @_Z7ew_multPfS_S_
-  .visible .entry _Z7ew_multPfS_S_(
-    .param .u64 _Z7ew_multPfS_S__param_0,
-    .param .u64 _Z7ew_multPfS_S__param_1,
-    .param .u64 _Z7ew_multPfS_S__param_2
-  )
-  {
-    .local .align 8 .b8 	__local_depot0[24];
-    .reg .b64 	%SP;
-    .reg .b64 	%SPL;
-    .reg .f32 	%f<4>;
-    .reg .b32 	%r<2>;
-    .reg .b64 	%rd<17>;
+//   // BB#0:
+//     mov.u64 	%SPL, __local_depot0;
+//     cvta.local.u64 	%SP, %SPL;
+//     ld.param.u64 	%rd3, [_Z7ew_multPfS_S__param_2];
+//     ld.param.u64 	%rd2, [_Z7ew_multPfS_S__param_1];
+//     ld.param.u64 	%rd1, [_Z7ew_multPfS_S__param_0];
+//     cvta.to.global.u64 	%rd4, %rd3;
+//     cvta.global.u64 	%rd5, %rd4;
+//     cvta.to.global.u64 	%rd6, %rd2;
+//     cvta.global.u64 	%rd7, %rd6;
+//     cvta.to.global.u64 	%rd8, %rd1;
+//     cvta.global.u64 	%rd9, %rd8;
+//     st.u64 	[%SP+0], %rd9;
+//     st.u64 	[%SP+8], %rd7;
+//     st.u64 	[%SP+16], %rd5;
+//     ld.u64 	%rd10, [%SP+0];
+//     mov.u32 	%r1, %tid.x;
+//     mul.wide.u32 	%rd11, %r1, 4;
+//     add.s64 	%rd12, %rd10, %rd11;
+//     ld.f32 	%f1, [%rd12];
+//     ld.u64 	%rd13, [%SP+8];
+//     add.s64 	%rd14, %rd13, %rd11;
+//     ld.f32 	%f2, [%rd14];
+//     mul.rn.f32 	%f3, %f1, %f2;
+//     ld.u64 	%rd15, [%SP+16];
+//     add.s64 	%rd16, %rd15, %rd11;
+//     st.f32 	[%rd16], %f3;
+//     ret;
+//   }
+//                                           // -- End function
+//     // .globl	_Z6ew_addPfS_S_ // -- Begin function _Z6ew_addPfS_S_
+//   .visible .entry _Z6ew_addPfS_S_(
+//     .param .u64 _Z6ew_addPfS_S__param_0,
+//     .param .u64 _Z6ew_addPfS_S__param_1,
+//     .param .u64 _Z6ew_addPfS_S__param_2
+//   )                                       // @_Z6ew_addPfS_S_
+//   {
+//     .local .align 8 .b8 	__local_depot1[24];
+//     .reg .b64 	%SP;
+//     .reg .b64 	%SPL;
+//     .reg .f32 	%f<4>;
+//     .reg .b32 	%r<2>;
+//     .reg .b64 	%rd<17>;
 
-  // BB#0:
-    mov.u64 	%SPL, __local_depot0;
-    cvta.local.u64 	%SP, %SPL;
-    ld.param.u64 	%rd3, [_Z7ew_multPfS_S__param_2];
-    ld.param.u64 	%rd2, [_Z7ew_multPfS_S__param_1];
-    ld.param.u64 	%rd1, [_Z7ew_multPfS_S__param_0];
-    cvta.to.global.u64 	%rd4, %rd3;
-    cvta.global.u64 	%rd5, %rd4;
-    cvta.to.global.u64 	%rd6, %rd2;
-    cvta.global.u64 	%rd7, %rd6;
-    cvta.to.global.u64 	%rd8, %rd1;
-    cvta.global.u64 	%rd9, %rd8;
-    st.u64 	[%SP+0], %rd9;
-    st.u64 	[%SP+8], %rd7;
-    st.u64 	[%SP+16], %rd5;
-    ld.u64 	%rd10, [%SP+0];
-    mov.u32 	%r1, %tid.x;
-    mul.wide.u32 	%rd11, %r1, 4;
-    add.s64 	%rd12, %rd10, %rd11;
-    ld.f32 	%f1, [%rd12];
-    ld.u64 	%rd13, [%SP+8];
-    add.s64 	%rd14, %rd13, %rd11;
-    ld.f32 	%f2, [%rd14];
-    mul.rn.f32 	%f3, %f1, %f2;
-    ld.u64 	%rd15, [%SP+16];
-    add.s64 	%rd16, %rd15, %rd11;
-    st.f32 	[%rd16], %f3;
-    ret;
-  }
-                                          // -- End function
-    // .globl	_Z6ew_addPfS_S_ // -- Begin function _Z6ew_addPfS_S_
-  .visible .entry _Z6ew_addPfS_S_(
-    .param .u64 _Z6ew_addPfS_S__param_0,
-    .param .u64 _Z6ew_addPfS_S__param_1,
-    .param .u64 _Z6ew_addPfS_S__param_2
-  )                                       // @_Z6ew_addPfS_S_
-  {
-    .local .align 8 .b8 	__local_depot1[24];
-    .reg .b64 	%SP;
-    .reg .b64 	%SPL;
-    .reg .f32 	%f<4>;
-    .reg .b32 	%r<2>;
-    .reg .b64 	%rd<17>;
+//   // BB#0:
+//     mov.u64 	%SPL, __local_depot1;
+//     cvta.local.u64 	%SP, %SPL;
+//     ld.param.u64 	%rd3, [_Z6ew_addPfS_S__param_2];
+//     ld.param.u64 	%rd2, [_Z6ew_addPfS_S__param_1];
+//     ld.param.u64 	%rd1, [_Z6ew_addPfS_S__param_0];
+//     cvta.to.global.u64 	%rd4, %rd3;
+//     cvta.global.u64 	%rd5, %rd4;
+//     cvta.to.global.u64 	%rd6, %rd2;
+//     cvta.global.u64 	%rd7, %rd6;
+//     cvta.to.global.u64 	%rd8, %rd1;
+//     cvta.global.u64 	%rd9, %rd8;
+//     st.u64 	[%SP+0], %rd9;
+//     st.u64 	[%SP+8], %rd7;
+//     st.u64 	[%SP+16], %rd5;
+//     ld.u64 	%rd10, [%SP+0];
+//     mov.u32 	%r1, %tid.x;
+//     mul.wide.u32 	%rd11, %r1, 4;
+//     add.s64 	%rd12, %rd10, %rd11;
+//     ld.f32 	%f1, [%rd12];
+//     ld.u64 	%rd13, [%SP+8];
+//     add.s64 	%rd14, %rd13, %rd11;
+//     ld.f32 	%f2, [%rd14];
+//     add.rn.f32 	%f3, %f1, %f2;
+//     ld.u64 	%rd15, [%SP+16];
+//     add.s64 	%rd16, %rd15, %rd11;
+//     st.f32 	[%rd16], %f3;
+//     ret;
+//   }
+//                                           // -- End function
+// )";
 
-  // BB#0:
-    mov.u64 	%SPL, __local_depot1;
-    cvta.local.u64 	%SP, %SPL;
-    ld.param.u64 	%rd3, [_Z6ew_addPfS_S__param_2];
-    ld.param.u64 	%rd2, [_Z6ew_addPfS_S__param_1];
-    ld.param.u64 	%rd1, [_Z6ew_addPfS_S__param_0];
-    cvta.to.global.u64 	%rd4, %rd3;
-    cvta.global.u64 	%rd5, %rd4;
-    cvta.to.global.u64 	%rd6, %rd2;
-    cvta.global.u64 	%rd7, %rd6;
-    cvta.to.global.u64 	%rd8, %rd1;
-    cvta.global.u64 	%rd9, %rd8;
-    st.u64 	[%SP+0], %rd9;
-    st.u64 	[%SP+8], %rd7;
-    st.u64 	[%SP+16], %rd5;
-    ld.u64 	%rd10, [%SP+0];
-    mov.u32 	%r1, %tid.x;
-    mul.wide.u32 	%rd11, %r1, 4;
-    add.s64 	%rd12, %rd10, %rd11;
-    ld.f32 	%f1, [%rd12];
-    ld.u64 	%rd13, [%SP+8];
-    add.s64 	%rd14, %rd13, %rd11;
-    ld.f32 	%f2, [%rd14];
-    add.rn.f32 	%f3, %f1, %f2;
-    ld.u64 	%rd15, [%SP+16];
-    add.s64 	%rd16, %rd15, %rd11;
-    st.f32 	[%rd16], %f3;
-    ret;
-  }
-                                          // -- End function
-)";
+//   // Create driver context
+//   check_cuda_errors(cuCtxCreate(&context, 0, device));
 
-  // Create driver context
-  check_cuda_errors(cuCtxCreate(&context, 0, device));
+//   // Create module for object
+//   check_cuda_errors(cuModuleLoadDataEx(&cuda_module, str, 0, 0, 0));
 
-  // Create module for object
-  check_cuda_errors(cuModuleLoadDataEx(&cuda_module, str, 0, 0, 0));
+//   // Get kernel function
+//   check_cuda_errors(cuModuleGetFunction(&function, cuda_module, "_Z7ew_multPfS_S_"));
 
-  // Get kernel function
-  check_cuda_errors(cuModuleGetFunction(&function, cuda_module, "_Z7ew_multPfS_S_"));
+//   // Device data
+//   CUdeviceptr dev_bufferA;
+//   CUdeviceptr dev_bufferB;
+//   CUdeviceptr dev_bufferC;
 
-  // Device data
-  CUdeviceptr dev_bufferA;
-  CUdeviceptr dev_bufferB;
-  CUdeviceptr dev_bufferC;
+//   check_cuda_errors(cuMemAlloc(&dev_bufferA, sizeof(float)*16));
+//   check_cuda_errors(cuMemAlloc(&dev_bufferB, sizeof(float)*16));
+//   check_cuda_errors(cuMemAlloc(&dev_bufferC, sizeof(float)*16));
 
-  check_cuda_errors(cuMemAlloc(&dev_bufferA, sizeof(float)*16));
-  check_cuda_errors(cuMemAlloc(&dev_bufferB, sizeof(float)*16));
-  check_cuda_errors(cuMemAlloc(&dev_bufferC, sizeof(float)*16));
+//   float* host_A = new float[16];
+//   float* host_B = new float[16];
+//   float* host_C = new float[16];
 
-  float* host_A = new float[16];
-  float* host_B = new float[16];
-  float* host_C = new float[16];
+//   // Populate input
+//   for (unsigned i = 0; i != 16; ++i) {
+//     host_A[i] = (float)i;
+//     host_B[i] = (float)(2*i);
+//     host_C[i] = 0.0f;
+//   }
 
-  // Populate input
-  for (unsigned i = 0; i != 16; ++i) {
-    host_A[i] = (float)i;
-    host_B[i] = (float)(2*i);
-    host_C[i] = 0.0f;
-  }
+//   check_cuda_errors(cuMemcpyHtoD(dev_bufferA, &host_A[0], sizeof(float)*16));
+//   check_cuda_errors(cuMemcpyHtoD(dev_bufferB, &host_B[0], sizeof(float)*16));
 
-  check_cuda_errors(cuMemcpyHtoD(dev_bufferA, &host_A[0], sizeof(float)*16));
-  check_cuda_errors(cuMemcpyHtoD(dev_bufferB, &host_B[0], sizeof(float)*16));
+//   unsigned block_size_X = 16;
+//   unsigned block_size_Y = 1;
+//   unsigned block_size_Z = 1;
+//   unsigned grid_size_X  = 1;
+//   unsigned grid_size_Y  = 1;
+//   unsigned grid_size_Z  = 1;
 
+//   // Kernel parameters
+//   void *kernel_params[] = { &dev_bufferA, &dev_bufferB, &dev_bufferC };
 
-  unsigned block_size_X = 16;
-  unsigned block_size_Y = 1;
-  unsigned block_size_Z = 1;
-  unsigned grid_size_X  = 1;
-  unsigned grid_size_Y  = 1;
-  unsigned grid_size_Z  = 1;
+//   std::cout << "Launching kernel\n";
 
-  // Kernel parameters
-  void *kernel_params[] = { &dev_bufferA, &dev_bufferB, &dev_bufferC };
+//   // Kernel launch
+//   check_cuda_errors(cuLaunchKernel(function, grid_size_X, grid_size_Y, grid_size_Z,
+//                                  block_size_X, block_size_Y, block_size_Z,
+//                                  0, NULL, kernel_params, NULL));
 
-  std::cout << "Launching kernel\n";
+//   // Retrieve device data
+//   check_cuda_errors(cuMemcpyDtoH(&host_C[0], dev_bufferC, sizeof(float)*16));
 
-  // Kernel launch
-  check_cuda_errors(cuLaunchKernel(function, grid_size_X, grid_size_Y, grid_size_Z,
-                                 block_size_X, block_size_Y, block_size_Z,
-                                 0, NULL, kernel_params, NULL));
+//   std::cout << "Results:\n";
+//   for (unsigned i = 0; i != 16; ++i) {
+//     std::cout << host_A[i] << " + " << host_B[i] << " = " << host_C[i] << "\n";
+//   }
 
-  // Retrieve device data
-  check_cuda_errors(cuMemcpyDtoH(&host_C[0], dev_bufferC, sizeof(float)*16));
+//   // Clean up after ourselves
+//   delete [] host_A;
+//   delete [] host_B;
+//   delete [] host_C;
 
+//   // Clean-up
+//   check_cuda_errors(cuMemFree(dev_bufferA));
+//   check_cuda_errors(cuMemFree(dev_bufferB));
+//   check_cuda_errors(cuMemFree(dev_bufferC));
+//   check_cuda_errors(cuModuleUnload(cuda_module));
+//   check_cuda_errors(cuCtxDestroy(context));
 
-  std::cout << "Results:\n";
-  for (unsigned i = 0; i != 16; ++i) {
-    std::cout << host_A[i] << " + " << host_B[i] << " = " << host_C[i] << "\n";
-  }
+//   return 0;
+// })###";
+//     codegen::Compiler compiler;
 
-
-  // Clean up after ourselves
-  delete [] host_A;
-  delete [] host_B;
-  delete [] host_C;
-
-  // Clean-up
-  check_cuda_errors(cuMemFree(dev_bufferA));
-  check_cuda_errors(cuMemFree(dev_bufferB));
-  check_cuda_errors(cuMemFree(dev_bufferC));
-  check_cuda_errors(cuModuleUnload(cuda_module));
-  check_cuda_errors(cuCtxDestroy(context));
-
-  return 0;
-})###";
-    codegen::Compiler compiler;
-
-    auto module = compiler.compile(source);
-}
+//     auto module = compiler.compile(source);
+// }
 
 template <typename T>
 static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
@@ -293,4 +289,28 @@ TEST(cudnn, abc)
     cf->call({a, c, b}, {result});
     EXPECT_EQ(result->get_vector<float>(),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
+}
+
+TEST(cudnn, dot1d)
+{
+    auto shape = Shape{4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto shape_r = Shape{};
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("GPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{2, 4, 8, 16});
+    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(b, vector<float>{1, 2, 4, 8});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ((vector<float>{170}), result->get_vector<float>());
 }

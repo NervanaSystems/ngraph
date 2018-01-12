@@ -192,6 +192,7 @@ endif()
             runtime/gpu/gpu_backend.cpp
             runtime/gpu/gpu_emitter.cpp
             runtime/gpu/gpu_external_function.cpp
+            runtime/gpu/gpu_kernel_emitters.cpp
             runtime/gpu/gpu_manager.cpp
             runtime/gpu/gpu_tensor_view.cpp
             runtime/gpu/gpu_tensor_view_wrapper.cpp

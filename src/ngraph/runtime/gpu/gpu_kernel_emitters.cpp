@@ -39,58 +39,58 @@ std::string emit_bracketed_string(std::vector<T> data)
 }
 
 // Convert a buffer into a C-style multi-index array
-std::string recast_tmp_var(codegen::CodeWriter& writer,
-                           const std::string& element_type,
-                           const std::string& arg_name,
-                           const Shape& arg_shape,
-                           const std::string& tmp_name)
-{
-    std::string nd_name = writer.generate_temporary_name(tmp_name);
-    std::string bracketed_shape = emit_bracketed_string(arg_shape);
+// std::string recast_tmp_var(codegen::CodeWriter& writer,
+//                            const std::string& element_type,
+//                            const std::string& arg_name,
+//                            const Shape& arg_shape,
+//                            const std::string& tmp_name)
+// {
+//     std::string nd_name = writer.generate_temporary_name(tmp_name);
+//     std::string bracketed_shape = emit_bracketed_string(arg_shape);
 
-    writer << element_type << "(&" << nd_name << ")" << bracketed_shape << " = *reinterpret_cast<"
-           << element_type << "(*)" << bracketed_shape << ">(" << arg_name << ");\n";
-    return nd_name;
-}
+//     writer << element_type << "(&" << nd_name << ")" << bracketed_shape << " = *reinterpret_cast<"
+//            << element_type << "(*)" << bracketed_shape << ">(" << arg_name << ");\n";
+//     return nd_name;
+// }
 
 // write openings to for loops, for variables in the order of top,
 // where each loop ranges from bottom[i] to top[i]
 // creates index variables for each loop and returns them
-std::vector<std::string>
-    open_for_loops(codegen::CodeWriter& writer, const Shape& top, const Shape& bottom = {})
-{
-    Shape new_bottom;
-    if (bottom.size() == 0)
-    {
-        new_bottom = Shape(top.size(), 0);
-    }
-    else
-    {
-        new_bottom = bottom;
-    }
+// std::vector<std::string>
+//     open_for_loops(codegen::CodeWriter& writer, const Shape& top, const Shape& bottom = {})
+// {
+//     Shape new_bottom;
+//     if (bottom.size() == 0)
+//     {
+//         new_bottom = Shape(top.size(), 0);
+//     }
+//     else
+//     {
+//         new_bottom = bottom;
+//     }
 
-    std::vector<std::string> index_vars;
-    for (size_t i = 0; i < top.size(); i++)
-    {
-        std::string index_var = writer.generate_temporary_name("i");
+//     std::vector<std::string> index_vars;
+//     for (size_t i = 0; i < top.size(); i++)
+//     {
+//         std::string index_var = writer.generate_temporary_name("i");
 
-        // writer << start_index_loop(index_var, new_bottom[i], top[i], i == 0);
-        writer.indent++;
+//         // writer << start_index_loop(index_var, new_bottom[i], top[i], i == 0);
+//         writer.indent++;
 
-        index_vars.push_back(index_var);
-    }
+//         index_vars.push_back(index_var);
+//     }
 
-    return index_vars;
-}
-//close the for loops created by open_for_loops
-void close_for_loops(codegen::CodeWriter& writer, const std::vector<std::string>& index_vars)
-{
-    for (size_t i = index_vars.size(); i-- > 0;)
-    {
-        writer.indent--;
-        // writer << end_index_loop(index_vars[i]);
-    }
-}
+//     return index_vars;
+// }
+// //close the for loops created by open_for_loops
+// void close_for_loops(codegen::CodeWriter& writer, const std::vector<std::string>& index_vars)
+// {
+//     for (size_t i = index_vars.size(); i-- > 0;)
+//     {
+//         writer.indent--;
+//         // writer << end_index_loop(index_vars[i]);
+//     }
+// }
 
 void ngraph::runtime::gpu::kernel::emit_broadcast(codegen::CodeWriter& writer,
                                                   const std::string& element_type,
@@ -100,27 +100,27 @@ void ngraph::runtime::gpu::kernel::emit_broadcast(codegen::CodeWriter& writer,
                                                   const Shape& out_shape,
                                                   const AxisSet& broadcast_axes)
 {
-    // create input and output arrays
-    auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
-    auto dest_nd_name = recast_tmp_var(writer, element_type, out, out_shape, "dest_nd");
+    // // create input and output arrays
+    // auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
+    // auto dest_nd_name = recast_tmp_var(writer, element_type, out, out_shape, "dest_nd");
 
-    // create the for loops
-    auto index_vars = open_for_loops(writer, out_shape);
+    // // create the for loops
+    // auto index_vars = open_for_loops(writer, out_shape);
 
-    // match positions in output to positions in the input
-    std::vector<std::string> source_indexes;
-    for (size_t i = 0; i < out_shape.size(); ++i)
-    {
-        if (broadcast_axes.count(i) == 0)
-        {
-            source_indexes.push_back(index_vars[i]);
-        }
-    }
-    // write the operation
-    writer << dest_nd_name << emit_bracketed_string(index_vars) << " = " << source_nd_name
-           << emit_bracketed_string(source_indexes) << ";\n";
+    // // match positions in output to positions in the input
+    // std::vector<std::string> source_indexes;
+    // for (size_t i = 0; i < out_shape.size(); ++i)
+    // {
+    //     if (broadcast_axes.count(i) == 0)
+    //     {
+    //         source_indexes.push_back(index_vars[i]);
+    //     }
+    // }
+    // // write the operation
+    // writer << dest_nd_name << emit_bracketed_string(index_vars) << " = " << source_nd_name
+    //        << emit_bracketed_string(source_indexes) << ";\n";
 
-    close_for_loops(writer, index_vars);
+    // close_for_loops(writer, index_vars);
 }
 
 //
@@ -134,24 +134,24 @@ void ngraph::runtime::gpu::kernel::emit_concat(codegen::CodeWriter& writer,
                                                const Shape& out_shape,
                                                size_t concatenation_axis)
 {
-    size_t concatenation_pos = 0;
+    // size_t concatenation_pos = 0;
 
-    for (size_t i = 0; i < args.size(); i++)
-    {
-        Coordinate out_start_coord = Coordinate(out_shape.size(), 0);
-        out_start_coord[concatenation_axis] = concatenation_pos;
+    // for (size_t i = 0; i < args.size(); i++)
+    // {
+    //     Coordinate out_start_coord = Coordinate(out_shape.size(), 0);
+    //     out_start_coord[concatenation_axis] = concatenation_pos;
 
-        Coordinate out_end_coord = out_shape;
-        out_end_coord[concatenation_axis] = concatenation_pos + in_shapes[i][concatenation_axis];
+    //     Coordinate out_end_coord = out_shape;
+    //     out_end_coord[concatenation_axis] = concatenation_pos + in_shapes[i][concatenation_axis];
 
-        CoordinateTransform input_transform(in_shapes[i]);
-        CoordinateTransform output_chunk_transform(out_shape, out_start_coord, out_end_coord);
+    //     CoordinateTransform input_transform(in_shapes[i]);
+    //     CoordinateTransform output_chunk_transform(out_shape, out_start_coord, out_end_coord);
 
-        emit_pointwise_copy(
-            writer, element_type, args[i], out, input_transform, output_chunk_transform);
+    //     emit_pointwise_copy(
+    //         writer, element_type, args[i], out, input_transform, output_chunk_transform);
 
-        concatenation_pos += in_shapes[i][concatenation_axis];
-    }
+    //     concatenation_pos += in_shapes[i][concatenation_axis];
+    // }
 }
 
 void ngraph::runtime::gpu::kernel::emit_replace_slice(

@@ -56,9 +56,6 @@ namespace ngraph
                 void tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
                                  const std::vector<std::shared_ptr<TensorView>>& outputs) override;
 
-                std::vector<ngraph::runtime::PerformanceCounter>
-                    get_performance_data() const override;
-
             protected:
                 std::shared_ptr<GPU_ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
