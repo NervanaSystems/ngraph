@@ -21,6 +21,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
@@ -43,6 +44,7 @@
 #include "ngraph/runtime/kernel/add.hpp"
 #include "ngraph/runtime/kernel/asin.hpp"
 #include "ngraph/runtime/kernel/atan.hpp"
+#include "ngraph/runtime/kernel/avg_pool.hpp"
 #include "ngraph/runtime/kernel/broadcast.hpp"
 #include "ngraph/runtime/kernel/ceiling.hpp"
 #include "ngraph/runtime/kernel/concat.hpp"
@@ -243,6 +245,17 @@ private:
             kernel::atan<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
+        }
+        else if (node_op == "AvgPool")
+        {
+            ngraph::op::AvgPool* avg_pool = dynamic_cast<ngraph::op::AvgPool*>(&node);
+
+            kernel::avg_pool<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                args[0]->get_shape(),
+                                out[0]->get_shape(),
+                                avg_pool->get_window_shape(),
+                                avg_pool->get_window_movement_strides());
         }
         else if (node_op == "Broadcast")
         {
