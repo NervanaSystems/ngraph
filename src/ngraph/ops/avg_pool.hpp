@@ -33,7 +33,7 @@ namespace ngraph
         /// Given an input image batch tensor \f$T_\textit{in}\f$, the output tensor is defined by the equation
         ///
         /// \f[
-        ///      T_\textit{out}[a,c,i_1,\dots,i_n] = \left(\sum_{j_1 = i_1, \dots, j_n = i_n}^{j_1 = i_1 + w_1 - 1, \dots, j_n = i_n + w_n - 1} (T_\textit{in}[a,c,j_1,\dots,j_n]\right) / (w_1 \cdot w_2 \cdot \dots \cdot w_n))
+        ///      T_\textit{out}[a,c,i_1,\dots,i_n] = \frac{\sum_{j_1 = i_1, \dots, j_n = i_n}^{j_1 = i_1 + w_1 - 1, \dots, j_n = i_n + w_n - 1} T_\textit{in}[a,c,j_1,\dots,j_n]}{\prod_{i=1}^n{w_n}}
         /// \f]
         ///
         class AvgPool : public RequiresTensorViewArgs
