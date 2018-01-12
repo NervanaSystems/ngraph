@@ -22,6 +22,7 @@ include_directories(
     )
 
 set (SRC
+    backend_debug_api.cpp
     builder.cpp
     builder_autobroadcast.cpp
     builder_xla.cpp

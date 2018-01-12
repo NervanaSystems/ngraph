@@ -117,6 +117,8 @@ public:
               const std::vector<std::shared_ptr<runtime::TensorView>>& outputs) override;
     std::vector<runtime::PerformanceCounter> get_performance_data() const override;
 
+    void set_nan_check(bool);
+
 private:
     /// @brief Invoke the function with tuples pre-expanded to their underlying
     /// tensor views.
@@ -132,9 +134,13 @@ private:
         const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>& output_alias_map,
         const std::vector<std::shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs);
 
+    static void perform_nan_check(const std::vector<std::shared_ptr<INT_TensorView>>&,
+                                  const Node* op = nullptr);
+
     std::shared_ptr<ExternalFunction> m_external_function;
     std::shared_ptr<Function> m_function;
     bool m_emit_timing;
+    bool m_nan_check;
     std::unordered_map<const Node*, stopwatch> m_timer_map;
 
     void generate_calls(const element::Type& base_type,
