@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
+// Copyright 2018 Nervana Systems Inc.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,23 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
 
-#include <list>
-#include <memory>
+using namespace std;
 
-namespace ngraph
+TEST(runtime_manager, invalidName)
 {
-    class Node;
-    class Function;
-}
-
-bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
-std::shared_ptr<ngraph::Function> make_test_graph();
-
-template <typename T>
-void copy_data(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::vector<T>& data)
-{
-    size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
+    ASSERT_THROW(ngraph::runtime::Manager::get("COMPLETELY-BOGUS-MANAGER-NAME"),
+                 ngraph::ngraph_error);
 }

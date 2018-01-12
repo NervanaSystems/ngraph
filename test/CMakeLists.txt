@@ -22,6 +22,7 @@ include_directories(
     )
 
 set (SRC
+    backend_debug_api.cpp
     builder.cpp
     builder_autobroadcast.cpp
     builder_xla.cpp
@@ -36,6 +37,7 @@ set (SRC
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    runtime_manager.cpp
     serialize.cpp
     pattern.cpp
     shape.cpp

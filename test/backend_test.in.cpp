@@ -25,16 +25,10 @@
 #include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"
 #include "util/ndarray.hpp"
+#include "util/test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-template <typename T>
-static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
-{
-    size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
-}
 
 TEST(${BACKEND_NAME}, aliased_output)
 {
@@ -4901,4 +4895,270 @@ TEST(${BACKEND_NAME}, abc_tbb)
     {
         unsetenv("NGRAPH_CPU_USE_TBB");
     }
+}
+
+//
+// The unit tests for ReduceWindow follow exactly what we test for MaxPool---but they use ReduceWindow to do it.
+//
+TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_1image)
+{
+    auto shape_ra = Shape{};
+    auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
+    auto shape_rb = Shape{};
+    auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::Parameters{RA, RB});
+
+    auto shape_a = Shape{1, 1, 14};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_r = Shape{1, 1, 12};
+    auto window_shape = Shape{1, 1, 3};
+    auto window_movement_strides = Strides{1, 1, 1};
+    auto f = make_shared<Function>(
+        make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
+        op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 3>{{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}}}.get_vector());
+    auto b = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(
+        b,
+        vector<float>{
+            -1}); // Really should use -inf but since we know the values in the test vector this should work
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}}).get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_2image)
+{
+    auto shape_ra = Shape{};
+    auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
+    auto shape_rb = Shape{};
+    auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::Parameters{RA, RB});
+
+    auto shape_a = Shape{2, 1, 14};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_r = Shape{2, 1, 12};
+    auto window_shape = Shape{1, 1, 3};
+    auto window_movement_strides = Strides{1, 1, 1};
+    auto f = make_shared<Function>(
+        make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
+        op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}},
+                                       {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2}}})
+                  .get_vector());
+    auto b = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(
+        b,
+        vector<float>{
+            -1}); // Really should use -inf but since we know the values in the test vector this should work
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>(
+                   {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}, {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_2channel_2image)
+{
+    auto shape_ra = Shape{};
+    auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
+    auto shape_rb = Shape{};
+    auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::Parameters{RA, RB});
+
+    auto shape_a = Shape{2, 2, 14};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_r = Shape{2, 2, 12};
+    auto window_shape = Shape{1, 1, 3};
+    auto window_movement_strides = Strides{1, 1, 1};
+    auto f = make_shared<Function>(
+        make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
+        op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0},
+                                        {0, 0, 0, 2, 0, 0, 2, 3, 0, 1, 2, 0, 1, 0}},
+
+                                       {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2},
+                                        {2, 1, 0, 0, 1, 0, 2, 0, 0, 0, 1, 1, 2, 0}}})
+                  .get_vector());
+    auto b = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(
+        b,
+        vector<float>{
+            -1}); // Really should use -inf but since we know the values in the test vector this should work
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>(
+                   {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}, {0, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 1}},
+
+                    {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}, {2, 1, 1, 1, 2, 2, 2, 0, 1, 1, 2, 2}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_2channel_2image)
+{
+    auto shape_ra = Shape{};
+    auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
+    auto shape_rb = Shape{};
+    auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::Parameters{RA, RB});
+
+    auto shape_a = Shape{2, 2, 5, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_r = Shape{2, 2, 4, 3};
+    auto window_shape = Shape{1, 1, 2, 3};
+    auto window_movement_strides = Strides{1, 1, 1, 1};
+    auto f = make_shared<Function>(
+        make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
+        op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1}, // img 0 chan 0
+                                         {0, 3, 2, 0, 0},
+                                         {2, 0, 0, 0, 1},
+                                         {2, 0, 1, 1, 2},
+                                         {0, 2, 1, 0, 0}},
+
+                                        {{0, 0, 0, 2, 0}, // img 0 chan 1
+                                         {0, 2, 3, 0, 1},
+                                         {2, 0, 1, 0, 2},
+                                         {3, 1, 0, 0, 0},
+                                         {2, 0, 0, 0, 0}}},
+
+                                       {{{0, 2, 1, 1, 0}, // img 1 chan 0
+                                         {0, 0, 2, 0, 1},
+                                         {0, 0, 1, 2, 3},
+                                         {2, 0, 0, 3, 0},
+                                         {0, 0, 0, 0, 0}},
+
+                                        {{2, 1, 0, 0, 1}, // img 1 chan 1
+                                         {0, 2, 0, 0, 0},
+                                         {1, 1, 2, 0, 2},
+                                         {1, 1, 1, 0, 1},
+                                         {1, 0, 0, 0, 2}}}})
+                  .get_vector());
+    auto b = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(
+        b,
+        vector<float>{
+            -1}); // Really should use -inf but since we know the values in the test vector this should work
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{3, 3, 2}, // img 0 chan 0
+                                          {3, 3, 2},
+                                          {2, 1, 2},
+                                          {2, 2, 2}},
+
+                                         {{3, 3, 3}, // img 0 chan 1
+                                          {3, 3, 3},
+                                          {3, 1, 2},
+                                          {3, 1, 0}}},
+
+                                        {{{2, 2, 2}, // img 1 chan 0
+                                          {2, 2, 3},
+                                          {2, 3, 3},
+                                          {2, 3, 3}},
+
+                                         {{2, 2, 1}, // img 1 chan 1
+                                          {2, 2, 2},
+                                          {2, 2, 2},
+                                          {1, 1, 2}}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_strided)
+{
+    auto shape_ra = Shape{};
+    auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
+    auto shape_rb = Shape{};
+    auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::Parameters{RA, RB});
+
+    auto shape_a = Shape{1, 1, 8, 8};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_r = Shape{1, 1, 3, 3};
+    auto window_shape = Shape{1, 1, 2, 3};
+    auto window_movement_strides = Strides{1, 1, 3, 2};
+    auto f = make_shared<Function>(
+        make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
+        op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1, 2, 0, 0},
+                                         {0, 3, 2, 0, 0, 0, 1, 0},
+                                         {2, 0, 0, 0, 1, 0, 0, 0},
+                                         {2, 0, 1, 1, 2, 2, 3, 0},
+                                         {0, 2, 1, 0, 0, 0, 1, 0},
+                                         {2, 0, 3, 1, 0, 0, 0, 0},
+                                         {1, 2, 0, 0, 0, 1, 2, 0},
+                                         {1, 0, 2, 0, 0, 0, 1, 0}}}})
+                  .get_vector());
+    auto b = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(
+        b,
+        vector<float>{
+            -1}); // Really should use -inf but since we know the values in the test vector this should work
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
+              result->get_vector<float>());
 }
