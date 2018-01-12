@@ -106,7 +106,7 @@ namespace ngraph
             /// \return The padding-below sizes.
             const Shape& get_padding_below() const { return m_padding_below; }
             /// \return The padding-above sizes.
-            const Strides& get_padding_above() const { return m_padding_above; }
+            const Shape& get_padding_above() const { return m_padding_above; }
             /// \return The number of input channels.
             size_t get_input_channel_count() const { return m_input_channel_count; }
             /// \return The number of output channels.
