@@ -29,6 +29,10 @@
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
 
+//
+#include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/relu.hpp"
+
 using namespace ngraph;
 using namespace std;
 
@@ -269,12 +273,39 @@ public:
         this->add_matcher(m);
     }
 
+    void construct_relu()
+    {
+        auto iconst0 = construct_constant_node(0);
+        auto val = std::make_shared<pattern::op::Label>(iconst0);
+        auto zero = std::make_shared<pattern::op::Label>(iconst0, nullptr, Nodes{iconst0});
+        auto max = std::make_shared<op::Maximum>(val, zero);
+
+        ngraph::pattern::gr_callback_fn callback = [val, zero](pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In a callback for construct_relu_pattern against "
+                         << m.match_root()->get_name();
+
+            auto mzero = m.get_pattern_map()[zero];
+            if (!is_zero(mzero))
+            {
+                NGRAPH_DEBUG << "zero constant = " << mzero->get_name() << " not equal to 0";
+                return;
+            }
+
+            auto relu = std::make_shared<op::Relu>(m.get_pattern_map()[val]);
+            ngraph::replace_node(m.match_root(), relu);
+        };
+
+        auto m = make_shared<TestMatcher>(max, callback);
+        this->add_matcher(m);
+    }
+
     TestGraphRewrite()
         : GraphRewrite()
     {
         construct_multiply_by_one();
         construct_add_zero();
         construct_sum();
+        construct_relu();
     }
 };
 
@@ -382,6 +413,23 @@ TEST(pattern, graph_rewrite)
         ASSERT_TRUE(sum);
         ASSERT_EQ(sum->get_reduction_axes(), axes);
         ASSERT_EQ(sum->get_input_op(0), parm);
+    }
+
+    //Relu rewrite
+    {
+        auto iconst0 = construct_constant_node(0);
+        auto parm = make_shared<op::Parameter>(element::i32, Shape{});
+        auto max = std::make_shared<op::Maximum>(iconst0, parm);
+
+        auto innermost_abs = make_shared<op::Abs>(max);
+
+        auto nested_abs_graph = make_shared<op::Abs>(
+            make_shared<op::Abs>(make_shared<op::Abs>(make_shared<op::Abs>(innermost_abs))));
+
+        run_passes(pass_manager, nested_abs_graph, {parm});
+        auto relu = std::dynamic_pointer_cast<op::Relu>(innermost_abs->get_input_op(0));
+        ASSERT_TRUE(relu);
+        ASSERT_EQ(relu->get_input_op(0), parm);
     }
 }
 
