@@ -59,12 +59,12 @@ if (NGRAPH_ARGON_ENABLE)
             GIT_TAG ${ARGON_CMAKE_GIT_TAG}
             PREFIX ${ARGON_CMAKE_PREFIX}
             UPDATE_COMMAND ""
-            INSTALL_COMMAND ""
             CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                    -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
-                    -DARGON_AS_EXTERNAL=True
-                    -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
-                    -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
+                       -DCMAKE_INSTALL_PREFIX=${ARGON_CMAKE_PREFIX}/src/ext_argon-build/argon
+                       -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
+                       -DARGON_AS_EXTERNAL=True
+                       -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
+                       -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
             BUILD_ALWAYS 1
         )
     else()
@@ -74,12 +74,12 @@ if (NGRAPH_ARGON_ENABLE)
             GIT_TAG ${ARGON_CMAKE_GIT_TAG}
             PREFIX ${ARGON_CMAKE_PREFIX}
             UPDATE_COMMAND ""
-            INSTALL_COMMAND ""
             CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                    -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
-                    -DARGON_AS_EXTERNAL=True
-                    -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
-                    -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
+                       -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
+                       -DCMAKE_INSTALL_PREFIX=${ARGON_CMAKE_PREFIX}/src/ext_argon-build/argon
+                       -DARGON_AS_EXTERNAL=True
+                       -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
+                       -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
             BUILD_BYPRODUCTS ${ARGON_CMAKE_PREFIX}
             BUILD_ALWAYS 1
         )
