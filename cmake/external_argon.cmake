@@ -39,7 +39,7 @@ if (NGRAPH_ARGON_ENABLE)
     #   commit.
     # - After we have ngraph CI job for argon transformer, ngraph master will be compatible with
     #   argon transformer guaranteed by CI.
-    set(ARGON_CMAKE_GIT_TAG a0fe149440d1a2b10fb33ecd2e05563c7e42d8b9) # Thu Jan 11 2018
+    set(ARGON_CMAKE_GIT_TAG 8ff440d21e22adbab16e99c411726bd99efd3d61) # Thu Jan 11 2018
 
     set(ARGON_CMAKE_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/argon)
     if (NOT DEFINED PREBUILD_ARGON_PATH)
