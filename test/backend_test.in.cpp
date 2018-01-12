@@ -5163,7 +5163,6 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_stride
               result->get_vector<float>());
 }
 
-/*
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
 {
     auto shape_a = Shape{1, 1, 14};
@@ -5183,8 +5182,22 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
               test::NDArray<float, 3>{{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}}}.get_vector());
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
+    float denom = 3.0;
+
     cf->call({a}, {result});
-    EXPECT_EQ((test::NDArray<float, 3>({{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}}).get_vector()),
+    EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          4 / denom,
+                                          5 / denom,
+                                          5 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          0 / denom}}})
+                   .get_vector()),
               result->get_vector<float>());
 }
 
@@ -5209,9 +5222,33 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
                   .get_vector());
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
+    float denom = 3.0;
+
     cf->call({a}, {result});
-    EXPECT_EQ((test::NDArray<float, 3>(
-                   {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}, {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}}})
+    EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          4 / denom,
+                                          5 / denom,
+                                          5 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          0 / denom}},
+                                        {{3 / denom,
+                                          4 / denom,
+                                          2 / denom,
+                                          1 / denom,
+                                          0 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          3 / denom,
+                                          1 / denom,
+                                          1 / denom,
+                                          1 / denom,
+                                          3 / denom}}})
                    .get_vector()),
               result->get_vector<float>());
 }
@@ -5240,11 +5277,58 @@ TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
                   .get_vector());
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
-    cf->call({a}, {result});
-    EXPECT_EQ((test::NDArray<float, 3>(
-                   {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}, {0, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 1}},
+    float denom = 3.0;
 
-                    {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}, {2, 1, 1, 1, 2, 2, 2, 0, 1, 1, 2, 2}}})
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          4 / denom,
+                                          5 / denom,
+                                          5 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          0 / denom},
+                                         {0 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          5 / denom,
+                                          5 / denom,
+                                          4 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          1 / denom}},
+
+                                        {{3 / denom,
+                                          4 / denom,
+                                          2 / denom,
+                                          1 / denom,
+                                          0 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          3 / denom,
+                                          1 / denom,
+                                          1 / denom,
+                                          1 / denom,
+                                          3 / denom},
+                                         {3 / denom,
+                                          1 / denom,
+                                          1 / denom,
+                                          1 / denom,
+                                          3 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          0 / denom,
+                                          1 / denom,
+                                          2 / denom,
+                                          4 / denom,
+                                          3 / denom}}})
                    .get_vector()),
               result->get_vector<float>());
 }
@@ -5291,26 +5375,28 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
                   .get_vector());
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
+    float denom = 2 * 3;
+
     cf->call({a}, {result});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{3, 3, 2}, // img 0 chan 0
-                                          {3, 3, 2},
-                                          {2, 1, 2},
-                                          {2, 2, 2}},
+    EXPECT_EQ((test::NDArray<float, 4>({{{{6 / denom, 8 / denom, 5 / denom}, // img 0 chan 0
+                                          {7 / denom, 5 / denom, 3 / denom},
+                                          {5 / denom, 2 / denom, 5 / denom},
+                                          {6 / denom, 5 / denom, 5 / denom}},
 
-                                         {{3, 3, 3}, // img 0 chan 1
-                                          {3, 3, 3},
-                                          {3, 1, 2},
-                                          {3, 1, 0}}},
+                                         {{5 / denom, 7 / denom, 6 / denom}, // img 0 chan 1
+                                          {8 / denom, 6 / denom, 7 / denom},
+                                          {7 / denom, 2 / denom, 3 / denom},
+                                          {6 / denom, 1 / denom, 0 / denom}}},
 
-                                        {{{2, 2, 2}, // img 1 chan 0
-                                          {2, 2, 3},
-                                          {2, 3, 3},
-                                          {2, 3, 3}},
+                                        {{{5 / denom, 6 / denom, 5 / denom}, // img 1 chan 0
+                                          {3 / denom, 5 / denom, 9 / denom},
+                                          {3 / denom, 6 / denom, 9 / denom},
+                                          {2 / denom, 3 / denom, 3 / denom}},
 
-                                         {{2, 2, 1}, // img 1 chan 1
-                                          {2, 2, 2},
-                                          {2, 2, 2},
-                                          {1, 1, 2}}}})
+                                         {{5 / denom, 3 / denom, 1 / denom}, // img 1 chan 1
+                                          {6 / denom, 5 / denom, 4 / denom},
+                                          {7 / denom, 5 / denom, 6 / denom},
+                                          {4 / denom, 2 / denom, 4 / denom}}}})
                    .get_vector()),
               result->get_vector<float>());
 }
@@ -5344,8 +5430,12 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
                   .get_vector());
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
+    float denom = 2 * 3;
+
     cf->call({a}, {result});
-    EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
+    EXPECT_EQ((test::NDArray<float, 4>({{{{6 / denom, 5 / denom, 4 / denom},
+                                          {6 / denom, 5 / denom, 8 / denom},
+                                          {6 / denom, 2 / denom, 4 / denom}}}})
+                   .get_vector()),
               result->get_vector<float>());
 }
-*/
