@@ -60,7 +60,7 @@ if (NGRAPH_ARGON_ENABLE)
             PREFIX ${ARGON_CMAKE_PREFIX}
             UPDATE_COMMAND ""
             CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                       -DCMAKE_INSTALL_PREFIX=${ARGON_CMAKE_PREFIX}/src/ext_argon-build/argon
+                       -DNGRAPH_INSTALL_PREFIX=${ARGON_CMAKE_PREFIX}
                        -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
                        -DARGON_AS_EXTERNAL=True
                        -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
@@ -75,8 +75,8 @@ if (NGRAPH_ARGON_ENABLE)
             PREFIX ${ARGON_CMAKE_PREFIX}
             UPDATE_COMMAND ""
             CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                       -DNGRAPH_INSTALL_PREFIX=${ARGON_CMAKE_PREFIX}
                        -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
-                       -DCMAKE_INSTALL_PREFIX=${ARGON_CMAKE_PREFIX}/src/ext_argon-build/argon
                        -DARGON_AS_EXTERNAL=True
                        -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
                        -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
@@ -85,7 +85,7 @@ if (NGRAPH_ARGON_ENABLE)
         )
     endif()
 
-    ExternalProject_Get_Property(ext_argon source_dir binary_dir)
-    set(ARGON_INCLUDE_DIR "${source_dir}/argon/src" PARENT_SCOPE)
-    set(ARGON_LIB_DIR "${binary_dir}/argon" PARENT_SCOPE)
+    ExternalProject_Get_Property(ext_argon source_dir)
+    set(ARGON_INCLUDE_DIR ${source_dir}/argon/src PARENT_SCOPE)
+    set(ARGON_LIB_DIR ${ARGON_CMAKE_PREFIX}/lib PARENT_SCOPE)
 endif()
