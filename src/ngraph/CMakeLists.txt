@@ -305,8 +305,8 @@ if (NOT APPLE)
     endif()
 
     if (NGRAPH_ARGON_ENABLE)
-        install(DIRECTORY ${ARGON_LIB_DIR}
-            DESTINATION ${NGRAPH_INSTALL_LIB}/
+        install(DIRECTORY ${ARGON_LIB_DIR}/
+            DESTINATION ${NGRAPH_INSTALL_LIB}
             FILES_MATCHING PATTERN "*.so"
         )
     endif()
