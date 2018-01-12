@@ -5162,3 +5162,182 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_stride
     EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
               result->get_vector<float>());
 }
+
+template <typename T>
+void make_unary_test()
+{
+    auto shape = Shape{0};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<T>(A), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ(a->get_vector<float>(), result->get_vector<float>());
+}
+
+template <typename T>
+void make_binary_test()
+{
+    auto shape = Shape{0};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<T>(A, B), op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    auto result = backend->make_primary_tensor_view(element::f32, shape);
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ(a->get_vector<float>(), result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, zero_sized_abs)
+{
+    make_unary_test<op::Abs>();
+}
+TEST(${BACKEND_NAME}, zero_sized_ceiling)
+{
+    make_unary_test<op::Ceiling>();
+}
+TEST(${BACKEND_NAME}, zero_sized_exp)
+{
+    make_unary_test<op::Exp>();
+}
+TEST(${BACKEND_NAME}, zero_sized_floor)
+{
+    make_unary_test<op::Floor>();
+}
+TEST(${BACKEND_NAME}, zero_sized_log)
+{
+    make_unary_test<op::Log>();
+}
+TEST(${BACKEND_NAME}, zero_sized_negative)
+{
+    make_unary_test<op::Negative>();
+}
+TEST(${BACKEND_NAME}, zero_sized_not)
+{
+    auto shape = Shape{0};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::Not>(A), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::boolean, shape);
+    auto result = backend->make_primary_tensor_view(element::boolean, shape);
+
+    cf->call({a}, {result});
+    EXPECT_EQ(a->get_vector<char>(), result->get_vector<char>());
+    std::cout << "binary" << std::endl;
+}
+TEST(${BACKEND_NAME}, zero_sized_sign)
+{
+    make_unary_test<op::Sign>();
+}
+TEST(${BACKEND_NAME}, zero_sized_sqrt)
+{
+    make_unary_test<op::Sqrt>();
+}
+TEST(${BACKEND_NAME}, zero_sized_sin)
+{
+    make_unary_test<op::Sin>();
+}
+TEST(${BACKEND_NAME}, zero_sized_sinh)
+{
+    make_unary_test<op::Sinh>();
+}
+TEST(${BACKEND_NAME}, zero_sized_cos)
+{
+    make_unary_test<op::Cos>();
+}
+TEST(${BACKEND_NAME}, zero_sized_cosh)
+{
+    make_unary_test<op::Cosh>();
+}
+TEST(${BACKEND_NAME}, zero_sized_tan)
+{
+    make_unary_test<op::Tan>();
+}
+TEST(${BACKEND_NAME}, zero_sized_tanh)
+{
+    make_unary_test<op::Tanh>();
+}
+TEST(${BACKEND_NAME}, zero_sized_asin)
+{
+    make_unary_test<op::Asin>();
+}
+TEST(${BACKEND_NAME}, zero_sized_acos)
+{
+    make_unary_test<op::Acos>();
+}
+TEST(${BACKEND_NAME}, zero_sized_atan)
+{
+    make_unary_test<op::Atan>();
+}
+TEST(${BACKEND_NAME}, zero_sized_add)
+{
+    make_binary_test<op::Add>();
+}
+TEST(${BACKEND_NAME}, zero_sized_divide)
+{
+    make_binary_test<op::Divide>();
+}
+TEST(${BACKEND_NAME}, zero_sized_eq)
+{
+    make_binary_test<op::Equal>();
+}
+TEST(${BACKEND_NAME}, zero_sized_greater)
+{
+    make_binary_test<op::Greater>();
+}
+TEST(${BACKEND_NAME}, zero_sized_greatereq)
+{
+    make_binary_test<op::GreaterEq>();
+}
+TEST(${BACKEND_NAME}, zero_sized_less)
+{
+    make_binary_test<op::Less>();
+}
+TEST(${BACKEND_NAME}, zero_sized_lesseq)
+{
+    make_binary_test<op::LessEq>();
+}
+TEST(${BACKEND_NAME}, zero_sized_maximum)
+{
+    make_binary_test<op::Maximum>();
+}
+TEST(${BACKEND_NAME}, zero_sized_minimum)
+{
+    make_binary_test<op::Minimum>();
+}
+TEST(${BACKEND_NAME}, zero_sized_multiply)
+{
+    make_binary_test<op::Multiply>();
+}
+TEST(${BACKEND_NAME}, zero_sized_not_equal)
+{
+    make_binary_test<op::NotEqual>();
+}
+TEST(${BACKEND_NAME}, zero_sized_power)
+{
+    make_binary_test<op::Power>();
+}
+TEST(${BACKEND_NAME}, zero_sized_subtract)
+{
+    make_binary_test<op::Subtract>();
+}
