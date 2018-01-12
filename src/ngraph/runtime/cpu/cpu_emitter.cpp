@@ -610,10 +610,19 @@ void runtime::cpu::CPU_Emitter::EmitSelect(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "   " << emit_array1d(args[0]) << "\n"
           << "    .select(" << emit_array1d(args[1]) << ",\n"
           << "       " << emit_array1d(args[2]) << ");\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] ? "
+          << args[1].get_name() << "[i] : " << args[2].get_name() << "[i];\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -735,9 +744,18 @@ void runtime::cpu::CPU_Emitter::EmitConvert(const ngraph::Node* n,
 
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << "\n"
           << "    .template cast<" << result_element_type.c_type_string() << ">();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = (" << result_element_type.c_type_string() << ")("
+          << args[0].get_name() << "[i]);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
@@ -865,7 +883,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(const ngraph::Node* n,
     auto result_shape = out[0].get_shape();
 
     auto& reduction_axes = reduce->get_reduction_axes();
-
+#if PREFER_EIGEN == 1
     // Trivial case: no reduction axes (this includes the scalar-reductee case).
     if (reduction_axes.empty())
     {
@@ -1024,6 +1042,35 @@ void runtime::cpu::CPU_Emitter::EmitReduce(const ngraph::Node* n,
         m_out << "               {" << join(reduce->get_reduction_axes()) << "},\n";
         m_out << "               f);\n";
     }
+#else
+    m_out << "{   // " << n->get_name() << " 1\n";
+    m_out.indent++;
+
+    string type = f_result_element_type.c_type_string();
+
+    m_out << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    m_out.indent++;
+    m_out << "\n";
+    m_out << type << " result;\n";
+    m_out << "void* args[] = {&x, &y};\n";
+    m_out << "void* out[] = {&result};\n";
+    m_out << reduction_function->get_name() << "(args, out);\n";
+    m_out << "return result;\n";
+    m_out.indent--;
+    m_out << "};\n";
+
+    kernel::emit_reduce(m_out,
+                        args[0].get_element_type().c_type_string(),
+                        args[0].get_name(),
+                        args[1].get_name(),
+                        out[0].get_name(),
+                        args[0].get_shape(),
+                        out[0].get_shape(),
+                        reduce->get_reduction_axes());
+
+    m_out.indent--;
+    m_out << "}\n";
+#endif
 }
 
 void runtime::cpu::CPU_Emitter::EmitSign(const ngraph::Node* n,
@@ -1032,8 +1079,17 @@ void runtime::cpu::CPU_Emitter::EmitSign(const ngraph::Node* n,
 {
     m_out << "{   // " << n->get_name() << "\n";
     m_out.indent++;
+#if PREFER_EIGEN == 1
     m_out << emit_array1d(out[0]) << " =\n"
           << "    " << emit_array1d(args[0]) << ".sign();\n";
+#else
+    m_out << "#pragma omp parallel for\n";
+    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    m_out << "{\n";
+    m_out << "    " << out[0].get_name() << "[i] = (0 < " << args[0].get_name() << "[i]) - ("
+          << args[0].get_name() << "[i] < 0);\n";
+    m_out << "}\n";
+#endif
     m_out.indent--;
     m_out << "}\n";
 }
