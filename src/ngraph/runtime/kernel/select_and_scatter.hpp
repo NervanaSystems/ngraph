@@ -38,7 +38,7 @@ namespace ngraph
                                     const Shape& window_shape,
                                     const Strides& window_movement_strides)
             {
-                // First zero out the output.
+                // First write every element of the output with the supplied initial value.
                 CoordinateTransform output_transform(out_shape);
 
                 for (const Coordinate& out_coord : output_transform)
