@@ -82,6 +82,9 @@ namespace ngraph
 
                     bool first_val = true;
                     Coordinate winner_coord;
+
+                    // This initial value is ignored; it's just here so the compiler knows
+                    // for sure that winner_val is initialized.
                     T winner_val = 0;
 
                     for (const Coordinate& challenger_coord : window_transform)
