@@ -303,7 +303,8 @@ private:
                                    c->get_window_movement_strides(),
                                    c->get_window_dilation_strides(),
                                    c->get_padding_below(),
-                                   c->get_padding_above());
+                                   c->get_padding_above(),
+                                   c->get_image_dilation_strides());
         }
         else if (node_op == "Cos")
         {
