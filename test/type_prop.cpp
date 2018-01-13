@@ -5022,8 +5022,12 @@ TEST(type_prop, avg_pool_1d_deduce)
 
     EXPECT_EQ(avg_pool->get_channel_count(), 3);
 
-    EXPECT_EQ(avg_pool->get_input_image_shape(), Shape{100});
+    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), Shape{100});
+    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), Shape{100});
     EXPECT_EQ(avg_pool->get_output_image_shape(), Shape{91});
+
+    EXPECT_EQ(avg_pool->get_padding_below(), Shape{0});
+    EXPECT_EQ(avg_pool->get_padding_above(), Shape{0});
 
     EXPECT_EQ(avg_pool->get_window_shape(), Shape{10});
 
@@ -5046,8 +5050,12 @@ TEST(type_prop, avg_pool_1d_deduce_strided)
 
     EXPECT_EQ(avg_pool->get_channel_count(), 3);
 
-    EXPECT_EQ(avg_pool->get_input_image_shape(), Shape{100});
+    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), Shape{100});
+    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), Shape{100});
     EXPECT_EQ(avg_pool->get_output_image_shape(), Shape{46});
+
+    EXPECT_EQ(avg_pool->get_padding_below(), Shape{0});
+    EXPECT_EQ(avg_pool->get_padding_above(), Shape{0});
 
     EXPECT_EQ(avg_pool->get_window_shape(), Shape{10});
 
@@ -5070,8 +5078,12 @@ TEST(type_prop, avg_pool_1d_deduce_strided_small_uneven)
 
     EXPECT_EQ(avg_pool->get_channel_count(), 3);
 
-    EXPECT_EQ(avg_pool->get_input_image_shape(), Shape{5});
+    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), Shape{5});
+    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), Shape{5});
     EXPECT_EQ(avg_pool->get_output_image_shape(), Shape{2});
+
+    EXPECT_EQ(avg_pool->get_padding_below(), Shape{0});
+    EXPECT_EQ(avg_pool->get_padding_above(), Shape{0});
 
     EXPECT_EQ(avg_pool->get_window_shape(), Shape{2});
 
@@ -5094,8 +5106,12 @@ TEST(type_prop, avg_pool_1d_deduce_strided_small_even)
 
     EXPECT_EQ(avg_pool->get_channel_count(), 3);
 
-    EXPECT_EQ(avg_pool->get_input_image_shape(), Shape{6});
+    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), Shape{6});
+    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), Shape{6});
     EXPECT_EQ(avg_pool->get_output_image_shape(), Shape{3});
+
+    EXPECT_EQ(avg_pool->get_padding_below(), Shape{0});
+    EXPECT_EQ(avg_pool->get_padding_above(), Shape{0});
 
     EXPECT_EQ(avg_pool->get_window_shape(), Shape{2});
 
@@ -5117,8 +5133,12 @@ TEST(type_prop, avg_pool_2d_deduce)
 
     EXPECT_EQ(avg_pool->get_channel_count(), 3);
 
-    EXPECT_EQ(avg_pool->get_input_image_shape(), (Shape{100, 150}));
+    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), (Shape{100, 150}));
+    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), (Shape{100, 150}));
     EXPECT_EQ(avg_pool->get_output_image_shape(), (Shape{91, 131}));
+
+    EXPECT_EQ(avg_pool->get_padding_below(), (Shape{0, 0}));
+    EXPECT_EQ(avg_pool->get_padding_above(), (Shape{0, 0}));
 
     EXPECT_EQ(avg_pool->get_window_shape(), (Shape{10, 20}));
 
@@ -5141,8 +5161,12 @@ TEST(type_prop, avg_pool_2d_deduce_strided)
 
     EXPECT_EQ(avg_pool->get_channel_count(), 3);
 
-    EXPECT_EQ(avg_pool->get_input_image_shape(), (Shape{100, 150}));
+    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), (Shape{100, 150}));
+    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), (Shape{100, 150}));
     EXPECT_EQ(avg_pool->get_output_image_shape(), (Shape{46, 44}));
+
+    EXPECT_EQ(avg_pool->get_padding_below(), (Shape{0, 0}));
+    EXPECT_EQ(avg_pool->get_padding_above(), (Shape{0, 0}));
 
     EXPECT_EQ(avg_pool->get_window_shape(), (Shape{10, 20}));
 
@@ -5165,8 +5189,43 @@ TEST(type_prop, avg_pool_3d_deduce_strided_small)
 
     EXPECT_EQ(avg_pool->get_channel_count(), 3);
 
-    EXPECT_EQ(avg_pool->get_input_image_shape(), (Shape{7, 8, 10}));
+    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), (Shape{7, 8, 10}));
+    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), (Shape{7, 8, 10}));
     EXPECT_EQ(avg_pool->get_output_image_shape(), (Shape{3, 2, 3}));
+
+    EXPECT_EQ(avg_pool->get_padding_below(), (Shape{0, 0, 0}));
+    EXPECT_EQ(avg_pool->get_padding_above(), (Shape{0, 0, 0}));
+
+    EXPECT_EQ(avg_pool->get_window_shape(), (Shape{2, 3, 2}));
+
+    EXPECT_EQ(avg_pool->get_batch_size(), 64);
+    EXPECT_EQ(avg_pool->get_image_dimension_count(), 3);
+}
+
+TEST(type_prop, avg_pool_3d_deduce_strided_padded_small)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 7, 8, 10});
+    auto window_shape = Shape{2, 3, 2};
+    auto move_strides = Strides{2, 3, 4};
+    auto padding_below = Shape{5, 6, 4};
+    auto padding_above = Shape{6, 4, 5};
+    auto avg_pool =
+        make_shared<op::AvgPool>(param, window_shape, move_strides, padding_below, padding_above);
+
+    EXPECT_EQ(avg_pool->get_element_type(), element::f32);
+    EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 9, 6, 5}));
+
+    EXPECT_EQ(avg_pool->get_window_movement_strides(), (Strides{2, 3, 4}));
+
+    EXPECT_EQ(avg_pool->get_channel_count(), 3);
+
+    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), (Shape{7, 8, 10}));
+    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), (Shape{18, 18, 19}));
+    EXPECT_EQ(avg_pool->get_output_image_shape(), (Shape{9, 6, 5}));
+
+    EXPECT_EQ(avg_pool->get_padding_below(), (Shape{5, 6, 4}));
+    EXPECT_EQ(avg_pool->get_padding_above(), (Shape{6, 4, 5}));
 
     EXPECT_EQ(avg_pool->get_window_shape(), (Shape{2, 3, 2}));
 
@@ -5367,6 +5426,62 @@ TEST(type_prop, avg_pool_invalid_movement_stride_rank)
     }
 }
 
+TEST(type_prop, avg_pool_invalid_padding_below_rank)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto window_shape = Shape{3, 3};
+    auto move_strides = Strides{2, 3};
+    auto padding_below = Shape{1, 2, 3};
+    auto padding_above = Shape{1, 2};
+    try
+    {
+        auto avg_pool = make_shared<op::AvgPool>(
+            param, window_shape, move_strides, padding_below, padding_above);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with wrong below-padding rank not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Average-pool below-padding rank does not "
+                              "match number of image dimensions."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, avg_pool_invalid_padding_above_rank)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto window_shape = Shape{3, 3};
+    auto move_strides = Strides{2, 3};
+    auto padding_below = Shape{1, 2};
+    auto padding_above = Shape{1, 2, 3};
+    try
+    {
+        auto avg_pool = make_shared<op::AvgPool>(
+            param, window_shape, move_strides, padding_below, padding_above);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with wrong above-padding rank not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Average-pool above-padding rank does not "
+                              "match number of image dimensions."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, avg_pool_invalid_input_image_size_0)
 {
     // Deduce type
@@ -5381,7 +5496,8 @@ TEST(type_prop, avg_pool_invalid_input_image_size_0)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool input image dimension is zero."));
+        EXPECT_EQ(error.what(),
+                  std::string("Average-pool input image dimension is zero even after padding."));
     }
     catch (...)
     {
@@ -5425,7 +5541,9 @@ TEST(type_prop, avg_pool_invalid_dilated_too_large)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool window shape is larger than the image."));
+        EXPECT_EQ(
+            error.what(),
+            std::string("Average-pool window shape is larger than the image even after padding."));
     }
     catch (...)
     {
