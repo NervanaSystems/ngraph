@@ -882,8 +882,8 @@ void runtime::cpu::CPU_Emitter::EmitReduce(const ngraph::Node* n,
     auto& f_result_element_type = out[0].get_element_type();
     auto result_shape = out[0].get_shape();
 
-    auto& reduction_axes = reduce->get_reduction_axes();
 #if PREFER_EIGEN == 1
+    auto& reduction_axes = reduce->get_reduction_axes();
     // Trivial case: no reduction axes (this includes the scalar-reductee case).
     if (reduction_axes.empty())
     {
