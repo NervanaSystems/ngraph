@@ -46,6 +46,8 @@ using namespace ngraph;
 
 #define PREFER_EIGEN 0
 
+static bool s_use_ref_kernels = (std::getenv("NGRAPH_CPU_USE_REF_KERNELS") != nullptr);
+
 static string eigen_vector_format(const runtime::cpu::TensorViewWrapper& tvi)
 {
     return "fmt::V{" + to_string(tvi.get_size()) + "}";
@@ -58,41 +60,44 @@ static string eigen_matrix_format(const ngraph::Shape& shape, const ngraph::Stri
     return ss.str();
 }
 
-void runtime::cpu::CPU_Emitter::EmitNop(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitNop(codegen::CodeWriter& writer,
+                                        const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
 }
 
-void runtime::cpu::CPU_Emitter::EmitAdd(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitAdd(codegen::CodeWriter& writer,
+                                        const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     // TODO: Audit all uses of Add and fix this to use
     // the right alignment instead of Eigen::Unaligned
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << "Eigen::Map<Eigen::Array<" << out[0].get_element_type().c_type_string() << ", "
-          << out[0].get_size() << ", 1>, Eigen::Unaligned> out(" << out[0].get_name() << ");\n";
-    m_out << "Eigen::Map<Eigen::Array<" << args[0].get_element_type().c_type_string() << ", "
-          << args[0].get_size() << ", 1>, Eigen::Unaligned> arg0(" << args[0].get_name() << ");\n";
-    m_out << "Eigen::Map<Eigen::Array<" << args[1].get_element_type().c_type_string() << ", "
-          << args[1].get_size() << ", 1>, Eigen::Unaligned> arg1(" << args[1].get_name() << ");\n";
-    m_out << "out = arg0 + arg1;\n";
+    writer << "Eigen::Map<Eigen::Array<" << out[0].get_element_type().c_type_string() << ", "
+           << out[0].get_size() << ", 1>, Eigen::Unaligned> out(" << out[0].get_name() << ");\n";
+    writer << "Eigen::Map<Eigen::Array<" << args[0].get_element_type().c_type_string() << ", "
+           << args[0].get_size() << ", 1>, Eigen::Unaligned> arg0(" << args[0].get_name() << ");\n";
+    writer << "Eigen::Map<Eigen::Array<" << args[1].get_element_type().c_type_string() << ", "
+           << args[1].get_size() << ", 1>, Eigen::Unaligned> arg1(" << args[1].get_name() << ");\n";
+    writer << "out = arg0 + arg1;\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] + "
-          << args[1].get_name() << "[i];\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] + "
+           << args[1].get_name() << "[i];\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitDot(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
+                                        const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
@@ -103,30 +108,30 @@ void runtime::cpu::CPU_Emitter::EmitDot(const ngraph::Node* n,
         auto& first = (arg0_shape.empty() ? args[0] : args[1]);
         auto& second = (arg0_shape.empty() ? args[1] : args[0]);
 
-        m_out << "{   // " << n->get_name() << "\n";
-        m_out.indent++;
-        m_out << emit_vector(out[0]) << "\n    = ";
-        m_out << first.get_name() << "[0]\n    * " << emit_vector(second) << ";\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << emit_vector(out[0]) << "\n    = ";
+        writer << first.get_name() << "[0]\n    * " << emit_vector(second) << ";\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
     {
-        m_out << "{   // " << n->get_name() << "\n";
-        m_out.indent++;
-        m_out << emit_vector(out[0]) << " << \n"
-              << "    " << emit_vector(args[0]) << ".dot(" << emit_vector(args[1]) << ");\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << emit_vector(out[0]) << " << \n"
+               << "    " << emit_vector(args[0]) << ".dot(" << emit_vector(args[1]) << ");\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
     {
-        m_out << "{   // " << n->get_name() << "\n";
-        m_out.indent++;
-        m_out << emit_vector(out[0]) << " = \n"
-              << "    " << emit_matrix(args[0]) << " * " << emit_vector(args[1]) << ";\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << emit_vector(out[0]) << " = \n"
+               << "    " << emit_matrix(args[0]) << " * " << emit_vector(args[1]) << ";\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
     {
@@ -134,116 +139,121 @@ void runtime::cpu::CPU_Emitter::EmitDot(const ngraph::Node* n,
         // clang-format off
         if (args[0].get_element_type() == element::f32)
         {
-            m_out << "{   // " << n->get_name() << "\n";
-            m_out.indent++;
-            m_out << "cblas::cblas_sgemm("
+            writer << "{   // " << n->get_name() << "\n";
+            writer.indent++;
+            writer << "cblas::cblas_sgemm("
                << "cblas::Layout::RowMajor, "
                << "cblas::Transpose::None, "
                << "cblas::Transpose::None, "
                << arg0_shape[0] << ", " << arg1_shape[1] << ", " << arg0_shape[1] << ",\n" <<
                 "        1.0f, " << args[0].get_name() << ", " << max(1UL, arg0_shape[1]) << ", " << args[1].get_name() << ", " << max(1UL, arg1_shape[1]) << ", 0.0f,\n" <<
                 "        " << out[0].get_name() << ", " << max(1UL, arg1_shape[1]) << ");\n";
-            m_out.indent--;
-            m_out << "}\n";
+            writer.indent--;
+            writer << "}\n";
         }
         // clang-format on
         else
         {
-            m_out << "{   // " << n->get_name() << "\n";
-            m_out.indent++;
-            m_out << emit_matrix(out[0]) << " = \n"
-                  << "    " << emit_matrix(args[0]) << " * " << emit_matrix(args[1]) << ";\n";
-            m_out.indent--;
-            m_out << "}\n";
+            writer << "{   // " << n->get_name() << "\n";
+            writer.indent++;
+            writer << emit_matrix(out[0]) << " = \n"
+                   << "    " << emit_matrix(args[0]) << " * " << emit_matrix(args[1]) << ";\n";
+            writer.indent--;
+            writer << "}\n";
         }
     }
     else
     {
         const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(n);
 
-        m_out << "kernel::dot(" << args[0].get_name() << ",\n";
-        m_out << "            " << args[1].get_name() << ",\n";
-        m_out << "            " << out[0].get_name() << ",\n";
-        m_out << "            {" << join(args[0].get_shape()) << "},\n";
-        m_out << "            {" << join(args[1].get_shape()) << "},\n";
-        m_out << "            {" << join(out[0].get_shape()) << "},\n";
-        m_out << "            " << dot->get_reduction_axes_count() << ");\n";
+        writer << "kernel::dot(" << args[0].get_name() << ",\n";
+        writer << "            " << args[1].get_name() << ",\n";
+        writer << "            " << out[0].get_name() << ",\n";
+        writer << "            {" << join(args[0].get_shape()) << "},\n";
+        writer << "            {" << join(args[1].get_shape()) << "},\n";
+        writer << "            {" << join(out[0].get_shape()) << "},\n";
+        writer << "            " << dot->get_reduction_axes_count() << ");\n";
     }
 }
 
-void runtime::cpu::CPU_Emitter::EmitMultiply(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitMultiply(codegen::CodeWriter& writer,
+                                             const ngraph::Node* n,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "   " << emit_array1d(args[0]) << " *\n"
-          << "   " << emit_array1d(args[1]) << ";\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "   " << emit_array1d(args[0]) << " *\n"
+           << "   " << emit_array1d(args[1]) << ";\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] * "
-          << args[1].get_name() << "[i];\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] * "
+           << args[1].get_name() << "[i];\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitGetOutputElement(
+    codegen::CodeWriter& writer,
     const ngraph::Node* n,
     const vector<runtime::cpu::TensorViewWrapper>& args,
     const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto get_tuple_element = static_cast<const op::GetOutputElement*>(n);
 
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
-    m_out << "memcpy(" << out[0].get_name() << ", " << args[get_tuple_element->get_n()].get_name()
-          << ", " << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-    m_out.indent--;
-    m_out << "}\n";
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
+    writer << "memcpy(" << out[0].get_name() << ", " << args[get_tuple_element->get_n()].get_name()
+           << ", " << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitTuple(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitTuple(codegen::CodeWriter& writer,
+                                          const ngraph::Node* n,
                                           const vector<runtime::cpu::TensorViewWrapper>& args,
                                           const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
     for (size_t i = 0; i < args.size(); ++i)
     {
-        m_out << "memcpy(" << out.at(i).get_name() << ", " << args.at(i).get_name() << ", "
-              << out[i].get_size() * out[i].get_element_type().size() << ");\n";
+        writer << "memcpy(" << out.at(i).get_name() << ", " << args.at(i).get_name() << ", "
+               << out[i].get_size() * out[i].get_element_type().size() << ");\n";
     }
-    m_out.indent--;
-    m_out += "}\n";
+    writer.indent--;
+    writer += "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitAbs(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitAbs(codegen::CodeWriter& writer,
+                                        const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n";
-    m_out << "Eigen::abs(" << emit_array1d(args[0]) << ");\n";
+    writer << emit_array1d(out[0]) << " =\n";
+    writer << "Eigen::abs(" << emit_array1d(args[0]) << ");\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = std::abs(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = std::abs(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitConcat(codegen::CodeWriter& writer,
+                                           const ngraph::Node* n,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
@@ -252,46 +262,46 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
 #if PREFER_EIGEN == 1
     if (result_shape.size() == 1)
     {
-        m_out << "{   // " << n->get_name() << "\n";
-        m_out.indent++;
-        m_out << emit_vector(out[0], "out_vector") << ";\n";
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << emit_vector(out[0], "out_vector") << ";\n";
 
         size_t concat_pos = 0;
         for (size_t i = 0; i < args.size(); i++)
         {
-            m_out << "out_vector.segment(" << concat_pos << ", " << args[i].get_shape().at(0)
-                  << ") << " << emit_vector(args[i]) << ";\n";
+            writer << "out_vector.segment(" << concat_pos << ", " << args[i].get_shape().at(0)
+                   << ") << " << emit_vector(args[i]) << ";\n";
             concat_pos += args[i].get_shape().at(0);
         }
-        m_out.indent--;
-        m_out << "}\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else if (result_shape.size() == 2)
     {
         auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
 
-        m_out << "{   // " << n->get_name() << "\n";
-        m_out.indent++;
-        m_out << emit_matrix(out[0], "out_matrix") << ";\n";
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << emit_matrix(out[0], "out_matrix") << ";\n";
 
         size_t concat_pos[2]{0, 0};
         for (size_t i = 0; i < args.size(); i++)
         {
             auto& arg_shape = args[i].get_shape();
 
-            m_out << "out_matrix.block(" << concat_pos[0] << ", " << concat_pos[1] << ", "
-                  << arg_shape.at(0) << ", " << arg_shape.at(1) << ") << " << emit_matrix(args[i])
-                  << ";\n";
+            writer << "out_matrix.block(" << concat_pos[0] << ", " << concat_pos[1] << ", "
+                   << arg_shape.at(0) << ", " << arg_shape.at(1) << ") << " << emit_matrix(args[i])
+                   << ";\n";
 
             concat_pos[axis] += arg_shape.at(axis);
         }
 
-        m_out.indent--;
-        m_out << "}\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else
     {
-        if (m_use_ref_kernels)
+        if (s_use_ref_kernels)
         {
             auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
 
@@ -304,11 +314,11 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
                 arg_shape_strings.push_back("{" + join(arg.get_shape()) + "}");
             }
 
-            m_out << "kernel::concat<" << out[0].get_type() << ">({" << join(arg_names) << "},\n";
-            m_out << "                         " << out[0].get_name() << ",\n";
-            m_out << "                         {" << join(arg_shape_strings) << "},\n";
-            m_out << "                         {" << join(result_shape) << "},\n";
-            m_out << "                         " << axis << ");\n";
+            writer << "kernel::concat<" << out[0].get_type() << ">({" << join(arg_names) << "},\n";
+            writer << "                         " << out[0].get_name() << ",\n";
+            writer << "                         {" << join(arg_shape_strings) << "},\n";
+            writer << "                         {" << join(result_shape) << "},\n";
+            writer << "                         " << axis << ");\n";
         }
         else
         {
@@ -323,7 +333,7 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
                 arg_shapes.push_back(arg.get_shape());
             }
 
-            kernel::emit_concat(m_out,
+            kernel::emit_concat(writer,
                                 args[0].get_element_type().c_type_string(),
                                 arg_names,
                                 out[0].get_name(),
@@ -344,7 +354,7 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
         arg_shapes.push_back(arg.get_shape());
     }
 
-    kernel::emit_concat(m_out,
+    kernel::emit_concat(writer,
                         args[0].get_element_type().c_type_string(),
                         arg_names,
                         out[0].get_name(),
@@ -354,350 +364,364 @@ void runtime::cpu::CPU_Emitter::EmitConcat(const ngraph::Node* n,
 #endif
 }
 
-void runtime::cpu::CPU_Emitter::EmitDivide(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitDivide(codegen::CodeWriter& writer,
+                                           const ngraph::Node* n,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
     if (n->get_element_type().is_real() == false)
     {
         // Check for divide by zero for integer types only
         size_t element_count = args[1].get_size();
-        m_out << "for (size_t i=0; i<" << element_count << "; i++)\n";
-        m_out << "{\n";
-        m_out << "    if (" << args.at(1).get_name()
-              << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
-        m_out << "}\n";
+        writer << "for (size_t i=0; i<" << element_count << "; i++)\n";
+        writer << "{\n";
+        writer << "    if (" << args.at(1).get_name()
+               << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
+        writer << "}\n";
     }
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << " /\n"
-          << "    " << emit_array1d(args[1]) << ";\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << " /\n"
+           << "    " << emit_array1d(args[1]) << ";\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] / "
-          << args[1].get_name() << "[i];\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] / "
+           << args[1].get_name() << "[i];\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitEqual(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitEqual(codegen::CodeWriter& writer,
+                                          const ngraph::Node* n,
                                           const vector<runtime::cpu::TensorViewWrapper>& args,
                                           const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    (" << emit_array1d(args[0]) << " ==\n"
-          << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    (" << emit_array1d(args[0]) << " ==\n"
+           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
-          << "[i] == " << args[1].get_name() << "[i];\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+           << "[i] == " << args[1].get_name() << "[i];\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitGreater(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitGreater(codegen::CodeWriter& writer,
+                                            const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << " xxx\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << " xxx\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    (" << emit_array1d(args[0]) << " >\n"
-          << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    (" << emit_array1d(args[0]) << " >\n"
+           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > "
-          << args[1].get_name() << "[i];\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > "
+           << args[1].get_name() << "[i];\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitGreaterEq(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitGreaterEq(codegen::CodeWriter& writer,
+                                              const ngraph::Node* n,
                                               const vector<runtime::cpu::TensorViewWrapper>& args,
                                               const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    (" << emit_array1d(args[0]) << " >=\n"
-          << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    (" << emit_array1d(args[0]) << " >=\n"
+           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
-          << "[i] >= " << args[1].get_name() << "[i];\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+           << "[i] >= " << args[1].get_name() << "[i];\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitLess(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitLess(codegen::CodeWriter& writer,
+                                         const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    (" << emit_array1d(args[0]) << " <\n"
-          << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    (" << emit_array1d(args[0]) << " <\n"
+           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
-          << args[1].get_name() << "[i];\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
+           << args[1].get_name() << "[i];\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitLessEq(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitLessEq(codegen::CodeWriter& writer,
+                                           const ngraph::Node* n,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    (" << emit_array1d(args[0]) << " <=\n"
-          << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    (" << emit_array1d(args[0]) << " <=\n"
+           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
-          << "[i] <= " << args[1].get_name() << "[i];\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+           << "[i] <= " << args[1].get_name() << "[i];\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitLog(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitLog(codegen::CodeWriter& writer,
+                                        const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    Eigen::log(" << emit_array1d(args[0]) << ");\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    Eigen::log(" << emit_array1d(args[0]) << ");\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = log(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = log(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitMaximum(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitMaximum(codegen::CodeWriter& writer,
+                                            const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "        " << emit_array1d(args[0]) << ".max(\n"
-          << "        " << emit_array1d(args[1]) << ");\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "        " << emit_array1d(args[0]) << ".max(\n"
+           << "        " << emit_array1d(args[1]) << ");\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > "
-          << args[1].get_name() << "[i] ? " << args[0].get_name() << "[i] : " << args[1].get_name()
-          << "[i] ;\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > "
+           << args[1].get_name() << "[i] ? " << args[0].get_name() << "[i] : " << args[1].get_name()
+           << "[i] ;\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitMinimum(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitMinimum(codegen::CodeWriter& writer,
+                                            const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << ".min(\n"
-          << "    " << emit_array1d(args[1]) << ");\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << ".min(\n"
+           << "    " << emit_array1d(args[1]) << ");\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
-          << args[1].get_name() << "[i] ? " << args[0].get_name() << "[i] : " << args[1].get_name()
-          << "[i] ;\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
+           << args[1].get_name() << "[i] ? " << args[0].get_name() << "[i] : " << args[1].get_name()
+           << "[i] ;\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitNegative(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitNegative(codegen::CodeWriter& writer,
+                                             const ngraph::Node* n,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    -" << emit_array1d(args[0]) << ";\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    -" << emit_array1d(args[0]) << ";\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = -" << args[0].get_name() << "[i];\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = -" << args[0].get_name() << "[i];\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitNotEqual(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitNotEqual(codegen::CodeWriter& writer,
+                                             const ngraph::Node* n,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    (" << emit_array1d(args[0]) << " !=\n"
-          << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    (" << emit_array1d(args[0]) << " !=\n"
+           << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
-          << "[i] != " << args[1].get_name() << "[i];\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name()
+           << "[i] != " << args[1].get_name() << "[i];\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSelect(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitSelect(codegen::CodeWriter& writer,
+                                           const ngraph::Node* n,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "   " << emit_array1d(args[0]) << "\n"
-          << "    .select(" << emit_array1d(args[1]) << ",\n"
-          << "       " << emit_array1d(args[2]) << ");\n";
-    m_out.indent--;
-    m_out << "}\n";
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
+    writer << emit_array1d(out[0]) << " =\n"
+           << "   " << emit_array1d(args[0]) << "\n"
+           << "    .select(" << emit_array1d(args[1]) << ",\n"
+           << "       " << emit_array1d(args[2]) << ");\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSubtract(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitSubtract(codegen::CodeWriter& writer,
+                                             const ngraph::Node* n,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << " -\n"
-          << "    " << emit_array1d(args[1]) << ";\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << " -\n"
+           << "    " << emit_array1d(args[1]) << ";\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] - "
-          << args[1].get_name() << "[i];\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] - "
+           << args[1].get_name() << "[i];\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitBroadcast(codegen::CodeWriter& writer,
+                                              const ngraph::Node* n,
                                               const vector<runtime::cpu::TensorViewWrapper>& args,
                                               const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto broadcast = static_cast<const op::Broadcast*>(n);
 
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
 
     if (broadcast->get_broadcast_axes().empty())
     {
-        m_out << "{   // " << n->get_name() << "\n";
-        m_out.indent++;
-        m_out << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+               << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else if (arg_shape.size() == 0)
     {
-        m_out << "{   // " << n->get_name() << "\n";
-        m_out.indent++;
-        m_out << emit_array1d(out[0]) << " =\n"
-              << "    " << emit_array1d(args[0]) << "(0, 0);\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << emit_array1d(out[0]) << " =\n"
+               << "    " << emit_array1d(args[0]) << "(0, 0);\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else if (arg_shape.size() == 1 && result_shape.size() == 2)
     {
         if (broadcast->get_broadcast_axes() == AxisSet{1})
         {
-            m_out << "{   // " << n->get_name() << "\n";
-            m_out.indent++;
-            m_out << emit_matrix(out[0]) << ".colwise() =\n"
-                  << "    " << emit_vector(args[0]) << ";\n";
-            m_out.indent--;
-            m_out << "}\n";
+            writer << "{   // " << n->get_name() << "\n";
+            writer.indent++;
+            writer << emit_matrix(out[0]) << ".colwise() =\n"
+                   << "    " << emit_vector(args[0]) << ";\n";
+            writer.indent--;
+            writer << "}\n";
         }
         else if (broadcast->get_broadcast_axes() == AxisSet{0})
         {
-            m_out << "{   // " << n->get_name() << "\n";
-            m_out.indent++;
+            writer << "{   // " << n->get_name() << "\n";
+            writer.indent++;
 
-            m_out << "Eigen::Map<Eigen::Matrix<" << out[0].get_element_type().c_type_string()
-                  << ", " << join(out[0].get_shape())
-                  << ", Eigen::RowMajor>, Eigen::Aligned64, Eigen::Stride<"
-                  << join(out[0].get_strides()) << ">> out(" << out[0].get_name() << ");\n";
-            m_out << "Eigen::Map<Eigen::Matrix<" << args[0].get_element_type().c_type_string()
-                  << ", 1, " << args[0].get_size()
-                  << ", Eigen::RowMajor>, Eigen::Aligned64, Eigen::Stride<" << args[0].get_size()
-                  << ", 1>> arg0(" << args[0].get_name() << ");\n";
-            m_out << "out = arg0.replicate<" << out[0].get_shape().at(0) << ", 1>();\n";
+            writer << "Eigen::Map<Eigen::Matrix<" << out[0].get_element_type().c_type_string()
+                   << ", " << join(out[0].get_shape())
+                   << ", Eigen::RowMajor>, Eigen::Aligned64, Eigen::Stride<"
+                   << join(out[0].get_strides()) << ">> out(" << out[0].get_name() << ");\n";
+            writer << "Eigen::Map<Eigen::Matrix<" << args[0].get_element_type().c_type_string()
+                   << ", 1, " << args[0].get_size()
+                   << ", Eigen::RowMajor>, Eigen::Aligned64, Eigen::Stride<" << args[0].get_size()
+                   << ", 1>> arg0(" << args[0].get_name() << ");\n";
+            writer << "out = arg0.replicate<" << out[0].get_shape().at(0) << ", 1>();\n";
 
-            m_out.indent--;
-            m_out << "}\n";
+            writer.indent--;
+            writer << "}\n";
         }
         else
         {
@@ -708,14 +732,14 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
     }
     else
     {
-        m_out << "kernel::broadcast<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-        m_out << "                         " << out[0].get_name() << ",\n";
-        m_out << "                         {" << join(arg_shape) << "},\n";
-        m_out << "                         {" << join(result_shape) << "},\n";
-        m_out << "                         {" << join(broadcast->get_broadcast_axes()) << "});\n";
+        writer << "kernel::broadcast<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        writer << "                         " << out[0].get_name() << ",\n";
+        writer << "                         {" << join(arg_shape) << "},\n";
+        writer << "                         {" << join(result_shape) << "},\n";
+        writer << "                         {" << join(broadcast->get_broadcast_axes()) << "});\n";
     }
 #else
-    kernel::emit_broadcast(m_out,
+    kernel::emit_broadcast(writer,
                            args[0].get_element_type().c_type_string(),
                            args[0].get_name(),
                            out[0].get_name(),
@@ -723,38 +747,41 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(const ngraph::Node* n,
                            out[0].get_shape(),
                            broadcast->get_broadcast_axes());
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitConvert(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitConvert(codegen::CodeWriter& writer,
+                                            const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto& result_element_type = out[0].get_element_type();
 
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << "\n"
-          << "    .template cast<" << result_element_type.c_type_string() << ">();\n";
-    m_out.indent--;
-    m_out << "}\n";
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << "\n"
+           << "    .template cast<" << result_element_type.c_type_string() << ">();\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitConstant(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitConstant(codegen::CodeWriter& writer,
+                                             const ngraph::Node* n,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
 }
 
-void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
+                                            const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto reshape = static_cast<const op::Reshape*>(n);
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
     auto arg_shape = args[0].get_shape();
     auto arg_rank = arg_shape.size();
@@ -776,12 +803,12 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
     //  we can just copy.
     if (same_layout || result_shape_product < 2)
     {
-        m_out << "{   // " << n->get_name() << " 1\n";
-        m_out.indent++;
-        m_out << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << " 1\n";
+        writer.indent++;
+        writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+               << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+        writer.indent--;
+        writer << "}\n";
     }
     // If there *is* a layout change in the 2D case, we transpose the input.
     else if (arg_rank == 2)
@@ -790,26 +817,26 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
         // clang-format off
         if (result_element_type == ngraph::element::f32)
         {
-            m_out << "{   // " << n->get_name() << " 2\n";
-            m_out.indent++;
-            m_out << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0]) << ",\n" <<
+            writer << "{   // " << n->get_name() << " 2\n";
+            writer.indent++;
+            writer << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0]) << ",\n" <<
                 "                   " << to_string(arg_shape[1]) << ", 1.0f,\n" <<
                 "                   " << args[0].get_name() << ", "
                 << to_string(arg_shape[1]) << ",\n" <<
                 "                   " << out[0].get_name()
                 << ", " << to_string(arg_shape[0]) << ");\n";
-                m_out.indent--;
-                m_out << "}\n";
+                writer.indent--;
+                writer << "}\n";
         }
         // clang-format on
         else
         {
-            m_out << "{   // " << n->get_name() << " 3\n";
-            m_out.indent++;
-            m_out << emit_matrix(out[0]) << " =\n"
-                  << "        " << emit_matrix(args[0]) << ".transpose();\n";
-            m_out.indent--;
-            m_out << "}\n";
+            writer << "{   // " << n->get_name() << " 3\n";
+            writer.indent++;
+            writer << emit_matrix(out[0]) << " =\n"
+                   << "        " << emit_matrix(args[0]) << ".transpose();\n";
+            writer.indent--;
+            writer << "}\n";
         }
     }
     // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
@@ -819,7 +846,7 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
             "Axis permutation in reshape is not implemented yet for tensors with rank>2");
     }
 #else
-    kernel::emit_reshape(m_out,
+    kernel::emit_reshape(writer,
                          args[0].get_element_type().c_type_string(),
                          args[0].get_name(),
                          out[0].get_name(),
@@ -827,11 +854,12 @@ void runtime::cpu::CPU_Emitter::EmitReshape(const ngraph::Node* n,
                          out[0].get_shape(),
                          reshape->get_input_order());
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitFunctionCall(
+    codegen::CodeWriter& writer,
     const ngraph::Node* n,
     const vector<runtime::cpu::TensorViewWrapper>& args,
     const vector<runtime::cpu::TensorViewWrapper>& out)
@@ -839,11 +867,39 @@ void runtime::cpu::CPU_Emitter::EmitFunctionCall(
     auto function_call = static_cast<const op::FunctionCall*>(n);
     shared_ptr<Function> function = function_call->get_functions()[0];
 
-    m_out << "{   // Call " << function->get_name() << "\n";
-    m_out.indent++;
-    generate_call(args, out, function);
-    m_out.indent--;
-    m_out << "}\n";
+    writer << "{   // Call " << function->get_name() << "\n";
+    writer.indent++;
+    {
+        vector<string> input_names;
+        vector<string> output_names;
+
+        for (const runtime::cpu::TensorViewWrapper& input : args)
+        {
+            input_names.push_back(input.get_name());
+        }
+
+        for (const runtime::cpu::TensorViewWrapper& output : out)
+        {
+            output_names.push_back(output.get_name());
+        }
+
+        writer << "void* args[] =\n{";
+        writer.indent++;
+        writer << "\n" << join(input_names, ",\n");
+        writer.indent--;
+        writer << "\n};\n";
+
+        writer << "void* out[] =\n{";
+        writer.indent++;
+        writer << "\n" << join(output_names, ",\n");
+        writer.indent--;
+        writer << "\n};\n";
+
+        writer << "\n";
+        writer << function->get_name() << "(args, out);\n";
+    }
+    writer.indent--;
+    writer << "}\n";
 }
 
 // TODO: This and other ops include comments/notes that
@@ -852,7 +908,8 @@ void runtime::cpu::CPU_Emitter::EmitFunctionCall(
 // the compiled version of these ops is intended to have semantics identical
 // to what's seen there (for now atleast)
 
-void runtime::cpu::CPU_Emitter::EmitReduce(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
+                                           const ngraph::Node* n,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
@@ -869,12 +926,12 @@ void runtime::cpu::CPU_Emitter::EmitReduce(const ngraph::Node* n,
     // Trivial case: no reduction axes (this includes the scalar-reductee case).
     if (reduction_axes.empty())
     {
-        m_out << "{   // " << n->get_name() << " 1\n";
-        m_out.indent++;
-        m_out << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << " 1\n";
+        writer.indent++;
+        writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+               << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+        writer.indent--;
+        writer << "}\n";
     }
     // Behavior for zero-size axes bears some explanation here. XLA's reduce
     // operator provides an "base" element (usually, but not necessarily,
@@ -906,44 +963,44 @@ void runtime::cpu::CPU_Emitter::EmitReduce(const ngraph::Node* n,
     {
         if (reductee_shape.at(0) == 0 || (reductee_shape.size() == 2 && reductee_shape.at(1) == 0))
         {
-            m_out << "{   // " << n->get_name() << " 2\n";
-            m_out.indent++;
-            m_out << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
-                  << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-            m_out.indent--;
-            m_out << "}\n";
+            writer << "{   // " << n->get_name() << " 2\n";
+            writer.indent++;
+            writer << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
+                   << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+            writer.indent--;
+            writer << "}\n";
         }
         else
         {
-            m_out << "{   // " << n->get_name() << " 3\n";
-            m_out.indent++;
+            writer << "{   // " << n->get_name() << " 3\n";
+            writer.indent++;
             string type = f_result_element_type.c_type_string();
-            m_out << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
-            m_out.indent++;
-            m_out << "\n";
-            m_out << type << " result;\n";
-            m_out << "void* args[] = {&x, &y};\n";
-            m_out << "void* out[] = {&result};\n";
-            m_out << reduction_function->get_name() << "(args, out);\n";
-            m_out << "return result;\n";
-            m_out.indent--;
-            m_out << "};\n";
-            m_out << emit_array1d(out[0]) << " =\n"
-                  << "    " << emit_array1d(args[0]) << ".redux(f);\n";
-            m_out.indent--;
-            m_out << "}\n";
+            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer.indent++;
+            writer << "\n";
+            writer << type << " result;\n";
+            writer << "void* args[] = {&x, &y};\n";
+            writer << "void* out[] = {&result};\n";
+            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << "return result;\n";
+            writer.indent--;
+            writer << "};\n";
+            writer << emit_array1d(out[0]) << " =\n"
+                   << "    " << emit_array1d(args[0]) << ".redux(f);\n";
+            writer.indent--;
+            writer << "}\n";
         }
     }
     else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{1})
     {
         if (reductee_shape.at(1) == 0)
         {
-            m_out << "{   // " << n->get_name() << " 4\n";
-            m_out.indent++;
-            m_out << emit_array1d(out[0]) << " =\n"
-                  << "    " << emit_array1d(args[1]) << "(0, 0);\n";
-            m_out.indent--;
-            m_out << "}\n";
+            writer << "{   // " << n->get_name() << " 4\n";
+            writer.indent++;
+            writer << emit_array1d(out[0]) << " =\n"
+                   << "    " << emit_array1d(args[1]) << "(0, 0);\n";
+            writer.indent--;
+            writer << "}\n";
         }
         else
         {
@@ -951,101 +1008,103 @@ void runtime::cpu::CPU_Emitter::EmitReduce(const ngraph::Node* n,
             //     dynamic_pointer_cast<CallFrame>(external->make_call_frame());
             // ef->get_callees().emplace_back(cf);
 
-            m_out << "{   // " << n->get_name() << " 5\n";
-            m_out.indent++;
+            writer << "{   // " << n->get_name() << " 5\n";
+            writer.indent++;
             string type = f_result_element_type.c_type_string();
-            m_out << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
-            m_out.indent++;
-            m_out << "\n";
-            m_out << type << " result;\n";
-            m_out << "void* args[] = {&x, &y};\n";
-            m_out << "void* out[] = {&result};\n";
-            m_out << reduction_function->get_name() << "(args, out);\n";
-            m_out << "return result;\n";
-            m_out.indent--;
-            m_out << "};\n";
-            m_out << emit_vector(out[0]) << " =\n"
-                  << "        " << emit_matrix(args[0]) << ".rowwise().redux(f);\n";
-            m_out.indent--;
-            m_out << "}\n";
+            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer.indent++;
+            writer << "\n";
+            writer << type << " result;\n";
+            writer << "void* args[] = {&x, &y};\n";
+            writer << "void* out[] = {&result};\n";
+            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << "return result;\n";
+            writer.indent--;
+            writer << "};\n";
+            writer << emit_vector(out[0]) << " =\n"
+                   << "        " << emit_matrix(args[0]) << ".rowwise().redux(f);\n";
+            writer.indent--;
+            writer << "}\n";
         }
     }
     else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{0})
     {
         if (reductee_shape.at(0) == 0)
         {
-            m_out << "{   // " << n->get_name() << " 6\n";
-            m_out.indent++;
-            m_out << emit_array1d(out[0]) << " =\n"
-                  << "    " << emit_array1d(args[1]) << "(0, 0);\n";
-            m_out.indent--;
-            m_out << "}\n";
+            writer << "{   // " << n->get_name() << " 6\n";
+            writer.indent++;
+            writer << emit_array1d(out[0]) << " =\n"
+                   << "    " << emit_array1d(args[1]) << "(0, 0);\n";
+            writer.indent--;
+            writer << "}\n";
         }
         else
         {
-            m_out << "{   // " << n->get_name() << " 7\n";
-            m_out.indent++;
+            writer << "{   // " << n->get_name() << " 7\n";
+            writer.indent++;
             string type = f_result_element_type.c_type_string();
-            m_out << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
-            m_out.indent++;
-            m_out << "\n";
-            m_out << type << " result;\n";
-            m_out << "void* args[] = {&x, &y};\n";
-            m_out << "void* out[] = {&result};\n";
-            m_out << reduction_function->get_name() << "(args, out);\n";
-            m_out << "return result;\n";
-            m_out.indent--;
-            m_out << "};\n";
-            m_out << emit_vector(out[0]) << " =\n"
-                  << "    " << emit_matrix(args[0]) << ".colwise().redux(f);\n";
-            m_out.indent--;
-            m_out << "}\n";
+            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer.indent++;
+            writer << "\n";
+            writer << type << " result;\n";
+            writer << "void* args[] = {&x, &y};\n";
+            writer << "void* out[] = {&result};\n";
+            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << "return result;\n";
+            writer.indent--;
+            writer << "};\n";
+            writer << emit_vector(out[0]) << " =\n"
+                   << "    " << emit_matrix(args[0]) << ".colwise().redux(f);\n";
+            writer.indent--;
+            writer << "}\n";
         }
     }
     else
     {
         string type = f_result_element_type.c_type_string();
-        m_out << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
-        m_out.indent++;
-        m_out << "\n";
-        m_out << type << " result;\n";
-        m_out << "void* args[] = {&x, &y};\n";
-        m_out << "void* out[] = {&result};\n";
-        m_out << reduction_function->get_name() << "(args, out);\n";
-        m_out << "return result;\n";
-        m_out.indent--;
-        m_out << "};\n";
+        writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+        writer.indent++;
+        writer << "\n";
+        writer << type << " result;\n";
+        writer << "void* args[] = {&x, &y};\n";
+        writer << "void* out[] = {&result};\n";
+        writer << reduction_function->get_name() << "(args, out);\n";
+        writer << "return result;\n";
+        writer.indent--;
+        writer << "};\n";
 
-        m_out << "kernel::reduce<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-        m_out << "               " << args[1].get_name() << ",\n";
-        m_out << "               " << out[0].get_name() << ",\n";
-        m_out << "               {" << join(args[0].get_shape()) << "},\n";
-        m_out << "               {" << join(out[0].get_shape()) << "},\n";
-        m_out << "               {" << join(reduce->get_reduction_axes()) << "},\n";
-        m_out << "               f);\n";
+        writer << "kernel::reduce<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        writer << "               " << args[1].get_name() << ",\n";
+        writer << "               " << out[0].get_name() << ",\n";
+        writer << "               {" << join(args[0].get_shape()) << "},\n";
+        writer << "               {" << join(out[0].get_shape()) << "},\n";
+        writer << "               {" << join(reduce->get_reduction_axes()) << "},\n";
+        writer << "               f);\n";
     }
 }
 
-void runtime::cpu::CPU_Emitter::EmitSign(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitSign(codegen::CodeWriter& writer,
+                                         const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << ".sign();\n";
-    m_out.indent--;
-    m_out << "}\n";
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << ".sign();\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSlice(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitSlice(codegen::CodeWriter& writer,
+                                          const ngraph::Node* n,
                                           const vector<runtime::cpu::TensorViewWrapper>& args,
                                           const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     const op::Slice* slice = static_cast<const op::Slice*>(n);
 
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
     size_t arg_rank = args[0].get_shape().size();
 
@@ -1065,49 +1124,49 @@ void runtime::cpu::CPU_Emitter::EmitSlice(const ngraph::Node* n,
     // Scalar slice is necessarily just a copy.
     if (!strided && arg_rank == 0)
     {
-        m_out << "{   // " << n->get_name() << " 1\n";
-        m_out.indent++;
-        m_out << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << " 1\n";
+        writer.indent++;
+        writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+               << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else if (!strided && arg_rank == 1)
     {
-        m_out << "{   // " << n->get_name() << " 2\n";
-        m_out.indent++;
-        m_out << emit_vector(out[0]) << " =\n"
-              << "    " << emit_vector(args[0]) << ".segment(\n"
-              << "        " << to_string(lower_bounds[0]) << ", "
-              << to_string(upper_bounds[0] - lower_bounds[0]) << ");\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << " 2\n";
+        writer.indent++;
+        writer << emit_vector(out[0]) << " =\n"
+               << "    " << emit_vector(args[0]) << ".segment(\n"
+               << "        " << to_string(lower_bounds[0]) << ", "
+               << to_string(upper_bounds[0] - lower_bounds[0]) << ");\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else if (!strided && arg_rank == 2)
     {
-        m_out << "{   // " << n->get_name() << " 3\n";
-        m_out.indent++;
-        m_out << emit_matrix(out[0]) << " = \n"
-              << "        " << emit_matrix(args[0]) << ".block(" << to_string(lower_bounds[0])
-              << ", " << to_string(lower_bounds[1]) << ",\n"
-              << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
-              << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ");\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << " 3\n";
+        writer.indent++;
+        writer << emit_matrix(out[0]) << " = \n"
+               << "        " << emit_matrix(args[0]) << ".block(" << to_string(lower_bounds[0])
+               << ", " << to_string(lower_bounds[1]) << ",\n"
+               << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
+               << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ");\n";
+        writer.indent--;
+        writer << "}\n";
     }
     // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
     else
     {
-        m_out << "kernel::slice<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-        m_out << "                         " << out[0].get_name() << ",\n";
-        m_out << "                         {" << join(args[0].get_shape()) << "},\n";
-        m_out << "                         {" << join(slice->get_lower_bounds()) << "},\n";
-        m_out << "                         {" << join(slice->get_upper_bounds()) << "},\n";
-        m_out << "                         {" << join(slice->get_strides()) << "},\n";
-        m_out << "                         {" << join(out[0].get_shape()) << "});\n";
+        writer << "kernel::slice<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        writer << "                         " << out[0].get_name() << ",\n";
+        writer << "                         {" << join(args[0].get_shape()) << "},\n";
+        writer << "                         {" << join(slice->get_lower_bounds()) << "},\n";
+        writer << "                         {" << join(slice->get_upper_bounds()) << "},\n";
+        writer << "                         {" << join(slice->get_strides()) << "},\n";
+        writer << "                         {" << join(out[0].get_shape()) << "});\n";
     }
 #else
-    kernel::emit_slice(m_out,
+    kernel::emit_slice(writer,
                        args[0].get_element_type().c_type_string(),
                        args[0].get_name(),
                        out[0].get_name(),
@@ -1117,17 +1176,18 @@ void runtime::cpu::CPU_Emitter::EmitSlice(const ngraph::Node* n,
                        slice->get_upper_bounds(),
                        slice->get_strides());
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitSum(codegen::CodeWriter& writer,
+                                        const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     const op::Sum* sum = static_cast<const op::Sum*>(n);
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
     const Shape& arg_shape = args[0].get_shape();
     size_t arg_rank = arg_shape.size();
@@ -1136,52 +1196,52 @@ void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
     // Trivial case: no reduction axes.
     if (reduction_axes.size() == 0)
     {
-        m_out << "{   // " << n->get_name() << "\n";
-        m_out.indent++;
-        m_out << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+               << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+        writer.indent--;
+        writer << "}\n";
     }
     // Full reduction? Then sum to scalar.
     else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
              (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
     {
-        m_out << "{   // " << n->get_name() << "\n";
-        m_out.indent++;
-        m_out << emit_array1d(out[0]) << " =\n"
-              << "    " << emit_array1d(args[0]) << ".sum();\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << emit_array1d(out[0]) << " =\n"
+               << "    " << emit_array1d(args[0]) << ".sum();\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else if (arg_rank == 2 && reduction_axes == AxisSet{1})
     {
-        m_out << "{   // " << n->get_name() << "\n";
-        m_out.indent++;
-        m_out << emit_vector(out[0]) << " =\n"
-              << "    " << emit_matrix(args[0]) << ".rowwise().sum();\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << emit_vector(out[0]) << " =\n"
+               << "    " << emit_matrix(args[0]) << ".rowwise().sum();\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else if (arg_rank == 2 && reduction_axes == AxisSet{0})
     {
-        m_out << "{   // " << n->get_name() << "\n";
-        m_out.indent++;
-        m_out << emit_vector(out[0]) << " =\n"
-              << "    " << emit_matrix(args[0]) << ".colwise().sum();\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << emit_vector(out[0]) << " =\n"
+               << "    " << emit_matrix(args[0]) << ".colwise().sum();\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else
     {
-        m_out << "kernel::sum<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-        m_out << "                         " << out[0].get_name() << ",\n";
-        m_out << "                         {" << join(args[0].get_shape()) << "},\n";
-        m_out << "                         {" << join(out[0].get_shape()) << "},\n";
-        m_out << "                         {" << join(sum->get_reduction_axes()) << "});\n";
+        writer << "kernel::sum<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        writer << "                         " << out[0].get_name() << ",\n";
+        writer << "                         {" << join(args[0].get_shape()) << "},\n";
+        writer << "                         {" << join(out[0].get_shape()) << "},\n";
+        writer << "                         {" << join(sum->get_reduction_axes()) << "});\n";
     }
 #else
-    kernel::emit_sum(m_out,
+    kernel::emit_sum(writer,
                      args[0].get_element_type().c_type_string(),
                      args[0].get_name(),
                      out[0].get_name(),
@@ -1189,131 +1249,138 @@ void runtime::cpu::CPU_Emitter::EmitSum(const ngraph::Node* n,
                      out[0].get_shape(),
                      sum->get_reduction_axes());
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitExp(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitExp(codegen::CodeWriter& writer,
+                                        const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << ".exp();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << ".exp();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = exp(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = exp(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSin(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitSin(codegen::CodeWriter& writer,
+                                        const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << ".sin();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << ".sin();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = sin(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = sin(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSinh(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitSinh(codegen::CodeWriter& writer,
+                                         const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << ".sinh();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << ".sinh();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = sinh(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = sinh(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitCos(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitCos(codegen::CodeWriter& writer,
+                                        const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << ".cos();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << ".cos();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = cos(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = cos(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitCosh(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitCosh(codegen::CodeWriter& writer,
+                                         const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << ".cosh();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << ".cosh();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = cosh(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = cosh(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitTan(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitTan(codegen::CodeWriter& writer,
+                                        const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << ".tan();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << ".tan();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = tan(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = tan(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitTanh(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitTanh(codegen::CodeWriter& writer,
+                                         const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
@@ -1321,111 +1388,116 @@ void runtime::cpu::CPU_Emitter::EmitTanh(const ngraph::Node* n,
     // so we fall-back to tanh
     // TODO: Implement our own internal fast/approximate tanh if this actually gets used
     // by models
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 0
-    m_out << "#pragma omp parallel for\n";
+    writer << "#pragma omp parallel for\n";
 #endif
-    m_out << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = tanh(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
-    m_out.indent--;
-    m_out << "}\n";
+    writer << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = tanh(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitAsin(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitAsin(codegen::CodeWriter& writer,
+                                         const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << ".asin();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << ".asin();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = asin(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = asin(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitAcos(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitAcos(codegen::CodeWriter& writer,
+                                         const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << ".acos();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << ".acos();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = acos(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = acos(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitAtan(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitAtan(codegen::CodeWriter& writer,
+                                         const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << ".atan();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << ".atan();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = atan(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = atan(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitPower(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitPower(codegen::CodeWriter& writer,
+                                          const ngraph::Node* n,
                                           const vector<runtime::cpu::TensorViewWrapper>& args,
                                           const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " = \n";
-    m_out.indent++;
-    m_out << emit_array1d(args[0]) << ".pow(\n ";
-    m_out << emit_array1d(args[1]) << ");\n";
-    m_out.indent--;
+    writer << emit_array1d(out[0]) << " = \n";
+    writer.indent++;
+    writer << emit_array1d(args[0]) << ".pow(\n ";
+    writer << emit_array1d(args[1]) << ");\n";
+    writer.indent--;
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = pow(" << args[0].get_name() << "[i], "
-          << args[1].get_name() << "[i]);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = pow(" << args[0].get_name() << "[i], "
+           << args[1].get_name() << "[i]);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
+    codegen::CodeWriter& writer,
     const ngraph::Node* n,
     const vector<runtime::cpu::TensorViewWrapper>& args,
     const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     auto replace_slice = static_cast<const op::Slice*>(n);
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
     size_t arg0_rank = args[0].get_shape().size();
 
@@ -1445,56 +1517,56 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
     // Scalar slice is necessarily just a copy.
     if (!strided && arg0_rank == 0)
     {
-        m_out << "{   // " << n->get_name() << " 1\n";
-        m_out.indent++;
-        m_out << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
-              << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << " 1\n";
+        writer.indent++;
+        writer << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
+               << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else if (!strided && arg0_rank == 1)
     {
-        m_out << "{   // " << n->get_name() << " 2\n";
-        m_out.indent++;
-        m_out << emit_vector(out[0]) << " =\n"
-              << "    " << emit_vector(args[0]) << ";\n"
-              << emit_vector(out[0]) << ".segment(\n"
-              << "    " << to_string(lower_bounds[0]) << ", "
-              << to_string(upper_bounds[0] - lower_bounds[0]) << ") =\n"
-              << "    " << emit_vector(args[1]) << ";\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << " 2\n";
+        writer.indent++;
+        writer << emit_vector(out[0]) << " =\n"
+               << "    " << emit_vector(args[0]) << ";\n"
+               << emit_vector(out[0]) << ".segment(\n"
+               << "    " << to_string(lower_bounds[0]) << ", "
+               << to_string(upper_bounds[0] - lower_bounds[0]) << ") =\n"
+               << "    " << emit_vector(args[1]) << ";\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else if (!strided && arg0_rank == 2)
     {
-        m_out << "{   // " << n->get_name() << " 3\n";
-        m_out.indent++;
-        m_out << emit_matrix(out[0]) << " =\n"
-              << "    " << emit_matrix(args[0]) << ";\n"
-              << emit_matrix(out[0]) << ".block(\n"
-              << "        " << to_string(lower_bounds[0]) << ",\n"
-              << "        " << to_string(lower_bounds[1]) << ",\n"
-              << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
-              << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ") =\n"
-              << "    " << emit_matrix(args[1]) << ";\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{   // " << n->get_name() << " 3\n";
+        writer.indent++;
+        writer << emit_matrix(out[0]) << " =\n"
+               << "    " << emit_matrix(args[0]) << ";\n"
+               << emit_matrix(out[0]) << ".block(\n"
+               << "        " << to_string(lower_bounds[0]) << ",\n"
+               << "        " << to_string(lower_bounds[1]) << ",\n"
+               << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
+               << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ") =\n"
+               << "    " << emit_matrix(args[1]) << ";\n";
+        writer.indent--;
+        writer << "}\n";
     }
     // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
     else
     {
-        m_out << "kernel::replace_slice<" << out[0].get_type() << ">(" << args[0].get_name()
-              << ",\n";
-        m_out << "                         " << args[1].get_name() << ",\n";
-        m_out << "                         " << out[0].get_name() << ",\n";
-        m_out << "                         {" << join(args[1].get_shape()) << "},\n";
-        m_out << "                         {" << join(replace_slice->get_lower_bounds()) << "},\n";
-        m_out << "                         {" << join(replace_slice->get_upper_bounds()) << "},\n";
-        m_out << "                         {" << join(replace_slice->get_strides()) << "},\n";
-        m_out << "                         {" << join(out[0].get_shape()) << "});\n";
+        writer << "kernel::replace_slice<" << out[0].get_type() << ">(" << args[0].get_name()
+               << ",\n";
+        writer << "                         " << args[1].get_name() << ",\n";
+        writer << "                         " << out[0].get_name() << ",\n";
+        writer << "                         {" << join(args[1].get_shape()) << "},\n";
+        writer << "                         {" << join(replace_slice->get_lower_bounds()) << "},\n";
+        writer << "                         {" << join(replace_slice->get_upper_bounds()) << "},\n";
+        writer << "                         {" << join(replace_slice->get_strides()) << "},\n";
+        writer << "                         {" << join(out[0].get_shape()) << "});\n";
     }
 #else
-    kernel::emit_replace_slice(m_out,
+    kernel::emit_replace_slice(writer,
                                args[0].get_element_type().c_type_string(),
                                args[0].get_name(),
                                args[1].get_name(),
@@ -1505,11 +1577,12 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
                                replace_slice->get_upper_bounds(),
                                replace_slice->get_strides());
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitOneHot(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitOneHot(codegen::CodeWriter& writer,
+                                           const ngraph::Node* n,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
@@ -1521,143 +1594,147 @@ void runtime::cpu::CPU_Emitter::EmitOneHot(const ngraph::Node* n,
 
     if (arg_rank == 0)
     {
-        m_out << "{   // " << n->get_name() << " 1\n";
-        m_out.indent++;
+        writer << "{   // " << n->get_name() << " 1\n";
+        writer.indent++;
 
-        m_out << emit_vector(out[0], "out_vector") << ";\n";
+        writer << emit_vector(out[0], "out_vector") << ";\n";
 
-        m_out << "out_vector.setZero();\n"
-              << ""
-              << "auto pos_raw = " << emit_vector(args[0]) << "(0, 0);\n"
-              << "if (floor(pos_raw) != pos_raw)\n"
-              << "{\n";
-        m_out.indent++;
-        m_out << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "out_vector.setZero();\n"
+               << ""
+               << "auto pos_raw = " << emit_vector(args[0]) << "(0, 0);\n"
+               << "if (floor(pos_raw) != pos_raw)\n"
+               << "{\n";
+        writer.indent++;
+        writer << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
+        writer.indent--;
+        writer << "}\n";
 
-        m_out << "size_t pos = pos_raw;\n"
-              << "if (pos >= " << bounds << ")\n";
+        writer << "size_t pos = pos_raw;\n"
+               << "if (pos >= " << bounds << ")\n";
 
-        m_out << "{\n";
-        m_out.indent++;
-        m_out << "throw(std::range_error(\"One-hot: value is out of category range\"));\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "{\n";
+        writer.indent++;
+        writer << "throw(std::range_error(\"One-hot: value is out of category range\"));\n";
+        writer.indent--;
+        writer << "}\n";
 
-        m_out << "out_vector(pos, 0) = 1;\n";
+        writer << "out_vector(pos, 0) = 1;\n";
 
-        m_out.indent--;
-        m_out << "}\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else if (arg_rank == 1)
     {
-        m_out << "{   // " << n->get_name() << " 1\n";
-        m_out.indent++;
+        writer << "{   // " << n->get_name() << " 1\n";
+        writer.indent++;
 
-        m_out << emit_vector(args[0], "arg_vector") << ";\n";
+        writer << emit_vector(args[0], "arg_vector") << ";\n";
 
-        m_out << emit_matrix(out[0], "out_vector") << ";\n";
-        m_out << "out_vector.setZero();\n";
+        writer << emit_matrix(out[0], "out_vector") << ";\n";
+        writer << "out_vector.setZero();\n";
 
-        m_out << "for (size_t i = 0; i < " << args[0].get_shape()[0] << "; i++)\n"
-              << "{\n";
-        m_out.indent++;
+        writer << "for (size_t i = 0; i < " << args[0].get_shape()[0] << "; i++)\n"
+               << "{\n";
+        writer.indent++;
 
-        m_out << "auto pos_raw = arg_vector(i, 0);\n";
+        writer << "auto pos_raw = arg_vector(i, 0);\n";
 
-        m_out << "if (floor(pos_raw) != pos_raw)\n"
-              << "{\n";
-        m_out.indent++;
-        m_out << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "if (floor(pos_raw) != pos_raw)\n"
+               << "{\n";
+        writer.indent++;
+        writer << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
+        writer.indent--;
+        writer << "}\n";
 
-        m_out << "size_t pos = pos_raw;\n";
-        m_out << "bool found = false;\n";
+        writer << "size_t pos = pos_raw;\n";
+        writer << "bool found = false;\n";
 
-        m_out << "if (pos >= " << bounds << ")\n"
-              << "{\n";
-        m_out.indent++;
-        m_out << "throw(std::range_error(\"One-hot: value is out of category range\"));\n";
-        m_out.indent--;
-        m_out << "}\n";
+        writer << "if (pos >= " << bounds << ")\n"
+               << "{\n";
+        writer.indent++;
+        writer << "throw(std::range_error(\"One-hot: value is out of category range\"));\n";
+        writer.indent--;
+        writer << "}\n";
 
-        m_out << "out_vector" << (oh->get_one_hot_axis() == 0 ? "(pos, i)" : "(i, pos)")
-              << " = 1;\n";
+        writer << "out_vector" << (oh->get_one_hot_axis() == 0 ? "(pos, i)" : "(i, pos)")
+               << " = 1;\n";
 
-        m_out.indent--;
-        m_out << "}\n";
+        writer.indent--;
+        writer << "}\n";
 
-        m_out.indent--;
-        m_out << "}\n";
+        writer.indent--;
+        writer << "}\n";
     }
     // Other cases are not handled yet.
     else
     {
-        m_out << "kernel::one_hot<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-        m_out << "                   " << out[0].get_name() << ",\n";
-        m_out << "                   {" << join(args[0].get_shape()) << "},\n";
-        m_out << "                   {" << join(out[0].get_shape()) << "},\n";
-        m_out << "                   " << oh->get_one_hot_axis() << ");\n";
+        writer << "kernel::one_hot<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        writer << "                   " << out[0].get_name() << ",\n";
+        writer << "                   {" << join(args[0].get_shape()) << "},\n";
+        writer << "                   {" << join(out[0].get_shape()) << "},\n";
+        writer << "                   " << oh->get_one_hot_axis() << ");\n";
     }
 }
 
-void runtime::cpu::CPU_Emitter::EmitCeiling(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitCeiling(codegen::CodeWriter& writer,
+                                            const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
     size_t element_count = out[0].get_size();
 #if PREFER_EIGEN == 0
-    m_out << "#pragma omp parallel for\n";
+    writer << "#pragma omp parallel for\n";
 #endif
-    m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
-    m_out.indent--;
-    m_out << "}\n";
+    writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitFloor(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitFloor(codegen::CodeWriter& writer,
+                                          const ngraph::Node* n,
                                           const vector<runtime::cpu::TensorViewWrapper>& args,
                                           const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
     size_t element_count = out[0].get_size();
 #if PREFER_EIGEN == 0
-    m_out << "#pragma omp parallel for\n";
+    writer << "#pragma omp parallel for\n";
 #endif
-    m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = floor(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
-    m_out.indent--;
-    m_out << "}\n";
+    writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = floor(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSqrt(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitSqrt(codegen::CodeWriter& writer,
+                                         const ngraph::Node* n,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
     size_t element_count = out[0].get_size();
 #if PREFER_EIGEN == 0
-    m_out << "#pragma omp parallel for\n";
+    writer << "#pragma omp parallel for\n";
 #endif
-    m_out << "for (size_t i = 0; i < " << element_count << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = sqrt(" << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
-    m_out.indent--;
-    m_out << "}\n";
+    writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = sqrt(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitConvolution(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
+                                                const ngraph::Node* n,
                                                 const vector<runtime::cpu::TensorViewWrapper>& args,
                                                 const vector<runtime::cpu::TensorViewWrapper>& out)
 {
@@ -1667,32 +1744,34 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(const ngraph::Node* n,
     auto arg1_shape = args[1].get_shape();
     auto result_shape = out[0].get_shape();
 
-    m_out << "kernel::convolution<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-    m_out << "                         " << args[1].get_name() << ",\n";
-    m_out << "                         " << out[0].get_name() << ",\n";
-    m_out << "                         {" << join(arg0_shape) << "},\n";
-    m_out << "                         {" << join(arg1_shape) << "},\n";
-    m_out << "                         {" << join(result_shape) << "},\n";
-    m_out << "                         {" << join(convolution->get_window_movement_strides())
-          << "},\n";
-    m_out << "                         {" << join(convolution->get_window_dilation_strides())
-          << "},\n";
-    m_out << "                         {" << join(convolution->get_padding_below()) << "},\n";
-    m_out << "                         {" << join(convolution->get_padding_above()) << "},\n";
-    m_out << "                         {" << join(convolution->get_image_dilation_strides())
-          << "});\n";
+    writer << "kernel::convolution<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    writer << "                         " << args[1].get_name() << ",\n";
+    writer << "                         " << out[0].get_name() << ",\n";
+    writer << "                         {" << join(arg0_shape) << "},\n";
+    writer << "                         {" << join(arg1_shape) << "},\n";
+    writer << "                         {" << join(result_shape) << "},\n";
+    writer << "                         {" << join(convolution->get_window_movement_strides())
+           << "},\n";
+    writer << "                         {" << join(convolution->get_window_dilation_strides())
+           << "},\n";
+    writer << "                         {" << join(convolution->get_padding_below()) << "},\n";
+    writer << "                         {" << join(convolution->get_padding_above()) << "},\n";
+    writer << "                         {" << join(convolution->get_image_dilation_strides())
+           << "});\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitNot(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitNot(codegen::CodeWriter& writer,
+                                        const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "kernel::logical_not(" << args[0].get_name() << ",\n"
-          << "                    " << out[0].get_name() << ",\n"
-          << "                    " << out[0].get_size() << ");\n";
+    writer << "kernel::logical_not(" << args[0].get_name() << ",\n"
+           << "                    " << out[0].get_name() << ",\n"
+           << "                    " << out[0].get_size() << ");\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitMaxPool(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
+                                            const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
@@ -1701,15 +1780,16 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(const ngraph::Node* n,
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
 
-    m_out << "kernel::max_pool<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-    m_out << "                 " << out[0].get_name() << ",\n";
-    m_out << "                 {" << join(arg_shape) << "},\n";
-    m_out << "                 {" << join(result_shape) << "},\n";
-    m_out << "                 {" << join(max_pool->get_window_shape()) << "},\n";
-    m_out << "                 {" << join(max_pool->get_window_movement_strides()) << "});\n";
+    writer << "kernel::max_pool<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    writer << "                 " << out[0].get_name() << ",\n";
+    writer << "                 {" << join(arg_shape) << "},\n";
+    writer << "                 {" << join(result_shape) << "},\n";
+    writer << "                 {" << join(max_pool->get_window_shape()) << "},\n";
+    writer << "                 {" << join(max_pool->get_window_movement_strides()) << "});\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitReverse(const ngraph::Node* n,
+void runtime::cpu::CPU_Emitter::EmitReverse(codegen::CodeWriter& writer,
+                                            const ngraph::Node* n,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
@@ -1718,14 +1798,15 @@ void runtime::cpu::CPU_Emitter::EmitReverse(const ngraph::Node* n,
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
 
-    m_out << "kernel::reverse<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-    m_out << "                " << out[0].get_name() << ",\n";
-    m_out << "                {" << join(arg_shape) << "},\n";
-    m_out << "                {" << join(result_shape) << "},\n";
-    m_out << "                {" << join(reverse->get_reversed_axes()) << "});\n";
+    writer << "kernel::reverse<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    writer << "                " << out[0].get_name() << ",\n";
+    writer << "                {" << join(arg_shape) << "},\n";
+    writer << "                {" << join(result_shape) << "},\n";
+    writer << "                {" << join(reverse->get_reversed_axes()) << "});\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitReduceWindow(
+    codegen::CodeWriter& writer,
     const ngraph::Node* n,
     const vector<runtime::cpu::TensorViewWrapper>& args,
     const vector<runtime::cpu::TensorViewWrapper>& out)
@@ -1738,64 +1819,31 @@ void runtime::cpu::CPU_Emitter::EmitReduceWindow(
     auto& f_result_element_type = out[0].get_element_type();
 
     string type = f_result_element_type.c_type_string();
-    m_out << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
-    m_out.indent++;
-    m_out << "\n";
-    m_out << type << " result;\n";
-    m_out << "void* args[] = {&x, &y};\n";
-    m_out << "void* out[] = {&result};\n";
-    m_out << reduction_function->get_name() << "(args, out);\n";
-    m_out << "return result;\n";
-    m_out.indent--;
-    m_out << "};\n";
+    writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer.indent++;
+    writer << "\n";
+    writer << type << " result;\n";
+    writer << "void* args[] = {&x, &y};\n";
+    writer << "void* out[] = {&result};\n";
+    writer << reduction_function->get_name() << "(args, out);\n";
+    writer << "return result;\n";
+    writer.indent--;
+    writer << "};\n";
 
-    m_out << "kernel::reduce_window<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-    m_out << "                      " << args[1].get_name() << ",\n";
-    m_out << "                      " << out[0].get_name() << ",\n";
-    m_out << "                      {" << join(arg_reductee_shape) << "},\n";
-    m_out << "                      {" << join(result_shape) << "},\n";
-    m_out << "                      f,\n";
-    m_out << "                      {" << join(reduce_window->get_window_shape()) << "},\n";
-    m_out << "                      {" << join(reduce_window->get_window_movement_strides())
-          << "});\n";
+    writer << "kernel::reduce_window<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    writer << "                      " << args[1].get_name() << ",\n";
+    writer << "                      " << out[0].get_name() << ",\n";
+    writer << "                      {" << join(arg_reductee_shape) << "},\n";
+    writer << "                      {" << join(result_shape) << "},\n";
+    writer << "                      f,\n";
+    writer << "                      {" << join(reduce_window->get_window_shape()) << "},\n";
+    writer << "                      {" << join(reduce_window->get_window_movement_strides())
+           << "});\n";
 }
 
 //------------------------------------------------------------------------------------------------
 // Utility methods
 //------------------------------------------------------------------------------------------------
-
-void runtime::cpu::CPU_Emitter::generate_call(const vector<runtime::cpu::TensorViewWrapper>& args,
-                                              const vector<runtime::cpu::TensorViewWrapper>& out,
-                                              shared_ptr<Function> function)
-{
-    vector<string> input_names;
-    vector<string> output_names;
-
-    for (const runtime::cpu::TensorViewWrapper& input : args)
-    {
-        input_names.push_back(input.get_name());
-    }
-
-    for (const runtime::cpu::TensorViewWrapper& output : out)
-    {
-        output_names.push_back(output.get_name());
-    }
-
-    m_out << "void* args[] =\n{";
-    m_out.indent++;
-    m_out << "\n" << join(input_names, ",\n");
-    m_out.indent--;
-    m_out << "\n};\n";
-
-    m_out << "void* out[] =\n{";
-    m_out.indent++;
-    m_out << "\n" << join(output_names, ",\n");
-    m_out.indent--;
-    m_out << "\n};\n";
-
-    m_out << "\n";
-    m_out << function->get_name() << "(args, out);\n";
-}
 
 static string format_name(const string& name)
 {
