@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
+// Copyright 2018 Nervana Systems Inc.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,26 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <sstream>
-
-#include "ngraph/ops/get_output_element.hpp"
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
 
 using namespace std;
-using namespace ngraph;
 
-op::GetOutputElement::GetOutputElement(const std::shared_ptr<Node>& arg, size_t n)
-    : Node("GetOutputElement", {arg})
-    , m_n{n}
+TEST(runtime_manager, invalidName)
 {
-    if (m_n >= arg->get_output_size())
-    {
-        throw ngraph_error("Indexing tuple beyond its size");
-    }
-
-    set_value_type_checked(arg->get_output_element_type(n), arg->get_output_shape(n));
-}
-
-bool op::GetOutputElement::is_functionally_identical(const Node& other) const
-{
-    return false;
+    ASSERT_THROW(ngraph::runtime::Manager::get("COMPLETELY-BOGUS-MANAGER-NAME"),
+                 ngraph::ngraph_error);
 }
