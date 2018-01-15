@@ -1,4 +1,4 @@
-.. tensorflow:
+.. tensorflow.rst:
 
 .. ---------------------------------------------------------------------------
 .. Copyright 2018 Intel Corporation

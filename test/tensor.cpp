@@ -23,7 +23,6 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/topological_sort.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
@@ -34,7 +33,6 @@ TEST(tensor, size)
 {
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.register_pass<pass::Liveness>();
 
     {
@@ -112,7 +110,6 @@ TEST(tensor, read_write)
 TEST(tensor, output_flag)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.register_pass<pass::Liveness>();
 
     auto arg0 = make_shared<op::Parameter>(element::f32, Shape{1});

@@ -59,9 +59,12 @@ set (SRC
     ops/parameter.cpp
     ops/power.cpp
     ops/reduce.cpp
+    ops/reduce_window.cpp
     ops/replace_slice.cpp
     ops/reshape.cpp
+    ops/reverse.cpp
     ops/select.cpp
+    ops/select_and_scatter.cpp
     ops/sin.cpp
     ops/sinh.cpp
     ops/slice.cpp
@@ -80,7 +83,6 @@ set (SRC
     pass/memory_layout.cpp
     pass/memory_visualize.cpp
     pass/pass.cpp
-    pass/topological_sort.cpp
     pass/visualize_tree.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp

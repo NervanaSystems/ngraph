@@ -26,7 +26,7 @@
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-needs_sphinx = '1.6.3'
+needs_sphinx = '1.6.5'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -50,7 +50,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Intel nGraph library'
+project = 'Intel® nGraph™ library'
 copyright = '2018, Intel Corporation'
 author = 'Intel Corporation'
 

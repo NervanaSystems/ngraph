@@ -31,7 +31,6 @@ Function::Function(const Nodes& results,
     : m_results(results)
     , m_parameters(parameters)
     , m_name(name)
-    , m_ordered_ops_valid(false)
     , m_temporary_pool_size(0)
     , m_instance_id(m_next_instance_id.fetch_add(1))
 {
@@ -57,28 +56,9 @@ Function::Function(const std::shared_ptr<Node>& result,
 {
 }
 
-void Function::set_ordered_ops(const std::list<shared_ptr<Node>>& ordered_ops)
+std::list<shared_ptr<Node>> Function::get_ordered_ops()
 {
-    m_ordered_ops = ordered_ops;
-    m_ordered_ops_valid = true;
-}
-
-std::list<shared_ptr<Node>>& Function::get_ordered_ops()
-{
-    if (!m_ordered_ops_valid)
-    {
-        throw ngraph_error("Access to ordered ops invalid");
-    }
-    return m_ordered_ops;
-}
-
-const std::list<shared_ptr<Node>>& Function::get_ordered_ops() const
-{
-    if (!m_ordered_ops_valid)
-    {
-        throw ngraph_error("Access to ordered ops invalid");
-    }
-    return m_ordered_ops;
+    return topological_sort(get_ops());
 }
 
 std::string Function::get_name() const

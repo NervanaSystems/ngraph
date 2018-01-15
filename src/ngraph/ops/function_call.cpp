@@ -47,3 +47,8 @@ op::FunctionCall::FunctionCall(std::shared_ptr<Function> function,
         add_output(function->get_output_element_type(i), function->get_output_shape(i));
     }
 }
+
+bool op::FunctionCall::is_functionally_identical(const Node&) const
+{
+    return false;
+}

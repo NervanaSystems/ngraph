@@ -39,7 +39,7 @@ namespace ngraph
                 for (size_t i = 0; i < args.size(); i++)
                 {
                     // The start coordinate for the copy is (0,...,0) except at the concatenation axis.
-                    Coordinate out_start_coord = Coordinate(out_shape.size(), 0);
+                    Coordinate out_start_coord(out_shape.size(), 0);
                     out_start_coord[concatenation_axis] = concatenation_pos;
 
                     // The end coordinate for the copy is the same as the output shape except at the
@@ -54,7 +54,7 @@ namespace ngraph
 
                     CoordinateTransform::Iterator output_chunk_it = output_chunk_transform.begin();
 
-                    for (Coordinate input_coord : input_transform)
+                    for (const Coordinate& input_coord : input_transform)
                     {
                         size_t input_index = input_transform.index(input_coord);
                         size_t output_chunk_index = output_chunk_transform.index(*output_chunk_it);

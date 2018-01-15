@@ -34,14 +34,14 @@ namespace ngraph
             {
                 CoordinateTransform output_transform(out_shape);
 
-                for (Coordinate output_coord : output_transform)
+                for (const Coordinate& output_coord : output_transform)
                 {
                     out[output_transform.index(output_coord)] = 0;
                 }
 
                 CoordinateTransform input_transform(in_shape);
 
-                for (Coordinate input_coord : input_transform)
+                for (const Coordinate& input_coord : input_transform)
                 {
                     Coordinate output_coord = project_coordinate(input_coord, reduction_axes);
 

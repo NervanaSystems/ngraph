@@ -149,12 +149,14 @@ namespace ngraph
                     while (input_it != input_batch_transform.end() &&
                            filter_it != filter_transform.end())
                     {
-                        Coordinate input_batch_coord = *input_it++;
-                        Coordinate filter_coord = *filter_it++;
+                        const Coordinate& input_batch_coord = *input_it;
+                        const Coordinate& filter_coord = *filter_it;
                         T v = input_batch_transform.in_padding(input_batch_coord)
                                   ? 0
                                   : arg0[input_batch_transform.index(input_batch_coord)];
                         result += v * arg1[filter_transform.index(filter_coord)];
+                        ++input_it;
+                        ++filter_it;
                     }
 
                     out[output_transform.index(out_coord)] = result;

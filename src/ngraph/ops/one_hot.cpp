@@ -41,3 +41,19 @@ op::OneHot::OneHot(const std::shared_ptr<Node>& arg, const Shape& shape, size_t 
 
     set_value_type_checked(make_shared<TensorViewType>(input_element_type, shape));
 }
+
+bool op::OneHot::is_functionally_identical(const Node& other) const
+{
+    bool rc = true;
+    if (Node::is_functionally_identical(other))
+    {
+        const OneHot& rhs = dynamic_cast<const OneHot&>(other);
+        rc &= m_shape == rhs.m_shape;
+        rc &= m_one_hot_axis == rhs.m_one_hot_axis;
+    }
+    else
+    {
+        rc = false;
+    }
+    return rc;
+}

@@ -31,6 +31,7 @@
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/call_frame.hpp"
@@ -72,6 +73,7 @@
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
+#include "ngraph/runtime/kernel/reverse.hpp"
 #include "ngraph/runtime/kernel/select.hpp"
 #include "ngraph/runtime/kernel/sign.hpp"
 #include "ngraph/runtime/kernel/sin.hpp"
@@ -110,13 +112,14 @@ public:
     ///
     /// Tuples will be expanded into their tensor views to build the call frame.
     void call(const std::vector<std::shared_ptr<runtime::TensorView>>& inputs,
-              const std::vector<std::shared_ptr<runtime::TensorView>>& outputs);
+              const std::vector<std::shared_ptr<runtime::TensorView>>& outputs) override;
+    std::vector<runtime::PerformanceCounter> get_performance_data() const override;
 
 private:
     /// @brief Invoke the function with tuples pre-expanded to their underlying
     /// tensor views.
     void tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
-                     const std::vector<std::shared_ptr<TensorView>>& outputs);
+                     const std::vector<std::shared_ptr<TensorView>>& outputs) override;
     void tensor_call(const std::vector<std::shared_ptr<INT_TensorView>>& inputs,
                      const std::vector<std::shared_ptr<INT_TensorView>>& outputs);
     void call(std::shared_ptr<Function> function,
@@ -129,6 +132,9 @@ private:
 
     std::shared_ptr<ExternalFunction> m_external_function;
     std::shared_ptr<Function> m_function;
+    bool m_emit_timing;
+    std::unordered_map<const Node*, stopwatch> m_timer_map;
+
     void generate_calls(const element::Type& base_type,
                         const element::Type& secondary_type,
                         ngraph::Node& op,
@@ -344,7 +350,7 @@ private:
         }
         else if (node_op == "FunctionCall")
         {
-            std::shared_ptr<Function> function = node.get_function();
+            std::shared_ptr<Function> function = node.get_functions()[0];
             call(function, args, out);
         }
         else if (node_op == "Greater")
@@ -454,7 +460,7 @@ private:
         else if (node_op == "Reduce")
         {
             ngraph::op::Reduce* reduce = dynamic_cast<ngraph::op::Reduce*>(&node);
-            std::shared_ptr<ngraph::Function> reduction_function = reduce->get_function();
+            std::shared_ptr<ngraph::Function> reduction_function = reduce->get_functions()[0];
 
             std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
                 auto tx = std::make_shared<runtime::interpreter::INT_TensorView>(
@@ -476,6 +482,10 @@ private:
                            node.get_output_shape(0),
                            reduce->get_reduction_axes(),
                            f);
+        }
+        else if (node_op == "ReduceWindow")
+        {
+            // TODO: Implement this. Stubbed out for because XLA bridge folks need it.
         }
         // else if (node_op == "Remainder")
         // {
@@ -502,6 +512,15 @@ private:
                             reshape->get_input_order(),
                             out[0]->get_shape());
         }
+        else if (node_op == "Reverse")
+        {
+            ngraph::op::Reverse* reverse = dynamic_cast<ngraph::op::Reverse*>(&node);
+            kernel::reverse(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                            args[0]->get_shape(),
+                            out[0]->get_shape(),
+                            reverse->get_reversed_axes());
+        }
         else if (node_op == "Select")
         {
             kernel::select<T>(reinterpret_cast<char*>(args[0]->get_data_ptr()),
@@ -509,6 +528,10 @@ private:
                               reinterpret_cast<T*>(args[2]->get_data_ptr()),
                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
                               out[0]->get_element_count());
+        }
+        else if (node_op == "SelectAndScatter")
+        {
+            // TODO: Implement this. Stubbed out for because XLA bridge folks need it.
         }
         else if (node_op == "Sign")
         {

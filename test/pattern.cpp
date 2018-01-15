@@ -24,7 +24,6 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -196,7 +195,6 @@ TEST(pattern, graph_rewrite)
     auto shape = Shape{1};
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.register_pass<TestGraphRewrite>();
 
     {

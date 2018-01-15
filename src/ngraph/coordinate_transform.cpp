@@ -368,7 +368,7 @@ void CoordinateTransform::Iterator::operator+=(size_t n)
     }
 }
 
-Coordinate CoordinateTransform::Iterator::operator*()
+const Coordinate& CoordinateTransform::Iterator::operator*() const
 {
     return m_coordinate;
 }
