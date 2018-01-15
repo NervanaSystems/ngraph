@@ -18,7 +18,6 @@ add_custom_target( docs
 set(DOCS_TARGET_IS_EMPTY TRUE)
 
 add_subdirectory( doxygen )
-add_subdirectory( sphinx )
 
 if (DOCS_TARGET_IS_EMPTY)
     add_custom_target( docs-is-noop-error

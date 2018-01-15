@@ -1,0 +1,60 @@
+digraph {
+  graph [pad="0.0", nodesep="0.2", ranksep="0.1"];
+  node [style=filled fillcolor="#abd3d2" color=white]
+  edge [color="#999999"]
+  rankdir=LR;
+  # Op -> NameableValue, DebugInfo
+  InitTensorOp -> Op
+  AssignOp -> Op
+  doall -> Op
+  Fill -> Op
+  TensorOp -> Op
+  ReshapeOp -> TensorOp
+  Transpose -> ReshapeOp
+  AxesCastOp -> ReshapeOp
+  ExpandDims -> ReshapeOp
+  ResultHandle -> ReshapeOp
+  BroadcastOp -> ReshapeOp
+  ReorderAxes -> ReshapeOp
+  Slice -> ReshapeOp
+  Flatten -> ReshapeOp
+  Unflatten -> ReshapeOp
+  AssignableTensorOp -> TensorOp
+  Stack -> TensorOp
+  Unslice -> TensorOp
+  AllReduce -> Op
+  ElementWiseOp -> TensorOp
+  UnaryElementWiseOp -> ElementWiseOp
+  NegativeOp -> UnaryElementWiseOp
+  AbsoluteOp -> UnaryElementWiseOp
+  SinOp -> UnaryElementWiseOp
+  CosOp -> UnaryElementWiseOp
+  TanhOp -> UnaryElementWiseOp
+  ExpOp -> UnaryElementWiseOp
+  LogOp -> UnaryElementWiseOp
+  ReciprocalOp -> UnaryElementWiseOp
+  SignOp -> UnaryElementWiseOp
+  SquareOp -> UnaryElementWiseOp
+  SqrtOp -> UnaryElementWiseOp
+  BinaryElementWiseOp -> ElementWiseOp
+  Dimshuffle -> TensorOp
+  DotOp -> TensorOp
+  ReductionOp -> TensorOp
+  TensorSizeOp -> TensorOp
+  OneHotOp -> TensorOp
+  Function -> Op
+  AddOp -> BinaryElementWiseOp
+  SubtractOp -> BinaryElementWiseOp
+  MultiplyOp -> BinaryElementWiseOp
+  DivideOp -> BinaryElementWiseOp
+  ModOp -> BinaryElementWiseOp
+  MaximumOp -> BinaryElementWiseOp
+  MinimumOp -> BinaryElementWiseOp
+  PowerOp -> BinaryElementWiseOp
+  EqualOp -> BinaryElementWiseOp
+  NotEqualOp -> BinaryElementWiseOp
+  GreaterOp -> BinaryElementWiseOp
+  GreaterEqualOp -> BinaryElementWiseOp
+  LessOp -> BinaryElementWiseOp
+  LessEqualOp -> BinaryElementWiseOp
+}

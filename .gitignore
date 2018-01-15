@@ -48,7 +48,6 @@ output/
 *.mpg
 *.cpio
 *.wav
-doc/source/generated
 .cache/
 nervana_aeon.egg-info/
 
@@ -72,3 +71,6 @@ venv/
 # VisualGDB files
 VisualGDB/
 toolchain.cmake
+
+# Generated docs
+doc/build/*
