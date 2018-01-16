@@ -5162,3 +5162,644 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_stride
     EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
               result->get_vector<float>());
 }
+
+//
+// From the XLA docs: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
+//
+TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
+{
+    auto shape_sel_a = Shape{};
+    auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
+    auto shape_sel_b = Shape{};
+    auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
+    auto sel_f =
+        make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B), op::Parameters{SEL_A, SEL_B});
+
+    auto shape_scatter_a = Shape{};
+    auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
+    auto shape_scatter_b = Shape{};
+    auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
+    auto scatter_f =
+        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+
+    auto shape_a = Shape{4, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{2, 2};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_c = Shape{};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    auto shape_r = Shape{4, 5};
+    auto window_shape = Shape{2, 3};
+    auto window_strides = Strides{2, 2};
+    auto f = make_shared<Function>(
+        make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
+        op::Parameters{A, B, C});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 2>(
+                  {{7, 2, 5, 3, 8}, {3, 8, 9, 3, 4}, {1, 5, 7, 5, 6}, {0, 6, 2, 10, 2}})
+                  .get_vector());
+    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    copy_data(b, test::NDArray<float, 2>({{2, 6}, {3, 1}}).get_vector());
+    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    copy_data(c, vector<float>{0});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b, c}, {result});
+    EXPECT_EQ((test::NDArray<float, 2>(
+                   {{0, 0, 0, 0, 0}, {0, 0, 8, 0, 0}, {0, 0, 3, 0, 0}, {0, 0, 0, 1, 0}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+//
+// From the XLA docs: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
+//
+TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
+{
+    auto shape_sel_a = Shape{};
+    auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
+    auto shape_sel_b = Shape{};
+    auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
+    auto sel_f =
+        make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B), op::Parameters{SEL_A, SEL_B});
+
+    auto shape_scatter_a = Shape{};
+    auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
+    auto shape_scatter_b = Shape{};
+    auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
+    auto scatter_f =
+        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+
+    auto shape_a = Shape{4, 6};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{2, 2};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_c = Shape{};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    auto shape_r = Shape{4, 6};
+    auto window_shape = Shape{2, 3};
+    auto window_strides = Strides{2, 3};
+    auto f = make_shared<Function>(
+        make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
+        op::Parameters{A, B, C});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 2>(
+                  {{7, 2, 5, 3, 10, 2}, {3, 8, 9, 3, 4, 2}, {1, 5, 7, 5, 6, 1}, {0, 6, 2, 7, 2, 8}})
+                  .get_vector());
+    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    copy_data(b, test::NDArray<float, 2>({{2, 6}, {3, 1}}).get_vector());
+    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    copy_data(c, vector<float>{0});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b, c}, {result});
+    EXPECT_EQ((test::NDArray<float, 2>(
+                   {{0, 0, 0, 0, 6, 0}, {0, 0, 2, 0, 0, 0}, {0, 0, 3, 0, 0, 0}, {0, 0, 0, 0, 0, 1}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+//
+// Adapted from the XLA docs to provide an example in >2D: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
+//
+TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
+{
+    auto shape_sel_a = Shape{};
+    auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
+    auto shape_sel_b = Shape{};
+    auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
+    auto sel_f =
+        make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B), op::Parameters{SEL_A, SEL_B});
+
+    auto shape_scatter_a = Shape{};
+    auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
+    auto shape_scatter_b = Shape{};
+    auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
+    auto scatter_f =
+        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+
+    auto shape_a = Shape{2, 4, 6};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{1, 2, 2};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_c = Shape{};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    auto shape_r = Shape{2, 4, 6};
+    auto window_shape = Shape{2, 2, 3};
+    auto window_strides = Strides{2, 2, 3};
+    auto f = make_shared<Function>(
+        make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
+        op::Parameters{A, B, C});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(
+        a,
+        test::NDArray<float, 3>(
+            {{{7, 2, 5, 3, 10, 2}, {3, 8, 9, 3, 4, 2}, {1, 5, 7, 5, 6, 1}, {0, 6, 2, 7, 2, 8}},
+             {{2, 5, 8, 3, 4, 2}, {1, 2, 8, 4, 5, 2}, {10, 2, 3, 4, 1, 0}, {4, 1, 2, 4, 5, 7}}})
+            .get_vector());
+    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    copy_data(b, test::NDArray<float, 3>({{{2, 6}, {3, 1}}}).get_vector());
+    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    copy_data(c, vector<float>{0});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b, c}, {result});
+    EXPECT_EQ(
+        (test::NDArray<float, 3>(
+             {{{0, 0, 0, 0, 6, 0}, {0, 0, 2, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 1}},
+              {{0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {3, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}}})
+             .get_vector()),
+        result->get_vector<float>());
+}
+
+
+TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
+{
+    auto shape_a = Shape{1, 1, 14};
+    auto window_shape = Shape{3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{1, 1, 12};
+    auto f = make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 3>{{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}}}.get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    float denom = 3.0;
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          4 / denom,
+                                          5 / denom,
+                                          5 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          0 / denom}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
+{
+    auto shape_a = Shape{2, 1, 14};
+    auto window_shape = Shape{3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{2, 1, 12};
+    auto f = make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0}},
+                                       {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    float denom = 3.0;
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          4 / denom,
+                                          5 / denom,
+                                          5 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          0 / denom}},
+                                        {{3 / denom,
+                                          4 / denom,
+                                          2 / denom,
+                                          1 / denom,
+                                          0 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          3 / denom,
+                                          1 / denom,
+                                          1 / denom,
+                                          1 / denom,
+                                          3 / denom}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
+{
+    auto shape_a = Shape{2, 2, 14};
+    auto window_shape = Shape{3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{2, 2, 12};
+    auto f = make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 3>({{{0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0},
+                                        {0, 0, 0, 2, 0, 0, 2, 3, 0, 1, 2, 0, 1, 0}},
+
+                                       {{0, 2, 1, 1, 0, 0, 0, 2, 0, 1, 0, 0, 1, 2},
+                                        {2, 1, 0, 0, 1, 0, 2, 0, 0, 0, 1, 1, 2, 0}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    float denom = 3.0;
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 3>({{{1 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          4 / denom,
+                                          5 / denom,
+                                          5 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          0 / denom},
+                                         {0 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          5 / denom,
+                                          5 / denom,
+                                          4 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          3 / denom,
+                                          1 / denom}},
+
+                                        {{3 / denom,
+                                          4 / denom,
+                                          2 / denom,
+                                          1 / denom,
+                                          0 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          3 / denom,
+                                          1 / denom,
+                                          1 / denom,
+                                          1 / denom,
+                                          3 / denom},
+                                         {3 / denom,
+                                          1 / denom,
+                                          1 / denom,
+                                          1 / denom,
+                                          3 / denom,
+                                          2 / denom,
+                                          2 / denom,
+                                          0 / denom,
+                                          1 / denom,
+                                          2 / denom,
+                                          4 / denom,
+                                          3 / denom}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
+{
+    auto shape_a = Shape{2, 2, 5, 5};
+    auto window_shape = Shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{2, 2, 4, 3};
+    auto f = make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1}, // img 0 chan 0
+                                         {0, 3, 2, 0, 0},
+                                         {2, 0, 0, 0, 1},
+                                         {2, 0, 1, 1, 2},
+                                         {0, 2, 1, 0, 0}},
+
+                                        {{0, 0, 0, 2, 0}, // img 0 chan 1
+                                         {0, 2, 3, 0, 1},
+                                         {2, 0, 1, 0, 2},
+                                         {3, 1, 0, 0, 0},
+                                         {2, 0, 0, 0, 0}}},
+
+                                       {{{0, 2, 1, 1, 0}, // img 1 chan 0
+                                         {0, 0, 2, 0, 1},
+                                         {0, 0, 1, 2, 3},
+                                         {2, 0, 0, 3, 0},
+                                         {0, 0, 0, 0, 0}},
+
+                                        {{2, 1, 0, 0, 1}, // img 1 chan 1
+                                         {0, 2, 0, 0, 0},
+                                         {1, 1, 2, 0, 2},
+                                         {1, 1, 1, 0, 1},
+                                         {1, 0, 0, 0, 2}}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    float denom = 2 * 3;
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{6 / denom, 8 / denom, 5 / denom}, // img 0 chan 0
+                                          {7 / denom, 5 / denom, 3 / denom},
+                                          {5 / denom, 2 / denom, 5 / denom},
+                                          {6 / denom, 5 / denom, 5 / denom}},
+
+                                         {{5 / denom, 7 / denom, 6 / denom}, // img 0 chan 1
+                                          {8 / denom, 6 / denom, 7 / denom},
+                                          {7 / denom, 2 / denom, 3 / denom},
+                                          {6 / denom, 1 / denom, 0 / denom}}},
+
+                                        {{{5 / denom, 6 / denom, 5 / denom}, // img 1 chan 0
+                                          {3 / denom, 5 / denom, 9 / denom},
+                                          {3 / denom, 6 / denom, 9 / denom},
+                                          {2 / denom, 3 / denom, 3 / denom}},
+
+                                         {{5 / denom, 3 / denom, 1 / denom}, // img 1 chan 1
+                                          {6 / denom, 5 / denom, 4 / denom},
+                                          {7 / denom, 5 / denom, 6 / denom},
+                                          {4 / denom, 2 / denom, 4 / denom}}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
+{
+    auto shape_a = Shape{1, 1, 8, 8};
+    auto window_shape = Shape{2, 3};
+    auto window_movement_strides = Strides{3, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{1, 1, 3, 3};
+    auto f = make_shared<Function>(
+        make_shared<op::AvgPool>(A, window_shape, window_movement_strides), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1, 2, 0, 0},
+                                         {0, 3, 2, 0, 0, 0, 1, 0},
+                                         {2, 0, 0, 0, 1, 0, 0, 0},
+                                         {2, 0, 1, 1, 2, 2, 3, 0},
+                                         {0, 2, 1, 0, 0, 0, 1, 0},
+                                         {2, 0, 3, 1, 0, 0, 0, 0},
+                                         {1, 2, 0, 0, 0, 1, 2, 0},
+                                         {1, 0, 2, 0, 0, 0, 1, 0}}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    float denom = 2 * 3;
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{6 / denom, 5 / denom, 4 / denom},
+                                          {6 / denom, 5 / denom, 8 / denom},
+                                          {6 / denom, 2 / denom, 4 / denom}}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
+{
+    auto shape_a = Shape{1, 1, 3, 3};
+    auto window_shape = Shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    auto padding_below = Shape{1, 1};
+    auto padding_above = Shape{1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{1, 1, 4, 4};
+    auto f = make_shared<Function>(
+        make_shared<op::AvgPool>(
+            A, window_shape, window_movement_strides, padding_below, padding_above),
+        op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, test::NDArray<float, 4>({{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}}}).get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
+                                          {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
+                                          {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
+                                          {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
+{
+    auto shape_a = Shape{2, 1, 3, 3};
+    auto window_shape = Shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    auto padding_below = Shape{1, 1};
+    auto padding_above = Shape{1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{2, 1, 4, 4};
+    auto f = make_shared<Function>(
+        make_shared<op::AvgPool>(
+            A, window_shape, window_movement_strides, padding_below, padding_above),
+        op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>(
+                  {{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}, {{3, 5, 2}, {2, 0, 9}, {3, 6, 5}}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2, 0.0f / 1},
+                                          {0.0f / 2, 4.0f / 4, 6.0f / 4, 2.0f / 2},
+                                          {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
+                                          {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}},
+                                         {{3.0f / 1, 8.0f / 2, 7.0f / 2, 2.0f / 1},
+                                          {5.0f / 2, 10.0f / 4, 16.0f / 4, 11.0f / 2},
+                                          {5.0f / 2, 11.0f / 4, 20.0f / 4, 14.0f / 2},
+                                          {3.0f / 1, 9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
+{
+    auto shape_a = Shape{2, 1, 3, 3};
+    auto window_shape = Shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    auto padding_below = Shape{1, 1};
+    auto padding_above = Shape{0, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{2, 1, 3, 3};
+    auto f = make_shared<Function>(
+        make_shared<op::AvgPool>(
+            A, window_shape, window_movement_strides, padding_below, padding_above),
+        op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>(
+                  {{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}, {{3, 5, 2}, {2, 0, 9}, {3, 6, 5}}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 2},
+                                          {0.0f / 2, 4.0f / 4, 6.0f / 4},
+                                          {2.0f / 2, 5.0f / 4, 5.0f / 4}},
+                                         {{3.0f / 1, 8.0f / 2, 7.0f / 2},
+                                          {5.0f / 2, 10.0f / 4, 16.0f / 4},
+                                          {5.0f / 2, 11.0f / 4, 20.0f / 4}}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
+{
+    auto shape_a = Shape{2, 1, 3, 3};
+    auto window_shape = Shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    auto padding_below = Shape{0, 0};
+    auto padding_above = Shape{1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{2, 1, 3, 3};
+    auto f = make_shared<Function>(
+        make_shared<op::AvgPool>(
+            A, window_shape, window_movement_strides, padding_below, padding_above),
+        op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>(
+                  {{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}, {{3, 5, 2}, {2, 0, 9}, {3, 6, 5}}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{4.0f / 4, 6.0f / 4, 2.0f / 2},
+                                          {5.0f / 4, 5.0f / 4, 2.0f / 2},
+                                          {2.0f / 2, 0.0f / 2, 0.0f / 1}},
+                                         {{10.0f / 4, 16.0f / 4, 11.0f / 2},
+                                          {11.0f / 4, 20.0f / 4, 14.0f / 2},
+                                          {9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
+{
+    auto shape_a = Shape{2, 1, 3, 3};
+    auto window_shape = Shape{3, 3};
+    auto window_movement_strides = Strides{1, 1};
+    auto padding_below = Shape{2, 2};
+    auto padding_above = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{2, 1, 5, 5};
+    auto f = make_shared<Function>(
+        make_shared<op::AvgPool>(
+            A, window_shape, window_movement_strides, padding_below, padding_above),
+        op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>(
+                  {{{{0, 1, 0}, {0, 3, 2}, {2, 0, 0}}, {{3, 5, 2}, {2, 0, 9}, {3, 6, 5}}}})
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    EXPECT_EQ((test::NDArray<float, 4>({{{{0.0f / 1, 1.0f / 2, 1.0f / 3, 1.0f / 2, 0.0f / 1},
+                                          {0.0f / 2, 4.0f / 4, 6.0f / 6, 6.0f / 4, 2.0f / 2},
+                                          {2.0f / 3, 6.0f / 6, 8.0f / 9, 6.0f / 6, 2.0f / 3},
+                                          {2.0f / 2, 5.0f / 4, 7.0f / 6, 5.0f / 4, 2.0f / 2},
+                                          {2.0f / 1, 2.0f / 2, 2.0f / 3, 0.0f / 2, 0.0f / 1}},
+                                         {{3.0f / 1, 8.0f / 2, 10.0f / 3, 7.0f / 2, 2.0f / 1},
+                                          {5.0f / 2, 10.0f / 4, 21.0f / 6, 16.0f / 4, 11.0f / 2},
+                                          {8.0f / 3, 19.0f / 6, 35.0f / 9, 27.0f / 6, 16.0f / 3},
+                                          {5.0f / 2, 11.0f / 4, 25.0f / 6, 20.0f / 4, 14.0f / 2},
+                                          {3.0f / 1, 9.0f / 2, 14.0f / 3, 11.0f / 2, 5.0f / 1}}}})
+                   .get_vector()),
+              result->get_vector<float>());
+}

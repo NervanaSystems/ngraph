@@ -34,6 +34,7 @@
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/reverse.hpp"
+#include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/call_frame.hpp"
@@ -79,6 +80,7 @@
 #include "ngraph/runtime/kernel/reshape.hpp"
 #include "ngraph/runtime/kernel/reverse.hpp"
 #include "ngraph/runtime/kernel/select.hpp"
+#include "ngraph/runtime/kernel/select_and_scatter.hpp"
 #include "ngraph/runtime/kernel/sign.hpp"
 #include "ngraph/runtime/kernel/sin.hpp"
 #include "ngraph/runtime/kernel/sinh.hpp"
@@ -580,7 +582,51 @@ private:
         }
         else if (node_op == "SelectAndScatter")
         {
-            // TODO: Implement this. Stubbed out for because XLA bridge folks need it.
+            ngraph::op::SelectAndScatter* select_and_scatter =
+                dynamic_cast<ngraph::op::SelectAndScatter*>(&node);
+
+            std::shared_ptr<ngraph::Function> selection_function =
+                select_and_scatter->get_functions()[0];
+            std::function<bool(T, T)> f_selection = [this, &node, selection_function](T x,
+                                                                                      T y) -> bool {
+                auto tx = std::make_shared<runtime::interpreter::INT_TensorView>(
+                    node.get_inputs().at(0).get_element_type(), Shape{}, "selection_temp_x");
+                auto ty = std::make_shared<runtime::interpreter::INT_TensorView>(
+                    node.get_inputs().at(1).get_element_type(), Shape{}, "selection_temp_y");
+                auto tr = std::make_shared<runtime::interpreter::INT_TensorView>(
+                    element::boolean, Shape{}, "selection_temp_r");
+                *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
+                *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
+                call(selection_function, {tx, ty}, {tr});
+                return *(reinterpret_cast<char*>(tr->get_data_ptr()));
+            };
+
+            std::shared_ptr<ngraph::Function> scatter_function =
+                select_and_scatter->get_functions()[1];
+            std::function<T(T, T)> f_scatter = [this, &node, scatter_function](T x, T y) -> T {
+                auto tx = std::make_shared<runtime::interpreter::INT_TensorView>(
+                    node.get_inputs().at(0).get_element_type(), Shape{}, "scatter_temp_x");
+                auto ty = std::make_shared<runtime::interpreter::INT_TensorView>(
+                    node.get_inputs().at(1).get_element_type(), Shape{}, "scatter_temp_y");
+                auto tr = std::make_shared<runtime::interpreter::INT_TensorView>(
+                    node.get_output_element_type(0), Shape{}, "scatter_temp_r");
+                *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
+                *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
+                call(scatter_function, {tx, ty}, {tr});
+                return *(reinterpret_cast<T*>(tr->get_data_ptr()));
+            };
+
+            kernel::select_and_scatter<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                          reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                          reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                                          reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                          args[0]->get_shape(),
+                                          args[1]->get_shape(),
+                                          out[0]->get_shape(),
+                                          f_selection,
+                                          f_scatter,
+                                          select_and_scatter->get_window_shape(),
+                                          select_and_scatter->get_window_movement_strides());
         }
         else if (node_op == "Sign")
         {

@@ -36,6 +36,7 @@
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/reverse.hpp"
+#include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
@@ -633,10 +634,19 @@ void runtime::cpu::CPU_Emitter::EmitSelect(codegen::CodeWriter& writer,
 {
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
+#if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
            << "   " << emit_array1d(args[0]) << "\n"
            << "    .select(" << emit_array1d(args[1]) << ",\n"
            << "       " << emit_array1d(args[2]) << ");\n";
+#else
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] ? "
+           << args[1].get_name() << "[i] : " << args[2].get_name() << "[i];\n";
+    writer << "}\n";
+#endif
     writer.indent--;
     writer << "}\n";
 }
@@ -761,9 +771,18 @@ void runtime::cpu::CPU_Emitter::EmitConvert(codegen::CodeWriter& writer,
 
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
+#if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
            << "    " << emit_array1d(args[0]) << "\n"
            << "    .template cast<" << result_element_type.c_type_string() << ">();\n";
+#else
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = (" << result_element_type.c_type_string()
+           << ")(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
+#endif
     writer.indent--;
     writer << "}\n";
 }
@@ -922,8 +941,8 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
     auto& f_result_element_type = out[0].get_element_type();
     auto result_shape = out[0].get_shape();
 
+#if PREFER_EIGEN == 1
     auto& reduction_axes = reduce->get_reduction_axes();
-
     // Trivial case: no reduction axes (this includes the scalar-reductee case).
     if (reduction_axes.empty())
     {
@@ -1082,6 +1101,35 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
         writer << "               {" << join(reduce->get_reduction_axes()) << "},\n";
         writer << "               f);\n";
     }
+#else
+    writer << "{   // " << n->get_name() << " 1\n";
+    writer.indent++;
+
+    string type = f_result_element_type.c_type_string();
+
+    writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer.indent++;
+    writer << "\n";
+    writer << type << " result;\n";
+    writer << "void* args[] = {&x, &y};\n";
+    writer << "void* out[] = {&result};\n";
+    writer << reduction_function->get_name() << "(args, out);\n";
+    writer << "return result;\n";
+    writer.indent--;
+    writer << "};\n";
+
+    kernel::emit_reduce(writer,
+                        args[0].get_element_type().c_type_string(),
+                        args[0].get_name(),
+                        args[1].get_name(),
+                        out[0].get_name(),
+                        args[0].get_shape(),
+                        out[0].get_shape(),
+                        reduce->get_reduction_axes());
+
+    writer.indent--;
+    writer << "}\n";
+#endif
 }
 
 void runtime::cpu::CPU_Emitter::EmitSign(codegen::CodeWriter& writer,
@@ -1091,8 +1139,17 @@ void runtime::cpu::CPU_Emitter::EmitSign(codegen::CodeWriter& writer,
 {
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
+#if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
            << "    " << emit_array1d(args[0]) << ".sign();\n";
+#else
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = (0 < " << args[0].get_name() << "[i]) - ("
+           << args[0].get_name() << "[i] < 0);\n";
+    writer << "}\n";
+#endif
     writer.indent--;
     writer << "}\n";
 }
@@ -1839,6 +1896,59 @@ void runtime::cpu::CPU_Emitter::EmitReduceWindow(
     writer << "                      f,\n";
     writer << "                      {" << join(reduce_window->get_window_shape()) << "},\n";
     writer << "                      {" << join(reduce_window->get_window_movement_strides())
+           << "});\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
+    codegen::CodeWriter& writer,
+    const ngraph::Node* n,
+    const vector<runtime::cpu::TensorViewWrapper>& args,
+    const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto select_and_scatter = static_cast<const op::SelectAndScatter*>(n);
+    auto selection_function = select_and_scatter->get_functions()[0];
+    auto scatter_function = select_and_scatter->get_functions()[1];
+
+    auto arg0_shape = args[0].get_shape();
+    auto arg1_shape = args[1].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    string type = n->get_output_element_type(0).c_type_string();
+
+    writer << "auto f_select = [](" << type << " x, " << type << " y) -> char\n{";
+    writer.indent++;
+    writer << "\n";
+    writer << "char result;\n";
+    writer << "void* args[] = {&x, &y};\n";
+    writer << "void* out[] = {&result};\n";
+    writer << selection_function->get_name() << "(args, out);\n";
+    writer << "return result;\n";
+    writer.indent--;
+    writer << "};\n";
+
+    writer << "auto f_scatter = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer.indent++;
+    writer << "\n";
+    writer << type << " result;\n";
+    writer << "void* args[] = {&x, &y};\n";
+    writer << "void* out[] = {&result};\n";
+    writer << scatter_function->get_name() << "(args, out);\n";
+    writer << "return result;\n";
+    writer.indent--;
+    writer << "};\n";
+
+    writer << "kernel::select_and_scatter<" << out[0].get_type() << ">(" << args[0].get_name()
+           << ",\n";
+    writer << "                " << args[1].get_name() << ",\n";
+    writer << "                " << args[2].get_name() << ",\n";
+    writer << "                " << out[0].get_name() << ",\n";
+    writer << "                {" << join(arg0_shape) << "},\n";
+    writer << "                {" << join(arg1_shape) << "},\n";
+    writer << "                {" << join(result_shape) << "},\n";
+    writer << "                f_select,\n";
+    writer << "                f_scatter,\n";
+    writer << "                {" << join(select_and_scatter->get_window_shape()) << "},\n";
+    writer << "                {" << join(select_and_scatter->get_window_movement_strides())
            << "});\n";
 }
 

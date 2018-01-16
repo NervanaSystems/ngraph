@@ -73,6 +73,14 @@ namespace ngraph
                               const Shape& arg0_shape,
                               const Shape& out_shape,
                               const AxisSet& reduction_axes);
+                void emit_reduce(codegen::CodeWriter& writer,
+                                 const std::string& element_type,
+                                 const std::string& arg0, // replacement context
+                                 const std::string& arg1,
+                                 const std::string& out,
+                                 const Shape& arg0_shape,
+                                 const Shape& out_shape,
+                                 const AxisSet& reduction_axes);
             }
         }
     }
