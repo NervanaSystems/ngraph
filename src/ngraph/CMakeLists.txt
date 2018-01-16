@@ -293,6 +293,7 @@ if (NOT APPLE)
         ${MKLDNN_LIB_DIR}/
         DESTINATION "${NGRAPH_INSTALL_LIB}"
     )
+
     if (NGRAPH_CPU_ENABLE)
         install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
             DESTINATION ${NGRAPH_INSTALL_LIB}
@@ -301,6 +302,13 @@ if (NOT APPLE)
         install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
             DESTINATION ${NGRAPH_INSTALL_LIB}
             FILES_MATCHING PATTERN "libtbb_debug.so.*"
+        )
+    endif()
+
+    if (NGRAPH_ARGON_ENABLE)
+        install(DIRECTORY ${ARGON_LIB_DIR}/
+            DESTINATION ${NGRAPH_INSTALL_LIB}
+            FILES_MATCHING PATTERN "*.so"
         )
     endif()
 endif()
