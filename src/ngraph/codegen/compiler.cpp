@@ -216,6 +216,15 @@ void StaticCompiler::initialize()
 
 StaticCompiler::~StaticCompiler()
 {
+    if (m_compiler)
+    {
+        PreprocessorOptions& preprocessor_options =
+            m_compiler->getInvocation().getPreprocessorOpts();
+        for (auto& x : preprocessor_options.RemappedFileBuffers)
+        {
+            delete x.second;
+        }
+    }
 }
 
 bool StaticCompiler::is_version_number(const string& path)
