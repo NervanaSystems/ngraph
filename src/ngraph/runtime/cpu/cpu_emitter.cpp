@@ -630,24 +630,23 @@ void runtime::cpu::CPU_Emitter::EmitSelect(codegen::CodeWriter& writer,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "   " << emit_array1d(args[0]) << "\n"
-          << "    .select(" << emit_array1d(args[1]) << ",\n"
-          << "       " << emit_array1d(args[2]) << ");\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "   " << emit_array1d(args[0]) << "\n"
+           << "    .select(" << emit_array1d(args[1]) << ",\n"
+           << "       " << emit_array1d(args[2]) << ");\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] ? "
-          << args[1].get_name() << "[i] : " << args[2].get_name() << "[i];\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] ? "
+           << args[1].get_name() << "[i] : " << args[2].get_name() << "[i];\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitSubtract(codegen::CodeWriter& writer,
@@ -768,22 +767,22 @@ void runtime::cpu::CPU_Emitter::EmitConvert(codegen::CodeWriter& writer,
 {
     auto& result_element_type = out[0].get_element_type();
 
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << "\n"
-          << "    .template cast<" << result_element_type.c_type_string() << ">();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << "\n"
+           << "    .template cast<" << result_element_type.c_type_string() << ">();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = (" << result_element_type.c_type_string() << ")("
-          << args[0].get_name() << "[i]);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = (" << result_element_type.c_type_string()
+           << ")(" << args[0].get_name() << "[i]);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitConstant(codegen::CodeWriter& writer,
@@ -1101,23 +1100,23 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
         writer << "               f);\n";
     }
 #else
-    m_out << "{   // " << n->get_name() << " 1\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << " 1\n";
+    writer.indent++;
 
     string type = f_result_element_type.c_type_string();
 
-    m_out << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
-    m_out.indent++;
-    m_out << "\n";
-    m_out << type << " result;\n";
-    m_out << "void* args[] = {&x, &y};\n";
-    m_out << "void* out[] = {&result};\n";
-    m_out << reduction_function->get_name() << "(args, out);\n";
-    m_out << "return result;\n";
-    m_out.indent--;
-    m_out << "};\n";
+    writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer.indent++;
+    writer << "\n";
+    writer << type << " result;\n";
+    writer << "void* args[] = {&x, &y};\n";
+    writer << "void* out[] = {&result};\n";
+    writer << reduction_function->get_name() << "(args, out);\n";
+    writer << "return result;\n";
+    writer.indent--;
+    writer << "};\n";
 
-    kernel::emit_reduce(m_out,
+    kernel::emit_reduce(writer,
                         args[0].get_element_type().c_type_string(),
                         args[0].get_name(),
                         args[1].get_name(),
@@ -1126,8 +1125,8 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
                         out[0].get_shape(),
                         reduce->get_reduction_axes());
 
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 #endif
 }
 
@@ -1136,21 +1135,21 @@ void runtime::cpu::CPU_Emitter::EmitSign(codegen::CodeWriter& writer,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    m_out << "{   // " << n->get_name() << "\n";
-    m_out.indent++;
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 #if PREFER_EIGEN == 1
-    m_out << emit_array1d(out[0]) << " =\n"
-          << "    " << emit_array1d(args[0]) << ".sign();\n";
+    writer << emit_array1d(out[0]) << " =\n"
+           << "    " << emit_array1d(args[0]) << ".sign();\n";
 #else
-    m_out << "#pragma omp parallel for\n";
-    m_out << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
-    m_out << "{\n";
-    m_out << "    " << out[0].get_name() << "[i] = (0 < " << args[0].get_name() << "[i]) - ("
-          << args[0].get_name() << "[i] < 0);\n";
-    m_out << "}\n";
+    writer << "#pragma omp parallel for\n";
+    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+    writer << "{\n";
+    writer << "    " << out[0].get_name() << "[i] = (0 < " << args[0].get_name() << "[i]) - ("
+           << args[0].get_name() << "[i] < 0);\n";
+    writer << "}\n";
 #endif
-    m_out.indent--;
-    m_out << "}\n";
+    writer.indent--;
+    writer << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitSlice(codegen::CodeWriter& writer,
