@@ -49,7 +49,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Intel® nGraph™ library'
+project = u'Intel® nGraph™ library'
 copyright = '2018, Intel Corporation'
 author = 'Intel Corporation'
 
