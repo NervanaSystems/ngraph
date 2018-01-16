@@ -27,8 +27,8 @@ namespace ngraph
         ///
         /// 1. <i>(the window shape)</i> a size vector \f$(w_1,\dots,w_n)\f$ where every \f$w_i \le d_i\f$; and
         /// 2. <i>(the window movement strides, optional)</i> a vector of positive integers \f$(s_1,\dots,s_n)\f$.
-        /// 2. <i>(the padding below, optional)</i> a vector of positive integers \f$(p_1,\dots,p_n)\f$.
-        /// 2. <i>(the padding above, optional)</i> a vector of positive integers \f$(q_1,\dots,q_n)\f$.
+        /// 3. <i>(the padding below, optional)</i> a vector of positive integers \f$(p_1,\dots,p_n)\f$.
+        /// 4. <i>(the padding above, optional)</i> a vector of positive integers \f$(q_1,\dots,q_n)\f$.
         ///
         /// The output has the shape \f$(N,C,d'_1,\dots,d'_n)\f$, where \f$d'_n = \lceil \frac{p_i + d_i + q_i - w_i + 1}{s_i} \rceil\f$.
         ///
