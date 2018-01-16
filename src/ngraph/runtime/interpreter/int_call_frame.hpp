@@ -255,7 +255,9 @@ private:
                                 args[0]->get_shape(),
                                 out[0]->get_shape(),
                                 avg_pool->get_window_shape(),
-                                avg_pool->get_window_movement_strides());
+                                avg_pool->get_window_movement_strides(),
+                                avg_pool->get_padding_below(),
+                                avg_pool->get_padding_above());
         }
         else if (node_op == "Broadcast")
         {
