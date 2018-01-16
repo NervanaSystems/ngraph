@@ -25,8 +25,8 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 
 #include "ngraph/ngraph.hpp"
-#include "util.hpp"
 #include "util/ndarray.hpp"
+#include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
