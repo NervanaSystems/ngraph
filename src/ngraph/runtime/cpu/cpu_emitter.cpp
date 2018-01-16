@@ -1843,6 +1843,7 @@ void runtime::cpu::CPU_Emitter::EmitReduceWindow(
 }
 
 void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
+    codegen::CodeWriter& writer,
     const ngraph::Node* n,
     const vector<runtime::cpu::TensorViewWrapper>& args,
     const vector<runtime::cpu::TensorViewWrapper>& out)
@@ -1857,41 +1858,41 @@ void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
 
     string type = n->get_output_element_type(0).c_type_string();
 
-    m_out << "auto f_select = [](" << type << " x, " << type << " y) -> char\n{";
-    m_out.indent++;
-    m_out << "\n";
-    m_out << "char result;\n";
-    m_out << "void* args[] = {&x, &y};\n";
-    m_out << "void* out[] = {&result};\n";
-    m_out << selection_function->get_name() << "(args, out);\n";
-    m_out << "return result;\n";
-    m_out.indent--;
-    m_out << "};\n";
+    writer << "auto f_select = [](" << type << " x, " << type << " y) -> char\n{";
+    writer.indent++;
+    writer << "\n";
+    writer << "char result;\n";
+    writer << "void* args[] = {&x, &y};\n";
+    writer << "void* out[] = {&result};\n";
+    writer << selection_function->get_name() << "(args, out);\n";
+    writer << "return result;\n";
+    writer.indent--;
+    writer << "};\n";
 
-    m_out << "auto f_scatter = [](" << type << " x, " << type << " y) -> " << type << "\n{";
-    m_out.indent++;
-    m_out << "\n";
-    m_out << type << " result;\n";
-    m_out << "void* args[] = {&x, &y};\n";
-    m_out << "void* out[] = {&result};\n";
-    m_out << scatter_function->get_name() << "(args, out);\n";
-    m_out << "return result;\n";
-    m_out.indent--;
-    m_out << "};\n";
+    writer << "auto f_scatter = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer.indent++;
+    writer << "\n";
+    writer << type << " result;\n";
+    writer << "void* args[] = {&x, &y};\n";
+    writer << "void* out[] = {&result};\n";
+    writer << scatter_function->get_name() << "(args, out);\n";
+    writer << "return result;\n";
+    writer.indent--;
+    writer << "};\n";
 
-    m_out << "kernel::select_and_scatter<" << out[0].get_type() << ">(" << args[0].get_name()
-          << ",\n";
-    m_out << "                " << args[1].get_name() << ",\n";
-    m_out << "                " << args[2].get_name() << ",\n";
-    m_out << "                " << out[0].get_name() << ",\n";
-    m_out << "                {" << join(arg0_shape) << "},\n";
-    m_out << "                {" << join(arg1_shape) << "},\n";
-    m_out << "                {" << join(result_shape) << "},\n";
-    m_out << "                f_select,\n";
-    m_out << "                f_scatter,\n";
-    m_out << "                {" << join(select_and_scatter->get_window_shape()) << "},\n";
-    m_out << "                {" << join(select_and_scatter->get_window_movement_strides())
-          << "});\n";
+    writer << "kernel::select_and_scatter<" << out[0].get_type() << ">(" << args[0].get_name()
+           << ",\n";
+    writer << "                " << args[1].get_name() << ",\n";
+    writer << "                " << args[2].get_name() << ",\n";
+    writer << "                " << out[0].get_name() << ",\n";
+    writer << "                {" << join(arg0_shape) << "},\n";
+    writer << "                {" << join(arg1_shape) << "},\n";
+    writer << "                {" << join(result_shape) << "},\n";
+    writer << "                f_select,\n";
+    writer << "                f_scatter,\n";
+    writer << "                {" << join(select_and_scatter->get_window_shape()) << "},\n";
+    writer << "                {" << join(select_and_scatter->get_window_movement_strides())
+           << "});\n";
 }
 
 //------------------------------------------------------------------------------------------------
