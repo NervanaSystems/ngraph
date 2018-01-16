@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
+#include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
@@ -1839,6 +1840,26 @@ void runtime::cpu::CPU_Emitter::EmitReduceWindow(
     writer << "                      {" << join(reduce_window->get_window_shape()) << "},\n";
     writer << "                      {" << join(reduce_window->get_window_movement_strides())
            << "});\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitAvgPool(codegen::CodeWriter& writer,
+                                            const ngraph::Node* n,
+                                            const vector<runtime::cpu::TensorViewWrapper>& args,
+                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto avg_pool = static_cast<const op::AvgPool*>(n);
+
+    auto arg_shape = args[0].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    writer << "kernel::avg_pool<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    writer << "                 " << out[0].get_name() << ",\n";
+    writer << "                 {" << join(arg_shape) << "},\n";
+    writer << "                 {" << join(result_shape) << "},\n";
+    writer << "                 {" << join(avg_pool->get_window_shape()) << "},\n";
+    writer << "                 {" << join(avg_pool->get_window_movement_strides()) << "},\n";
+    writer << "                 {" << join(avg_pool->get_padding_below()) << "},\n";
+    writer << "                 {" << join(avg_pool->get_padding_above()) << "});\n";
 }
 
 //------------------------------------------------------------------------------------------------

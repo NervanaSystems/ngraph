@@ -89,6 +89,7 @@ namespace ngraph
                 static void EMITTER_DECL(EmitMaxPool);
                 static void EMITTER_DECL(EmitReverse);
                 static void EMITTER_DECL(EmitReduceWindow);
+                static void EMITTER_DECL(EmitAvgPool);
 
             private:
                 static std::string emit_vector(const TensorViewWrapper&,
