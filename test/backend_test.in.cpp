@@ -5163,11 +5163,11 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_stride
               result->get_vector<float>());
 }
 
-template <typename T>
+template <typename T, typename ET>
 void make_unary_empty_test()
 {
     auto shape = Shape{0};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto A = make_shared<op::Parameter>(element::from<ET>(), shape);
     auto f = make_shared<Function>(make_shared<T>(A), op::Parameters{A});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -5175,19 +5175,23 @@ void make_unary_empty_test()
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->make_primary_tensor_view(element::from<ET>(), shape);
+    auto result = backend->make_primary_tensor_view(element::from<ET>(), shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ(a->get_vector<float>(), result->get_vector<float>());
+
+    auto in_vec = a->template get_vector<ET>();
+    auto out_vec = result->template get_vector<ET>();
+
+    EXPECT_EQ(in_vec, out_vec);
 }
 
-template <typename T>
+template <typename T, typename ET>
 void make_binary_empty_test()
 {
     auto shape = Shape{0};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto A = make_shared<op::Parameter>(element::from<ET>(), shape);
+    auto B = make_shared<op::Parameter>(element::from<ET>(), shape);
     auto f = make_shared<Function>(make_shared<T>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -5195,12 +5199,45 @@ void make_binary_empty_test()
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
+    auto a = backend->make_primary_tensor_view(element::from<ET>(), shape);
+    auto b = backend->make_primary_tensor_view(element::from<ET>(), shape);
+    auto result = backend->make_primary_tensor_view(element::from<ET>(), shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ(a->get_vector<float>(), result->get_vector<float>());
+
+    auto in_vec = a->template get_vector<ET>();
+    auto out_vec = result->template get_vector<ET>();
+
+    EXPECT_EQ(in_vec, out_vec);
+}
+
+template <typename T>
+void make_binary_empty_test()
+{
+    make_binary_empty_test<T, float>();
+    make_binary_empty_test<T, double>();
+    make_binary_empty_test<T, int8_t>();
+    make_binary_empty_test<T, int16_t>();
+    make_binary_empty_test<T, int32_t>();
+    make_binary_empty_test<T, int64_t>();
+    make_binary_empty_test<T, uint8_t>();
+    make_binary_empty_test<T, uint16_t>();
+    make_binary_empty_test<T, uint32_t>();
+    make_binary_empty_test<T, uint64_t>();
+}
+template <typename T>
+void make_unary_empty_test()
+{
+    make_unary_empty_test<T, float>();
+    make_unary_empty_test<T, double>();
+    make_unary_empty_test<T, int8_t>();
+    make_unary_empty_test<T, int16_t>();
+    make_unary_empty_test<T, int32_t>();
+    make_unary_empty_test<T, int64_t>();
+    make_unary_empty_test<T, uint8_t>();
+    make_unary_empty_test<T, uint16_t>();
+    make_unary_empty_test<T, uint32_t>();
+    make_unary_empty_test<T, uint64_t>();
 }
 
 TEST(${BACKEND_NAME}, zero_sized_abs)
@@ -5229,21 +5266,7 @@ TEST(${BACKEND_NAME}, zero_sized_negative)
 }
 TEST(${BACKEND_NAME}, zero_sized_not)
 {
-    auto shape = Shape{0};
-    auto A = make_shared<op::Parameter>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Not>(A), op::Parameters{A});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    auto a = backend->make_primary_tensor_view(element::boolean, shape);
-    auto result = backend->make_primary_tensor_view(element::boolean, shape);
-
-    cf->call({a}, {result});
-    EXPECT_EQ(a->get_vector<char>(), result->get_vector<char>());
-    std::cout << "binary" << std::endl;
+    make_unary_empty_test<op::Not, char>();
 }
 TEST(${BACKEND_NAME}, zero_sized_sign)
 {
