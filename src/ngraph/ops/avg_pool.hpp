@@ -20,7 +20,7 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Batched average pooling operation, with optional window stride.
+        /// \brief Batched average pooling operation, with optional padding and window stride.
         ///
         /// Average pooling takes as its input an image batch tensor of shape \f$(N,C,d_1,\dots,d_n)\f$ where \f$n > 0\f$, every \f$d_i > 0\f$, and where \f$N\f$ is
         /// the batch size, and \f$C > 0\f$ is the number of channels (sometimes called features). It also takes four parameters:
