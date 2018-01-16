@@ -53,7 +53,9 @@ namespace ngraph
         virtual ~Node()
         {
             for (auto arg : m_arguments)
+            {
                 arg->m_users.erase(this);
+            }
         }
         virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const std::shared_ptr<Node>& delta)
