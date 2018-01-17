@@ -555,382 +555,318 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     check_cuda_errors(cuMemFree(dev_bufferB));
     check_cuda_errors(cuMemFree(dev_bufferC));
     check_cuda_errors(cuModuleUnload(cuda_module));
-    check_cuda_errors(cuCtxDestroy(context));})";
+    check_cuda_errors(cuCtxDestroy(context));)";
 
-    if (m_emit_timing)
-    {
-        writer << "// Declare debug timers\n";
-        vector<string> names;
-        for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
+        if (m_emit_timing)
         {
-            for (shared_ptr<Node> node : current_function->get_ordered_ops())
+            writer << "// Declare debug timers\n";
+            vector<string> names;
+            for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
             {
-                if (!node->is_parameter() && !node->is_constant())
+                for (shared_ptr<Node> node : current_function->get_ordered_ops())
                 {
-                    names.push_back(node->get_name());
+                    if (!node->is_parameter() && !node->is_constant())
+                    {
+                        names.push_back(node->get_name());
+                    }
+                }
+            }
+            for (const string& s : names)
+            {
+                writer << "ngraph::stopwatch timer_" << s << ";\n";
+            }
+            writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
+                   << "; }\n";
+            writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
+            writer << "{\n";
+            writer.indent++;
+            writer << "const char* rc;\n";
+            writer << "switch(index)\n";
+            writer << "{\n";
+            for (size_t i = 0; i < names.size(); i++)
+            {
+                writer << "case " << i << ": rc = \"" << names[i] << "\"; break;\n";
+            }
+            writer << "default: rc = \"\";\n";
+            writer << "}\n";
+            writer << "return rc;\n";
+            writer.indent--;
+            writer << "}\n";
+            writer << "extern \"C\" const size_t get_debug_timer_microseconds(size_t index)\n";
+            writer << "{\n";
+            writer.indent++;
+            writer << "size_t rc;\n";
+            writer << "switch(index)\n";
+            writer << "{\n";
+            for (size_t i = 0; i < names.size(); i++)
+            {
+                writer << "case " << i << ": rc = timer_" << names[i]
+                       << ".get_total_microseconds(); break;\n";
+            }
+            writer << "default: rc = 0;\n";
+            writer << "}\n";
+            writer << "return rc;\n";
+            writer.indent--;
+            writer << "}\n";
+            writer << "extern \"C\" const size_t get_debug_timer_call_count(size_t index)\n";
+            writer << "{\n";
+            writer.indent++;
+            writer << "size_t rc;\n";
+            writer << "switch(index)\n";
+            writer << "{\n";
+            for (size_t i = 0; i < names.size(); i++)
+            {
+                writer << "case " << i << ": rc = timer_" << names[i]
+                       << ".get_call_count(); break;\n";
+            }
+            writer << "default: rc = 0;\n";
+            writer << "}\n";
+            writer << "return rc;\n";
+            writer.indent--;
+            writer << "}\n";
+            writer << "\n";
+        }
+
+        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        {
+            if (node->liveness_new_list.size() > 0)
+            {
+                temporaries_used = true;
+                for (descriptor::Tensor* tensor : node->liveness_new_list)
+                {
+                    worst_case_tmp_size += tensor->size();
                 }
             }
         }
-        for (const string& s : names)
+
+        if (temporaries_used)
         {
-            writer << "ngraph::stopwatch timer_" << s << ";\n";
+            size_t temp_pool_size = current_function->get_temporary_pool_size();
+            writer << "// Allocate the memory pool\n";
+            writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
+            writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
+            writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
+                   << ngraph::runtime::gpu::alignment << ");\n";
+            writer << "size_t pool_gpu_ptr = (size_t)memory_handler.get_ptr();\n";
+            writer << "\n";
+
+            // Add temporaries to the variable name map
+            for (shared_ptr<Node> node : current_function->get_ordered_ops())
+            {
+                for (descriptor::Tensor* tensor : node->liveness_new_list)
+                {
+                    stringstream ss;
+                    ss << "((" << tensor->get_element_type().c_type_string() << "*)(pool_gpu_ptr + "
+                       << tensor->get_pool_offset() << "))";
+                    m_variable_name_map[tensor->get_name()] = ss.str();
+                }
+            }
         }
-        writer << "extern \"C\" size_t get_debug_timer_count() { return " << names.size()
-               << "; }\n";
-        writer << "extern \"C\" const char* get_debug_timer_name(size_t index)\n";
-        writer << "{\n";
-        writer.indent++;
-        writer << "const char* rc;\n";
-        writer << "switch(index)\n";
-        writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
+
+        // Add inputs to the variable name map
+        size_t arg_index = 0;
+        for (shared_ptr<op::Parameter> param : current_function->get_parameters())
         {
-            writer << "case " << i << ": rc = \"" << names[i] << "\"; break;\n";
+            for (size_t i = 0; i < param->get_output_size(); ++i)
+            {
+                shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
+                const element::Type& et = tv->get_tensor_view_type()->get_element_type();
+                string type = et.c_type_string();
+                stringstream ss;
+                ss << "((" << type << "*)(inputs[" << arg_index << "]))";
+                m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
+                arg_index++;
+            }
         }
-        writer << "default: rc = \"\";\n";
-        writer << "}\n";
-        writer << "return rc;\n";
+
+        // create output alias map
+        size_t output_index = 0;
+        unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
+        vector<size_t> aliases;
+        for (size_t i = 0; i < current_function->get_output_size(); ++i)
+        {
+            shared_ptr<Node> op = current_function->get_output_op(i);
+            shared_ptr<descriptor::TensorView> otv = op->get_output_tensor_view();
+            vector<size_t>& al = output_alias_map[otv.get()];
+            al.push_back(output_index);
+            if (al.size() > 1)
+            {
+                aliases.push_back(output_index);
+            }
+            output_index++;
+        }
+
+        // Add outputs to the variable name map
+        output_index = 0;
+        for (size_t i = 0; i < current_function->get_output_size(); ++i)
+        {
+            shared_ptr<Node> op = current_function->get_output_op(i);
+            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
+            const element::Type& et = tv->get_tensor_view_type()->get_element_type();
+            bool parameter_as_output = false;
+            for (shared_ptr<op::Parameter> param : current_function->get_parameters())
+            {
+                for (const descriptor::Output& pout : param->get_outputs())
+                {
+                    shared_ptr<descriptor::TensorView> ptv = pout.get_tensor_view();
+                    if (tv == ptv)
+                    {
+                        parameter_as_output = true;
+                        writer << "memcpy(static_cast<" << et.c_type_string() << "*>(outputs["
+                               << output_index << "]), "
+                               << m_variable_name_map[ptv->get_tensor().get_name()] << ", "
+                               << ptv->get_tensor().size() << ");\n";
+                        break;
+                    }
+                }
+            }
+            if (!parameter_as_output && !contains(aliases, output_index))
+            {
+                if (contains(constants, tv.get()))
+                {
+                    writer << "memcpy(outputs[" << output_index << "], "
+                           << tv->get_tensor().get_name() << ", " << tv->get_tensor().size()
+                           << ");\n";
+                }
+                else
+                {
+                    string type = et.c_type_string();
+                    stringstream ss;
+                    ss << "((" << type << "*)(outputs[" << output_index << "]))";
+                    m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
+                }
+            }
+            output_index++;
+        }
+
+        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        {
+            auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
+            // with shared pointers, which is fine here but clang doesn't like it.)
+            auto handler = dispatcher.find(type_index(typeid(n)));
+            if (handler == dispatcher.end())
+            {
+                throw ngraph_error("Unhandled op during code generation : " + node->description());
+            }
+            vector<GPU_TensorViewWrapper> in;
+            for (const descriptor::Input& input : node->get_inputs())
+            {
+                const descriptor::Output& output = input.get_output();
+                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                in.push_back(
+                    GPU_TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
+            }
+            vector<GPU_TensorViewWrapper> out;
+            for (const descriptor::Output& output : node->get_outputs())
+            {
+                shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
+                out.push_back(
+                    GPU_TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
+            }
+
+            // Emit operation prologue
+            if (!node->is_parameter() && !node->is_constant())
+            {
+                if (m_use_tbb)
+                {
+                    writer << "tbb::flow::continue_node<tbb::flow::continue_msg> "
+                              "flowgraph_node_"
+                           << node->get_name()
+                           << "(G, [&](const tbb::flow::continue_msg &msg)\n{\n";
+                    writer.indent++;
+                }
+                if (m_emit_timing)
+                {
+                    emit_debug_function_entry(writer, node.get(), in, out);
+                }
+            }
+
+            // Emit operation body
+            string func_name;
+            auto it = match_functions.find(node.get());
+            if (it != match_functions.end())
+            {
+                func_name = it->second;
+            }
+            if (func_name.empty())
+            {
+                handler->second(writer, node.get(), in, out);
+            }
+            else
+            {
+                vector<string> names;
+                for (const GPU_TensorViewWrapper& tv : in)
+                {
+                    names.push_back(tv.get_name());
+                }
+                for (const GPU_TensorViewWrapper& tv : out)
+                {
+                    names.push_back(tv.get_name());
+                }
+                writer << func_name << "(" << join(names) << ");\n";
+            }
+
+            // Emit operation epilogue
+            if (!node->is_parameter() && !node->is_constant())
+            {
+                handle_output_alias(writer, *node, output_alias_map);
+                if (m_emit_timing)
+                {
+                    emit_debug_function_exit(writer, node.get(), in, out);
+                }
+                if (m_use_tbb)
+                {
+                    writer.indent--;
+                    writer << "});\n";
+                }
+            }
+        }
+
+        if (m_use_tbb)
+        {
+            writer << "\n";
+            // Build the flow graph
+            vector<Node*> dependence_graph_heads;
+
+            traverse_nodes(
+                current_function, [&writer, &dependence_graph_heads](shared_ptr<Node> n) {
+                    if (!n->is_parameter() && !n->is_constant())
+                    {
+                        bool is_head = true;
+                        for (auto arg : n->get_input_ops())
+                        {
+                            if (!arg->is_parameter() && !arg->is_constant())
+                            {
+                                is_head = false;
+                                writer << "tbb::flow::make_edge(flowgraph_node_" << arg->get_name()
+                                       << ", flowgraph_node_" << n->get_name() << ");\n";
+                            }
+                        }
+                        if (is_head)
+                        {
+                            dependence_graph_heads.emplace_back(n.get());
+                        }
+                    }
+                });
+
+            writer << "\n";
+
+            // Execute the flow graph
+            if (!dependence_graph_heads.empty())
+            {
+                for (Node* n : dependence_graph_heads)
+                {
+                    writer << "flowgraph_node_" << n->get_name()
+                           << ".try_put(tbb::flow::continue_msg());\n";
+                }
+                writer << "try { G.wait_for_all(); } catch(...) { throw; }\n";
+            }
+        }
+
         writer.indent--;
-        writer << "}\n";
-        writer << "extern \"C\" const size_t get_debug_timer_microseconds(size_t index)\n";
-        writer << "{\n";
-        writer.indent++;
-        writer << "size_t rc;\n";
-        writer << "switch(index)\n";
-        writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
-        {
-            writer << "case " << i << ": rc = timer_" << names[i]
-                   << ".get_total_microseconds(); break;\n";
-        }
-        writer << "default: rc = 0;\n";
-        writer << "}\n";
-        writer << "return rc;\n";
-        writer.indent--;
-        writer << "}\n";
-        writer << "extern \"C\" const size_t get_debug_timer_call_count(size_t index)\n";
-        writer << "{\n";
-        writer.indent++;
-        writer << "size_t rc;\n";
-        writer << "switch(index)\n";
-        writer << "{\n";
-        for (size_t i = 0; i < names.size(); i++)
-        {
-            writer << "case " << i << ": rc = timer_" << names[i] << ".get_call_count(); break;\n";
-        }
-        writer << "default: rc = 0;\n";
-        writer << "}\n";
-        writer << "return rc;\n";
-        writer.indent--;
-        writer << "}\n";
-        writer << "\n";
+        // End generated function
+        writer += "}\n\n";
     }
-
-    //     // This for loop creates a collection of functions that are called more than once
-    //     // and emitting them as globally callable functions.
-    //     // ops implement the is_functionally_identical method
-    //     unordered_map<Node*, string> match_functions;
-    //     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
-    //     {
-    //         const list<shared_ptr<Node>>& tmp = current_function->get_ordered_ops();
-    //         vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
-    //         for (size_t i = 0; i < op_list.size() - 1; i++)
-    //         {
-    //             if (op_list[i]->is_constant() || op_list[i]->is_parameter())
-    //             {
-    //                 continue;
-    //             }
-    //             if (contains_key(match_functions, op_list[i].get()))
-    //             {
-    //                 continue;
-    //             }
-    //             string match_function_name;
-    //             for (size_t j = i + 1; j < op_list.size(); j++)
-    //             {
-    //                 if (op_list[i]->is_functionally_identical(*op_list[j]))
-    //                 {
-    //                     if (match_function_name.empty())
-    //                     {
-    //                         match_function_name = "func_" + op_list[i]->get_name();
-    //                         match_functions.insert({op_list[i].get(), match_function_name});
-    //                     }
-    //                     match_functions.insert({op_list[j].get(), match_function_name});
-    //                 }
-    //             }
-    //             if (!match_function_name.empty())
-    //             {
-    //                 writer << "static void " << match_function_name << "(";
-    //                 writer.indent++;
-    //                 // Work around a compiler warning (*node inside typeid may have effects
-    //                 // with shared pointers, which is fine here but clang doesn't like it.)
-    //                 auto& n = *op_list[i];
-    //                 auto handler = dispatcher.find(type_index(typeid(n)));
-    //                 vector<GPU_TensorViewWrapper> in;
-    //                 size_t arg_index = 0;
-    //                 set<string> arg_names;
-    //                 for (const descriptor::Input& input : n.get_inputs())
-    //                 {
-    //                     const descriptor::Output& output = input.get_output();
-    //                     shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-    //                     GPU_TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
-    //                     if (!contains(arg_names, tvw.get_name()))
-    //                     {
-    //                         arg_names.insert(tvw.get_name());
-    //                         if (arg_index++ > 0)
-    //                         {
-    //                             writer << ",";
-    //                         }
-    //                         writer << "\n";
-    //                         writer << tvw.get_type() << "* " << tvw.get_name();
-    //                     }
-    //                     in.push_back(tvw);
-    //                 }
-    //                 vector<GPU_TensorViewWrapper> out;
-    //                 for (const descriptor::Output& output : n.get_outputs())
-    //                 {
-    //                     shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-    //                     GPU_TensorViewWrapper tvw{tv, "_out" + to_string(arg_index)};
-    //                     if (arg_index++ > 0)
-    //                     {
-    //                         writer << ",";
-    //                     }
-    //                     writer << "\n";
-    //                     writer << tvw.get_type() << "* " << tvw.get_name();
-    //                     out.push_back(tvw);
-    //                 }
-    //                 writer.indent--;
-    // if (node->liveness_new_list.size() > 0)
-    //     {
-    //         temporaries_used = true;
-    //         for (descriptor::Tensor* tensor : node->liveness_new_list)
-    //         {
-    //             worst_case_tmp_size += tensor->size();
-    //         }
-    //     }
-    // }
-    // if (temporaries_used)
-    // {
-    //     size_t temp_pool_size = current_function->get_temporary_pool_size();
-    //     writer << "// Allocate the memory pool\n";
-    //     writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
-    //     writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
-    //     writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
-    //            << ngraph::runtime::gpu::alignment << ");\n";
-    //     writer << "size_t pool_gpu_ptr = (size_t)memory_handler.get_ptr();\n";
-    //     writer << "\n";
-
-    //     // Add temporaries to the variable name map
-    //     for (shared_ptr<Node> node : current_function->get_ordered_ops())
-    //     {
-    //         for (descriptor::Tensor* tensor : node->liveness_new_list)
-    //         {
-    //             stringstream ss;
-    //             ss << "((" << tensor->get_element_type().c_type_string() << "*)(pool_gpu_ptr + "
-    //                << tensor->get_pool_offset() << "))";
-    //             m_variable_name_map[tensor->get_name()] = ss.str();
-    //         }
-    //     }
-    // }
-
-    // // Add inputs to the variable name map
-    // size_t arg_index = 0;
-    // for (shared_ptr<op::Parameter> param : current_function->get_parameters())
-    // {
-    //     for (size_t i = 0; i < param->get_output_size(); ++i)
-    //     {
-    //         shared_ptr<descriptor::TensorView> tv = param->get_output_tensor_view(i);
-    //         const element::Type& et = tv->get_tensor_view_type()->get_element_type();
-    //         string type = et.c_type_string();
-    //         stringstream ss;
-    //         ss << "((" << type << "*)(inputs[" << arg_index << "]))";
-    //         m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
-    //         arg_index++;
-    //     }
-    // }
-
-    // // create output alias map
-    // size_t output_index = 0;
-    // unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
-    // vector<size_t> aliases;
-    // for (size_t i = 0; i < current_function->get_output_size(); ++i)
-    // {
-    //     shared_ptr<Node> op = current_function->get_output_op(i);
-    //     shared_ptr<descriptor::TensorView> otv = op->get_output_tensor_view();
-    //     vector<size_t>& al = output_alias_map[otv.get()];
-    //     al.push_back(output_index);
-    //     if (al.size() > 1)
-    //     {
-    //         aliases.push_back(output_index);
-    //     }
-    //     output_index++;
-    // }
-
-    // // Add outputs to the variable name map
-    // output_index = 0;
-    // for (size_t i = 0; i < current_function->get_output_size(); ++i)
-    // {
-    //     shared_ptr<Node> op = current_function->get_output_op(i);
-    //     shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
-    //     const element::Type& et = tv->get_tensor_view_type()->get_element_type();
-    //     bool parameter_as_output = false;
-    //     for (shared_ptr<op::Parameter> param : current_function->get_parameters())
-    //     {
-    //         for (const descriptor::Output& pout : param->get_outputs())
-    //         {
-    //             shared_ptr<descriptor::TensorView> ptv = pout.get_tensor_view();
-    //             if (tv == ptv)
-    //             {
-    //                 parameter_as_output = true;
-    //                 writer << "memcpy(static_cast<" << et.c_type_string() << "*>(outputs["
-    //                        << output_index << "]), "
-    //                        << m_variable_name_map[ptv->get_tensor().get_name()] << ", "
-    //                        << ptv->get_tensor().size() << ");\n";
-    //                 break;
-    //             }
-    //         }
-    //     }
-    //     if (!parameter_as_output && !contains(aliases, output_index))
-    //     {
-    //         if (contains(constants, tv.get()))
-    //         {
-    //             writer << "memcpy(outputs[" << output_index << "], " << tv->get_tensor().get_name()
-    //                    << ", " << tv->get_tensor().size() << ");\n";
-    //         }
-    //         else
-    //         {
-    //             string type = et.c_type_string();
-    //             stringstream ss;
-    //             ss << "((" << type << "*)(outputs[" << output_index << "]))";
-    //             m_variable_name_map[tv->get_tensor().get_name()] = ss.str();
-    //         }
-    //     }
-    //     output_index++;
-    // }
-
-    // for (shared_ptr<Node> node : current_function->get_ordered_ops())
-    // {
-    //     auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
-    //     // with shared pointers, which is fine here but clang doesn't like it.)
-    //     auto handler = dispatcher.find(type_index(typeid(n)));
-    //     if (handler == dispatcher.end())
-    //     {
-    //         throw ngraph_error("Unhandled op during code generation : " + node->description());
-    //     }
-    //     vector<GPU_TensorViewWrapper> in;
-    //     for (const descriptor::Input& input : node->get_inputs())
-    //     {
-    //         const descriptor::Output& output = input.get_output();
-    //         shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-    //         in.push_back(GPU_TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
-    //     }
-    //     vector<GPU_TensorViewWrapper> out;
-    //     for (const descriptor::Output& output : node->get_outputs())
-    //     {
-    //         shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
-    //         out.push_back(GPU_TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
-    //     }
-
-    //     // Emit operation prologue
-    //     if (!node->is_parameter() && !node->is_constant())
-    //     {
-    //         if (m_use_tbb)
-    //         {
-    //             writer << "tbb::flow::continue_node<tbb::flow::continue_msg> "
-    //                       "flowgraph_node_"
-    //                    << node->get_name() << "(G, [&](const tbb::flow::continue_msg &msg)\n{\n";
-    //             writer.indent++;
-    //         }
-    //         if (m_emit_timing)
-    //         {
-    //             emit_debug_function_entry(writer, node.get(), in, out);
-    //         }
-    //     }
-
-    //     // Emit operation body
-    //     string func_name;
-    //     auto it = match_functions.find(node.get());
-    //     if (it != match_functions.end())
-    //     {
-    //         func_name = it->second;
-    //     }
-    //     if (func_name.empty())
-    //     {
-    //         handler->second(&emitter, node.get(), in, out);
-    //     }
-    //     else
-    //     {
-    //         vector<string> names;
-    //         for (const GPU_TensorViewWrapper& tv : in)
-    //         {
-    //             names.push_back(tv.get_name());
-    //         }
-    //         for (const GPU_TensorViewWrapper& tv : out)
-    //         {
-    //             names.push_back(tv.get_name());
-    //         }
-    //         writer << func_name << "(" << join(names) << ");\n";
-    //     }
-
-    //     // Emit operation epilogue
-    //     if (!node->is_parameter() && !node->is_constant())
-    //     {
-    //         handle_output_alias(writer, *node, output_alias_map);
-    //         if (m_emit_timing)
-    //         {
-    //             emit_debug_function_exit(writer, node.get(), in, out);
-    //         }
-    //         if (m_use_tbb)
-    //         {
-    //             writer.indent--;
-    //             writer << "});\n";
-    //         }
-    //     }
-    // }
-
-    // if (m_use_tbb)
-    // {
-    //     writer << "\n";
-    //     // Build the flow graph
-    //     vector<Node*> dependence_graph_heads;
-
-    //     traverse_nodes(current_function, [&writer, &dependence_graph_heads](shared_ptr<Node> n) {
-    //         if (!n->is_parameter() && !n->is_constant())
-    //         {
-    //             bool is_head = true;
-    //             for (auto arg : n->get_input_ops())
-    //             {
-    //                 if (!arg->is_parameter() && !arg->is_constant())
-    //                 {
-    //                     is_head = false;
-    //                     writer << "tbb::flow::make_edge(flowgraph_node_" << arg->get_name()
-    //                            << ", flowgraph_node_" << n->get_name() << ");\n";
-    //                 }
-    //             }
-    //             if (is_head)
-    //             {
-    //                 dependence_graph_heads.emplace_back(n.get());
-    //             }
-    //         }
-    //     });
-
-    //     writer << "\n";
-
-    //     // Execute the flow graph
-    //     if (!dependence_graph_heads.empty())
-    //     {
-    //         for (Node* n : dependence_graph_heads)
-    //         {
-    //             writer << "flowgraph_node_" << n->get_name()
-    //                    << ".try_put(tbb::flow::continue_msg());\n";
-    //         }
-    //         writer << "try { G.wait_for_all(); } catch(...) { throw; }\n";
-    //     }
-    // }
-
-    // writer.indent--;
-    // // End generated function
-    // writer += "}\n\n";
-    // }
 
     // TODO: Cleanup and make this a utility function
 
