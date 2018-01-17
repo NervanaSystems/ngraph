@@ -82,16 +82,18 @@ void runtime::gpu::GPU_Emitter::EmitDot(const ngraph::Node* n,
     // clang-format off
     else if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
     {
+      // TODO Assert arg0_shape[0] == arg1_shape[0]?
       writer << "{   // " << n->get_name() << "\n";
       writer.indent++;
       writer << "cublas::cublasSdot("
-        << "cublasHandle_t handle,"
-        << "int n,"
-        << "const float *x,"
-        << "int incx,"
-        << "const float *y,"
-        << "int incy,"
-        << "float *result)"
+        << "cublas_handle,"
+        << arg0_shape[0],
+        << args[0].get_name(),
+        // Todo handle striding?
+        << "1,"
+        << arg[1].get_name(),
+        << "1,"
+        << out[0].get_name()
       writer.indent--;
       writer << "}\n";
     }
