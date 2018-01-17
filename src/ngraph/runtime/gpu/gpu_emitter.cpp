@@ -78,9 +78,24 @@ void runtime::gpu::GPU_Emitter::EmitDot(const ngraph::Node* n,
         auto& first = (arg0_shape.empty() ? args[0] : args[1]);
         auto& second = (arg0_shape.empty() ? args[1] : args[0]);
     }
+
+    // clang-format off
     else if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
     {
+      writer << "{   // " << n->get_name() << "\n";
+      writer.indent++;
+      writer << "cublas::cublasSdot("
+        << "cublasHandle_t handle,"
+        << "int n,"
+        << "const float *x,"
+        << "int incx,"
+        << "const float *y,"
+        << "int incy,"
+        << "float *result)"
+      writer.indent--;
+      writer << "}\n";
     }
+    // clang-format on
     else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
     {
     }
