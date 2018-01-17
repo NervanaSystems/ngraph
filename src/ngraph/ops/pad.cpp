@@ -98,8 +98,44 @@ bool op::Pad::is_functionally_identical(const Node& other) const
     return rc;
 }
 
-/* The "y" half of this is going to be a bit tricky... best way to handle it, I think, is to ReplaceSlice the non-padded values in the incoming delta tensor
-   with a zero broadcasted to x's shape; then sum that and backprop the result to y.
+/* The "y" half of this is going to be a bit tricky... best way to handle it, I think,
+   is to ReplaceSlice the non-padded values in the incoming delta tensor with a zero
+   broadcasted to x's shape; then sum that and backprop the result to y.
+
+   For example, let's say we are padding a 2x2 with 1 above, below, and interior, and
+   the deltas coming back are:
+
+   d00 d01 d02 d03 d04
+   d10 d11 d12 d13 d14
+   d20 d21 d22 d23 d24
+   d30 d31 d32 d33 d34
+   d40 d41 d42 d43 d44
+
+   We know that everything but d11, d13, d31, and d33 on the forward prop is just "y".
+   So we mask that off (using the forward-prop padding values to determine start, end,
+   and slice stride):
+
+   d00 d01 d02 d03 d04
+   d10   0 d12   0 d14
+   d20 d21 d22 d23 d24
+   d30   0 d32   0 d34
+   d40 d41 d42 d43 d44
+
+   Then sum that up:
+
+   d00 + d01 + d02 + d03 + d04 +
+   d10 +   0 + d12 +   0 + d14 +
+   d20 + d21 + d22 + d23 + d24 +
+   d30 +   0 + d32 +   0 + d34 +
+   d40 + d41 + d42 + d43 + d44
+
+   For the "x" backprop it's sort of the opposite; just slice out:
+
+   d11 d13
+   d31 d33
+
+   and push that back.
+
 void op::Pad::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {
     auto x = get_inputs_op(0);

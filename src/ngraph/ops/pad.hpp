@@ -36,6 +36,24 @@ namespace ngraph
         ///
         /// The output tensor will have the shape \f$(d'_1,\dots,d'_n)\f$ where \f$d'_i = p_i + (d_i - 1)(r_i + 1) + 1 + q_i\f$ if \f$d_i > 0\f$, and \f$d'_i = p_i + q_i\f$ if \f$d_i = 0\f$.
         ///
+        /// Example: given a 3x3 tensor, with interior-padding sizes of `{1,2}`, padding-below of `{1,2}`, padding-above of `{1,0}`, and a pad-value of `42`, we obtain:
+        ///
+        /// ```
+        ///           42 42 42 42 42 42 42 42 42
+        ///           42 42  1 42 42  2 42 42  3
+        /// 1 2 3     42 42 42 42 42 42 42 42 42
+        /// 4 5 6 --> 42 42  4 42 42  5 42 42  6
+        /// 7 8 9     42 42 42 42 42 42 42 42 42
+        ///           42 42  7 42 42  8 42 42  9
+        ///           42 42 42 42 42 42 42 42 42
+        /// ```
+        ///
+        /// In other words we have inserted one new row between each pair of adjacent rows, two new columns between each pair of adjacent columns, one new row at
+        /// the top and two new columns on the left, and one new row at the bottom and zero new columns on the right; then filled the new rows and columns with `42`.
+        ///
+        /// (Note that `below` and `above` here refer respectively to lower- or higher-numbered coordinate indices, and numbering starts at the upper-left corner;
+        /// thus inserting a row "below" actually inserts it at the "top" of the matrix.)
+        ///
         class Pad : public RequiresTensorViewArgs
         {
         public:
