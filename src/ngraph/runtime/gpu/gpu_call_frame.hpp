@@ -26,6 +26,8 @@ namespace ngraph
 {
     namespace runtime
     {
+        class PrimaryTensorView;
+
         namespace gpu
         {
             class GPU_CallFrame;
@@ -40,22 +42,23 @@ namespace ngraph
             {
             public:
                 GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction> external_function,
-                              std::shared_ptr<Function> func);
+                              EntryPoint compiled_function);
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
-                void call(const std::vector<std::shared_ptr<ngraph::runtime::Value>>& inputs,
-                          const std::vector<std::shared_ptr<ngraph::runtime::Value>>& outputs);
+                void
+                    call(const std::vector<std::shared_ptr<runtime::TensorView>>& inputs,
+                         const std::vector<std::shared_ptr<runtime::TensorView>>& outputs) override;
 
                 /// @brief Invoke the function with tuples pre-expanded to their underlying
                 /// tensor views.
                 void tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
-                                 const std::vector<std::shared_ptr<TensorView>>& outputs);
+                                 const std::vector<std::shared_ptr<TensorView>>& outputs) override;
 
             protected:
                 std::shared_ptr<GPU_ExternalFunction> m_external_function;
-                std::shared_ptr<Function> m_function;
+                EntryPoint m_compiled_function;
             };
         }
     }
