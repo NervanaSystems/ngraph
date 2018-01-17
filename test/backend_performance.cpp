@@ -127,22 +127,10 @@ TEST(benchmark, mxnet_10_bucket_lstm)
     run_benchmark(json_path, "CPU", 10);
 }
 
-TEST(benchmark, mxnet_10_bucket_lstm_int)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/10_bucket_LSTM.json");
-    run_benchmark(json_path, "INTERPRETER", 10);
-}
-
 TEST(benchmark, mxnet_lstm_backward)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/LSTM_backward.json");
     run_benchmark(json_path, "CPU", 10);
-}
-
-TEST(benchmark, mxnet_lstm_backward_int)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/LSTM_backward.json");
-    run_benchmark(json_path, "INTERPRETER", 1);
 }
 
 TEST(benchmark, mxnet_lstm_forward)
@@ -151,10 +139,16 @@ TEST(benchmark, mxnet_lstm_forward)
     run_benchmark(json_path, "CPU", 10);
 }
 
-TEST(benchmark, mxnet_lstm_forward_int)
+TEST(benchmark, mxnet_seq2seq_forward)
 {
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/LSTM_forward.json");
-    run_benchmark(json_path, "INTERPRETER", 10);
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Seq2Seq_forward.json");
+    run_benchmark(json_path, "CPU", 10);
+}
+
+TEST(benchmark, mxnet_seq2seq_backward)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Seq2Seq_backward.json");
+    run_benchmark(json_path, "CPU", 10);
 }
 
 //
