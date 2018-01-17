@@ -61,9 +61,10 @@ op::Pad::Pad(const std::shared_ptr<Node>& arg,
 
     for (size_t i = 0; i < arg_shape.size(); i++)
     {
-        result_shape.push_back(padding_below[i] +
-                               SUBTRACT_OR_ZERO(arg_shape[i] * (padding_interior[i] + 1), padding_interior[i]) +
-                               padding_above[i]);
+        result_shape.push_back(
+            padding_below[i] +
+            SUBTRACT_OR_ZERO(arg_shape[i] * (padding_interior[i] + 1), padding_interior[i]) +
+            padding_above[i]);
     }
 
     set_value_type_checked(get_input_element_type(0), result_shape);

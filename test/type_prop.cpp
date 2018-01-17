@@ -5016,8 +5016,7 @@ TEST(type_prop, pad_deduce_1d_exterior)
     auto padding_below = Shape{2};
     auto padding_above = Shape{3};
     auto padding_interior = Shape{0};
-    auto pad = make_shared<op::Pad>(
-        param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
     EXPECT_EQ(pad->get_element_type(), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{55}));
 
@@ -5034,8 +5033,7 @@ TEST(type_prop, pad_deduce_1d_interior)
     auto padding_below = Shape{0};
     auto padding_above = Shape{0};
     auto padding_interior = Shape{2};
-    auto pad = make_shared<op::Pad>(
-        param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
     EXPECT_EQ(pad->get_element_type(), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{148}));
 
@@ -5052,8 +5050,7 @@ TEST(type_prop, pad_deduce_1d_interior_exterior)
     auto padding_below = Shape{5};
     auto padding_above = Shape{6};
     auto padding_interior = Shape{2};
-    auto pad = make_shared<op::Pad>(
-        param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
     EXPECT_EQ(pad->get_element_type(), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{159}));
 
@@ -5065,57 +5062,57 @@ TEST(type_prop, pad_deduce_1d_interior_exterior)
 TEST(type_prop, pad_deduce_2d_interior_exterior)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50,40});
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto padding_below = Shape{5,3};
-    auto padding_above = Shape{6,9};
-    auto padding_interior = Shape{2,3};
-    auto pad = make_shared<op::Pad>(
-        param0, param1, padding_below, padding_above, padding_interior);
+    auto padding_below = Shape{5, 3};
+    auto padding_above = Shape{6, 9};
+    auto padding_interior = Shape{2, 3};
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
     EXPECT_EQ(pad->get_element_type(), element::f32);
-    EXPECT_EQ(pad->get_shape(), (Shape{159,169}));
+    EXPECT_EQ(pad->get_shape(), (Shape{159, 169}));
 
-    EXPECT_EQ(pad->get_padding_below(), (Shape{5,3}));
-    EXPECT_EQ(pad->get_padding_above(), (Shape{6,9}));
-    EXPECT_EQ(pad->get_padding_interior(), (Shape{2,3}));
+    EXPECT_EQ(pad->get_padding_below(), (Shape{5, 3}));
+    EXPECT_EQ(pad->get_padding_above(), (Shape{6, 9}));
+    EXPECT_EQ(pad->get_padding_interior(), (Shape{2, 3}));
 }
 
 TEST(type_prop, pad_deduce_3d_interior_exterior)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50,40,20});
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto padding_below = Shape{5,3,0};
-    auto padding_above = Shape{6,9,4};
-    auto padding_interior = Shape{2,3,0};
-    auto pad = make_shared<op::Pad>(
-        param0, param1, padding_below, padding_above, padding_interior);
+    auto padding_below = Shape{5, 3, 0};
+    auto padding_above = Shape{6, 9, 4};
+    auto padding_interior = Shape{2, 3, 0};
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
     EXPECT_EQ(pad->get_element_type(), element::f32);
-    EXPECT_EQ(pad->get_shape(), (Shape{159,169,24}));
+    EXPECT_EQ(pad->get_shape(), (Shape{159, 169, 24}));
 
-    EXPECT_EQ(pad->get_padding_below(), (Shape{5,3,0}));
-    EXPECT_EQ(pad->get_padding_above(), (Shape{6,9,4}));
-    EXPECT_EQ(pad->get_padding_interior(), (Shape{2,3,0}));
+    EXPECT_EQ(pad->get_padding_below(), (Shape{5, 3, 0}));
+    EXPECT_EQ(pad->get_padding_above(), (Shape{6, 9, 4}));
+    EXPECT_EQ(pad->get_padding_interior(), (Shape{2, 3, 0}));
 }
 
 TEST(type_prop, pad_deduce_element_type_mismatch)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50,40,20});
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::i32, Shape{});
-    auto padding_below = Shape{5,3,0};
-    auto padding_above = Shape{6,9,4};
-    auto padding_interior = Shape{2,3,0};
+    auto padding_below = Shape{5, 3, 0};
+    auto padding_above = Shape{6, 9, 4};
+    auto padding_interior = Shape{2, 3, 0};
     try
     {
-        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Element tpye mismatch not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Pad argument tensor and padding value element types do not match"));
+        EXPECT_EQ(error.what(),
+                  std::string("Pad argument tensor and padding value element types do not match"));
     }
     catch (...)
     {
@@ -5126,14 +5123,15 @@ TEST(type_prop, pad_deduce_element_type_mismatch)
 TEST(type_prop, pad_deduce_nonscalar_pad_value)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50,40,20});
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{6});
-    auto padding_below = Shape{5,3,0};
-    auto padding_above = Shape{6,9,4};
-    auto padding_interior = Shape{2,3,0};
+    auto padding_below = Shape{5, 3, 0};
+    auto padding_above = Shape{6, 9, 4};
+    auto padding_interior = Shape{2, 3, 0};
     try
     {
-        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Non-scalar pad value not detected";
@@ -5151,21 +5149,23 @@ TEST(type_prop, pad_deduce_nonscalar_pad_value)
 TEST(type_prop, pad_deduce_below_padding_wrong_rank)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50,40,20});
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto padding_below = Shape{5,3,0,6};
-    auto padding_above = Shape{6,9,4};
-    auto padding_interior = Shape{2,3,0};
+    auto padding_below = Shape{5, 3, 0, 6};
+    auto padding_above = Shape{6, 9, 4};
+    auto padding_interior = Shape{2, 3, 0};
     try
     {
-        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Wrong below-padding rank not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Pad rank for below-padding does not match rank of argument tensor"));
+        EXPECT_EQ(error.what(),
+                  std::string("Pad rank for below-padding does not match rank of argument tensor"));
     }
     catch (...)
     {
@@ -5176,21 +5176,23 @@ TEST(type_prop, pad_deduce_below_padding_wrong_rank)
 TEST(type_prop, pad_deduce_above_padding_wrong_rank)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50,40,20});
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto padding_below = Shape{5,3,0};
-    auto padding_above = Shape{6,9};
-    auto padding_interior = Shape{2,3,0};
+    auto padding_below = Shape{5, 3, 0};
+    auto padding_above = Shape{6, 9};
+    auto padding_interior = Shape{2, 3, 0};
     try
     {
-        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Wrong above-padding rank not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Pad rank for above-padding does not match rank of argument tensor"));
+        EXPECT_EQ(error.what(),
+                  std::string("Pad rank for above-padding does not match rank of argument tensor"));
     }
     catch (...)
     {
@@ -5201,21 +5203,24 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
 TEST(type_prop, pad_deduce_interior_padding_wrong_rank)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50,40,20});
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto padding_below = Shape{5,3,0};
-    auto padding_above = Shape{6,9,4};
-    auto padding_interior = Shape{2,3,0,9,3};
+    auto padding_below = Shape{5, 3, 0};
+    auto padding_above = Shape{6, 9, 4};
+    auto padding_interior = Shape{2, 3, 0, 9, 3};
     try
     {
-        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Wrong interior padding rank not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Pad rank for interior padding does not match rank of argument tensor"));
+        EXPECT_EQ(
+            error.what(),
+            std::string("Pad rank for interior padding does not match rank of argument tensor"));
     }
     catch (...)
     {
