@@ -426,50 +426,18 @@ void runtime::gpu::GPU_Emitter::EmitReverse(codegen::CodeWriter& writer,
 {
 }
 
-//------------------------------------------------------------------------------------------------
-// Utility methods
-//------------------------------------------------------------------------------------------------
-
-void runtime::gpu::GPU_Emitter::generate_call(
+void runtime::gpu::GPU_Emitter::EmitReduceWindow(
+    codegen::CodeWriter& writer,
+    const ngraph::Node* n,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-    const vector<runtime::gpu::GPU_TensorViewWrapper>& out,
-    shared_ptr<Function> function)
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    vector<string> input_names;
-    vector<string> output_names;
-
-    for (const runtime::gpu::GPU_TensorViewWrapper& input : args)
-    {
-        input_names.push_back(input.get_name());
-    }
-
-    for (const runtime::gpu::GPU_TensorViewWrapper& output : out)
-    {
-        output_names.push_back(output.get_name());
-    }
-
-    m_out << "void* args[] =\n{";
-    m_out.indent++;
-    m_out << "\n" << join(input_names, ",\n");
-    m_out.indent--;
-    m_out << "\n};\n";
-
-    m_out << "void* out[] =\n{";
-    m_out.indent++;
-    m_out << "\n" << join(output_names, ",\n");
-    m_out.indent--;
-    m_out << "\n};\n";
-
-    m_out << "\n";
-    m_out << function->get_name() << "(args, out);\n";
 }
 
-static string format_name(const string& name)
+void runtime::gpu::GPU_Emitter::EmitSelectAndScatter(
+    codegen::CodeWriter& writer,
+    const ngraph::Node* n,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    string rc;
-    if (!name.empty())
-    {
-        rc = " " + name;
-    }
-    return rc;
 }
