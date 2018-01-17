@@ -28,6 +28,7 @@
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/one_hot.hpp"
+#include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -71,6 +72,7 @@
 #include "ngraph/runtime/kernel/not.hpp"
 #include "ngraph/runtime/kernel/not_equal.hpp"
 #include "ngraph/runtime/kernel/one_hot.hpp"
+#include "ngraph/runtime/kernel/pad.hpp"
 #include "ngraph/runtime/kernel/power.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/reduce_window.hpp"
@@ -460,6 +462,19 @@ private:
         }
         else if (node_op == "Parameter")
         {
+        }
+        else if (node_op == "Pad")
+        {
+            ngraph::op::Pad* pad = dynamic_cast<ngraph::op::Pad*>(&node);
+
+            kernel::pad(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                        reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                        reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                        node.get_inputs().at(0).get_shape(),
+                        node.get_output_shape(0),
+                        pad->get_padding_below(),
+                        pad->get_padding_above(),
+                        pad->get_padding_interior());
         }
         else if (node_op == "Power")
         {
