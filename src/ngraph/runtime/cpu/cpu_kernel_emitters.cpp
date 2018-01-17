@@ -303,12 +303,15 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
     if (out_shape.size() == 0)
     {
         writer << dest_nd_name << " = 0;\n";
+        writer << element_type << " residual = 0;\n";
     }
     else
     {
+        writer << element_type << " residual" << emit_bracketed_string(out_shape) << ";\n";
         auto output_vars = open_for_loops(writer, out_shape);
 
         writer << dest_nd_name << emit_bracketed_string(output_vars) << " = 0;\n";
+        writer << "residual" << emit_bracketed_string(output_vars) << " = 1e-8;\n";
 
         close_for_loops(writer, output_vars);
     }
@@ -357,10 +360,13 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
                 writer.indent++;
             }
         }
-
-        writer << dest_nd_name << emit_bracketed_string(out_indexes) << " += " << source_nd_name
-               << emit_bracketed_string(index_vars) << ";\n";
-
+        auto out_brackets = emit_bracketed_string(out_indexes);
+        auto dst = dest_nd_name + out_brackets;
+        auto src = source_nd_name + emit_bracketed_string(index_vars);
+        writer << element_type << " y = " << src << " - residual" << out_brackets << ";\n";
+        writer << element_type << " t = " << dst << " + y;\n";
+        writer << "residual" << out_brackets << " = (t - " << dst << ") - y;\n";
+        writer << dst << " = t;\n";
         close_for_loops(writer, index_vars);
     }
 }
