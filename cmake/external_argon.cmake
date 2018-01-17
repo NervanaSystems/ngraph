@@ -39,7 +39,7 @@ if (NGRAPH_ARGON_ENABLE)
     #   commit.
     # - After we have ngraph CI job for argon transformer, ngraph master will be compatible with
     #   argon transformer guaranteed by CI.
-    set(ARGON_CMAKE_GIT_TAG ec0b55008755b4d18474ac50216ef8cbf0f11598) # Tue Jan 2 2018
+    set(ARGON_CMAKE_GIT_TAG 213f85d536d1525c8e83edb08164ae0aece749cf) # Thu Jan 11 2018
 
     set(ARGON_CMAKE_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/argon)
     if (NOT DEFINED PREBUILD_ARGON_PATH)
@@ -59,12 +59,12 @@ if (NGRAPH_ARGON_ENABLE)
             GIT_TAG ${ARGON_CMAKE_GIT_TAG}
             PREFIX ${ARGON_CMAKE_PREFIX}
             UPDATE_COMMAND ""
-            INSTALL_COMMAND ""
             CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                    -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
-                    -DARGON_AS_EXTERNAL=True
-                    -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
-                    -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
+                       -DNGRAPH_INSTALL_PREFIX=${ARGON_CMAKE_PREFIX}
+                       -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
+                       -DARGON_AS_EXTERNAL=True
+                       -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
+                       -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
             BUILD_ALWAYS 1
         )
     else()
@@ -74,18 +74,18 @@ if (NGRAPH_ARGON_ENABLE)
             GIT_TAG ${ARGON_CMAKE_GIT_TAG}
             PREFIX ${ARGON_CMAKE_PREFIX}
             UPDATE_COMMAND ""
-            INSTALL_COMMAND ""
             CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                    -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
-                    -DARGON_AS_EXTERNAL=True
-                    -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
-                    -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
+                       -DNGRAPH_INSTALL_PREFIX=${ARGON_CMAKE_PREFIX}
+                       -DPREBUILD_ARGON_PATH=${PREBUILD_ARGON_PATH}
+                       -DARGON_AS_EXTERNAL=True
+                       -DEXTERNAL_NGRAPH_INCLUDE_DIR=${NGRAPH_INCLUDE_PATH}
+                       -DLLVM_INCLUDE_DIR=${LLVM_INCLUDE_DIR}
             BUILD_BYPRODUCTS ${ARGON_CMAKE_PREFIX}
             BUILD_ALWAYS 1
         )
     endif()
 
-    ExternalProject_Get_Property(ext_argon source_dir binary_dir)
-    set(ARGON_INCLUDE_DIR "${source_dir}/argon/src" PARENT_SCOPE)
-    set(ARGON_LIB_DIR "${binary_dir}/argon" PARENT_SCOPE)
+    ExternalProject_Get_Property(ext_argon source_dir)
+    set(ARGON_INCLUDE_DIR ${source_dir}/argon/src PARENT_SCOPE)
+    set(ARGON_LIB_DIR ${ARGON_CMAKE_PREFIX}/lib PARENT_SCOPE)
 endif()

@@ -30,7 +30,7 @@ op::Pad::Pad(const std::shared_ptr<Node>& arg,
     , m_padding_above(padding_above)
     , m_padding_interior(padding_interior)
 {
-    if (get_input_element_type(0) != arg_pad_value->get_input_element_type(1))
+    if (get_input_element_type(0) != get_input_element_type(1))
     {
         throw ngraph_error("Pad argument tensor and padding value element types do not match");
     }
@@ -62,7 +62,7 @@ op::Pad::Pad(const std::shared_ptr<Node>& arg,
     for (size_t i = 0; i < arg_shape.size(); i++)
     {
         result_shape.push_back(padding_below[i] +
-                               ((SUBTRACT_OR_ZERO(arg_shape[i], 1)) * (padding_interior[i] + 1)) +
+                               SUBTRACT_OR_ZERO(arg_shape[i] * (padding_interior[i] + 1), padding_interior[i]) +
                                padding_above[i]);
     }
 

@@ -20,12 +20,12 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Generic padding operation.
+        /// \brief Generic constant-padding operation.
         ///
         /// Takes an input tensor of shape \f$(d_1,\dots,d_n)\f$ and pads by inserting a scalar \f$x\f$ supplied as input, in three possible ways:
         ///
-        /// 1. <i>(exterior padding)</i> inserts copies of \f$x\f$ <i>below or above</i> the bounds of existing rows, columns, etc., or
-        /// 2. <i>(interior padding)</i> inserts copies of \f$x\f$ <i>between</i> rows, columns, etc.,
+        /// 1. <i>(exterior padding)</i> inserts copies of \f$x\f$ <i>below or above</i> the bounds of existing rows, columns, etc.,
+        /// 2. <i>(interior padding)</i> inserts copies of \f$x\f$ <i>between</i> rows, columns, etc., or
         /// 3. both of the above.
         ///
         /// The number and position of elements to be inserted along a given axis is determined by three parameters:
