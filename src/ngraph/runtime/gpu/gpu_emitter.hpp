@@ -23,7 +23,8 @@
 #include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
 
 #define EMITTER_DECL(E)                                                                            \
-    E(const ngraph::Node* n,                                                                       \
+    E(codegen::CodeWriter& writer,                                                                 \
+      const ngraph::Node* n,                                                                       \
       const std::vector<ngraph::runtime::gpu::GPU_TensorViewWrapper>& args,                        \
       const std::vector<ngraph::runtime::gpu::GPU_TensorViewWrapper>& out)
 
