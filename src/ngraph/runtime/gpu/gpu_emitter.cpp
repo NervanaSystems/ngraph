@@ -49,9 +49,21 @@ void runtime::gpu::GPU_Emitter::EmitNop(const ngraph::Node* n,
 {
 }
 
+void runtime::gpu::GPU_Emitter::EmitAbs(const ngraph::Node* n,
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+{
+}
+
 void runtime::gpu::GPU_Emitter::EmitAdd(const ngraph::Node* n,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+{
+}
+
+void runtime::gpu::GPU_Emitter::EmitConcat(const ngraph::Node* n,
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
 }
 
@@ -59,6 +71,44 @@ void runtime::gpu::GPU_Emitter::EmitDot(const ngraph::Node* n,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    const Shape& arg0_shape = args[0].get_shape();
+    const Shape& arg1_shape = args[1].get_shape();
+    if (arg0_shape.empty() || arg1_shape.empty())
+    {
+        auto& first = (arg0_shape.empty() ? args[0] : args[1]);
+        auto& second = (arg0_shape.empty() ? args[1] : args[0]);
+    }
+
+    // clang-format off
+    else if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
+    {
+      // TODO Assert arg0_shape[0] == arg1_shape[0]?
+      writer << "{   // " << n->get_name() << "\n";
+      writer.indent++;
+      writer << "cublas::cublasSdot("
+        << "cublas_handle,"
+        << arg0_shape[0],
+        << args[0].get_name(),
+        // Todo handle striding?
+        << "1,"
+        << arg[1].get_name(),
+        << "1,"
+        << out[0].get_name()
+      writer.indent--;
+      writer << "}\n";
+    }
+    // clang-format on
+    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
+    {
+    }
+    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
+    {
+        // GEMM Call
+    }
+    else
+    {
+        // General ND Call?
+    }
 }
 
 void runtime::gpu::GPU_Emitter::EmitDivide(const ngraph::Node* n,
@@ -196,6 +246,13 @@ void runtime::gpu::GPU_Emitter::EmitSlice(const ngraph::Node* n,
 void runtime::gpu::GPU_Emitter::EmitSum(const ngraph::Node* n,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
+{
+}
+
+void runtime::gpu::GPU_Emitter::EmitMultiply(
+    const ngraph::Node* n,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
+    const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
 }
 
@@ -367,23 +424,4 @@ static string format_name(const string& name)
         rc = " " + name;
     }
     return rc;
-}
-
-void runtime::gpu::GPU_Emitter::EmitAbs(const ngraph::Node* n,
-                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                        const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
-{
-}
-
-void runtime::gpu::GPU_Emitter::EmitConcat(const ngraph::Node* n,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
-{
-}
-
-void runtime::gpu::GPU_Emitter::EmitMultiply(
-    const ngraph::Node* n,
-    const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
-    const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
-{
 }
