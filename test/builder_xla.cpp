@@ -86,7 +86,7 @@ TEST(builder_xla, empty_tuple_interpreter)
     xla::call(cf, {}, {});
 }
 
-TEST(builder_xla, DISABLED_empty_tuple_cpu)
+TEST(builder_xla, empty_tuple_cpu)
 {
     auto empty_tuple = make_shared<xla::op::Tuple>(Nodes{});
     auto f = make_shared<xla::XLAFunction>(Nodes{empty_tuple}, Nodes{});
