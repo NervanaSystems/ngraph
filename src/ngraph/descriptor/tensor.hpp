@@ -65,7 +65,7 @@ public:
     static std::string make_tensor_name(const Node* node, size_t value_index);
     void set_is_output() { m_is_output = true; }
 protected:
-    const element::Type& m_element_type;
+    const element::Type m_element_type;
     PrimaryTensorView* m_primary_tensor_view;
     bool m_is_output;
     bool m_is_input;
