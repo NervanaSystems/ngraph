@@ -43,6 +43,7 @@ TEST(cudnn, compileTest)
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include "cublas_v2.h"
 #include "cuda.h"
 
 void check_cuda_errors(CUresult err) {
@@ -57,6 +58,15 @@ int main(int argc, char **argv) {
   CUfunction  function;
   CUlinkState linker;
   int         dev_count;
+
+  // Cublas init
+
+  cudaError_t cudaStat;
+  cublasStatus_t stat;
+  cublasHandle_t handle;
+  stat = cublasCreate(&handle);
+
+  cublasDestroy(handle);
 
   // CUDA initialization
   check_cuda_errors(cuInit(0));

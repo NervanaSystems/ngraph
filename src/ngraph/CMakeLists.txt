@@ -183,7 +183,6 @@ endif()
     # and compiler.cpp requires MKLDNN
     if(NGRAPH_GPU_ENABLE)
         include_directories(${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
-        link_directories(${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
 
         # Add sources for the GPU backend
         # and all its dependencies
@@ -267,8 +266,9 @@ if(NGRAPH_CPU_ENABLE)
     target_link_libraries(ngraph PRIVATE ${TBB_IMPORTED_TARGETS})
 endif()
 
+# Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    target_link_libraries(ngraph PRIVATE cuda)
+    target_link_libraries(ngraph PRIVATE cuda ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 # Argon
