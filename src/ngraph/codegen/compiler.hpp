@@ -86,6 +86,7 @@ private:
     std::unique_ptr<clang::CompilerInstance> m_compiler;
     bool m_precompiled_header_valid;
     bool m_debuginfo_enabled;
+    bool m_enable_diag_output;
     std::string m_source_name;
     std::vector<std::string> m_extra_search_path_list;
     std::string m_pch_path;
