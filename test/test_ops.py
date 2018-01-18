@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
+import pytest
 import numpy as np
 
 import pyngraph.util as util
@@ -27,7 +28,7 @@ from pyngraph.op import OneHot, Negative
 
 def make_backend_call_frame(function):
 
-    manager = Manager.get('INTERPRETER');
+    manager = Manager.get(pytest.config.getoption('backend'));
     external = manager.compile(function)
     backend = manager.allocate_backend()
     cf = backend.make_call_frame(external)
