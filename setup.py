@@ -21,91 +21,26 @@ import os
 __version__ = '0.0.1'
 
 
-class get_pybind_include(object):
-    """Helper class to determine the pybind11 include path
+# Parallel build from http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
+# monkey-patch for parallel compilation
+def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=None, debug=0, extra_preargs=None, extra_postargs=None, depends=None):
+    # those lines are copied from distutils.ccompiler.CCompiler directly
+    macros, objects, extra_postargs, pp_opts, build = self._setup_compile(output_dir, macros, include_dirs, sources, depends, extra_postargs)
+    cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
+    # parallel code
+    import multiprocessing.pool
+    def _single_compile(obj):
+        try: src, ext = build[obj]
+        except KeyError: return
+        self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
+    # convert to list, imap is evaluated on-demand
+    list(multiprocessing.pool.ThreadPool().imap(_single_compile,objects))
+    return objects
+import distutils.ccompiler
+distutils.ccompiler.CCompiler.compile=parallelCCompile
 
-    The purpose of this class is to postpone importing pybind11
-    until it is actually installed, so that the ``get_include()``
-    method can be invoked. """
 
-    def __init__(self, user=False):
-        self.user = user
-
-    def __str__(self):
-        import pybind11
-        return pybind11.get_include(self.user)
-
-requirements = [
-    "numpy",
-    "pybind11",
-]
-include_dirs = [# Path to pybind11 headers
-                os.environ["PYBIND_HEADERS_PATH"],
-                get_pybind_include(),
-                get_pybind_include(user=True)
-               ]
-ext_modules = [Extension('nwrapper.ngraph.types.Type',
-                        ['nwrapper/ngraph/types/element_type.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Parameter',
-                        ['nwrapper/ngraph/ops/parameter.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.types.TensorViewType',
-                        ['nwrapper/ngraph/types/type.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.runtime.TensorView',
-                        ['nwrapper/ngraph/runtime/tensor_view.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.Function',
-                        ['nwrapper/ngraph/function.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.Node',
-                        ['nwrapper/ngraph/node.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.runtime.Manager',
-                        ['nwrapper/ngraph/runtime/manager.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.runtime.Backend',
-                        ['nwrapper/ngraph/runtime/backend.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.runtime.ExternalFunction',
-                        ['nwrapper/ngraph/runtime/external_function.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.runtime.CallFrame',
-                        ['nwrapper/ngraph/runtime/call_frame.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.Util',
-                        ['nwrapper/ngraph/util.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Op',
-                        ['nwrapper/ngraph/ops/op.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Add',
-                        ['nwrapper/ngraph/ops/add.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Dot',
-                        ['nwrapper/ngraph/ops/dot.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Maximum',
-                        ['nwrapper/ngraph/ops/maximum.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Divide',
-                        ['nwrapper/ngraph/ops/divide.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Minimum',
-                        ['nwrapper/ngraph/ops/minimum.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Exp',
-                        ['nwrapper/ngraph/ops/exp.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Sum',
-                        ['nwrapper/ngraph/ops/sum.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Greater',
-                        ['nwrapper/ngraph/ops/greater.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Less',
-                        ['nwrapper/ngraph/ops/less.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Log',
-                        ['nwrapper/ngraph/ops/log.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Convert',
-                        ['nwrapper/ngraph/ops/convert.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Subtract',
-                        ['nwrapper/ngraph/ops/subtract.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Negative',
-                        ['nwrapper/ngraph/ops/negative.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Reshape',
-                        ['nwrapper/ngraph/ops/reshape.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Broadcast',
-                        ['nwrapper/ngraph/ops/broadcast.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Reduce',
-                        ['nwrapper/ngraph/ops/reduce.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.OneHot',
-                        ['nwrapper/ngraph/ops/one_hot.cpp'], include_dirs),
-               Extension('nwrapper.ngraph.ops.Constant',
-                        ['nwrapper/ngraph/ops/constant.cpp'], include_dirs)]
-
-# As of Python 3.6, CCompiler has a `has_flag` m ethod.
+# As of Python 3.6, CCompiler has a `has_flag` method.
 # cf http://bugs.python.org/issue26689
 def has_flag(compiler, flagname):
     """Return a boolean indicating whether a flag name is supported on
@@ -135,49 +70,110 @@ def cpp_flag(compiler):
                            'is needed!')
 
 
+if "NGRAPH_CPP_BUILD_PATH" in os.environ:
+    NGRAPH_CPP_INCLUDE_DIR = os.environ["NGRAPH_CPP_BUILD_PATH"] + "/include"
+    NGRAPH_CPP_LIBRARY_DIR = os.environ["NGRAPH_CPP_BUILD_PATH"] + "/lib"
+else:
+    raise RuntimeError('NGRAPH_CPP_BUILD_PATH must be defined')
+
+
+sources = ['pyngraph/function.cpp',
+           'pyngraph/node.cpp',
+           'pyngraph/pyngraph.cpp',
+           'pyngraph/util.cpp',
+           'pyngraph/ops/add.cpp',
+           'pyngraph/ops/broadcast.cpp',
+           'pyngraph/ops/constant.cpp',
+           'pyngraph/ops/convert.cpp',
+           'pyngraph/ops/divide.cpp',
+           'pyngraph/ops/dot.cpp',
+           'pyngraph/ops/exp.cpp',
+           'pyngraph/ops/greater.cpp',
+           'pyngraph/ops/less.cpp',
+           'pyngraph/ops/log.cpp',
+           'pyngraph/ops/maximum.cpp',
+           'pyngraph/ops/minimum.cpp',
+           'pyngraph/ops/multiply.cpp',
+           'pyngraph/ops/negative.cpp',
+           'pyngraph/ops/op.cpp',
+           'pyngraph/ops/one_hot.cpp',
+           'pyngraph/ops/parameter.cpp',
+           'pyngraph/ops/reduce.cpp',
+           'pyngraph/ops/regmodule_pyngraph_op.cpp',
+           'pyngraph/ops/reshape.cpp',
+           'pyngraph/ops/subtract.cpp',
+           'pyngraph/ops/sum.cpp',
+           'pyngraph/runtime/backend.cpp',
+           'pyngraph/runtime/call_frame.cpp',
+           'pyngraph/runtime/external_function.cpp',
+           'pyngraph/runtime/manager.cpp',
+           'pyngraph/runtime/regmodule_pyngraph_runtime.cpp',
+           'pyngraph/runtime/tensor_view.cpp',
+           'pyngraph/runtime/value.cpp',
+           'pyngraph/types/element_type.cpp',
+           'pyngraph/types/regmodule_pyngraph_types.cpp',
+           'pyngraph/types/type.cpp',
+           ]
+
+include_dirs = [# Path to pybind11 headers
+                "pybind11/include",
+                NGRAPH_CPP_INCLUDE_DIR,
+                ".",
+               ]
+
+library_dirs = [NGRAPH_CPP_LIBRARY_DIR,
+               ]
+
+libraries    = ["ngraph",
+               ]
+
+extra_compile_args = []
+
+extra_link_args = []
+
+ext_modules = [Extension(
+                   'pyngraph',
+                   sources = sources,
+                   include_dirs = include_dirs,
+                   define_macros = [("VERSION_INFO", __version__)],
+                   library_dirs = library_dirs,
+                   libraries = libraries,
+                   extra_link_args = extra_link_args,
+                   language = "c++",
+                   )
+              ]
+
+
 class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
-    c_opts = {
-        'msvc': ['/EHsc'],
-        'unix': [],
-    }
-
-    if sys.platform == 'darwin':
-        c_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
-
     def build_extensions(self):
         ct = self.compiler.compiler_type
-        opts = self.c_opts.get(ct, [])
-        if "NGRAPH_CPP_BUILD_PATH" in os.environ:
-            NGRAPH_CPP_INSTALL_PATH = os.environ["NGRAPH_CPP_BUILD_PATH"]
-            opts.append('-I')
-            opts.append('%s/include'%(NGRAPH_CPP_INSTALL_PATH))
-            if ct == 'unix':
-                opts.append('-DVERSION_INFO="%s"' % self.distribution.get_version())
-                opts.append(cpp_flag(self.compiler))
+        for ext in self.extensions:
+            ext.extra_compile_args += [cpp_flag(self.compiler)]
+            if has_flag(self.compiler, '-frtti'):
+                ext.extra_compile_args += ['-frtti']
+            if sys.platform == 'darwin':
+                ext.extra_compile_args += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
+            else:
                 if has_flag(self.compiler, '-fvisibility=hidden'):
-                    opts.append('-fvisibility=hidden')
-            elif ct == 'msvc':
-                opts.append('/DVERSION_INFO=\\"%s\\"' % self.distribution.get_version())
-            for ext in self.extensions:
-                ext.library_dirs = ['%s/lib'%(NGRAPH_CPP_INSTALL_PATH)]
-                ext.extra_compile_args = opts
-                ext.extra_link_args = ["-shared", "-lngraph", "-Wl,-rpath,%s/lib"%(NGRAPH_CPP_INSTALL_PATH)]
-            build_ext.build_extensions(self)
-        else:
-            print("NGRAPH_CPP_BUILD_PATH, not defined")
+                    ext.extra_compile_args += ['-fvisibility=hidden']
+
+            # else:
+            #    ext.extra_link_args += ["-shared"]
+            ext.extra_link_args += ["-Wl,-rpath,%s"%(NGRAPH_CPP_LIBRARY_DIR)]
+        build_ext.build_extensions(self)
 
 
 setup(
-    name='ngraph neon',
+    name='pyngraph',
     version=__version__,
-    author='Me',
-    author_email='me@i.com',
-    url='https://github.com/NervanaSystems/ngraph-neon',
-    description='A test project using pybind11',
+    author='Intel',
+    author_email='intelnervana@intel.com',
+    url='http://www.intelnervana.com',
+    license='License :: OSI Approved :: Apache Software License',
+    description='Python wrapper for ngraph',
     long_description='',
     ext_modules=ext_modules,
-    install_requires=requirements,
     cmdclass={'build_ext': BuildExt},
     zip_safe=False,
 )

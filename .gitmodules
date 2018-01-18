@@ -1,0 +1,4 @@
+[submodule "pybind11"]
+	path = pybind11
+	url = https://github.com/jagerman/pybind11.git
+	branch = allow-nonconstructible-holders
