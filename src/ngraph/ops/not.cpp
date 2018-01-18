@@ -34,3 +34,8 @@ op::Not::Not(const std::shared_ptr<Node>& arg)
           arg)
 {
 }
+
+bool ngraph::op::Not::is_functionally_identical(const Node& other) const
+{
+    return test_identical(other);
+}
