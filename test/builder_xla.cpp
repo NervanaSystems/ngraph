@@ -72,3 +72,29 @@ TEST(builder_xla, simple)
     xla::call(cf, {acb}, {result_tuple});
     EXPECT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector<float>());
 }
+
+TEST(builder_xla, empty_tuple_interpreter)
+{
+    auto empty_tuple = make_shared<xla::op::Tuple>(Nodes{});
+    auto f = make_shared<xla::XLAFunction>(Nodes{empty_tuple}, Nodes{});
+
+    auto manager = runtime::Manager::get("INTERPRETER");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    xla::call(cf, {}, {});
+}
+
+TEST(builder_xla, DISABLED_empty_tuple_cpu)
+{
+    auto empty_tuple = make_shared<xla::op::Tuple>(Nodes{});
+    auto f = make_shared<xla::XLAFunction>(Nodes{empty_tuple}, Nodes{});
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    xla::call(cf, {}, {});
+}
