@@ -25,7 +25,7 @@ def pass_method(*args, **kwargs):
 
 
 def pytest_configure(config):
-    config.gpu_skip = pytest.mark.skipif(config.getvalue("backend") == "argon")
-    config.cpu_skip = pytest.mark.skipif(config.getvalue("backend") == "ngcpu")
-    config.interpreter_skip = pytest.mark.skipif(config.getvalue("backend") == "flexgpu")
+    config.gpu_skip = pytest.mark.skipif(config.getvalue("backend") == "GPU")
+    config.cpu_skip = pytest.mark.skipif(config.getvalue("backend") == "CPU")
+    config.interpreter_skip = pytest.mark.skipif(config.getvalue("backend") == "INTERPRETER")
 
