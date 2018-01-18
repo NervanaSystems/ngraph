@@ -294,7 +294,7 @@ std::shared_ptr<Node>
 bool op::Convolution::is_functionally_identical(const Node& other) const
 {
     bool rc = true;
-    if (Node::is_functionally_identical(other))
+    if (Node::test_identical(other))
     {
         const Convolution& rhs = dynamic_cast<const Convolution&>(other);
         rc &= m_window_movement_strides == rhs.m_window_movement_strides;

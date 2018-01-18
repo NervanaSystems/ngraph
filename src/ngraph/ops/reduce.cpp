@@ -90,8 +90,3 @@ op::Reduce::Reduce(const std::shared_ptr<Node>& arg_reductee,
 
     add_output(input_reductee.get_element_type(), result_shape);
 }
-
-bool op::Reduce::is_functionally_identical(const Node& other) const
-{
-    return false;
-}
