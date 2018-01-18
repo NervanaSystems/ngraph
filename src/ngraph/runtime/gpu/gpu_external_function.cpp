@@ -237,7 +237,10 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     #include <typeinfo>
     #include <unordered_map>
 
+    #include <cuda_runtime.h>
+    #include "cublas_v2.h"
     #include "cuda.h"
+
     #include "ngraph/codegen/code_writer.hpp"
     #include "ngraph/codegen/compiler.hpp"
     #include "ngraph/codegen/execution_engine.hpp"
@@ -352,10 +355,37 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     {
         writer << "extern \"C\" void " << f->get_name() << "(void** inputs, void** outputs);\n";
     }
+
     writer << "\n";
-    writer << "extern \"C\" void " << pass_manager.get_state().get_functions()[0]->get_name()
-           << "(void** inputs, void** outputs){\n";
-    writer += R"(
+
+    unordered_map<Node*, string> match_functions;
+    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
+    {
+        bool temporaries_used = false;
+        size_t worst_case_tmp_size = 0;
+
+        set<string> output_names;
+        for (shared_ptr<Node> op : current_function->get_results())
+        {
+            shared_ptr<descriptor::TensorView> tv = op->get_output_tensor_view();
+            output_names.insert(tv->get_tensor().get_name());
+        }
+        set<descriptor::TensorView*> constants;
+        for (shared_ptr<Node> node : current_function->get_ordered_ops())
+        {
+            if (dynamic_cast<op::Constant*>(node.get()))
+            {
+                shared_ptr<descriptor::TensorView> tv = node->get_outputs()[0].get_tensor_view();
+                constants.insert(tv.get());
+            }
+        }
+
+        writer << "extern \"C\" void " << current_function->get_name();
+        writer << "(void** inputs, void** outputs)\n";
+        writer << "{\n";
+        writer.indent++;
+
+        writer += R"(
     CUdevice    device;
     CUmodule    cuda_module;
     CUcontext   context;
@@ -363,6 +393,11 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     CUfunction  mult_function;
     CUlinkState linker;
     int         dev_count;
+    cudaError_t cudaStat;
+    cublasStatus_t stat;
+    cublasHandle_t cublas_handle;
+    stat = cublasCreate(&cublas_handle);
+
     check_cuda_errors(cuInit(0));
     check_cuda_errors(cuDeviceGetCount(&dev_count));
     check_cuda_errors(cuDeviceGet(&device, 0));
@@ -548,11 +583,13 @@ void runtime::gpu::GPU_ExternalFunction::compile()
                                         kernel_params,
                                         NULL));
 
-    // Write final output 
+    // Write final output
     check_cuda_errors(cuMemcpyDtoH(&((float*)(outputs[0]))[0], dev_bufferC, sizeof(float) * 4));
     // Clean up after ourselves
 
     // // Clean-up must do this in tensor view!!!
+
+    cublasDestroy(cublas_handle);
 
     check_cuda_errors(cuMemFree(dev_bufferA));
     check_cuda_errors(cuMemFree(dev_bufferB));

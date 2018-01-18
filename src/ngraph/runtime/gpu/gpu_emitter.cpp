@@ -90,7 +90,7 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
       // TODO Assert arg0_shape[0] == arg1_shape[0]?
       writer << "{   // " << n->get_name() << "\n";
       writer.indent++;
-      writer << "cublas::cublasSdot("
+      writer << "cublasSdot("
           << "cublas_handle,"
           << arg0_shape[0] << ","
           << args[0].get_name() << ","
@@ -98,7 +98,7 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
           << "1,"
           << args[1].get_name() << ","
           << "1,"
-          << out[0].get_name() << ")";
+          << out[0].get_name() << ");";
       writer.indent--;
       writer << "}\n";
     }
