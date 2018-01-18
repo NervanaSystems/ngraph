@@ -37,19 +37,8 @@ namespace ngraph
                      const Shape& padding_interior)
             {
                 Coordinate input_start(arg0_shape.size(), 0); // start at (0,0,...,0)
-
                 Coordinate input_end =
-                    arg0_shape; // end at (d'0,d'1,...,d'n), the outer corner of the post-padding shape
-                for (size_t i = 0; i < arg0_shape.size(); i++)
-                {
-                    if (arg0_shape[i] == 0)
-                    {
-                        input_end[i] = padding_below[i] + padding_above[i];
-                    }
-                    input_end[i] = padding_below[i] +
-                                   ((arg0_shape[i] - 1) * (padding_interior[i] + 1)) + 1 +
-                                   padding_above[i];
-                }
+                    out_shape; // end at (d'0,d'1,...,d'n), the outer corner of the post-padding shape
 
                 Strides input_strides(arg0_shape.size(), 1);
 
