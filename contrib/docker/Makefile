@@ -77,7 +77,7 @@ build_docker: build_docker_image
 docs: sphinx_doc doxygen_doc
 
 doxygen_doc:
-	# sphinx html docs build
+	# doxygen html docs build
 	docker run --rm --tty \
             ${VOLUME} \
 	    ${DOCKER_RUN_ENV} \
