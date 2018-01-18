@@ -39,19 +39,19 @@ runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& elemen
 
     m_buffer_size = m_descriptor->get_tensor_view_layout()->get_size() * element_type.size();
 
-    // cuMemAlloc(&dev_buffer, m_buffer_size);
+    cuMemAlloc(&dev_buffer, m_buffer_size);
 }
 
 runtime::gpu::GPU_TensorView::~GPU_TensorView()
 {
-    // cuMemFree(dev_buffer);
+    cuMemFree(dev_buffer);
 }
 void runtime::gpu::GPU_TensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
-    // cuMemcpyHtoD(dev_buffer, source, n);
+    cuMemcpyHtoD(dev_buffer, source, n);
 }
 
 void runtime::gpu::GPU_TensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
-    // cuMemcpyDtoH(target, dev_buffer, n);
+    cuMemcpyDtoH(target, dev_buffer, n);
 }
