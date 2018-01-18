@@ -123,6 +123,7 @@ static std::string GetExecutablePath(const char* Argv0)
 StaticCompiler::StaticCompiler()
     : m_precompiled_header_valid(false)
     , m_debuginfo_enabled(false)
+    , m_enable_diag_output((std::getenv("NGRAPH_COMPILER_DIAG_ENABLE") != nullptr))
     , m_source_name("code.cpp")
 {
     initialize();
@@ -150,19 +151,27 @@ void StaticCompiler::initialize()
     args.push_back("-inline-threshold=1000000");
 
     // Prepare DiagnosticEngine
-    IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
-    DiagOpts->ErrorLimit = 20;
-    TextDiagnosticPrinter* textDiagPrinter = new clang::TextDiagnosticPrinter(errs(), &*DiagOpts);
-    IntrusiveRefCntPtr<DiagnosticIDs> DiagID(new DiagnosticIDs());
-    DiagnosticsEngine DiagEngine(DiagID, &*DiagOpts, textDiagPrinter);
+    IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
+    diag_options->ErrorLimit = 20;
+    IntrusiveRefCntPtr<DiagnosticIDs> diag_id(new DiagnosticIDs());
+    DiagnosticsEngine diag_engine(diag_id, &*diag_options);
 
     // Create and initialize CompilerInstance
     m_compiler = std::unique_ptr<CompilerInstance>(new CompilerInstance());
-    m_compiler->createDiagnostics();
+    DiagnosticConsumer* diag_consumer;
+    if (m_enable_diag_output)
+    {
+        diag_consumer = new TextDiagnosticPrinter(errs(), &*diag_options);
+    }
+    else
+    {
+        diag_consumer = new IgnoringDiagConsumer();
+    }
+    m_compiler->createDiagnostics(diag_consumer);
 
     // Initialize CompilerInvocation
     CompilerInvocation::CreateFromArgs(
-        m_compiler->getInvocation(), &args[0], &args[0] + args.size(), DiagEngine);
+        m_compiler->getInvocation(), &args[0], &args[0] + args.size(), diag_engine);
 
     configure_search_path();
 

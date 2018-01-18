@@ -22,7 +22,27 @@ namespace ngraph
     {
         /// \brief Select-and-scatter operation.
         ///
-        /// TODO: More formal definition. For now, see: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter.
+        /// Select-and-scatter takes three inputs, all of which must have the same element type \f$E\f$:
+        ///
+        /// 1. the <i>selectee</i>, a tensor of shape \f$(d_1,\dots,d_n)\f$,
+        /// 2. the <i>source</i>, a tensor of shape \f$(d'_1,\dots,d'_n)\f$ where \f$d'_i = \lceil \frac {d_i - w_i + 1}{s_i} \rceil\f$ (see below for definition of window sizes \f$w_i\f$ and strides \f$s_i\f$, and
+        /// 3. the <i>initial value</i>, a scalar.
+        ///
+        /// It also takes four parameters:
+        ///
+        /// 1. the <i>selection function</i>, a function that takes two arguments of type \f$E[]\f$ and returns `Bool` (think of this as a binary relation),
+        /// 2. the <i>scatter function</i>, a function that takes two arguments of type \f$E[]\f$ and returns \f$E[]\f$,
+        /// 3. the <i>window shape</i>, a vector \f$(w_1,\dots,w_n)\f$ of non-negative integers, and
+        /// 4. the <i>window movement strides</i>, a vector \f$(s_1,\dots,s_n)\f$ of non-negative integers.
+        ///
+        /// It is assumed that the selection function is a strict total order; otherwise behavior is undefined. (TODO: we may be able to generalize usefully here.)
+        ///
+        /// The output \f$T_\textit{out}\f$ has the same element type and shape as the selectee. Its values are produced as follows:
+        /// 1. Initialize every element \f$T_\textit{out}\f$ with the initial value.
+        /// 2. Slide a window of shape \f$(w_1,\dots,w_n)\f$ over the selectee, with stride \f$(s_1,\dots,s_n)\f$, with the start corner of the window increasing in natural ("row-major") order. Note that for every valid window position, there will be a corresponding value in the source tensor located at some coordinate \f$(i_1,\dots,i_n)\f$.
+        /// 3. At each window position, using the selection function as the relation, find a coordinate \f$(j_1,\dots,j_n)\f$ where some "maximum" value resides. Replace \f$T_\textit{out}[j_1,\dots,j_n]\f$ with the value \f$f(T_\textit{out}[j_1,\dots,j_n],T_\textit{source}[i_1,\dots,i_n])\f$ where \f$f\f$ is the scatter function and \f$T_\textit{source}\f$ is the source tensor.
+        ///
+        /// The XLA documentation has good examples at https://www.tensorflow.org/versions/r1.5/performance/xla/operation_semantics#selectandscatter .
         ///
         /// ## Parameters
         ///
@@ -43,9 +63,9 @@ namespace ngraph
         ///
         /// ## Output
         ///
-        /// | Type                     | Description                            |
-        /// | ------------------------ | -------------------------------------- |
-        /// | \f$E[d'_1,\dots,d'_n]\f$ | (TODO: explain more) See the XLA docs. |
+        /// | Type                   | Description          |
+        /// | ---------------------- | -------------------- |
+        /// | \f$E[d_1,\dots,d_n]\f$ | See above algorithm. |
         class SelectAndScatter : public RequiresTensorViewArgs
         {
         public:
@@ -88,8 +108,6 @@ namespace ngraph
             const Shape& get_window_shape() const { return m_window_shape; }
             /// \return The window movement strides.
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
-            bool is_functionally_identical(const Node&) const override;
-
         protected:
             std::shared_ptr<Function> m_selection_function;
             std::shared_ptr<Function> m_scatter_function;

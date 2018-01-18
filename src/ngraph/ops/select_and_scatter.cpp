@@ -213,8 +213,3 @@ op::SelectAndScatter::SelectAndScatter(const std::shared_ptr<Node>& arg_selectee
     //
     set_value_type_checked(input_selectee_element_type, input_selectee_shape);
 }
-
-bool op::SelectAndScatter::is_functionally_identical(const Node& other) const
-{
-    return false;
-}

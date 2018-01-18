@@ -3257,6 +3257,50 @@ TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
     EXPECT_EQ((vector<float>{0, 0, 0, 0, 0, 0}), result->get_vector<float>());
 }
 
+TEST(${BACKEND_NAME}, sum_to_scalar_stable)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1e-6, -1, 0, 1});
+    auto result = backend->make_primary_tensor_view(element::f32, Shape{});
+
+    cf->call({a}, {result});
+    EXPECT_TRUE(test::all_close(result->get_vector<float>(), vector<float>{1e-6}, 5e-2f));
+    // EXPECT_EQ(vector<float>{1e-6}, result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
+{
+    auto shape_a = Shape{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_rt = Shape{3};
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 1,  1,  1,  1,  1,  1e-4, 1e-5, 1e-6, 1,  1,  1,  1, 1,
+                               1, -1, -1, -1, -1, -1, -1,   -1,   -1,   -1, -1, -1, -1});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_TRUE(
+        test::all_close(result->get_vector<float>(), vector<float>{1e-4, 1e-5, 1e-6}, 5e-2f));
+}
+
 TEST(${BACKEND_NAME}, sign)
 {
     auto shape = Shape{2, 3};
@@ -5161,4 +5205,378 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_stride
     cf->call({a, b}, {result});
     EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
               result->get_vector<float>());
+}
+
+//
+// From the XLA docs: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
+//
+TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
+{
+    auto shape_sel_a = Shape{};
+    auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
+    auto shape_sel_b = Shape{};
+    auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
+    auto sel_f =
+        make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B), op::Parameters{SEL_A, SEL_B});
+
+    auto shape_scatter_a = Shape{};
+    auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
+    auto shape_scatter_b = Shape{};
+    auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
+    auto scatter_f =
+        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+
+    auto shape_a = Shape{4, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{2, 2};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_c = Shape{};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    auto shape_r = Shape{4, 5};
+    auto window_shape = Shape{2, 3};
+    auto window_strides = Strides{2, 2};
+    auto f = make_shared<Function>(
+        make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
+        op::Parameters{A, B, C});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 2>(
+                  {{7, 2, 5, 3, 8}, {3, 8, 9, 3, 4}, {1, 5, 7, 5, 6}, {0, 6, 2, 10, 2}})
+                  .get_vector());
+    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    copy_data(b, test::NDArray<float, 2>({{2, 6}, {3, 1}}).get_vector());
+    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    copy_data(c, vector<float>{0});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b, c}, {result});
+    EXPECT_EQ((test::NDArray<float, 2>(
+                   {{0, 0, 0, 0, 0}, {0, 0, 8, 0, 0}, {0, 0, 3, 0, 0}, {0, 0, 0, 1, 0}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+//
+// From the XLA docs: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
+//
+TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
+{
+    auto shape_sel_a = Shape{};
+    auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
+    auto shape_sel_b = Shape{};
+    auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
+    auto sel_f =
+        make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B), op::Parameters{SEL_A, SEL_B});
+
+    auto shape_scatter_a = Shape{};
+    auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
+    auto shape_scatter_b = Shape{};
+    auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
+    auto scatter_f =
+        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+
+    auto shape_a = Shape{4, 6};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{2, 2};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_c = Shape{};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    auto shape_r = Shape{4, 6};
+    auto window_shape = Shape{2, 3};
+    auto window_strides = Strides{2, 3};
+    auto f = make_shared<Function>(
+        make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
+        op::Parameters{A, B, C});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 2>(
+                  {{7, 2, 5, 3, 10, 2}, {3, 8, 9, 3, 4, 2}, {1, 5, 7, 5, 6, 1}, {0, 6, 2, 7, 2, 8}})
+                  .get_vector());
+    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    copy_data(b, test::NDArray<float, 2>({{2, 6}, {3, 1}}).get_vector());
+    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    copy_data(c, vector<float>{0});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b, c}, {result});
+    EXPECT_EQ((test::NDArray<float, 2>(
+                   {{0, 0, 0, 0, 6, 0}, {0, 0, 2, 0, 0, 0}, {0, 0, 3, 0, 0, 0}, {0, 0, 0, 0, 0, 1}})
+                   .get_vector()),
+              result->get_vector<float>());
+}
+
+//
+// Adapted from the XLA docs to provide an example in >2D: https://www.tensorflow.org/performance/xla/operation_semantics#selectandscatter
+//
+TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
+{
+    auto shape_sel_a = Shape{};
+    auto SEL_A = make_shared<op::Parameter>(element::f32, shape_sel_a);
+    auto shape_sel_b = Shape{};
+    auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
+    auto sel_f =
+        make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B), op::Parameters{SEL_A, SEL_B});
+
+    auto shape_scatter_a = Shape{};
+    auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
+    auto shape_scatter_b = Shape{};
+    auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
+    auto scatter_f =
+        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+
+    auto shape_a = Shape{2, 4, 6};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{1, 2, 2};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_c = Shape{};
+    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    auto shape_r = Shape{2, 4, 6};
+    auto window_shape = Shape{2, 2, 3};
+    auto window_strides = Strides{2, 2, 3};
+    auto f = make_shared<Function>(
+        make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
+        op::Parameters{A, B, C});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(
+        a,
+        test::NDArray<float, 3>(
+            {{{7, 2, 5, 3, 10, 2}, {3, 8, 9, 3, 4, 2}, {1, 5, 7, 5, 6, 1}, {0, 6, 2, 7, 2, 8}},
+             {{2, 5, 8, 3, 4, 2}, {1, 2, 8, 4, 5, 2}, {10, 2, 3, 4, 1, 0}, {4, 1, 2, 4, 5, 7}}})
+            .get_vector());
+    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    copy_data(b, test::NDArray<float, 3>({{{2, 6}, {3, 1}}}).get_vector());
+    auto c = backend->make_primary_tensor_view(element::f32, shape_c);
+    copy_data(c, vector<float>{0});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b, c}, {result});
+    EXPECT_EQ(
+        (test::NDArray<float, 3>(
+             {{{0, 0, 0, 0, 6, 0}, {0, 0, 2, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 1}},
+              {{0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {3, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}}})
+             .get_vector()),
+        result->get_vector<float>());
+}
+
+template <typename T, typename ET>
+void make_unary_empty_test()
+{
+    auto shape = Shape{0};
+    auto A = make_shared<op::Parameter>(element::from<ET>(), shape);
+    auto f = make_shared<Function>(make_shared<T>(A), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::from<ET>(), shape);
+    auto result = backend->make_primary_tensor_view(element::from<ET>(), shape);
+
+    cf->call({a}, {result});
+
+    auto in_vec = a->template get_vector<ET>();
+    auto out_vec = result->template get_vector<ET>();
+
+    EXPECT_EQ(in_vec, out_vec);
+}
+
+template <typename T, typename ET>
+void make_binary_empty_test()
+{
+    auto shape = Shape{0};
+    auto A = make_shared<op::Parameter>(element::from<ET>(), shape);
+    auto B = make_shared<op::Parameter>(element::from<ET>(), shape);
+    auto f = make_shared<Function>(make_shared<T>(A, B), op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::from<ET>(), shape);
+    auto b = backend->make_primary_tensor_view(element::from<ET>(), shape);
+    auto result = backend->make_primary_tensor_view(element::from<ET>(), shape);
+
+    cf->call({a, b}, {result});
+
+    auto in_vec = a->template get_vector<ET>();
+    auto out_vec = result->template get_vector<ET>();
+
+    EXPECT_EQ(in_vec, out_vec);
+}
+
+template <typename T>
+void make_binary_empty_test()
+{
+    make_binary_empty_test<T, float>();
+    make_binary_empty_test<T, double>();
+    make_binary_empty_test<T, int8_t>();
+    make_binary_empty_test<T, int16_t>();
+    make_binary_empty_test<T, int32_t>();
+    make_binary_empty_test<T, int64_t>();
+    make_binary_empty_test<T, uint8_t>();
+    make_binary_empty_test<T, uint16_t>();
+    make_binary_empty_test<T, uint32_t>();
+    make_binary_empty_test<T, uint64_t>();
+}
+template <typename T>
+void make_unary_empty_test()
+{
+    make_unary_empty_test<T, float>();
+    make_unary_empty_test<T, double>();
+    make_unary_empty_test<T, int8_t>();
+    make_unary_empty_test<T, int16_t>();
+    make_unary_empty_test<T, int32_t>();
+    make_unary_empty_test<T, int64_t>();
+    make_unary_empty_test<T, uint8_t>();
+    make_unary_empty_test<T, uint16_t>();
+    make_unary_empty_test<T, uint32_t>();
+    make_unary_empty_test<T, uint64_t>();
+}
+
+TEST(${BACKEND_NAME}, zero_sized_abs)
+{
+    make_unary_empty_test<op::Abs>();
+}
+TEST(${BACKEND_NAME}, zero_sized_ceiling)
+{
+    make_unary_empty_test<op::Ceiling>();
+}
+TEST(${BACKEND_NAME}, zero_sized_exp)
+{
+    make_unary_empty_test<op::Exp>();
+}
+TEST(${BACKEND_NAME}, zero_sized_floor)
+{
+    make_unary_empty_test<op::Floor>();
+}
+TEST(${BACKEND_NAME}, zero_sized_log)
+{
+    make_unary_empty_test<op::Log>();
+}
+TEST(${BACKEND_NAME}, zero_sized_negative)
+{
+    make_unary_empty_test<op::Negative>();
+}
+TEST(${BACKEND_NAME}, zero_sized_not)
+{
+    make_unary_empty_test<op::Not, char>();
+}
+TEST(${BACKEND_NAME}, zero_sized_sign)
+{
+    make_unary_empty_test<op::Sign>();
+}
+TEST(${BACKEND_NAME}, zero_sized_sqrt)
+{
+    make_unary_empty_test<op::Sqrt>();
+}
+TEST(${BACKEND_NAME}, zero_sized_sin)
+{
+    make_unary_empty_test<op::Sin>();
+}
+TEST(${BACKEND_NAME}, zero_sized_sinh)
+{
+    make_unary_empty_test<op::Sinh>();
+}
+TEST(${BACKEND_NAME}, zero_sized_cos)
+{
+    make_unary_empty_test<op::Cos>();
+}
+TEST(${BACKEND_NAME}, zero_sized_cosh)
+{
+    make_unary_empty_test<op::Cosh>();
+}
+TEST(${BACKEND_NAME}, zero_sized_tan)
+{
+    make_unary_empty_test<op::Tan>();
+}
+TEST(${BACKEND_NAME}, zero_sized_tanh)
+{
+    make_unary_empty_test<op::Tanh>();
+}
+TEST(${BACKEND_NAME}, zero_sized_asin)
+{
+    make_unary_empty_test<op::Asin>();
+}
+TEST(${BACKEND_NAME}, zero_sized_acos)
+{
+    make_unary_empty_test<op::Acos>();
+}
+TEST(${BACKEND_NAME}, zero_sized_atan)
+{
+    make_unary_empty_test<op::Atan>();
+}
+TEST(${BACKEND_NAME}, zero_sized_add)
+{
+    make_binary_empty_test<op::Add>();
+}
+TEST(${BACKEND_NAME}, zero_sized_divide)
+{
+    make_binary_empty_test<op::Divide>();
+}
+TEST(${BACKEND_NAME}, zero_sized_eq)
+{
+    make_binary_empty_test<op::Equal>();
+}
+TEST(${BACKEND_NAME}, zero_sized_greater)
+{
+    make_binary_empty_test<op::Greater>();
+}
+TEST(${BACKEND_NAME}, zero_sized_greatereq)
+{
+    make_binary_empty_test<op::GreaterEq>();
+}
+TEST(${BACKEND_NAME}, zero_sized_less)
+{
+    make_binary_empty_test<op::Less>();
+}
+TEST(${BACKEND_NAME}, zero_sized_lesseq)
+{
+    make_binary_empty_test<op::LessEq>();
+}
+TEST(${BACKEND_NAME}, zero_sized_maximum)
+{
+    make_binary_empty_test<op::Maximum>();
+}
+TEST(${BACKEND_NAME}, zero_sized_minimum)
+{
+    make_binary_empty_test<op::Minimum>();
+}
+TEST(${BACKEND_NAME}, zero_sized_multiply)
+{
+    make_binary_empty_test<op::Multiply>();
+}
+TEST(${BACKEND_NAME}, zero_sized_not_equal)
+{
+    make_binary_empty_test<op::NotEqual>();
+}
+TEST(${BACKEND_NAME}, zero_sized_power)
+{
+    make_binary_empty_test<op::Power>();
+}
+TEST(${BACKEND_NAME}, zero_sized_subtract)
+{
+    make_binary_empty_test<op::Subtract>();
 }

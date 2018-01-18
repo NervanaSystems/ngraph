@@ -71,6 +71,7 @@
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
+#include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/sign.hpp"
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
@@ -187,6 +188,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::EmitMaxPool},
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::EmitReverse},
     {TI(ngraph::op::ReduceWindow), &runtime::cpu::CPU_Emitter::EmitReduceWindow},
+    {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPU_Emitter::EmitSelectAndScatter},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
@@ -240,6 +242,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/kernel/reduce_window.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reverse.hpp"
+#include "ngraph/runtime/kernel/select_and_scatter.hpp"
 #include "ngraph/runtime/kernel/slice.hpp"
 #include "ngraph/runtime/kernel/sum.hpp"
 #include "ngraph/util.hpp"
@@ -362,6 +365,11 @@ using namespace ngraph::runtime;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         const list<shared_ptr<Node>>& tmp = current_function->get_ordered_ops();
+        if (tmp.size() < 2)
+        {
+            // Since we are comparing ops there must be at least two ops to proceed.
+            continue;
+        }
         vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
         for (size_t i = 0; i < op_list.size() - 1; i++)
         {

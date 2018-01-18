@@ -12,29 +12,39 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#pragma once
+
 #include <memory>
 
-#include "ngraph/ops/convert.hpp"
-#include "ngraph/ops/greater.hpp"
-#include "ngraph/ops/maximum.hpp"
-#include "ngraph/ops/multiply.hpp"
+#include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/types/element_type.hpp"
 
-using namespace std;
-using namespace ngraph;
-
-void ngraph::op::Maximum::generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const std::shared_ptr<Node>& delta)
+namespace ngraph
 {
-    auto x = get_input_op(0);
-    auto y = get_input_op(1);
-    adjoints.add_delta(
-        x, delta * make_shared<op::Convert>(make_shared<op::Greater>(x, y), x->get_element_type()));
-    adjoints.add_delta(
-        y, delta * make_shared<op::Convert>(make_shared<op::Greater>(y, x), y->get_element_type()));
+    namespace runtime
+    {
+        namespace gpu
+        {
+            class GPU_TensorViewWrapper;
+        }
+    }
 }
 
-bool ngraph::op::Maximum::is_functionally_identical(const Node& other) const
+class ngraph::runtime::gpu::GPU_TensorViewWrapper
 {
-    return test_identical(other);
-}
+public:
+    GPU_TensorViewWrapper(const std::shared_ptr<descriptor::TensorView>&,
+                          const std::string& alias = "");
+
+    size_t get_size() const;
+    const std::vector<size_t>& get_shape() const;
+    const std::vector<size_t>& get_strides() const;
+    const element::Type& get_element_type() const;
+    const std::string& get_name() const;
+    const std::string& get_type() const;
+    bool is_output() const;
+
+private:
+    std::shared_ptr<descriptor::TensorView> m_tensor_view;
+    std::string m_alias;
+};

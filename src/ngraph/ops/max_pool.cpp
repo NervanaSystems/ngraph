@@ -150,7 +150,7 @@ op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg, const Shape& window_shape
 bool op::MaxPool::is_functionally_identical(const Node& other) const
 {
     bool rc = true;
-    if (Node::is_functionally_identical(other))
+    if (Node::test_identical(other))
     {
         const MaxPool& rhs = dynamic_cast<const MaxPool&>(other);
         rc &= m_window_shape == rhs.m_window_shape;
