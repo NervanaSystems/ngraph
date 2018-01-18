@@ -3257,6 +3257,50 @@ TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
     EXPECT_EQ((vector<float>{0, 0, 0, 0, 0, 0}), result->get_vector<float>());
 }
 
+TEST(${BACKEND_NAME}, sum_to_scalar_stable)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{1e-6, -1, 0, 1});
+    auto result = backend->make_primary_tensor_view(element::f32, Shape{});
+
+    cf->call({a}, {result});
+    EXPECT_TRUE(test::all_close(result->get_vector<float>(), vector<float>{1e-6}, 5e-2f));
+    // EXPECT_EQ(vector<float>{1e-6}, result->get_vector<float>());
+}
+
+TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
+{
+    auto shape_a = Shape{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_rt = Shape{3};
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 1,  1,  1,  1,  1,  1e-4, 1e-5, 1e-6, 1,  1,  1,  1, 1,
+                               1, -1, -1, -1, -1, -1, -1,   -1,   -1,   -1, -1, -1, -1});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+
+    cf->call({a}, {result});
+    EXPECT_TRUE(
+        test::all_close(result->get_vector<float>(), vector<float>{1e-4, 1e-5, 1e-6}, 5e-2f));
+}
+
 TEST(${BACKEND_NAME}, sign)
 {
     auto shape = Shape{2, 3};
