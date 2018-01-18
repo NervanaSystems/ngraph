@@ -23,8 +23,6 @@
 #include "ngraph/except.hpp"
 #include "ngraph/util.hpp"
 
-#define SUBTRACT_OR_ZERO(x, y) (((y) > (x)) ? 0 : (x) - (y))
-
 using namespace ngraph;
 
 CoordinateTransform::CoordinateTransform(const Shape& source_shape,
@@ -112,7 +110,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     for (size_t i = 0; i < m_n_axes; i++)
     {
         if (source_end_corner[i] >
-            SUBTRACT_OR_ZERO(source_shape[i], 1) * target_dilation_strides[i] + 1 +
+            subtract_or_zero(source_shape[i], size_t(1)) * target_dilation_strides[i] + 1 +
                 target_padding_below[i] + target_padding_above[i])
         {
             std::stringstream ss;

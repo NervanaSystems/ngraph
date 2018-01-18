@@ -18,8 +18,6 @@
 using namespace std;
 using namespace ngraph;
 
-#define SUBTRACT_OR_ZERO(x, y) (((y) > (x)) ? 0 : (x) - (y))
-
 op::Pad::Pad(const std::shared_ptr<Node>& arg,
              const std::shared_ptr<Node>& arg_pad_value,
              const Shape& padding_below,
@@ -63,7 +61,7 @@ op::Pad::Pad(const std::shared_ptr<Node>& arg,
     {
         result_shape.push_back(
             padding_below[i] +
-            SUBTRACT_OR_ZERO(arg_shape[i] * (padding_interior[i] + 1), padding_interior[i]) +
+            subtract_or_zero(arg_shape[i] * (padding_interior[i] + 1), padding_interior[i]) +
             padding_above[i]);
     }
 
@@ -135,12 +133,8 @@ bool op::Pad::is_functionally_identical(const Node& other) const
    d31 d33
 
    and push that back.
-
+*/
 void op::Pad::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {
-    auto x = get_inputs_op(0);
-    auto y = get_inputs_op(1);
-
-    
+    throw std::invalid_argument("Autodiff is not yet implemented for Pad");
 }
-*/

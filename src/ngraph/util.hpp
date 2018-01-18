@@ -237,6 +237,12 @@ namespace ngraph
         return (x == 0 ? 0 : (1 + (x - 1) / y));
     }
 
+    template <typename T>
+    T subtract_or_zero(T x, T y)
+    {
+        return y > x ? 0 : x - y;
+    }
+
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
     size_t round_up(size_t size, size_t alignment);
