@@ -15,6 +15,7 @@
 #pragma once
 
 #include "ngraph/ops/op.hpp"
+#include "ngraph/types/type.hpp"
 
 namespace ngraph
 {
