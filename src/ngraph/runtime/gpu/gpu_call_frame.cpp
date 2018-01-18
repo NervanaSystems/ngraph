@@ -29,6 +29,7 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
 {
+    cublasCreate(&m_cublas_handle);
 }
 
 void runtime::gpu::GPU_CallFrame::tensor_call(
@@ -53,7 +54,7 @@ void runtime::gpu::GPU_CallFrame::tensor_call(
     }
 
     // Invoke compiled computation
-    m_compiled_function(inputs.data(), outputs.data());
+    m_compiled_function(inputs.data(), outputs.data(), m_cublas_handle);
 }
 
 void runtime::gpu::GPU_CallFrame::call(

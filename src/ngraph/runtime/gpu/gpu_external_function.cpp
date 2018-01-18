@@ -353,7 +353,8 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
     {
-        writer << "extern \"C\" void " << f->get_name() << "(void** inputs, void** outputs);\n";
+        writer << "extern \"C\" void " << f->get_name()
+               << "(void** inputs, void** outputs, cublasHandle_t& cublas_handle);\n";
     }
 
     writer << "\n";
@@ -381,26 +382,12 @@ void runtime::gpu::GPU_ExternalFunction::compile()
         }
 
         writer << "extern \"C\" void " << current_function->get_name();
-        writer << "(void** inputs, void** outputs)\n";
+        writer << "(void** inputs, void** outputs, cublasHandle_t& cublas_handle)\n";
         writer << "{\n";
         writer.indent++;
 
         writer += R"(
-    CUdevice    device;
-    CUmodule    cuda_module;
-    CUcontext   context;
-    CUfunction  add_function;
-    CUfunction  mult_function;
-    CUlinkState linker;
-    int         dev_count;
-    cudaError_t cudaStat;
-    cublasStatus_t stat;
-    cublasHandle_t cublas_handle;
-    stat = cublasCreate(&cublas_handle);
-
-    check_cuda_errors(cuInit(0));
-    check_cuda_errors(cuDeviceGetCount(&dev_count));
-    check_cuda_errors(cuDeviceGet(&device, 0));
+    #define IDX2F(i,j,ld) ((((j)-1)*(ld))+((i)-1))
 
     )";
 
@@ -709,10 +696,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
                 writer << "try { G.wait_for_all(); } catch(...) { throw; }\n";
             }
         }
-
-        // Cleanup
-        writer << "cublasDestroy(cublas_handle);\n"
-               << "check_cuda_errors(cuCtxDestroy(context));\n";
         writer.indent--;
         // End generated function
         writer += "}\n\n";
