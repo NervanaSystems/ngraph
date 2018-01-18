@@ -103,7 +103,7 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints,
 bool op::Reshape::is_functionally_identical(const Node& other) const
 {
     bool rc = true;
-    if (Node::is_functionally_identical(other))
+    if (Node::test_identical(other))
     {
         const Reshape& reshape = dynamic_cast<const Reshape&>(other);
         rc &= m_input_order == reshape.m_input_order;

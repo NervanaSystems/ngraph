@@ -55,6 +55,10 @@ namespace ngraph
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<Remainder>(new_args.at(0), new_args.at(1));
             }
+            bool is_functionally_identical(const Node& other) const override
+            {
+                return test_identical(other);
+            }
         };
     }
 }
