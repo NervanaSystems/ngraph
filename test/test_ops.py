@@ -56,9 +56,9 @@ def binary_op(op_str, a, b):
         return Divide(a, b)
     elif op_str == "Dot":
         return Dot(a, b)
-    elif op_str == "Max":
+    elif op_str == "Maximum":
         return Maximum(a, b)
-    elif op_str == "Min":
+    elif op_str == "Minimum":
         return Minimum(a, b)
 
 
@@ -74,9 +74,9 @@ def binary_op_ref(op_str, a, b):
         return a / b
     elif op_str == "Dot":
         return np.dot(a, b)
-    elif op_str == "Max":
+    elif op_str == "Maximum":
         return np.maximum(a, b)
-    elif op_str == "Min":
+    elif op_str == "Minimum":
         return np.minimum(a, b)
 
 
@@ -146,11 +146,11 @@ def test_dot():
 
 
 def test_maximum():
-    binary_op_exec("Max")
+    binary_op_exec("Maximum")
 
 
 def test_minimum():
-    binary_op_exec("Min")
+    binary_op_exec("Minimum")
 
 
 def test_add_with_mul():
