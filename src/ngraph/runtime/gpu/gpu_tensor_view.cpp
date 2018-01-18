@@ -14,7 +14,7 @@
 
 #include <memory>
 
-#include <cuda.h>
+#include <cuda_runtime.h>
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
@@ -39,19 +39,19 @@ runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& elemen
 
     m_buffer_size = m_descriptor->get_tensor_view_layout()->get_size() * element_type.size();
 
-    cuMemAlloc(&dev_buffer, m_buffer_size);
+    cudaMalloc(&dev_buffer, m_buffer_size);
 }
 
 runtime::gpu::GPU_TensorView::~GPU_TensorView()
 {
-    cuMemFree(dev_buffer);
+    cudaFree(dev_buffer);
 }
 void runtime::gpu::GPU_TensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
-    cuMemcpyHtoD(dev_buffer, source, n);
+    cudaMemcpy(dev_buffer, source, n, cudaMemcpyDeviceToHost);
 }
 
 void runtime::gpu::GPU_TensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
-    cuMemcpyDtoH(target, dev_buffer, n);
+    cudaMemcpy(target, dev_buffer, n, cudaMemcpyHostToDevice);
 }

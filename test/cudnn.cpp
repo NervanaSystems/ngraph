@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 
 #include <cuda.h>
+#include <cuda_runtime.h>
 #include <cudnn.h>
 
 #include "ngraph/codegen/compiler.hpp"
