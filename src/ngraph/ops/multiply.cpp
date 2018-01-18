@@ -23,3 +23,8 @@ void ngraph::op::Multiply::generate_adjoints(autodiff::Adjoints& adjoints,
     adjoints.add_delta(x, delta * y);
     adjoints.add_delta(y, x * delta);
 }
+
+bool ngraph::op::Multiply::is_functionally_identical(const Node& other) const
+{
+    return test_identical(other);
+}

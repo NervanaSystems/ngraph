@@ -63,3 +63,8 @@ void ngraph::op::Select::generate_adjoints(autodiff::Adjoints& adjoints,
     adjoints.add_delta(x, delta * p_as_x_type);
     adjoints.add_delta(y, delta * not_p_as_y_type);
 }
+
+bool ngraph::op::Select::is_functionally_identical(const Node& other) const
+{
+    return test_identical(other);
+}

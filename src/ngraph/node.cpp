@@ -338,6 +338,11 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
 
 bool Node::is_functionally_identical(const Node& other) const
 {
+    return false;
+}
+
+bool Node::test_identical(const Node& other) const
+{
     bool rc = true;
     if (this->description() == other.description())
     {

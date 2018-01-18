@@ -54,7 +54,7 @@ void op::Reverse::generate_adjoints(autodiff::Adjoints& adjoints,
 bool op::Reverse::is_functionally_identical(const Node& other) const
 {
     bool rc = true;
-    if (Node::is_functionally_identical(other))
+    if (Node::test_identical(other))
     {
         const Reverse& obj = dynamic_cast<const Reverse&>(other);
         rc &= m_reversed_axes == obj.m_reversed_axes;

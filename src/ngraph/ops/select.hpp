@@ -54,6 +54,7 @@ namespace ngraph
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<Select>(new_args.at(0), new_args.at(1), new_args.at(2));
             }
+            bool is_functionally_identical(const Node&) const override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
