@@ -136,7 +136,7 @@ void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints,
 bool op::ReplaceSlice::is_functionally_identical(const Node& other) const
 {
     bool rc = true;
-    if (Node::is_functionally_identical(other))
+    if (Node::test_identical(other))
     {
         const ReplaceSlice& slice = dynamic_cast<const ReplaceSlice&>(other);
         rc &= m_lower_bounds == slice.m_lower_bounds;

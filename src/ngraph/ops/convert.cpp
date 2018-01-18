@@ -40,7 +40,7 @@ void ngraph::op::Convert::generate_adjoints(autodiff::Adjoints& adjoints,
 bool op::Convert::is_functionally_identical(const Node& other) const
 {
     bool rc = true;
-    if (Node::is_functionally_identical(other))
+    if (Node::test_identical(other))
     {
         const Convert& obj = dynamic_cast<const Convert&>(other);
         rc &= m_element_type == obj.m_element_type;

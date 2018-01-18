@@ -368,6 +368,11 @@ using namespace ngraph::runtime;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         const list<shared_ptr<Node>>& tmp = current_function->get_ordered_ops();
+        if (tmp.size() < 2)
+        {
+            // Since we are comparing ops there must be at least two ops to proceed.
+            continue;
+        }
         vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
         for (size_t i = 0; i < op_list.size() - 1; i++)
         {
