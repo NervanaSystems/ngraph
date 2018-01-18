@@ -402,200 +402,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     check_cuda_errors(cuDeviceGetCount(&dev_count));
     check_cuda_errors(cuDeviceGet(&device, 0));
 
-    // char name[128];
-    // check_cuda_errors(cuDeviceGetName(name, 128, device));
-    // std::cout << "Using CUDA Device [0]: " << name << "\n";
-
-    // int dev_major, dev_minor;
-    // check_cuda_errors(cuDeviceComputeCapability(&dev_major, &dev_minor, device));
-    // std::cout << "Device Compute Capability: "
-    //           << dev_major << "." << dev_minor << "\n";
-    // if (dev_major < 2) {
-    //   std::cerr << "ERROR: Device 0 is not SM 2.0 or greater\n";
-    // }
-
-    const auto kernels = R"#(
-    .version 5.0
-    .target sm_60
-    .address_size 64
-
-      // .globl	_Z7ew_multPfS_S_ // -- Begin function _Z7ew_multPfS_S_
-    .global .align 1 .b8 threadIdx[1];
-                                            // @_Z7ew_multPfS_S_
-    .visible .entry _Z7ew_multPfS_S_(
-      .param .u64 _Z7ew_multPfS_S__param_0,
-      .param .u64 _Z7ew_multPfS_S__param_1,
-      .param .u64 _Z7ew_multPfS_S__param_2
-    )
-    {
-      .local .align 8 .b8 	__local_depot0[24];
-      .reg .b64 	%SP;
-      .reg .b64 	%SPL;
-      .reg .f32 	%f<4>;
-      .reg .b32 	%r<2>;
-      .reg .b64 	%rd<17>;
-
-    // BB#0:
-      mov.u64 	%SPL, __local_depot0;
-      cvta.local.u64 	%SP, %SPL;
-      ld.param.u64 	%rd3, [_Z7ew_multPfS_S__param_2];
-      ld.param.u64 	%rd2, [_Z7ew_multPfS_S__param_1];
-      ld.param.u64 	%rd1, [_Z7ew_multPfS_S__param_0];
-      cvta.to.global.u64 	%rd4, %rd3;
-      cvta.global.u64 	%rd5, %rd4;
-      cvta.to.global.u64 	%rd6, %rd2;
-      cvta.global.u64 	%rd7, %rd6;
-      cvta.to.global.u64 	%rd8, %rd1;
-      cvta.global.u64 	%rd9, %rd8;
-      st.u64 	[%SP+0], %rd9;
-      st.u64 	[%SP+8], %rd7;
-      st.u64 	[%SP+16], %rd5;
-      ld.u64 	%rd10, [%SP+0];
-      mov.u32 	%r1, %tid.x;
-      mul.wide.u32 	%rd11, %r1, 4;
-      add.s64 	%rd12, %rd10, %rd11;
-      ld.f32 	%f1, [%rd12];
-      ld.u64 	%rd13, [%SP+8];
-      add.s64 	%rd14, %rd13, %rd11;
-      ld.f32 	%f2, [%rd14];
-      mul.rn.f32 	%f3, %f1, %f2;
-      ld.u64 	%rd15, [%SP+16];
-      add.s64 	%rd16, %rd15, %rd11;
-      st.f32 	[%rd16], %f3;
-      ret;
-    }
-                                            // -- End function
-      // .globl	_Z6ew_addPfS_S_ // -- Begin function _Z6ew_addPfS_S_
-    .visible .entry _Z6ew_addPfS_S_(
-      .param .u64 _Z6ew_addPfS_S__param_0,
-      .param .u64 _Z6ew_addPfS_S__param_1,
-      .param .u64 _Z6ew_addPfS_S__param_2
-    )                                       // @_Z6ew_addPfS_S_
-    {
-      .local .align 8 .b8 	__local_depot1[24];
-      .reg .b64 	%SP;
-      .reg .b64 	%SPL;
-      .reg .f32 	%f<4>;
-      .reg .b32 	%r<2>;
-      .reg .b64 	%rd<17>;
-
-    // BB#0:
-      mov.u64 	%SPL, __local_depot1;
-      cvta.local.u64 	%SP, %SPL;
-      ld.param.u64 	%rd3, [_Z6ew_addPfS_S__param_2];
-      ld.param.u64 	%rd2, [_Z6ew_addPfS_S__param_1];
-      ld.param.u64 	%rd1, [_Z6ew_addPfS_S__param_0];
-      cvta.to.global.u64 	%rd4, %rd3;
-      cvta.global.u64 	%rd5, %rd4;
-      cvta.to.global.u64 	%rd6, %rd2;
-      cvta.global.u64 	%rd7, %rd6;
-      cvta.to.global.u64 	%rd8, %rd1;
-      cvta.global.u64 	%rd9, %rd8;
-      st.u64 	[%SP+0], %rd9;
-      st.u64 	[%SP+8], %rd7;
-      st.u64 	[%SP+16], %rd5;
-      ld.u64 	%rd10, [%SP+0];
-      mov.u32 	%r1, %tid.x;
-      mul.wide.u32 	%rd11, %r1, 4;
-      add.s64 	%rd12, %rd10, %rd11;
-      ld.f32 	%f1, [%rd12];
-      ld.u64 	%rd13, [%SP+8];
-      add.s64 	%rd14, %rd13, %rd11;
-      ld.f32 	%f2, [%rd14];
-      add.rn.f32 	%f3, %f1, %f2;
-      ld.u64 	%rd15, [%SP+16];
-      add.s64 	%rd16, %rd15, %rd11;
-      st.f32 	[%rd16], %f3;
-      ret;
-    }
-                                            // -- End function
-    )#";
-    // Create driver context
-    check_cuda_errors(cuCtxCreate(&context, 0, device));
-
-    // Create module for object
-    check_cuda_errors(cuModuleLoadDataEx(&cuda_module, kernels, 0, 0, 0));
-
-    // Get kernel function
-    check_cuda_errors(cuModuleGetFunction(&add_function, cuda_module, "_Z6ew_addPfS_S_"));
-    check_cuda_errors(cuModuleGetFunction(&mult_function, cuda_module, "_Z7ew_multPfS_S_"));
-
-    // Device data
-    CUdeviceptr dev_bufferA;
-    CUdeviceptr dev_bufferB;
-    CUdeviceptr dev_bufferC;
-
-    check_cuda_errors(cuMemAlloc(&dev_bufferA, sizeof(float) * 4));
-    check_cuda_errors(cuMemAlloc(&dev_bufferB, sizeof(float) * 4));
-    check_cuda_errors(cuMemAlloc(&dev_bufferC, sizeof(float) * 4));
-
-    float* host_A = new float[4];
-    float* host_B = new float[4];
-    float* host_C = new float[4];
-
-    // Populate input
-    memcpy(host_A, (float*)(inputs[0]), sizeof(float) * 4);
-    memcpy(host_B, (float*)(inputs[1]), sizeof(float) * 4);
-    memcpy(host_C, (float*)(inputs[2]), sizeof(float) * 4);
-
-    check_cuda_errors(cuMemcpyHtoD(dev_bufferA, &host_A[0], sizeof(float) * 4));
-    check_cuda_errors(cuMemcpyHtoD(dev_bufferB, &host_B[0], sizeof(float) * 4));
-    // check_cuda_errors(cuMemcpyHtoD(dev_bufferC, &host_C[0], sizeof(float) * 4));
-
-    unsigned block_size_X = 4;
-    unsigned block_size_Y = 1;
-    unsigned block_size_Z = 1;
-    unsigned grid_size_X = 1;
-    unsigned grid_size_Y = 1;
-    unsigned grid_size_Z = 1;
-
-    // Kernel parameters
-    void* kernel_params[] = {&dev_bufferA, &dev_bufferB, &dev_bufferC};
-
-    // Add Kernel launch
-    check_cuda_errors(cuLaunchKernel(add_function,
-                                        grid_size_X,
-                                        grid_size_Y,
-                                        grid_size_Z,
-                                        block_size_X,
-                                        block_size_Y,
-                                        block_size_Z,
-                                        0,
-                                        NULL,
-                                        kernel_params,
-                                        NULL));
-
-    check_cuda_errors(cuMemcpyDtoH(&host_A[0], dev_bufferC, sizeof(float) * 4));
-    host_B = &host_C[0];
-      check_cuda_errors(cuMemcpyHtoD(dev_bufferA, &host_A[0], sizeof(float) * 4));
-      check_cuda_errors(cuMemcpyHtoD(dev_bufferB, &host_B[0], sizeof(float) * 4));
-
-    // Mult Kernel launch
-    check_cuda_errors(cuLaunchKernel(mult_function,
-                                        grid_size_X,
-                                        grid_size_Y,
-                                        grid_size_Z,
-                                        block_size_X,
-                                        block_size_Y,
-                                        block_size_Z,
-                                        0,
-                                        NULL,
-                                        kernel_params,
-                                        NULL));
-
-    // Write final output
-    check_cuda_errors(cuMemcpyDtoH(&((float*)(outputs[0]))[0], dev_bufferC, sizeof(float) * 4));
-    // Clean up after ourselves
-
-    // // Clean-up must do this in tensor view!!!
-
-    cublasDestroy(cublas_handle);
-
-    check_cuda_errors(cuMemFree(dev_bufferA));
-    check_cuda_errors(cuMemFree(dev_bufferB));
-    check_cuda_errors(cuMemFree(dev_bufferC));
-    check_cuda_errors(cuModuleUnload(cuda_module));
-    check_cuda_errors(cuCtxDestroy(context));)";
+    )";
 
         if (m_emit_timing)
         {
@@ -681,26 +488,26 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
         if (temporaries_used)
         {
-            size_t temp_pool_size = current_function->get_temporary_pool_size();
-            writer << "// Allocate the memory pool\n";
-            writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
-            writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
-            writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
-                   << ngraph::runtime::gpu::alignment << ");\n";
-            writer << "size_t pool_gpu_ptr = (size_t)memory_handler.get_ptr();\n";
-            writer << "\n";
+            // size_t temp_pool_size = current_function->get_temporary_pool_size();
+            // writer << "// Allocate the memory pool\n";
+            // writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
+            // writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
+            // writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
+            //        << ngraph::runtime::gpu::alignment << ");\n";
+            // writer << "size_t pool_gpu_ptr = (size_t)memory_handler.get_ptr();\n";
+            // writer << "\n";
 
-            // Add temporaries to the variable name map
-            for (shared_ptr<Node> node : current_function->get_ordered_ops())
-            {
-                for (descriptor::Tensor* tensor : node->liveness_new_list)
-                {
-                    stringstream ss;
-                    ss << "((" << tensor->get_element_type().c_type_string() << "*)(pool_gpu_ptr + "
-                       << tensor->get_pool_offset() << "))";
-                    m_variable_name_map[tensor->get_name()] = ss.str();
-                }
-            }
+            // // Add temporaries to the variable name map
+            // for (shared_ptr<Node> node : current_function->get_ordered_ops())
+            // {
+            //     for (descriptor::Tensor* tensor : node->liveness_new_list)
+            //     {
+            //         stringstream ss;
+            //         ss << "((" << tensor->get_element_type().c_type_string() << "*)(pool_gpu_ptr + "
+            //            << tensor->get_pool_offset() << "))";
+            //         m_variable_name_map[tensor->get_name()] = ss.str();
+            //     }
+            // }
         }
 
         // Add inputs to the variable name map
@@ -903,6 +710,9 @@ void runtime::gpu::GPU_ExternalFunction::compile()
             }
         }
 
+        // Cleanup
+        writer << "cublasDestroy(cublas_handle);\n"
+               << "check_cuda_errors(cuCtxDestroy(context));\n";
         writer.indent--;
         // End generated function
         writer += "}\n\n";
