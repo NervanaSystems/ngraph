@@ -333,18 +333,18 @@ bool CoordinateTransform::has_source_coordinate(const Coordinate& c_target) cons
 
         // The rest of this is a replay of the corresponding logic in `to_source_coordinate`, with
         // bounds and divisibility checking.
-        size_t source_axis = m_source_axis_order[target_axis];
+        ssize_t source_axis = m_source_axis_order[target_axis];
 
-        size_t target_pos = c_target[target_axis];
-        size_t pos_destrided = target_pos * m_source_strides[source_axis];
-        size_t pos_deshifted = pos_destrided + m_source_start_corner[source_axis];
+        ssize_t target_pos = c_target[target_axis];
+        ssize_t pos_destrided = target_pos * m_source_strides[source_axis];
+        ssize_t pos_deshifted = pos_destrided + m_source_start_corner[source_axis];
 
         // If we are in the below-padding or the above-padding.
         if (pos_deshifted < m_target_padding_below[target_axis])
         {
             return false;
         }
-        size_t pos_depadded = pos_deshifted - m_target_padding_below[target_axis];
+        ssize_t pos_depadded = pos_deshifted - m_target_padding_below[target_axis];
 
         // If we are in the above-padding, we have no source coordinate.
         if (pos_depadded >=
