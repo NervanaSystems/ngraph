@@ -81,6 +81,7 @@ def tuple_times(t1,t2):
 def convolution_ref(img_batch, filter, move_strides, filter_dilation, below_pads, above_pads, image_dilation):
     assert(len(img_batch.shape) == len(filter.shape))
     assert(len(img_batch.shape) > 2)
+    assert(len(img_batch.shape) <= 6)
     assert(img_batch.shape[1] == filter.shape[1])
     assert(len(move_strides) == len(img_batch.shape) - 2)
     assert(len(filter_dilation) == len(img_batch.shape) - 2)
@@ -93,7 +94,9 @@ def convolution_ref(img_batch, filter, move_strides, filter_dilation, below_pads
 
     for n in range(0, new_img_batch_shape[0]) :
         for c in range(0, new_img_batch_shape[1]) :
-            if new_img_batch.ndim == 4:
+            if new_img_batch.ndim == 3:
+                new_img_batch[n, c, 0::image_dilation[0]] = img_batch[n][c]
+            elif new_img_batch.ndim == 4:
                 new_img_batch[n, c, 0::image_dilation[0], 0::image_dilation[1]] = img_batch[n][c]
             elif new_img_batch.ndim == 5:
                 new_img_batch[n, c, 0::image_dilation[0], 0::image_dilation[1], 0::image_dilation[2]] = img_batch[n][c]
@@ -104,10 +107,16 @@ def convolution_ref(img_batch, filter, move_strides, filter_dilation, below_pads
 
     img_batch = new_img_batch
 
-    # Pad the input batch.
-    below_pads = (0,0) + below_pads  # Have to add values for the image and channel dims.
-    above_pads = (0,0) + above_pads  # Have to add values for the image and channel dims.
-    img_batch = np.pad(img_batch, zip(below_pads,above_pads), mode='constant', constant_values=0)
+    # Pad the input batch wherever the pads are positive.
+    below_pads_pos = (0,0) + tuple(np.clip(below_pads,0,None))  # Have to add values for the image and channel dims.
+    above_pads_pos = (0,0) + tuple(np.clip(above_pads,0,None))  # Have to add values for the image and channel dims.
+    img_batch = np.pad(img_batch, zip(below_pads_pos,above_pads_pos), mode='constant', constant_values=0)
+
+    # Slice the input batch wherever the pads are negative.
+    slice_bottoms = (0,0) + tuple (-np.clip(below_pads,None,0))
+    slice_tops = (0,0) + tuple (np.clip(above_pads,None,0))
+    slices = map(lambda p: slice(p[0],p[1] if p[1] < 0 else None),zip(slice_bottoms,slice_tops))
+    img_batch = img_batch[slices]
 
     img_count = img_batch.shape[0]                # N
     ci_count = img_batch.shape[1]                 # Ci
@@ -196,11 +205,11 @@ TEST (${BACKEND_NAME}, %s)
     auto shape_r = Shape{%s};
     auto f = make_shared<Function>(
         make_shared<op::Convolution>(A, B, 
-                                     Strides{%s},  // move_strides
-                                     Strides{%s},  // filter_dilation
-                                     Shape{%s},    // below_pads
-                                     Shape{%s},    // above_pads
-                                     Strides{%s}), // image_dilation
+                                     Strides{%s},        // move_strides
+                                     Strides{%s},        // filter_dilation
+                                     CoordinateDiff{%s}, // below_pads
+                                     CoordinateDiff{%s}, // above_pads
+                                     Strides{%s}),       // image_dilation
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -235,48 +244,51 @@ TEST (${BACKEND_NAME}, %s)
                          data_str(filter_data),
                          data_str(output_batch_data)));
 
-#                                                                                                                          filter                           image
-#         test name                                input image batch              filters                        stride    dilation  below-pads  above-pads dilation
+#                                                                                                                          filter                            image
+#         test name                                input image batch              filters                        stride    dilation  below-pads  above-pads  dilation
 tests = [
-         ("convolution_2d_1image",                 shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (1,1)),
-         ("convolution_2d_1image_padded_1_1x1_1",  shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (1,1),      (1,1),     (1,1)),
-         ("convolution_2d_1image_padded_2_3x4_5",  shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (2,3),      (4,5),     (1,1)),
-         ("convolution_2d_2images",                shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (1,1)),
-         ("convolution_2d_2images_strided",        shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (2,2),    (1,1),    (0,0),      (0,0),     (1,1)),
-         ("convolution_2d_2images_strided_padded", shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (2,2),    (1,1),    (4,2),      (5,7),     (1,1)),
+         ("convolution_2d_1image",                 shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1)),
+         ("convolution_2d_1image_padded_1_1x1_1",  shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (1,1),      (1,1),      (1,1)),
+         ("convolution_2d_1image_padded_2_3x4_5",  shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (2,3),      (4,5),      (1,1)),
+         ("convolution_2d_2images",                shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),      (1,1)),
+         ("convolution_2d_2images_strided",        shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (2,2),    (1,1),    (0,0),      (0,0),      (1,1)),
+         ("convolution_2d_2images_strided_padded", shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (2,2),    (1,1),    (4,2),      (5,7),      (1,1)),
          ("convolution_2d_2images_strided_padded_same",
-                                                   shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (2,2),    (1,1),    (2,2),      (2,2),     (1,1)),
-         ("convolution_2d_2images_dilated",        shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (2,2),    (0,0),      (0,0),     (1,1)),
-         ("convolution_2d_2images_dilated_padded", shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (2,2),    (4,2),      (5,7),     (1,1)),
-         ("convolution_3d_2images",                shaped_linspace((2,1,3,5,8)),  shaped_linspace((2,1,2,2,3)),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),   (1,1,1)),
-         ("convolution_4d_2images",                shaped_linspace((2,1,3,5,8,7)),shaped_linspace((2,1,2,2,3,1)),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0), (1,1,1,1)),
-         ("convolution_4d_4images",                shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0), (1,1,1,1)),
-         ("convolution_4d_4images_strided",        shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(2,1,3,2),(1,1,1,1),(0,0,0,0),  (0,0,0,0), (1,1,1,1)),
-         ("convolution_4d_4images_dilated",        shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(1,1,1,1),(2,1,3,2),(0,0,0,0),  (0,0,0,0), (1,1,1,1)),
-         ("convolution_4d_4images_strided_dilated",shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(0,0,0,0),  (0,0,0,0), (1,1,1,1)),
+                                                   shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (2,2),    (1,1),    (2,2),      (2,2),      (1,1)),
+         ("convolution_2d_2images_dilated",        shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (2,2),    (0,0),      (0,0),      (1,1)),
+         ("convolution_2d_2images_dilated_padded", shaped_linspace((2,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (2,2),    (4,2),      (5,7),      (1,1)),
+         ("convolution_3d_2images",                shaped_linspace((2,1,3,5,8)),  shaped_linspace((2,1,2,2,3)),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (1,1,1)),
+         ("convolution_4d_2images",                shaped_linspace((2,1,3,5,8,7)),shaped_linspace((2,1,2,2,3,1)),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1)),
+         ("convolution_4d_4images",                shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(1,1,1,1),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1)),
+         ("convolution_4d_4images_padded_neg",     shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(1,1,1,1),(1,1,1,1),(-1,2,-3,2),(1,0,0,-3), (1,1,1,1)),
+         ("convolution_4d_4images_strided",        shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(2,1,3,2),(1,1,1,1),(0,0,0,0),  (0,0,0,0),  (1,1,1,1)),
+         ("convolution_4d_4images_dilated",        shaped_linspace((4,3,3,5,8,7)),shaped_linspace((4,3,2,2,3,1)),(1,1,1,1),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1)),
+         ("convolution_4d_4images_strided_dilated",shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(0,0,0,0),  (0,0,0,0),  (1,1,1,1)),
          ("convolution_4d_4images_strided_dilated_padded",
-                                                   shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(2,4,6,8),  (1,3,5,7), (1,1,1,1)),
+                                                   shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(2,4,6,8),  (1,3,5,7),  (1,1,1,1)),
+         ("convolution_4d_4images_strided_dilated_padded_neg",
+                                                   shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(-2,4,0,5), (1,3,-1,-4),(1,1,1,1)),
          ("convolution_4d_4images_strided_dilated_padded_same",
-                                                   shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(3,3,3,3),  (3,3,3,3), (1,1,1,1)),
-         ("convolution_2d_1image_1o1i_img_dilated",shaped_linspace((1,1,3,5)),    shaped_linspace((1,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
-         ("convolution_2d_1image_2o1i_img_dilated",shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
-         ("convolution_2d_1image_2o2i_img_dilated",shaped_linspace((1,2,3,5)),    shaped_linspace((2,2,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
-         ("convolution_2d_1image_5o3i_img_dilated",shaped_linspace((1,3,3,5)),    shaped_linspace((5,3,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
-         ("convolution_2d_8image_5o3i_img_dilated",shaped_linspace((8,3,3,5)),    shaped_linspace((5,3,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
+                                                   shaped_linspace((4,3,8,8,8,8)),shaped_linspace((4,3,2,2,3,1)),(3,2,2,3),(2,1,3,2),(3,3,3,3),  (3,3,3,3),  (1,1,1,1)),
+         ("convolution_2d_1image_1o1i_img_dilated",shaped_linspace((1,1,3,5)),    shaped_linspace((1,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2)),
+         ("convolution_2d_1image_2o1i_img_dilated",shaped_linspace((1,1,3,5)),    shaped_linspace((2,1,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2)),
+         ("convolution_2d_1image_2o2i_img_dilated",shaped_linspace((1,2,3,5)),    shaped_linspace((2,2,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2)),
+         ("convolution_2d_1image_5o3i_img_dilated",shaped_linspace((1,3,3,5)),    shaped_linspace((5,3,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2)),
+         ("convolution_2d_8image_5o3i_img_dilated",shaped_linspace((8,3,3,5)),    shaped_linspace((5,3,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2)),
          ("convolution_2d_8image_large_5o3i_img_dilated",
-                                                   shaped_linspace((8,3,16,16)),  shaped_linspace((5,3,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
+                                                   shaped_linspace((8,3,16,16)),  shaped_linspace((5,3,2,2)),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2)),
          ("convolution_2d_8image_large_5o3i_uneven_filter_img_dilated",
-                                                   shaped_linspace((8,3,16,16)),  shaped_linspace((5,3,2,3)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,2)),
+                                                   shaped_linspace((8,3,16,16)),  shaped_linspace((5,3,2,3)),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2)),
          ("convolution_2d_8image_large_5o3i_uneven_filter_uneven_img_dilation_img_dilated",
-                                                   shaped_linspace((8,3,16,16)),  shaped_linspace((5,3,2,3)),    (1,1),    (1,1),    (0,0),      (0,0),     (2,3)),
+                                                   shaped_linspace((8,3,16,16)),  shaped_linspace((5,3,2,3)),    (1,1),    (1,1),    (0,0),      (0,0),      (2,3)),
          ("convolution_3d_2image_large_5o3i_uneven_filter_uneven_img_dilation_img_dilated",
-                                                   shaped_linspace((2,3,8,8,8)),  shaped_linspace((5,3,2,3,4)),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),   (2,3,2)),
+                                                   shaped_linspace((2,3,8,8,8)),  shaped_linspace((5,3,2,3,4)),  (1,1,1),  (1,1,1),  (0,0,0),    (0,0,0),    (2,3,2)),
          ("convolution_3d_1image_large_5o3i_padded_uneven_filter_uneven_img_dilation_img_dilated",
-                                                   shaped_linspace((1,3,8,8,8)),  shaped_linspace((5,3,2,3,4)),  (1,1,1),  (1,1,1),  (2,1,2),    (1,2,3),   (2,3,2)),
+                                                   shaped_linspace((1,3,8,8,8)),  shaped_linspace((5,3,2,3,4)),  (1,1,1),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2)),
          ("convolution_3d_2image_large_5o3i_padded_strided_uneven_filter_uneven_img_dilation_img_dilated",
-                                                   shaped_linspace((2,3,8,8,8)),  shaped_linspace((5,3,2,3,4)),  (2,3,2),  (1,1,1),  (2,1,2),    (1,2,3),   (2,3,2)),
+                                                   shaped_linspace((2,3,8,8,8)),  shaped_linspace((5,3,2,3,4)),  (2,3,2),  (1,1,1),  (2,1,2),    (1,2,3),    (2,3,2)),
          ("convolution_3d_2image_large_5o3i_padded_strided_uneven_filter_uneven_img_dilation_filter_dilated_img_dilated",
-                                                   shaped_linspace((2,3,8,8,8)),  shaped_linspace((5,3,2,3,4)),  (2,3,2),  (3,2,2),  (2,1,2),    (1,2,3),   (2,3,2)),
+                                                   shaped_linspace((2,3,8,8,8)),  shaped_linspace((5,3,2,3,4)),  (2,3,2),  (3,2,2),  (2,1,2),    (1,2,3),    (2,3,2)),
         ]
 
 def main():
@@ -337,14 +349,16 @@ static bool all_close_d(const std::vector<double>& a,
 {
     assert(a.size() == b.size());
 
+    bool rc = true;
+
     for (size_t i = 0; i < a.size(); ++i)
     {
         if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]))
         {
-            return false;
+            rc = false;
         }
     }
-    return true;
+    return rc;
 }
 ''')
     for t in tests:

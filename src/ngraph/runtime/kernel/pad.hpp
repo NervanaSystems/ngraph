@@ -54,13 +54,23 @@ namespace ngraph
                     input_dilation[i] = padding_interior[i] + 1;
                 }
 
+                // Need to cast these to CoordinateDiff in order to make CoordinateTransform happy.
+                CoordinateDiff padding_below_signed;
+                CoordinateDiff padding_above_signed;
+
+                for (size_t i = 0; i < padding_below.size(); i++)
+                {
+                    padding_below_signed.push_back(padding_below[i]);
+                    padding_above_signed.push_back(padding_above[i]);
+                }
+
                 CoordinateTransform input_transform(arg0_shape,
                                                     input_start,
                                                     input_end,
                                                     input_strides,
                                                     input_axis_order,
-                                                    padding_below,
-                                                    padding_above,
+                                                    padding_below_signed,
+                                                    padding_above_signed,
                                                     input_dilation);
                 CoordinateTransform output_transform(out_shape);
 
