@@ -1081,6 +1081,9 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
     }
     else
     {
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+
         string type = f_result_element_type.c_type_string();
         writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
         writer.indent++;
@@ -1100,6 +1103,9 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
         writer << "               {" << join(out[0].get_shape()) << "},\n";
         writer << "               {" << join(reduce->get_reduction_axes()) << "},\n";
         writer << "               f);\n";
+
+        writer.indent--;
+        writer << "}\n";
     }
 #else
     writer << "{   // " << n->get_name() << " 1\n";
@@ -1876,6 +1882,9 @@ void runtime::cpu::CPU_Emitter::EmitReduceWindow(
     auto reduction_function = reduce_window->get_functions()[0];
     auto& f_result_element_type = out[0].get_element_type();
 
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
+
     string type = f_result_element_type.c_type_string();
     writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
     writer.indent++;
@@ -1897,6 +1906,9 @@ void runtime::cpu::CPU_Emitter::EmitReduceWindow(
     writer << "                      {" << join(reduce_window->get_window_shape()) << "},\n";
     writer << "                      {" << join(reduce_window->get_window_movement_strides())
            << "});\n";
+
+    writer.indent--;
+    writer << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
@@ -1912,6 +1924,9 @@ void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
     auto arg0_shape = args[0].get_shape();
     auto arg1_shape = args[1].get_shape();
     auto result_shape = out[0].get_shape();
+
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
 
     string type = n->get_output_element_type(0).c_type_string();
 
@@ -1950,6 +1965,9 @@ void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
     writer << "                {" << join(select_and_scatter->get_window_shape()) << "},\n";
     writer << "                {" << join(select_and_scatter->get_window_movement_strides())
            << "});\n";
+
+    writer.indent--;
+    writer << "}\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitAvgPool(codegen::CodeWriter& writer,
