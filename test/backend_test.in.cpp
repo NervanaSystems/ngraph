@@ -5614,7 +5614,7 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
                                           2 / denom,
                                           0 / denom}}})
                    .get_vector()),
-              result->get_vector<float>());
+              get_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
@@ -5666,7 +5666,7 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
                                           1 / denom,
                                           3 / denom}}})
                    .get_vector()),
-              result->get_vector<float>());
+              get_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
@@ -5746,7 +5746,7 @@ TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
                                           4 / denom,
                                           3 / denom}}})
                    .get_vector()),
-              result->get_vector<float>());
+              get_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
@@ -5814,7 +5814,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
                                           {7 / denom, 5 / denom, 6 / denom},
                                           {4 / denom, 2 / denom, 4 / denom}}}})
                    .get_vector()),
-              result->get_vector<float>());
+              get_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
@@ -5853,7 +5853,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
                                           {6 / denom, 5 / denom, 8 / denom},
                                           {6 / denom, 2 / denom, 4 / denom}}}})
                    .get_vector()),
-              result->get_vector<float>());
+              get_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
@@ -5886,7 +5886,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
                                           {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
                                           {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}}}})
                    .get_vector()),
-              result->get_vector<float>());
+              get_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
@@ -5926,7 +5926,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
                                           {5.0f / 2, 11.0f / 4, 20.0f / 4, 14.0f / 2},
                                           {3.0f / 1, 9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
                    .get_vector()),
-              result->get_vector<float>());
+              get_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
@@ -5964,7 +5964,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
                                           {5.0f / 2, 10.0f / 4, 16.0f / 4},
                                           {5.0f / 2, 11.0f / 4, 20.0f / 4}}}})
                    .get_vector()),
-              result->get_vector<float>());
+              get_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
@@ -6002,7 +6002,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
                                           {11.0f / 4, 20.0f / 4, 14.0f / 2},
                                           {9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
                    .get_vector()),
-              result->get_vector<float>());
+              get_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
@@ -6044,7 +6044,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
                                           {5.0f / 2, 11.0f / 4, 25.0f / 6, 20.0f / 4, 14.0f / 2},
                                           {3.0f / 1, 9.0f / 2, 14.0f / 3, 11.0f / 2, 5.0f / 1}}}})
                    .get_vector()),
-              result->get_vector<float>());
+              get_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
@@ -6082,7 +6082,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
                                           {8.0f / 3, 35.0f / 9, 16.0f / 3},
                                           {3.0f / 1, 14.0f / 3, 5.0f / 1}}}})
                    .get_vector()),
-              result->get_vector<float>());
+              get_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
@@ -6117,5 +6117,5 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
                    {{{{0.0f / 1, 1.0f / 2}, {2.0f / 3, 6.0f / 6}, {2.0f / 1, 0.0f / 2}},
                      {{3.0f / 1, 7.0f / 2}, {8.0f / 3, 27.0f / 6}, {3.0f / 1, 11.0f / 2}}}})
                    .get_vector()),
-              result->get_vector<float>());
+              get_vector<float>(result));
 }

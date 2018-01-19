@@ -99,7 +99,7 @@ namespace ngraph
                             res_k += vec.size();
                         }
                     }
-                    set_vector(results[pos],  res);
+                    set_vector(results[pos], res);
                     pos++;
                 }
             }

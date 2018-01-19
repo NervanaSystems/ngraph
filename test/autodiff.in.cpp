@@ -94,13 +94,6 @@ bool autodiff_numeric_compare_selective(
     return test::all_close(results_num, results_sym, rtol, atol);
 }
 
-template <typename T>
-static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
-{
-    size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
-}
-
 TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 {
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -144,7 +137,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
     cf->tensor_call({input, ep}, {output});
-    ASSERT_TRUE(output->get_vector<int>() == expected);
+    ASSERT_TRUE(get_vector<int>(output) == expected);
 }
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
@@ -188,7 +181,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
     cf->tensor_call({input, ep}, {output});
-    ASSERT_TRUE(output->get_vector<int>() == expected);
+    ASSERT_TRUE(get_vector<int>(output) == expected);
 }
 
 TEST(${BACKEND_NAME}, backwards_abs)
