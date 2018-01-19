@@ -15,17 +15,11 @@
 
 #include "ngraph/ngraph.hpp"
 #include "util/all_close.hpp"
+#include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace ngraph::test;
 using namespace std;
-
-template <typename T>
-static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
-{
-    size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
-}
 
 std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result(
     std::function<std::shared_ptr<Node>(const std::shared_ptr<Node>&, const AxisSet&)> func)
@@ -91,31 +85,31 @@ TEST(builder, l2_norm)
 {
     auto result = make_reduce_result(builder::l2_norm);
     ASSERT_TRUE(
-        all_close((vector<float>{5.9160797831f, 7.48331477355f}), result->get_vector<float>()));
+        all_close((vector<float>{5.9160797831f, 7.48331477355f}), get_vector<float>(result)));
 }
 
 TEST(builder, mean)
 {
     auto result = make_reduce_result(builder::mean);
-    ASSERT_TRUE(all_close((vector<float>{3, 4}), result->get_vector<float>()));
+    ASSERT_TRUE(all_close((vector<float>{3, 4}), get_vector<float>(result)));
 }
 
 TEST(builder, std_dev)
 {
     auto result = make_reduce_result_false(builder::std_dev);
     ASSERT_TRUE(
-        all_close((vector<float>{1.63299316186f, 1.63299316186f}), result->get_vector<float>()));
+        all_close((vector<float>{1.63299316186f, 1.63299316186f}), get_vector<float>(result)));
     result = make_reduce_result_true(builder::std_dev);
-    ASSERT_TRUE(all_close((vector<float>{2, 2}), result->get_vector<float>()));
+    ASSERT_TRUE(all_close((vector<float>{2, 2}), get_vector<float>(result)));
 }
 
 TEST(builder, variance)
 {
     auto result = make_reduce_result_false(builder::variance);
     ASSERT_TRUE(
-        all_close((vector<float>{2.66666666666f, 2.66666666666f}), result->get_vector<float>()));
+        all_close((vector<float>{2.66666666666f, 2.66666666666f}), get_vector<float>(result)));
     result = make_reduce_result_true(builder::variance);
-    ASSERT_TRUE(all_close((vector<float>{4, 4}), result->get_vector<float>()));
+    ASSERT_TRUE(all_close((vector<float>{4, 4}), get_vector<float>(result)));
 }
 
 TEST(builder, numpy_transpose)

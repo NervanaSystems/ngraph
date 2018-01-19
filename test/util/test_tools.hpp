@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <exception>
 #include <list>
 #include <memory>
 
@@ -31,4 +32,18 @@ void copy_data(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::vecto
 {
     size_t data_size = data.size() * sizeof(T);
     tv->write(data.data(), 0, data_size);
+}
+
+template <typename T>
+std::vector<T> get_vector(std::shared_ptr<ngraph::runtime::TensorView> tv)
+{
+    if (ngraph::element::from<T>() != tv->get_tensor_view_layout()->get_element_type())
+    {
+        throw std::invalid_argument("get_vector type must match TensorView type");
+    }
+    size_t element_count = ngraph::shape_size(tv->get_shape());
+    size_t size = element_count * sizeof(T);
+    std::vector<T> rc(element_count);
+    tv->read(rc.data(), 0, size);
+    return rc;
 }
