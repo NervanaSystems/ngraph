@@ -198,8 +198,8 @@ TEST (${BACKEND_NAME}, %s)
         make_shared<op::Convolution>(A, B, 
                                      Strides{%s},  // move_strides
                                      Strides{%s},  // filter_dilation
-                                     Shape{%s},    // below_pads
-                                     Shape{%s},    // above_pads
+                                     Padding{%s},  // below_pads
+                                     Padding{%s},  // above_pads
                                      Strides{%s}), // image_dilation
         op::Parameters{A, B});
 

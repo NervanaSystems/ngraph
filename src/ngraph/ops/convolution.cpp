@@ -22,8 +22,8 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
                              const std::shared_ptr<Node>& filters,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
-                             const Shape& padding_below,
-                             const Shape& padding_above,
+                             const Padding& padding_below,
+                             const Padding& padding_above,
                              const Strides& image_dilation_strides)
     : RequiresTensorViewArgs("Convolution", {image_batch, filters})
     , m_window_movement_strides(window_movement_strides)
@@ -128,7 +128,15 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
         size_t dim_size = image_batch_shape[1 + 1 + i];
         m_input_image_physical_shape.push_back(dim_size);
         size_t dilated_dim_size = (dim_size - 1) * image_dilation_strides[i] + 1;
-        size_t padded_dilated_dim_size = padding_below[i] + dilated_dim_size + padding_above[i];
+
+        ssize_t padded_dilated_dim_size = padding_below[i] + dilated_dim_size + padding_above[i];
+
+        if (padded_dilated_dim_size < 0)
+        {
+            throw ngraph_error(
+                "Convolution input image dimension after padding and dilation is negative.");
+        }
+
         m_input_image_virtual_shape.push_back(padded_dilated_dim_size);
 
         if (m_input_image_virtual_shape[i] == 0)
@@ -214,8 +222,8 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
                              const std::shared_ptr<Node>& filters,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
-                             const Shape& padding_below,
-                             const Shape& padding_above)
+                             const Padding& padding_below,
+                             const Padding& padding_above)
     : Convolution(image_batch,
                   filters,
                   window_movement_strides,
@@ -226,7 +234,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
 {
 }
 
-Shape op::Convolution::default_padding(const std::shared_ptr<Node>& image_batch)
+Padding op::Convolution::default_padding(const std::shared_ptr<Node>& image_batch)
 {
     auto& image_batch_shape = image_batch->get_shape();
     if (image_batch_shape.size() < 3)
@@ -236,7 +244,7 @@ Shape op::Convolution::default_padding(const std::shared_ptr<Node>& image_batch)
             "Convolution image batch input must have rank of at least 3 (one batch axis, one "
             "input-channel axis, at least one image dimension).");
     }
-    return Shape(image_batch_shape.size() - 2, 0);
+    return Padding(image_batch_shape.size() - 2, 0);
 }
 
 op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,

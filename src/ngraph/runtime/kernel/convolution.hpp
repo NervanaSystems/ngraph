@@ -35,8 +35,8 @@ namespace ngraph
                              const Shape& out_shape,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
-                             const Shape& padding_below,
-                             const Shape& padding_above,
+                             const Padding& padding_below,
+                             const Padding& padding_above,
                              const Strides& image_dilation_strides)
             {
                 // At the outermost level we will walk over every output coordinate O.

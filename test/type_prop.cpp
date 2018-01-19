@@ -1767,8 +1767,8 @@ TEST(type_prop, conv_1d_deduce)
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
     EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), Shape{0});
-    EXPECT_EQ(conv->get_padding_above(), Shape{0});
+    EXPECT_EQ(conv->get_padding_below(), Padding{0});
+    EXPECT_EQ(conv->get_padding_above(), Padding{0});
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -1791,8 +1791,8 @@ TEST(type_prop, conv_1d_deduce_padded)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
     auto move_strides = Strides{1};
     auto dilation_strides = Strides{1};
-    auto padding_below = Shape{2};
-    auto padding_above = Shape{3};
+    auto padding_below = Padding{2};
+    auto padding_above = Padding{3};
     auto conv = make_shared<op::Convolution>(
         param0, param1, move_strides, dilation_strides, padding_below, padding_above);
     EXPECT_EQ(conv->get_element_type(), element::f32);
@@ -1802,8 +1802,8 @@ TEST(type_prop, conv_1d_deduce_padded)
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
     EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), Shape{2});
-    EXPECT_EQ(conv->get_padding_above(), Shape{3});
+    EXPECT_EQ(conv->get_padding_below(), Padding{2});
+    EXPECT_EQ(conv->get_padding_above(), Padding{3});
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -1833,8 +1833,8 @@ TEST(type_prop, conv_1d_deduce_strided)
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
     EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), Shape{0});
-    EXPECT_EQ(conv->get_padding_above(), Shape{0});
+    EXPECT_EQ(conv->get_padding_below(), Padding{0});
+    EXPECT_EQ(conv->get_padding_above(), Padding{0});
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -1857,8 +1857,8 @@ TEST(type_prop, conv_1d_deduce_strided_padded)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
     auto move_strides = Strides{2};
     auto dilation_strides = Strides{1};
-    auto padding_below = Shape{2};
-    auto padding_above = Shape{3};
+    auto padding_below = Padding{2};
+    auto padding_above = Padding{3};
     auto conv = make_shared<op::Convolution>(
         param0, param1, move_strides, dilation_strides, padding_below, padding_above);
     EXPECT_EQ(conv->get_element_type(), element::f32);
@@ -1868,8 +1868,8 @@ TEST(type_prop, conv_1d_deduce_strided_padded)
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
     EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), Shape{2});
-    EXPECT_EQ(conv->get_padding_above(), Shape{3});
+    EXPECT_EQ(conv->get_padding_below(), Padding{2});
+    EXPECT_EQ(conv->get_padding_above(), Padding{3});
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -1899,8 +1899,8 @@ TEST(type_prop, conv_1d_deduce_strided_small_uneven)
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
     EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), Shape{0});
-    EXPECT_EQ(conv->get_padding_above(), Shape{0});
+    EXPECT_EQ(conv->get_padding_below(), Padding{0});
+    EXPECT_EQ(conv->get_padding_above(), Padding{0});
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -1930,8 +1930,8 @@ TEST(type_prop, conv_1d_deduce_strided_small_even)
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
     EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), Shape{0});
-    EXPECT_EQ(conv->get_padding_above(), Shape{0});
+    EXPECT_EQ(conv->get_padding_below(), Padding{0});
+    EXPECT_EQ(conv->get_padding_above(), Padding{0});
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -1962,8 +1962,8 @@ TEST(type_prop, conv_1d_deduce_window_dilated)
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{2});
     EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), Shape{0});
-    EXPECT_EQ(conv->get_padding_above(), Shape{0});
+    EXPECT_EQ(conv->get_padding_below(), Padding{0});
+    EXPECT_EQ(conv->get_padding_above(), Padding{0});
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -1986,8 +1986,8 @@ TEST(type_prop, conv_1d_deduce_window_dilated_padded)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
-    auto padding_below = Shape{2};
-    auto padding_above = Shape{3};
+    auto padding_below = Padding{2};
+    auto padding_above = Padding{3};
     auto conv = make_shared<op::Convolution>(
         param0, param1, move_strides, dilate_strides, padding_below, padding_above);
     EXPECT_EQ(conv->get_element_type(), element::f32);
@@ -1997,8 +1997,8 @@ TEST(type_prop, conv_1d_deduce_window_dilated_padded)
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{2});
     EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), Shape{2});
-    EXPECT_EQ(conv->get_padding_above(), Shape{3});
+    EXPECT_EQ(conv->get_padding_below(), Padding{2});
+    EXPECT_EQ(conv->get_padding_above(), Padding{3});
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -2021,8 +2021,8 @@ TEST(type_prop, conv_1d_deduce_window_dilated_images_dilated_padded)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
-    auto padding_below = Shape{2};
-    auto padding_above = Shape{3};
+    auto padding_below = Padding{2};
+    auto padding_above = Padding{3};
     auto img_dilate_strides = Strides{3};
     auto conv = make_shared<op::Convolution>(param0,
                                              param1,
@@ -2038,8 +2038,8 @@ TEST(type_prop, conv_1d_deduce_window_dilated_images_dilated_padded)
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{2});
     EXPECT_EQ(conv->get_image_dilation_strides(), Strides{3});
 
-    EXPECT_EQ(conv->get_padding_below(), Shape{2});
-    EXPECT_EQ(conv->get_padding_above(), Shape{3});
+    EXPECT_EQ(conv->get_padding_below(), Padding{2});
+    EXPECT_EQ(conv->get_padding_above(), Padding{3});
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -2068,8 +2068,8 @@ TEST(type_prop, conv_2d_deduce)
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
     EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1}));
 
-    EXPECT_EQ(conv->get_padding_below(), (Shape{0, 0}));
-    EXPECT_EQ(conv->get_padding_above(), (Shape{0, 0}));
+    EXPECT_EQ(conv->get_padding_below(), (Padding{0, 0}));
+    EXPECT_EQ(conv->get_padding_above(), (Padding{0, 0}));
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -2092,8 +2092,8 @@ TEST(type_prop, conv_2d_deduce_padded)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
     auto move_strides = Strides{1, 1};
     auto dilate_strides = Strides{1, 1};
-    auto padding_below = Shape{2, 3};
-    auto padding_above = Shape{3, 4};
+    auto padding_below = Padding{2, 3};
+    auto padding_above = Padding{3, 4};
     auto conv = make_shared<op::Convolution>(
         param0, param1, move_strides, dilate_strides, padding_below, padding_above);
     EXPECT_EQ(conv->get_element_type(), element::f32);
@@ -2103,8 +2103,8 @@ TEST(type_prop, conv_2d_deduce_padded)
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
     EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1}));
 
-    EXPECT_EQ(conv->get_padding_below(), (Shape{2, 3}));
-    EXPECT_EQ(conv->get_padding_above(), (Shape{3, 4}));
+    EXPECT_EQ(conv->get_padding_below(), (Padding{2, 3}));
+    EXPECT_EQ(conv->get_padding_above(), (Padding{3, 4}));
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -2134,8 +2134,8 @@ TEST(type_prop, conv_2d_deduce_strided)
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
     EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1}));
 
-    EXPECT_EQ(conv->get_padding_below(), (Shape{0, 0}));
-    EXPECT_EQ(conv->get_padding_above(), (Shape{0, 0}));
+    EXPECT_EQ(conv->get_padding_below(), (Padding{0, 0}));
+    EXPECT_EQ(conv->get_padding_above(), (Padding{0, 0}));
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -2166,8 +2166,8 @@ TEST(type_prop, conv_2d_deduce_strided_window_dilated)
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2}));
     EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1}));
 
-    EXPECT_EQ(conv->get_padding_below(), (Shape{0, 0}));
-    EXPECT_EQ(conv->get_padding_above(), (Shape{0, 0}));
+    EXPECT_EQ(conv->get_padding_below(), (Padding{0, 0}));
+    EXPECT_EQ(conv->get_padding_above(), (Padding{0, 0}));
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -2190,8 +2190,8 @@ TEST(type_prop, conv_2d_deduce_strided_window_dilated_images_dilated)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
     auto move_strides = Strides{2, 3};
     auto dilate_strides = Strides{3, 2};
-    auto padding_below = Shape{0, 0};
-    auto padding_above = Shape{0, 0};
+    auto padding_below = Padding{0, 0};
+    auto padding_above = Padding{0, 0};
     auto img_dilate_strides = Strides{2, 3};
     auto conv = make_shared<op::Convolution>(param0,
                                              param1,
@@ -2207,8 +2207,8 @@ TEST(type_prop, conv_2d_deduce_strided_window_dilated_images_dilated)
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2}));
     EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{2, 3}));
 
-    EXPECT_EQ(conv->get_padding_below(), (Shape{0, 0}));
-    EXPECT_EQ(conv->get_padding_above(), (Shape{0, 0}));
+    EXPECT_EQ(conv->get_padding_below(), (Padding{0, 0}));
+    EXPECT_EQ(conv->get_padding_above(), (Padding{0, 0}));
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -2239,8 +2239,8 @@ TEST(type_prop, conv_2d_deduce_strided_window_dilated_small)
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2}));
     EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1}));
 
-    EXPECT_EQ(conv->get_padding_below(), (Shape{0, 0}));
-    EXPECT_EQ(conv->get_padding_above(), (Shape{0, 0}));
+    EXPECT_EQ(conv->get_padding_below(), (Padding{0, 0}));
+    EXPECT_EQ(conv->get_padding_above(), (Padding{0, 0}));
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -2271,8 +2271,8 @@ TEST(type_prop, conv_3d_deduce_strided_window_dilated_small)
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2, 2}));
     EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1, 1}));
 
-    EXPECT_EQ(conv->get_padding_below(), (Shape{0, 0, 0}));
-    EXPECT_EQ(conv->get_padding_above(), (Shape{0, 0, 0}));
+    EXPECT_EQ(conv->get_padding_below(), (Padding{0, 0, 0}));
+    EXPECT_EQ(conv->get_padding_above(), (Padding{0, 0, 0}));
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -2295,15 +2295,15 @@ TEST(type_prop, conv_3d_deduce_strided_window_dilated_image_dilated_small)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2, 3, 2});
     auto move_strides = Strides{2, 3, 4};
     auto dilate_strides = Strides{3, 2, 2};
-    auto below_padding = Shape{0, 0, 0};
-    auto above_padding = Shape{0, 0, 0};
+    auto padding_below = Padding{0, 0, 0};
+    auto padding_above = Padding{0, 0, 0};
     auto img_dilate_strides = Strides{2, 3, 2};
     auto conv = make_shared<op::Convolution>(param0,
                                              param1,
                                              move_strides,
                                              dilate_strides,
-                                             below_padding,
-                                             above_padding,
+                                             padding_below,
+                                             padding_above,
                                              img_dilate_strides);
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 5, 6, 5}));
@@ -2312,8 +2312,8 @@ TEST(type_prop, conv_3d_deduce_strided_window_dilated_image_dilated_small)
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2, 2}));
     EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{2, 3, 2}));
 
-    EXPECT_EQ(conv->get_padding_below(), (Shape{0, 0, 0}));
-    EXPECT_EQ(conv->get_padding_above(), (Shape{0, 0, 0}));
+    EXPECT_EQ(conv->get_padding_below(), (Padding{0, 0, 0}));
+    EXPECT_EQ(conv->get_padding_above(), (Padding{0, 0, 0}));
 
     EXPECT_EQ(conv->get_input_channel_count(), 3);
     EXPECT_EQ(conv->get_output_channel_count(), 128);
@@ -2601,8 +2601,8 @@ TEST(type_prop, conv_invalid_image_dilation_stride_rank)
                                                  param1,
                                                  Strides{2, 3},
                                                  Strides{2, 3},
-                                                 Shape{0, 0},
-                                                 Shape{0, 0},
+                                                 Padding{0, 0},
+                                                 Padding{0, 0},
                                                  Strides{2, 3, 8});
 
         // Should have thrown, so fail if it didn't
@@ -2628,7 +2628,7 @@ TEST(type_prop, conv_invalid_padding_below_rank)
     try
     {
         auto conv = make_shared<op::Convolution>(
-            param0, param1, Strides{2, 3}, Strides{1, 1}, Shape{0, 0, 0}, Shape{0, 0});
+            param0, param1, Strides{2, 3}, Strides{1, 1}, Padding{0, 0, 0}, Padding{0, 0});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong padding-below rank not detected";
@@ -2653,7 +2653,7 @@ TEST(type_prop, conv_invalid_padding_above_rank)
     try
     {
         auto conv = make_shared<op::Convolution>(
-            param0, param1, Strides{2, 3}, Strides{2, 3}, Shape{0, 0}, Shape{0, 0, 0});
+            param0, param1, Strides{2, 3}, Strides{2, 3}, Padding{0, 0}, Padding{0, 0, 0});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong padding-above rank not detected";
@@ -2746,8 +2746,13 @@ TEST(type_prop, conv_invalid_image_dilation_stride_0)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(
-            param0, param1, Strides{2, 3}, Strides{2, 3}, Shape{0, 0}, Shape{0, 0}, Strides{2, 0});
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 Strides{2, 3},
+                                                 Strides{2, 3},
+                                                 Padding{0, 0},
+                                                 Padding{0, 0},
+                                                 Strides{2, 0});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong 0-length image dilation stride axis not detected";

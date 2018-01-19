@@ -73,8 +73,8 @@ TEST(${BACKEND_NAME}, convolution_2d_1image)
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{0, 0},    // below_pads
-                                                                Shape{0, 0},    // above_pads
+                                                                Padding{0, 0},  // below_pads
+                                                                Padding{0, 0},  // above_pads
                                                                 Strides{1, 1}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -108,8 +108,8 @@ TEST(${BACKEND_NAME}, convolution_2d_1image_padded_1_1x1_1)
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{1, 1},    // below_pads
-                                                                Shape{1, 1},    // above_pads
+                                                                Padding{1, 1},  // below_pads
+                                                                Padding{1, 1},  // above_pads
                                                                 Strides{1, 1}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -145,8 +145,8 @@ TEST(${BACKEND_NAME}, convolution_2d_1image_padded_2_3x4_5)
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{2, 3},    // below_pads
-                                                                Shape{4, 5},    // above_pads
+                                                                Padding{2, 3},  // below_pads
+                                                                Padding{4, 5},  // above_pads
                                                                 Strides{1, 1}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -190,8 +190,8 @@ TEST(${BACKEND_NAME}, convolution_2d_2images)
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{0, 0},    // below_pads
-                                                                Shape{0, 0},    // above_pads
+                                                                Padding{0, 0},  // below_pads
+                                                                Padding{0, 0},  // above_pads
                                                                 Strides{1, 1}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -227,8 +227,8 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_strided)
                                                                 B,
                                                                 Strides{2, 2},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{0, 0},    // below_pads
-                                                                Shape{0, 0},    // above_pads
+                                                                Padding{0, 0},  // below_pads
+                                                                Padding{0, 0},  // above_pads
                                                                 Strides{1, 1}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -262,8 +262,8 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_strided_padded)
                                                                 B,
                                                                 Strides{2, 2},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{4, 2},    // below_pads
-                                                                Shape{5, 7},    // above_pads
+                                                                Padding{4, 2},  // below_pads
+                                                                Padding{5, 7},  // above_pads
                                                                 Strides{1, 1}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -305,8 +305,8 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_strided_padded_same)
                                                                 B,
                                                                 Strides{2, 2},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{2, 2},    // below_pads
-                                                                Shape{2, 2},    // above_pads
+                                                                Padding{2, 2},  // below_pads
+                                                                Padding{2, 2},  // above_pads
                                                                 Strides{1, 1}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -342,8 +342,8 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_dilated)
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{2, 2},  // filter_dilation
-                                                                Shape{0, 0},    // below_pads
-                                                                Shape{0, 0},    // above_pads
+                                                                Padding{0, 0},  // below_pads
+                                                                Padding{0, 0},  // above_pads
                                                                 Strides{1, 1}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -377,8 +377,8 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_dilated_padded)
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{2, 2},  // filter_dilation
-                                                                Shape{4, 2},    // below_pads
-                                                                Shape{5, 7},    // above_pads
+                                                                Padding{4, 2},  // below_pads
+                                                                Padding{5, 7},  // above_pads
                                                                 Strides{1, 1}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -439,8 +439,8 @@ TEST(${BACKEND_NAME}, convolution_3d_2images)
                                                                 B,
                                                                 Strides{1, 1, 1}, // move_strides
                                                                 Strides{1, 1, 1}, // filter_dilation
-                                                                Shape{0, 0, 0},   // below_pads
-                                                                Shape{0, 0, 0},   // above_pads
+                                                                Padding{0, 0, 0}, // below_pads
+                                                                Padding{0, 0, 0}, // above_pads
                                                                 Strides{1, 1, 1}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -506,8 +506,8 @@ TEST(${BACKEND_NAME}, convolution_4d_2images)
                                                            B,
                                                            Strides{1, 1, 1, 1},  // move_strides
                                                            Strides{1, 1, 1, 1},  // filter_dilation
-                                                           Shape{0, 0, 0, 0},    // below_pads
-                                                           Shape{0, 0, 0, 0},    // above_pads
+                                                           Padding{0, 0, 0, 0},  // below_pads
+                                                           Padding{0, 0, 0, 0},  // above_pads
                                                            Strides{1, 1, 1, 1}), // image_dilation
                               op::Parameters{A, B});
 
@@ -787,8 +787,8 @@ TEST(${BACKEND_NAME}, convolution_4d_4images)
                                                            B,
                                                            Strides{1, 1, 1, 1},  // move_strides
                                                            Strides{1, 1, 1, 1},  // filter_dilation
-                                                           Shape{0, 0, 0, 0},    // below_pads
-                                                           Shape{0, 0, 0, 0},    // above_pads
+                                                           Padding{0, 0, 0, 0},  // below_pads
+                                                           Padding{0, 0, 0, 0},  // above_pads
                                                            Strides{1, 1, 1, 1}), // image_dilation
                               op::Parameters{A, B});
 
@@ -2272,8 +2272,8 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided)
                                                            B,
                                                            Strides{2, 1, 3, 2},  // move_strides
                                                            Strides{1, 1, 1, 1},  // filter_dilation
-                                                           Shape{0, 0, 0, 0},    // below_pads
-                                                           Shape{0, 0, 0, 0},    // above_pads
+                                                           Padding{0, 0, 0, 0},  // below_pads
+                                                           Padding{0, 0, 0, 0},  // above_pads
                                                            Strides{1, 1, 1, 1}), // image_dilation
                               op::Parameters{A, B});
 
@@ -3216,8 +3216,8 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_dilated)
                                                            B,
                                                            Strides{1, 1, 1, 1},  // move_strides
                                                            Strides{2, 1, 3, 2},  // filter_dilation
-                                                           Shape{0, 0, 0, 0},    // below_pads
-                                                           Shape{0, 0, 0, 0},    // above_pads
+                                                           Padding{0, 0, 0, 0},  // below_pads
+                                                           Padding{0, 0, 0, 0},  // above_pads
                                                            Strides{1, 1, 1, 1}), // image_dilation
                               op::Parameters{A, B});
 
@@ -4203,8 +4203,8 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated)
                                                            B,
                                                            Strides{3, 2, 2, 3},  // move_strides
                                                            Strides{2, 1, 3, 2},  // filter_dilation
-                                                           Shape{0, 0, 0, 0},    // below_pads
-                                                           Shape{0, 0, 0, 0},    // above_pads
+                                                           Padding{0, 0, 0, 0},  // below_pads
+                                                           Padding{0, 0, 0, 0},  // above_pads
                                                            Strides{1, 1, 1, 1}), // image_dilation
                               op::Parameters{A, B});
 
@@ -8394,8 +8394,8 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated_padded)
                                                            B,
                                                            Strides{3, 2, 2, 3},  // move_strides
                                                            Strides{2, 1, 3, 2},  // filter_dilation
-                                                           Shape{2, 4, 6, 8},    // below_pads
-                                                           Shape{1, 3, 5, 7},    // above_pads
+                                                           Padding{2, 4, 6, 8},  // below_pads
+                                                           Padding{1, 3, 5, 7},  // above_pads
                                                            Strides{1, 1, 1, 1}), // image_dilation
                               op::Parameters{A, B});
 
@@ -14888,8 +14888,8 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated_padded_same)
                                                            B,
                                                            Strides{3, 2, 2, 3},  // move_strides
                                                            Strides{2, 1, 3, 2},  // filter_dilation
-                                                           Shape{3, 3, 3, 3},    // below_pads
-                                                           Shape{3, 3, 3, 3},    // above_pads
+                                                           Padding{3, 3, 3, 3},  // below_pads
+                                                           Padding{3, 3, 3, 3},  // above_pads
                                                            Strides{1, 1, 1, 1}), // image_dilation
                               op::Parameters{A, B});
 
@@ -19926,8 +19926,8 @@ TEST(${BACKEND_NAME}, convolution_2d_1image_1o1i_img_dilated)
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{0, 0},    // below_pads
-                                                                Shape{0, 0},    // above_pads
+                                                                Padding{0, 0},  // below_pads
+                                                                Padding{0, 0},  // above_pads
                                                                 Strides{2, 2}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -19961,8 +19961,8 @@ TEST(${BACKEND_NAME}, convolution_2d_1image_2o1i_img_dilated)
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{0, 0},    // below_pads
-                                                                Shape{0, 0},    // above_pads
+                                                                Padding{0, 0},  // below_pads
+                                                                Padding{0, 0},  // above_pads
                                                                 Strides{2, 2}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -19998,8 +19998,8 @@ TEST(${BACKEND_NAME}, convolution_2d_1image_2o2i_img_dilated)
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{0, 0},    // below_pads
-                                                                Shape{0, 0},    // above_pads
+                                                                Padding{0, 0},  // below_pads
+                                                                Padding{0, 0},  // above_pads
                                                                 Strides{2, 2}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -20037,8 +20037,8 @@ TEST(${BACKEND_NAME}, convolution_2d_1image_5o3i_img_dilated)
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{0, 0},    // below_pads
-                                                                Shape{0, 0},    // above_pads
+                                                                Padding{0, 0},  // below_pads
+                                                                Padding{0, 0},  // above_pads
                                                                 Strides{2, 2}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -20087,8 +20087,8 @@ TEST(${BACKEND_NAME}, convolution_2d_8image_5o3i_img_dilated)
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{0, 0},    // below_pads
-                                                                Shape{0, 0},    // above_pads
+                                                                Padding{0, 0},  // below_pads
+                                                                Padding{0, 0},  // above_pads
                                                                 Strides{2, 2}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -20247,8 +20247,8 @@ TEST(${BACKEND_NAME}, convolution_2d_8image_large_5o3i_img_dilated)
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{0, 0},    // below_pads
-                                                                Shape{0, 0},    // above_pads
+                                                                Padding{0, 0},  // below_pads
+                                                                Padding{0, 0},  // above_pads
                                                                 Strides{2, 2}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -23998,8 +23998,8 @@ TEST(${BACKEND_NAME}, convolution_2d_8image_large_5o3i_uneven_filter_img_dilated
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{0, 0},    // below_pads
-                                                                Shape{0, 0},    // above_pads
+                                                                Padding{0, 0},  // below_pads
+                                                                Padding{0, 0},  // above_pads
                                                                 Strides{2, 2}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -27959,8 +27959,8 @@ TEST(${BACKEND_NAME},
                                                                 B,
                                                                 Strides{1, 1},  // move_strides
                                                                 Strides{1, 1},  // filter_dilation
-                                                                Shape{0, 0},    // below_pads
-                                                                Shape{0, 0},    // above_pads
+                                                                Padding{0, 0},  // below_pads
+                                                                Padding{0, 0},  // above_pads
                                                                 Strides{2, 3}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -33720,8 +33720,8 @@ TEST(${BACKEND_NAME},
                                                                 B,
                                                                 Strides{1, 1, 1}, // move_strides
                                                                 Strides{1, 1, 1}, // filter_dilation
-                                                                Shape{0, 0, 0},   // below_pads
-                                                                Shape{0, 0, 0},   // above_pads
+                                                                Padding{0, 0, 0}, // below_pads
+                                                                Padding{0, 0, 0}, // above_pads
                                                                 Strides{2, 3, 2}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -37361,8 +37361,8 @@ TEST(${BACKEND_NAME},
                                                                 B,
                                                                 Strides{1, 1, 1}, // move_strides
                                                                 Strides{1, 1, 1}, // filter_dilation
-                                                                Shape{2, 1, 2},   // below_pads
-                                                                Shape{1, 2, 3},   // above_pads
+                                                                Padding{2, 1, 2}, // below_pads
+                                                                Padding{1, 2, 3}, // above_pads
                                                                 Strides{2, 3, 2}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -40856,8 +40856,8 @@ TEST(${BACKEND_NAME},
                                                                 B,
                                                                 Strides{2, 3, 2}, // move_strides
                                                                 Strides{1, 1, 1}, // filter_dilation
-                                                                Shape{2, 1, 2},   // below_pads
-                                                                Shape{1, 2, 3},   // above_pads
+                                                                Padding{2, 1, 2}, // below_pads
+                                                                Padding{1, 2, 3}, // above_pads
                                                                 Strides{2, 3, 2}), // image_dilation
                                    op::Parameters{A, B});
 
@@ -41786,8 +41786,8 @@ TEST(
                                                                 B,
                                                                 Strides{2, 3, 2}, // move_strides
                                                                 Strides{3, 2, 2}, // filter_dilation
-                                                                Shape{2, 1, 2},   // below_pads
-                                                                Shape{1, 2, 3},   // above_pads
+                                                                Padding{2, 1, 2}, // below_pads
+                                                                Padding{1, 2, 3}, // above_pads
                                                                 Strides{2, 3, 2}), // image_dilation
                                    op::Parameters{A, B});
 

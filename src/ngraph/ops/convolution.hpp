@@ -34,8 +34,8 @@ namespace ngraph
         ///
         /// 3. <i>(the window movement strides)</i> a vector of positive integers \f$(s_1,\dots,s_n)\f$ (default is all ones),
         /// 4. <i>(the window dilation strides)</i> a vector of positive integers \f$(l_1,\dots,l_n)\f$ (default is all ones),
-        /// 5. <i>(the padding below)</i> a vector of non-negative integers \f$(p_1,\dots,p_n)\f$ (default is all zeros),
-        /// 6. <i>(the padding above)</i> a vector of non-negative integers \f$(q_1,\dots,q_n)\f$ (default is all zeros), and
+        /// 5. <i>(the padding below)</i> a vector of (possibly negative) integers \f$(p_1,\dots,p_n)\f$ (default is all zeros),
+        /// 6. <i>(the padding above)</i> a vector of (possibly negative) integers \f$(q_1,\dots,q_n)\f$ (default is all zeros), and
         /// 7. <i>(the image dilation strides)</i> a vector of non-negative integers \f$(q_1,\dots,q_n)\f$ (default is all ones).
         ///
         /// The output has the shape \f$(N,C_\textit{out},d'_1,\dots,d'_n)\f$, where \f$d'_n = \lceil \frac{(d_i - 1) * g_i + 1 + p_i + q_i - l_i(d^f_i - 1)}{s_i} \rceil\f$.
@@ -68,8 +68,8 @@ namespace ngraph
                         const std::shared_ptr<Node>& filters,
                         const Strides& window_movement_strides,
                         const Strides& window_dilation_strides,
-                        const Shape& padding_below,
-                        const Shape& padding_above,
+                        const Padding& padding_below,
+                        const Padding& padding_above,
                         const Strides& image_dilation_strides);
 
             /// \brief Constructs a batched convolution operation with no image dilation (i.e., all image dilation strides are 1).
@@ -84,8 +84,8 @@ namespace ngraph
                         const std::shared_ptr<Node>& filters,
                         const Strides& window_movement_strides,
                         const Strides& window_dilation_strides,
-                        const Shape& padding_below,
-                        const Shape& padding_above);
+                        const Padding& padding_below,
+                        const Padding& padding_above);
 
             /// \brief Constructs a batched convolution operation with no padding or image dilation (i.e., padding above and below are 0 everywhere, and all image dilation strides are 1).
             ///
@@ -122,9 +122,9 @@ namespace ngraph
             /// \return The window dilation strides.
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
             /// \return The padding-below sizes.
-            const Shape& get_padding_below() const { return m_padding_below; }
+            const Padding& get_padding_below() const { return m_padding_below; }
             /// \return The padding-above sizes.
-            const Strides& get_padding_above() const { return m_padding_above; }
+            const Padding& get_padding_above() const { return m_padding_above; }
             /// \return The input image dilation strides.
             const Strides& get_image_dilation_strides() const { return m_image_dilation_strides; }
             /// \return The number of input channels.
@@ -156,8 +156,8 @@ namespace ngraph
         protected:
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;
-            Shape m_padding_below;
-            Shape m_padding_above;
+            Padding m_padding_below;
+            Padding m_padding_above;
             Strides m_image_dilation_strides;
 
             // TODO: Some or all of these values should probably be computed dynamically rather than stored here.
@@ -173,7 +173,7 @@ namespace ngraph
 
         private:
             static Strides default_strides(const std::shared_ptr<Node>& image_batch);
-            static Shape default_padding(const std::shared_ptr<Node>& image_batch);
+            static Padding default_padding(const std::shared_ptr<Node>& image_batch);
         };
     }
 }
