@@ -2120,6 +2120,41 @@ TEST(type_prop, conv_2d_deduce_padded)
     EXPECT_EQ(conv->get_image_dimension_count(), 2);
 }
 
+TEST(type_prop, conv_2d_deduce_padded_neg)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto move_strides = Strides{1, 1};
+    auto dilate_strides = Strides{1, 1};
+    auto padding_below = Padding{2, -3};
+    auto padding_above = Padding{3, -4};
+    auto conv = make_shared<op::Convolution>(
+        param0, param1, move_strides, dilate_strides, padding_below, padding_above);
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 96, 124}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1}));
+
+    EXPECT_EQ(conv->get_padding_below(), (Padding{2, -3}));
+    EXPECT_EQ(conv->get_padding_above(), (Padding{3, -4}));
+
+    EXPECT_EQ(conv->get_input_channel_count(), 3);
+    EXPECT_EQ(conv->get_output_channel_count(), 128);
+
+    EXPECT_EQ(conv->get_input_image_physical_shape(), (Shape{100, 150}));
+    EXPECT_EQ(conv->get_input_image_virtual_shape(), (Shape{105, 143}));
+    EXPECT_EQ(conv->get_output_image_shape(), (Shape{96, 124}));
+
+    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{10, 20}));
+    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{10, 20}));
+
+    EXPECT_EQ(conv->get_batch_size(), 64);
+    EXPECT_EQ(conv->get_image_dimension_count(), 2);
+}
+
 TEST(type_prop, conv_2d_deduce_strided)
 {
     // Deduce type
@@ -2663,6 +2698,57 @@ TEST(type_prop, conv_invalid_padding_above_rank)
         EXPECT_EQ(error.what(),
                   std::string("Convolution padding-above rank does not "
                               "match number of image dimensions."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_input_image_size_negative_after_padding)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(
+            param0, param1, Strides{0, 0}, Strides{0, 0}, Padding{-4, 0}, Padding{-7, 0});
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with negative-length post-padding image axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string(
+                      "Convolution input image dimension after padding and dilation is negative."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_invalid_input_image_size_zero_after_padding)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(
+            param0, param1, Strides{0, 0}, Strides{0, 0}, Padding{-4, 0}, Padding{-6, 0});
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with zero-length post-padding image axis not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Convolution input image dimension after dilation is zero even with padding."));
     }
     catch (...)
     {
