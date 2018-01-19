@@ -58,13 +58,13 @@ TEST(builder_xla, simple)
     auto result_tuple = xla::make_tuple({result});
 
     xla::call(cf, {abc}, {result_tuple});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
     xla::call(cf, {bac}, {result_tuple});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
     xla::call(cf, {acb}, {result_tuple});
-    EXPECT_EQ((vector<float>{50, 72, 98, 128}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{50, 72, 98, 128}), read_vector<float>(result));
 }
 
 TEST(builder_xla, empty_tuple_interpreter)

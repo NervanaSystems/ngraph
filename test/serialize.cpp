@@ -79,13 +79,13 @@ TEST(serialize, main)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({x, y, z}, {result});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
     cf->call({y, x, z}, {result});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
     cf->call({x, z, y}, {result});
-    EXPECT_EQ((vector<float>{50, 72, 98, 128}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{50, 72, 98, 128}), read_vector<float>(result));
 }
 
 TEST(serialize, existing_models)

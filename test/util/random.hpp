@@ -42,12 +42,12 @@ namespace ngraph
             const std::shared_ptr<runtime::TensorView>
                 initialize(const std::shared_ptr<runtime::TensorView>& ptv)
             {
-                std::vector<T> vec = get_vector<T>(ptv);
+                std::vector<T> vec = read_vector<T>(ptv);
                 for (T& elt : vec)
                 {
                     elt = m_r();
                 }
-                set_vector(ptv, vec);
+                write_vector(ptv, vec);
                 return ptv;
             }
 

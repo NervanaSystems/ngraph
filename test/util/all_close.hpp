@@ -69,7 +69,7 @@ namespace ngraph
             if (a->get_shape() != b->get_shape())
                 return false;
 
-            return all_close(get_vector<T>(a), get_vector<T>(b), rtol, atol);
+            return all_close(read_vector<T>(a), read_vector<T>(b), rtol, atol);
         }
 
         /// @brief Same as numpy.allclose

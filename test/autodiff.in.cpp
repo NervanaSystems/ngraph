@@ -137,7 +137,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
     cf->tensor_call({input, ep}, {output});
-    ASSERT_TRUE(get_vector<int>(output) == expected);
+    ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
@@ -181,7 +181,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
     auto external = manager->compile(df);
     auto cf = backend->make_call_frame(external);
     cf->tensor_call({input, ep}, {output});
-    ASSERT_TRUE(get_vector<int>(output) == expected);
+    ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
 TEST(${BACKEND_NAME}, backwards_abs)
@@ -873,7 +873,7 @@ TEST(${BACKEND_NAME}, backwards_select)
     for (auto i = 0; i < 100; i++)
     {
         auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
-        set_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
+        write_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
         auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
         auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -906,7 +906,7 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
     for (auto i = 0; i < 100; i++)
     {
         auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
-        set_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
+        write_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
         auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
         auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 

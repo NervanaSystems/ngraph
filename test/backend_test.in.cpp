@@ -54,8 +54,8 @@ TEST(${BACKEND_NAME}, aliased_output)
     vector<float> expected{1, 3, 5, 7};
 
     cf->call({a, b}, {out1, out2});
-    EXPECT_EQ(expected, get_vector<float>(out1));
-    EXPECT_EQ(expected, get_vector<float>(out2));
+    EXPECT_EQ(expected, read_vector<float>(out1));
+    EXPECT_EQ(expected, read_vector<float>(out2));
 }
 
 TEST(${BACKEND_NAME}, parameter_as_output)
@@ -78,7 +78,7 @@ TEST(${BACKEND_NAME}, parameter_as_output)
     copy_data(a, expected);
 
     cf->call({a}, {result});
-    EXPECT_EQ(get_vector<float>(result), expected);
+    EXPECT_EQ(read_vector<float>(result), expected);
 }
 
 TEST(${BACKEND_NAME}, ab)
@@ -102,7 +102,7 @@ TEST(${BACKEND_NAME}, ab)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
     cf->call({a, b}, {result});
-    EXPECT_EQ(get_vector<float>(result),
+    EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
 
@@ -130,15 +130,15 @@ TEST(${BACKEND_NAME}, abc)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     cf->call({a, b, c}, {result});
-    EXPECT_EQ(get_vector<float>(result),
+    EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
     cf->call({b, a, c}, {result});
-    EXPECT_EQ(get_vector<float>(result),
+    EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
     cf->call({a, c, b}, {result});
-    EXPECT_EQ(get_vector<float>(result),
+    EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 }
 
@@ -165,13 +165,13 @@ TEST(${BACKEND_NAME}, abc_int64)
     auto result = backend->make_primary_tensor_view(element::i64, shape);
 
     cf->call({a, b, c}, {result});
-    EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), get_vector<int64_t>(result));
+    EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), read_vector<int64_t>(result));
 
     cf->call({b, a, c}, {result});
-    EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), get_vector<int64_t>(result));
+    EXPECT_EQ((vector<int64_t>{54, 80, 110, 144}), read_vector<int64_t>(result));
 
     cf->call({a, c, b}, {result});
-    EXPECT_EQ((vector<int64_t>{50, 72, 98, 128}), get_vector<int64_t>(result));
+    EXPECT_EQ((vector<int64_t>{50, 72, 98, 128}), read_vector<int64_t>(result));
 }
 
 // Multiple retrive values
@@ -203,8 +203,8 @@ TEST(${BACKEND_NAME}, multiple_result)
 
     cf->call({a, b, c}, {r0, r1});
 
-    EXPECT_EQ((vector<float>{6, 8, 10, 12}), get_vector<float>(r0));
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), get_vector<float>(r1));
+    EXPECT_EQ((vector<float>{6, 8, 10, 12}), read_vector<float>(r0));
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(r1));
 }
 
 TEST(${BACKEND_NAME}, abs)
@@ -224,7 +224,7 @@ TEST(${BACKEND_NAME}, abs)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 0, 4.8f}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 0, 4.8f}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, ceiling)
@@ -244,7 +244,7 @@ TEST(${BACKEND_NAME}, ceiling)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{-2.0f, -2.0f, 1.0f, 5.0f}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{-2.0f, -2.0f, 1.0f, 5.0f}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, concat_matrix_colwise)
@@ -275,7 +275,7 @@ TEST(${BACKEND_NAME}, concat_matrix_colwise)
 
     cf->call({a, b, c}, {result});
     EXPECT_EQ((vector<float>{2, 4, 1, 2, 4, 2, 3, 5, 8, 16, 8, 16, 32, 7, 11, 13}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, concat_matrix_rowwise)
@@ -306,7 +306,7 @@ TEST(${BACKEND_NAME}, concat_matrix_rowwise)
 
     cf->call({a, b, c}, {result});
     EXPECT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, concat_matrix_int64)
@@ -337,7 +337,7 @@ TEST(${BACKEND_NAME}, concat_matrix_int64)
 
     cf->call({a, b, c}, {result});
     EXPECT_EQ((vector<int64_t>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 2, 3, 5, 7, 11, 13}),
-              get_vector<int64_t>(result));
+              read_vector<int64_t>(result));
 }
 
 TEST(${BACKEND_NAME}, concat_vector)
@@ -367,7 +367,7 @@ TEST(${BACKEND_NAME}, concat_vector)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a, b, c}, {result});
-    EXPECT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{2, 4, 8, 16, 1, 2, 4, 8, 16, 32, 18, 19}), read_vector<float>(result));
 }
 
 // from numpy import *
@@ -491,7 +491,7 @@ TEST(${BACKEND_NAME}, concat_5d)
             139.,  140.,  141.,  142.,  143.,  144.,  1091., 1092., 1093., 1094., 1095., 1096.,
             1097., 1098., 1099., 1100., 1101., 1102., 1103., 1104., 1105., 1106., 1107., 1108.,
             2061., 2062., 2063., 2064., 2065., 2066., 2067., 2068., 2069., 2070., 2071., 2072.}),
-        get_vector<float>(result));
+        read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, divide)
@@ -520,7 +520,7 @@ TEST(${BACKEND_NAME}, divide)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{2, 2, 2, 2}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{2, 2, 2, 2}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, divide_by_zero_float32)
@@ -553,7 +553,7 @@ TEST(${BACKEND_NAME}, divide_by_zero_float32)
                              std::numeric_limits<float>::infinity(),
                              std::numeric_limits<float>::infinity(),
                              std::numeric_limits<float>::infinity()}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, divide_by_zero_int32)
@@ -604,7 +604,7 @@ TEST(${BACKEND_NAME}, equal)
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, floor)
@@ -624,7 +624,7 @@ TEST(${BACKEND_NAME}, floor)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{-3.0f, -2.0f, 0.0f, 4.0f}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{-3.0f, -2.0f, 0.0f, 4.0f}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, dot_0_0)
@@ -651,7 +651,7 @@ TEST(${BACKEND_NAME}, dot_0_0)
     copy_data(result, vector<float>{2112});
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{0}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{0}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
@@ -685,7 +685,7 @@ TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
     copy_data(result, vector<float>{2112, 2112, 2112, 2112});
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{0, 0, 0, 0}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{0, 0, 0, 0}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
@@ -710,7 +710,7 @@ TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
@@ -735,7 +735,7 @@ TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, dot_scalar_0x2)
@@ -760,7 +760,7 @@ TEST(${BACKEND_NAME}, dot_scalar_0x2)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, dot_2x0_0)
@@ -788,7 +788,7 @@ TEST(${BACKEND_NAME}, dot_2x0_0)
     copy_data(result, vector<float>{2112, 2112});
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{0, 0}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{0, 0}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, dot1d)
@@ -812,7 +812,7 @@ TEST(${BACKEND_NAME}, dot1d)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{170}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{170}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, dot2d)
@@ -836,7 +836,7 @@ TEST(${BACKEND_NAME}, dot2d)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{19, 22, 43, 50}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{19, 22, 43, 50}), read_vector<float>(result));
 }
 
 //
@@ -884,7 +884,7 @@ TEST(${BACKEND_NAME}, dot3d_3d)
 
     cf->call({a, b}, {result});
     EXPECT_EQ((vector<float>{11, 14, 17, 20, 23, 30, 37, 44, 35, 46, 57, 68, 47, 62, 77, 92}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 //
@@ -936,7 +936,7 @@ TEST(${BACKEND_NAME}, dot3d_2d)
     EXPECT_EQ((vector<float>{20,  23,  26,  29,  56,  68,  80,  92,  92,  113, 134,
                              155, 128, 158, 188, 218, 164, 203, 242, 281, 200, 248,
                              296, 344, 236, 293, 350, 407, 272, 338, 404, 470}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
@@ -960,7 +960,7 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
     auto result = backend->make_primary_tensor_view(element::f32, shape_b);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
@@ -984,7 +984,7 @@ TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
     auto result = backend->make_primary_tensor_view(element::f32, shape_a);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, dot_scalar_scalar)
@@ -1007,7 +1007,7 @@ TEST(${BACKEND_NAME}, dot_scalar_scalar)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{48}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{48}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, dot_matrix_vector)
@@ -1032,7 +1032,7 @@ TEST(${BACKEND_NAME}, dot_matrix_vector)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{190, 486, 782, 1078}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{190, 486, 782, 1078}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
@@ -1057,7 +1057,7 @@ TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
     auto result = backend->make_primary_tensor_view(element::i64, shape_r);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<int64_t>{190, 486, 782, 1078}), get_vector<int64_t>(result));
+    EXPECT_EQ((vector<int64_t>{190, 486, 782, 1078}), read_vector<int64_t>(result));
 }
 
 TEST(${BACKEND_NAME}, greater)
@@ -1080,7 +1080,7 @@ TEST(${BACKEND_NAME}, greater)
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, greatereq)
@@ -1103,7 +1103,7 @@ TEST(${BACKEND_NAME}, greatereq)
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, less)
@@ -1126,7 +1126,7 @@ TEST(${BACKEND_NAME}, less)
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<char>{0, 0, 1, 0, 1, 0, 0, 1}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{0, 0, 1, 0, 1, 0, 0, 1}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, lesseq)
@@ -1149,7 +1149,7 @@ TEST(${BACKEND_NAME}, lesseq)
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, lesseq_bool)
@@ -1175,7 +1175,7 @@ TEST(${BACKEND_NAME}, lesseq_bool)
     copy_data(result, vector<char>{1, 1, 1, 1, 1, 1, 1, 1});
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<char>{0, 0, 0, 0, 0, 0, 0, 0}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{0, 0, 0, 0, 0, 0, 0, 0}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, log)
@@ -1194,14 +1194,14 @@ TEST(${BACKEND_NAME}, log)
     copy_data(
         a, vector<float>{expf(1), expf(2), expf(3), expf(4), expf(5), expf(6), expf(7), expf(8)});
     vector<float> loga;
-    for (auto elt : get_vector<float>(a))
+    for (auto elt : read_vector<float>(a))
     {
         loga.push_back(logf(elt));
     }
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_TRUE(test::all_close(loga, get_vector<float>(result)));
+    EXPECT_TRUE(test::all_close(loga, read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, maximum)
@@ -1224,7 +1224,7 @@ TEST(${BACKEND_NAME}, maximum)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 8, 4, 17, 0, 0.5, 2, 1.5}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, minimum)
@@ -1247,7 +1247,7 @@ TEST(${BACKEND_NAME}, minimum)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{1, 2, -8, 8, -.5, 0, 1, 1}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, -8, 8, -.5, 0, 1, 1}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, negative)
@@ -1267,7 +1267,7 @@ TEST(${BACKEND_NAME}, negative)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{-1, 2, 0, 4.8f, -8.6f, 8.6f}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{-1, 2, 0, 4.8f, -8.6f, 8.6f}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, notequal)
@@ -1290,7 +1290,7 @@ TEST(${BACKEND_NAME}, notequal)
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, select)
@@ -1316,7 +1316,7 @@ TEST(${BACKEND_NAME}, select)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a, b, c}, {result});
-    EXPECT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{11, 2, 3, 14, 15, 6, 17, 8}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, subtract)
@@ -1339,7 +1339,7 @@ TEST(${BACKEND_NAME}, subtract)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 4, 8}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 4, 8}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, tensor_constant)
@@ -1357,7 +1357,7 @@ TEST(${BACKEND_NAME}, tensor_constant)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, tensor_constant_with_op)
@@ -1375,7 +1375,7 @@ TEST(${BACKEND_NAME}, tensor_constant_with_op)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, constant_broadcast)
@@ -1490,13 +1490,13 @@ TEST(${BACKEND_NAME}, function_call)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({x, y, z}, {result});
-    EXPECT_EQ((vector<float>{108, 160, 220, 288}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{108, 160, 220, 288}), read_vector<float>(result));
 
     cf->call({y, x, z}, {result});
-    EXPECT_EQ((vector<float>{108, 160, 220, 288}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{108, 160, 220, 288}), read_vector<float>(result));
 
     cf->call({x, z, y}, {result});
-    EXPECT_EQ((vector<float>{100, 144, 196, 256}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{100, 144, 196, 256}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, broadcast_scalar_vector)
@@ -1518,7 +1518,7 @@ TEST(${BACKEND_NAME}, broadcast_scalar_vector)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{6, 6, 6, 6}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{6, 6, 6, 6}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
@@ -1540,7 +1540,7 @@ TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{6, 6, 6, 6}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{6, 6, 6, 6}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
@@ -1562,7 +1562,7 @@ TEST(${BACKEND_NAME}, broadcast_scalar_tensor)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{6, 6, 6, 6, 6, 6, 6, 6}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, broadcast_trivial)
@@ -1583,7 +1583,7 @@ TEST(${BACKEND_NAME}, broadcast_trivial)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{2, 4, 6, 8, 16, 32, 64, 128}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, broadcast_vector_colwise)
@@ -1605,7 +1605,7 @@ TEST(${BACKEND_NAME}, broadcast_vector_colwise)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
@@ -1627,7 +1627,7 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
@@ -1649,7 +1649,7 @@ TEST(${BACKEND_NAME}, broadcast_vector_rowwise_int64)
     auto result = backend->make_primary_tensor_view(element::i64, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<int64_t>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), get_vector<int64_t>(result));
+    EXPECT_EQ((vector<int64_t>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4}), read_vector<int64_t>(result));
 }
 
 TEST(${BACKEND_NAME}, broadcast_matrix_0)
@@ -1671,7 +1671,7 @@ TEST(${BACKEND_NAME}, broadcast_matrix_0)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 1, 2, 3, 4}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, broadcast_matrix_1)
@@ -1693,7 +1693,7 @@ TEST(${BACKEND_NAME}, broadcast_matrix_1)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 1, 2, 3, 4, 3, 4}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 1, 2, 3, 4, 3, 4}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, broadcast_matrix_2)
@@ -1715,7 +1715,7 @@ TEST(${BACKEND_NAME}, broadcast_matrix_2)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 1, 2, 2, 3, 3, 4, 4}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 1, 2, 2, 3, 3, 4, 4}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, convert_int32_float32)
@@ -1735,7 +1735,7 @@ TEST(${BACKEND_NAME}, convert_int32_float32)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, convert_int32_bool)
@@ -1756,7 +1756,7 @@ TEST(${BACKEND_NAME}, convert_int32_bool)
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<char>{1, 2, 3, 4}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{1, 2, 3, 4}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, convert_float32_bool)
@@ -1777,7 +1777,7 @@ TEST(${BACKEND_NAME}, convert_float32_bool)
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<char>{1, 2, 3, 4}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{1, 2, 3, 4}), read_vector<char>(result));
 }
 
 // Trivial case with no reduction axes.
@@ -1808,7 +1808,7 @@ TEST(${BACKEND_NAME}, reduce_trivial)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reduce_to_scalar)
@@ -1838,12 +1838,12 @@ TEST(${BACKEND_NAME}, reduce_to_scalar)
     auto result = backend->make_primary_tensor_view(element::f32, Shape{});
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{10}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{10}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), get_vector<float>(a));
-    EXPECT_EQ((vector<float>{0}), get_vector<float>(b));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
+    EXPECT_EQ((vector<float>{0}), read_vector<float>(b));
 }
 
 TEST(${BACKEND_NAME}, reduce_matrix_columns)
@@ -1876,12 +1876,12 @@ TEST(${BACKEND_NAME}, reduce_matrix_columns)
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{9, 12}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{9, 12}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), get_vector<float>(a));
-    EXPECT_EQ((vector<float>{0}), get_vector<float>(b));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+    EXPECT_EQ((vector<float>{0}), read_vector<float>(b));
 }
 
 TEST(${BACKEND_NAME}, reduce_matrix_rows)
@@ -1913,12 +1913,12 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows)
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{3, 7, 11}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{3, 7, 11}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), get_vector<float>(a));
-    EXPECT_EQ((vector<float>{0}), get_vector<float>(b));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
+    EXPECT_EQ((vector<float>{0}), read_vector<float>(b));
 }
 
 TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
@@ -1949,12 +1949,12 @@ TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{66, 66, 66}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{66, 66, 66}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), get_vector<float>(a));
-    EXPECT_EQ((vector<float>{66}), get_vector<float>(b));
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_EQ((vector<float>{66}), read_vector<float>(b));
 }
 
 TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
@@ -1985,12 +1985,12 @@ TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{77, 77}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{77, 77}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), get_vector<float>(a));
-    EXPECT_EQ((vector<float>{77}), get_vector<float>(b));
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_EQ((vector<float>{77}), read_vector<float>(b));
 }
 
 TEST(${BACKEND_NAME}, reduce_vector_zero)
@@ -2021,12 +2021,12 @@ TEST(${BACKEND_NAME}, reduce_vector_zero)
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{88}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{88}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), get_vector<float>(a));
-    EXPECT_EQ((vector<float>{88}), get_vector<float>(b));
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_EQ((vector<float>{88}), read_vector<float>(b));
 }
 
 TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
@@ -2057,12 +2057,12 @@ TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{99}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{99}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), get_vector<float>(a));
-    EXPECT_EQ((vector<float>{99}), get_vector<float>(b));
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
+    EXPECT_EQ((vector<float>{99}), read_vector<float>(b));
 }
 
 TEST(${BACKEND_NAME}, reduce_3d_to_vector)
@@ -2097,7 +2097,7 @@ TEST(${BACKEND_NAME}, reduce_3d_to_vector)
     EXPECT_EQ((vector<float>{1.0f * 10.0f * 19.0f * 4.0f * 13.0f * 22.0f * 7.0f * 16.0f * 25.0f,
                              2.0f * 11.0f * 20.0f * 5.0f * 14.0f * 23.0f * 8.0f * 17.0f * 26.0f,
                              3.0f * 12.0f * 21.0f * 6.0f * 15.0f * 24.0f * 9.0f * 18.0f * 27.0f}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reshape_t2v_012)
@@ -2119,7 +2119,7 @@ TEST(${BACKEND_NAME}, reshape_t2v_012)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reshape_t2s_012)
@@ -2141,7 +2141,7 @@ TEST(${BACKEND_NAME}, reshape_t2s_012)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{6}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{6}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reshape_t2s_120)
@@ -2163,7 +2163,7 @@ TEST(${BACKEND_NAME}, reshape_t2s_120)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{6}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{6}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reshape_s2t)
@@ -2185,7 +2185,7 @@ TEST(${BACKEND_NAME}, reshape_s2t)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{42}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{42}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reshape_v2m_col)
@@ -2207,7 +2207,7 @@ TEST(${BACKEND_NAME}, reshape_v2m_col)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 3}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reshape_v2m_row)
@@ -2229,7 +2229,7 @@ TEST(${BACKEND_NAME}, reshape_v2m_row)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 3}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reshape_v2t_middle)
@@ -2251,7 +2251,7 @@ TEST(${BACKEND_NAME}, reshape_v2t_middle)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 3}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reshape_m2m_same)
@@ -2273,7 +2273,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_same)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reshape_m2m_transpose)
@@ -2295,7 +2295,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_transpose)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 4, 7, 2, 5, 8, 3, 6, 9}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 4, 7, 2, 5, 8, 3, 6, 9}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
@@ -2317,7 +2317,7 @@ TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 3, 5, 2, 4, 6}), read_vector<float>(result));
 }
 
 //
@@ -2411,7 +2411,7 @@ TEST(${BACKEND_NAME}, reshape_6d)
             55.,  127., 63.,  135., 71.,  143., 56.,  128., 64.,  136., 72.,  144., 197., 269.,
             205., 277., 213., 285., 198., 270., 206., 278., 214., 286., 199., 271., 207., 279.,
             215., 287., 200., 272., 208., 280., 216., 288.}),
-        get_vector<float>(result));
+        read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, sin)
@@ -2436,7 +2436,7 @@ TEST(${BACKEND_NAME}, sin)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return sinf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, get_vector<float>(result));
+    EXPECT_EQ(input, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, cos)
@@ -2461,7 +2461,7 @@ TEST(${BACKEND_NAME}, cos)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return cosf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, get_vector<float>(result));
+    EXPECT_EQ(input, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, tan)
@@ -2486,7 +2486,7 @@ TEST(${BACKEND_NAME}, tan)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, get_vector<float>(result));
+    EXPECT_EQ(input, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, asin)
@@ -2510,7 +2510,7 @@ TEST(${BACKEND_NAME}, asin)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return asinf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, get_vector<float>(result));
+    EXPECT_EQ(input, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, acos)
@@ -2534,7 +2534,7 @@ TEST(${BACKEND_NAME}, acos)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return acosf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, get_vector<float>(result));
+    EXPECT_EQ(input, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, atan)
@@ -2558,7 +2558,7 @@ TEST(${BACKEND_NAME}, atan)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return atanf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, get_vector<float>(result));
+    EXPECT_EQ(input, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, sinh)
@@ -2582,7 +2582,7 @@ TEST(${BACKEND_NAME}, sinh)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return sinhf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, get_vector<float>(result));
+    EXPECT_EQ(input, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, cosh)
@@ -2606,7 +2606,7 @@ TEST(${BACKEND_NAME}, cosh)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return coshf(x); });
 
     cf->call({a}, {result});
-    EXPECT_TRUE(test::all_close(input, get_vector<float>(result)));
+    EXPECT_TRUE(test::all_close(input, read_vector<float>(result)));
 }
 
 TEST(${BACKEND_NAME}, tanh)
@@ -2630,7 +2630,7 @@ TEST(${BACKEND_NAME}, tanh)
         input.begin(), input.end(), input.begin(), [](float x) -> float { return tanhf(x); });
 
     cf->call({a}, {result});
-    EXPECT_EQ(input, get_vector<float>(result));
+    EXPECT_EQ(input, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, exp)
@@ -2652,7 +2652,7 @@ TEST(${BACKEND_NAME}, exp)
     cf->call({a}, {result});
     EXPECT_EQ(
         (vector<float>{expf(-4), expf(-3), expf(-2), expf(-1), expf(0), expf(1), expf(2), expf(3)}),
-        get_vector<float>(result));
+        read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, slice_scalar)
@@ -2674,7 +2674,7 @@ TEST(${BACKEND_NAME}, slice_scalar)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{312}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{312}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, slice_matrix)
@@ -2696,7 +2696,7 @@ TEST(${BACKEND_NAME}, slice_matrix)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{2, 3, 6, 7, 10, 11}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{2, 3, 6, 7, 10, 11}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, slice_vector)
@@ -2718,7 +2718,7 @@ TEST(${BACKEND_NAME}, slice_vector)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, slice_matrix_strided)
@@ -2740,7 +2740,7 @@ TEST(${BACKEND_NAME}, slice_matrix_strided)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{4, 7, 12, 15}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{4, 7, 12, 15}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, slice_3d)
@@ -2768,7 +2768,7 @@ TEST(${BACKEND_NAME}, slice_3d)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{21, 22, 25, 26, 37, 38, 41, 42}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{21, 22, 25, 26, 37, 38, 41, 42}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, slice_3d_strided)
@@ -2796,7 +2796,7 @@ TEST(${BACKEND_NAME}, slice_3d_strided)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{0, 2, 8, 10, 32, 34, 40, 42}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{0, 2, 8, 10, 32, 34, 40, 42}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
@@ -2824,7 +2824,7 @@ TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{0, 3, 8, 11, 32, 35, 40, 43}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{0, 3, 8, 11, 32, 35, 40, 43}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, scalar_constant_float32)
@@ -2841,7 +2841,7 @@ TEST(${BACKEND_NAME}, scalar_constant_float32)
     auto result = backend->make_primary_tensor_view(element::f32, Shape{});
 
     cf->call({}, {result});
-    EXPECT_EQ(vector<float>{4.8}, get_vector<float>(result));
+    EXPECT_EQ(vector<float>{4.8}, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, scalar_constant_int64)
@@ -2858,7 +2858,7 @@ TEST(${BACKEND_NAME}, scalar_constant_int64)
     auto result = backend->make_primary_tensor_view(element::i64, Shape{});
 
     cf->call({}, {result});
-    EXPECT_EQ(vector<int64_t>{{2112}}, get_vector<int64_t>(result));
+    EXPECT_EQ(vector<int64_t>{{2112}}, read_vector<int64_t>(result));
 }
 
 TEST(${BACKEND_NAME}, tensor_constant_float32)
@@ -2876,7 +2876,7 @@ TEST(${BACKEND_NAME}, tensor_constant_float32)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({}, {result});
-    EXPECT_EQ((vector<float>{4.8, 4.7, -5.3, 0}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{4.8, 4.7, -5.3, 0}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, tensor_constant_int64)
@@ -2894,7 +2894,7 @@ TEST(${BACKEND_NAME}, tensor_constant_int64)
     auto result = backend->make_primary_tensor_view(element::i64, shape);
 
     cf->call({}, {result});
-    EXPECT_EQ((vector<int64_t>{2112, 1848, 1776, 1964}), get_vector<int64_t>(result));
+    EXPECT_EQ((vector<int64_t>{2112, 1848, 1776, 1964}), read_vector<int64_t>(result));
 }
 
 // Trivial case with no summed axes.
@@ -2915,7 +2915,7 @@ TEST(${BACKEND_NAME}, sum_trivial)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
 }
 
 // Failure has been reported at 5D for some reason
@@ -2939,7 +2939,7 @@ TEST(${BACKEND_NAME}, sum_trivial_5d)
     cf->call({a}, {result});
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, sum_to_scalar)
@@ -2959,11 +2959,11 @@ TEST(${BACKEND_NAME}, sum_to_scalar)
     auto result = backend->make_primary_tensor_view(element::f32, Shape{});
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{10}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{10}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4}), get_vector<float>(a));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
 }
 
 TEST(${BACKEND_NAME}, sum_matrix_columns)
@@ -2984,11 +2984,11 @@ TEST(${BACKEND_NAME}, sum_matrix_columns)
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{9, 12}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{9, 12}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), get_vector<float>(a));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
 TEST(${BACKEND_NAME}, sum_matrix_rows)
@@ -3009,11 +3009,11 @@ TEST(${BACKEND_NAME}, sum_matrix_rows)
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{3, 7, 11}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{3, 7, 11}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), get_vector<float>(a));
+    EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
 TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
@@ -3035,11 +3035,11 @@ TEST(${BACKEND_NAME}, sum_matrix_rows_zero)
     copy_data(result, vector<float>({3, 3, 3}));
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{0, 0, 0}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{0, 0, 0}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), get_vector<float>(a));
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
 TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
@@ -3062,11 +3062,11 @@ TEST(${BACKEND_NAME}, sum_matrix_cols_zero)
     copy_data(result, vector<float>({3, 3}));
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{0, 0}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{0, 0}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), get_vector<float>(a));
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
 TEST(${BACKEND_NAME}, sum_vector_zero)
@@ -3088,11 +3088,11 @@ TEST(${BACKEND_NAME}, sum_vector_zero)
     copy_data(result, vector<float>({3}));
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{0}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{0}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), get_vector<float>(a));
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
 TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
@@ -3114,11 +3114,11 @@ TEST(${BACKEND_NAME}, sum_matrix_to_scalar_zero_by_zero)
     copy_data(result, vector<float>({3}));
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{0}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{0}), read_vector<float>(result));
 
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
-    EXPECT_EQ((vector<float>{}), get_vector<float>(a));
+    EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
 TEST(${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
@@ -3149,7 +3149,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_matrix_most_sig)
                              7 + 16 + 25,
                              8 + 17 + 26,
                              9 + 18 + 27}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
@@ -3180,7 +3180,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_matrix_least_sig)
                              19 + 20 + 21,
                              22 + 23 + 24,
                              25 + 26 + 27}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, sum_3d_to_vector)
@@ -3205,7 +3205,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector)
     EXPECT_EQ((vector<float>{1 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25,
                              2 + 11 + 20 + 5 + 14 + 23 + 8 + 17 + 26,
                              3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, sum_3d_to_scalar)
@@ -3229,7 +3229,7 @@ TEST(${BACKEND_NAME}, sum_3d_to_scalar)
     cf->call({a}, {result});
     EXPECT_EQ((vector<float>{1 + 10 + 19 + 4 + 13 + 22 + 7 + 16 + 25 + 2 + 11 + 20 + 5 + 14 + 23 +
                              8 + 17 + 26 + 3 + 12 + 21 + 6 + 15 + 24 + 9 + 18 + 27}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
@@ -3253,7 +3253,7 @@ TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
     copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{0, 0, 0, 0, 0, 0}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{0, 0, 0, 0, 0, 0}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, sum_to_scalar_stable)
@@ -3273,8 +3273,8 @@ TEST(${BACKEND_NAME}, sum_to_scalar_stable)
     auto result = backend->make_primary_tensor_view(element::f32, Shape{});
 
     cf->call({a}, {result});
-    EXPECT_TRUE(test::all_close(get_vector<float>(result), vector<float>{1e-6}, 5e-2f));
-    // EXPECT_EQ(vector<float>{1e-6}, get_vector<float>(result));
+    EXPECT_TRUE(test::all_close(read_vector<float>(result), vector<float>{1e-6}, 5e-2f));
+    // EXPECT_EQ(vector<float>{1e-6}, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
@@ -3296,7 +3296,8 @@ TEST(${BACKEND_NAME}, sum_3d_to_vector_stable)
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
 
     cf->call({a}, {result});
-    EXPECT_TRUE(test::all_close(get_vector<float>(result), vector<float>{1e-4, 1e-5, 1e-6}, 5e-2f));
+    EXPECT_TRUE(
+        test::all_close(read_vector<float>(result), vector<float>{1e-4, 1e-5, 1e-6}, 5e-2f));
 }
 
 TEST(${BACKEND_NAME}, sign)
@@ -3316,7 +3317,7 @@ TEST(${BACKEND_NAME}, sign)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, -1, 0, -1, 1, 0}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, power)
@@ -3339,7 +3340,7 @@ TEST(${BACKEND_NAME}, power)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{1, 1, 729, 125}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, 1, 729, 125}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, constant_equality_bool)
@@ -3362,7 +3363,7 @@ TEST(${BACKEND_NAME}, constant_equality_bool)
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
 
     cf->call({}, {result});
-    EXPECT_EQ((vector<char>{true, false, true, false}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{true, false, true, false}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, sqrt)
@@ -3382,7 +3383,7 @@ TEST(${BACKEND_NAME}, sqrt)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{4, 2, 9, 10, 100, 0}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{4, 2, 9, 10, 100, 0}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, replace_slice_scalar)
@@ -3408,7 +3409,7 @@ TEST(${BACKEND_NAME}, replace_slice_scalar)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{808}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{808}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, replace_slice_matrix)
@@ -3435,7 +3436,7 @@ TEST(${BACKEND_NAME}, replace_slice_matrix)
 
     cf->call({a, b}, {result});
     EXPECT_EQ((vector<float>{1, 102, 103, 4, 5, 106, 107, 8, 9, 110, 111, 12, 13, 14, 15, 16}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, replace_slice_vector)
@@ -3463,7 +3464,7 @@ TEST(${BACKEND_NAME}, replace_slice_vector)
     cf->call({a, b}, {result});
     EXPECT_EQ(
         (vector<float>{0, 1, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 14, 15}),
-        get_vector<float>(result));
+        read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
@@ -3485,7 +3486,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
     auto result = backend->make_primary_tensor_view(element::i32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<int32_t>{0, 0, 1}), get_vector<int32_t>(result));
+    EXPECT_EQ((vector<int32_t>{0, 0, 1}), read_vector<int32_t>(result));
 }
 
 TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
@@ -3507,7 +3508,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
     auto result = backend->make_primary_tensor_view(element::i32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<int32_t>{0, 1, 0}), get_vector<int32_t>(result));
+    EXPECT_EQ((vector<int32_t>{0, 1, 0}), read_vector<int32_t>(result));
 }
 
 TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
@@ -3529,7 +3530,7 @@ TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
     auto result = backend->make_primary_tensor_view(element::i32, shape_r);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<int32_t>{1, 0, 0}), get_vector<int32_t>(result));
+    EXPECT_EQ((vector<int32_t>{1, 0, 0}), read_vector<int32_t>(result));
 }
 
 TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
@@ -3617,7 +3618,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_0)
     cf->call({a}, {result});
     EXPECT_EQ(
         (vector<int32_t>{0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0}),
-        get_vector<int32_t>(result));
+        read_vector<int32_t>(result));
 }
 
 TEST(${BACKEND_NAME}, one_hot_vector_1)
@@ -3641,7 +3642,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1)
     cf->call({a}, {result});
     EXPECT_EQ(
         (vector<int32_t>{0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0}),
-        get_vector<int32_t>(result));
+        read_vector<int32_t>(result));
 }
 
 TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
@@ -3735,7 +3736,7 @@ TEST(${BACKEND_NAME}, one_hot_matrix_0)
                                0, 1, 1, 0, 1, 0, 0, 0, 1,
 
                                0, 0, 0, 1, 0, 0, 0, 1, 0}),
-              get_vector<int32_t>(result));
+              read_vector<int32_t>(result));
 }
 
 TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
@@ -3759,7 +3760,7 @@ TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
     cf->call({a}, {result});
     EXPECT_EQ(
         (vector<float>{0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0}),
-        get_vector<float>(result));
+        read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
@@ -3830,7 +3831,7 @@ TEST(${BACKEND_NAME}, replace_slice_3d)
                              32, 33, 34, 35, 36, 937, 938, 39, 40, 941, 942, 43, 44, 45, 46, 47,
 
                              48, 49, 50, 51, 52, 53,  54,  55, 56, 57,  58,  59, 60, 61, 62, 63}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, replace_slice_3d_strided)
@@ -3870,7 +3871,7 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided)
                              932, 33, 934, 35, 36, 37, 38, 39, 940, 41, 942, 43, 44, 45, 46, 47,
 
                              48,  49, 50,  51, 52, 53, 54, 55, 56,  57, 58,  59, 60, 61, 62, 63}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
@@ -3910,7 +3911,7 @@ TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
                              932, 33, 34, 935, 36, 37, 38, 39, 940, 41, 42, 943, 44, 45, 46, 47,
 
                              48,  49, 50, 51,  52, 53, 54, 55, 56,  57, 58, 59,  60, 61, 62, 63}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 //
@@ -3967,7 +3968,7 @@ TEST(DISABLED_${BACKEND_NAME}, dot_3d_multi_axis)
 
     cf->call({a, b}, {result});
     EXPECT_EQ((vector<float>{2938., 3016., 3094., 3172., 3250., 7042., 7264., 7486., 7708., 7930.}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 //
@@ -4025,7 +4026,7 @@ TEST(DISABLED_${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
                              117,  50,  29,  472, 819, 62,   785,  236, 476, 235,  175,  1521, 2387,
                              1402, 97,  29,  69,  412, 63,   286,  429, 218, 45,   11,   29,   162,
                              27,   106, 149, 126, 65,  25,   44,   6,   11,  165,  281,  52}),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 //
@@ -4100,7 +4101,7 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis)
                        40476., 40986., 41496., 45534., 46188., 46842., 47496., 48150., 48804.,
                        49458., 50112., 50766., 51420., 52074., 52728., 55182., 55980., 56778.,
                        57576., 58374., 59172., 59970., 60768., 61566., 62364., 63162., 63960.}),
-        get_vector<float>(result));
+        read_vector<float>(result));
 }
 
 //
@@ -4155,7 +4156,7 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{251412., 254040.}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{251412., 254040.}), read_vector<float>(result));
 }
 
 //
@@ -4229,7 +4230,7 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
             2.48832336959957401600e+18, 2.48832362880081817600e+18, 2.48832388800090368000e+18,
             2.48832414720096000000e+18, 2.48832440640101478400e+18, 2.48832466560109772800e+18,
             2.48832492480234188800e+18, 2.48832518400031897600e+18},
-        get_vector<double>(result)));
+        read_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, DISABLED_parameter_to_output)
@@ -4249,7 +4250,7 @@ TEST(${BACKEND_NAME}, DISABLED_parameter_to_output)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, -2, 0, -4.8f}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{1, -2, 0, -4.8f}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
@@ -4273,7 +4274,7 @@ TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
 
     cf->call({a}, {result});
     EXPECT_EQ((test::NDArray<float, 3>({{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}}).get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
@@ -4301,7 +4302,7 @@ TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
     EXPECT_EQ((test::NDArray<float, 3>(
                    {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}, {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
@@ -4334,7 +4335,7 @@ TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
 
                     {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}, {2, 1, 1, 1, 2, 2, 2, 0, 1, 1, 2, 2}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
@@ -4400,7 +4401,7 @@ TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
                                           {2, 2, 2},
                                           {1, 1, 2}}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
@@ -4434,7 +4435,7 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
 
     cf->call({a}, {result});
     EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, not)
@@ -4454,7 +4455,7 @@ TEST(${BACKEND_NAME}, not)
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<char>{0, 1, 0, 1}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{0, 1, 0, 1}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_0d)
@@ -4474,7 +4475,7 @@ TEST(${BACKEND_NAME}, reverse_0d)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{6}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{6}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_1d_nochange)
@@ -4494,7 +4495,7 @@ TEST(${BACKEND_NAME}, reverse_1d_nochange)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{0, 1, 2, 3, 4, 5, 6, 7}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{0, 1, 2, 3, 4, 5, 6, 7}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_1d_0)
@@ -4514,7 +4515,7 @@ TEST(${BACKEND_NAME}, reverse_1d_0)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{7, 6, 5, 4, 3, 2, 1, 0}), get_vector<float>(result));
+    EXPECT_EQ((vector<float>{7, 6, 5, 4, 3, 2, 1, 0}), read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_2d_nochange)
@@ -4537,7 +4538,7 @@ TEST(${BACKEND_NAME}, reverse_2d_nochange)
     cf->call({a}, {result});
     EXPECT_EQ(
         (test::NDArray<float, 2>({{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}).get_vector()),
-        get_vector<float>(result));
+        read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_2d_0)
@@ -4560,7 +4561,7 @@ TEST(${BACKEND_NAME}, reverse_2d_0)
     cf->call({a}, {result});
     EXPECT_EQ(
         (test::NDArray<float, 2>({{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}}).get_vector()),
-        get_vector<float>(result));
+        read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_2d_1)
@@ -4583,7 +4584,7 @@ TEST(${BACKEND_NAME}, reverse_2d_1)
     cf->call({a}, {result});
     EXPECT_EQ(
         (test::NDArray<float, 2>({{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}}).get_vector()),
-        get_vector<float>(result));
+        read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_2d_01)
@@ -4606,7 +4607,7 @@ TEST(${BACKEND_NAME}, reverse_2d_01)
     cf->call({a}, {result});
     EXPECT_EQ(
         (test::NDArray<float, 2>({{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}}).get_vector()),
-        get_vector<float>(result));
+        read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_3d_nochange)
@@ -4632,7 +4633,7 @@ TEST(${BACKEND_NAME}, reverse_3d_nochange)
     EXPECT_EQ((test::NDArray<float, 3>({{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}},
                                         {{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_3d_0)
@@ -4658,7 +4659,7 @@ TEST(${BACKEND_NAME}, reverse_3d_0)
     EXPECT_EQ((test::NDArray<float, 3>({{{12, 13, 14}, {15, 16, 17}, {18, 19, 20}, {21, 22, 23}},
                                         {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_3d_1)
@@ -4684,7 +4685,7 @@ TEST(${BACKEND_NAME}, reverse_3d_1)
     EXPECT_EQ((test::NDArray<float, 3>({{{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}},
                                         {{21, 22, 23}, {18, 19, 20}, {15, 16, 17}, {12, 13, 14}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_3d_2)
@@ -4710,7 +4711,7 @@ TEST(${BACKEND_NAME}, reverse_3d_2)
     EXPECT_EQ((test::NDArray<float, 3>({{{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}},
                                         {{14, 13, 12}, {17, 16, 15}, {20, 19, 18}, {23, 22, 21}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_3d_01)
@@ -4736,7 +4737,7 @@ TEST(${BACKEND_NAME}, reverse_3d_01)
     EXPECT_EQ((test::NDArray<float, 3>({{{21, 22, 23}, {18, 19, 20}, {15, 16, 17}, {12, 13, 14}},
                                         {{9, 10, 11}, {6, 7, 8}, {3, 4, 5}, {0, 1, 2}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_3d_02)
@@ -4762,7 +4763,7 @@ TEST(${BACKEND_NAME}, reverse_3d_02)
     EXPECT_EQ((test::NDArray<float, 3>({{{14, 13, 12}, {17, 16, 15}, {20, 19, 18}, {23, 22, 21}},
                                         {{2, 1, 0}, {5, 4, 3}, {8, 7, 6}, {11, 10, 9}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_3d_12)
@@ -4788,7 +4789,7 @@ TEST(${BACKEND_NAME}, reverse_3d_12)
     EXPECT_EQ((test::NDArray<float, 3>({{{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}},
                                         {{23, 22, 21}, {20, 19, 18}, {17, 16, 15}, {14, 13, 12}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reverse_3d_012)
@@ -4815,7 +4816,7 @@ TEST(${BACKEND_NAME}, reverse_3d_012)
     EXPECT_EQ((test::NDArray<float, 3>({{{23, 22, 21}, {20, 19, 18}, {17, 16, 15}, {14, 13, 12}},
                                         {{11, 10, 9}, {8, 7, 6}, {5, 4, 3}, {2, 1, 0}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, numeric_float_nan)
@@ -4833,7 +4834,7 @@ TEST(${BACKEND_NAME}, numeric_float_nan)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
     cf->call({}, {result});
-    EXPECT_EQ((vector<char>{false, false, true, false, false}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, numeric_double_nan)
@@ -4851,7 +4852,7 @@ TEST(${BACKEND_NAME}, numeric_double_nan)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
     cf->call({}, {result});
-    EXPECT_EQ((vector<char>{false, false, true, false, false}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, numeric_float_inf)
@@ -4869,7 +4870,7 @@ TEST(${BACKEND_NAME}, numeric_float_inf)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
     cf->call({}, {result});
-    EXPECT_EQ((vector<char>{false, false, true, false, false}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, numeric_double_inf)
@@ -4887,7 +4888,7 @@ TEST(${BACKEND_NAME}, numeric_double_inf)
     // Create some tensors for input/output
     auto result = backend->make_primary_tensor_view(element::boolean, shape);
     cf->call({}, {result});
-    EXPECT_EQ((vector<char>{false, false, true, false, false}), get_vector<char>(result));
+    EXPECT_EQ((vector<char>{false, false, true, false, false}), read_vector<char>(result));
 }
 
 TEST(${BACKEND_NAME}, abc_tbb)
@@ -4922,15 +4923,15 @@ TEST(${BACKEND_NAME}, abc_tbb)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     cf->call({a, b, c}, {result});
-    EXPECT_EQ(get_vector<float>(result),
+    EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
     cf->call({b, a, c}, {result});
-    EXPECT_EQ(get_vector<float>(result),
+    EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
     cf->call({a, c, b}, {result});
-    EXPECT_EQ(get_vector<float>(result),
+    EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 
     if (!use_tbb)
@@ -4979,7 +4980,7 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_1image)
 
     cf->call({a, b}, {result});
     EXPECT_EQ((test::NDArray<float, 3>({{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}}).get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_2image)
@@ -5023,7 +5024,7 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_2image)
     EXPECT_EQ((test::NDArray<float, 3>(
                    {{{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0}}, {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_2channel_2image)
@@ -5072,7 +5073,7 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_2channel_2image)
 
                     {{2, 2, 1, 1, 0, 2, 2, 2, 1, 1, 1, 2}, {2, 1, 1, 1, 2, 2, 2, 0, 1, 1, 2, 2}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_2channel_2image)
@@ -5154,7 +5155,7 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_2channel_2image)
                                           {2, 2, 2},
                                           {1, 1, 2}}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_strided)
@@ -5202,7 +5203,7 @@ TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image_stride
 
     cf->call({a, b}, {result});
     EXPECT_EQ((test::NDArray<float, 4>({{{{3, 2, 2}, {2, 2, 3}, {2, 2, 2}}}}).get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 //
@@ -5258,7 +5259,7 @@ TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
     EXPECT_EQ((test::NDArray<float, 2>(
                    {{0, 0, 0, 0, 0}, {0, 0, 8, 0, 0}, {0, 0, 3, 0, 0}, {0, 0, 0, 1, 0}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 //
@@ -5314,7 +5315,7 @@ TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
     EXPECT_EQ((test::NDArray<float, 2>(
                    {{0, 0, 0, 0, 6, 0}, {0, 0, 2, 0, 0, 0}, {0, 0, 3, 0, 0, 0}, {0, 0, 0, 0, 0, 1}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 //
@@ -5374,7 +5375,7 @@ TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
              {{{0, 0, 0, 0, 6, 0}, {0, 0, 2, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 1}},
               {{0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {3, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}}})
              .get_vector()),
-        get_vector<float>(result));
+        read_vector<float>(result));
 }
 
 template <typename T, typename ET>
@@ -5394,8 +5395,8 @@ void make_unary_empty_test()
 
     cf->call({a}, {result});
 
-    auto in_vec = get_vector<ET>(a);
-    auto out_vec = get_vector<ET>(result);
+    auto in_vec = read_vector<ET>(a);
+    auto out_vec = read_vector<ET>(result);
 
     EXPECT_EQ(in_vec, out_vec);
 }
@@ -5419,8 +5420,8 @@ void make_binary_empty_test()
 
     cf->call({a, b}, {result});
 
-    auto in_vec = get_vector<ET>(a);
-    auto out_vec = get_vector<ET>(result);
+    auto in_vec = read_vector<ET>(a);
+    auto out_vec = read_vector<ET>(result);
 
     EXPECT_EQ(in_vec, out_vec);
 }
@@ -5614,7 +5615,7 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
                                           2 / denom,
                                           0 / denom}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
@@ -5666,7 +5667,7 @@ TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
                                           1 / denom,
                                           3 / denom}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
@@ -5746,7 +5747,7 @@ TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
                                           4 / denom,
                                           3 / denom}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
@@ -5814,7 +5815,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
                                           {7 / denom, 5 / denom, 6 / denom},
                                           {4 / denom, 2 / denom, 4 / denom}}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
@@ -5853,7 +5854,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
                                           {6 / denom, 5 / denom, 8 / denom},
                                           {6 / denom, 2 / denom, 4 / denom}}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
@@ -5886,7 +5887,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded)
                                           {2.0f / 2, 5.0f / 4, 5.0f / 4, 2.0f / 2},
                                           {2.0f / 1, 2.0f / 2, 0.0f / 2, 0.0f / 1}}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
@@ -5926,7 +5927,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded)
                                           {5.0f / 2, 11.0f / 4, 20.0f / 4, 14.0f / 2},
                                           {3.0f / 1, 9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
@@ -5964,7 +5965,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below)
                                           {5.0f / 2, 10.0f / 4, 16.0f / 4},
                                           {5.0f / 2, 11.0f / 4, 20.0f / 4}}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
@@ -6002,7 +6003,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above)
                                           {11.0f / 4, 20.0f / 4, 14.0f / 2},
                                           {9.0f / 2, 11.0f / 2, 5.0f / 1}}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
@@ -6044,7 +6045,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3)
                                           {5.0f / 2, 11.0f / 4, 25.0f / 6, 20.0f / 4, 14.0f / 2},
                                           {3.0f / 1, 9.0f / 2, 14.0f / 3, 11.0f / 2, 5.0f / 1}}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
@@ -6082,7 +6083,7 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided)
                                           {8.0f / 3, 35.0f / 9, 16.0f / 3},
                                           {3.0f / 1, 14.0f / 3, 5.0f / 1}}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
@@ -6117,5 +6118,5 @@ TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_3x3_strided_uneven)
                    {{{{0.0f / 1, 1.0f / 2}, {2.0f / 3, 6.0f / 6}, {2.0f / 1, 0.0f / 2}},
                      {{3.0f / 1, 7.0f / 2}, {8.0f / 3, 27.0f / 6}, {3.0f / 1, 11.0f / 2}}}})
                    .get_vector()),
-              get_vector<float>(result));
+              read_vector<float>(result));
 }

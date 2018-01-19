@@ -62,7 +62,7 @@ namespace ngraph
             auto ref_y = backend->make_primary_tensor_view<T>(y_shape);
 
             cf->tensor_call(args, std::vector<std::shared_ptr<ngraph::runtime::TensorView>>{ref_y});
-            auto ref_vec = get_vector<T>(ref_y);
+            auto ref_vec = read_vector<T>(ref_y);
 
             // inc_y will hold f(x+dx) values
             auto inc_y = backend->make_primary_tensor_view<T>(y_shape);
@@ -79,17 +79,17 @@ namespace ngraph
                     indep_params.end())
                 {
                     auto arg = args[i];
-                    auto res = get_vector<T>(results[pos]);
-                    auto vec = get_vector<T>(arg);
+                    auto res = read_vector<T>(results[pos]);
+                    auto vec = read_vector<T>(arg);
                     for (size_t j = 0; j < vec.size(); j++)
                     {
                         auto old_val = vec[j];
                         vec[j] += delta;
-                        set_vector(arg, vec);
+                        write_vector(arg, vec);
                         cf->tensor_call(args, {inc_y});
-                        auto inc_vec = get_vector<T>(inc_y);
+                        auto inc_vec = read_vector<T>(inc_y);
                         vec[j] = old_val;
-                        set_vector(arg, vec);
+                        write_vector(arg, vec);
                         size_t res_k = j;
                         for (size_t k = 0; k < inc_vec.size(); k++)
                         {
@@ -99,7 +99,7 @@ namespace ngraph
                             res_k += vec.size();
                         }
                     }
-                    set_vector(results[pos], res);
+                    write_vector(results[pos], res);
                     pos++;
                 }
             }

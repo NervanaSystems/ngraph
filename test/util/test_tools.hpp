@@ -38,11 +38,11 @@ void copy_data(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::vecto
 }
 
 template <typename T>
-std::vector<T> get_vector(std::shared_ptr<ngraph::runtime::TensorView> tv)
+std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::TensorView> tv)
 {
     if (ngraph::element::from<T>() != tv->get_tensor_view_layout()->get_element_type())
     {
-        throw std::invalid_argument("get_vector type must match TensorView type");
+        throw std::invalid_argument("read_vector type must match TensorView type");
     }
     size_t element_count = ngraph::shape_size(tv->get_shape());
     size_t size = element_count * sizeof(T);
@@ -52,7 +52,7 @@ std::vector<T> get_vector(std::shared_ptr<ngraph::runtime::TensorView> tv)
 }
 
 template <typename T>
-void set_vector(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::vector<T>& values)
+void write_vector(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::vector<T>& values)
 {
     tv->write(values.data(), 0, values.size() * sizeof(T));
 }
