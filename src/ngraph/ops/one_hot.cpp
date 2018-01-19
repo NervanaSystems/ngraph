@@ -45,7 +45,7 @@ op::OneHot::OneHot(const std::shared_ptr<Node>& arg, const Shape& shape, size_t 
 bool op::OneHot::is_functionally_identical(const Node& other) const
 {
     bool rc = true;
-    if (Node::is_functionally_identical(other))
+    if (Node::test_identical(other))
     {
         const OneHot& rhs = dynamic_cast<const OneHot&>(other);
         rc &= m_shape == rhs.m_shape;

@@ -69,7 +69,7 @@ namespace ngraph
         friend std::ostream& operator<<(std::ostream&, const TensorViewType&);
 
     protected:
-        const element::Type& m_element_type;
+        const element::Type m_element_type;
         Shape m_shape;
     };
 

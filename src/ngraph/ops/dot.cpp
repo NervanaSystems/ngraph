@@ -147,7 +147,7 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_
 bool op::Dot::is_functionally_identical(const Node& other) const
 {
     bool rc = true;
-    if (Node::is_functionally_identical(other))
+    if (Node::test_identical(other))
     {
         const Dot& rhs = dynamic_cast<const Dot&>(other);
         rc &= m_reduction_axes_count == rhs.m_reduction_axes_count;

@@ -55,8 +55,6 @@ namespace ngraph
                 return std::make_shared<FunctionCall>(m_function, new_args);
             }
 
-            /// \return The function to be called.
-            bool is_functionally_identical(const Node&) const override;
             /// \return A singleton vector containing the function to be called.
             std::vector<std::shared_ptr<Function>> get_functions() const override
             {
