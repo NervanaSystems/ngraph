@@ -40,6 +40,8 @@ TEST(cudnn, loadTest)
 TEST(cudnn, compileTest)
 {
     const auto source = R"###(
+// Example developed from LLVM documentation https://llvm.org/docs/NVPTXUsage.html
+
 #include <cassert>
 #include <fstream>
 #include <iostream>

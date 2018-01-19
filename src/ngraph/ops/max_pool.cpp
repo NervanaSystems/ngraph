@@ -13,6 +13,11 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/ops/max_pool.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/ops/add.hpp"
+#include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/greater.hpp"
+#include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -168,8 +173,40 @@ bool op::MaxPool::is_functionally_identical(const Node& other) const
     return rc;
 }
 
-/*
-void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints,
+                                    const std::shared_ptr<Node>& delta)
 {
+    auto shape_sel_a = Shape{};
+    auto etype = delta->get_element_type();
+
+    //Select Max
+    auto SEL_A = make_shared<op::Parameter>(etype, shape_sel_a);
+    auto shape_sel_b = Shape{};
+    auto SEL_B = make_shared<op::Parameter>(etype, shape_sel_b);
+    auto sel_f = std::make_shared<Function>(std::make_shared<op::Greater>(SEL_A, SEL_B),
+                                            op::Parameters{SEL_A, SEL_B});
+
+    //Update Cell
+    auto shape_scatter_a = Shape{};
+    auto SCATTER_A = make_shared<op::Parameter>(etype, shape_scatter_a);
+    auto shape_scatter_b = Shape{};
+    auto SCATTER_B = make_shared<op::Parameter>(etype, shape_scatter_b);
+    auto scatter_f =
+        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+
+    auto operand = get_input_op(0);
+    auto init_value =
+        std::make_shared<op::Constant>(etype, Shape{}, std::vector<std::string>({"0"}));
+
+    Strides strides{1, 1};
+    strides.push_back(m_window_movement_strides.at(0));
+    strides.push_back(m_window_movement_strides.at(1));
+
+    Shape shape{1, 1};
+    shape.push_back(m_window_shape.at(0));
+    shape.push_back(m_window_shape.at(1));
+
+    auto sas = std::make_shared<op::SelectAndScatter>(
+        operand, delta, init_value, sel_f, scatter_f, shape, strides);
+    adjoints.add_delta(operand, sas);
 }
-*/
