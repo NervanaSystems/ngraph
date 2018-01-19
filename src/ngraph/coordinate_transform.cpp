@@ -109,7 +109,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
 
     for (size_t i = 0; i < m_n_axes; i++)
     {
-        std::ptrdiff_t padded_upper_bound = (source_shape[i] - 1) * target_dilation_strides[i] + 1 +
+        std::ptrdiff_t padded_upper_bound = subtract_or_zero(source_shape[i],size_t(1)) * target_dilation_strides[i] + 1 +
                                             target_padding_below[i] + target_padding_above[i];
 
         if (padded_upper_bound < 0)
@@ -347,8 +347,9 @@ bool CoordinateTransform::has_source_coordinate(const Coordinate& c_target) cons
         std::ptrdiff_t pos_depadded = pos_deshifted - m_target_padding_below[target_axis];
 
         // If we are in the above-padding, we have no source coordinate.
-        if (pos_depadded >=
-            ((m_source_shape[source_axis] - 1) * m_target_dilation_strides[target_axis]) + 1)
+        if (m_source_shape[source_axis] == 0 ||
+            (pos_depadded >=
+             ((m_source_shape[source_axis] - 1) * m_target_dilation_strides[target_axis]) + 1))
         {
             return false;
         }
