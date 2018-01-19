@@ -32,6 +32,7 @@ set (SRC
     node.cpp
     ops/abs.cpp
     ops/add.cpp
+    ops/avg_pool.cpp
     ops/binary_elementwise_arithmetic.cpp
     ops/binary_elementwise_comparison.cpp
     ops/binary_elementwise.cpp
@@ -120,6 +121,10 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt" "${OP_CLASS_LINES}")
 find_package(Graphviz QUIET)
 if (GRAPHVIZ_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGRAPHVIZ_FOUND")
+endif()
+if(NGRAPH_ADDRESS_SANITIZER)
+    message(STATUS "Enable Address Sanitizer")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
 include_directories(
