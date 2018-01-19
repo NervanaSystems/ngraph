@@ -19,7 +19,8 @@ import numpy as np
 import pyngraph.util as util
 from pyngraph import Type, Function
 from pyngraph.runtime import Manager
-from pyngraph.op import Acos, Asin, Cos, Sin
+from pyngraph.op import Acos, Asin, Atan, Cos, Sin, Tan
+from pyngraph.op import Cosh, Sinh, Tanh
 from pyngraph.op import Parameter, Maximum, Minimum, Reshape, Broadcast
 from pyngraph.op import Add, Subtract, Multiply, Divide, Dot
 from pyngraph.op import Constant, Abs, Exp, Log, Sum
@@ -194,8 +195,12 @@ def unary_op(op_str, a):
         return Acos(a)
     elif op_str == 'Asin':
         return Asin(a)
+    elif op_str == 'Atan':
+        return Atan(a)
     elif op_str == 'Cos':
         return Cos(a)
+    elif op_str == 'Cosh':
+        return Cosh(a)
     elif op_str == 'log':
         return Log(a)
     elif op_str == 'exp':
@@ -204,6 +209,12 @@ def unary_op(op_str, a):
         return Negative(a)
     elif op_str == 'Sin':
         return Sin(a)
+    elif op_str == 'Sinh':
+        return Sinh(a)
+    elif op_str == 'Tan':
+        return Tan(a)
+    elif op_str == 'Tanh':
+        return Tanh(a)
 
 
 def unary_op_ref(op_str, a):
@@ -213,8 +224,12 @@ def unary_op_ref(op_str, a):
         return np.arccos(a)
     elif op_str == 'Asin':
         return np.arcsin(a)
+    elif op_str == 'Atan':
+        return np.arctan(a)
     elif op_str == 'Cos':
         return np.cos(a)
+    elif op_str == 'Cosh':
+        return np.cosh(a)
     elif op_str == 'log':
         return np.log(a)
     elif op_str == 'exp':
@@ -223,6 +238,12 @@ def unary_op_ref(op_str, a):
         return np.negative(a)
     elif op_str == 'Sin':
         return np.sin(a)
+    elif op_str == 'Sinh':
+        return np.sinh(a)
+    elif op_str == 'Tan':
+        return np.tan(a)
+    elif op_str == 'Tanh':
+        return np.tanh(a)
 
 
 def unary_op_exec(op_str, input_list):
@@ -270,9 +291,21 @@ def test_asin():
     unary_op_exec(op_str, input_list)
 
 
+def test_atan():
+    input_list = [-1, 0, 0.5, 1]
+    op_str = 'Atan'
+    unary_op_exec(op_str, input_list)
+
+
 def test_cos():
     input_list = [0, 0.7, 1.7, 3.4]
     op_str = 'Cos'
+    unary_op_exec(op_str, input_list)
+
+
+def test_cosh():
+    input_list = [-1, 0., 0.5, 1]
+    op_str = 'Cosh'
     unary_op_exec(op_str, input_list)
 
 
@@ -297,6 +330,24 @@ def test_negative():
 def test_sin():
     input_list = [0, 0.7, 1.7, 3.4]
     op_str = 'Sin'
+    unary_op_exec(op_str, input_list)
+
+
+def test_sinh():
+    input_list = [-1, 0., 0.5, 1]
+    op_str = 'Sinh'
+    unary_op_exec(op_str, input_list)
+
+
+def test_tan():
+    input_list = [-np.pi/4, 0, np.pi/8, np.pi/8]
+    op_str = 'Tan'
+    unary_op_exec(op_str, input_list)
+
+
+def test_tanh():
+    input_list = [-1, 0, 0.5, 1]
+    op_str = 'Tanh'
     unary_op_exec(op_str, input_list)
 
 

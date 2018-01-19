@@ -18,8 +18,10 @@
 #include "pyngraph/ops/abs.hpp"
 #include "pyngraph/ops/acos.hpp"
 #include "pyngraph/ops/cos.hpp"
+#include "pyngraph/ops/cosh.hpp"
 #include "pyngraph/ops/add.hpp"
 #include "pyngraph/ops/asin.hpp"
+#include "pyngraph/ops/atan.hpp"
 #include "pyngraph/ops/broadcast.hpp"
 #include "pyngraph/ops/constant.hpp"
 #include "pyngraph/ops/convert.hpp"
@@ -39,8 +41,11 @@
 #include "pyngraph/ops/reduce.hpp"
 #include "pyngraph/ops/reshape.hpp"
 #include "pyngraph/ops/sin.hpp"
+#include "pyngraph/ops/sinh.hpp"
 #include "pyngraph/ops/subtract.hpp"
 #include "pyngraph/ops/sum.hpp"
+#include "pyngraph/ops/tan.hpp"
+#include "pyngraph/ops/tanh.hpp"
 
 namespace py = pybind11;
 
