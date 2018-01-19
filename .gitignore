@@ -1,0 +1,11 @@
+*.so
+*.pyc
+.cache/
+.coverage
+__pycache__/
+build/
+ngraph_neon.egg-info/
+pyngraph.egg-info/
+test/.coverage
+test/__pycache__/
+tmp/

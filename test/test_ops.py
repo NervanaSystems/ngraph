@@ -19,9 +19,10 @@ import numpy as np
 import pyngraph.util as util
 from pyngraph import Type, Function
 from pyngraph.runtime import Manager
+from pyngraph.op import Acos, Asin, Cos, Sin
 from pyngraph.op import Parameter, Maximum, Minimum, Reshape, Broadcast
 from pyngraph.op import Add, Subtract, Multiply, Divide, Dot
-from pyngraph.op import Constant, Exp, Log, Sum
+from pyngraph.op import Constant, Abs, Exp, Log, Sum
 from pyngraph.op import Greater, Less, Convert, Reduce
 from pyngraph.op import OneHot, Negative
 
@@ -187,21 +188,41 @@ def test_add_with_mul():
 
 
 def unary_op(op_str, a):
-    if op_str == 'log':
+    if op_str == 'Abs':
+        return Abs(a)
+    elif op_str == 'Acos':
+        return Acos(a)
+    elif op_str == 'Asin':
+        return Asin(a)
+    elif op_str == 'Cos':
+        return Cos(a)
+    elif op_str == 'log':
         return Log(a)
     elif op_str == 'exp':
         return Exp(a)
     elif op_str == 'negative':
         return Negative(a)
+    elif op_str == 'Sin':
+        return Sin(a)
 
 
 def unary_op_ref(op_str, a):
-    if op_str == 'log':
+    if op_str == 'Abs':
+        return np.abs(a)
+    elif op_str == 'Acos':
+        return np.arccos(a)
+    elif op_str == 'Asin':
+        return np.arcsin(a)
+    elif op_str == 'Cos':
+        return np.cos(a)
+    elif op_str == 'log':
         return np.log(a)
     elif op_str == 'exp':
         return np.exp(a)
     elif op_str == 'negative':
         return np.negative(a)
+    elif op_str == 'Sin':
+        return np.sin(a)
 
 
 def unary_op_exec(op_str, input_list):
@@ -231,6 +252,30 @@ def unary_op_exec(op_str, input_list):
     assert np.allclose(result_arr, result_arr_ref)
 
 
+def test_abs():
+    input_list = [-1, 0, 1, 2]
+    op_str = 'Abs'
+    unary_op_exec(op_str, input_list)
+
+
+def test_acos():
+    input_list = [-1, 0, 0.5, 1]
+    op_str = 'Acos'
+    unary_op_exec(op_str, input_list)
+
+
+def test_asin():
+    input_list = [-1, 0, 0.5, 1]
+    op_str = 'Asin'
+    unary_op_exec(op_str, input_list)
+
+
+def test_cos():
+    input_list = [0, 0.7, 1.7, 3.4]
+    op_str = 'Cos'
+    unary_op_exec(op_str, input_list)
+
+
 def test_log():
     input_list = [1, 2, 3, 4]
     op_str = 'log'
@@ -246,6 +291,12 @@ def test_exp():
 def test_negative():
     input_list = [-1, 0, 1, 2]
     op_str = 'negative'
+    unary_op_exec(op_str, input_list)
+
+
+def test_sin():
+    input_list = [0, 0.7, 1.7, 3.4]
+    op_str = 'Sin'
     unary_op_exec(op_str, input_list)
 
 
@@ -503,4 +554,4 @@ def test_onehot():
 
 
 if  __name__ == '__main__':
-    test_add()
+    test_cos()

@@ -15,7 +15,11 @@
 #pragma once
 
 #include <pybind11/pybind11.h>
+#include "pyngraph/ops/abs.hpp"
+#include "pyngraph/ops/acos.hpp"
+#include "pyngraph/ops/cos.hpp"
 #include "pyngraph/ops/add.hpp"
+#include "pyngraph/ops/asin.hpp"
 #include "pyngraph/ops/broadcast.hpp"
 #include "pyngraph/ops/constant.hpp"
 #include "pyngraph/ops/convert.hpp"
@@ -34,6 +38,7 @@
 #include "pyngraph/ops/parameter.hpp"
 #include "pyngraph/ops/reduce.hpp"
 #include "pyngraph/ops/reshape.hpp"
+#include "pyngraph/ops/sin.hpp"
 #include "pyngraph/ops/subtract.hpp"
 #include "pyngraph/ops/sum.hpp"
 
