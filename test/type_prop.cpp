@@ -5573,3 +5573,223 @@ TEST(type_prop, avg_pool_invalid_movement_stride_0)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, pad_deduce_1d_exterior)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto padding_below = Shape{2};
+    auto padding_above = Shape{3};
+    auto padding_interior = Shape{0};
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    EXPECT_EQ(pad->get_element_type(), element::f32);
+    EXPECT_EQ(pad->get_shape(), (Shape{55}));
+
+    EXPECT_EQ(pad->get_padding_below(), (Shape{2}));
+    EXPECT_EQ(pad->get_padding_above(), (Shape{3}));
+    EXPECT_EQ(pad->get_padding_interior(), (Shape{0}));
+}
+
+TEST(type_prop, pad_deduce_1d_interior)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto padding_below = Shape{0};
+    auto padding_above = Shape{0};
+    auto padding_interior = Shape{2};
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    EXPECT_EQ(pad->get_element_type(), element::f32);
+    EXPECT_EQ(pad->get_shape(), (Shape{148}));
+
+    EXPECT_EQ(pad->get_padding_below(), (Shape{0}));
+    EXPECT_EQ(pad->get_padding_above(), (Shape{0}));
+    EXPECT_EQ(pad->get_padding_interior(), (Shape{2}));
+}
+
+TEST(type_prop, pad_deduce_1d_interior_exterior)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto padding_below = Shape{5};
+    auto padding_above = Shape{6};
+    auto padding_interior = Shape{2};
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    EXPECT_EQ(pad->get_element_type(), element::f32);
+    EXPECT_EQ(pad->get_shape(), (Shape{159}));
+
+    EXPECT_EQ(pad->get_padding_below(), (Shape{5}));
+    EXPECT_EQ(pad->get_padding_above(), (Shape{6}));
+    EXPECT_EQ(pad->get_padding_interior(), (Shape{2}));
+}
+
+TEST(type_prop, pad_deduce_2d_interior_exterior)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto padding_below = Shape{5, 3};
+    auto padding_above = Shape{6, 9};
+    auto padding_interior = Shape{2, 3};
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    EXPECT_EQ(pad->get_element_type(), element::f32);
+    EXPECT_EQ(pad->get_shape(), (Shape{159, 169}));
+
+    EXPECT_EQ(pad->get_padding_below(), (Shape{5, 3}));
+    EXPECT_EQ(pad->get_padding_above(), (Shape{6, 9}));
+    EXPECT_EQ(pad->get_padding_interior(), (Shape{2, 3}));
+}
+
+TEST(type_prop, pad_deduce_3d_interior_exterior)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto padding_below = Shape{5, 3, 0};
+    auto padding_above = Shape{6, 9, 4};
+    auto padding_interior = Shape{2, 3, 0};
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    EXPECT_EQ(pad->get_element_type(), element::f32);
+    EXPECT_EQ(pad->get_shape(), (Shape{159, 169, 24}));
+
+    EXPECT_EQ(pad->get_padding_below(), (Shape{5, 3, 0}));
+    EXPECT_EQ(pad->get_padding_above(), (Shape{6, 9, 4}));
+    EXPECT_EQ(pad->get_padding_interior(), (Shape{2, 3, 0}));
+}
+
+TEST(type_prop, pad_deduce_element_type_mismatch)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
+    auto param1 = make_shared<op::Parameter>(element::i32, Shape{});
+    auto padding_below = Shape{5, 3, 0};
+    auto padding_above = Shape{6, 9, 4};
+    auto padding_interior = Shape{2, 3, 0};
+    try
+    {
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Element tpye mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Pad argument tensor and padding value element types do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_deduce_nonscalar_pad_value)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6});
+    auto padding_below = Shape{5, 3, 0};
+    auto padding_above = Shape{6, 9, 4};
+    auto padding_interior = Shape{2, 3, 0};
+    try
+    {
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Non-scalar pad value not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(), std::string("Padding value for pad is not a scalar"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_deduce_below_padding_wrong_rank)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto padding_below = Shape{5, 3, 0, 6};
+    auto padding_above = Shape{6, 9, 4};
+    auto padding_interior = Shape{2, 3, 0};
+    try
+    {
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong below-padding rank not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Pad rank for below-padding does not match rank of argument tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_deduce_above_padding_wrong_rank)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto padding_below = Shape{5, 3, 0};
+    auto padding_above = Shape{6, 9};
+    auto padding_interior = Shape{2, 3, 0};
+    try
+    {
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong above-padding rank not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Pad rank for above-padding does not match rank of argument tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_deduce_interior_padding_wrong_rank)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto padding_below = Shape{5, 3, 0};
+    auto padding_above = Shape{6, 9, 4};
+    auto padding_interior = Shape{2, 3, 0, 9, 3};
+    try
+    {
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Wrong interior padding rank not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(
+            error.what(),
+            std::string("Pad rank for interior padding does not match rank of argument tensor"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
