@@ -97,6 +97,7 @@
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/op.hpp"
+#include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
