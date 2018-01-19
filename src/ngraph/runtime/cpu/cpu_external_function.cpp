@@ -37,6 +37,7 @@
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
+#include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/ceiling.hpp"
 #include "ngraph/ops/concatenate.hpp"
@@ -189,6 +190,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::EmitReverse},
     {TI(ngraph::op::ReduceWindow), &runtime::cpu::CPU_Emitter::EmitReduceWindow},
     {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPU_Emitter::EmitSelectAndScatter},
+    {TI(ngraph::op::AvgPool), &runtime::cpu::CPU_Emitter::EmitAvgPool},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
@@ -231,6 +233,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
+#include "ngraph/runtime/kernel/avg_pool.hpp"
 #include "ngraph/runtime/kernel/broadcast.hpp"
 #include "ngraph/runtime/kernel/concat.hpp"
 #include "ngraph/runtime/kernel/convolution.hpp"
@@ -365,6 +368,11 @@ using namespace ngraph::runtime;
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
     {
         const list<shared_ptr<Node>>& tmp = current_function->get_ordered_ops();
+        if (tmp.size() < 2)
+        {
+            // Since we are comparing ops there must be at least two ops to proceed.
+            continue;
+        }
         vector<shared_ptr<Node>> op_list{tmp.begin(), tmp.end()};
         for (size_t i = 0; i < op_list.size() - 1; i++)
         {

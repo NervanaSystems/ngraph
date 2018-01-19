@@ -101,7 +101,7 @@ void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const std::share
 bool op::Slice::is_functionally_identical(const Node& other) const
 {
     bool rc = true;
-    if (Node::is_functionally_identical(other))
+    if (Node::test_identical(other))
     {
         const Slice& slice = dynamic_cast<const Slice&>(other);
         rc &= m_lower_bounds == slice.m_lower_bounds;

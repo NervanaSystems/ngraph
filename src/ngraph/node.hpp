@@ -50,7 +50,13 @@ namespace ngraph
 
     protected:
         Node(const std::string& node_type, const Nodes& arguments);
-        virtual ~Node() {}
+        virtual ~Node()
+        {
+            for (auto arg : m_arguments)
+            {
+                arg->m_users.erase(this);
+            }
+        }
         virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const std::shared_ptr<Node>& delta)
         {
@@ -165,6 +171,7 @@ namespace ngraph
     protected:
         void add_output(const element::Type& element_type, const Shape& shape);
         void assert_argument_list_equivalency(const Nodes& b);
+        bool test_identical(const Node&) const;
 
         std::string m_node_type;
         std::multiset<Node*> m_users;
