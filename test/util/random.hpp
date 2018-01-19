@@ -47,7 +47,7 @@ namespace ngraph
                 {
                     elt = m_r();
                 }
-                ptv->write(vec);
+                set_vector(ptv, vec);
                 return ptv;
             }
 

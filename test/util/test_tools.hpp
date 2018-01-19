@@ -50,3 +50,9 @@ std::vector<T> get_vector(std::shared_ptr<ngraph::runtime::TensorView> tv)
     tv->read(rc.data(), 0, size);
     return rc;
 }
+
+template <typename T>
+void set_vector(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::vector<T>& values)
+{
+    tv->write(values.data(), 0, values.size() * sizeof(T));
+}

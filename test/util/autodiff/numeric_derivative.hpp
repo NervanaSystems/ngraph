@@ -85,11 +85,11 @@ namespace ngraph
                     {
                         auto old_val = vec[j];
                         vec[j] += delta;
-                        arg->write(vec);
+                        set_vector(arg, vec);
                         cf->tensor_call(args, {inc_y});
                         auto inc_vec = get_vector<T>(inc_y);
                         vec[j] = old_val;
-                        arg->write(vec);
+                        set_vector(arg, vec);
                         size_t res_k = j;
                         for (size_t k = 0; k < inc_vec.size(); k++)
                         {
@@ -99,7 +99,7 @@ namespace ngraph
                             res_k += vec.size();
                         }
                     }
-                    results[pos]->write(res);
+                    set_vector(results[pos],  res);
                     pos++;
                 }
             }

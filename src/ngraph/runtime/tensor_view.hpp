@@ -64,12 +64,6 @@ namespace ngraph
             /// @param n Number of bytes to write, must be integral number of elements.
             virtual void write(const void* p, size_t tensor_offset, size_t n) = 0;
 
-            template <typename T>
-            void write(const std::vector<T>& values)
-            {
-                write(values.data(), 0, values.size() * sizeof(T));
-            }
-
             /// @brief Read bytes directly from the tensor
             /// @param p Pointer to destination for data
             /// @param tensor_offset Offset into tensor storage to begin reading. Must be element-aligned.

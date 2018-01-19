@@ -783,7 +783,7 @@ TEST(${BACKEND_NAME}, backwards_select)
     for (auto i = 0; i < 100; i++)
     {
         auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
-        x0->write(vector<char>{0, 1, 0, 1, 0, 1});
+        set_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
         auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
         auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -816,7 +816,7 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
     for (auto i = 0; i < 100; i++)
     {
         auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
-        x0->write(vector<char>{0, 1, 0, 1, 0, 1});
+        set_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
         auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
         auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 

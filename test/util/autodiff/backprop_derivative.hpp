@@ -95,10 +95,10 @@ namespace ngraph
             for (size_t i = 0; i < c_vec.size(); i++)
             {
                 c_vec[i] = 1;
-                c_arg->write(c_vec);
+                set_vector(c_arg, c_vec);
                 cf->tensor_call(args_tv, bprops_tv);
                 c_vec[i] = 0;
-                c_arg->write(c_vec);
+                set_vector(c_arg, c_vec);
                 for (size_t j = 0; j < results.size(); j++)
                 {
                     auto bprop_vec = get_vector<T>(bprops[j]);
@@ -109,7 +109,7 @@ namespace ngraph
             // Copy results from temp to result vector
             for (size_t j = 0; j < results.size(); j++)
             {
-                results[j]->write(result_vect[j]);
+                set_vector(results[j], result_vect[j]);
             }
             return results;
         }
