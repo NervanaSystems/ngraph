@@ -73,9 +73,8 @@ static std::shared_ptr<ngraph::Function>
 static json write(const ngraph::Function&);
 static json write(const ngraph::Node&);
 
-// This stupidity is caused by the fact that we do not pass element types
-// by value but by reference even though they can be compared. There is no reason to pass
-// them by reference EVERYWERE but here we are...
+// There should be a map from element type names to element types so deserialization can
+// find the singletons and serialization can serialize by name.
 static const element::Type& to_ref(const element::Type& t)
 {
     if (t == element::boolean)
