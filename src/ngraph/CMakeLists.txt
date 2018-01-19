@@ -92,6 +92,12 @@ set (SRC
     runtime/interpreter/int_kernels.cpp
     runtime/interpreter/int_manager.cpp
     runtime/interpreter/int_tensor_view.cpp
+    runtime/gpu_interpreter/int_backend.cpp
+    runtime/gpu_interpreter/int_call_frame.cpp
+    runtime/gpu_interpreter/int_external_function.cpp
+    runtime/gpu_interpreter/int_kernels.cpp
+    runtime/gpu_interpreter/int_manager.cpp
+    runtime/gpu_interpreter/int_tensor_view.cpp
     runtime/manager.cpp
     runtime/tensor_view.cpp
     serializer.cpp
