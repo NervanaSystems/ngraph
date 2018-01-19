@@ -53,8 +53,12 @@ namespace ngraph
     /// @brief Strides of a tensor
     using Strides = std::vector<size_t>;
 
-    /// @brief Padding for a tensor; can be negative.
-    using Padding = std::vector<ssize_t>;
+    /// @brief A coordinate-like type whose elements are allowed to be
+    ///        negative.
+    ///
+    ///        Currently used only to express negative padding; in the future,
+    ///        could conceivably be used to express
+    using CoordinateDiff = std::vector<std::ptrdiff_t>;
 
     Coordinate project_coordinate(const Coordinate& coord, const AxisSet& deleted_axes);
     Shape project_shape(const Shape& shape, const AxisSet& deleted_axes);

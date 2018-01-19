@@ -205,11 +205,11 @@ TEST (${BACKEND_NAME}, %s)
     auto shape_r = Shape{%s};
     auto f = make_shared<Function>(
         make_shared<op::Convolution>(A, B, 
-                                     Strides{%s},  // move_strides
-                                     Strides{%s},  // filter_dilation
-                                     Padding{%s},  // below_pads
-                                     Padding{%s},  // above_pads
-                                     Strides{%s}), // image_dilation
+                                     Strides{%s},        // move_strides
+                                     Strides{%s},        // filter_dilation
+                                     CoordinateDiff{%s}, // below_pads
+                                     CoordinateDiff{%s}, // above_pads
+                                     Strides{%s}),       // image_dilation
         op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");

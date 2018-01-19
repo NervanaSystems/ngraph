@@ -67,8 +67,8 @@ namespace ngraph
                     Coordinate input_batch_transform_end(2 + n_image_dimensions);
                     Strides input_batch_transform_source_strides(2 + n_image_dimensions, 1);
                     AxisVector input_batch_transform_source_axis_order(2 + n_image_dimensions);
-                    Padding input_batch_transform_padding_below(2 + n_image_dimensions);
-                    Padding input_batch_transform_padding_above(2 + n_image_dimensions);
+                    CoordinateDiff input_batch_transform_padding_below(2 + n_image_dimensions);
+                    CoordinateDiff input_batch_transform_padding_above(2 + n_image_dimensions);
 
                     input_batch_transform_start[0] = img_index;
                     input_batch_transform_end[0] = img_index + 1;

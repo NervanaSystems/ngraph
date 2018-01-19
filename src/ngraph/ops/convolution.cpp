@@ -22,8 +22,8 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
                              const std::shared_ptr<Node>& filters,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
-                             const Padding& padding_below,
-                             const Padding& padding_above,
+                             const CoordinateDiff& padding_below,
+                             const CoordinateDiff& padding_above,
                              const Strides& image_dilation_strides)
     : RequiresTensorViewArgs("Convolution", {image_batch, filters})
     , m_window_movement_strides(window_movement_strides)
@@ -129,7 +129,8 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
         m_input_image_physical_shape.push_back(dim_size);
         size_t dilated_dim_size = (dim_size - 1) * image_dilation_strides[i] + 1;
 
-        ssize_t padded_dilated_dim_size = padding_below[i] + dilated_dim_size + padding_above[i];
+        std::ptrdiff_t padded_dilated_dim_size =
+            padding_below[i] + dilated_dim_size + padding_above[i];
 
         if (padded_dilated_dim_size < 0)
         {
@@ -222,8 +223,8 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
                              const std::shared_ptr<Node>& filters,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
-                             const Padding& padding_below,
-                             const Padding& padding_above)
+                             const CoordinateDiff& padding_below,
+                             const CoordinateDiff& padding_above)
     : Convolution(image_batch,
                   filters,
                   window_movement_strides,
@@ -234,7 +235,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
 {
 }
 
-Padding op::Convolution::default_padding(const std::shared_ptr<Node>& image_batch)
+CoordinateDiff op::Convolution::default_padding(const std::shared_ptr<Node>& image_batch)
 {
     auto& image_batch_shape = image_batch->get_shape();
     if (image_batch_shape.size() < 3)
@@ -244,7 +245,7 @@ Padding op::Convolution::default_padding(const std::shared_ptr<Node>& image_batc
             "Convolution image batch input must have rank of at least 3 (one batch axis, one "
             "input-channel axis, at least one image dimension).");
     }
-    return Padding(image_batch_shape.size() - 2, 0);
+    return CoordinateDiff(image_batch_shape.size() - 2, 0);
 }
 
 op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,

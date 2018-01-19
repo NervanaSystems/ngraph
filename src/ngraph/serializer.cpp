@@ -369,8 +369,8 @@ static shared_ptr<ngraph::Function>
                 node_js.at("window_movement_strides").get<vector<size_t>>();
             auto window_dilation_strides =
                 node_js.at("window_dilation_strides").get<vector<size_t>>();
-            auto padding_below = node_js.at("padding_below").get<vector<ssize_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<ssize_t>>();
+            auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+            auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
             node = make_shared<op::Convolution>(args[0],
                                                 args[1],
                                                 window_movement_strides,

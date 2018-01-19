@@ -68,8 +68,8 @@ namespace ngraph
                         const std::shared_ptr<Node>& filters,
                         const Strides& window_movement_strides,
                         const Strides& window_dilation_strides,
-                        const Padding& padding_below,
-                        const Padding& padding_above,
+                        const CoordinateDiff& padding_below,
+                        const CoordinateDiff& padding_above,
                         const Strides& image_dilation_strides);
 
             /// \brief Constructs a batched convolution operation with no image dilation (i.e., all image dilation strides are 1).
@@ -84,8 +84,8 @@ namespace ngraph
                         const std::shared_ptr<Node>& filters,
                         const Strides& window_movement_strides,
                         const Strides& window_dilation_strides,
-                        const Padding& padding_below,
-                        const Padding& padding_above);
+                        const CoordinateDiff& padding_below,
+                        const CoordinateDiff& padding_above);
 
             /// \brief Constructs a batched convolution operation with no padding or image dilation (i.e., padding above and below are 0 everywhere, and all image dilation strides are 1).
             ///
@@ -121,10 +121,10 @@ namespace ngraph
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             /// \return The window dilation strides.
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
-            /// \return The padding-below sizes.
-            const Padding& get_padding_below() const { return m_padding_below; }
-            /// \return The padding-above sizes.
-            const Padding& get_padding_above() const { return m_padding_above; }
+            /// \return The padding-below sizes (possibly negative).
+            const CoordinateDiff& get_padding_below() const { return m_padding_below; }
+            /// \return The padding-above sizes (possibly negative).
+            const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             /// \return The input image dilation strides.
             const Strides& get_image_dilation_strides() const { return m_image_dilation_strides; }
             /// \return The number of input channels.
@@ -156,8 +156,8 @@ namespace ngraph
         protected:
             Strides m_window_movement_strides;
             Strides m_window_dilation_strides;
-            Padding m_padding_below;
-            Padding m_padding_above;
+            CoordinateDiff m_padding_below;
+            CoordinateDiff m_padding_above;
             Strides m_image_dilation_strides;
 
             // TODO: Some or all of these values should probably be computed dynamically rather than stored here.
@@ -173,7 +173,7 @@ namespace ngraph
 
         private:
             static Strides default_strides(const std::shared_ptr<Node>& image_batch);
-            static Padding default_padding(const std::shared_ptr<Node>& image_batch);
+            static CoordinateDiff default_padding(const std::shared_ptr<Node>& image_batch);
         };
     }
 }
