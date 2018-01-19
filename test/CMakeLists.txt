@@ -59,6 +59,7 @@ add_subdirectory(models)
 #================================================================================================
 # TODO add interpreter back to unit tests when it works
 set(BACKEND_NAMES ${BACKEND_NAMES} "INTERPRETER")
+set(BACKEND_NAMES ${BACKEND_NAMES} "GPU_INTERPRETER")
 
 if(MKLDNN_INCLUDE_DIR)
     include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})
