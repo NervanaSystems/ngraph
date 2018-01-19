@@ -1,5 +1,5 @@
 # API Changes
-`Parameter` and `Function` no longer take a type argument. 
+`Parameter` and `Function` no longer take a type argument.
 To update, remove the passed argument. For example,
 ```C++
 // Old
@@ -13,3 +13,5 @@ make_shared<Function>(results, result_type, parameters);
 make_shared<Function>(results, parameters);
 ```
 
+The runtime::TensorView methods to get_tensor<> and write<T>(std::vector&) have been removed
+to the unit test directory under utils/test_tool.hpp read_vector and write_vector.
