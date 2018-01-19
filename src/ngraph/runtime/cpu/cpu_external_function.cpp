@@ -91,6 +91,7 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/host_tensor_view.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -498,7 +499,7 @@ using namespace ngraph::runtime;
             writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
             writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
             writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
-                   << ngraph::runtime::cpu::alignment << ");\n";
+                   << ngraph::runtime::alignment << ");\n";
             writer << "size_t pool_base_ptr = (size_t)memory_handler.get_ptr();\n";
             writer << "\n";
 
