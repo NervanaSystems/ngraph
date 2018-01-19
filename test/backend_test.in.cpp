@@ -6368,12 +6368,11 @@ TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
               result->get_vector<float>());
 }
 
-// This is regression test for one of TF's unit tests, which was failing.
-// The problem was inappropriate handling of the shape computation for
-// a zero-length axis with interior padding. Rather than subtract 1 from
-// the source shape and multiply by the interior padding (which causes
-// underflow), we should just count the pre-interior-padding length as
-// zero.
+// This is a regression test for one of TF's unit tests, which was failing.
+// The problem was inappropriate handling of the shape computation for a
+// zero-length axis with interior padding. Rather than subtract 1 from the
+// source shape and multiply by the interior padding (which causes underflow),
+// we should just count the pre-interior-padding length as zero.
 TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
 {
     auto shape_a = Shape{2, 0, 3, 2};
