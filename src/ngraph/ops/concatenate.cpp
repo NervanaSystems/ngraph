@@ -106,7 +106,7 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const std::shar
 bool op::Concat::is_functionally_identical(const Node& other) const
 {
     bool rc = true;
-    if (Node::is_functionally_identical(other))
+    if (Node::test_identical(other))
     {
         const Concat& concat = dynamic_cast<const Concat&>(other);
         rc &= m_concatenation_axis == concat.m_concatenation_axis;

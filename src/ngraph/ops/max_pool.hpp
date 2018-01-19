@@ -80,6 +80,9 @@ namespace ngraph
             bool is_functionally_identical(const Node&) const override;
 
         protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
+
             Shape m_window_shape;
             Strides m_window_movement_strides;
 
