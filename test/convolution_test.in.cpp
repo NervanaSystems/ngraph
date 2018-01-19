@@ -34,16 +34,10 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "util/test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-template <typename T>
-static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
-{
-    size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
-}
 
 static bool all_close_d(const std::vector<double>& a,
                         const std::vector<double>& b,
@@ -94,7 +88,7 @@ TEST(${BACKEND_NAME}, convolution_2d_1image)
         51, 61, 71, 81, 101, 111, 121, 131, 115, 141, 167, 193, 245, 271, 297, 323};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_1image_padded_1_1x1_1)
@@ -131,7 +125,7 @@ TEST(${BACKEND_NAME}, convolution_2d_1image_padded_1_1x1_1)
                                    124, 245, 271, 297, 323, 155, 66, 127, 138, 149, 160, 75};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_1image_padded_2_3x4_5)
@@ -176,7 +170,7 @@ TEST(${BACKEND_NAME}, convolution_2d_1image_padded_2_3x4_5)
         0,   0,  0,  0,   0,   0,   0,   0,  0,   0,   0,   0};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_2images)
@@ -213,7 +207,7 @@ TEST(${BACKEND_NAME}, convolution_2d_2images)
                                    271, 281, 505, 531, 557, 583, 635, 661, 687, 713};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_2images_strided)
@@ -248,7 +242,7 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_strided)
     vector<double> expected_result{51, 71, 115, 167, 201, 221, 505, 557};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_2images_strided_padded)
@@ -291,7 +285,7 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_strided_padded)
         0, 292, 314, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0,   0,   0, 0, 0};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_2images_strided_padded_same)
@@ -328,7 +322,7 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_strided_padded_same)
         0, 0, 0, 0, 0, 201, 221, 95, 0, 80, 86, 30, 0, 0, 0, 0, 0, 505, 557, 275, 0, 292, 314, 150};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_2images_dilated)
@@ -363,7 +357,7 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_dilated)
     vector<double> expected_result{92, 102, 112, 204, 230, 256, 242, 252, 262, 594, 620, 646};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_2images_dilated_padded)
@@ -425,7 +419,7 @@ TEST(${BACKEND_NAME}, convolution_2d_2images_dilated_padded)
         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_3d_2images)
@@ -491,7 +485,7 @@ TEST(${BACKEND_NAME}, convolution_3d_2images)
         46088, 46310, 46532, 46754, 47420, 47642, 47864, 48086, 48308, 48530};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_4d_2images)
@@ -772,7 +766,7 @@ TEST(${BACKEND_NAME}, convolution_4d_2images)
         339488, 339710};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_4d_4images)
@@ -2257,7 +2251,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images)
         41531622, 41536176, 41540730};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_4d_4images_strided)
@@ -3201,7 +3195,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided)
         40078896, 40088004, 40097112, 40106220, 40174530, 40183638, 40192746, 40201854};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_4d_4images_dilated)
@@ -4188,7 +4182,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_dilated)
         40836654, 40841208, 40845762, 40850316, 40854870};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated)
@@ -8379,7 +8373,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated)
         197951832, 197965494, 198521082, 198534744, 198548406, 199103994, 199117656, 199131318};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated_padded)
@@ -14873,7 +14867,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated_padded)
                                    0, 0, 0, 0,         0,         0,         0, 0};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated_padded_same)
@@ -19912,7 +19906,7 @@ TEST(${BACKEND_NAME}, convolution_4d_4images_strided_dilated_padded_same)
         0, 0,         0,         0,         0, 0, 0,         0,         0,         0};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_1image_1o1i_img_dilated)
@@ -19947,7 +19941,7 @@ TEST(${BACKEND_NAME}, convolution_2d_1image_1o1i_img_dilated)
                                    6, 14, 7, 16, 8, 18, 9, 20, 33, 48, 36, 52, 39, 56, 42, 60};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_1image_2o1i_img_dilated)
@@ -19984,7 +19978,7 @@ TEST(${BACKEND_NAME}, convolution_2d_1image_2o1i_img_dilated)
         56, 72, 63, 80, 30, 42, 35, 48, 40, 54, 45, 60, 77, 96, 84, 104, 91, 112, 98, 120};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_1image_2o2i_img_dilated)
@@ -20023,7 +20017,7 @@ TEST(${BACKEND_NAME}, convolution_2d_1image_2o2i_img_dilated)
                                    371, 426, 393, 450, 511, 576, 537, 604, 563, 632, 589, 660};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_1image_5o3i_img_dilated)
@@ -20073,7 +20067,7 @@ TEST(${BACKEND_NAME}, convolution_2d_1image_5o3i_img_dilated)
         3936, 4170, 4410, 4656, 4575, 4824, 4740, 4992, 4905, 5160};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_8image_5o3i_img_dilated)
@@ -20233,7 +20227,7 @@ TEST(${BACKEND_NAME}, convolution_2d_8image_5o3i_img_dilated)
         56550, 57744, 56715, 57912, 56880, 58080};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_8image_large_5o3i_img_dilated)
@@ -23984,7 +23978,7 @@ TEST(${BACKEND_NAME}, convolution_2d_8image_large_5o3i_img_dilated)
         972908, 990728, 973073, 990896, 973238, 991064, 973403, 991232};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME}, convolution_2d_8image_large_5o3i_uneven_filter_img_dilated)
@@ -27944,7 +27938,7 @@ TEST(${BACKEND_NAME}, convolution_2d_8image_large_5o3i_uneven_filter_img_dilated
         1467939, 2936130, 1468188, 2936628, 1468437, 2937126, 1468686, 2937624, 1468935, 2938122};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME},
@@ -33705,7 +33699,7 @@ TEST(${BACKEND_NAME},
         1486092, 1468437, 1450782, 1486344, 1468686, 1451028, 1486596, 1468935, 1451274, 1486848};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME},
@@ -37346,7 +37340,7 @@ TEST(${BACKEND_NAME},
         5168373, 5185710, 5170377, 5187720, 5172381, 5189730, 5174385, 5191740, 5176389, 5193750};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME},
@@ -40841,7 +40835,7 @@ TEST(${BACKEND_NAME},
         1975545, 1983570, 1977429, 989184,  986112};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(${BACKEND_NAME},
@@ -41770,7 +41764,7 @@ TEST(${BACKEND_NAME},
         2451528, 2467797, 4921233, 4923141, 4925049, 4926957, 4928865, 4930773, 4932681, 2459136};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }
 
 TEST(
@@ -42444,5 +42438,5 @@ TEST(
         9717204, 9721074, 7281060, 7312164, 9736554, 9740424, 9744294, 9748164, 9752034, 7304244};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, result->get_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, get_vector<double>(result)));
 }

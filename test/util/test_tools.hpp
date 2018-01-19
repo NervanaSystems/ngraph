@@ -18,6 +18,9 @@
 #include <list>
 #include <memory>
 
+#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
+
 namespace ngraph
 {
     class Node;

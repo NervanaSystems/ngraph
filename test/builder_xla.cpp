@@ -18,16 +18,10 @@
 
 #include "ngraph/builder/xla_tuple.hpp"
 #include "ngraph/ngraph.hpp"
+#include "util/test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-template <typename T>
-static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
-{
-    size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
-}
 
 TEST(builder_xla, simple)
 {
@@ -64,13 +58,13 @@ TEST(builder_xla, simple)
     auto result_tuple = xla::make_tuple({result});
 
     xla::call(cf, {abc}, {result_tuple});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), get_vector<float>(result));
 
     xla::call(cf, {bac}, {result_tuple});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), get_vector<float>(result));
 
     xla::call(cf, {acb}, {result_tuple});
-    EXPECT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector<float>());
+    EXPECT_EQ((vector<float>{50, 72, 98, 128}), get_vector<float>(result));
 }
 
 TEST(builder_xla, empty_tuple_interpreter)

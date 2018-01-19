@@ -248,7 +248,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         std::cout << "Verifying " << backend_names[i] << " result against " << backend_names[0]
                   << "..." << std::flush;
 
-        if (result_tvs[i]->get_vector<float>() == result_tvs[0]->get_vector<float>())
+        if (get_vector<float>(result_tvs[i]) == get_vector<float>(result_tvs[0]))
         {
             std::cout << " OK" << std::endl;
         }
