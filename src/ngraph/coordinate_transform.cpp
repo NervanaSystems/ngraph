@@ -109,8 +109,9 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
 
     for (size_t i = 0; i < m_n_axes; i++)
     {
-        std::ptrdiff_t padded_upper_bound = subtract_or_zero(source_shape[i],size_t(1)) * target_dilation_strides[i] + 1 +
-                                            target_padding_below[i] + target_padding_above[i];
+        std::ptrdiff_t padded_upper_bound =
+            subtract_or_zero(source_shape[i], size_t(1)) * target_dilation_strides[i] + 1 +
+            target_padding_below[i] + target_padding_above[i];
 
         if (padded_upper_bound < 0)
         {
