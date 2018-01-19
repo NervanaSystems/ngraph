@@ -59,8 +59,8 @@ namespace ngraph
 
                     size_t n_image_dimensions = arg_shape.size() - 2;
 
-                    Shape input_batch_transform_start(2 + n_image_dimensions);
-                    Shape input_batch_transform_end(2 + n_image_dimensions);
+                    Coordinate input_batch_transform_start(2 + n_image_dimensions);
+                    Coordinate input_batch_transform_end(2 + n_image_dimensions);
 
                     input_batch_transform_start[0] = img_index;
                     input_batch_transform_end[0] = img_index + 1;

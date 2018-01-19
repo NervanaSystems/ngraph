@@ -73,9 +73,8 @@ static std::shared_ptr<ngraph::Function>
 static json write(const ngraph::Function&);
 static json write(const ngraph::Node&);
 
-// This stupidity is caused by the fact that we do not pass element types
-// by value but by reference even though they can be compared. There is no reason to pass
-// them by reference EVERYWERE but here we are...
+// There should be a map from element type names to element types so deserialization can
+// find the singletons and serialization can serialize by name.
 static const element::Type& to_ref(const element::Type& t)
 {
     if (t == element::boolean)
@@ -370,8 +369,8 @@ static shared_ptr<ngraph::Function>
                 node_js.at("window_movement_strides").get<vector<size_t>>();
             auto window_dilation_strides =
                 node_js.at("window_dilation_strides").get<vector<size_t>>();
-            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+            auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+            auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
             node = make_shared<op::Convolution>(args[0],
                                                 args[1],
                                                 window_movement_strides,
