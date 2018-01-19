@@ -57,18 +57,6 @@ namespace ngraph
             {
                 return make_primary_tensor_view(element::from<T>(), shape);
             }
-
-            virtual std::shared_ptr<ngraph::runtime::TensorView>
-                make_tensor(const ngraph::element::Type& element_type, const Shape& shape)
-            {
-                return make_primary_tensor_view(element_type, shape);
-            }
-
-            template <typename T>
-            std::shared_ptr<ngraph::runtime::TensorView> make_tensor(const Shape& shape)
-            {
-                return make_tensor(element::from<T>(), shape);
-            }
         };
     }
 }
