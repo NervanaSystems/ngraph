@@ -69,44 +69,44 @@ using namespace clang;
 using namespace llvm;
 using namespace llvm::opt;
 using namespace std;
-using namespace ngraph::codegen;
+using namespace ngraph;
 
-static StaticCompiler s_static_compiler;
+static codegen::StaticCompiler s_static_compiler;
 static std::mutex m_mutex;
 
-ngraph::codegen::Module::Module(std::unique_ptr<llvm::Module> module)
+codegen::Module::Module(std::unique_ptr<llvm::Module> module)
     : m_module(move(module))
 {
 }
 
-ngraph::codegen::Module::~Module()
+codegen::Module::~Module()
 {
 }
 
-std::unique_ptr<llvm::Module> ngraph::codegen::Module::take_module()
+std::unique_ptr<llvm::Module> codegen::Module::take_module()
 {
     return move(m_module);
 }
 
-Compiler::Compiler()
+codegen::Compiler::Compiler()
 {
 }
 
-Compiler::~Compiler()
+codegen::Compiler::~Compiler()
 {
 }
 
-void Compiler::set_precompiled_header_source(const std::string& source)
+void codegen::Compiler::set_precompiled_header_source(const std::string& source)
 {
     s_static_compiler.set_precompiled_header_source(source);
 }
 
-void Compiler::add_header_search_path(const std::string& path)
+void codegen::Compiler::add_header_search_path(const std::string& path)
 {
     s_static_compiler.add_header_search_path(path);
 }
 
-std::unique_ptr<ngraph::codegen::Module> Compiler::compile(const std::string& source)
+std::unique_ptr<codegen::Module> codegen::Compiler::compile(const std::string& source)
 {
     lock_guard<mutex> lock(m_mutex);
     return s_static_compiler.compile(m_compiler_action, source);
@@ -120,7 +120,7 @@ static std::string GetExecutablePath(const char* Argv0)
     return llvm::sys::fs::getMainExecutable(Argv0, MainAddr);
 }
 
-StaticCompiler::StaticCompiler()
+codegen::StaticCompiler::StaticCompiler()
     : m_precompiled_header_valid(false)
     , m_debuginfo_enabled(false)
     , m_enable_diag_output((std::getenv("NGRAPH_COMPILER_DIAG_ENABLE") != nullptr))
@@ -129,7 +129,7 @@ StaticCompiler::StaticCompiler()
     initialize();
 }
 
-void StaticCompiler::initialize()
+void codegen::StaticCompiler::initialize()
 {
     m_extra_search_path_list.clear();
 #if NGCPU_DEBUGINFO
@@ -223,7 +223,7 @@ void StaticCompiler::initialize()
     TO.FeaturesAsWritten.emplace_back("+fma");
 }
 
-StaticCompiler::~StaticCompiler()
+codegen::StaticCompiler::~StaticCompiler()
 {
     // This is causing a segfault after program terminates
     // will address later
@@ -239,10 +239,10 @@ StaticCompiler::~StaticCompiler()
     // }
 }
 
-bool StaticCompiler::is_version_number(const string& path)
+bool codegen::StaticCompiler::is_version_number(const string& path)
 {
     bool rc = true;
-    vector<string> tokens = ngraph::split(path, '.');
+    vector<string> tokens = split(path, '.');
     for (string s : tokens)
     {
         for (char c : s)
@@ -256,7 +256,7 @@ bool StaticCompiler::is_version_number(const string& path)
     return rc;
 }
 
-void StaticCompiler::add_header_search_path(const string& path)
+void codegen::StaticCompiler::add_header_search_path(const string& path)
 {
     if (!contains(m_extra_search_path_list, path))
     {
@@ -266,9 +266,9 @@ void StaticCompiler::add_header_search_path(const string& path)
     }
 }
 
-std::unique_ptr<ngraph::codegen::Module>
-    StaticCompiler::compile(std::unique_ptr<clang::CodeGenAction>& m_compiler_action,
-                            const string& source)
+std::unique_ptr<codegen::Module>
+    codegen::StaticCompiler::compile(std::unique_ptr<clang::CodeGenAction>& m_compiler_action,
+                                     const string& source)
 {
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
     if (!m_precompiled_header_valid && m_precomiled_header_source.empty() == false)
@@ -304,25 +304,25 @@ std::unique_ptr<ngraph::codegen::Module>
 
     preprocessor_options.RemappedFileBuffers.pop_back();
 
-    unique_ptr<ngraph::codegen::Module> result;
+    unique_ptr<codegen::Module> result;
     if (rc)
     {
-        result = move(unique_ptr<ngraph::codegen::Module>(new ngraph::codegen::Module(move(rc))));
+        result = move(unique_ptr<codegen::Module>(new codegen::Module(move(rc))));
     }
     else
     {
-        result = move(unique_ptr<ngraph::codegen::Module>(nullptr));
+        result = move(unique_ptr<codegen::Module>(nullptr));
     }
 
     if (reinitialize)
     {
-        StaticCompiler::initialize();
+        codegen::StaticCompiler::initialize();
     }
 
     return result;
 }
 
-void StaticCompiler::generate_pch(const string& source)
+void codegen::StaticCompiler::generate_pch(const string& source)
 {
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
     m_pch_path = file_util::tmp_filename();
@@ -346,7 +346,7 @@ void StaticCompiler::generate_pch(const string& source)
     delete compilerAction;
 }
 
-void StaticCompiler::configure_search_path()
+void codegen::StaticCompiler::configure_search_path()
 {
 #ifdef USE_BUILTIN
     load_headers_from_resource();
@@ -400,7 +400,7 @@ void StaticCompiler::configure_search_path()
 #endif
 }
 
-void StaticCompiler::load_headers_from_resource()
+void codegen::StaticCompiler::load_headers_from_resource()
 {
     HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
@@ -423,7 +423,7 @@ void StaticCompiler::load_headers_from_resource()
     }
 }
 
-void StaticCompiler::set_precompiled_header_source(const std::string& source)
+void codegen::StaticCompiler::set_precompiled_header_source(const std::string& source)
 {
     m_precomiled_header_source = source;
 }
