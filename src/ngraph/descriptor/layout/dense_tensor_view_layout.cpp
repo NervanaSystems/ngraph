@@ -18,12 +18,12 @@
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/types/type.hpp"
 
-using namespace ngraph::descriptor::layout;
+using namespace ngraph;
 using ngraph::Shape;
 using ngraph::descriptor::TensorView;
 using ngraph::TensorViewType;
 
-DenseTensorViewLayout::DenseTensorViewLayout(const TensorView& tensor_view)
+descriptor::layout::DenseTensorViewLayout::DenseTensorViewLayout(const TensorView& tensor_view)
     : TensorViewLayout(tensor_view)
 {
     auto tensor_view_type = tensor_view.get_tensor_view_type();
@@ -32,7 +32,8 @@ DenseTensorViewLayout::DenseTensorViewLayout(const TensorView& tensor_view)
     m_strides = ngraph::row_major_strides(shape);
 }
 
-size_t DenseTensorViewLayout::get_index_offset(const std::vector<size_t>& indices)
+size_t
+    descriptor::layout::DenseTensorViewLayout::get_index_offset(const std::vector<size_t>& indices)
 {
     if (indices.size() != m_strides.size())
     {
@@ -46,7 +47,7 @@ size_t DenseTensorViewLayout::get_index_offset(const std::vector<size_t>& indice
     return result;
 }
 
-bool DenseTensorViewLayout::operator==(const TensorViewLayout& other) const
+bool descriptor::layout::DenseTensorViewLayout::operator==(const TensorViewLayout& other) const
 {
     const DenseTensorViewLayout* p_other = dynamic_cast<const DenseTensorViewLayout*>(&other);
     if (nullptr == p_other)
