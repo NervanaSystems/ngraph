@@ -35,8 +35,8 @@ namespace ngraph
                              const Shape& out_shape,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
-                             const Shape& padding_below,
-                             const Shape& padding_above,
+                             const CoordinateDiff& padding_below,
+                             const CoordinateDiff& padding_above,
                              const Strides& image_dilation_strides)
             {
                 // At the outermost level we will walk over every output coordinate O.
@@ -71,12 +71,12 @@ namespace ngraph
                     size_t n_image_dimensions = arg0_shape.size() - 2;
                     size_t n_input_channels = arg0_shape[1];
 
-                    Shape input_batch_transform_start(2 + n_image_dimensions);
-                    Shape input_batch_transform_end(2 + n_image_dimensions);
-                    Shape input_batch_transform_movement_strides(2 + n_image_dimensions, 1);
-                    Shape input_batch_transform_padding_below(2 + n_image_dimensions, 0);
-                    Shape input_batch_transform_padding_above(2 + n_image_dimensions, 0);
-                    Shape input_batch_transform_dilation_strides(2 + n_image_dimensions, 1);
+                    Coordinate input_batch_transform_start(2 + n_image_dimensions);
+                    Coordinate input_batch_transform_end(2 + n_image_dimensions);
+                    Strides input_batch_transform_movement_strides(2 + n_image_dimensions, 1);
+                    CoordinateDiff input_batch_transform_padding_below(2 + n_image_dimensions, 0);
+                    CoordinateDiff input_batch_transform_padding_above(2 + n_image_dimensions, 0);
+                    Strides input_batch_transform_dilation_strides(2 + n_image_dimensions, 1);
 
                     input_batch_transform_start[0] = img_index;
                     input_batch_transform_end[0] = img_index + 1;
@@ -87,8 +87,8 @@ namespace ngraph
                     {
                         size_t window_dilation_stride = window_dilation_strides[i - 2];
                         size_t window_movement_stride = window_movement_strides[i - 2];
-                        size_t below_pad = padding_below[i - 2];
-                        size_t above_pad = padding_above[i - 2];
+                        std::ptrdiff_t below_pad = padding_below[i - 2];
+                        std::ptrdiff_t above_pad = padding_above[i - 2];
                         size_t image_dilation_stride = image_dilation_strides[i - 2];
 
                         input_batch_transform_start[i] = window_movement_stride * out_coord[i];

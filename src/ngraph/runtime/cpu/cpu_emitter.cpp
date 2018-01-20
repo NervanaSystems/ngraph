@@ -31,6 +31,7 @@
 #include "ngraph/ops/get_output_element.hpp"
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/one_hot.hpp"
+#include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -1988,6 +1989,26 @@ void runtime::cpu::CPU_Emitter::EmitAvgPool(codegen::CodeWriter& writer,
     writer << "                 {" << join(avg_pool->get_window_movement_strides()) << "},\n";
     writer << "                 {" << join(avg_pool->get_padding_below()) << "},\n";
     writer << "                 {" << join(avg_pool->get_padding_above()) << "});\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitPad(codegen::CodeWriter& writer,
+                                        const ngraph::Node* n,
+                                        const vector<runtime::cpu::TensorViewWrapper>& args,
+                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto pad = static_cast<const op::Pad*>(n);
+
+    auto arg0_shape = args[0].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    writer << "kernel::pad<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    writer << "            " << args[1].get_name() << ",\n";
+    writer << "            " << out[0].get_name() << ",\n";
+    writer << "            {" << join(arg0_shape) << "},\n";
+    writer << "            {" << join(result_shape) << "},\n";
+    writer << "            {" << join(pad->get_padding_below()) << "},\n";
+    writer << "            {" << join(pad->get_padding_above()) << "},\n";
+    writer << "            {" << join(pad->get_padding_interior()) << "});\n";
 }
 
 //------------------------------------------------------------------------------------------------

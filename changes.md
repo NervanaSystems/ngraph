@@ -1,5 +1,14 @@
 # API Changes
-`Parameter` and `Function` no longer take a type argument.
+
+## Negative convolution padding
+
+`Convolution` now allows negative padding. This means that the `padding_below` and `padding_above`
+arguments now take type `CoordinateDiff` instead of `Shape`. `CoordinateDiff` is an alias for
+`std::vector<std::ptrdiff_t>`, which "is like `size_t` but is allowed to be negative". Callers may
+need to be adapted.
+
+## `Parameter` and `Function` no longer take a type argument.
+
 To update, remove the passed argument. For example,
 ```C++
 // Old

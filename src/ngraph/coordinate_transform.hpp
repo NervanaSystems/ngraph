@@ -31,8 +31,8 @@ namespace ngraph
                             const Coordinate& source_end_corner,
                             const Strides& source_strides,
                             const AxisVector& source_axis_order,
-                            const Shape& target_padding_below,
-                            const Shape& target_padding_above,
+                            const CoordinateDiff& target_padding_below,
+                            const CoordinateDiff& target_padding_above,
                             const Strides& source_dilation_strides);
 
         CoordinateTransform(const Shape& source_shape,
@@ -40,8 +40,8 @@ namespace ngraph
                             const Coordinate& source_end_corner,
                             const Strides& source_strides,
                             const AxisVector& source_axis_order,
-                            const Shape& target_padding_below,
-                            const Shape& target_padding_above);
+                            const CoordinateDiff& target_padding_below,
+                            const CoordinateDiff& target_padding_above);
 
         CoordinateTransform(const Shape& source_shape,
                             const Coordinate& source_start_corner,
@@ -96,7 +96,7 @@ namespace ngraph
     private:
         size_t index_source(const Coordinate& c) const;
         static Strides default_strides(size_t n_axes);
-        static Shape default_padding(size_t n_axes);
+        static CoordinateDiff default_padding(size_t n_axes);
         static AxisVector default_axis_order(size_t n_axes);
         static Coordinate default_source_start_corner(size_t n_axes);
         static Coordinate default_source_end_corner(const Shape& source_shape);
@@ -106,8 +106,8 @@ namespace ngraph
         Shape m_source_end_corner;
         Strides m_source_strides;
         AxisVector m_source_axis_order;
-        Shape m_target_padding_below;
-        Shape m_target_padding_above;
+        CoordinateDiff m_target_padding_below;
+        CoordinateDiff m_target_padding_above;
         Strides m_target_dilation_strides;
 
         Shape m_target_shape;
