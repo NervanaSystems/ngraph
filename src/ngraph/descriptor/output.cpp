@@ -18,9 +18,8 @@
 
 using namespace std;
 using namespace ngraph;
-using namespace ngraph::descriptor;
 
-Output::Output(Node* node, size_t index, const std::shared_ptr<TensorView>& tensor_view)
+descriptor::Output::Output(Node* node, size_t index, const shared_ptr<TensorView>& tensor_view)
     : m_node(node)
     , m_index(index)
     , m_tensor_view(tensor_view)
@@ -28,37 +27,37 @@ Output::Output(Node* node, size_t index, const std::shared_ptr<TensorView>& tens
 }
 
 // Add an input to the vector of inputs that use this output.
-void Output::add_input(Input* input)
+void descriptor::Output::add_input(Input* input)
 {
     m_inputs.insert(input);
 }
 
-void Output::remove_input(Input* input)
+void descriptor::Output::remove_input(Input* input)
 {
     m_inputs.erase(input);
 }
 
-std::shared_ptr<Node> Output::get_node() const
+shared_ptr<Node> descriptor::Output::get_node() const
 {
     return m_node->shared_from_this();
 }
 
-Tensor& Output::get_tensor() const
+descriptor::Tensor& descriptor::Output::get_tensor() const
 {
     return m_tensor_view->get_tensor();
 }
 
-std::shared_ptr<const TensorViewType> Output::get_tensor_view_type() const
+shared_ptr<const TensorViewType> descriptor::Output::get_tensor_view_type() const
 {
     return get_tensor_view()->get_tensor_view_type();
 }
 
-const Shape& Output::get_shape() const
+const Shape& descriptor::Output::get_shape() const
 {
     return get_tensor_view_type()->get_shape();
 }
 
-const element::Type& Output::get_element_type() const
+const element::Type& descriptor::Output::get_element_type() const
 {
     return get_tensor_view_type()->get_element_type();
 }

@@ -67,7 +67,6 @@
 
 using namespace clang;
 using namespace llvm;
-using namespace llvm::opt;
 using namespace std;
 using namespace ngraph;
 

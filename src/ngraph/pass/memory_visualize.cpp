@@ -26,7 +26,6 @@
 
 using namespace std;
 using namespace ngraph;
-using namespace ngraph::descriptor;
 
 pass::MemoryVisualize::MemoryVisualize(const string& filename)
     : m_filename{filename}
@@ -104,7 +103,7 @@ shared_ptr<Node> pass::MemoryVisualize::find_largest_op(const list<shared_ptr<No
     for (shared_ptr<Node> exop : nodes)
     {
         size_t size = 0;
-        for (const Tensor* tensor : exop->liveness_live_list)
+        for (const descriptor::Tensor* tensor : exop->liveness_live_list)
         {
             size += tensor->size();
         }
@@ -123,15 +122,15 @@ void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<shared_
 
     if (largest_op)
     {
-        unordered_set<Tensor*> largest_live;
-        for (Tensor* tensor : largest_op->liveness_live_list)
+        unordered_set<descriptor::Tensor*> largest_live;
+        for (descriptor::Tensor* tensor : largest_op->liveness_live_list)
         {
             largest_live.insert(tensor);
         }
 
-        unordered_map<const Tensor*, size_t> age_list;
-        vector<const Tensor*> tensor_set;
-        unordered_map<const Tensor*, shared_ptr<Node>> generator_op;
+        unordered_map<const descriptor::Tensor*, size_t> age_list;
+        vector<const descriptor::Tensor*> tensor_set;
+        unordered_map<const descriptor::Tensor*, shared_ptr<Node>> generator_op;
         file << "<table>\n";
         file << "    <tr>";
         file << "<th align=\"left\">tensor</th>";
@@ -142,12 +141,12 @@ void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<shared_
         size_t i = 0;
         for (shared_ptr<Node> exop : nodes)
         {
-            for (const Tensor* tensor : exop->liveness_new_list)
+            for (const descriptor::Tensor* tensor : exop->liveness_new_list)
             {
                 age_list[tensor] = i;
                 generator_op[tensor] = exop;
             }
-            for (const Tensor* tensor : exop->liveness_free_list)
+            for (const descriptor::Tensor* tensor : exop->liveness_free_list)
             {
                 size_t start = age_list[tensor];
                 age_list[tensor] = (i - start);
@@ -155,10 +154,12 @@ void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<shared_
             }
             i++;
         }
-        sort(tensor_set.begin(), tensor_set.end(), [](const Tensor* t1, const Tensor* t2) {
-            return t1->size() < t2->size();
-        });
-        for (const Tensor* tensor : tensor_set)
+        sort(tensor_set.begin(),
+             tensor_set.end(),
+             [](const descriptor::Tensor* t1, const descriptor::Tensor* t2) {
+                 return t1->size() < t2->size();
+             });
+        for (const descriptor::Tensor* tensor : tensor_set)
         {
             int generator_weight = compute_op_weight(generator_op[tensor]);
             if (contains(largest_live, tensor))
@@ -249,14 +250,14 @@ int pass::MemoryVisualize::compute_op_weight(const shared_ptr<Node> exop)
     //     tensor = output_decl.tensor
     //     if tensor.is_persistent is False:
     //         mass -= tensor->size()
-    for (const Tensor* tensor : exop->liveness_new_list)
+    for (const descriptor::Tensor* tensor : exop->liveness_new_list)
     {
         if (tensor->is_persistent() == false)
         {
             mass += tensor->size();
         }
     }
-    for (const Tensor* tensor : exop->liveness_free_list)
+    for (const descriptor::Tensor* tensor : exop->liveness_free_list)
     {
         if (tensor->is_persistent() == false)
         {

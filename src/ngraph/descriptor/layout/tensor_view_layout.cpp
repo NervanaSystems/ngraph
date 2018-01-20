@@ -17,19 +17,19 @@
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/types/type.hpp"
 
-using namespace ngraph::descriptor::layout;
+using namespace ngraph;
 
-TensorViewLayout::TensorViewLayout(const ngraph::descriptor::TensorView& tensor_view)
+descriptor::layout::TensorViewLayout::TensorViewLayout(const descriptor::TensorView& tensor_view)
     : m_tensor_view_type(tensor_view.get_tensor_view_type())
 {
 }
 
-const ngraph::element::Type& TensorViewLayout::get_element_type() const
+const element::Type& descriptor::layout::TensorViewLayout::get_element_type() const
 {
     return m_tensor_view_type->get_element_type();
 }
 
-const ngraph::Shape& TensorViewLayout::get_shape() const
+const Shape& descriptor::layout::TensorViewLayout::get_shape() const
 {
     return m_tensor_view_type->get_shape();
 }
