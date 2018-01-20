@@ -275,15 +275,15 @@ TEST(cudnn, abc)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     cf->call({a, b, c}, {result});
-    EXPECT_EQ(result->get_vector<float>(),
+    EXPECT_EQ(result->read_vector<float>(),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
     cf->call({b, a, c}, {result});
-    EXPECT_EQ(result->get_vector<float>(),
+    EXPECT_EQ(result->read_vector<float>(),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
     cf->call({a, c, b}, {result});
-    EXPECT_EQ(result->get_vector<float>(),
+    EXPECT_EQ(result->read_vector<float>(),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 }
 
@@ -308,5 +308,5 @@ TEST(cudnn, dot1d)
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
     cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{170}), result->get_vector<float>());
+    EXPECT_EQ((vector<float>{170}), result->read_vector<float>());
 }
