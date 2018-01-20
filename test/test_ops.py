@@ -20,12 +20,13 @@ import pyngraph.util as util
 from pyngraph import Type, Function
 from pyngraph.runtime import Manager
 from pyngraph.op import Acos, Asin, Atan, Cos, Sin, Tan
-from pyngraph.op import Cosh, Sinh, Tanh
-from pyngraph.op import Parameter, Maximum, Minimum, Reshape, Broadcast
+from pyngraph.op import Cosh, Sinh, Tanh, Sqrt, Sign
+from pyngraph.op import Power, Negative, Ceiling, Floor
+from pyngraph.op import Parameter, Maximum, Minimum
 from pyngraph.op import Add, Subtract, Multiply, Divide, Dot
 from pyngraph.op import Constant, Abs, Exp, Log, Sum
-from pyngraph.op import Greater, Less, Convert, Reduce
-from pyngraph.op import OneHot, Negative
+from pyngraph.op import Greater, Less, Equal, NotEqual, GreaterEq, LessEq, Not
+from pyngraph.op import OneHot, Broadcast, Reshape, Convert, Reduce
 
 
 def make_backend_call_frame(function):
@@ -58,10 +59,24 @@ def binary_op(op_str, a, b):
         return Divide(a, b)
     elif op_str == "Dot":
         return Dot(a, b)
+    elif op_str == "Equal":
+        return Equal(a, b)
+    elif op_str == "Greater":
+        return Greater(a, b)
+    elif op_str == "GreaterEq":
+        return GreaterEq(a, b)
+    elif op_str == "Less":
+        return Less(a, b)
+    elif op_str == "LessEq":
+        return LessEq(a, b)
     elif op_str == "Maximum":
         return Maximum(a, b)
     elif op_str == "Minimum":
         return Minimum(a, b)
+    elif op_str == "NotEqual":
+        return NotEqual(a, b)
+    elif op_str == "Power":
+        return Power(a, b)
 
 
 def binary_op_ref(op_str, a, b):
@@ -76,10 +91,24 @@ def binary_op_ref(op_str, a, b):
         return a / b
     elif op_str == "Dot":
         return np.dot(a, b)
+    elif op_str == "Equal":
+        return np.equal(a, b)
+    elif op_str == "Greater":
+        return np.greater(a, b)
+    elif op_str == "GreaterEq":
+        return np.greater_equal(a, b)
+    elif op_str == "Less":
+        return np.less(a, b)
+    elif op_str == "LessEq":
+        return np.less_equal(a, b)
     elif op_str == "Maximum":
         return np.maximum(a, b)
     elif op_str == "Minimum":
         return np.minimum(a, b)
+    elif op_str == "NotEqual":
+        return np.not_equal(a, b)
+    elif op_str == "Power":
+        return np.power(a, b)
 
 
 def binary_op_exec(op_str):
@@ -106,6 +135,35 @@ def binary_op_exec(op_str):
 
     a_arr = np.array([[1, 6], [7, 4]], dtype=np.float32)
     b_arr = np.array([[5, 2], [3, 8]], dtype=np.float32)
+    result_arr_ref = binary_op_ref(op_str, a_arr, b_arr)
+
+    assert np.allclose(result_arr, result_arr_ref)
+
+
+def binary_op_comparison(op_str):
+
+    element_type = Type.f32
+    shape = [2, 2]
+    A = Parameter(element_type, shape)
+    B = Parameter(element_type, shape)
+    parameter_list = [A, B]
+    function = Function([binary_op(op_str, A,  B)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(element_type, shape)
+    b = backend.make_primary_tensor_view(element_type, shape)
+    result = backend.make_primary_tensor_view(Type.boolean, shape)
+
+    a.write(util.numpy_to_c(np.array([[1, 5], [3, 2]], dtype=np.float32)), 0, 16)
+    b.write(util.numpy_to_c(np.array([[2, 4], [3, 1]], dtype=np.float32)), 0, 16)
+
+    result_arr = np.array([[False, False], [False, False]], dtype=np.bool)
+    result.write(util.numpy_to_c(result_arr), 0, 4)
+    cf.call([a, b], [result])
+    result.read(util.numpy_to_c(result_arr), 0, 4)
+
+    a_arr = np.array([[1, 5], [3, 2]], dtype=np.float32)
+    b_arr = np.array([[2, 4], [3, 1]], dtype=np.float32)
     result_arr_ref = binary_op_ref(op_str, a_arr, b_arr)
 
     assert np.allclose(result_arr, result_arr_ref)
@@ -155,6 +213,30 @@ def test_minimum():
     binary_op_exec("Minimum")
 
 
+def test_power():
+    binary_op_exec("Power")
+
+
+def test_greater():
+    binary_op_comparison("Greater")
+
+
+def test_greater_eq():
+    binary_op_comparison("GreaterEq")
+
+
+def test_less():
+    binary_op_comparison("Less")
+
+
+def test_less_eq():
+    binary_op_comparison("LessEq")
+
+
+def test_not_equal():
+    binary_op_comparison("NotEqual")
+
+
 def test_add_with_mul():
 
     element_type = Type.f32
@@ -197,20 +279,28 @@ def unary_op(op_str, a):
         return Asin(a)
     elif op_str == 'Atan':
         return Atan(a)
+    elif op_str == 'Ceiling':
+        return Ceiling(a)
     elif op_str == 'Cos':
         return Cos(a)
     elif op_str == 'Cosh':
         return Cosh(a)
+    elif op_str == 'Floor':
+        return Floor(a)
     elif op_str == 'log':
         return Log(a)
     elif op_str == 'exp':
         return Exp(a)
     elif op_str == 'negative':
         return Negative(a)
+    elif op_str == 'Sign':
+        return Sign(a)
     elif op_str == 'Sin':
         return Sin(a)
     elif op_str == 'Sinh':
         return Sinh(a)
+    elif op_str == 'Sqrt':
+        return Sqrt(a)
     elif op_str == 'Tan':
         return Tan(a)
     elif op_str == 'Tanh':
@@ -226,20 +316,28 @@ def unary_op_ref(op_str, a):
         return np.arcsin(a)
     elif op_str == 'Atan':
         return np.arctan(a)
+    elif op_str == 'Ceiling':
+        return np.ceil(a)
     elif op_str == 'Cos':
         return np.cos(a)
     elif op_str == 'Cosh':
         return np.cosh(a)
+    elif op_str == 'Floor':
+        return np.floor(a)
     elif op_str == 'log':
         return np.log(a)
     elif op_str == 'exp':
         return np.exp(a)
     elif op_str == 'negative':
         return np.negative(a)
+    elif op_str == 'Sign':
+        return np.sign(a)
     elif op_str == 'Sin':
         return np.sin(a)
     elif op_str == 'Sinh':
         return np.sinh(a)
+    elif op_str == 'Sqrt':
+        return np.sqrt(a)
     elif op_str == 'Tan':
         return np.tan(a)
     elif op_str == 'Tanh':
@@ -297,6 +395,12 @@ def test_atan():
     unary_op_exec(op_str, input_list)
 
 
+def test_ceiling():
+    input_list = [0.5, 0, 0.4, 0.5]
+    op_str = 'Ceiling'
+    unary_op_exec(op_str, input_list)
+
+
 def test_cos():
     input_list = [0, 0.7, 1.7, 3.4]
     op_str = 'Cos'
@@ -306,6 +410,12 @@ def test_cos():
 def test_cosh():
     input_list = [-1, 0., 0.5, 1]
     op_str = 'Cosh'
+    unary_op_exec(op_str, input_list)
+
+
+def test_floor():
+    input_list = [-0.5, 0, 0.4, 0.5]
+    op_str = 'Floor'
     unary_op_exec(op_str, input_list)
 
 
@@ -327,6 +437,12 @@ def test_negative():
     unary_op_exec(op_str, input_list)
 
 
+def test_sign():
+    input_list = [-1, 0, 0.5,  1]
+    op_str = 'Sign'
+    unary_op_exec(op_str, input_list)
+
+
 def test_sin():
     input_list = [0, 0.7, 1.7, 3.4]
     op_str = 'Sin'
@@ -336,6 +452,12 @@ def test_sin():
 def test_sinh():
     input_list = [-1, 0., 0.5, 1]
     op_str = 'Sinh'
+    unary_op_exec(op_str, input_list)
+
+
+def test_sqrt():
+    input_list = [0., 0.5, 1, 2]
+    op_str = 'Sqrt'
     unary_op_exec(op_str, input_list)
 
 
@@ -349,6 +471,31 @@ def test_tanh():
     input_list = [-1, 0, 0.5, 1]
     op_str = 'Tanh'
     unary_op_exec(op_str, input_list)
+
+
+def test_not():
+    element_type = Type.boolean
+    shape = [2]
+    A = Parameter(element_type, shape)
+    parameter_list = [A]
+    function = Function([Not(A)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(element_type, shape)
+    b = backend.make_primary_tensor_view(element_type, shape)
+    result = backend.make_primary_tensor_view(Type.boolean, shape)
+
+    a.write(util.numpy_to_c(np.array([True, False], dtype=np.bool)), 0, 2)
+
+    result_arr = np.array([False, False], dtype=np.bool)
+    result.write(util.numpy_to_c(result_arr), 0, 2)
+    cf.call([a], [result])
+    result.read(util.numpy_to_c(result_arr), 0, 2)
+
+    a_arr = np.array([True, False], dtype=np.bool)
+    result_arr_ref = np.logical_not(a_arr)
+
+    assert np.allclose(result_arr, result_arr_ref)
 
 
 def test_sum():
@@ -374,64 +521,6 @@ def test_sum():
     result_arr_ref = np.sum(a_arr)
 
     assert np.allclose(result_arr[0], result_arr_ref)
-
-
-def test_greater():
-
-    element_type = Type.f32
-    shape = [1,3]
-    A = Parameter(element_type, shape)
-    B = Parameter(element_type, shape)
-    parameter_list = [A, B]
-    function = Function([Greater(A,  B)], parameter_list, 'test')
-    backend, cf = make_backend_call_frame(function)
-
-    a = backend.make_primary_tensor_view(element_type, shape)
-    b = backend.make_primary_tensor_view(element_type, shape)
-    result = backend.make_primary_tensor_view(Type.boolean, shape)
-
-    a.write(util.numpy_to_c(np.array([1, 5, 3], dtype=np.float32)), 0, 12)
-    b.write(util.numpy_to_c(np.array([2, 4, 6], dtype=np.float32)), 0, 12)
-
-    result_arr = np.array([False, False, False], dtype=np.bool)
-    result.write(util.numpy_to_c(result_arr), 0, 3)
-    cf.call([a, b], [result])
-    result.read(util.numpy_to_c(result_arr), 0, 3)
-
-    a_arr = np.array([1, 5, 3], dtype=np.float32)
-    b_arr = np.array([2, 4, 6], dtype=np.float32)
-    result_arr_ref = np.greater(a_arr, b_arr)
-
-    assert np.allclose(result_arr, result_arr_ref)
-
-
-def test_less():
-
-    element_type = Type.f32
-    shape = [1,3]
-    A = Parameter(element_type, shape)
-    B = Parameter(element_type, shape)
-    parameter_list = [A, B]
-    function = Function([Less(A,  B)], parameter_list, 'test')
-    backend, cf = make_backend_call_frame(function)
-
-    a = backend.make_primary_tensor_view(element_type, shape)
-    b = backend.make_primary_tensor_view(element_type, shape)
-    result = backend.make_primary_tensor_view(Type.boolean, shape)
-
-    a.write(util.numpy_to_c(np.array([1, 5, 3], dtype=np.float32)), 0, 12)
-    b.write(util.numpy_to_c(np.array([2, 4, 6], dtype=np.float32)), 0, 12)
-
-    result_arr = np.array([False, False, False], dtype=np.bool)
-    result.write(util.numpy_to_c(result_arr), 0, 3)
-    cf.call([a, b], [result])
-    result.read(util.numpy_to_c(result_arr), 0, 3)
-
-    a_arr = np.array([1, 5, 3], dtype=np.float32)
-    b_arr = np.array([2, 4, 6], dtype=np.float32)
-    result_arr_ref = np.less(a_arr, b_arr)
-
-    assert np.allclose(result_arr, result_arr_ref)
 
 
 def test_reshape():
