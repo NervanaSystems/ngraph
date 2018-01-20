@@ -19,6 +19,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/util.hpp"
+#include "util/test_tools.hpp"
 
 namespace ngraph
 {
@@ -78,7 +79,7 @@ namespace ngraph
             std::vector<std::vector<T>> result_vect;
             for (auto result : results)
             {
-                result_vect.push_back(result->get_vector<T>()); // storage for results
+                result_vect.push_back(read_vector<T>(result)); // storage for results
                 result_pos.push_back(result_vect.back().begin());
             }
 
@@ -89,18 +90,18 @@ namespace ngraph
             std::vector<std::shared_ptr<ngraph::runtime::TensorView>> bprops_tv;
             bprops_tv.insert(bprops_tv.begin(), bprops.begin(), bprops.end());
 
-            auto c_vec = c_arg->template get_vector<T>();
+            auto c_vec = read_vector<T>(c_arg);
             fill(c_vec.begin(), c_vec.end(), 0);
             for (size_t i = 0; i < c_vec.size(); i++)
             {
                 c_vec[i] = 1;
-                c_arg->write(c_vec);
+                write_vector(c_arg, c_vec);
                 cf->tensor_call(args_tv, bprops_tv);
                 c_vec[i] = 0;
-                c_arg->write(c_vec);
+                write_vector(c_arg, c_vec);
                 for (size_t j = 0; j < results.size(); j++)
                 {
-                    auto bprop_vec = bprops[j]->get_vector<T>();
+                    auto bprop_vec = read_vector<T>(bprops[j]);
                     result_pos[j] = std::copy(bprop_vec.begin(), bprop_vec.end(), result_pos[j]);
                 }
             }
@@ -108,7 +109,7 @@ namespace ngraph
             // Copy results from temp to result vector
             for (size_t j = 0; j < results.size(); j++)
             {
-                results[j]->write(result_vect[j]);
+                write_vector(results[j], result_vect[j]);
             }
             return results;
         }

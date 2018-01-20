@@ -64,28 +64,11 @@ namespace ngraph
             /// @param n Number of bytes to write, must be integral number of elements.
             virtual void write(const void* p, size_t tensor_offset, size_t n) = 0;
 
-            template <typename T>
-            void write(const std::vector<T>& values)
-            {
-                write(values.data(), 0, values.size() * sizeof(T));
-            }
-
             /// @brief Read bytes directly from the tensor
             /// @param p Pointer to destination for data
             /// @param tensor_offset Offset into tensor storage to begin reading. Must be element-aligned.
             /// @param n Number of bytes to read, must be integral number of elements.
             virtual void read(void* p, size_t tensor_offset, size_t n) const = 0;
-
-            // This is for unit test only
-            template <typename T>
-            std::vector<T> get_vector()
-            {
-                size_t element_count = shape_size(get_shape());
-                size_t size = element_count * sizeof(T);
-                std::vector<T> rc(element_count);
-                read(rc.data(), 0, size);
-                return rc;
-            }
 
         protected:
             std::shared_ptr<ngraph::descriptor::TensorView> m_descriptor;

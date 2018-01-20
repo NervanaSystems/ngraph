@@ -35,7 +35,7 @@ def shaped_linspace(shape):
     total_elems = reduce(mul,shape)
 
     flat = np.linspace(1,total_elems,total_elems)
-    
+
     return shaped_from_flat(shape,flat)
 
 # Elementwise addition on tuples.
@@ -204,7 +204,7 @@ TEST (${BACKEND_NAME}, %s)
     auto B = make_shared<op::Parameter>(element::f64, shape_b);
     auto shape_r = Shape{%s};
     auto f = make_shared<Function>(
-        make_shared<op::Convolution>(A, B, 
+        make_shared<op::Convolution>(A, B,
                                      Strides{%s},        // move_strides
                                      Strides{%s},        // filter_dilation
                                      CoordinateDiff{%s}, // below_pads
@@ -228,7 +228,7 @@ TEST (${BACKEND_NAME}, %s)
 
     cf->call({a, b}, {result});
     EXPECT_TRUE(all_close_d(vector<double>{expected_result},
-                            result->get_vector<double>()));
+                            result->read_vector<double>()));
 }
 '''
     f.write (template % (test_name,
