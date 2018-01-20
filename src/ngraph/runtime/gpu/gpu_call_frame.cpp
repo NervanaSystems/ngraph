@@ -21,6 +21,9 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 
+#include <cuda_runtime.h>
+#include "cublas_v2.h"
+
 using namespace std;
 using namespace ngraph;
 
@@ -29,7 +32,11 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
 {
-    cublasCreate(&m_cublas_handle);
+    cublasStatus_t stat = cublasCreate(&m_cublas_handle);
+    if (stat != cudaSuccess)
+    {
+        std::cout << "device cublas handler creation failed";
+    }
 }
 
 void runtime::gpu::GPU_CallFrame::tensor_call(
@@ -42,14 +49,14 @@ void runtime::gpu::GPU_CallFrame::tensor_call(
 
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
-        shared_ptr<runtime::HostTensorView> tv =
-            static_pointer_cast<runtime::HostTensorView>(input_tvs[i]);
+        shared_ptr<runtime::gpu::GPU_TensorView> tv =
+            static_pointer_cast<runtime::gpu::GPU_TensorView>(input_tvs[i]);
         inputs.push_back(tv->get_data_ptr());
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        shared_ptr<runtime::HostTensorView> tv =
-            static_pointer_cast<runtime::HostTensorView>(output_tvs[i]);
+        shared_ptr<runtime::gpu::GPU_TensorView> tv =
+            static_pointer_cast<runtime::gpu::GPU_TensorView>(output_tvs[i]);
         outputs.push_back(tv->get_data_ptr());
     }
 

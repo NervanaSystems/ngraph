@@ -33,25 +33,47 @@ runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& elemen
           true,
           false))
 {
-    // Need to check type and have host/device tensors
     m_descriptor->set_tensor_view_layout(
         std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
 
     m_buffer_size = m_descriptor->get_tensor_view_layout()->get_size() * element_type.size();
-
-    cudaMalloc(&dev_buffer, m_buffer_size);
+    if (m_buffer_size > 0)
+    {
+        cudaMalloc((void**)&m_allocated_buffer_pool, m_buffer_size);
+    }
 }
 
 runtime::gpu::GPU_TensorView::~GPU_TensorView()
 {
-    cudaFree(dev_buffer);
+    cudaFree(m_allocated_buffer_pool);
 }
+
+char* runtime::gpu::GPU_TensorView::get_data_ptr()
+{
+    return m_allocated_buffer_pool;
+}
+
+const char* runtime::gpu::GPU_TensorView::get_data_ptr() const
+{
+    return m_allocated_buffer_pool;
+}
+
 void runtime::gpu::GPU_TensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
-    cudaMemcpy(dev_buffer, source, n, cudaMemcpyDeviceToHost);
+    if (tensor_offset + n > m_buffer_size)
+    {
+        throw out_of_range("write access past end of tensor");
+    }
+    char* target = get_data_ptr();
+    cudaMemcpy(&target[tensor_offset], source, n, cudaMemcpyHostToDevice);
 }
 
 void runtime::gpu::GPU_TensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
-    cudaMemcpy(target, dev_buffer, n, cudaMemcpyHostToDevice);
+    if (tensor_offset + n > m_buffer_size)
+    {
+        throw out_of_range("read access past end of tensor");
+    }
+    const char* source = get_data_ptr();
+    cudaMemcpy(target, &source[tensor_offset], n, cudaMemcpyDeviceToHost);
 }

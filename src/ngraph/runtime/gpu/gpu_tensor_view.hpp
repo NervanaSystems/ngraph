@@ -37,6 +37,8 @@ public:
     GPU_TensorView(const ngraph::element::Type& element_type, const Shape& shape);
     virtual ~GPU_TensorView();
 
+    char* get_data_ptr();
+    const char* get_data_ptr() const;
     /// @brief Write bytes directly into the tensor
     /// @param p Pointer to source of data
     /// @param tensor_offset Offset into tensor storage to begin writing. Must be element-aligned.
@@ -50,7 +52,6 @@ public:
     void read(void* p, size_t tensor_offset, size_t n) const override;
 
 private:
-    float* dev_buffer;
-    // At some point need to deal with alignment
+    char* m_allocated_buffer_pool;
     size_t m_buffer_size;
 };
