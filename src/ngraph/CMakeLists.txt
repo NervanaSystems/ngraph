@@ -57,6 +57,7 @@ set (SRC
     ops/not.cpp
     ops/one_hot.cpp
     ops/op.cpp
+    ops/pad.cpp
     ops/parameter.cpp
     ops/power.cpp
     ops/reduce.cpp
