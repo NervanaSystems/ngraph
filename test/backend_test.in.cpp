@@ -5378,206 +5378,237 @@ TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
         read_vector<float>(result));
 }
 
-template <typename T, typename ET>
-void make_unary_empty_test()
+template <typename OP, typename T>
+void make_unary_empty_test(const string& backend_name)
 {
     auto shape = Shape{0};
-    auto A = make_shared<op::Parameter>(element::from<ET>(), shape);
-    auto f = make_shared<Function>(make_shared<T>(A), op::Parameters{A});
+    auto A = make_shared<op::Parameter>(element::from<T>(), shape);
+    auto f = make_shared<Function>(make_shared<OP>(A), op::Parameters{A});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto manager = runtime::Manager::get(backend_name);
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
-    auto a = backend->make_primary_tensor_view(element::from<ET>(), shape);
-    auto result = backend->make_primary_tensor_view(element::from<ET>(), shape);
+    auto a = backend->make_primary_tensor_view(element::from<T>(), shape);
+    auto result = backend->make_primary_tensor_view(element::from<T>(), shape);
 
     cf->call({a}, {result});
 
-    auto in_vec = read_vector<ET>(a);
-    auto out_vec = read_vector<ET>(result);
+    auto in_vec = read_vector<T>(a);
+    auto out_vec = read_vector<T>(result);
 
     EXPECT_EQ(in_vec, out_vec);
 }
 
-template <typename T, typename ET>
-void make_binary_empty_test()
+template <typename OP, typename T>
+void make_binary_empty_test(const string& backend_name)
 {
     auto shape = Shape{0};
-    auto A = make_shared<op::Parameter>(element::from<ET>(), shape);
-    auto B = make_shared<op::Parameter>(element::from<ET>(), shape);
-    auto f = make_shared<Function>(make_shared<T>(A, B), op::Parameters{A, B});
+    auto A = make_shared<op::Parameter>(element::from<T>(), shape);
+    auto B = make_shared<op::Parameter>(element::from<T>(), shape);
+    auto f = make_shared<Function>(make_shared<OP>(A, B), op::Parameters{A, B});
 
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto manager = runtime::Manager::get(backend_name);
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
-    auto a = backend->make_primary_tensor_view(element::from<ET>(), shape);
-    auto b = backend->make_primary_tensor_view(element::from<ET>(), shape);
-    auto result = backend->make_primary_tensor_view(element::from<ET>(), shape);
+    auto a = backend->make_primary_tensor_view(element::from<T>(), shape);
+    auto b = backend->make_primary_tensor_view(element::from<T>(), shape);
+    auto result = backend->make_primary_tensor_view(element::from<T>(), shape);
 
     cf->call({a, b}, {result});
 
-    auto in_vec = read_vector<ET>(a);
-    auto out_vec = read_vector<ET>(result);
+    auto in_vec = read_vector<T>(a);
+    auto out_vec = read_vector<T>(result);
 
     EXPECT_EQ(in_vec, out_vec);
 }
 
-template <typename T>
-void make_binary_empty_test()
+template <typename OP>
+void make_binary_empty_test(const string& backend_name)
 {
-    make_binary_empty_test<T, float>();
-    make_binary_empty_test<T, double>();
-    make_binary_empty_test<T, int8_t>();
-    make_binary_empty_test<T, int16_t>();
-    make_binary_empty_test<T, int32_t>();
-    make_binary_empty_test<T, int64_t>();
-    make_binary_empty_test<T, uint8_t>();
-    make_binary_empty_test<T, uint16_t>();
-    make_binary_empty_test<T, uint32_t>();
-    make_binary_empty_test<T, uint64_t>();
+    make_binary_empty_test<OP, float>(backend_name);
+    make_binary_empty_test<OP, double>(backend_name);
+    make_binary_empty_test<OP, int8_t>(backend_name);
+    make_binary_empty_test<OP, int16_t>(backend_name);
+    make_binary_empty_test<OP, int32_t>(backend_name);
+    make_binary_empty_test<OP, int64_t>(backend_name);
+    make_binary_empty_test<OP, uint8_t>(backend_name);
+    make_binary_empty_test<OP, uint16_t>(backend_name);
+    make_binary_empty_test<OP, uint32_t>(backend_name);
+    make_binary_empty_test<OP, uint64_t>(backend_name);
 }
-template <typename T>
-void make_unary_empty_test()
+
+template <typename OP>
+void make_unary_empty_test(const string& backend_name)
 {
-    make_unary_empty_test<T, float>();
-    make_unary_empty_test<T, double>();
-    make_unary_empty_test<T, int8_t>();
-    make_unary_empty_test<T, int16_t>();
-    make_unary_empty_test<T, int32_t>();
-    make_unary_empty_test<T, int64_t>();
-    make_unary_empty_test<T, uint8_t>();
-    make_unary_empty_test<T, uint16_t>();
-    make_unary_empty_test<T, uint32_t>();
-    make_unary_empty_test<T, uint64_t>();
+    make_unary_empty_test<OP, float>(backend_name);
+    make_unary_empty_test<OP, double>(backend_name);
+    make_unary_empty_test<OP, int8_t>(backend_name);
+    make_unary_empty_test<OP, int16_t>(backend_name);
+    make_unary_empty_test<OP, int32_t>(backend_name);
+    make_unary_empty_test<OP, int64_t>(backend_name);
+    make_unary_empty_test<OP, uint8_t>(backend_name);
+    make_unary_empty_test<OP, uint16_t>(backend_name);
+    make_unary_empty_test<OP, uint32_t>(backend_name);
+    make_unary_empty_test<OP, uint64_t>(backend_name);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_abs)
 {
-    make_unary_empty_test<op::Abs>();
+    make_unary_empty_test<op::Abs>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_ceiling)
 {
-    make_unary_empty_test<op::Ceiling>();
+    make_unary_empty_test<op::Ceiling>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_exp)
 {
-    make_unary_empty_test<op::Exp>();
+    make_unary_empty_test<op::Exp>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_floor)
 {
-    make_unary_empty_test<op::Floor>();
+    make_unary_empty_test<op::Floor>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_log)
 {
-    make_unary_empty_test<op::Log>();
+    make_unary_empty_test<op::Log>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_negative)
 {
-    make_unary_empty_test<op::Negative>();
+    make_unary_empty_test<op::Negative>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_not)
 {
-    make_unary_empty_test<op::Not, char>();
+    make_unary_empty_test<op::Not, char>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_sign)
 {
-    make_unary_empty_test<op::Sign>();
+    make_unary_empty_test<op::Sign>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_sqrt)
 {
-    make_unary_empty_test<op::Sqrt>();
+    make_unary_empty_test<op::Sqrt>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_sin)
 {
-    make_unary_empty_test<op::Sin>();
+    make_unary_empty_test<op::Sin>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_sinh)
 {
-    make_unary_empty_test<op::Sinh>();
+    make_unary_empty_test<op::Sinh>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_cos)
 {
-    make_unary_empty_test<op::Cos>();
+    make_unary_empty_test<op::Cos>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_cosh)
 {
-    make_unary_empty_test<op::Cosh>();
+    make_unary_empty_test<op::Cosh>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_tan)
 {
-    make_unary_empty_test<op::Tan>();
+    make_unary_empty_test<op::Tan>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_tanh)
 {
-    make_unary_empty_test<op::Tanh>();
+    make_unary_empty_test<op::Tanh>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_asin)
 {
-    make_unary_empty_test<op::Asin>();
+    make_unary_empty_test<op::Asin>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_acos)
 {
-    make_unary_empty_test<op::Acos>();
+    make_unary_empty_test<op::Acos>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_atan)
 {
-    make_unary_empty_test<op::Atan>();
+    make_unary_empty_test<op::Atan>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_add)
 {
-    make_binary_empty_test<op::Add>();
+    make_binary_empty_test<op::Add>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_divide)
 {
-    make_binary_empty_test<op::Divide>();
+    make_binary_empty_test<op::Divide>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_eq)
 {
-    make_binary_empty_test<op::Equal>();
+    make_binary_empty_test<op::Equal>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_greater)
 {
-    make_binary_empty_test<op::Greater>();
+    make_binary_empty_test<op::Greater>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_greatereq)
 {
-    make_binary_empty_test<op::GreaterEq>();
+    make_binary_empty_test<op::GreaterEq>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_less)
 {
-    make_binary_empty_test<op::Less>();
+    make_binary_empty_test<op::Less>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_lesseq)
 {
-    make_binary_empty_test<op::LessEq>();
+    make_binary_empty_test<op::LessEq>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_maximum)
 {
-    make_binary_empty_test<op::Maximum>();
+    make_binary_empty_test<op::Maximum>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_minimum)
 {
-    make_binary_empty_test<op::Minimum>();
+    make_binary_empty_test<op::Minimum>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_multiply)
 {
-    make_binary_empty_test<op::Multiply>();
+    make_binary_empty_test<op::Multiply>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_not_equal)
 {
-    make_binary_empty_test<op::NotEqual>();
+    make_binary_empty_test<op::NotEqual>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_power)
 {
-    make_binary_empty_test<op::Power>();
+    make_binary_empty_test<op::Power>("${BACKEND_NAME}");
 }
+
 TEST(${BACKEND_NAME}, zero_sized_subtract)
 {
-    make_binary_empty_test<op::Subtract>();
+    make_binary_empty_test<op::Subtract>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)

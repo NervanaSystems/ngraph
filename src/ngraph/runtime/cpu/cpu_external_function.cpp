@@ -212,14 +212,12 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     }
 
     string function_name = m_function->get_name();
-    string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
 
     pass::Manager pass_manager;
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>(64);
-    pass_manager.register_pass<pass::DumpSorted>(dump_filename);
     pass_manager.run_passes(m_function);
 
     codegen::CodeWriter writer;
