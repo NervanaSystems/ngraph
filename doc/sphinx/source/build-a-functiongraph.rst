@@ -86,13 +86,13 @@ sources: *literals*, *calls* to ops (built-in ops or user-defined ops AKA
 
    - *functions* are user-defined ops.
      - A user-defined function is "external" if it can be called externally.   
-     - The result is a graph node that  depends only on parameters. 
-     - The result's ``type`` of a call to a function is determined from the 
+     - The result is a graph node that  depends only on parameters.
+     - The result's ``type`` of call to a function is determined from the 
        types of the arguments.
 
-  .. important::  Any external function interacting with the graph 
-     at the level of user-defined ``op`` must specify a type for each 
-     of its parameters.   
+       .. important::  Any external function interacting with the graph 
+          at the level of user-defined ``op`` must specify a type for each 
+          of its parameters.   
 
 #. *Parameters* of user-defined *functions* may also be a source of a graph's
    values. Externally-callable functions must specify a type for each parameter.
@@ -121,7 +121,7 @@ functions, use the following syntax to:
 
      * return the type: \* method ``type()``
 
-     * set the type to `t`:  \* method ``type(ValueType t)`
+     * set the type to `t`:  \* method ``type(ValueType t)``
 
      * set the type to a ``TensorViewType``: \* method ``type(ElementType element_type, Shape shape)`` 
 
@@ -146,7 +146,7 @@ calls. When building a function graph with built-in ops,
 - to add a value to a tuple, use the overload ``Tuple(list<Value>)``
     * to add a value to the tuple operation: \* method ``push_back(value)`` 
     * to return the specified component, call  \* method ``get(index)``   
-      - where ``index``is a compile-time value.
+      - where ``index`` is a compile-time value.
 
 
 Example

@@ -27,7 +27,7 @@ Installation Steps
    `macOS Development Prerequisites`_ below.
 
 To build |nGl| on one of the supported systems, the default CMake procedure 
-will install :term:`ngraph_dist` to your user's ``$HOME`` directory as
+will install ``ngraph_dist`` to your user's ``$HOME`` directory as
 the default install location.  See the :file:`CMakeLists.txt` file for more 
 information.
 
@@ -49,7 +49,6 @@ or to set up user directories and permissions however you like.
       $ cd /opt
       $ sudo mkdir -p local{libraries}
       $ sudo chown -R username:username /opt/local   
-
 
 #. Clone the `NervanaSystems` ``ngraph-cpp`` repo to your `/libraries`
    directory.
