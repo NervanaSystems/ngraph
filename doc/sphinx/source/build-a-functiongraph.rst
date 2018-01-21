@@ -37,7 +37,8 @@ Descriptions of ngraph values
       primitive types. They are specified by a shape and an primitive
       type for the elements.
 
-      .. TODO add Doxy links corresponding to these tensor view types
+      .. TODO add Doxy links corresponding to these tensor view types'
+         APIs or use the literalinclude better 
 
    -  **Tuple types** These are cartesian product types for tuples of
       tuples and tensors, described by a sequence of tuple types and
@@ -71,8 +72,8 @@ sources: *literals*, *calls* to ops (built-in ops or user-defined ops AKA
 
 #. *Calls* to **ops**. When called with appropriate arguments, an *op* 
    produces a return value. All arguments not fixed at compile time 
-   must be values. In the nGraph API, the term :ref:`parameter` refers 
-   to what "stands in" for an argument in an ``op`` definition, and :ref:`result` 
+   must be values. In the nGraph API, the term :term:`parameter` refers 
+   to what "stands in" for an argument in an ``op`` definition, and :term:`result` 
    refers to what "stands in" for the returned *value*. 
    
    For example, the ``add`` **op** is a built-in op with two run-time 

@@ -24,6 +24,7 @@ Intel nGraph library
    :name: tocmaster
 
    installation.rst
+   testing-libngraph.rst
    build-a-functiongraph.rst
 
 .. toctree::
@@ -44,6 +45,7 @@ Intel nGraph library
 
    api.rst
    autodiff.rst
+   glossary.rst
 
 .. toctree::
    :maxdepth: 1
@@ -53,7 +55,9 @@ Intel nGraph library
    code-contributor-README.rst
 
 .. toctree::
+   :maxdepth: 0
    :hidden: 
+   
    branding-notice.rst
    doc-contributor-README.rst
 

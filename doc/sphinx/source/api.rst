@@ -1,7 +1,9 @@
 .. api.rst:
 
 
-This API documentation covers the public API for Intel® nGraph™ library (ngraph), organized into three main modules:
+This API documentation covers the public API for 
+Intel® nGraph™ library (``ngraph``), organized into 
+three main modules:
 
 - ``ngraph``: Contains the core ops for constructing the graph.
 - ``ngraph.transformers``: Defines methods for executing a defined graph on hardware.
