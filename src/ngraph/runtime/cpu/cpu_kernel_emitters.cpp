@@ -19,14 +19,14 @@
 #include "ngraph/runtime/cpu/cpu_kernel_utils.hpp"
 
 using namespace ngraph;
-using namespace ngraph::runtime::cpu::kernel;
+using namespace std;
 
 // Function to take a vector of data, say 1,2,3 and return
 // a string representing multi-index access, i.e "[1][2][3]"
 template <typename T>
-std::string emit_bracketed_string(std::vector<T> data)
+string emit_bracketed_string(vector<T> data)
 {
-    std::stringstream ss;
+    stringstream ss;
 
     if (data.size() == 0)
         return "";
@@ -40,14 +40,14 @@ std::string emit_bracketed_string(std::vector<T> data)
 }
 
 // Convert a buffer into a C-style multi-index array
-std::string recast_tmp_var(codegen::CodeWriter& writer,
-                           const std::string& element_type,
-                           const std::string& arg_name,
-                           const Shape& arg_shape,
-                           const std::string& tmp_name)
+string recast_tmp_var(codegen::CodeWriter& writer,
+                      const string& element_type,
+                      const string& arg_name,
+                      const Shape& arg_shape,
+                      const string& tmp_name)
 {
-    std::string nd_name = writer.generate_temporary_name(tmp_name);
-    std::string bracketed_shape = emit_bracketed_string(arg_shape);
+    string nd_name = writer.generate_temporary_name(tmp_name);
+    string bracketed_shape = emit_bracketed_string(arg_shape);
 
     writer << element_type << "(&" << nd_name << ")" << bracketed_shape << " = *reinterpret_cast<"
            << element_type << "(*)" << bracketed_shape << ">(" << arg_name << ");\n";
@@ -57,7 +57,7 @@ std::string recast_tmp_var(codegen::CodeWriter& writer,
 // write openings to for loops, for variables in the order of top,
 // where each loop ranges from bottom[i] to top[i]
 // creates index variables for each loop and returns them
-std::vector<std::string>
+vector<string>
     open_for_loops(codegen::CodeWriter& writer, const Shape& top, const Shape& bottom = {})
 {
     Shape new_bottom;
@@ -70,12 +70,12 @@ std::vector<std::string>
         new_bottom = bottom;
     }
 
-    std::vector<std::string> index_vars;
+    vector<string> index_vars;
     for (size_t i = 0; i < top.size(); i++)
     {
-        std::string index_var = writer.generate_temporary_name("i");
+        string index_var = writer.generate_temporary_name("i");
 
-        writer << start_index_loop(index_var, new_bottom[i], top[i], i == 0);
+        writer << runtime::cpu::kernel::start_index_loop(index_var, new_bottom[i], top[i], i == 0);
         writer.indent++;
 
         index_vars.push_back(index_var);
@@ -84,19 +84,19 @@ std::vector<std::string>
     return index_vars;
 }
 //close the for loops created by open_for_loops
-void close_for_loops(codegen::CodeWriter& writer, const std::vector<std::string>& index_vars)
+void close_for_loops(codegen::CodeWriter& writer, const vector<string>& index_vars)
 {
     for (size_t i = index_vars.size(); i-- > 0;)
     {
         writer.indent--;
-        writer << end_index_loop(index_vars[i]);
+        writer << runtime::cpu::kernel::end_index_loop(index_vars[i]);
     }
 }
 
 void ngraph::runtime::cpu::kernel::emit_broadcast(codegen::CodeWriter& writer,
-                                                  const std::string& element_type,
-                                                  const std::string& arg0, // replacement context
-                                                  const std::string& out,
+                                                  const string& element_type,
+                                                  const string& arg0, // replacement context
+                                                  const string& out,
                                                   const Shape& arg0_shape,
                                                   const Shape& out_shape,
                                                   const AxisSet& broadcast_axes)
@@ -109,7 +109,7 @@ void ngraph::runtime::cpu::kernel::emit_broadcast(codegen::CodeWriter& writer,
     auto index_vars = open_for_loops(writer, out_shape);
 
     // match positions in output to positions in the input
-    std::vector<std::string> source_indexes;
+    vector<string> source_indexes;
     for (size_t i = 0; i < out_shape.size(); ++i)
     {
         if (broadcast_axes.count(i) == 0)
@@ -128,10 +128,10 @@ void ngraph::runtime::cpu::kernel::emit_broadcast(codegen::CodeWriter& writer,
 // For the reference kernel this is based on, see ngraph/runtime/kernel/concat.hpp.
 //
 void ngraph::runtime::cpu::kernel::emit_concat(codegen::CodeWriter& writer,
-                                               const std::string& element_type,
-                                               const std::vector<std::string>& args,
-                                               const std::string& out,
-                                               const std::vector<Shape>& in_shapes,
+                                               const string& element_type,
+                                               const vector<string>& args,
+                                               const string& out,
+                                               const vector<Shape>& in_shapes,
                                                const Shape& out_shape,
                                                size_t concatenation_axis)
 {
@@ -155,17 +155,16 @@ void ngraph::runtime::cpu::kernel::emit_concat(codegen::CodeWriter& writer,
     }
 }
 
-void ngraph::runtime::cpu::kernel::emit_replace_slice(
-    codegen::CodeWriter& writer,
-    const std::string& element_type,
-    const std::string& arg0, // replacement context
-    const std::string& arg1, // replacement value
-    const std::string& out,
-    const Shape& arg1_shape,
-    const Shape& out_shape,
-    const Coordinate& lower_bounds,
-    const Coordinate& upper_bounds,
-    const Strides& strides)
+void ngraph::runtime::cpu::kernel::emit_replace_slice(codegen::CodeWriter& writer,
+                                                      const string& element_type,
+                                                      const string& arg0, // replacement context
+                                                      const string& arg1, // replacement value
+                                                      const string& out,
+                                                      const Shape& arg1_shape,
+                                                      const Shape& out_shape,
+                                                      const Coordinate& lower_bounds,
+                                                      const Coordinate& upper_bounds,
+                                                      const Strides& strides)
 {
     // Step 1: Copy the entire replacement context to the output.
     CoordinateTransform copy_transform(out_shape);
@@ -179,9 +178,9 @@ void ngraph::runtime::cpu::kernel::emit_replace_slice(
 }
 
 void ngraph::runtime::cpu::kernel::emit_slice(codegen::CodeWriter& writer,
-                                              const std::string& element_type,
-                                              const std::string& arg0, // replacement context
-                                              const std::string& out,
+                                              const string& element_type,
+                                              const string& arg0, // replacement context
+                                              const string& out,
                                               const Shape& arg0_shape,
                                               const Shape& out_shape,
                                               const Coordinate& lower_bounds,
@@ -196,17 +195,17 @@ void ngraph::runtime::cpu::kernel::emit_slice(codegen::CodeWriter& writer,
     auto index_vars = open_for_loops(writer, out_shape);
 
     // map the position in the output to a position in the input
-    std::vector<std::string> source_indexes;
+    vector<string> source_indexes;
     size_t j = 0;
     for (size_t i = 0; i < lower_bounds.size(); ++i)
     {
         if (lower_bounds[i] == upper_bounds[i])
         {
-            source_indexes.push_back(std::to_string(lower_bounds[i]));
+            source_indexes.push_back(to_string(lower_bounds[i]));
         }
         else
         {
-            std::stringstream ss;
+            stringstream ss;
             ss << lower_bounds[i];
             ss << " + " << index_vars[j];
             ss << " * " << strides[i];
@@ -223,9 +222,9 @@ void ngraph::runtime::cpu::kernel::emit_slice(codegen::CodeWriter& writer,
 }
 
 void ngraph::runtime::cpu::kernel::emit_reshape(codegen::CodeWriter& writer,
-                                                const std::string& element_type,
-                                                const std::string& arg0, // replacement context
-                                                const std::string& out,
+                                                const string& element_type,
+                                                const string& arg0, // replacement context
+                                                const string& out,
                                                 const Shape& arg0_shape,
                                                 const Shape& out_shape,
                                                 const AxisVector& arg0_axis_order)
@@ -242,8 +241,8 @@ void ngraph::runtime::cpu::kernel::emit_reshape(codegen::CodeWriter& writer,
     auto source_nd_name = recast_tmp_var(writer, element_type, arg0, arg0_shape, "source_nd");
     auto dest_nd_name = recast_tmp_var(writer, element_type, out, {size}, "dest_nd");
 
-    std::map<size_t, size_t> input_to_loop_pos;
-    std::map<size_t, size_t> loop_to_input_pos;
+    map<size_t, size_t> input_to_loop_pos;
+    map<size_t, size_t> loop_to_input_pos;
     // loop over the input in the order of arg0_axis_order
     int input_pos = 0;
     Shape ordered_input_shape;
@@ -288,9 +287,9 @@ void ngraph::runtime::cpu::kernel::emit_reshape(codegen::CodeWriter& writer,
 }
 
 void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
-                                            const std::string& element_type,
-                                            const std::string& arg0, // replacement context
-                                            const std::string& out,
+                                            const string& element_type,
+                                            const string& arg0, // replacement context
+                                            const string& out,
                                             const Shape& arg0_shape,
                                             const Shape& out_shape,
                                             const AxisSet& reduction_axes)
@@ -317,18 +316,18 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
     }
 
     // If we don't have a zero index in the input, perform the sum
-    if (std::find(arg0_shape.begin(), arg0_shape.end(), 0) == arg0_shape.end())
+    if (find(arg0_shape.begin(), arg0_shape.end(), 0) == arg0_shape.end())
     {
         // create the the interation variables without writing the for loops
-        std::vector<std::string> index_vars;
+        vector<string> index_vars;
         for (size_t i = 0; i < arg0_shape.size(); i++)
         {
-            std::string index_var = writer.generate_temporary_name("i");
+            string index_var = writer.generate_temporary_name("i");
             index_vars.push_back(index_var);
         }
 
         // calculate the output indexes based on what's being reduced
-        std::vector<std::string> out_indexes;
+        vector<string> out_indexes;
         size_t outer_arg_index = -1;
         for (size_t i = 0; i < index_vars.size(); ++i)
         {
@@ -355,7 +354,7 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
         {
             if (i != outer_arg_index)
             {
-                std::string index_var = index_vars[i];
+                string index_var = index_vars[i];
                 writer << start_index_loop(index_var, 0, arg0_shape[i], false);
                 writer.indent++;
             }
@@ -371,10 +370,10 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
     }
 }
 void ngraph::runtime::cpu::kernel::emit_reduce(codegen::CodeWriter& writer,
-                                               const std::string& element_type,
-                                               const std::string& arg0, // replacement context
-                                               const std::string& arg1,
-                                               const std::string& out,
+                                               const string& element_type,
+                                               const string& arg0, // replacement context
+                                               const string& arg1,
+                                               const string& out,
                                                const Shape& arg0_shape,
                                                const Shape& out_shape,
                                                const AxisSet& reduction_axes)
@@ -398,18 +397,18 @@ void ngraph::runtime::cpu::kernel::emit_reduce(codegen::CodeWriter& writer,
     }
 
     // If we don't have a zero index in the input, perform the sum
-    if (std::find(arg0_shape.begin(), arg0_shape.end(), 0) == arg0_shape.end())
+    if (find(arg0_shape.begin(), arg0_shape.end(), 0) == arg0_shape.end())
     {
         // create the the interation variables without writing the for loops
-        std::vector<std::string> index_vars;
+        vector<string> index_vars;
         for (size_t i = 0; i < arg0_shape.size(); i++)
         {
-            std::string index_var = writer.generate_temporary_name("i");
+            string index_var = writer.generate_temporary_name("i");
             index_vars.push_back(index_var);
         }
 
         // calculate the output indexes based on what's being reduced
-        std::vector<std::string> out_indexes;
+        vector<string> out_indexes;
         size_t outer_arg_index = -1;
         for (size_t i = 0; i < index_vars.size(); ++i)
         {
@@ -436,7 +435,7 @@ void ngraph::runtime::cpu::kernel::emit_reduce(codegen::CodeWriter& writer,
         {
             if (i != outer_arg_index)
             {
-                std::string index_var = index_vars[i];
+                string index_var = index_vars[i];
                 writer << start_index_loop(index_var, 0, arg0_shape[i], false);
                 writer.indent++;
             }
