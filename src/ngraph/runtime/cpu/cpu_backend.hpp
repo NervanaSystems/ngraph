@@ -22,8 +22,6 @@ namespace ngraph
     {
         namespace cpu
         {
-            static size_t alignment = 64;
-
             class CPU_Backend : public runtime::Backend
             {
             public:

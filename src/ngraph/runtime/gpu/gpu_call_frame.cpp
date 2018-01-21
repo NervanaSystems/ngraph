@@ -41,14 +41,14 @@ void runtime::gpu::GPU_CallFrame::tensor_call(
 
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
-        shared_ptr<runtime::cpu::CPU_TensorView> tv =
-            static_pointer_cast<runtime::cpu::CPU_TensorView>(input_tvs[i]);
+        shared_ptr<runtime::HostTensorView> tv =
+            static_pointer_cast<runtime::HostTensorView>(input_tvs[i]);
         inputs.push_back(tv->get_data_ptr());
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        shared_ptr<runtime::cpu::CPU_TensorView> tv =
-            static_pointer_cast<runtime::cpu::CPU_TensorView>(output_tvs[i]);
+        shared_ptr<runtime::HostTensorView> tv =
+            static_pointer_cast<runtime::HostTensorView>(output_tvs[i]);
         outputs.push_back(tv->get_data_ptr());
     }
 

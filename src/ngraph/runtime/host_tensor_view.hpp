@@ -23,23 +23,25 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace interpreter
-        {
-            class INT_TensorView;
-        }
+        static size_t alignment = 64;
+
+        class HostTensorView;
     }
 }
 
-class ngraph::runtime::interpreter::INT_TensorView : public ngraph::runtime::TensorView
+class ngraph::runtime::HostTensorView : public ngraph::runtime::TensorView
 {
 public:
-    INT_TensorView(const ngraph::element::Type& element_type,
+    HostTensorView(const ngraph::element::Type& element_type,
                    const Shape& shape,
-                   const std::string& name);
-    virtual ~INT_TensorView();
+                   const std::string& name = "external");
+    virtual ~HostTensorView();
 
     char* get_data_ptr();
     const char* get_data_ptr() const;
+
+    size_t get_size() const;
+    const element::Type& get_element_type() const;
 
     /// @brief Write bytes directly into the tensor
     /// @param p Pointer to source of data
