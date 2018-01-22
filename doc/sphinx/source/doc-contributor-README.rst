@@ -1,3 +1,5 @@
+.. doc-contributor-README:
+
 .. ---------------------------------------------------------------------------
 .. Copyright 2017 Intel Corporation
 .. Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,25 +50,26 @@ When **verbosely** documenting functionality of specific sections of code -- whe
 they're entire code blocks within a file, or code strings that are **outside** the 
 Intel nGraph `documentation repo`_, here is an example of best practice: 
 
-Say the file named ``dqn_atari.py`` has some interesting functionality that could
+Say the file named `` `` has some interesting functionality that could
 benefit from more explanation about one or more of the pieces in context. To keep 
 the "in context" format, write something like the following in your documentation
 source file (``.rst``):
 
 ::
 
-  .. literalinclude:: ../../test/models/mxnet/10_bucket_LSTM.json
-     :language: json
-     :lines: 12-30
+  .. literalinclude:: ../../../src/ngraph/descriptor/primary_tensor_view.cpp
+     :language: cpp
+     :lines: 20-31
 
 And the raw code will render as follows
 
-  .. literalinclude:: ../../test/models/mxnet/10_bucket_LSTM.json
-   :language: python
-   :lines: 12-30 
+
+.. literalinclude:: ../../../src/ngraph/descriptor/primary_tensor_view.cpp
+   :language: cpp
+   :lines: 20-31
 
 You can now verbosely explain the code block without worrying about breaking
-the code!
+the code.
 
 The trick here is to add the file you want to reference relative to the folder
 where the ``Makefile`` is that generates the documentation you're writing. See the 
@@ -84,20 +87,19 @@ line numbers, and add a caption "One way to define neon axes within the dqn_atar
 
 ::
 
-  .. literalinclude:: ../../examples/dqn/dqn_atari.py
-     :language: python
-     :lines: 12-49
-     :linenos:
-     :caption: Defining action_axes within the dqn_atari.py file for neon frontend
+  .. literalinclude:: ../../../src/ngraph/descriptor/primary_tensor_view.cpp
+    :language: cpp
+    :lines: 20-31
+    :caption: 
 
 
 and the generated output will show readers of your helpful documentation
 
-.. literalinclude:: ../../examples/dqn/dqn_atari.py
-   :language: python
-   :lines: 12-49
-   :linenos:
-   :caption: Defining action_axes within the dqn_atari.py file for neon frontend
+.. literalinclude:: ../../../src/ngraph/descriptor/primary_tensor_view.cpp
+   :language: cpp
+   :lines: 20-31
+   :caption: 
+
 
 Take note that the ``linenos`` line will add a new context for line numbers
 within your file; it will not bring the original line numbering with it. This
@@ -109,17 +111,29 @@ use to prevent code bloat.  A ``literalinclude`` with the ``caption`` option
 also generates a permalink (see above) that makes finding "verbose" documentation 
 easier.       
 
+
+.. build-docs:
+
+Build the Documentation
+========================
+
+
 .. note:: Stuck on how to generate the html?  Run these commands; they assume 
    you start at a command line running within a clone (or a cloned fork) of the 
    ``ngraph`` repo.  You do **not** need to run a virtual environment to create 
    documentation if you don't want; running ``$ make clean`` in the ``doc/`` folder
    removes any generated files.
 
+
+Right now the minimal version of Sphinx needed to build the documentation is 
+Sphinx v. 1.6.5.  This can be installed with `pip3` either to a virtual environment, or
+to your base system if you plan to contribute much to docs.    
+
+
    .. code-block:: console
 
-      $ pip install -r doc_requirements.txt
-      $ cd /doc/source/
-      /ngraph/doc/source$ make html
+      $ cd doc/sphinx/
+      $ make html
 
 
 For tips similar to this, see the `sphinx`_ stable reST documentation.   

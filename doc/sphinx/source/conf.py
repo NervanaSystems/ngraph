@@ -34,6 +34,7 @@ needs_sphinx = '1.6.5'
 extensions = ['sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
+    'sphinx.ext.autodoc'
     ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -98,17 +99,17 @@ html_theme = 'ngraph_theme'
 # further.  For a list of options available for each theme, see the
 # documentation.
 # html_theme_options = {}
-html_logo = 'ngraph_theme/static/favicon.ico'
+html_logo = '../ngraph_theme/static/favicon.ico'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = 'ngraph_theme/static/favicon.ico'
+html_favicon = '../ngraph_theme/static/favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['ngraph_theme/static']
+html_static_path = ['../ngraph_theme/static']
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ["../"]
@@ -187,3 +188,26 @@ texinfo_documents = [
 ]
 
 html_add_permalinks = ""
+
+
+rst_epilog = u"""
+.. |codename| replace:: Intel nGraph
+.. |project| replace:: Intel nGraph library
+.. |InG| replace:: Intel® nGraph 
+.. |nGl| replace:: nGraph library
+.. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
+   :ltrim:
+.. |deg|    unicode:: U+000B0 .. DEGREE SIGN
+   :ltrim:
+.. |plusminus|  unicode:: U+000B1 .. PLUS-MINUS SIGN
+   :rtrim:
+.. |micro|  unicode:: U+000B5 .. MICRO SIGN
+   :rtrim:
+.. |trade|  unicode:: U+02122 .. TRADEMARK SIGN
+   :ltrim:
+.. |reg|    unicode:: U+000AE .. REGISTERED TRADEMARK SIGN
+   :ltrim:
+   
+"""
+
+
