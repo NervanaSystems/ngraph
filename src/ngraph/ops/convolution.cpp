@@ -360,6 +360,8 @@ void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
 
     AxisSet data_axes_2_to_n;
 
+    // adjust padding for x and f adjoints per:
+    // https://wiki.ith.intel.com/display/intelnervana/Autodiff
     CoordinateDiff x_adjoint_padding_below;
     CoordinateDiff x_adjoint_padding_above;
     CoordinateDiff f_adjoint_padding_below;
@@ -401,7 +403,7 @@ void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
     auto f_reshape_reverse = std::make_shared<op::Reverse>(f_reshape, data_axes_2_to_n);
 
     // 3) convolve delta with reshaped/reversed filter
-    //    swap image_dilation_stride and window_movement_stride inputs
+    //    swap image_dilation_stride and window_movement_stride
     // {N, Cin, d1,...,dn}
     auto x_adjoint = std::make_shared<op::Convolution>(delta,
                                                        f_reshape_reverse,
@@ -423,7 +425,7 @@ void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
     auto delta_reshape = flipDim0and1(delta, delta_shape);
 
     // 3) convolve reshaped input with reshaped delta
-    //    swap window_movement_stride and window_dilation_stride inputs
+    //    swap window_movement_stride and window_dilation_stride
     // {Cin, Cout, df1,...,dfn}
     auto f_adjoint = std::make_shared<op::Convolution>(x_reshape,
                                                        delta_reshape,
