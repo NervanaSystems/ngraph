@@ -16,10 +16,10 @@
 #include "ngraph/ops/op.hpp"
 
 using namespace ngraph;
-using namespace ngraph::op;
+using namespace std;
 
-op::Not::Not(const std::shared_ptr<Node>& arg)
-    : UnaryElementwise("Not", arg->get_element_type(), arg)
+op::Not::Not(const shared_ptr<Node>& arg)
+    : op::UnaryElementwise("Not", arg->get_element_type(), arg)
 {
 }
 

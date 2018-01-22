@@ -92,6 +92,7 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/host_tensor_view.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -212,14 +213,12 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     }
 
     string function_name = m_function->get_name();
-    string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
 
     pass::Manager pass_manager;
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>(64);
-    pass_manager.register_pass<pass::DumpSorted>(dump_filename);
     pass_manager.run_passes(m_function);
 
     codegen::CodeWriter writer;
@@ -501,7 +500,7 @@ using namespace ngraph::runtime;
             writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
             writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
             writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
-                   << ngraph::runtime::cpu::alignment << ");\n";
+                   << ngraph::runtime::alignment << ");\n";
             writer << "size_t pool_base_ptr = (size_t)memory_handler.get_ptr();\n";
             writer << "\n";
 

@@ -18,41 +18,41 @@
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/types/type.hpp"
 
-using namespace ngraph::runtime;
+using namespace ngraph;
+using namespace std;
 
-std::shared_ptr<const ngraph::descriptor::TensorView> TensorView::get_tensor_view_descriptor() const
+shared_ptr<const descriptor::TensorView> runtime::TensorView::get_tensor_view_descriptor() const
 {
     return m_descriptor;
 }
 
-std::shared_ptr<ngraph::descriptor::TensorView> TensorView::get_descriptor() const
+shared_ptr<descriptor::TensorView> runtime::TensorView::get_descriptor() const
 {
     return m_descriptor;
 }
 
-void TensorView::collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
-                                      const std::shared_ptr<TensorView>& value) const
+void runtime::TensorView::collect_tensor_views(vector<shared_ptr<TensorView>>& views,
+                                               const shared_ptr<TensorView>& value) const
 {
     views.push_back(value);
 }
 
-const ngraph::Shape& TensorView::get_shape() const
+const Shape& runtime::TensorView::get_shape() const
 {
     return m_descriptor->get_tensor_view_type()->get_shape();
 }
 
-const ngraph::Strides& TensorView::get_strides() const
+const Strides& runtime::TensorView::get_strides() const
 {
     return m_descriptor->get_tensor_view_layout()->get_strides();
 }
 
-std::shared_ptr<ngraph::descriptor::layout::TensorViewLayout>
-    TensorView::get_tensor_view_layout() const
+shared_ptr<descriptor::layout::TensorViewLayout> runtime::TensorView::get_tensor_view_layout() const
 {
     return m_descriptor->get_tensor_view_layout();
 }
 
-size_t TensorView::get_element_count() const
+size_t runtime::TensorView::get_element_count() const
 {
     size_t rc = 1;
     for (size_t s : get_shape())
@@ -62,7 +62,7 @@ size_t TensorView::get_element_count() const
     return rc;
 }
 
-const ngraph::descriptor::Tensor& TensorView::get_tensor() const
+const descriptor::Tensor& runtime::TensorView::get_tensor() const
 {
     return get_tensor_view_descriptor()->get_tensor();
 }
