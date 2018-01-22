@@ -20,16 +20,17 @@ using namespace std;
 using namespace ngraph;
 
 template <typename T>
-bool autodiff_numeric_compare(const shared_ptr<runtime::Manager>& manager,
-                              const shared_ptr<runtime::Backend>& backend,
-                              function<shared_ptr<Function>()> make_graph,
-                              const vector<shared_ptr<runtime::TensorView>>& args,
+bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Manager>& manager,
+                              const std::shared_ptr<ngraph::runtime::Backend>& backend,
+                              function<std::shared_ptr<ngraph::Function>()> make_graph,
+                              const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& args,
                               T rtol,
                               T atol)
 {
+    T delta = .001;
     auto f = make_graph();
     auto results_num =
-        autodiff::numeric_derivative<T>(manager, backend, f, args, .001f, f->get_parameters());
+        autodiff::numeric_derivative<T>(manager, backend, f, args, delta, f->get_parameters());
 
     auto g = make_graph();
     auto results_sym =
@@ -39,15 +40,16 @@ bool autodiff_numeric_compare(const shared_ptr<runtime::Manager>& manager,
 }
 
 template <typename T>
-bool autodiff_numeric_compare_selective(const shared_ptr<runtime::Manager>& manager,
-                                        const shared_ptr<runtime::Backend>& backend,
-                                        function<shared_ptr<Function>()> make_graph,
-                                        const vector<shared_ptr<runtime::TensorView>>& args,
-                                        T rtol,
-                                        T atol,
-                                        const vector<bool>& indep_param_mask)
+bool autodiff_numeric_compare_selective(
+    const std::shared_ptr<ngraph::runtime::Manager>& manager,
+    const std::shared_ptr<ngraph::runtime::Backend>& backend,
+    function<std::shared_ptr<ngraph::Function>()> make_graph,
+    const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& args,
+    T rtol,
+    T atol,
+    const std::vector<bool>& indep_param_mask)
 {
-    vector<shared_ptr<op::Parameter>> f_indep_params;
+    std::vector<std::shared_ptr<ngraph::op::Parameter>> f_indep_params;
     auto f = make_graph();
 
     size_t i = 0;
@@ -64,7 +66,7 @@ bool autodiff_numeric_compare_selective(const shared_ptr<runtime::Manager>& mana
     auto results_num =
         autodiff::numeric_derivative<T>(manager, backend, f, args, .001f, f_indep_params);
 
-    vector<shared_ptr<op::Parameter>> g_indep_params;
+    std::vector<std::shared_ptr<ngraph::op::Parameter>> g_indep_params;
     auto g = make_graph();
 
     i = 0;
