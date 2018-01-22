@@ -190,10 +190,10 @@ texinfo_documents = [
 html_add_permalinks = ""
 
 
-rst_epilog = """
+rst_epilog = u"""
 .. |codename| replace:: Intel nGraph
 .. |project| replace:: Intel nGraph library
-.. |InG| replace:: u'Intel® nGraph' 
+.. |InG| replace:: Intel® nGraph 
 .. |nGl| replace:: nGraph library
 .. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
    :ltrim:
