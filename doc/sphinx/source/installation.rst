@@ -15,8 +15,8 @@ packages and prerequisites:
    :widths: 25, 15, 25, 20, 25
    :escape: ~
 
-   Ubuntu 16.04 (LTS) 64-bit, CLang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 libtinfo-dev``
-   Ubuntu 16.04 (LTS) 64-bit, CLang 4.0, CMake 3.5.1 + GNU Make, officially unsupported, ``build-essential cmake clang-4.0 libtinfo-dev``
+   Ubuntu 16.04 (LTS) 64-bit, CLang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 git libtinfo-dev``
+   Ubuntu 16.04 (LTS) 64-bit, CLang 4.0, CMake 3.5.1 + GNU Make, officially unsupported, ``build-essential cmake clang-4.0 git libtinfo-dev``
    Clear Linux\* OS for Intel Architecture, Clang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
 Installation Steps
@@ -35,20 +35,19 @@ This guide provides one possible configuration that does not rely on a
 virtual environment. You are, of course, free to use a virtual environment, 
 or to set up user directories and permissions however you like. 
 
-#.  Since most of a developer's interaction with the frontend framework 
+#.  Since most of a developer's interaction with a frontend framework 
     will take place locally through Python, set a placeholder directory 
     where Python bindings can interact more efficiently with the nGraph 
     library backend components. Create something like ``/opt/local`` and 
     (presuming you have sudo permissions), give ownership of that local 
     directory to your user. This will make configuring for various ``PATH`` 
-    and environmental variables much more simple later, if you wish to 
-    test across various frameworks. 
+    and environmental variables much more simple later. 
 
-   .. code-block:: console
+    .. code-block:: console
 
-      $ cd /opt
-      $ sudo mkdir -p local{libraries}
-      $ sudo chown -R username:username /opt/local   
+       $ cd /opt
+       $ sudo mkdir -p local/libraries
+       $ sudo chown -R username:username /opt/local
 
 #. Clone the `NervanaSystems` ``ngraph-cpp`` repo to your `/libraries`
    directory.
@@ -59,14 +58,12 @@ or to set up user directories and permissions however you like.
       $ git clone git@github.com:NervanaSystems/private-ngraph-cpp.git
       $ cd private-ngraph-cpp
 
-
-#. Create a build directory outside of ``private-ngraph-cpp/src`` directory 
+#. Create a build directory outside of the ``private-ngraph-cpp/src`` directory 
    tree; something like  ``private-ngraph-cpp/build`` should work.
 
    .. code-block:: console
 
-      $ mkdir build
-   
+      $ mkdir build   
 
 #. ``$ cd`` to the build directory and generate the GNUMakefiles in the 
    customary manner from within your ``build`` directory:
@@ -74,7 +71,6 @@ or to set up user directories and permissions however you like.
    .. code-block:: console
 
       $ cd build && cmake ../
-
 
 #. Run ``$ make -j8`` and ``make install`` to install ``libngraph.so`` and the 
    header files to the default location of ``$HOME/ngraph_dist``.
@@ -87,9 +83,7 @@ or to set up user directories and permissions however you like.
 #. (Optional, requires `Sphinx`_.)  Run ``make html`` inside the  
    ``doc/sphinx`` directory to build HTML docs for the nGraph library.    
 
-#. (COMING SOON -- optional, requires `doxygen`_.) Run ``$ make doc`` from 
-   within your ``build`` directory to generate another view of API 
-   documentation.
+#. (COMING SOON -- optional, requires `doxygen`_.)  TBD
 
 
 

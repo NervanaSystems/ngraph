@@ -25,6 +25,7 @@ Intel nGraph library
 
    installation.rst
    testing-libngraph.rst
+   framework-integration-guides.rst
    build-a-functiongraph.rst
 
 .. toctree::

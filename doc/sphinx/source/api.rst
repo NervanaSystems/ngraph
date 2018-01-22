@@ -1,16 +1,18 @@
 .. api.rst:
 
+API 
+###
 
-This API documentation covers the public API for 
-Intel® nGraph™ library (``ngraph``), organized into 
-three main modules:
+Intel nGraph library
+====================
+
+This API documentation covers the public API for Intel® nGraph™ library 
+(``ngraph``), organized into three main modules:
 
 - ``ngraph``: Contains the core ops for constructing the graph.
 - ``ngraph.transformers``: Defines methods for executing a defined graph on hardware.
 - ``ngraph.types``: Types in ngraph (for example, ``Axes``, ``Op``, etc.)
 
-Intel Nervana (ngraph) API 
-==========================
 
 Several ops are used to create different types of tensors:
 
@@ -79,8 +81,9 @@ To compose a computational graph, we support the following operations:
 	:meth:`ngraph.squared_L2` | dot x with itself
 
 
-.. Note::
-   Additional operations are supported that are not currently documented, and so are not included in the list above. We will continue to populate this API when the documentation is updated.
+.. note::  Additional operations are supported that are not currently documented, 
+   and so are not included in the list above. We will continue to populate this 
+   API when the documentation is updated.
 
 ngraph.transformers
 ===================
