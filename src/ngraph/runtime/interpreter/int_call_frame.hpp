@@ -262,6 +262,21 @@ private:
                                 avg_pool->get_padding_below(),
                                 avg_pool->get_padding_above());
         }
+        else if (node_op == "AvgPoolBprop")
+        {
+            ngraph::op::AvgPoolBprop* apb = dynamic_cast<ngraph::op::AvgPoolBprop*>(&node);
+            kernel::avg_pool_bprop<T>(
+                reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                args[0]->get_shape(),
+                args[1]->get_shape(), /*delta shape*/
+                apb->get_window_shape(),
+                apb->get_window_movement_strides(),
+                apb->get_padding_below(),
+                apb->get_padding_above(),
+                true /*divide by the number of physical elements in a window*/);
+        }
         else if (node_op == "Broadcast")
         {
             ngraph::op::Broadcast* broadcast = dynamic_cast<ngraph::op::Broadcast*>(&node);

@@ -203,7 +203,6 @@ bool op::AvgPool::is_functionally_identical(const Node& other) const
         rc &= m_window_movement_strides == rhs.m_window_movement_strides;
         rc &= m_padding_below == rhs.m_padding_below;
         rc &= m_padding_above == rhs.m_padding_above;
-        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
         rc &= m_channel_count == rhs.m_channel_count;
         rc &= m_input_image_physical_shape == rhs.m_input_image_physical_shape;
         rc &= m_input_image_virtual_shape == rhs.m_input_image_virtual_shape;
@@ -218,8 +217,49 @@ bool op::AvgPool::is_functionally_identical(const Node& other) const
     return rc;
 }
 
-/*
-void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+op::AvgPoolBprop::AvgPoolBprop(const std::shared_ptr<Node>& arg,
+                               const std::shared_ptr<Node>& delta,
+                               const Shape& window_shape,
+                               const Strides& window_movement_strides,
+                               const Shape& padding_below,
+                               const Shape& padding_above)
+    : RequiresTensorViewArgs("AvgPoolBprop", {arg, delta})
+    , m_window_shape(window_shape)
+    , m_window_movement_strides(window_movement_strides)
+    , m_padding_below(padding_below)
+    , m_padding_above(padding_above)
 {
+    set_value_type_checked(get_input_element_type(0), arg->get_shape());
 }
-*/
+
+bool op::AvgPoolBprop::is_functionally_identical(const Node& other) const
+{
+    bool rc = true;
+    if (Node::is_functionally_identical(other))
+    {
+        const AvgPoolBprop& rhs = dynamic_cast<const AvgPoolBprop&>(other);
+        rc &= m_window_shape == rhs.m_window_shape;
+        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
+        rc &= m_padding_below == rhs.m_padding_below;
+        rc &= m_padding_above == rhs.m_padding_above;
+    }
+    else
+    {
+        rc = false;
+    }
+    return rc;
+}
+
+void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints,
+                                    const std::shared_ptr<Node>& delta)
+{
+    auto operand = get_input_op(0);
+    AvgPoolBprop* avpn = new AvgPoolBprop(operand,
+                                          delta,
+                                          m_window_shape,
+                                          m_window_movement_strides,
+                                          m_padding_below,
+                                          m_padding_above);
+    auto bprop = std::shared_ptr<op::AvgPoolBprop>(avpn);
+    adjoints.add_delta(operand, bprop);
+}
