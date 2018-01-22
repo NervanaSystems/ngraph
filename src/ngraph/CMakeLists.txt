@@ -187,7 +187,7 @@ endif()
     # GPU backend current requires CPU because they share compiler.cpp,
     # and compiler.cpp requires MKLDNN
     if(NGRAPH_GPU_ENABLE)
-        include_directories(${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
+        include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
 
         # Add sources for the GPU backend
         # and all its dependencies
