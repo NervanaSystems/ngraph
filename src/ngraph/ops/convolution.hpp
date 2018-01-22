@@ -153,7 +153,7 @@ namespace ngraph
             size_t get_image_dimension_count() const { return m_image_dimension_count; }
             bool is_functionally_identical(const Node&) const override;
             void generate_adjoints(autodiff::Adjoints& adjoints,
-                                   const std::shared_ptr<Node>& delta);
+                                   const std::shared_ptr<Node>& delta) override;
 
         protected:
             Strides m_window_movement_strides;

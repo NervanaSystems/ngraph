@@ -368,7 +368,6 @@ void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
     CoordinateDiff f_adjoint_padding_above;
 
     // loop over data axes
-    bool clip = false;
     for (auto i = 0; i < delta_shape.size() - 2; ++i)
     {
         data_axes_2_to_n.insert(i + 2);
