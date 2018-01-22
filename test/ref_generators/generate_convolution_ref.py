@@ -227,8 +227,7 @@ TEST (${BACKEND_NAME}, %s)
     vector<double> expected_result{%s};
 
     cf->call({a, b}, {result});
-    EXPECT_TRUE(all_close_d(vector<double>{expected_result},
-                            result->read_vector<double>()));
+    EXPECT_TRUE(all_close_d(vector<double>{expected_result}, read_vector<double>(result)));
 }
 '''
     f.write (template % (test_name,
@@ -331,16 +330,10 @@ def main():
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "util/test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-template <typename T>
-static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
-{
-    size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
-}
 
 static bool all_close_d(const std::vector<double>& a,
                         const std::vector<double>& b,
