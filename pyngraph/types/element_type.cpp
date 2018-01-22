@@ -33,4 +33,19 @@ void regclass_pyngraph_Type(py::module m){
     type.attr("u16")     = ngraph::element::u16;
     type.attr("u32")     = ngraph::element::u32;
     type.attr("u64")     = ngraph::element::u64;
+
+    type.def("__repr__", [](const ngraph::element::Type &self) {
+        std::string bitwidth = std::to_string(self.bitwidth());
+        if (self.is_signed()) {
+            return "<Type: '" + self.c_type_string() + bitwidth + "'>";
+        }
+        return "<Type: 'u" + self.c_type_string() + bitwidth + "'>";
+    });
+
+    type.def("__eq__", [](const ngraph::element::Type &a, const ngraph::element::Type &b) {
+        return a == b;
+    }, py::is_operator());
+
+    type.def_property_readonly("bitwidth", &ngraph::element::Type::bitwidth);
+    type.def_property_readonly("is_real", &ngraph::element::Type::is_real);
 }

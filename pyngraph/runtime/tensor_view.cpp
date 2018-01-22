@@ -14,14 +14,22 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-//#include <string>
 #include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/descriptor/tensor.hpp"
 #include "pyngraph/runtime/tensor_view.hpp"
 
 namespace py = pybind11;
 
 void regclass_pyngraph_runtime_TensorView(py::module m) {
     py::class_<ngraph::runtime::TensorView, std::shared_ptr<ngraph::runtime::TensorView>> tensorView(m, "TensorView");
+
     tensorView.def("write", (void (ngraph::runtime::TensorView::*) (const void*, size_t, size_t)) &ngraph::runtime::TensorView::write);
     tensorView.def("read", &ngraph::runtime::TensorView::read);
+
+    tensorView.def_property_readonly("shape", &ngraph::runtime::TensorView::get_shape);
+    tensorView.def_property_readonly("element_count", &ngraph::runtime::TensorView::get_element_count);
+    tensorView.def_property_readonly("element_type", [](const ngraph::runtime::TensorView &self) {
+        return self.get_tensor().get_element_type();
+    });
+
 }
