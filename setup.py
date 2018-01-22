@@ -173,6 +173,7 @@ setup(
     license='License :: OSI Approved :: Apache Software License',
     description='Python wrapper for ngraph',
     long_description='',
+    packages=['ngraph_api'],
     ext_modules=ext_modules,
     cmdclass={'build_ext': BuildExt},
     zip_safe=False,
