@@ -13,6 +13,8 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/ops/convolution.hpp"
+#include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/reverse.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -328,8 +330,110 @@ bool op::Convolution::is_functionally_identical(const Node& other) const
     return rc;
 }
 
-/*
-void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+std::shared_ptr<op::Reshape> flipDim0and1(std::shared_ptr<Node> node, const Shape& shape)
 {
+    AxisVector input_order(shape.size());
+    std::iota(input_order.begin(), input_order.end(), 0);
+    std::swap(input_order[0], input_order[1]);
+
+    auto output_shape = shape;
+    std::swap(output_shape[0], output_shape[1]);
+
+    return std::make_shared<op::Reshape>(node, input_order, output_shape);
 }
-*/
+
+void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
+                                        const std::shared_ptr<Node>& delta)
+{
+    // input
+    // {N, Cin, d1,...,dn}
+    auto x = get_input_op(0);
+    const auto x_shape = x->get_shape();
+
+    // filters
+    // {Cout, Cin, df1,...,dfn}
+    auto f = get_input_op(1);
+    const auto f_shape = f->get_shape();
+
+    // {N, Cout, d'1,...,d'n}
+    const auto delta_shape = delta->get_shape();
+
+    AxisSet data_axes_2_to_n;
+
+    CoordinateDiff x_adjoint_padding_below;
+    CoordinateDiff x_adjoint_padding_above;
+    CoordinateDiff f_adjoint_padding_below;
+    CoordinateDiff f_adjoint_padding_above;
+
+    // loop over data axes
+    bool clip = false;
+    for (auto i = 0; i < delta_shape.size() - 2; ++i)
+    {
+        data_axes_2_to_n.insert(i + 2);
+
+        // (Sw - 1)%Q
+        // (Ax + (Sx - 1)Px + Bx - (Sf - 1)Pf) % Q
+        auto sw_mod_q = (m_padding_above[i] + (x_shape[i + 2] - 1) * m_image_dilation_strides[i] +
+                         m_padding_below[i] - (f_shape[i + 2] - 1) * m_window_dilation_strides[i]) %
+                        m_window_movement_strides[i];
+
+        // (Sf - 1)Pf + (Sw - 1)%Q - Ax
+        x_adjoint_padding_above.push_back((f_shape[i + 2] - 1) * m_window_dilation_strides[i] +
+                                          sw_mod_q - m_padding_above[i]);
+
+        // (Sf - 1)Pf - Bx
+        x_adjoint_padding_below.push_back((f_shape[i + 2] - 1) * m_window_dilation_strides[i] -
+                                          m_padding_below[i]);
+
+        // Ax  - (SW - 1)%Q
+        f_adjoint_padding_above.push_back(m_padding_above[i] - sw_mod_q);
+
+        // Bx
+        f_adjoint_padding_below.push_back(m_padding_below[i]);
+    }
+
+    // to calculate adjoint of the input...
+    // 1) reshape filter (flip channel dimensions)
+    // {Cin, Cout, df1,...,dfn}
+    auto f_reshape = flipDim0and1(f, f_shape);
+
+    // 2) reverse filter data
+    auto f_reshape_reverse = std::make_shared<op::Reverse>(f_reshape, data_axes_2_to_n);
+
+    // 3) convolve delta with reshaped/reversed filter
+    //    swap image_dilation_stride and window_movement_stride inputs
+    // {N, Cin, d1,...,dn}
+    auto x_adjoint = std::make_shared<op::Convolution>(delta,
+                                                       f_reshape_reverse,
+                                                       m_image_dilation_strides,
+                                                       m_window_dilation_strides,
+                                                       x_adjoint_padding_below,
+                                                       x_adjoint_padding_above,
+                                                       m_window_movement_strides);
+
+    adjoints.add_delta(x, x_adjoint);
+
+    // to calculate adjoint of the filter...
+    // 1) reshape input
+    // {Cin, N, d1,...,dn}
+    auto x_reshape = flipDim0and1(x, x_shape);
+
+    // 2) reshape delta
+    // {Cout, N, d'1,...d'n}
+    auto delta_reshape = flipDim0and1(delta, delta_shape);
+
+    // 3) convolve reshaped input with reshaped delta
+    //    swap window_movement_stride and window_dilation_stride inputs
+    // {Cin, Cout, df1,...,dfn}
+    auto f_adjoint = std::make_shared<op::Convolution>(x_reshape,
+                                                       delta_reshape,
+                                                       m_window_dilation_strides,
+                                                       m_window_movement_strides,
+                                                       f_adjoint_padding_below,
+                                                       f_adjoint_padding_above,
+                                                       m_image_dilation_strides);
+
+    // 4) reshape result to match filter dimentions
+    // {Cout, Cin, df1,...,dfn}
+    adjoints.add_delta(f, flipDim0and1(f_adjoint, f_adjoint->get_shape()));
+}
