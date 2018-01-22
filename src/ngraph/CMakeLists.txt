@@ -274,7 +274,7 @@ if(NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    target_link_libraries(ngraph PRIVATE cuda)
+    target_link_libraries(ngraph PRIVATE cuda ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 # Argon

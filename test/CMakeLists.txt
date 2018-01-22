@@ -75,8 +75,8 @@ if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
 endif()
 
 if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
-    include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
-    link_directories(${LLVM_LIB_DIR})
+    include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${CUDA_INCLUDE_DIRS})
+    link_directories(${LLVM_LIB_DIR} ${CUDA_LIBRARIES})
     set(SRC
         ${SRC}
         cudnn.cpp)
@@ -121,7 +121,7 @@ if(LLVM_INCLUDE_DIR)
 endif()
 
 if(CUDA_INCLUDE_DIRS)
-  target_link_libraries(unit-test ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+  target_link_libraries(unit-test cuda ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)
