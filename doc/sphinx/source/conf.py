@@ -193,7 +193,7 @@ html_add_permalinks = ""
 rst_epilog = """
 .. |codename| replace:: Intel nGraph
 .. |project| replace:: Intel nGraph library
-.. |InG| replace:: Intel® nGraph 
+.. |InG| replace:: u'Intel® nGraph' 
 .. |nGl| replace:: nGraph library
 .. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
    :ltrim:
@@ -209,4 +209,5 @@ rst_epilog = """
    :ltrim:
    
 """
+
 
