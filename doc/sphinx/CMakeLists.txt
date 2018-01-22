@@ -13,7 +13,7 @@
 
 set(NGRAPH_BUILD_SPHINX_DOCS FALSE
     CACHE BOOL
-    "The NGraph build system shall contain a target for '.rst'-based overview docs."
+    "The nGraph build system shall contain a target for '.rst'-based overview docs."
     )
 
 if (NGRAPH_BUILD_SPHINX_DOCS)
