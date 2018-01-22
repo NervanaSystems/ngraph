@@ -27,6 +27,8 @@ from pyngraph.op import Add, Subtract, Multiply, Divide, Dot
 from pyngraph.op import Constant, Abs, Exp, Log, Sum
 from pyngraph.op import Greater, Less, Equal, NotEqual, GreaterEq, LessEq, Not
 from pyngraph.op import OneHot, Broadcast, Reshape, Convert, Reduce
+from pyngraph.op import Concat, Select
+#from pyngraph.op import Reverse
 
 
 def make_backend_call_frame(function):
@@ -293,6 +295,8 @@ def unary_op(op_str, a):
         return Exp(a)
     elif op_str == 'negative':
         return Negative(a)
+    elif op_str == 'Reverse':
+        return Reverse(a, {0})
     elif op_str == 'Sign':
         return Sign(a)
     elif op_str == 'Sin':
@@ -330,6 +334,8 @@ def unary_op_ref(op_str, a):
         return np.exp(a)
     elif op_str == 'negative':
         return np.negative(a)
+    elif op_str == 'Reverse':
+        return np.fliplr(a)
     elif op_str == 'Sign':
         return np.sign(a)
     elif op_str == 'Sin':
@@ -346,8 +352,9 @@ def unary_op_ref(op_str, a):
 
 def unary_op_exec(op_str, input_list):
 
-    if len(input_list) != 4:
-        raise ValueError("Invalid list size: list length needs to be 4")
+    """
+    input_list needs to have deep length of 4
+    """
     element_type = Type.f32
     shape = [2,2]
     A = Parameter(element_type, shape)
@@ -470,6 +477,14 @@ def test_tan():
 def test_tanh():
     input_list = [-1, 0, 0.5, 1]
     op_str = 'Tanh'
+    unary_op_exec(op_str, input_list)
+
+
+@pytest.mark.skip('Not implemented')
+def test_reverse():
+    return
+    input_list = [[-1, 0], [0.5, 1]]
+    op_str = 'Reverse'
     unary_op_exec(op_str, input_list)
 
 
@@ -689,6 +704,69 @@ def test_onehot():
 
     a_arr = np.array([1,0,2])
     result_arr_ref = np.eye(3)[a_arr]
+
+    assert np.allclose(result_arr, result_arr_ref)
+
+
+def test_concat():
+
+    element_type = Type.f32
+    A = Parameter(element_type, [1, 2])
+    B = Parameter(element_type, [1, 2])
+    C = Parameter(element_type, [1, 2])
+    parameter_list = [A, B, C]
+    axis = 0
+    function = Function([Concat([A,  B, C], axis)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(element_type, [1, 2])
+    b = backend.make_primary_tensor_view(element_type, [1, 2])
+    c = backend.make_primary_tensor_view(element_type, [1, 2])
+    result = backend.make_primary_tensor_view(element_type, [3, 2])
+
+    a.write(util.numpy_to_c(np.array([1,2], dtype=np.float32)), 0, 8)
+    b.write(util.numpy_to_c(np.array([5,6], dtype=np.float32)), 0, 8)
+    c.write(util.numpy_to_c(np.array([7,8], dtype=np.float32)), 0, 8)
+
+    result_arr = np.zeros(6, dtype=np.float32).reshape(3, 2)
+    result.write(util.numpy_to_c(result_arr), 0, 24)
+    cf.call([a, b, c], [result])
+    result.read(util.numpy_to_c(result_arr), 0, 24)
+
+    a_arr = np.array([[1, 2]], dtype=np.float32)
+    b_arr = np.array([[5, 6]], dtype=np.float32)
+    c_arr = np.array([[7, 8]], dtype=np.float32)
+    result_arr_ref = np.concatenate((a_arr, b_arr, c_arr), axis)
+
+    assert np.allclose(result_arr, result_arr_ref)
+
+
+def test_select():
+
+    element_type = Type.f32
+    A = Parameter(Type.boolean, [1, 2])
+    B = Parameter(element_type, [1, 2])
+    C = Parameter(element_type, [1, 2])
+    parameter_list = [A, B, C]
+
+    function = Function([Select(A,  B, C)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(Type.boolean, [1, 2])
+    b = backend.make_primary_tensor_view(element_type, [1, 2])
+    c = backend.make_primary_tensor_view(element_type, [1, 2])
+    result = backend.make_primary_tensor_view(element_type, [1, 2])
+
+    a.write(util.numpy_to_c(np.array([[True, False]], dtype=np.bool)), 0, 2)
+    b.write(util.numpy_to_c(np.array([[5,6]], dtype=np.float32)), 0, 8)
+    c.write(util.numpy_to_c(np.array([[7,8]], dtype=np.float32)), 0, 8)
+
+    result_arr = np.array([[0, 0]], dtype=np.float32)
+    result.write(util.numpy_to_c(result_arr), 0, 8)
+    cf.call([a, b, c], [result])
+    result.read(util.numpy_to_c(result_arr), 0, 8)
+
+    result_arr_ref = np.array([[5,8]])
 
     assert np.allclose(result_arr, result_arr_ref)
 
