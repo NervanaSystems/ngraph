@@ -130,6 +130,8 @@ extra_compile_args = []
 
 extra_link_args = []
 
+data_files = [('lib', [NGRAPH_CPP_LIBRARY_DIR + "/" + library for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR)]),]
+
 ext_modules = [Extension(
                    'pyngraph',
                    sources = sources,
@@ -174,5 +176,6 @@ setup(
     long_description='',
     ext_modules=ext_modules,
     cmdclass={'build_ext': BuildExt},
+    data_files = data_files,
     zip_safe=False,
 )
