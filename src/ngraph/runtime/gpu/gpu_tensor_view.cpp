@@ -77,3 +77,14 @@ void runtime::gpu::GPU_TensorView::read(void* target, size_t tensor_offset, size
     const char* source = get_data_ptr();
     cudaMemcpy(target, &source[tensor_offset], n, cudaMemcpyDeviceToHost);
 }
+extern "C" void print_gpu_f32_tensor(void* p, size_t element_count, size_t element_size)
+{
+    float* local = 0;
+    size_t size_in_bytes = element_size * element_count;
+    local = (float*)malloc(size_in_bytes);
+    cudaMemcpy(local, p, size_in_bytes, cudaMemcpyDeviceToHost);
+    for (size_t i = 0; i < element_count; i++)
+    {
+        std::cout << local[i] << "\n";
+    }
+}

@@ -320,6 +320,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
       assert(err == CUDA_SUCCESS);
     }
 
+extern "C" void print_gpu_f32_tensor(void* p, size_t element_count, size_t element_size);
 
 )";
 
@@ -388,6 +389,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
         writer.indent++;
 
         writer += R"(
+     print_gpu_f32_tensor(inputs[0], 4, sizeof(float));
 
     )";
 
