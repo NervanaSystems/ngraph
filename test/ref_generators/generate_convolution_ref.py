@@ -373,9 +373,10 @@ bool autodiff_numeric_compare(const std::shared_ptr<runtime::Manager>& manager,
                               T rtol,
                               T atol)
 {
+    T delta = .001;
     auto f = make_graph();
     auto results_num =
-        autodiff::numeric_derivative<T>(manager, backend, f, args, .001f, f->get_parameters());
+        autodiff::numeric_derivative<T>(manager, backend, f, args, delta, f->get_parameters());
 
     auto g = make_graph();
     auto results_sym =
