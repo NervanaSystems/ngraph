@@ -57,6 +57,7 @@ set (SRC
     ops/not.cpp
     ops/one_hot.cpp
     ops/op.cpp
+    ops/pad.cpp
     ops/parameter.cpp
     ops/power.cpp
     ops/reduce.cpp
@@ -87,12 +88,12 @@ set (SRC
     pass/visualize_tree.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
+    runtime/host_tensor_view.cpp
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp
     runtime/interpreter/int_external_function.cpp
     runtime/interpreter/int_kernels.cpp
     runtime/interpreter/int_manager.cpp
-    runtime/interpreter/int_tensor_view.cpp
     runtime/manager.cpp
     runtime/tensor_view.cpp
     serializer.cpp
@@ -167,7 +168,6 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_kernel_utils.cpp
         runtime/cpu/cpu_emitter.cpp
         runtime/cpu/cpu_external_function.cpp
-        runtime/cpu/cpu_tensor_view.cpp
         runtime/cpu/cpu_tensor_view_wrapper.cpp
     )
     # LLVM binary builds are typically built without RTTI
