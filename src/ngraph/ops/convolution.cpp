@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <numeric>
+
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/reverse.hpp"
