@@ -376,22 +376,22 @@ void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
 
         // (Sw - 1)%Q
         // (Ax + (Sx - 1)Px + Bx - (Sf - 1)Pf) % Q
-        auto sw_mod_q = (m_padding_above[i] + (x_shape[i + 2] - 1) * m_image_dilation_strides[i] +
-                         m_padding_below[i] - (f_shape[i + 2] - 1) * m_window_dilation_strides[i]) %
+        auto sw_mod_q = (m_padding_below[i] + (x_shape[i + 2] - 1) * m_image_dilation_strides[i] +
+                         m_padding_above[i] - (f_shape[i + 2] - 1) * m_window_dilation_strides[i]) %
                         m_window_movement_strides[i];
 
-        // (Sf - 1)Pf + (Sw - 1)%Q - Ax
+        // (Sf - 1)Pf + (Sw - 1)%Q - Bx
         x_adjoint_padding_above.push_back((f_shape[i + 2] - 1) * m_window_dilation_strides[i] +
                                           sw_mod_q - m_padding_above[i]);
 
-        // (Sf - 1)Pf - Bx
+        // (Sf - 1)Pf - Ax
         x_adjoint_padding_below.push_back((f_shape[i + 2] - 1) * m_window_dilation_strides[i] -
                                           m_padding_below[i]);
 
-        // Ax  - (SW - 1)%Q
+        // Bx  - (SW - 1)%Q
         f_adjoint_padding_above.push_back(m_padding_above[i] - sw_mod_q);
 
-        // Bx
+        // Ax
         f_adjoint_padding_below.push_back(m_padding_below[i]);
     }
 

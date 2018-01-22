@@ -337,10 +337,7 @@ def main():
 
 #include "ngraph/ngraph.hpp"
 #include "util/test_tools.hpp"
-
-#include "util/all_close.hpp"
-#include "util/autodiff/backprop_derivative.hpp"
-#include "util/autodiff/numeric_derivative.hpp"
+#include "util/autodiff/numeric_compare.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -364,26 +361,6 @@ static bool all_close_d(const std::vector<double>& a,
     return rc;
 }
 
-// TODO: move this to its own include file
-template <typename T>
-bool autodiff_numeric_compare(const std::shared_ptr<runtime::Manager>& manager,
-                              const std::shared_ptr<runtime::Backend>& backend,
-                              std::function<std::shared_ptr<Function>()> make_graph,
-                              const std::vector<std::shared_ptr<runtime::TensorView>>& args,
-                              T rtol,
-                              T atol)
-{
-    T delta = .001;
-    auto f = make_graph();
-    auto results_num =
-        autodiff::numeric_derivative<T>(manager, backend, f, args, delta, f->get_parameters());
-
-    auto g = make_graph();
-    auto results_sym =
-        autodiff::backprop_derivative<T>(manager, backend, g, args, g->get_parameters());
-
-    return test::all_close(results_num, results_sym, rtol, atol);
-}
 ''')
     for t in tests:
         emit_test(t,f)
