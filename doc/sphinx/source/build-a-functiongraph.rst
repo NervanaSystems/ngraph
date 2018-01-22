@@ -89,10 +89,8 @@ sources: *literals*, *calls* to ops (built-in ops or user-defined ops AKA
      - The result is a graph node that  depends only on parameters.
      - The result's ``type`` of call to a function is determined from the 
        types of the arguments.
-
-       .. important::  Any external function interacting with the graph 
-          at the level of user-defined ``op`` must specify a type for each 
-          of its parameters.   
+     - Any external function interacting with the graph at the level of 
+       user-defined ``op`` must specify a type for each of its parameters.   
 
 #. *Parameters* of user-defined *functions* may also be a source of a graph's
    values. Externally-callable functions must specify a type for each parameter.
