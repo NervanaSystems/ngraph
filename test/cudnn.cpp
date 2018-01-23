@@ -303,7 +303,7 @@ TEST(cudnn, dot1d)
     auto shape = Shape{4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto shape_r = Shape{};
+    auto shape_r = Shape{1};
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("GPU");
@@ -317,6 +317,7 @@ TEST(cudnn, dot1d)
     auto b = backend->make_primary_tensor_view(element::f32, shape);
     copy_data(b, vector<float>{1, 2, 4, 8});
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+    copy_data(result, vector<float>{42});
 
     cf->call({a, b}, {result});
     EXPECT_EQ((vector<float>{170}), result->read_vector<float>());

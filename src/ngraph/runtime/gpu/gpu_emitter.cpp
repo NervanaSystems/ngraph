@@ -98,7 +98,7 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
           << "1,"
           << args[1].get_name() << ","
           << "1,"
-          << out[0].get_name() << ");";
+          << out[0].get_name() << ");\n";
       writer.indent--;
       writer << "}\n";
     }

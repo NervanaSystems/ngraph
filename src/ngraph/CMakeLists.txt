@@ -200,6 +200,7 @@ endif()
             runtime/gpu/gpu_manager.cpp
             runtime/gpu/gpu_tensor_view.cpp
             runtime/gpu/gpu_tensor_view_wrapper.cpp
+            runtime/gpu/gpu_util.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")

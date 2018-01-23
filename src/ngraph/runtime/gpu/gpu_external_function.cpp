@@ -307,21 +307,15 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     #include "ngraph/pass/manager.hpp"
     #include "ngraph/pass/memory_layout.hpp"
     #include "ngraph/runtime/aligned_buffer.hpp"
+    #include "ngraph/runtime/gpu/gpu_util.hpp"
     #include "ngraph/util.hpp"
 )";
 
     string pch_header_source = writer.get_code();
 
     writer += R"(
-    using namespace ngraph::runtime;
+    using namespace ngraph;
     using namespace std;
-
-    void check_cuda_errors(CUresult err) {
-      assert(err == CUDA_SUCCESS);
-    }
-
-extern "C" void print_gpu_f32_tensor(void* p, size_t element_count, size_t element_size);
-
 )";
 
     //     // The "dso_handle" symbol is required by __cxa_atexit()
@@ -387,11 +381,6 @@ extern "C" void print_gpu_f32_tensor(void* p, size_t element_count, size_t eleme
         writer << "(void** inputs, void** outputs, cublasHandle_t& cublas_handle)\n";
         writer << "{\n";
         writer.indent++;
-
-        writer += R"(
-     print_gpu_f32_tensor(inputs[0], 4, sizeof(float));
-
-    )";
 
         if (m_emit_timing)
         {

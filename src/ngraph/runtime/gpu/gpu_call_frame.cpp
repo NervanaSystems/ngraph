@@ -14,6 +14,7 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <stdio.h>
 
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 
@@ -23,6 +24,11 @@
 
 #include <cuda_runtime.h>
 #include "cublas_v2.h"
+
+#include <math.h>
+#define M 6
+#define N 5
+#define IDX2F(i, j, ld) ((((j)-1) * (ld)) + ((i)-1))
 
 using namespace std;
 using namespace ngraph;
@@ -35,7 +41,7 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     cublasStatus_t stat = cublasCreate(&m_cublas_handle);
     if (stat != cudaSuccess)
     {
-        std::cout << "device cublas handler creation failed";
+        throw runtime_error("cuBLAS create failed");
     }
     // Pass scalars as reference on the device
     cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
@@ -62,7 +68,7 @@ void runtime::gpu::GPU_CallFrame::tensor_call(
         outputs.push_back(tv->m_allocated_buffer_pool);
     }
 
-    m_compiled_function(inputs, outputs, m_cublas_handle);
+    m_compiled_function(inputs.data(), outputs.data(), m_cublas_handle);
 }
 
 void runtime::gpu::GPU_CallFrame::call(
