@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # ----------------------------------------------------------------------------
 
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
