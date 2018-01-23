@@ -30,7 +30,7 @@ namespace ngraph
     {
         class Backend;
         class Manager;
-    }
+    } // namespace runtime
 
     namespace autodiff
     {
@@ -121,17 +121,10 @@ namespace ngraph
             std::vector<typename std::vector<T>::iterator> result_pos;
             for (auto result : results)
             {
-                result_vect.push_back(read_vector<T>(result)); // storage for results
+                result_vect.push_back(read_vector<T>(result));
                 result_pos.push_back(result_vect.back().begin());
             }
 
-            std::vector<std::shared_ptr<ngraph::runtime::TensorView>> args_tv;
-            args_tv.insert(args_tv.begin(), args.begin(), args.end());
-            args_tv.push_back(c_arg);
-
-            std::vector<std::shared_ptr<ngraph::runtime::TensorView>> bprops_tv;
-            bprops_tv.insert(bprops_tv.begin(), bprops.begin(), bprops.end());
-			
             // get adjoint and force to all elements to zero
             auto c_vec = read_vector<T>(c_arg);
             fill(c_vec.begin(), c_vec.end(), 0);
@@ -156,8 +149,8 @@ namespace ngraph
                 for (size_t j = 0; j < results.size(); j++)
                 {
                     // copy df/dx to storage for this element of y
-                    auto bprop_vec = read_vector<T>(bprops[j]);
-                    result_pos[j] = std::copy(bprop_vec.begin(), bprop_vec.end(), result_pos[j]);
+                    auto dfdx = read_vector<T>(df_output_args[j]);
+                    result_pos[j] = std::copy(dfdx.begin(), dfdx.end(), result_pos[j]);
                 }
             }
 
