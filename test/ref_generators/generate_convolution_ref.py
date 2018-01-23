@@ -19,26 +19,6 @@ import math
 import random
 from operator import mul
 
-# Imposes the shape on the given 1-D array to produce a C-style-indexed n-D array.
-def shaped_from_flat(shape,flat):
-    total_elems = reduce(mul,shape)
-
-    assert(len(flat) == total_elems)
-
-    arr = np.array(flat)
-    arr.shape = shape
-
-    return arr
-
-# Creates a linspaced array from 1 to n where n is the number of elements in the shape, then
-# imposes the shape on the array to produce a C-style-indexed n-D array.
-def shaped_linspace(shape):
-    total_elems = reduce(mul,shape)
-
-    flat = np.linspace(1,total_elems,total_elems)
-
-    return shaped_from_flat(shape,flat)
-
 # Generates an array of random floating point literals of the given length, from a fixed seed.
 def random_array_float_literals(length,seed=8086):
     literals = []
@@ -356,8 +336,7 @@ def main():
 // If you want to add new tests, you should edit test/ref_generators/generate_convolution_ref.py
 // and regenerate this file.
 //
-// To regenerate (NOTE: this script will run apply-code-format.sh and reformat all source files
-// in your tree):
+// To regenerate:
 //
 //   $ cd <ngraph source dir>/test
 //   $ ./update_reference.sh
