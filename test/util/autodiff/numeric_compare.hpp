@@ -26,8 +26,8 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Manager>& m
 {
     T delta = 0.001;
     auto f = make_graph();
-    auto results_num =
-        ngraph::autodiff::numeric_derivative<T>(manager, backend, f, args, delta, f->get_parameters());
+    auto results_num = ngraph::autodiff::numeric_derivative<T>(
+        manager, backend, f, args, delta, f->get_parameters());
 
     auto g = make_graph();
     auto results_sym =
@@ -77,7 +77,8 @@ bool autodiff_numeric_compare_selective(
         i++;
     }
 
-    auto results_sym = ngraph::autodiff::backprop_derivative<T>(manager, backend, g, args, g_indep_params);
+    auto results_sym =
+        ngraph::autodiff::backprop_derivative<T>(manager, backend, g, args, g_indep_params);
 
     return ngraph::test::all_close(results_num, results_sym, rtol, atol);
 }
