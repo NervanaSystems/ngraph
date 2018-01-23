@@ -30,7 +30,7 @@ namespace ngraph
     {
         class Backend;
         class Manager;
-    } // namespace runtime
+    }
 
     namespace autodiff
     {
@@ -168,5 +168,5 @@ namespace ngraph
             }
             return results;
         }
-    } // namespace autodiff
-} // namespace ngraph
+    }
+}
