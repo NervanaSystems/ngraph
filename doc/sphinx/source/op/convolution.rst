@@ -11,19 +11,19 @@ Basic Operation
 
 In the simplest case, (TODO: explain what convolution is in human words.)
 
-+-----------------+-------------------------+--------------------------------+
-| Input Name      | Element Type            | Shape                          |
-+=================+=========================+================================+
-| ``image_batch`` | Any                     | ``(N, C_in, d_1, ..., d_n)``   |
-+-----------------+-------------------------+--------------------------------+
-| ``filters``     | Same as ``image_batch`` | ``(N, C_in, df_1, ..., df_n)`` |
-+-----------------+-------------------------+--------------------------------+
++-----------------+-------------------------+------------------------------------+
+| Input Name      | Element Type            | Shape                              |
++=================+=========================+====================================+
+| ``image_batch`` | Any                     | ``(N, C_in, d_1, ..., d_n)``       |
++-----------------+-------------------------+------------------------------------+
+| ``filters``     | Same as ``image_batch`` | ``(C_out, C_in, df_1, ..., df_n)`` |
++-----------------+-------------------------+------------------------------------+
 
-+------------------+-------------------------+----------------------------------------------------+
-| Output Name      | Element Type            | Shape                                              |
-+==================+=========================+====================================================+
-| ``features_out`` | Same as ``image_batch`` | ``(N, C_in, d_1 - df_1 + 1, ..., d_n - df_n + 1)`` |
-+------------------+-------------------------+----------------------------------------------------+
++------------------+-------------------------+-----------------------------------------------------+
+| Output Name      | Element Type            | Shape                                               |
++==================+=========================+=====================================================+
+| ``features_out`` | Same as ``image_batch`` | ``(N, C_out, d_1 - df_1 + 1, ..., d_n - df_n + 1)`` |
++------------------+-------------------------+-----------------------------------------------------+
 
 It must be the case that after dilation and padding are applied, the filter fits within the image.
 
@@ -116,17 +116,23 @@ Convolution
 
 TODO.
 
+.. math::
+
+   \mathit{Conv}(T^\mathit{image},T^\mathit{filter}) \triangleq
+
 Padded, Dilated, Strided Convolution
 ------------------------------------
 
 .. math::
 
-   \mathit{PDSConv}[g,p,q,l,s](T_\mathit{image},T_\mathit{filter} \triangleq \mathit{Stride}[s](\mathit{Conv}(\mathit{Pad}[p,q](\mathit{Dilate}[g](T_\mathit{batch})),\mathit{Dilate}[l](T_\mathit{filter})))
+   \mathit{PDSConv}[g,p,q,l,s](T^\mathit{image},T^\mathit{filter}) \triangleq \mathit{Stride}[s](\mathit{Conv}(\mathit{Pad}[p,q](\mathit{Dilate}[g](T^\mathit{image})),\mathit{Dilate}[l](T^\mathit{filter})))
 
 Batched, Padded, Dilated, Strided Convolution
 ---------------------------------------------
 
-TODO.
+.. math::
+
+   \mathit{BPDSConv}[g,p,q,l,s](T^\mathit{images},T^\mathit{filters})_{n,c,d_1,\dots,d_n} \triangleq \mathit{PDSConv}[(1,g),(0,p),(0,q),(1,l),(1,s)](T^\mathit{images}_{n},T^\mathit{filters}_c)_{0,d_1,\dots,d_n}
 
 C++ Interface
 =============
