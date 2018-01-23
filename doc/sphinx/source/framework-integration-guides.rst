@@ -10,7 +10,7 @@ Compile MXNet with ``libngraph``
 ================================
 
 #. Add the `MXNet`_ prerequisites to your system, if the system doesn't have them
-   already:  
+   already.  These requirements are Ubuntu\*-specific.  
 
    .. code-block:: console
 
@@ -72,7 +72,7 @@ Using ``libngraph`` from Tensorflow as XLA plugin
 .. warning:: Section below is a Work in Progress.
 
 #. Get the `ngraph` fork of TensorFlow from this repo: ``git@github.com:NervanaSystems/ngraph-tensorflow.git``
-#. Etc.
+
 #. Go to the end near the following snippet
 
    ::

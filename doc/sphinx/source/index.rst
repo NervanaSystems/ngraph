@@ -34,7 +34,6 @@ Intel nGraph library
    :name: Models
 
    training.rst
-   model-phases.rst
 
 .. toctree::
    :maxdepth: 2

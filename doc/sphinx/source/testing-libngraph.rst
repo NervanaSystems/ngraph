@@ -20,20 +20,13 @@ To perform the unit tests:
       $ cd build/
       $ make check
 
-#. To build the full Google test suite (required to compile with MXNet):
-
-   .. code-block:: console
-
-      $ git clone git@github.com:google/googletest.git
-      $ cd googletest/ && cmake . && make -j$(nproc) && sudo make install      
-
 
 Compiling a framework with ``libngraph``
 ========================================
 
 After building and installing the nGraph library to your system, the next 
 logical step is to compile a framework that you can use to run a 
-training/inference model with one of function-driven backends that are now 
+training/inference model with one of the backends that are now 
 enabled. See our :doc:`model-phases` documentation for more about function-driven
 backend design and architecture for algorithms.      
 
