@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # ----------------------------------------------------------------------------
 
-from setuptools import setup, Extension
+# ----------------------------------------------------------------------------
+#
+# This file is auto generated from cmake. Do not manually modify content!
+#
+# ----------------------------------------------------------------------------
+
+from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
@@ -133,7 +139,7 @@ extra_link_args = []
 data_files = [('lib', [NGRAPH_CPP_LIBRARY_DIR + "/" + library for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR)]),]
 
 ext_modules = [Extension(
-                   'pyngraph',
+                   '_pyngraph',
                    sources = sources,
                    include_dirs = include_dirs,
                    define_macros = [("VERSION_INFO", __version__)],
@@ -173,6 +179,8 @@ setup(
     description='Python wrapper for ngraph',
     long_description='',
     ext_modules=ext_modules,
+    package_dir={'pyngraph': PYNGRAPH_SOURCE_DIR + "/pyngraph"},
+    packages = find_packages(exclude=['pybind11', 'build', 'test']),
     cmdclass={'build_ext': BuildExt},
     data_files = data_files,
     zip_safe=False,
