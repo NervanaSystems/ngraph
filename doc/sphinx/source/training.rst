@@ -1,0 +1,6 @@
+.. training:
+
+Training
+########
+
+
