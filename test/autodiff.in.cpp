@@ -20,79 +20,12 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "util/all_close.hpp"
-#include "util/autodiff/backprop_derivative.hpp"
 #include "util/autodiff/backprop_function.hpp"
-#include "util/autodiff/numeric_derivative.hpp"
+#include "util/autodiff/numeric_compare.hpp"
 #include "util/random.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-template <typename T>
-bool autodiff_numeric_compare(const std::shared_ptr<runtime::Manager>& manager,
-                              const std::shared_ptr<runtime::Backend>& backend,
-                              std::function<std::shared_ptr<Function>()> make_graph,
-                              const std::vector<std::shared_ptr<runtime::TensorView>>& args,
-                              T rtol,
-                              T atol)
-{
-    auto f = make_graph();
-    auto results_num =
-        autodiff::numeric_derivative<T>(manager, backend, f, args, .001f, f->get_parameters());
-
-    auto g = make_graph();
-    auto results_sym =
-        autodiff::backprop_derivative<T>(manager, backend, g, args, g->get_parameters());
-
-    return test::all_close(results_num, results_sym, rtol, atol);
-}
-
-template <typename T>
-bool autodiff_numeric_compare_selective(
-    const std::shared_ptr<runtime::Manager>& manager,
-    const std::shared_ptr<runtime::Backend>& backend,
-    std::function<std::shared_ptr<Function>()> make_graph,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& args,
-    T rtol,
-    T atol,
-    const std::vector<bool>& indep_param_mask)
-{
-    std::vector<std::shared_ptr<op::Parameter>> f_indep_params;
-    auto f = make_graph();
-
-    size_t i = 0;
-
-    for (auto b : indep_param_mask)
-    {
-        if (b)
-        {
-            f_indep_params.push_back(f->get_parameters().at(i));
-        }
-        i++;
-    }
-
-    auto results_num =
-        autodiff::numeric_derivative<T>(manager, backend, f, args, .001f, f_indep_params);
-
-    std::vector<std::shared_ptr<op::Parameter>> g_indep_params;
-    auto g = make_graph();
-
-    i = 0;
-
-    for (auto b : indep_param_mask)
-    {
-        if (b)
-        {
-            g_indep_params.push_back(g->get_parameters().at(i));
-        }
-        i++;
-    }
-
-    auto results_sym = autodiff::backprop_derivative<T>(manager, backend, g, args, g_indep_params);
-
-    return test::all_close(results_num, results_sym, rtol, atol);
-}
 
 TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 {
