@@ -14,7 +14,7 @@
 # limitations under the License.
 # ----------------------------------------------------------------------------
 
-if [ -d dl_frameworks ]; then
+if [ -d build ]; then
     rm -rf build
 fi
 
