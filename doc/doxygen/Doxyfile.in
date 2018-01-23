@@ -1,8 +1,10 @@
-PROJECT_NAME     = "ngraph++"
-PROJECT_BRIEF    = "Nervana graph compiler"
+PROJECT_NAME     = "nGraph++"
+PROJECT_BRIEF    = "Intel(R) nGraph(TM)"
 
 OUTPUT_DIRECTORY = @CMAKE_CURRENT_BINARY_DIR@
 INPUT            = @CMAKE_SOURCE_DIR@/src
 RECURSIVE        = YES
 
 USE_MATHJAX      = YES
+
+GENERATE_XML     = YES

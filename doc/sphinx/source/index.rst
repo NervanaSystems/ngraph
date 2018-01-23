@@ -50,6 +50,12 @@ Intel nGraph library
 
 .. toctree::
    :maxdepth: 1
+   :caption: Ops
+
+   op/convolution.rst
+
+.. toctree::
+   :maxdepth: 1
    :caption: Project Docs
 
    release-notes.rst

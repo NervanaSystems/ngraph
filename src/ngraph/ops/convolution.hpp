@@ -21,37 +21,6 @@ namespace ngraph
     namespace op
     {
         /// \brief Batched convolution operation, with optional window dilation and stride.
-        ///
-        /// Convolution takes two inputs:
-        ///
-        /// 1. <i>(the image batch)</i> a tensor of shape \f$(N,C_\textit{in},d_1,\dots,d_n)\f$ where \f$n > 0\f$, every \f$d_i > 0\f$, and where \f$N\f$ is the batch size
-        ///    (number of images) and \f$C_\textit{in} > 0\f$ is the number of input channels (sometimes called features); and
-        /// 2. <i>(the filters)</i> a tensor of shape \f$(C_\textit{out},C_\textit{in},d^f_1,\dots,d^f_n)\f$, where \f$C_\textit{out} > 0\f$ is the number of output channels
-        ///    (sometimes called features) and \f$(d^f_1,\dots,d^f_n)\f$ are the filter dimensions. It is required that for all \f$i\f$, \f$0 < l_i(d^f_i - 1) + 1 \le (d_i - 1)*g_i + 1\f$.
-        ///    (See below for the definition of the window dilation \f$l_i\f$ and the image dilation \f$g_i\f$);
-        ///
-        /// and five optional parameters:
-        ///
-        /// 3. <i>(the window movement strides)</i> a vector of positive integers \f$(s_1,\dots,s_n)\f$ (default is all ones),
-        /// 4. <i>(the window dilation strides)</i> a vector of positive integers \f$(l_1,\dots,l_n)\f$ (default is all ones),
-        /// 5. <i>(the padding below)</i> a vector of (possibly negative) integers \f$(p_1,\dots,p_n)\f$ (default is all zeros),
-        /// 6. <i>(the padding above)</i> a vector of (possibly negative) integers \f$(q_1,\dots,q_n)\f$ (default is all zeros), and
-        /// 7. <i>(the image dilation strides)</i> a vector of non-negative integers \f$(q_1,\dots,q_n)\f$ (default is all ones).
-        ///
-        /// The output has the shape \f$(N,C_\textit{out},d'_1,\dots,d'_n)\f$, where \f$d'_n = \lceil \frac{(d_i - 1) * g_i + 1 + p_i + q_i - l_i(d^f_i - 1)}{s_i} \rceil\f$.
-        ///
-        /// Given an input image batch tensor \f$T_\textit{in}\f$, first define the <i>transformed input tensor</i> \f$T_\textit{trans}\f$, with shape \f$(N,C_\textit{in},(d_1 - 1)*g_1+1+p_1+q_1,\dots,(d_n - 1)*g_n+1+p_n+q_n)\f$, as follows:
-        ///
-        /// \f[
-        ///      T_\textit{trans}[a,c,i_1,\dots,i_n] = T[a,c,(i_1 - p_1)/g_1,\dots,(i_n - p_n)/g_n] \text{ if for all }k, g_k evenly divides (i_k - p_k) and p_k \le i_k \lt p_k + (d_k - 1)*g_k + 1, \text{ else } 0
-        /// \f]
-        ///
-        /// then, given an input filter tensor \f$T_\textit{filt}\f$, the output tensor \f$T_\textit{out}\f$ is defined by the equation.
-        ///
-        /// \f[
-        ///      T_\textit{out}[a,c_\textit{out},i_1,\dots,i_n] = \sum_{c_\textit{in}=0,j_1=0,\dots,j_n=0}^{c_\textit{in}=C_\textit{in}-1,j_1=d^f_1-1,\dots,j_n=d^f_n-1} (T_\textit{filt}[c_\textit{out},c_\textit{in},j_1,\dots,j_n] \cdot T_\textit{trans}[a,c_\textit{in},s_1i_1+l_1j_1,\dots,s_ni_n+l_nj_n])
-        /// \f]
-        ///
         class Convolution : public RequiresTensorViewArgs
         {
         public:
