@@ -732,12 +732,6 @@ TEST(${BACKEND_NAME}, backwards_power)
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 
-    x0 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
-    x1 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
-
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
-
     x0 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
     x1 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
 
