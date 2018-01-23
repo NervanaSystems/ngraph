@@ -228,6 +228,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     // to register cleanup handlers. We use it, and not atexit(), because
     // atexit() happens too late, when the JIT is no longer alive
 
+    writer << "using namespace ngraph::runtime;\n\n";
+
     writer << "void *__dso_handle = 0;\n\n";
 
     if (m_emit_timing)
@@ -694,7 +696,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     file_util::make_directory(s_output_dir);
     string filename = file_util::path_join(s_output_dir, function_name + "_codegen.cpp");
     ofstream out(filename);
-    string code = preamble + writer.get_code();
+    string code = writer.get_code();
     out << code;
     out.close();
 
@@ -723,13 +725,15 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
 string runtime::cpu::CPU_ExternalFunction::generate_includes(codegen::CodeWriter& writer)
 {
+    writer.add_include_directive("#include <cmath>");
+    writer.add_include_directive("#include <cstring>");
+    writer.add_include_directive(R"(#include "ngraph/runtime/aligned_buffer.hpp")");
+    // writer.add_include_directive("#include <tbb/flow_graph.h>");
     string preamble =
         R"(
 #include <cmath>
-#include <tbb/flow_graph.h>
-
+#include <cstring>
 #include "ngraph/runtime/aligned_buffer.hpp"
-#include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/kernel/avg_pool.hpp"
 #include "ngraph/runtime/kernel/broadcast.hpp"
@@ -748,9 +752,6 @@ string runtime::cpu::CPU_ExternalFunction::generate_includes(codegen::CodeWriter
 #include "ngraph/runtime/kernel/slice.hpp"
 #include "ngraph/runtime/kernel/sum.hpp"
 #include "ngraph/util.hpp"
-
-using namespace ngraph::runtime;
-
 )";
     return preamble;
 }

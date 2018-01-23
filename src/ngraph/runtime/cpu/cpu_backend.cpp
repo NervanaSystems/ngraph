@@ -33,3 +33,8 @@ std::shared_ptr<ngraph::runtime::TensorView>
     auto rc = make_shared<runtime::HostTensorView>(element_type, shape);
     return dynamic_pointer_cast<runtime::TensorView>(rc);
 }
+
+void runtime::cpu::CPU_Backend::tbb_enable(bool value)
+{
+    m_tbb_enable = value;
+}

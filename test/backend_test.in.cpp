@@ -26,6 +26,7 @@
 #include "util/all_close.hpp"
 #include "util/ndarray.hpp"
 #include "util/test_tools.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -4893,14 +4894,6 @@ TEST(${BACKEND_NAME}, numeric_double_inf)
 
 TEST(${BACKEND_NAME}, abc_tbb)
 {
-    // Force TBB flow graph generation in the CPU backend
-    // This has no effect on other backends
-    bool use_tbb = (getenv("NGRAPH_CPU_USE_TBB") != nullptr);
-    if (!use_tbb)
-    {
-        setenv("NGRAPH_CPU_USE_TBB", "1", 1);
-    }
-
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -4910,6 +4903,11 @@ TEST(${BACKEND_NAME}, abc_tbb)
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
+    shared_ptr<runtime::cpu::CPU_Backend> cpu_backend = dynamic_pointer_cast<runtime::cpu::CPU_Backend>(backend);
+    if (cpu_backend)
+    {
+        cpu_backend->tbb_enable(true);
+    }
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
@@ -4933,11 +4931,6 @@ TEST(${BACKEND_NAME}, abc_tbb)
     cf->call({a, c, b}, {result});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
-
-    if (!use_tbb)
-    {
-        unsetenv("NGRAPH_CPU_USE_TBB");
-    }
 }
 
 //

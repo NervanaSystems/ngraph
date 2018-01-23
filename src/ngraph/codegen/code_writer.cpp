@@ -26,7 +26,15 @@ codegen::CodeWriter::CodeWriter()
 
 string codegen::CodeWriter::get_code() const
 {
-    return m_ss.str();
+    stringstream ss;
+
+    for (const string& s : m_include_directives)
+    {
+        ss << s << "\n";
+    }
+    ss << m_ss.str();
+
+    return ss.str();
 }
 
 stringstream& codegen::CodeWriter::get_stream()
