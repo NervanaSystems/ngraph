@@ -24,7 +24,7 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Manager>& m
                               T rtol,
                               T atol)
 {
-    T delta = 0.001;
+    T delta = static_cast<T>(0.001);
     auto f = make_graph();
     auto results_num = ngraph::autodiff::numeric_derivative<T>(
         manager, backend, f, args, delta, f->get_parameters());
