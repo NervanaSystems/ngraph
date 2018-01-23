@@ -16,6 +16,11 @@ Activate your virtual environment and install the bdist wheel
 pip install -U <full path to the bdist wheel>
 ```
 
+For example, On MacOS you would run a command like,
+
+```
+pip install -U build/dist/pyngraph-0.0.1-cp27-cp27m-macosx_10_13_intel.whl
+```
 
 ## Installation - Old Way (Still works)
 
