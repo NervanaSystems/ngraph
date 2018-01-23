@@ -749,7 +749,6 @@ string runtime::cpu::CPU_ExternalFunction::generate_includes(codegen::CodeWriter
 #include "ngraph/runtime/kernel/sum.hpp"
 #include "ngraph/util.hpp"
 
-using namespace ngraph::runtime::cpu::eigen;
 using namespace ngraph::runtime;
 
 )";
