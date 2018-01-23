@@ -25,7 +25,6 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
-#include "ngraph/pass/topological_sort.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "util/test_tools.hpp"
 
@@ -207,7 +206,6 @@ TEST(memory_layout, basic)
 {
     string dump_file = "memory_layout.txt";
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>();
     pass_manager.register_pass<pass::DumpSorted>(dump_file);
@@ -223,7 +221,6 @@ TEST(memory_layout, constant)
 {
     string dump_file = "constant.txt";
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>();
     pass_manager.register_pass<pass::DumpSorted>(dump_file);

@@ -50,7 +50,13 @@ namespace ngraph
 
     protected:
         Node(const std::string& node_type, const Nodes& arguments);
-        virtual ~Node() {}
+        virtual ~Node()
+        {
+            for (auto arg : m_arguments)
+            {
+                arg->m_users.erase(this);
+            }
+        }
         virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const std::shared_ptr<Node>& delta)
         {
@@ -155,14 +161,17 @@ namespace ngraph
         virtual std::shared_ptr<Node>
             copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const = 0;
 
-        virtual std::shared_ptr<Function> get_function() const;
+        virtual std::vector<std::shared_ptr<Function>> get_functions() const;
 
         // True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
 
+        virtual bool is_functionally_identical(const Node&) const;
+
     protected:
         void add_output(const element::Type& element_type, const Shape& shape);
         void assert_argument_list_equivalency(const Nodes& b);
+        bool test_identical(const Node&) const;
 
         std::string m_node_type;
         std::multiset<Node*> m_users;

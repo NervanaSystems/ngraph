@@ -19,7 +19,7 @@
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
-using namespace ngraph::runtime::cpu::kernels;
+using namespace std;
 
 //
 // Given a coordinate transform and a vector of index expressions relative to
@@ -37,18 +37,17 @@ using namespace ngraph::runtime::cpu::kernels;
 //    {"((k) * 2 + 5)", "((i) * 2 + 3)", "((j) * 2 + 4)"}
 //
 //
-std::vector<std::string>
-    ngraph::runtime::cpu::kernels::emit_multi_indices(CoordinateTransform trans,
-                                                      std::vector<std::string> index_vars)
+vector<string> ngraph::runtime::cpu::kernel::emit_multi_indices(CoordinateTransform& trans,
+                                                                const vector<string>& index_vars)
 {
-    std::vector<std::string> result;
+    vector<string> result;
 
     for (size_t i = 0; i < index_vars.size(); i++)
     {
-        std::string index_var = index_vars[trans.get_source_axis_order()[i]];
+        string index_var = index_vars[trans.get_source_axis_order()[i]];
         size_t source_stride = trans.get_source_strides()[i];
         size_t source_start = trans.get_source_start_corner()[i];
-        std::stringstream ss;
+        stringstream ss;
 
         if (source_stride == 1 && source_start == 0)
         {
@@ -90,10 +89,10 @@ std::vector<std::string>
 //    "((4 * ((k) * 2 + 5)) + (2 * ((i) * 2 + 3)) + ((j) * 2 + 4))"
 //
 //
-std::string ngraph::runtime::cpu::kernels::emit_linear_index(CoordinateTransform trans,
-                                                             std::vector<std::string> index_vars)
+string ngraph::runtime::cpu::kernel::emit_linear_index(CoordinateTransform& trans,
+                                                       const vector<string>& index_vars)
 {
-    std::vector<std::string> multi_indices = emit_multi_indices(trans, index_vars);
+    vector<string> multi_indices = emit_multi_indices(trans, index_vars);
 
     size_t stride = 1;
 
@@ -102,7 +101,7 @@ std::string ngraph::runtime::cpu::kernels::emit_linear_index(CoordinateTransform
         // No need to do this (multiply by stride) if it's 1, though it wouldn't hurt anything.
         if (stride != 1)
         {
-            std::stringstream ss;
+            stringstream ss;
             ss << "(" << stride << " * " << multi_indices[i] << ")";
             multi_indices[i] = ss.str();
         }
@@ -110,7 +109,7 @@ std::string ngraph::runtime::cpu::kernels::emit_linear_index(CoordinateTransform
         stride *= trans.get_source_shape()[i];
     }
 
-    std::stringstream ss;
+    stringstream ss;
     ss << "(" << join(multi_indices, " + ") << ")";
 
     return ss.str();
@@ -122,12 +121,12 @@ std::string ngraph::runtime::cpu::kernels::emit_linear_index(CoordinateTransform
 //
 // Optionally emits an OpenMP parallel pragma, if "omp" is true.
 //
-std::string ngraph::runtime::cpu::kernels::start_index_loop(std::string index_var,
-                                                            size_t start,
-                                                            size_t end,
-                                                            bool omp)
+string ngraph::runtime::cpu::kernel::start_index_loop(const string& index_var,
+                                                      size_t start,
+                                                      size_t end,
+                                                      bool omp)
 {
-    std::stringstream ss;
+    stringstream ss;
 
     if (omp)
     {
@@ -144,18 +143,18 @@ std::string ngraph::runtime::cpu::kernels::start_index_loop(std::string index_va
 //
 // Ends an indexing loop on the index variable [index_var].
 //
-std::string ngraph::runtime::cpu::kernels::end_index_loop(std::string index_var)
+string ngraph::runtime::cpu::kernel::end_index_loop(const string& index_var)
 {
-    std::stringstream ss;
+    stringstream ss;
 
     ss << "} // end for(" << index_var << ")\n";
 
     return ss.str();
 }
 
-std::string ngraph::runtime::cpu::kernels::emit_nd_sizes(CoordinateTransform trans)
+string ngraph::runtime::cpu::kernel::emit_nd_sizes(CoordinateTransform& trans)
 {
-    std::stringstream ss;
+    stringstream ss;
 
     for (size_t s : trans.get_source_shape())
     {
@@ -165,12 +164,12 @@ std::string ngraph::runtime::cpu::kernels::emit_nd_sizes(CoordinateTransform tra
     return ss.str();
 }
 
-std::string ngraph::runtime::cpu::kernels::emit_nd_index(CoordinateTransform trans,
-                                                         std::vector<std::string> index_vars)
+string ngraph::runtime::cpu::kernel::emit_nd_index(CoordinateTransform& trans,
+                                                   const vector<string>& index_vars)
 {
-    std::stringstream ss;
+    stringstream ss;
 
-    for (std::string index : emit_multi_indices(trans, index_vars))
+    for (string index : emit_multi_indices(trans, index_vars))
     {
         ss << "[" << index << "]";
     }
@@ -182,22 +181,22 @@ std::string ngraph::runtime::cpu::kernels::emit_nd_index(CoordinateTransform tra
 // Emits a pointwise copy from source_buffer mediated by in_trans, to
 // dest_buffer mediated by dest_trans.
 //
-void ngraph::runtime::cpu::kernels::emit_pointwise_copy(codegen::CodeWriter& writer,
-                                                        std::string element_type,
-                                                        std::string source_buffer,
-                                                        std::string dest_buffer,
-                                                        CoordinateTransform source_trans,
-                                                        CoordinateTransform dest_trans)
+void ngraph::runtime::cpu::kernel::emit_pointwise_copy(codegen::CodeWriter& writer,
+                                                       const string& element_type,
+                                                       const string& source_buffer,
+                                                       const string& dest_buffer,
+                                                       CoordinateTransform& source_trans,
+                                                       CoordinateTransform& dest_trans)
 {
-    std::vector<std::string> index_vars;
+    vector<string> index_vars;
 
     Shape source_start_corner = source_trans.get_source_start_corner();
     Shape source_end_corner = source_trans.get_source_end_corner();
 
     size_t n_axes = source_start_corner.size();
 
-    std::string source_nd_name = writer.generate_temporary_name("source_nd");
-    std::string dest_nd_name = writer.generate_temporary_name("dest_nd");
+    string source_nd_name = writer.generate_temporary_name("source_nd");
+    string dest_nd_name = writer.generate_temporary_name("dest_nd");
 
     writer << element_type << "(&" << source_nd_name << ")" << emit_nd_sizes(source_trans)
            << " = *reinterpret_cast<" << element_type << "(*)" << emit_nd_sizes(source_trans)
@@ -208,7 +207,7 @@ void ngraph::runtime::cpu::kernels::emit_pointwise_copy(codegen::CodeWriter& wri
 
     for (size_t i = 0; i < n_axes; i++)
     {
-        std::string index_var = writer.generate_temporary_name("i");
+        string index_var = writer.generate_temporary_name("i");
 
         writer << start_index_loop(index_var, source_start_corner[i], source_end_corner[i], i == 0);
         writer.indent++;

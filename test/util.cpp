@@ -27,13 +27,6 @@
 using namespace std;
 using namespace ngraph;
 
-template <typename T>
-static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
-{
-    size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
-}
-
 TEST(util, split)
 {
     {

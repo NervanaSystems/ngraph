@@ -15,6 +15,7 @@
 #pragma once
 
 #include "ngraph/ops/op.hpp"
+#include "ngraph/types/type.hpp"
 
 namespace ngraph
 {
@@ -60,8 +61,10 @@ namespace ngraph
             }
 
             const element::Type& get_convert_element_type() const { return m_element_type; }
+            bool is_functionally_identical(const Node&) const override;
+
         protected:
-            const ngraph::element::Type& m_element_type;
+            const ngraph::element::Type m_element_type;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
         };

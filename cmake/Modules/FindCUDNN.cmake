@@ -11,6 +11,10 @@
 # See the License for the specific language governing permissions and
 #
 
+# The remaining code in this file was included from the Caffe 2 project,
+# which was made available under the terms of the Apache 2.0 License.
+# [link] (https://github.com/caffe2/caffe2/blob/f69232c9237174f8e272c0fc59d3e28af52842f2/cmake/Modules/FindCuDNN.cmake)
+
 # - Try to find cuDNN
 #
 # The following variables are optionally searched for defaults

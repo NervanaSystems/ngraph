@@ -35,7 +35,7 @@ namespace ngraph
                 CoordinateTransform input_transform(in_shape);
                 CoordinateTransform output_transform(out_shape);
 
-                for (Coordinate output_coord : output_transform)
+                for (const Coordinate& output_coord : output_transform)
                 {
                     Coordinate input_coord = project_coordinate(output_coord, broadcast_axes);
 

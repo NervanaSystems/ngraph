@@ -21,6 +21,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
@@ -28,19 +29,23 @@
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/one_hot.hpp"
+#include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/reverse.hpp"
+#include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/interpreter/int_tensor_view.hpp"
-#include "ngraph/runtime/interpreter/int_tensor_view.hpp"
+#include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/kernel/abs.hpp"
 #include "ngraph/runtime/kernel/acos.hpp"
 #include "ngraph/runtime/kernel/add.hpp"
 #include "ngraph/runtime/kernel/asin.hpp"
 #include "ngraph/runtime/kernel/atan.hpp"
+#include "ngraph/runtime/kernel/avg_pool.hpp"
 #include "ngraph/runtime/kernel/broadcast.hpp"
 #include "ngraph/runtime/kernel/ceiling.hpp"
 #include "ngraph/runtime/kernel/concat.hpp"
@@ -68,11 +73,15 @@
 #include "ngraph/runtime/kernel/not.hpp"
 #include "ngraph/runtime/kernel/not_equal.hpp"
 #include "ngraph/runtime/kernel/one_hot.hpp"
+#include "ngraph/runtime/kernel/pad.hpp"
 #include "ngraph/runtime/kernel/power.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
+#include "ngraph/runtime/kernel/reduce_window.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
+#include "ngraph/runtime/kernel/reverse.hpp"
 #include "ngraph/runtime/kernel/select.hpp"
+#include "ngraph/runtime/kernel/select_and_scatter.hpp"
 #include "ngraph/runtime/kernel/sign.hpp"
 #include "ngraph/runtime/kernel/sin.hpp"
 #include "ngraph/runtime/kernel/sinh.hpp"
@@ -109,37 +118,47 @@ public:
     /// @brief Invoke the function with values matching the signature of the function.
     ///
     /// Tuples will be expanded into their tensor views to build the call frame.
-    void call(const std::vector<std::shared_ptr<runtime::Value>>& inputs,
-              const std::vector<std::shared_ptr<runtime::Value>>& outputs);
+    void call(const std::vector<std::shared_ptr<runtime::TensorView>>& inputs,
+              const std::vector<std::shared_ptr<runtime::TensorView>>& outputs) override;
+    std::vector<runtime::PerformanceCounter> get_performance_data() const override;
+
+    void set_nan_check(bool);
 
 private:
     /// @brief Invoke the function with tuples pre-expanded to their underlying
     /// tensor views.
     void tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
-                     const std::vector<std::shared_ptr<TensorView>>& outputs);
-    void tensor_call(const std::vector<std::shared_ptr<INT_TensorView>>& inputs,
-                     const std::vector<std::shared_ptr<INT_TensorView>>& outputs);
+                     const std::vector<std::shared_ptr<TensorView>>& outputs) override;
+    void tensor_call(const std::vector<std::shared_ptr<HostTensorView>>& inputs,
+                     const std::vector<std::shared_ptr<HostTensorView>>& outputs);
     void call(std::shared_ptr<Function> function,
-              const std::vector<std::shared_ptr<runtime::interpreter::INT_TensorView>>& input_tvs,
-              const std::vector<std::shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs);
+              const std::vector<std::shared_ptr<runtime::HostTensorView>>& input_tvs,
+              const std::vector<std::shared_ptr<runtime::HostTensorView>>& output_tvs);
     void handle_output_alias(
         const Node& node,
         const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>& output_alias_map,
-        const std::vector<std::shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs);
+        const std::vector<std::shared_ptr<runtime::HostTensorView>>& output_tvs);
+
+    static void perform_nan_check(const std::vector<std::shared_ptr<HostTensorView>>&,
+                                  const Node* op = nullptr);
 
     std::shared_ptr<ExternalFunction> m_external_function;
     std::shared_ptr<Function> m_function;
+    bool m_emit_timing;
+    bool m_nan_check;
+    std::unordered_map<const Node*, stopwatch> m_timer_map;
+
     void generate_calls(const element::Type& base_type,
                         const element::Type& secondary_type,
                         ngraph::Node& op,
-                        const std::vector<std::shared_ptr<INT_TensorView>>& args,
-                        const std::vector<std::shared_ptr<INT_TensorView>>& out);
+                        const std::vector<std::shared_ptr<HostTensorView>>& args,
+                        const std::vector<std::shared_ptr<HostTensorView>>& out);
 
     template <typename BASE>
     void generate_calls(const element::Type& type,
                         ngraph::Node& op,
-                        const std::vector<std::shared_ptr<INT_TensorView>>& args,
-                        const std::vector<std::shared_ptr<INT_TensorView>>& out)
+                        const std::vector<std::shared_ptr<HostTensorView>>& args,
+                        const std::vector<std::shared_ptr<HostTensorView>>& out)
     {
         if (type == element::boolean)
         {
@@ -195,8 +214,8 @@ private:
 
     template <typename T, typename S>
     void op_engine(ngraph::Node& node,
-                   const std::vector<std::shared_ptr<INT_TensorView>>& args,
-                   const std::vector<std::shared_ptr<INT_TensorView>>& out)
+                   const std::vector<std::shared_ptr<HostTensorView>>& args,
+                   const std::vector<std::shared_ptr<HostTensorView>>& out)
     {
         std::string node_op = node.description();
         if (node_op == "Abs")
@@ -230,6 +249,19 @@ private:
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
         }
+        else if (node_op == "AvgPool")
+        {
+            ngraph::op::AvgPool* avg_pool = dynamic_cast<ngraph::op::AvgPool*>(&node);
+
+            kernel::avg_pool<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                args[0]->get_shape(),
+                                out[0]->get_shape(),
+                                avg_pool->get_window_shape(),
+                                avg_pool->get_window_movement_strides(),
+                                avg_pool->get_padding_below(),
+                                avg_pool->get_padding_above());
+        }
         else if (node_op == "Broadcast")
         {
             ngraph::op::Broadcast* broadcast = dynamic_cast<ngraph::op::Broadcast*>(&node);
@@ -253,7 +285,7 @@ private:
             const op::Concat* concat = static_cast<const op::Concat*>(&node);
             std::vector<T*> in_args;
             std::vector<Shape> in_shapes;
-            for (std::shared_ptr<INT_TensorView> arg : args)
+            for (std::shared_ptr<HostTensorView> arg : args)
             {
                 in_args.push_back(reinterpret_cast<T*>(arg->get_data_ptr()));
                 in_shapes.push_back(arg->get_shape());
@@ -287,7 +319,10 @@ private:
                                    args[1]->get_shape(),
                                    out[0]->get_shape(),
                                    c->get_window_movement_strides(),
-                                   c->get_window_dilation_strides());
+                                   c->get_window_dilation_strides(),
+                                   c->get_padding_below(),
+                                   c->get_padding_above(),
+                                   c->get_image_dilation_strides());
         }
         else if (node_op == "Cos")
         {
@@ -342,7 +377,7 @@ private:
         }
         else if (node_op == "FunctionCall")
         {
-            std::shared_ptr<Function> function = node.get_function();
+            std::shared_ptr<Function> function = node.get_functions()[0];
             call(function, args, out);
         }
         else if (node_op == "Greater")
@@ -442,6 +477,19 @@ private:
         else if (node_op == "Parameter")
         {
         }
+        else if (node_op == "Pad")
+        {
+            ngraph::op::Pad* pad = dynamic_cast<ngraph::op::Pad*>(&node);
+
+            kernel::pad(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                        reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                        reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                        node.get_inputs().at(0).get_shape(),
+                        node.get_output_shape(0),
+                        pad->get_padding_below(),
+                        pad->get_padding_above(),
+                        pad->get_padding_interior());
+        }
         else if (node_op == "Power")
         {
             kernel::power<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
@@ -452,14 +500,14 @@ private:
         else if (node_op == "Reduce")
         {
             ngraph::op::Reduce* reduce = dynamic_cast<ngraph::op::Reduce*>(&node);
-            std::shared_ptr<ngraph::Function> reduction_function = reduce->get_function();
+            std::shared_ptr<ngraph::Function> reduction_function = reduce->get_functions()[0];
 
             std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
-                auto tx = std::make_shared<runtime::interpreter::INT_TensorView>(
+                auto tx = std::make_shared<runtime::HostTensorView>(
                     node.get_inputs().at(0).get_element_type(), Shape{}, "reduce_temp_x");
-                auto ty = std::make_shared<runtime::interpreter::INT_TensorView>(
+                auto ty = std::make_shared<runtime::HostTensorView>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "reduce_temp_y");
-                auto tr = std::make_shared<runtime::interpreter::INT_TensorView>(
+                auto tr = std::make_shared<runtime::HostTensorView>(
                     node.get_output_element_type(0), Shape{}, "reduce_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
@@ -474,6 +522,35 @@ private:
                            node.get_output_shape(0),
                            reduce->get_reduction_axes(),
                            f);
+        }
+        else if (node_op == "ReduceWindow")
+        {
+            ngraph::op::ReduceWindow* reduce_window =
+                dynamic_cast<ngraph::op::ReduceWindow*>(&node);
+            std::shared_ptr<ngraph::Function> reduction_function =
+                reduce_window->get_functions()[0];
+
+            std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
+                auto tx = std::make_shared<runtime::HostTensorView>(
+                    node.get_inputs().at(0).get_element_type(), Shape{}, "reduce_window_temp_x");
+                auto ty = std::make_shared<runtime::HostTensorView>(
+                    node.get_inputs().at(1).get_element_type(), Shape{}, "reduce_window_temp_y");
+                auto tr = std::make_shared<runtime::HostTensorView>(
+                    node.get_output_element_type(0), Shape{}, "reduce_window_temp_r");
+                *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
+                *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
+                call(reduction_function, {tx, ty}, {tr});
+                return *(reinterpret_cast<T*>(tr->get_data_ptr()));
+            };
+
+            kernel::reduce_window(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                  reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                  reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                  node.get_inputs().at(0).get_shape(),
+                                  node.get_output_shape(0),
+                                  f,
+                                  reduce_window->get_window_shape(),
+                                  reduce_window->get_window_movement_strides());
         }
         // else if (node_op == "Remainder")
         // {
@@ -500,6 +577,15 @@ private:
                             reshape->get_input_order(),
                             out[0]->get_shape());
         }
+        else if (node_op == "Reverse")
+        {
+            ngraph::op::Reverse* reverse = dynamic_cast<ngraph::op::Reverse*>(&node);
+            kernel::reverse(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                            args[0]->get_shape(),
+                            out[0]->get_shape(),
+                            reverse->get_reversed_axes());
+        }
         else if (node_op == "Select")
         {
             kernel::select<T>(reinterpret_cast<char*>(args[0]->get_data_ptr()),
@@ -507,6 +593,54 @@ private:
                               reinterpret_cast<T*>(args[2]->get_data_ptr()),
                               reinterpret_cast<T*>(out[0]->get_data_ptr()),
                               out[0]->get_element_count());
+        }
+        else if (node_op == "SelectAndScatter")
+        {
+            ngraph::op::SelectAndScatter* select_and_scatter =
+                dynamic_cast<ngraph::op::SelectAndScatter*>(&node);
+
+            std::shared_ptr<ngraph::Function> selection_function =
+                select_and_scatter->get_functions()[0];
+            std::function<bool(T, T)> f_selection = [this, &node, selection_function](T x,
+                                                                                      T y) -> bool {
+                auto tx = std::make_shared<runtime::HostTensorView>(
+                    node.get_inputs().at(0).get_element_type(), Shape{}, "selection_temp_x");
+                auto ty = std::make_shared<runtime::HostTensorView>(
+                    node.get_inputs().at(1).get_element_type(), Shape{}, "selection_temp_y");
+                auto tr = std::make_shared<runtime::HostTensorView>(
+                    element::boolean, Shape{}, "selection_temp_r");
+                *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
+                *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
+                call(selection_function, {tx, ty}, {tr});
+                return *(reinterpret_cast<char*>(tr->get_data_ptr()));
+            };
+
+            std::shared_ptr<ngraph::Function> scatter_function =
+                select_and_scatter->get_functions()[1];
+            std::function<T(T, T)> f_scatter = [this, &node, scatter_function](T x, T y) -> T {
+                auto tx = std::make_shared<runtime::HostTensorView>(
+                    node.get_inputs().at(0).get_element_type(), Shape{}, "scatter_temp_x");
+                auto ty = std::make_shared<runtime::HostTensorView>(
+                    node.get_inputs().at(1).get_element_type(), Shape{}, "scatter_temp_y");
+                auto tr = std::make_shared<runtime::HostTensorView>(
+                    node.get_output_element_type(0), Shape{}, "scatter_temp_r");
+                *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
+                *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
+                call(scatter_function, {tx, ty}, {tr});
+                return *(reinterpret_cast<T*>(tr->get_data_ptr()));
+            };
+
+            kernel::select_and_scatter<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                          reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                          reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                                          reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                          args[0]->get_shape(),
+                                          args[1]->get_shape(),
+                                          out[0]->get_shape(),
+                                          f_selection,
+                                          f_scatter,
+                                          select_and_scatter->get_window_shape(),
+                                          select_and_scatter->get_window_movement_strides());
         }
         else if (node_op == "Sign")
         {

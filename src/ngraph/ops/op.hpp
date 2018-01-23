@@ -60,10 +60,9 @@ namespace ngraph
             /// \brief Constructs a unary elementwise tensor operation.
             ///
             /// \param arg Node that produces the input tensor.
-            UnaryElementwise(
-                const std::string& node_type,
-                std::function<const element::Type&(const element::Type&)> element_type_function,
-                const std::shared_ptr<Node>& arg);
+            UnaryElementwise(const std::string& node_type,
+                             const element::Type& result_element_type,
+                             const std::shared_ptr<Node>& arg);
         };
 
         /// \brief Abstract base class for elementwise unary arithmetic operations, i.e., operations where the same
@@ -119,12 +118,10 @@ namespace ngraph
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
-            BinaryElementwise(
-                const std::string& node_type,
-                std::function<const element::Type&(const element::Type&, const element::Type&)>
-                    element_type_function,
-                const std::shared_ptr<Node>& arg0,
-                const std::shared_ptr<Node>& arg1);
+            BinaryElementwise(const std::string& node_type,
+                              const element::Type& result_element_type,
+                              const std::shared_ptr<Node>& arg0,
+                              const std::shared_ptr<Node>& arg1);
         };
 
         /// \brief Abstract base class for elementwise binary comparison operations, i.e., operations where the same

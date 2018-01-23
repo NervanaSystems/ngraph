@@ -56,9 +56,15 @@ void ngraph::op::Select::generate_adjoints(autodiff::Adjoints& adjoints,
     auto x = get_inputs().at(1).get_output().get_node();
     auto y = get_inputs().at(2).get_output().get_node();
 
-    auto p_as_float = std::make_shared<op::Convert>(p, element::f32);
-    auto not_p_as_float = std::make_shared<op::Convert>(std::make_shared<op::Not>(p), element::f32);
+    auto p_as_x_type = std::make_shared<op::Convert>(p, x->get_element_type());
+    auto not_p_as_y_type =
+        std::make_shared<op::Convert>(std::make_shared<op::Not>(p), y->get_element_type());
 
-    adjoints.add_delta(x, delta * p_as_float);
-    adjoints.add_delta(y, delta * not_p_as_float);
+    adjoints.add_delta(x, delta * p_as_x_type);
+    adjoints.add_delta(y, delta * not_p_as_y_type);
+}
+
+bool ngraph::op::Select::is_functionally_identical(const Node& other) const
+{
+    return test_identical(other);
 }

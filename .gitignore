@@ -72,3 +72,9 @@ venv/
 # VisualGDB files
 VisualGDB/
 toolchain.cmake
+
+# do not add build artifacts to github
+
+/doc/build
+/doc/sphinx/build
+

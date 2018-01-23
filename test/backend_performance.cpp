@@ -30,22 +30,16 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "util/random.hpp"
+#include "util/test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-template <typename T>
-static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
-{
-    size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
-}
-
 static multimap<size_t, string>
-    agregate_timing(const vector<runtime::cpu::PerformanceCounter>& perf_data)
+    agregate_timing(const vector<runtime::PerformanceCounter>& perf_data)
 {
     unordered_map<string, size_t> timing;
-    for (const runtime::cpu::PerformanceCounter& p : perf_data)
+    for (const runtime::PerformanceCounter& p : perf_data)
     {
         string op = p.name().substr(0, p.name().find('_'));
         timing[op] += p.microseconds();
@@ -59,12 +53,13 @@ static multimap<size_t, string>
     return rc;
 }
 
-void run_benchmark(const std::string& json_path, size_t iterations)
+void run_benchmark(const string& json_path, const string& backend_name, size_t iterations)
 {
-    bool emit_timing = (std::getenv("NGRAPH_CPU_EMIT_TIMING") != nullptr);
+    string env_var_name = "NGRAPH_" + backend_name + "_EMIT_TIMING";
+    bool emit_timing = (std::getenv(env_var_name.c_str()) != nullptr);
     if (!emit_timing)
     {
-        cout << "To get per-op timing set the environment variable NGRAPH_CPU_EMIT_TIMING\n";
+        cout << "To get per-op timing set the environment variable " << env_var_name << "\n";
     }
 
     test::Uniform<float> rng{-1, 1, 0};
@@ -74,11 +69,10 @@ void run_benchmark(const std::string& json_path, size_t iterations)
 
     stopwatch build_time;
     build_time.start();
-    auto manager = runtime::Manager::get("CPU");
+    auto manager = runtime::Manager::get(backend_name);
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
-    runtime::cpu::CPU_CallFrame* cpu_cf = static_cast<runtime::cpu::CPU_CallFrame*>(cf.get());
     build_time.stop();
     cout << "build_time " << build_time.get_milliseconds() << "ms" << endl;
 
@@ -107,47 +101,54 @@ void run_benchmark(const std::string& json_path, size_t iterations)
     float time = t1.get_milliseconds();
     cout << time / iterations << "ms per iteration" << endl;
 
-    if (emit_timing)
+    vector<runtime::PerformanceCounter> perf_data = cf->get_performance_data();
+    sort(perf_data.begin(),
+         perf_data.end(),
+         [](const runtime::PerformanceCounter& p1, const runtime::PerformanceCounter& p2) {
+             return p1.total_microseconds() > p2.total_microseconds();
+         });
+    multimap<size_t, string> timing = agregate_timing(perf_data);
+    for (auto it = timing.rbegin(); it != timing.rend(); it++)
     {
-        vector<runtime::cpu::PerformanceCounter> perf_data = cpu_cf->get_performance_data();
-        sort(perf_data.begin(),
-             perf_data.end(),
-             [](const runtime::cpu::PerformanceCounter& p1,
-                const runtime::cpu::PerformanceCounter& p2) {
-                 return p1.total_microseconds() > p2.total_microseconds();
-             });
-        multimap<size_t, string> timing = agregate_timing(perf_data);
-        for (auto it = timing.rbegin(); it != timing.rend(); it++)
-        {
-            cout.imbue(locale(""));
-            cout << setw(15) << left << it->second << " " << setw(10) << right << it->first
-                 << "us\n";
-        }
+        cout.imbue(locale(""));
+        cout << setw(15) << left << it->second << " " << setw(10) << right << it->first << "us\n";
     }
 }
 
 TEST(benchmark, mxnet_mnist_mlp_forward)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
-    run_benchmark(json_path, 1000);
+    run_benchmark(json_path, "CPU", 1000);
 }
 
 TEST(benchmark, mxnet_10_bucket_lstm)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/10_bucket_LSTM.json");
-    run_benchmark(json_path, 10);
+    run_benchmark(json_path, "CPU", 10);
 }
 
 TEST(benchmark, mxnet_lstm_backward)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/LSTM_backward.json");
-    run_benchmark(json_path, 10);
+    run_benchmark(json_path, "CPU", 10);
 }
 
 TEST(benchmark, mxnet_lstm_forward)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/LSTM_forward.json");
-    run_benchmark(json_path, 10);
+    run_benchmark(json_path, "CPU", 10);
+}
+
+TEST(benchmark, mxnet_seq2seq_forward)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Seq2Seq_forward.json");
+    run_benchmark(json_path, "CPU", 10);
+}
+
+TEST(benchmark, mxnet_seq2seq_backward)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Seq2Seq_backward.json");
+    run_benchmark(json_path, "CPU", 10);
 }
 
 //
@@ -205,7 +206,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         auto backend = manager->allocate_backend();
         auto cf = backend->make_call_frame(external);
 
-        vector<shared_ptr<runtime::Value>> input_vals;
+        vector<shared_ptr<runtime::TensorView>> input_vals;
 
         for (size_t i = 0; i < n_arrays; i++)
         {
@@ -247,7 +248,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         std::cout << "Verifying " << backend_names[i] << " result against " << backend_names[0]
                   << "..." << std::flush;
 
-        if (result_tvs[i]->get_vector<float>() == result_tvs[0]->get_vector<float>())
+        if (read_vector<float>(result_tvs[i]) == read_vector<float>(result_tvs[0]))
         {
             std::cout << " OK" << std::endl;
         }

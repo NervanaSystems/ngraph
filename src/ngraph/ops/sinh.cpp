@@ -23,3 +23,8 @@ void ngraph::op::Sinh::generate_adjoints(autodiff::Adjoints& adjoints,
 
     adjoints.add_delta(x, delta * (std::make_shared<op::Cosh>(x)));
 }
+
+bool ngraph::op::Sinh::is_functionally_identical(const Node& other) const
+{
+    return test_identical(other);
+}

@@ -24,24 +24,23 @@
 
 using namespace std;
 using namespace ngraph;
-using namespace ngraph::descriptor;
 
 pass::MemoryLayout::MemoryLayout(size_t alignment)
     : m_alignment(alignment)
 {
 }
 
-bool pass::MemoryLayout::run_on_function(std::shared_ptr<ngraph::Function> function)
+bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 {
     MemoryManager mm(m_alignment);
     for (shared_ptr<Node> node : function->get_ordered_ops())
     {
-        for (Tensor* tensor : node->liveness_new_list)
+        for (descriptor::Tensor* tensor : node->liveness_new_list)
         {
             size_t offset = mm.allocate(tensor->size());
             tensor->set_pool_offset(offset);
         }
-        for (const Tensor* tensor : node->liveness_free_list)
+        for (const descriptor::Tensor* tensor : node->liveness_free_list)
         {
             mm.free(tensor->get_pool_offset());
         }
@@ -114,7 +113,7 @@ size_t pass::MemoryManager::best_fit(size_t size)
         m_node_list.insert(best_fit, node{size, block_state::ALLOCATED});
         best_fit->m_size -= size;
     }
-    m_max_allocated = std::max(m_max_allocated, best_offset + size);
+    m_max_allocated = max(m_max_allocated, best_offset + size);
 
     return best_offset;
 }
@@ -148,7 +147,7 @@ size_t pass::MemoryManager::first_fit(size_t size)
     {
         throw bad_alloc();
     }
-    m_max_allocated = std::max(m_max_allocated, offset + size);
+    m_max_allocated = max(m_max_allocated, offset + size);
 
     return offset;
 }
@@ -161,7 +160,7 @@ void pass::MemoryManager::free(size_t offset)
     {
         if (offset == search_offset)
         {
-            list<node>::iterator it_next = std::next(it);
+            list<node>::iterator it_next = next(it);
             if (it == m_node_list.begin())
             {
                 // free the first node in the list
@@ -170,7 +169,7 @@ void pass::MemoryManager::free(size_t offset)
             else
             {
                 // node has predecessor
-                list<node>::iterator it_prev = std::prev(it);
+                list<node>::iterator it_prev = prev(it);
                 if (it_prev->m_state == block_state::FREE)
                 {
                     it->m_size += it_prev->m_size;
@@ -195,7 +194,7 @@ void pass::MemoryManager::free(size_t offset)
     }
 }
 
-void pass::MemoryManager::dump(std::ostream& out)
+void pass::MemoryManager::dump(ostream& out)
 {
     for (const node& n : m_node_list)
     {

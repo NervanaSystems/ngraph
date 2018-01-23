@@ -14,6 +14,8 @@
 
 #include <memory>
 
+#include <cuda.h>
+
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
@@ -30,59 +32,26 @@ runtime::gpu::GPU_TensorView::GPU_TensorView(const ngraph::element::Type& elemen
           true,
           true,
           false))
-    , m_allocated_buffer_pool(nullptr)
-    , m_aligned_buffer_pool(nullptr)
-
 {
+    // Need to check type and have host/device tensors
     m_descriptor->set_tensor_view_layout(
         std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
 
     m_buffer_size = m_descriptor->get_tensor_view_layout()->get_size() * element_type.size();
-    if (m_buffer_size > 0)
-    {
-        size_t allocation_size = m_buffer_size + runtime::gpu::alignment;
-        m_allocated_buffer_pool = static_cast<char*>(malloc(allocation_size));
-        m_aligned_buffer_pool = m_allocated_buffer_pool;
-        size_t mod = size_t(m_aligned_buffer_pool) % alignment;
-        if (mod != 0)
-        {
-            m_aligned_buffer_pool += (alignment - mod);
-        }
-    }
+
+    // cuMemAlloc(&dev_buffer, m_buffer_size);
 }
 
 runtime::gpu::GPU_TensorView::~GPU_TensorView()
 {
-    if (m_allocated_buffer_pool != nullptr)
-    {
-        free(m_allocated_buffer_pool);
-    }
+    // cuMemFree(dev_buffer);
 }
-
-char* runtime::gpu::GPU_TensorView::get_data_ptr()
-{
-    return m_aligned_buffer_pool;
-}
-
-const char* runtime::gpu::GPU_TensorView::get_data_ptr() const
-{
-    return m_aligned_buffer_pool;
-}
-
 void runtime::gpu::GPU_TensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
-    if (tensor_offset + n > m_buffer_size)
-    {
-        throw out_of_range("write access past end of tensor");
-    }
-    char* target = get_data_ptr();
+    // cuMemcpyHtoD(dev_buffer, source, n);
 }
 
 void runtime::gpu::GPU_TensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
-    if (tensor_offset + n > m_buffer_size)
-    {
-        throw out_of_range("read access past end of tensor");
-    }
-    const char* source = get_data_ptr();
+    // cuMemcpyDtoH(target, dev_buffer, n);
 }

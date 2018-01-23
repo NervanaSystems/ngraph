@@ -19,6 +19,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/util.hpp"
+#include "util/test_tools.hpp"
 
 namespace ngraph
 {
@@ -120,12 +121,19 @@ namespace ngraph
             std::vector<typename std::vector<T>::iterator> result_pos;
             for (auto result : results)
             {
-                result_vect.push_back(result->get_vector<T>());
+                result_vect.push_back(read_vector<T>(result)); // storage for results
                 result_pos.push_back(result_vect.back().begin());
             }
 
+            std::vector<std::shared_ptr<ngraph::runtime::TensorView>> args_tv;
+            args_tv.insert(args_tv.begin(), args.begin(), args.end());
+            args_tv.push_back(c_arg);
+
+            std::vector<std::shared_ptr<ngraph::runtime::TensorView>> bprops_tv;
+            bprops_tv.insert(bprops_tv.begin(), bprops.begin(), bprops.end());
+			
             // get adjoint and force to all elements to zero
-            auto c_vec = c_arg->template get_vector<T>();
+            auto c_vec = read_vector<T>(c_arg);
             fill(c_vec.begin(), c_vec.end(), 0);
 
             // for each element of the adjoint
@@ -134,29 +142,29 @@ namespace ngraph
             {
                 // set a single adjoint element
                 c_vec[i] = 1;
-                c_arg->write(c_vec);
+                write_vector(c_arg, c_vec);
 
                 // call modified df/dX* = f'(c, cached)
                 cf->tensor_call(df_input_args, df_output_args);
 
                 // reset the adjoint element
                 c_vec[i] = 0;
-                c_arg->write(c_vec);
+                write_vector(c_arg, c_vec);
 
                 // for each result
                 // same as saying for each x "of interest"
                 for (size_t j = 0; j < results.size(); j++)
                 {
                     // copy df/dx to storage for this element of y
-                    auto dfdx = df_output_args[j]->get_vector<T>();
-                    result_pos[j] = std::copy(dfdx.begin(), dfdx.end(), result_pos[j]);
+                    auto bprop_vec = read_vector<T>(bprops[j]);
+                    result_pos[j] = std::copy(bprop_vec.begin(), bprop_vec.end(), result_pos[j]);
                 }
             }
 
             // copy storage to results and return
             for (size_t j = 0; j < results.size(); j++)
             {
-                results[j]->write(result_vect[j]);
+                write_vector(results[j], result_vect[j]);
             }
             return results;
         }

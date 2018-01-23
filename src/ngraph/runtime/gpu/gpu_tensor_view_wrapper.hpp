@@ -12,31 +12,39 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#pragma once
+
 #include <memory>
-#include <vector>
 
 #include "ngraph/descriptor/tensor_view.hpp"
-#include "ngraph/descriptor/tuple.hpp"
-#include "ngraph/types/type.hpp"
+#include "ngraph/types/element_type.hpp"
 
-using namespace ngraph::descriptor;
-
-Tuple::Tuple(const std::vector<std::shared_ptr<ngraph::descriptor::Value>>& elements)
-    : m_elements(elements)
+namespace ngraph
 {
-    std::vector<std::shared_ptr<const ngraph::ValueType>> types;
-    for (auto element : m_elements)
+    namespace runtime
     {
-        types.push_back(element->get_value_type());
-    }
-    m_tuple_type = std::make_shared<ngraph::TupleType>(types);
-}
-
-void Tuple::collect_tensor_views(std::vector<std::shared_ptr<TensorView>>& views,
-                                 const std::shared_ptr<Value>& value) const
-{
-    for (auto element : m_elements)
-    {
-        element->collect_tensor_views(views, element);
+        namespace gpu
+        {
+            class GPU_TensorViewWrapper;
+        }
     }
 }
+
+class ngraph::runtime::gpu::GPU_TensorViewWrapper
+{
+public:
+    GPU_TensorViewWrapper(const std::shared_ptr<descriptor::TensorView>&,
+                          const std::string& alias = "");
+
+    size_t get_size() const;
+    const std::vector<size_t>& get_shape() const;
+    const std::vector<size_t>& get_strides() const;
+    const element::Type& get_element_type() const;
+    const std::string& get_name() const;
+    const std::string& get_type() const;
+    bool is_output() const;
+
+private:
+    std::shared_ptr<descriptor::TensorView> m_tensor_view;
+    std::string m_alias;
+};

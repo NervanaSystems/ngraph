@@ -23,18 +23,15 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/topological_sort.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
-using namespace ngraph::descriptor;
 
 TEST(tensor, size)
 {
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.register_pass<pass::Liveness>();
 
     {
@@ -46,7 +43,7 @@ TEST(tensor, size)
 
         auto& outputs = arg0->get_outputs();
         ASSERT_EQ(1, outputs.size());
-        Tensor& output = outputs[0].get_tensor();
+        descriptor::Tensor& output = outputs[0].get_tensor();
         EXPECT_EQ(2 * 3 * 4, output.size());
     }
 
@@ -59,7 +56,7 @@ TEST(tensor, size)
 
         auto& outputs = arg0->get_outputs();
         ASSERT_EQ(1, outputs.size());
-        Tensor& output = outputs[0].get_tensor();
+        descriptor::Tensor& output = outputs[0].get_tensor();
         EXPECT_EQ(1 * 4, output.size());
     }
 
@@ -72,33 +69,33 @@ TEST(tensor, size)
 
         auto& outputs = arg0->get_outputs();
         ASSERT_EQ(1, outputs.size());
-        Tensor& output = outputs[0].get_tensor();
+        descriptor::Tensor& output = outputs[0].get_tensor();
         EXPECT_EQ(1 * 4, output.size());
     }
 }
 
 template <typename T>
-void test_read_write(const std::vector<T>& x)
+void test_read_write(const vector<T>& x)
 {
-    auto manager = ngraph::runtime::Manager::get("INTERPRETER");
+    auto manager = runtime::Manager::get("INTERPRETER");
     auto backend = manager->allocate_backend();
 
     auto a = backend->make_primary_tensor_view(element::from<T>(), Shape{2, x.size()});
 
-    std::vector<T> result(2 * x.size());
+    vector<T> result(2 * x.size());
 
     a->write(&x[0], 0, x.size() * sizeof(T));
-    std::copy(x.begin(), x.end(), result.begin());
+    copy(x.begin(), x.end(), result.begin());
     a->write(&x[0], x.size() * sizeof(T), x.size() * sizeof(T));
-    std::copy(x.begin(), x.end(), result.begin() + x.size());
+    copy(x.begin(), x.end(), result.begin() + x.size());
 
-    std::vector<T> af_vector(2 * x.size());
+    vector<T> af_vector(2 * x.size());
     a->read(af_vector.data(), 0, af_vector.size() * sizeof(T));
     ASSERT_EQ(af_vector, result);
 
-    std::vector<T> result1(x.size());
-    std::vector<T> result2(x.size());
-    std::copy(result.begin() + 1, result.begin() + 1 + x.size(), result1.begin());
+    vector<T> result1(x.size());
+    vector<T> result2(x.size());
+    copy(result.begin() + 1, result.begin() + 1 + x.size(), result1.begin());
     a->read(&result2[0], sizeof(T), sizeof(T) * x.size());
     ASSERT_EQ(result1, result2);
 }
@@ -112,7 +109,6 @@ TEST(tensor, read_write)
 TEST(tensor, output_flag)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::TopologicalSort>();
     pass_manager.register_pass<pass::Liveness>();
 
     auto arg0 = make_shared<op::Parameter>(element::f32, Shape{1});

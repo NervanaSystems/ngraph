@@ -21,10 +21,16 @@ using namespace ngraph;
 op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
                              const std::shared_ptr<Node>& filters,
                              const Strides& window_movement_strides,
-                             const Strides& window_dilation_strides)
+                             const Strides& window_dilation_strides,
+                             const CoordinateDiff& padding_below,
+                             const CoordinateDiff& padding_above,
+                             const Strides& image_dilation_strides)
     : RequiresTensorViewArgs("Convolution", {image_batch, filters})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
+    , m_padding_below(padding_below)
+    , m_padding_above(padding_above)
+    , m_image_dilation_strides(image_dilation_strides)
 {
     auto& image_batch_shape = get_inputs().at(0).get_shape();
     auto& filters_shape = get_inputs().at(1).get_shape();
@@ -73,7 +79,8 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
     }
 
     //
-    // Make sure window movement strides and window dilation strades have same rank as Di.
+    // Make sure window movement strides, window dilation strides, and image dilation strides
+    // have same rank as Di.
     //
     if (m_window_movement_strides.size() != m_image_dimension_count)
     {
@@ -87,27 +94,67 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
             "Convolution window dilation stride rank does not match number of image dimensions.");
     }
 
+    if (m_image_dilation_strides.size() != m_image_dimension_count)
+    {
+        throw ngraph_error(
+            "Convolution image dilation stride rank does not match number of image dimensions.");
+    }
+
     //
-    // Extract input image shape Di and make sure all dimensions are larger than 0.
+    // Make sure padding-below and padding-above shapes have same rank as Di.
+    //
+    if (m_padding_below.size() != m_image_dimension_count)
+    {
+        throw ngraph_error(
+            "Convolution padding-below rank does not match number of image dimensions.");
+    }
+
+    if (m_padding_above.size() != m_image_dimension_count)
+    {
+        throw ngraph_error(
+            "Convolution padding-above rank does not match number of image dimensions.");
+    }
+
+    //
+    // Extract input image shape Di and make sure all dimensions are larger than 0 after padding and dilation.
     //
     for (size_t i = 0; i < m_image_dimension_count; i++)
     {
-        m_input_image_shape.push_back(image_batch_shape[1 + 1 + +i]);
-
-        if (m_input_image_shape[i] == 0)
+        if (image_dilation_strides[i] == 0)
         {
-            throw ngraph_error("Convolution input image dimension is zero.");
+            throw ngraph_error("Convolution image dilation stride is zero.");
+        }
+
+        size_t dim_size = image_batch_shape[1 + 1 + i];
+        m_input_image_physical_shape.push_back(dim_size);
+        size_t dilated_dim_size = (dim_size - 1) * image_dilation_strides[i] + 1;
+
+        std::ptrdiff_t padded_dilated_dim_size =
+            padding_below[i] + dilated_dim_size + padding_above[i];
+
+        if (padded_dilated_dim_size < 0)
+        {
+            throw ngraph_error(
+                "Convolution input image dimension after padding and dilation is negative.");
+        }
+
+        m_input_image_virtual_shape.push_back(padded_dilated_dim_size);
+
+        if (m_input_image_virtual_shape[i] == 0)
+        {
+            throw ngraph_error(
+                "Convolution input image dimension after dilation is zero even with padding.");
         }
     }
 
     //
-    // Extract the virtual shape Wv of the convolution window, *not* including dilation, from the filter dimensions.
+    // Extract the physical shape Wp of the convolution window, *not* including dilation, from the filter dimensions.
     // At the same time, make sure window shape dimensions are all larger than 0.
     //
     for (size_t i = 0; i < m_image_dimension_count; i++)
     {
-        m_window_virtual_shape.push_back(filters_shape[1 + 1 + i]);
-        if (m_window_virtual_shape[i] == 0)
+        m_window_physical_shape.push_back(filters_shape[1 + 1 + i]);
+        if (m_window_physical_shape[i] == 0)
         {
             throw ngraph_error("Convolution window shape has a zero-length axis.");
         }
@@ -124,12 +171,13 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
             throw ngraph_error("Convolution window axis dilation stride is zero.");
         }
 
-        m_window_physical_shape.push_back(
-            (m_window_virtual_shape[i] - 1) * m_window_dilation_strides[i] + 1);
+        m_window_virtual_shape.push_back(
+            (m_window_physical_shape[i] - 1) * m_window_dilation_strides[i] + 1);
 
-        if (m_window_physical_shape[i] > m_input_image_shape[i])
+        if (m_window_virtual_shape[i] > m_input_image_virtual_shape[i])
         {
-            throw ngraph_error("Convolution window after dilation is larger than the image.");
+            throw ngraph_error(
+                "Convolution window after dilation is larger than the image even with padding.");
         }
     }
 
@@ -142,8 +190,9 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
         {
             throw ngraph_error("Convolution window axis movement stride is zero.");
         }
-        m_output_image_shape.push_back(ceil_div(
-            m_input_image_shape[i] - m_window_physical_shape[i] + 1, m_window_movement_strides[i]));
+        m_output_image_shape.push_back(
+            ceil_div(m_input_image_virtual_shape[i] - m_window_virtual_shape[i] + 1,
+                     m_window_movement_strides[i]));
     }
 
     //
@@ -157,7 +206,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
     set_value_type_checked(get_inputs().at(0).get_element_type(), result_shape);
 }
 
-Strides default_strides(const std::shared_ptr<Node>& image_batch)
+Strides op::Convolution::default_strides(const std::shared_ptr<Node>& image_batch)
 {
     auto& image_batch_shape = image_batch->get_shape();
     if (image_batch_shape.size() < 3)
@@ -172,14 +221,66 @@ Strides default_strides(const std::shared_ptr<Node>& image_batch)
 
 op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
                              const std::shared_ptr<Node>& filters,
+                             const Strides& window_movement_strides,
+                             const Strides& window_dilation_strides,
+                             const CoordinateDiff& padding_below,
+                             const CoordinateDiff& padding_above)
+    : Convolution(image_batch,
+                  filters,
+                  window_movement_strides,
+                  window_dilation_strides,
+                  padding_below,
+                  padding_above,
+                  default_strides(image_batch))
+{
+}
+
+CoordinateDiff op::Convolution::default_padding(const std::shared_ptr<Node>& image_batch)
+{
+    auto& image_batch_shape = image_batch->get_shape();
+    if (image_batch_shape.size() < 3)
+    {
+        // For consistency we should throw the same error message here that we throw in the constructor.
+        throw ngraph_error(
+            "Convolution image batch input must have rank of at least 3 (one batch axis, one "
+            "input-channel axis, at least one image dimension).");
+    }
+    return CoordinateDiff(image_batch_shape.size() - 2, 0);
+}
+
+op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
+                             const std::shared_ptr<Node>& filters,
+                             const Strides& window_movement_strides,
+                             const Strides& window_dilation_strides)
+    : Convolution(image_batch,
+                  filters,
+                  window_movement_strides,
+                  window_dilation_strides,
+                  default_padding(image_batch),
+                  default_padding(image_batch))
+{
+}
+
+op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
+                             const std::shared_ptr<Node>& filters,
                              const Strides& window_movement_strides)
-    : Convolution(image_batch, filters, window_movement_strides, default_strides(image_batch))
+    : Convolution(image_batch,
+                  filters,
+                  window_movement_strides,
+                  default_strides(image_batch),
+                  default_padding(image_batch),
+                  default_padding(image_batch))
 {
 }
 
 op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
                              const std::shared_ptr<Node>& filters)
-    : Convolution(image_batch, filters, default_strides(image_batch), default_strides(image_batch))
+    : Convolution(image_batch,
+                  filters,
+                  default_strides(image_batch),
+                  default_strides(image_batch),
+                  default_padding(image_batch),
+                  default_padding(image_batch))
 {
 }
 
@@ -190,8 +291,41 @@ std::shared_ptr<Node>
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return std::make_shared<Convolution>(
-        new_args.at(0), new_args.at(1), m_window_movement_strides, m_window_dilation_strides);
+    return std::make_shared<Convolution>(new_args.at(0),
+                                         new_args.at(1),
+                                         m_window_movement_strides,
+                                         m_window_dilation_strides,
+                                         m_padding_below,
+                                         m_padding_above,
+                                         m_image_dilation_strides);
+}
+
+bool op::Convolution::is_functionally_identical(const Node& other) const
+{
+    bool rc = true;
+    if (Node::test_identical(other))
+    {
+        const Convolution& rhs = dynamic_cast<const Convolution&>(other);
+        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
+        rc &= m_window_dilation_strides == rhs.m_window_dilation_strides;
+        rc &= m_padding_below == rhs.m_padding_below;
+        rc &= m_padding_above == rhs.m_padding_above;
+        rc &= m_image_dilation_strides == rhs.m_image_dilation_strides;
+        rc &= m_input_channel_count == rhs.m_input_channel_count;
+        rc &= m_output_channel_count == rhs.m_output_channel_count;
+        rc &= m_input_image_physical_shape == rhs.m_input_image_physical_shape;
+        rc &= m_input_image_virtual_shape == rhs.m_input_image_virtual_shape;
+        rc &= m_output_image_shape == rhs.m_output_image_shape;
+        rc &= m_window_physical_shape == rhs.m_window_physical_shape;
+        rc &= m_window_virtual_shape == rhs.m_window_virtual_shape;
+        rc &= m_batch_size == rhs.m_batch_size;
+        rc &= m_image_dimension_count == rhs.m_image_dimension_count;
+    }
+    else
+    {
+        rc = false;
+    }
+    return rc;
 }
 
 /*

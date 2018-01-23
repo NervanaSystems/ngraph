@@ -73,9 +73,8 @@ static std::shared_ptr<ngraph::Function>
 static json write(const ngraph::Function&);
 static json write(const ngraph::Node&);
 
-// This stupidity is caused by the fact that we do not pass element types
-// by value but by reference even though they can be compared. There is no reason to pass
-// them by reference EVERYWERE but here we are...
+// There should be a map from element type names to element types so deserialization can
+// find the singletons and serialization can serialize by name.
 static const element::Type& to_ref(const element::Type& t)
 {
     if (t == element::boolean)
@@ -370,8 +369,14 @@ static shared_ptr<ngraph::Function>
                 node_js.at("window_movement_strides").get<vector<size_t>>();
             auto window_dilation_strides =
                 node_js.at("window_dilation_strides").get<vector<size_t>>();
-            node = make_shared<op::Convolution>(
-                args[0], args[1], window_movement_strides, window_dilation_strides);
+            auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
+            auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
+            node = make_shared<op::Convolution>(args[0],
+                                                args[1],
+                                                window_movement_strides,
+                                                window_dilation_strides,
+                                                padding_below,
+                                                padding_above);
         }
         else if (node_op == "Cos")
         {
@@ -638,6 +643,8 @@ static json write(const Node& n)
         auto tmp = dynamic_cast<const op::Convolution*>(&n);
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["window_dilation_strides"] = tmp->get_window_dilation_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
     }
     else if (node_op == "Cos")
     {
@@ -662,7 +669,7 @@ static json write(const Node& n)
     }
     else if (node_op == "FunctionCall")
     {
-        node["function"] = n.get_function()->get_name();
+        node["function"] = n.get_functions()[0]->get_name();
     }
     else if (node_op == "GetOutputElement")
     {
@@ -724,7 +731,7 @@ static json write(const Node& n)
     else if (node_op == "Reduce")
     {
         auto tmp = dynamic_cast<const op::Reduce*>(&n);
-        node["function"] = tmp->get_function()->get_name();
+        node["function"] = tmp->get_functions()[0]->get_name();
         node["reduction_axes"] = tmp->get_reduction_axes();
     }
     else if (node_op == "Remainder")

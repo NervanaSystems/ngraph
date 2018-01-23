@@ -26,11 +26,10 @@
 
 using namespace std;
 using namespace ngraph;
-using namespace ngraph::descriptor;
 
-bool pass::Liveness::run_on_call_graph(list<shared_ptr<Node>>& ops)
+bool pass::Liveness::run_on_call_graph(const list<shared_ptr<Node>>& ops)
 {
-    unordered_set<Tensor*> currently_live;
+    unordered_set<descriptor::Tensor*> currently_live;
 
     for (auto it = ops.rbegin(); it != ops.rend(); it++)
     {
@@ -38,32 +37,32 @@ bool pass::Liveness::run_on_call_graph(list<shared_ptr<Node>>& ops)
         node->liveness_live_list.clear();
         node->liveness_new_list.clear();
         node->liveness_free_list.clear();
-        unordered_set<Tensor*> input_tensor_decls;
-        for (Input& input_decl : node->get_inputs())
+        unordered_set<descriptor::Tensor*> input_tensor_decls;
+        for (descriptor::Input& input_decl : node->get_inputs())
         {
-            Tensor& tensor = input_decl.get_tensor();
+            descriptor::Tensor& tensor = input_decl.get_tensor();
             if (is_temporary(tensor))
             {
                 input_tensor_decls.insert(&tensor);
             }
         }
 
-        unordered_set<Tensor*> output_tensor_decls;
+        unordered_set<descriptor::Tensor*> output_tensor_decls;
         for (size_t i = 0; i < node->get_output_size(); ++i)
         {
-            Tensor& tensor = node->get_output_tensor(i);
+            descriptor::Tensor& tensor = node->get_output_tensor(i);
             if (is_temporary(tensor))
             {
                 output_tensor_decls.insert(&tensor);
             }
         }
 
-        unordered_set<Tensor*> free_tensor_decls;
-        unordered_set<Tensor*> new_tensor_decls;
-        unordered_set<Tensor*> all_tensor_decls = input_tensor_decls;
+        unordered_set<descriptor::Tensor*> free_tensor_decls;
+        unordered_set<descriptor::Tensor*> new_tensor_decls;
+        unordered_set<descriptor::Tensor*> all_tensor_decls = input_tensor_decls;
         all_tensor_decls.insert(output_tensor_decls.begin(), output_tensor_decls.end());
 
-        for (Tensor* tensor_decl : all_tensor_decls)
+        for (descriptor::Tensor* tensor_decl : all_tensor_decls)
         {
             if (!contains(currently_live, tensor_decl))
             {
@@ -75,7 +74,7 @@ bool pass::Liveness::run_on_call_graph(list<shared_ptr<Node>>& ops)
         }
 
         node->liveness_live_list = currently_live;
-        for (Tensor* output_decl : output_tensor_decls)
+        for (descriptor::Tensor* output_decl : output_tensor_decls)
         {
             if (contains(currently_live, output_decl))
             {
@@ -89,18 +88,18 @@ bool pass::Liveness::run_on_call_graph(list<shared_ptr<Node>>& ops)
 
     // Anything marked as output must remain live for the remainder of the graph
     // Add outputs to live_list and remove from free_list
-    unordered_set<Tensor*> outputs;
-    unordered_set<Tensor*> seen;
+    unordered_set<descriptor::Tensor*> outputs;
+    unordered_set<descriptor::Tensor*> seen;
     for (shared_ptr<Node> node : ops)
     {
-        for (Tensor* tensor : node->liveness_live_list)
+        for (descriptor::Tensor* tensor : node->liveness_live_list)
         {
             if (tensor->is_output())
             {
                 outputs.insert(tensor);
             }
         }
-        for (Tensor* tensor : outputs)
+        for (descriptor::Tensor* tensor : outputs)
         {
             node->liveness_live_list.insert(tensor);
             node->liveness_free_list.erase(tensor);
@@ -123,7 +122,7 @@ bool pass::Liveness::run_on_call_graph(list<shared_ptr<Node>>& ops)
     return false;
 }
 
-bool pass::Liveness::is_temporary(const Tensor& tensor)
+bool pass::Liveness::is_temporary(const descriptor::Tensor& tensor)
 {
     return tensor.is_persistent() == false && tensor.is_input() == false &&
            tensor.is_output() == false && tensor.is_constant() == false;
@@ -132,13 +131,13 @@ bool pass::Liveness::is_temporary(const Tensor& tensor)
 
 void pass::Liveness::validate_liveness(const list<Node*>& ops)
 {
-    unordered_set<Tensor*> dead_tensors;
+    unordered_set<descriptor::Tensor*> dead_tensors;
     for (const Node* node : ops)
     {
         auto active = node->liveness_live_list;
         active.insert(node->liveness_new_list.begin(), node->liveness_new_list.end());
         active.insert(node->liveness_free_list.begin(), node->liveness_free_list.end());
-        for (const Tensor* tensor : active)
+        for (const descriptor::Tensor* tensor : active)
         {
             if (contains(dead_tensors, tensor))
             {
