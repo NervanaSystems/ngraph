@@ -130,8 +130,10 @@ extra_compile_args = []
 
 extra_link_args = []
 
+data_files = [('lib', [NGRAPH_CPP_LIBRARY_DIR + "/" + library for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR)]),]
+
 ext_modules = [Extension(
-                   'pyngraph',
+                   '_pyngraph',
                    sources = sources,
                    include_dirs = include_dirs,
                    define_macros = [("VERSION_INFO", __version__)],
@@ -153,13 +155,11 @@ class BuildExt(build_ext):
                 ext.extra_compile_args += ['-frtti']
             if sys.platform == 'darwin':
                 ext.extra_compile_args += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
+                ext.extra_link_args += ["-Wl,-rpath,@loader_path/../.."]
             else:
                 if has_flag(self.compiler, '-fvisibility=hidden'):
                     ext.extra_compile_args += ['-fvisibility=hidden']
-
-            # else:
-            #    ext.extra_link_args += ["-shared"]
-            ext.extra_link_args += ["-Wl,-rpath,%s"%(NGRAPH_CPP_LIBRARY_DIR)]
+                ext.extra_link_args += ["-Wl,-rpath,$ORIGIN/../.."]
         build_ext.build_extensions(self)
 
 
@@ -173,6 +173,8 @@ setup(
     description='Python wrapper for ngraph',
     long_description='',
     ext_modules=ext_modules,
+    packages = find_packages(exclude=['pybind11', 'build', 'test']),
     cmdclass={'build_ext': BuildExt},
+    data_files = data_files,
     zip_safe=False,
 )
