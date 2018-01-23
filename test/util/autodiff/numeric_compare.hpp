@@ -16,34 +16,31 @@
 #include "util/autodiff/backprop_derivative.hpp"
 #include "util/autodiff/numeric_derivative.hpp"
 
-using namespace std;
-using namespace ngraph;
-
 template <typename T>
 bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Manager>& manager,
                               const std::shared_ptr<ngraph::runtime::Backend>& backend,
-                              function<std::shared_ptr<ngraph::Function>()> make_graph,
+                              std::function<std::shared_ptr<ngraph::Function>()> make_graph,
                               const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& args,
                               T rtol,
                               T atol)
 {
-    T delta = .001;
+    T delta = 0.001;
     auto f = make_graph();
     auto results_num =
-        autodiff::numeric_derivative<T>(manager, backend, f, args, delta, f->get_parameters());
+        ngraph::autodiff::numeric_derivative<T>(manager, backend, f, args, delta, f->get_parameters());
 
     auto g = make_graph();
     auto results_sym =
-        autodiff::backprop_derivative<T>(manager, backend, g, args, g->get_parameters());
+        ngraph::autodiff::backprop_derivative<T>(manager, backend, g, args, g->get_parameters());
 
-    return test::all_close(results_num, results_sym, rtol, atol);
+    return ngraph::test::all_close(results_num, results_sym, rtol, atol);
 }
 
 template <typename T>
 bool autodiff_numeric_compare_selective(
     const std::shared_ptr<ngraph::runtime::Manager>& manager,
     const std::shared_ptr<ngraph::runtime::Backend>& backend,
-    function<std::shared_ptr<ngraph::Function>()> make_graph,
+    std::function<std::shared_ptr<ngraph::Function>()> make_graph,
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& args,
     T rtol,
     T atol,
@@ -64,7 +61,7 @@ bool autodiff_numeric_compare_selective(
     }
 
     auto results_num =
-        autodiff::numeric_derivative<T>(manager, backend, f, args, .001f, f_indep_params);
+        ngraph::autodiff::numeric_derivative<T>(manager, backend, f, args, .001f, f_indep_params);
 
     std::vector<std::shared_ptr<ngraph::op::Parameter>> g_indep_params;
     auto g = make_graph();
@@ -80,7 +77,7 @@ bool autodiff_numeric_compare_selective(
         i++;
     }
 
-    auto results_sym = autodiff::backprop_derivative<T>(manager, backend, g, args, g_indep_params);
+    auto results_sym = ngraph::autodiff::backprop_derivative<T>(manager, backend, g, args, g_indep_params);
 
-    return test::all_close(results_num, results_sym, rtol, atol);
+    return ngraph::test::all_close(results_num, results_sym, rtol, atol);
 }
