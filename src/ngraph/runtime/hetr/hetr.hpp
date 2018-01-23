@@ -12,21 +12,26 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "mpi.h"
+#pragma once
 
-#include <gtest/gtest.h>
-#include "ngraph/runtime/hetr/hetr.hpp"
+#include <mpi.h>
 
-using namespace std;
-
-TEST(hetr, load_mpi_test)
+namespace ngraph
 {
-    MPI::Status stat;
-    MPI::Init();
-}
+    class Function;
 
-TEST(hetr, init_mpi)
-{
-    ngraph::runtime::Hetr hetr;
-    hetr.init_mpi();
+    namespace runtime
+    {
+        class Hetr
+        {
+        public:
+           void init_mpi() {
+               MPI::Status stat;
+               MPI::Init();
+           }
+           
+           void finalize_mpi() {
+           }
+        };
+    }
 }

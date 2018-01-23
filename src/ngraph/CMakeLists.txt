@@ -176,6 +176,12 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
       "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE};")
 
+if(MPI_CXX_INCLUDE_PATH)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    set(SRC ${SRC} runtime/hetr/hetr.hpp)
+endif()
+
 if (NGRAPH_ARGON_ENABLE)
     link_directories(${ARGON_LIB_DIR})
 endif()
@@ -267,6 +273,10 @@ endif()
 
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
     target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+endif()
+
+if(MPI_CXX_INCLUDE_PATH)
+    target_link_libraries(ngraph PRIVATE ${MPI_CXX_LIBRARIES})
 endif()
 
 # Argon
