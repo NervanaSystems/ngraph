@@ -1,15 +1,15 @@
 // ----------------------------------------------------------------------------
-// copyright 2017 nervana systems inc.
-// licensed under the apache license, version 2.0 (the "license");
-// you may not use this file except in compliance with the license.
-// you may obtain a copy of the license at
+// Copyright 2017 Nervana Systems Inc.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/license-2.0
+//      http://www.apache.org/licenses/LICENSE-2.0
 //
-// unless required by applicable law or agreed to in writing, software
-// distributed under the license is distributed on an "as is" basis,
-// without warranties or conditions of any kind, either express or implied.
-// see the license for the specific language governing permissions and
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
 #include <cstdlib>
@@ -37,6 +37,8 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     {
         std::cout << "device cublas handler creation failed";
     }
+    // Pass scalars as reference on the device
+    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
 }
 
 void runtime::gpu::GPU_CallFrame::tensor_call(
@@ -44,24 +46,23 @@ void runtime::gpu::GPU_CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
 {
     // Host tensors
-    vector<void*> inputs;
-    vector<void*> outputs;
+    vector<void**> inputs;
+    vector<void**> outputs;
 
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
         shared_ptr<runtime::gpu::GPU_TensorView> tv =
             static_pointer_cast<runtime::gpu::GPU_TensorView>(input_tvs[i]);
-        inputs.push_back(tv->get_data_ptr());
+        inputs.push_back(tv->m_allocated_buffer_pool);
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
         shared_ptr<runtime::gpu::GPU_TensorView> tv =
             static_pointer_cast<runtime::gpu::GPU_TensorView>(output_tvs[i]);
-        outputs.push_back(tv->get_data_ptr());
+        outputs.push_back(tv->m_allocated_buffer_pool);
     }
 
-    // Invoke compiled computation
-    m_compiled_function(inputs.data(), outputs.data(), m_cublas_handle);
+    m_compiled_function(inputs, outputs, m_cublas_handle);
 }
 
 void runtime::gpu::GPU_CallFrame::call(
