@@ -73,6 +73,7 @@ namespace ngraph
                     codegen::CodeWriter& writer,
                     const Node&,
                     const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>&);
+                std::string generate_includes(codegen::CodeWriter&);
 
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;

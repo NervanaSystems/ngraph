@@ -32,6 +32,11 @@ namespace ngraph
                 std::shared_ptr<ngraph::runtime::TensorView>
                     make_primary_tensor_view(const ngraph::element::Type& element_type,
                                              const Shape& shape) override;
+
+                void tbb_enable(bool);
+
+            private:
+                bool m_tbb_enable;
             };
         }
     }

@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <set>
 #include <sstream>
 #include <string>
 
@@ -32,6 +33,7 @@ class ngraph::codegen::CodeWriter
 public:
     CodeWriter();
     std::string get_code() const;
+    std::stringstream& get_stream();
 
     void operator+=(const std::string&);
 
@@ -68,8 +70,11 @@ public:
 
     std::string generate_temporary_name(std::string prefix = "tempvar");
 
+    void add_include_directive(const std::string&);
+
 private:
     std::stringstream m_ss;
     bool m_pending_indent;
     size_t m_temporary_name_count;
+    std::set<std::string> m_include_directives;
 };

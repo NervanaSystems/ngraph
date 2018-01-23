@@ -26,7 +26,20 @@ codegen::CodeWriter::CodeWriter()
 
 string codegen::CodeWriter::get_code() const
 {
-    return m_ss.str();
+    stringstream ss;
+
+    for (const string& s : m_include_directives)
+    {
+        ss << s << "\n";
+    }
+    ss << m_ss.str();
+
+    return ss.str();
+}
+
+stringstream& codegen::CodeWriter::get_stream()
+{
+    return m_ss;
 }
 
 void codegen::CodeWriter::operator+=(const std::string& s)
@@ -42,4 +55,9 @@ std::string codegen::CodeWriter::generate_temporary_name(std::string prefix)
     m_temporary_name_count++;
 
     return ss.str();
+}
+
+void codegen::CodeWriter::add_include_directive(const std::string& s)
+{
+    m_include_directives.insert(s);
 }
