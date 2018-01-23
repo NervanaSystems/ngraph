@@ -163,6 +163,12 @@ class BuildExt(build_ext):
         build_ext.build_extensions(self)
 
 
+requirements = [
+    "setuptools",
+    "six",
+]
+
+
 setup(
     name='pyngraph',
     version=__version__,
@@ -176,5 +182,6 @@ setup(
     packages = find_packages(exclude=['pybind11', 'build', 'test']),
     cmdclass={'build_ext': BuildExt},
     data_files = data_files,
+    install_requires = requirements,
     zip_safe=False,
 )
