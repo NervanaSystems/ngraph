@@ -24,26 +24,49 @@ else:
     flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
 sys.setdlopenflags(flags)
 
+from _pyngraph.op import Abs
+from _pyngraph.op import Acos
 from _pyngraph.op import Add
+from _pyngraph.op import Asin
+from _pyngraph.op import Atan
 from _pyngraph.op import Broadcast
+from _pyngraph.op import Ceiling
+from _pyngraph.op import Concat
 from _pyngraph.op import Constant
 from _pyngraph.op import Convert
+from _pyngraph.op import Cos
+from _pyngraph.op import Cosh
 from _pyngraph.op import Divide
 from _pyngraph.op import Dot
+from _pyngraph.op import Equal
 from _pyngraph.op import Exp
+from _pyngraph.op import Floor
 from _pyngraph.op import Greater
+from _pyngraph.op import GreaterEq
 from _pyngraph.op import Less
+from _pyngraph.op import LessEq
 from _pyngraph.op import Log
 from _pyngraph.op import Maximum
 from _pyngraph.op import Minimum
 from _pyngraph.op import Multiply
 from _pyngraph.op import Negative
+from _pyngraph.op import NotEqual
+from _pyngraph.op import Not
 from _pyngraph.op import OneHot
 from _pyngraph.op import Parameter
+from _pyngraph.op import Power
 from _pyngraph.op import Reduce
 from _pyngraph.op import Reshape
+from _pyngraph.op import Reverse
+from _pyngraph.op import Select
+from _pyngraph.op import Sign
+from _pyngraph.op import Sin
+from _pyngraph.op import Sinh
+from _pyngraph.op import Sqrt
 from _pyngraph.op import Subtract
 from _pyngraph.op import Sum
+from _pyngraph.op import Tan
+from _pyngraph.op import Tanh
 
 from _pyngraph.op import RequiresTensorViewArgs
 from _pyngraph.op import UnaryElementwise
