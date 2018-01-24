@@ -96,8 +96,6 @@ sources: *literals*, *calls* to ops (built-in ops or user-defined ops AKA
    values. Externally-callable functions must specify a type for each parameter.
 
 
-
-
 Building a Graph
 ================
 

@@ -34,7 +34,8 @@ needs_sphinx = '1.6.5'
 extensions = ['sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'sphinx.ext.autodoc'
+    'sphinx.ext.autodoc',
+    'breathe'
     ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -189,6 +190,10 @@ texinfo_documents = [
 
 html_add_permalinks = ""
 
+breathe_projects = {
+    "nGraph": "../../../build/doc/doxygen/xml",
+}
+breathe_default_project = "nGraph"
 
 rst_epilog = u"""
 .. |codename| replace:: Intel nGraph
