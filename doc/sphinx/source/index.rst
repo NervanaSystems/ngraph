@@ -33,8 +33,6 @@ Intel nGraph library
    :caption: Models 
    :name: Models
 
-   training.rst
-
 .. toctree::
    :maxdepth: 2
    :caption: Backend Components

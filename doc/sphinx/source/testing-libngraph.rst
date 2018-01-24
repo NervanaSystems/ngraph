@@ -27,14 +27,15 @@ Compiling a framework with ``libngraph``
 After building and installing the nGraph library to your system, the next 
 logical step is to compile a framework that you can use to run a 
 training/inference model with one of the backends that are now 
-enabled. See our :doc:`model-phases` documentation for more about function-driven
-backend design and architecture for algorithms.      
+enabled.
 
-Intel nGraph library supports all of the popular frameworks including `MXNet`_,
-`TensorFlow`_, `Caffe2`_, `PyTorch`_, `Chainer`_ and the native `neon`_ frontend
-framework. Currently we provide integration guides for MXNet and Tensorflow, as
+For this early release, we provide integration guides for MXNet and Tensorflow, as
 well as legacy documentation for the `neon`_ framework. Integration guides for 
 each of the other frameworks is forthcoming.    
+
+Intel nGraph library will soon support popular frameworks including `MXNet`_,
+`TensorFlow`_, `Caffe2`_, `PyTorch`_, `Chainer`_ and the native `neon`_ frontend
+framework. 
 
 
 .. _GTest framework: https://github.com/google/googletest.git
