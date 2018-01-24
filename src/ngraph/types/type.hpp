@@ -22,6 +22,10 @@
 
 namespace ngraph
 {
+    class TensorViewType;
+
+    std::ostream& operator<<(std::ostream&, const TensorViewType&);
+
     /// Describes a tensor view; an element type and a shape.
     class TensorViewType : public std::enable_shared_from_this<TensorViewType>
     {
