@@ -1812,13 +1812,13 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
     auto arg1_rank = arg1_shape.size();
 
     bool filter_dilated = false;
-    for (const size_t& s : convolution->get_window_dilation_strides())
+    for (size_t s : convolution->get_window_dilation_strides())
     {
         filter_dilated = filter_dilated || (s != 1);
     }
 
     bool images_dilated = false;
-    for (const size_t& s : convolution->get_image_dilation_strides())
+    for (size_t s : convolution->get_image_dilation_strides())
     {
         images_dilated = images_dilated || (s != 1);
     }
@@ -1865,7 +1865,7 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
         Strides window_dilation_strides_adjusted;
 
-        for (const size_t& s : convolution->get_window_dilation_strides())
+        for (size_t s : convolution->get_window_dilation_strides())
         {
             window_dilation_strides_adjusted.push_back(s - 1);
         }
