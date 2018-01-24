@@ -129,9 +129,11 @@ Right now the minimal version of Sphinx needed to build the documentation is
 Sphinx v. 1.6.5.  This can be installed with `pip3` either to a virtual environment, or
 to your base system if you plan to contribute much to docs.    
 
+To build documentation locally, run: 
 
    .. code-block:: console
 
+      $ pip3 install breathe
       $ cd doc/sphinx/
       $ make html
 
