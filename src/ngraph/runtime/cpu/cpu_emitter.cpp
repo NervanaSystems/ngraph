@@ -1858,12 +1858,17 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         writer.indent--;
         writer << "}\n";
     }
-    /*    else if (filter_dilated && !images_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+    else if (filter_dilated && !images_dilated && arg0_rank == 4 && arg1_rank == 4 &&
              args[0].get_element_type() == element::f32)
     {
-        //
-        // TODO [amprocte]: This is segfaulting.
-        //
+        // For dilation, MKLDNN wants to know how many elements to insert between, not how far
+        // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+        Strides window_dilation_strides_adjusted;
+
+        for (const size_t& s : convolution->get_window_dilation_strides())
+        {
+            window_dilation_strides_adjusted.push_back(s - 1);
+        }
 
         string et = "memory::data_type::f32";
 
@@ -1888,7 +1893,7 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
                << "{prop_kind::forward, algorithm::convolution_direct, input_data_desc, "
                   "weights_desc, result_desc, {"
                << join(convolution->get_window_movement_strides()) << "}, {"
-               << join(convolution->get_window_dilation_strides()) << "}, {"
+               << join(window_dilation_strides_adjusted) << "}, {"
                << join(convolution->get_padding_below()) << "}, {"
                << join(convolution->get_padding_above()) << "}, padding_kind::zero}, cpu_engine}, "
                << "input_data, weights, result);\n";
@@ -1897,7 +1902,7 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
                << "s.submit({conv}).wait();\n";
         writer.indent--;
         writer << "}\n";
-    }*/
+    }
     else
     {
         writer << "kernel::convolution<" << out[0].get_type() << ">(" << args[0].get_name()
