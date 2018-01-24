@@ -122,14 +122,15 @@ if(NGRAPH_GPU_ENABLE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
-# MPI support
+# distributed support
 #-----------------------------------------------------------------------------------------------
-if(NGRAPH_HETR_ENABLE)
+if(NGRAPH_DISTRIBUTED_ENABLE)
     find_package(MPI REQUIRED)
     if(MPI_CXX_FOUND)
         add_definitions(-DNGRAPH_DISTRIBUTED)
     endif()
 endif()
+
 #-----------------------------------------------------------------------------------------------
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
