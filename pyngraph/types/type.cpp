@@ -17,17 +17,13 @@
 //#include <string>
 #include "ngraph/common.hpp"             // ngraph::Shape
 #include "ngraph/types/element_type.hpp" // ngraph::element::Type
-#include "ngraph/types/type.hpp"         // ngraph::ValueType, ngraph::TensorViewType
+#include "ngraph/types/type.hpp"         // ngraph::TensorViewType
 #include "pyngraph/types/type.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_ValueType(py::module m) {
-    py::class_<ngraph::ValueType, std::shared_ptr<ngraph::ValueType>> valueType(m, "ValueType");
-}
-
 void regclass_pyngraph_TensorViewType(py::module m) {
-    py::class_<ngraph::TensorViewType, std::shared_ptr<ngraph::TensorViewType>, ngraph::ValueType> tensorViewType(m, "TensorViewType");
+    py::class_<ngraph::TensorViewType, std::shared_ptr<ngraph::TensorViewType>> tensorViewType(m, "TensorViewType");
 
     tensorViewType.def(py::init<const ngraph::element::Type&, const ngraph::Shape&>());
     tensorViewType.def("get_shape", &ngraph::TensorViewType::get_shape);

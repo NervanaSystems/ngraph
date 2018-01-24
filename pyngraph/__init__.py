@@ -27,7 +27,4 @@ sys.setdlopenflags(flags)
 from _pyngraph import Function
 from _pyngraph import Node
 from _pyngraph import Type
-from _pyngraph import ValueType
 from _pyngraph import TensorViewType
-# from _pyngraph import op
-# from _pyngraph import runtime
