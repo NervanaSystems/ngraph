@@ -65,6 +65,12 @@ add_subdirectory(models)
 # TODO add interpreter back to unit tests when it works
 set(BACKEND_NAMES ${BACKEND_NAMES} "INTERPRETER")
 
+if(MPI_C_INCLUDE_PATH)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    set(SRC ${SRC} hetr.cpp)
+endif()
+
 if(MKLDNN_INCLUDE_DIR)
     include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})
     link_directories(${MKLDNN_LIB_DIR})
@@ -150,6 +156,10 @@ if(NGRAPH_ADDRESS_SANITIZER)
 endif()
 
 add_executable(unit-test ${SRC})
+
+if(MPI_C_INCLUDE_PATH)
+    target_link_libraries(unit-test ${MPI_CXX_LIBRARIES})
+endif()
 
 if(MKLDNN_INCLUDE_DIR)
     target_link_libraries(unit-test mkldnn)
