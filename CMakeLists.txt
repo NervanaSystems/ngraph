@@ -126,6 +126,9 @@ endif()
 #-----------------------------------------------------------------------------------------------
 if(NGRAPH_HETR_ENABLE)
     find_package(MPI REQUIRED)
+    if(MPI_CXX_FOUND)
+        add_definitions(-DNGRAPH_DISTRIBUTED)
+    endif()
 endif()
 #-----------------------------------------------------------------------------------------------
 # External projects install directory

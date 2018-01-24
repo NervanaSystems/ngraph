@@ -23,10 +23,13 @@ TEST(hetr, load_mpi_test)
 {
     MPI::Status stat;
     MPI::Init();
+    MPI::Finalize();
 }
 
 TEST(hetr, init_mpi)
 {
     ngraph::runtime::Hetr hetr;
     hetr.init_mpi();
+    hetr.test_macro();
+    hetr.finalize_mpi();
 }

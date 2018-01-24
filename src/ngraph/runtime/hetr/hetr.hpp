@@ -29,8 +29,16 @@ namespace ngraph
                MPI::Status stat;
                MPI::Init();
            }
+
+           void test_macro() {
+#ifdef NGRAPH_DISTRIBUTED
+               std::cerr << "[          ] NGRAPH_DISTRIBUTED is defined" << std::endl;
+#endif
+               return;
+           }
            
            void finalize_mpi() {
+               MPI::Finalize();
            }
         };
     }
