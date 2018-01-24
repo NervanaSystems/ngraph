@@ -49,12 +49,6 @@ public:
     /// @param n Number of bytes to read, must be integral number of elements.
     void read(void* p, size_t tensor_offset, size_t n) const override;
 
-    // const char* get_data_ptr();
-
-    // const char* get_data_ptr() const;
-
-private:
-    CUdeviceptr dev_buffer;
-    // At some point need to deal with alignment
+    void** m_allocated_buffer_pool;
     size_t m_buffer_size;
 };
