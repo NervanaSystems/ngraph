@@ -51,7 +51,7 @@ namespace ngraph
             virtual const Tensor& get_tensor() const = 0;
             virtual Tensor& get_tensor() = 0;
 
-            virtual std::shared_ptr<const ValueType> get_value_type() const;
+            virtual std::shared_ptr<const TensorViewType> get_value_type() const;
 
             const std::string& get_name() const { return m_name; }
             std::shared_ptr<const TensorViewType> get_tensor_view_type() const
