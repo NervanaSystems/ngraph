@@ -16,19 +16,12 @@
 #include <fstream>
 #include <stdio.h>
 
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include <cuda_runtime.h>
+#include "cublas_v2.h"
 
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
-
-#include <cuda_runtime.h>
-#include "cublas_v2.h"
-
-#include <math.h>
-#define M 6
-#define N 5
-#define IDX2F(i, j, ld) ((((j)-1) * (ld)) + ((i)-1))
 
 using namespace std;
 using namespace ngraph;

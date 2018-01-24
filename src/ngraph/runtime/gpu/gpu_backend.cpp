@@ -26,8 +26,8 @@ std::shared_ptr<ngraph::runtime::CallFrame> runtime::gpu::GPU_Backend::make_call
 }
 
 std::shared_ptr<ngraph::runtime::TensorView>
-    runtime::gpu::GPU_Backend::make_device_tensor(const ngraph::element::Type& element_type,
-                                                  const Shape& shape)
+    runtime::gpu::GPU_Backend::make_primary_tensor_view(const ngraph::element::Type& element_type,
+                                                        const Shape& shape)
 {
     auto rc = make_shared<runtime::gpu::GPU_TensorView>(element_type, shape);
     return dynamic_pointer_cast<runtime::TensorView>(rc);

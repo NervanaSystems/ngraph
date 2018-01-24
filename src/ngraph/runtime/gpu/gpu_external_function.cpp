@@ -243,9 +243,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     #include "cublas_v2.h"
     #include "cuda.h"
 
-    #include "ngraph/codegen/code_writer.hpp"
-    #include "ngraph/codegen/compiler.hpp"
-    #include "ngraph/codegen/execution_engine.hpp"
     #include "ngraph/descriptor/input.hpp"
     #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
     #include "ngraph/descriptor/output.hpp"
@@ -466,26 +463,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
         if (temporaries_used)
         {
-            // size_t temp_pool_size = current_function->get_temporary_pool_size();
-            // writer << "// Allocate the memory pool\n";
-            // writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
-            // writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
-            // writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
-            //        << ngraph::runtime::gpu::alignment << ");\n";
-            // writer << "size_t pool_gpu_ptr = (size_t)memory_handler.get_ptr();\n";
-            // writer << "\n";
-
-            // // Add temporaries to the variable name map
-            // for (shared_ptr<Node> node : current_function->get_ordered_ops())
-            // {
-            //     for (descriptor::Tensor* tensor : node->liveness_new_list)
-            //     {
-            //         stringstream ss;
-            //         ss << "((" << tensor->get_element_type().c_type_string() << "*)(pool_gpu_ptr + "
-            //            << tensor->get_pool_offset() << "))";
-            //         m_variable_name_map[tensor->get_name()] = ss.str();
-            //     }
-            // }
+            // TODO use temporary variables
         }
 
         // Add inputs to the variable name map
@@ -592,14 +570,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
             // Emit operation prologue
             if (!node->is_parameter() && !node->is_constant())
             {
-                if (m_use_tbb)
-                {
-                    writer << "tbb::flow::continue_node<tbb::flow::continue_msg> "
-                              "flowgraph_node_"
-                           << node->get_name()
-                           << "(G, [&](const tbb::flow::continue_msg &msg)\n{\n";
-                    writer.indent++;
-                }
                 if (m_emit_timing)
                 {
                     emit_debug_function_entry(writer, node.get(), in, out);
@@ -639,54 +609,9 @@ void runtime::gpu::GPU_ExternalFunction::compile()
                 {
                     emit_debug_function_exit(writer, node.get(), in, out);
                 }
-                if (m_use_tbb)
-                {
-                    writer.indent--;
-                    writer << "});\n";
-                }
             }
         }
 
-        if (m_use_tbb)
-        {
-            writer << "\n";
-            // Build the flow graph
-            vector<Node*> dependence_graph_heads;
-
-            traverse_nodes(
-                current_function, [&writer, &dependence_graph_heads](shared_ptr<Node> n) {
-                    if (!n->is_parameter() && !n->is_constant())
-                    {
-                        bool is_head = true;
-                        for (auto arg : n->get_input_ops())
-                        {
-                            if (!arg->is_parameter() && !arg->is_constant())
-                            {
-                                is_head = false;
-                                writer << "tbb::flow::make_edge(flowgraph_node_" << arg->get_name()
-                                       << ", flowgraph_node_" << n->get_name() << ");\n";
-                            }
-                        }
-                        if (is_head)
-                        {
-                            dependence_graph_heads.emplace_back(n.get());
-                        }
-                    }
-                });
-
-            writer << "\n";
-
-            // Execute the flow graph
-            if (!dependence_graph_heads.empty())
-            {
-                for (Node* n : dependence_graph_heads)
-                {
-                    writer << "flowgraph_node_" << n->get_name()
-                           << ".try_put(tbb::flow::continue_msg());\n";
-                }
-                writer << "try { G.wait_for_all(); } catch(...) { throw; }\n";
-            }
-        }
         writer.indent--;
         // End generated function
         writer += "}\n\n";
