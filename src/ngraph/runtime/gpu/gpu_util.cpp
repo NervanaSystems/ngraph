@@ -12,23 +12,33 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/external_function.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
+#include <cassert>
+#include <cstdlib>
+#include <iostream>
+#include <stddef.h>
+#include <stdio.h>
+
+#include "cuda.h"
+#include "cuda_runtime.h"
+
+#include "ngraph/runtime/gpu/gpu_util.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-std::shared_ptr<ngraph::runtime::CallFrame> runtime::gpu::GPU_Backend::make_call_frame(
-    const std::shared_ptr<ExternalFunction>& external_function)
+void runtime::gpu::print_gpu_f32_tensor(void* p, size_t element_count, size_t element_size)
 {
-    return external_function->make_call_frame();
+    float* local;
+    size_t size_in_bytes = element_size * element_count;
+    local = static_cast<float*>(malloc(size_in_bytes));
+    cudaMemcpy(local, p, size_in_bytes, cudaMemcpyDeviceToHost);
+    for (size_t i = 0; i < element_count; i++)
+    {
+        std::cout << local[i] << "\n";
+    }
 }
 
-std::shared_ptr<ngraph::runtime::TensorView>
-    runtime::gpu::GPU_Backend::make_primary_tensor_view(const ngraph::element::Type& element_type,
-                                                        const Shape& shape)
+void runtime::gpu::check_cuda_errors(CUresult err)
 {
-    auto rc = make_shared<runtime::gpu::GPU_TensorView>(element_type, shape);
-    return dynamic_pointer_cast<runtime::TensorView>(rc);
+    assert(err == CUDA_SUCCESS);
 }
