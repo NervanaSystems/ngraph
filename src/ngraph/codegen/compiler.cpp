@@ -388,6 +388,7 @@ void codegen::StaticCompiler::configure_search_path()
     });
 
     add_header_search_path(EIGEN_HEADERS_PATH);
+    add_header_search_path(MKLDNN_HEADERS_PATH);
     add_header_search_path(TBB_HEADERS_PATH);
     add_header_search_path(NGRAPH_HEADERS_PATH);
     add_header_search_path(INSTALLED_HEADERS_PATH);
