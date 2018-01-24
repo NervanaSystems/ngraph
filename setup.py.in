@@ -18,7 +18,7 @@
 #
 # ----------------------------------------------------------------------------
 
-from setuptools import setup, Extension, find_packages
+from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
@@ -185,8 +185,10 @@ setup(
     description='Python wrapper for ngraph',
     long_description='',
     ext_modules=ext_modules,
-    package_dir={'pyngraph': PYNGRAPH_SOURCE_DIR + "/pyngraph"},
-    packages = find_packages(exclude=['pybind11', 'build', 'test']),
+    package_dir={'pyngraph': PYNGRAPH_SOURCE_DIR + "/pyngraph",
+                 'pyngraph.op': PYNGRAPH_SOURCE_DIR + "/pyngraph/op",
+                 'pyngraph.runtime': }PYNGRAPH_SOURCE_DIR + "/pyngraph/runtime",
+    packages = ['pyngraph', 'pyngraph.op', 'pyngraph.runtime'],
     cmdclass={'build_ext': BuildExt},
     data_files = data_files,
     install_requires = requirements,
