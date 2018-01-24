@@ -135,8 +135,6 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_
 
     auto y_reshaped = make_reshape_axes_to_front(y, J_shape, K_shape);               // KI
     auto delta_dot_y_reshaped = make_shared<Dot>(delta, y_reshaped, K_shape.size()); // JI
-    // auto delta_reshaped_dot_y_reshaped =
-    // make_reshape_axes_to_front(delta_reshaped_dot_y, J_shape, I_shape); // IJ
     adjoints.add_delta(x, delta_dot_y_reshaped);
 
     auto x_reshaped = make_reshape_axes_to_front(x, I_shape, J_shape);               // JI
