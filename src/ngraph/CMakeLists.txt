@@ -187,8 +187,7 @@ endif()
     # GPU backend current requires CPU because they share compiler.cpp,
     # and compiler.cpp requires MKLDNN
     if(NGRAPH_GPU_ENABLE)
-        include_directories(${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
-        link_directories(${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+        include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
 
         # Add sources for the GPU backend
         # and all its dependencies
@@ -201,6 +200,7 @@ endif()
             runtime/gpu/gpu_manager.cpp
             runtime/gpu/gpu_tensor_view.cpp
             runtime/gpu/gpu_tensor_view_wrapper.cpp
+            runtime/gpu/gpu_util.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
@@ -272,8 +272,9 @@ if(NGRAPH_CPU_ENABLE)
     target_link_libraries(ngraph PRIVATE ${TBB_IMPORTED_TARGETS})
 endif()
 
+# Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    target_link_libraries(ngraph PRIVATE cuda)
+    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 # Argon
