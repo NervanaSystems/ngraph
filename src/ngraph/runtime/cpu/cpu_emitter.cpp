@@ -1811,11 +1811,19 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
     auto arg0_rank = arg0_shape.size();
     auto arg1_rank = arg1_shape.size();
 
-    bool is_dilated = true;
+    bool filter_dilated = false;
     for (auto s : convolution->get_window_dilation_strides())
-        is_dilated = is_dilated && (s != 1);
+    {
+        filter_dilated = filter_dilated || (s != 1);
+    }
 
-    if (!is_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+    bool images_dilated = false;
+    for (auto s : convolution->get_image_dilation_strides())
+    {
+        images_dilated = images_dilated || (s != 1);
+    }
+
+    if (!filter_dilated && !images_dilated && arg0_rank == 4 && arg1_rank == 4 &&
         args[0].get_element_type() == element::f32)
     {
         string et = "memory::data_type::f32";
@@ -1840,12 +1848,9 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         writer << "auto conv = convolution_forward({"
                << "{prop_kind::forward, algorithm::convolution_direct, input_data_desc, "
                   "weights_desc, result_desc, {"
-               << join(convolution->get_window_movement_strides())
-               << "}, {"
-               << join(convolution->get_padding_below())
-               << "}, {"
-               << join(convolution->get_padding_above())
-               << "}, padding_kind::zero}, cpu_engine}, "
+               << join(convolution->get_window_movement_strides()) << "}, {"
+               << join(convolution->get_padding_below()) << "}, {"
+               << join(convolution->get_padding_above()) << "}, padding_kind::zero}, cpu_engine}, "
                << "input_data, weights, result);\n";
 
         writer << "auto s = stream(stream::kind::eager);\n"
@@ -1853,6 +1858,46 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         writer.indent--;
         writer << "}\n";
     }
+    /*    else if (filter_dilated && !images_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+             args[0].get_element_type() == element::f32)
+    {
+        //
+        // TODO [amprocte]: This is segfaulting.
+        //
+
+        string et = "memory::data_type::f32";
+
+        writer << "{\n";
+        writer.indent++;
+        writer << "using namespace mkldnn;\n";
+
+        writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
+        writer << "auto input_data_desc = memory::desc({" << join(arg0_shape) << "}, " << et
+               << ", memory::format::nchw);\n";
+        writer << "auto weights_desc = memory::desc({" << join(arg1_shape) << "}, " << et
+               << ", memory::format::oihw);\n";
+        writer << "auto result_desc = memory::desc({" << join(result_shape) << "}, " << et
+               << ", memory::format::nchw);\n";
+
+        writer << "auto input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+               << ");\n";
+        writer << "auto weights = memory({weights_desc, cpu_engine}, " << args[1].get_name()
+               << ");\n";
+        writer << "auto result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
+        writer << "auto conv = convolution_forward({"
+               << "{prop_kind::forward, algorithm::convolution_direct, input_data_desc, "
+                  "weights_desc, result_desc, {"
+               << join(convolution->get_window_movement_strides()) << "}, {"
+               << join(convolution->get_window_dilation_strides()) << "}, {"
+               << join(convolution->get_padding_below()) << "}, {"
+               << join(convolution->get_padding_above()) << "}, padding_kind::zero}, cpu_engine}, "
+               << "input_data, weights, result);\n";
+
+        writer << "auto s = stream(stream::kind::eager);\n"
+               << "s.submit({conv}).wait();\n";
+        writer.indent--;
+        writer << "}\n";
+    }*/
     else
     {
         writer << "kernel::convolution<" << out[0].get_type() << ">(" << args[0].get_name()
