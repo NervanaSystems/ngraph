@@ -23,10 +23,6 @@ packages and prerequisites:
 Installation Steps
 ==================
 
-.. note:: If you are developing |nGl| projects on macOS*\, please be 
-   aware that this platform is officially unsupported; see the section 
-   `macOS Development Prerequisites`_ below.
-
 To build |nGl| on one of the supported systems, the default CMake procedure 
 will install ``ngraph_dist`` to your user's ``$HOME`` directory as
 the default install location.  See the :file:`CMakeLists.txt` file for more 
@@ -92,6 +88,9 @@ or to set up user directories and permissions however you like.
 
 macOS Development Prerequisites
 -------------------------------
+
+.. note:: If you are developing |nGl| projects on macOS*\, please be 
+   aware that this platform is officially unsupported.
 
 The repository includes two scripts (``maint/check-code-format.sh`` and 
 ``maint/apply-code-format.sh``) that are used respectively to check adherence 

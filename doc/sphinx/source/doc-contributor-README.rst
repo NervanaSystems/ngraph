@@ -27,7 +27,7 @@ with respect to additions or feature requests.
 
 If you prefer to use a containerized application, like Jupyter\* notebooks, 
 Google Docs\*, or MS Word\* to write and share documentation contributions, 
-you can convert the ``doc/source/.rst`` files to another format with a tool 
+you can convert the ``doc/sphinx/source/*.rst`` files to another format with a tool 
 like ``pypandoc`` and share a link to your docs on our `wiki`_.    
 
 Another option is to fork the `ngraph repo`_, essentially snapshotting it at 
@@ -38,8 +38,7 @@ our wiki.
 .. note:: Please do not submit Jupyter* notebook code to the Intel nGraph library 
    repos; best practice is to maintain any project-specific examples, tests, or 
    walk-throughs separately. Alternatively, you may wish to upstream documentation 
-   contributions directly to whatever frontend framework supports the rendering and 
-   reproducibility of your example.
+   contributions directly to whatever frontend framework supports your example.
 
 
 
@@ -126,8 +125,8 @@ Build the Documentation
 
 
 Right now the minimal version of Sphinx needed to build the documentation is 
-Sphinx v. 1.6.5.  This can be installed with `pip3` either to a virtual environment, or
-to your base system if you plan to contribute much to docs.    
+Sphinx v. 1.6.5.  This can be installed with `pip3`, either to a virtual 
+environment, or to your base system if you plan to contribute much to docs.    
 
 To build documentation locally, run: 
 
@@ -140,7 +139,7 @@ To build documentation locally, run:
 
 For tips similar to this, see the `sphinx`_ stable reST documentation.   
 
-.. _ngraph repo: https://github.com/NervanaSystems/ngraph/
+.. _ngraph repo: https://github.com/NervanaSystems/ngraph-cpp/
 .. _documentation repo: https://github.com/NervanaSystems/ngraph/tree/master/doc
 .. _sphinx: http://www.sphinx-doc.org/en/stable/rest.html
 .. _wiki: https://github.com/NervanaSystems/ngraph/wiki/

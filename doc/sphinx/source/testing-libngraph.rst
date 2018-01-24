@@ -29,13 +29,13 @@ logical step is to compile a framework that you can use to run a
 training/inference model with one of the backends that are now 
 enabled.
 
-For this early release, we provide integration guides for MXNet and Tensorflow, as
-well as legacy documentation for the `neon`_ framework. Integration guides for 
-each of the other frameworks is forthcoming.    
+For this early release, we provide integration guides for `MXNet`_ and 
+`TensorFlow`_, as well as legacy documentation for the `neon`_ framework. 
+Integration guides for each of these other frameworks is forthcoming:
 
-Intel nGraph library will soon support popular frameworks including `MXNet`_,
-`TensorFlow`_, `Caffe2`_, `PyTorch`_, `Chainer`_ and the native `neon`_ frontend
-framework. 
+* `Caffe2`_ 
+* `PyTorch`_ 
+* `Chainer`_ 
 
 
 .. _GTest framework: https://github.com/google/googletest.git
