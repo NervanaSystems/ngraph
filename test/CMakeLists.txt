@@ -22,6 +22,7 @@ include_directories(
     )
 
 set (SRC
+    backend_debug_api.cpp
     builder.cpp
     builder_autobroadcast.cpp
     builder_xla.cpp
@@ -36,11 +37,11 @@ set (SRC
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
+    runtime_manager.cpp
     serialize.cpp
     pattern.cpp
     shape.cpp
     tensor.cpp
-    topological_sort.cpp
     type_prop.cpp
     util/autodiff/backprop_function.cpp
     util/test_tools.cpp
@@ -112,6 +113,9 @@ include_directories(".")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
+if(NGRAPH_ADDRESS_SANITIZER)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
+endif()
 
 add_executable(unit-test ${SRC})
 

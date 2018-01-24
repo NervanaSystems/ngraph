@@ -22,7 +22,6 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/topological_sort.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -31,8 +30,6 @@ using namespace std;
 TEST(pass_manager, add)
 {
     pass::Manager pass_manager;
-
-    pass_manager.register_pass<pass::TopologicalSort>();
 
     auto graph = make_test_graph();
     size_t node_count = 0;

@@ -157,6 +157,11 @@ namespace ngraph
             template <typename T>
             std::vector<T> get_vector() const
             {
+                if (sizeof(T) > m_element_type.size() && shape_size(m_shape) > 0)
+                {
+                    throw ngraph_error("Buffer over-read");
+                }
+
                 std::vector<T> rc;
                 const T* p = reinterpret_cast<const T*>(m_data);
                 for (size_t i = 0; i < shape_size(m_shape); i++)

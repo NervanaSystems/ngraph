@@ -70,9 +70,11 @@ namespace ngraph
                 return std::make_shared<Broadcast>(new_args.at(0), m_shape, m_broadcast_axes);
             }
 
-            /// \return An set containing the indices of the broadcast axes (0-based).
+            /// \return A set containing the indices of the broadcast axes (0-based).
             const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
             const Shape& get_broadcast_shape() const { return m_shape; }
+            bool is_functionally_identical(const Node&) const override;
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;

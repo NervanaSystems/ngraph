@@ -41,6 +41,12 @@
 /// @brief Convenience functions that create addional graph nodes to implement commonly-used
 ///        recipes, for example auto-broadcast.
 
+/// @namespace ngraph::xla
+/// @brief Code to facilitate nGraph's support for XLA/HLO.
+
+/// @namespace ngraph::xla::op
+/// @brief Operators specific to nGraph's support for XLA/HLO.
+
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/numpy_transpose.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
@@ -62,6 +68,7 @@
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
+#include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/ceiling.hpp"
 #include "ngraph/ops/concatenate.hpp"
@@ -90,6 +97,7 @@
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/one_hot.hpp"
 #include "ngraph/ops/op.hpp"
+#include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"

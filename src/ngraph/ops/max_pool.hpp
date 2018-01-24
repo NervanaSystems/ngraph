@@ -33,7 +33,7 @@ namespace ngraph
         /// Given an input image batch tensor \f$T_\textit{in}\f$, the output tensor is defined by the equation
         ///
         /// \f[
-        ///      T_\textit{out}[a,c,i_1,\dots,i_n] = \max_{j_1 = i_1, \dots, j_n = i_n}^{j_1 = i_1 + w_1 - 1, \dots, j_n = i_n + w_n - 1} (T_\textit{in}[a,c,j_1,\dots,j_n])
+        ///      T_\textit{out}[a,c,i_1,\dots,i_n] = \max_{j_1 = s_1 i_1, \dots, j_n = s_n i_n}^{j_1 = s_1 i_1 + w_1 - 1, \dots, j_n = s_n i_n + w_n - 1} (T_\textit{in}[a,c,j_1,\dots,j_n])
         /// \f]
         ///
         class MaxPool : public RequiresTensorViewArgs
@@ -77,7 +77,12 @@ namespace ngraph
             size_t get_batch_size() const { return m_batch_size; }
             /// \return The number of image dimensions.
             size_t get_image_dimension_count() const { return m_image_dimension_count; }
+            bool is_functionally_identical(const Node&) const override;
+
         protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
+
             Shape m_window_shape;
             Strides m_window_movement_strides;
 

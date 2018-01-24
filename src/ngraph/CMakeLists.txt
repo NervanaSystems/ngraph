@@ -32,6 +32,7 @@ set (SRC
     node.cpp
     ops/abs.cpp
     ops/add.cpp
+    ops/avg_pool.cpp
     ops/binary_elementwise_arithmetic.cpp
     ops/binary_elementwise_comparison.cpp
     ops/binary_elementwise.cpp
@@ -56,6 +57,7 @@ set (SRC
     ops/not.cpp
     ops/one_hot.cpp
     ops/op.cpp
+    ops/pad.cpp
     ops/parameter.cpp
     ops/power.cpp
     ops/reduce.cpp
@@ -83,16 +85,15 @@ set (SRC
     pass/memory_layout.cpp
     pass/memory_visualize.cpp
     pass/pass.cpp
-    pass/topological_sort.cpp
     pass/visualize_tree.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
+    runtime/host_tensor_view.cpp
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp
     runtime/interpreter/int_external_function.cpp
     runtime/interpreter/int_kernels.cpp
     runtime/interpreter/int_manager.cpp
-    runtime/interpreter/int_tensor_view.cpp
     runtime/manager.cpp
     runtime/tensor_view.cpp
     serializer.cpp
@@ -121,6 +122,10 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt" "${OP_CLASS_LINES}")
 find_package(Graphviz QUIET)
 if (GRAPHVIZ_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGRAPHVIZ_FOUND")
+endif()
+if(NGRAPH_ADDRESS_SANITIZER)
+    message(STATUS "Enable Address Sanitizer")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
 include_directories(
@@ -163,7 +168,6 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_kernel_utils.cpp
         runtime/cpu/cpu_emitter.cpp
         runtime/cpu/cpu_external_function.cpp
-        runtime/cpu/cpu_tensor_view.cpp
         runtime/cpu/cpu_tensor_view_wrapper.cpp
     )
     # LLVM binary builds are typically built without RTTI
@@ -197,9 +201,12 @@ endif()
         set(SRC ${SRC}
             runtime/gpu/gpu_call_frame.cpp
             runtime/gpu/gpu_backend.cpp
-            runtime/gpu/gpu_manager.cpp
+            runtime/gpu/gpu_emitter.cpp
             runtime/gpu/gpu_external_function.cpp
+            runtime/gpu/gpu_kernel_emitters.cpp
+            runtime/gpu/gpu_manager.cpp
             runtime/gpu/gpu_tensor_view.cpp
+            runtime/gpu/gpu_tensor_view_wrapper.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
@@ -272,7 +279,7 @@ if(NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+    target_link_libraries(ngraph PRIVATE cuda)
 endif()
 
 if(MPI_CXX_INCLUDE_PATH)
@@ -303,6 +310,7 @@ if (NOT APPLE)
         ${MKLDNN_LIB_DIR}/
         DESTINATION "${NGRAPH_INSTALL_LIB}"
     )
+
     if (NGRAPH_CPU_ENABLE)
         install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
             DESTINATION ${NGRAPH_INSTALL_LIB}
@@ -311,6 +319,13 @@ if (NOT APPLE)
         install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
             DESTINATION ${NGRAPH_INSTALL_LIB}
             FILES_MATCHING PATTERN "libtbb_debug.so.*"
+        )
+    endif()
+
+    if (NGRAPH_ARGON_ENABLE)
+        install(DIRECTORY ${ARGON_LIB_DIR}/
+            DESTINATION ${NGRAPH_INSTALL_LIB}
+            FILES_MATCHING PATTERN "*.so"
         )
     endif()
 endif()

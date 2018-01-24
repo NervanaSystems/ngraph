@@ -13,9 +13,11 @@
 // ----------------------------------------------------------------------------
 
 #include <algorithm>
+#include <cstdlib>
+#include <iomanip>
 
+#include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/interpreter/int_call_frame.hpp"
-#include "ngraph/runtime/interpreter/int_tensor_view.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -24,16 +26,21 @@ runtime::interpreter::INT_CallFrame::INT_CallFrame(shared_ptr<ExternalFunction> 
                                                    shared_ptr<Function> func)
     : m_external_function(external_function)
     , m_function(func)
+    , m_emit_timing(std::getenv("NGRAPH_INTERPRETER_EMIT_TIMING") != nullptr)
+    , m_nan_check(std::getenv("NGRAPH_INTERPRETER_NAN_CHECK") != nullptr)
 {
 }
 
 void runtime::interpreter::INT_CallFrame::call(
     std::shared_ptr<Function> function,
-    const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& input_tvs,
-    const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs)
+    const vector<shared_ptr<runtime::HostTensorView>>& input_tvs,
+    const vector<shared_ptr<runtime::HostTensorView>>& output_tvs)
 {
-    unordered_map<descriptor::TensorView*, shared_ptr<runtime::interpreter::INT_TensorView>>
-        tensor_map;
+    if (m_nan_check)
+    {
+        perform_nan_check(input_tvs);
+    }
+    unordered_map<descriptor::TensorView*, shared_ptr<runtime::HostTensorView>> tensor_map;
 
     size_t arg_index = 0;
     for (shared_ptr<op::Parameter> param : function->get_parameters())
@@ -87,8 +94,8 @@ void runtime::interpreter::INT_CallFrame::call(
             continue;
         }
 
-        vector<shared_ptr<runtime::interpreter::INT_TensorView>> inputs;
-        vector<shared_ptr<runtime::interpreter::INT_TensorView>> outputs;
+        vector<shared_ptr<runtime::HostTensorView>> inputs;
+        vector<shared_ptr<runtime::HostTensorView>> outputs;
         for (const descriptor::Input& input : op->get_inputs())
         {
             descriptor::TensorView* tv = input.get_output().get_tensor_view().get();
@@ -99,15 +106,14 @@ void runtime::interpreter::INT_CallFrame::call(
         {
             descriptor::TensorView* tv = op->get_output_tensor_view(i).get();
             string name = tv->get_tensor().get_name();
-            shared_ptr<runtime::interpreter::INT_TensorView> itv;
+            shared_ptr<runtime::HostTensorView> itv;
             if (!contains_key(tensor_map, tv))
             {
                 // The output tensor is not in the tensor map so create a new tensor
                 const Shape& shape = op->get_output_shape(i);
                 const element::Type& element_type = op->get_output_element_type(i);
                 string tensor_name = op->get_output_tensor(i).get_name();
-                itv = make_shared<runtime::interpreter::INT_TensorView>(
-                    element_type, shape, tensor_name);
+                itv = make_shared<runtime::HostTensorView>(element_type, shape, tensor_name);
                 tensor_map.insert({tv, itv});
             }
             else
@@ -136,7 +142,20 @@ void runtime::interpreter::INT_CallFrame::call(
             secondary_type = op->get_inputs().at(0).get_tensor().get_element_type();
         }
 
+        if (m_emit_timing)
+        {
+            m_timer_map[op.get()].start();
+        }
         generate_calls(base_type, secondary_type, *op, inputs, outputs);
+        if (m_emit_timing)
+        {
+            stopwatch& timer = m_timer_map[op.get()];
+            timer.stop();
+        }
+        if (m_nan_check)
+        {
+            perform_nan_check(outputs, op.get());
+        }
 
         handle_output_alias(*op, output_alias_map, output_tvs);
 
@@ -158,7 +177,7 @@ void runtime::interpreter::INT_CallFrame::call(
 void runtime::interpreter::INT_CallFrame::handle_output_alias(
     const Node& node,
     const unordered_map<descriptor::TensorView*, vector<size_t>>& output_alias_map,
-    const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs)
+    const vector<shared_ptr<runtime::HostTensorView>>& output_tvs)
 {
     for (size_t i = 0; i < node.get_output_size(); ++i)
     {
@@ -184,8 +203,8 @@ void runtime::interpreter::INT_CallFrame::generate_calls(
     const element::Type& base_type,
     const element::Type& secondary_type,
     ngraph::Node& op,
-    const std::vector<std::shared_ptr<INT_TensorView>>& args,
-    const std::vector<std::shared_ptr<INT_TensorView>>& out)
+    const std::vector<std::shared_ptr<HostTensorView>>& args,
+    const std::vector<std::shared_ptr<HostTensorView>>& out)
 {
     if (base_type == element::boolean)
     {
@@ -240,8 +259,8 @@ void runtime::interpreter::INT_CallFrame::generate_calls(
 }
 
 void runtime::interpreter::INT_CallFrame::tensor_call(
-    const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& input_tvs,
-    const vector<shared_ptr<runtime::interpreter::INT_TensorView>>& output_tvs)
+    const vector<shared_ptr<runtime::HostTensorView>>& input_tvs,
+    const vector<shared_ptr<runtime::HostTensorView>>& output_tvs)
 {
     call(m_function, input_tvs, output_tvs);
 }
@@ -250,15 +269,15 @@ void runtime::interpreter::INT_CallFrame::tensor_call(
     const vector<shared_ptr<runtime::TensorView>>& input_tvs,
     const vector<shared_ptr<runtime::TensorView>>& output_tvs)
 {
-    vector<shared_ptr<runtime::interpreter::INT_TensorView>> args;
-    vector<shared_ptr<runtime::interpreter::INT_TensorView>> out;
+    vector<shared_ptr<runtime::HostTensorView>> args;
+    vector<shared_ptr<runtime::HostTensorView>> out;
     for (auto tv : input_tvs)
     {
-        args.push_back(static_pointer_cast<runtime::interpreter::INT_TensorView>(tv));
+        args.push_back(static_pointer_cast<runtime::HostTensorView>(tv));
     }
     for (auto tv : output_tvs)
     {
-        out.push_back(static_pointer_cast<runtime::interpreter::INT_TensorView>(tv));
+        out.push_back(static_pointer_cast<runtime::HostTensorView>(tv));
     }
     tensor_call(args, out);
 }
@@ -280,4 +299,71 @@ void runtime::interpreter::INT_CallFrame::call(
     }
 
     tensor_call(inputs, outputs);
+}
+
+vector<runtime::PerformanceCounter>
+    runtime::interpreter::INT_CallFrame::get_performance_data() const
+{
+    vector<runtime::PerformanceCounter> rc;
+    for (const pair<const Node*, stopwatch> p : m_timer_map)
+    {
+        rc.emplace_back(p.first->get_name().c_str(),
+                        p.second.get_total_microseconds(),
+                        p.second.get_call_count());
+    }
+    return rc;
+}
+
+void runtime::interpreter::INT_CallFrame::perform_nan_check(
+    const vector<shared_ptr<HostTensorView>>& tvs, const Node* op)
+{
+    size_t arg_number = 1;
+    for (shared_ptr<HostTensorView> tv : tvs)
+    {
+        const element::Type& type = tv->get_tensor().get_element_type();
+        if (type == element::f32)
+        {
+            const float* data = reinterpret_cast<float*>(tv->get_data_ptr());
+            for (size_t i = 0; i < tv->get_element_count(); i++)
+            {
+                if (isnan(data[i]))
+                {
+                    if (op)
+                    {
+                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
+                    }
+                    else
+                    {
+                        throw runtime_error("nan found in function's input tensor number " +
+                                            to_string(arg_number));
+                    }
+                }
+            }
+        }
+        else if (type == element::f64)
+        {
+            const double* data = reinterpret_cast<double*>(tv->get_data_ptr());
+            for (size_t i = 0; i < tv->get_element_count(); i++)
+            {
+                if (isnan(data[i]))
+                {
+                    if (op)
+                    {
+                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
+                    }
+                    else
+                    {
+                        throw runtime_error("nan found in function's input tensor number " +
+                                            to_string(arg_number));
+                    }
+                }
+            }
+        }
+        arg_number++;
+    }
+}
+
+void runtime::interpreter::INT_CallFrame::set_nan_check(bool value)
+{
+    m_nan_check = value;
 }

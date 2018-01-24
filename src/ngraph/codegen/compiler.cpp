@@ -67,49 +67,48 @@
 
 using namespace clang;
 using namespace llvm;
-using namespace llvm::opt;
 using namespace std;
-using namespace ngraph::codegen;
+using namespace ngraph;
 
-static StaticCompiler s_static_compiler;
+static codegen::StaticCompiler s_static_compiler;
 static std::mutex m_mutex;
 
-ngraph::codegen::Module::Module(std::unique_ptr<llvm::Module> module)
+codegen::Module::Module(std::unique_ptr<llvm::Module> module)
     : m_module(move(module))
 {
 }
 
-ngraph::codegen::Module::~Module()
+codegen::Module::~Module()
 {
 }
 
-std::unique_ptr<llvm::Module> ngraph::codegen::Module::take_module()
+std::unique_ptr<llvm::Module> codegen::Module::take_module()
 {
     return move(m_module);
 }
 
-Compiler::Compiler()
+codegen::Compiler::Compiler()
 {
 }
 
-Compiler::~Compiler()
+codegen::Compiler::~Compiler()
 {
 }
 
-void Compiler::set_precompiled_header_source(const std::string& source)
+void codegen::Compiler::set_precompiled_header_source(const std::string& source)
 {
     s_static_compiler.set_precompiled_header_source(source);
 }
 
-void Compiler::add_header_search_path(const std::string& path)
+void codegen::Compiler::add_header_search_path(const std::string& path)
 {
     s_static_compiler.add_header_search_path(path);
 }
 
-std::unique_ptr<ngraph::codegen::Module> Compiler::compile(const std::string& source)
+std::unique_ptr<codegen::Module> codegen::Compiler::compile(const std::string& source)
 {
     lock_guard<mutex> lock(m_mutex);
-    return s_static_compiler.compile(compiler_action, source);
+    return s_static_compiler.compile(m_compiler_action, source);
 }
 
 static std::string GetExecutablePath(const char* Argv0)
@@ -120,11 +119,18 @@ static std::string GetExecutablePath(const char* Argv0)
     return llvm::sys::fs::getMainExecutable(Argv0, MainAddr);
 }
 
-StaticCompiler::StaticCompiler()
+codegen::StaticCompiler::StaticCompiler()
     : m_precompiled_header_valid(false)
     , m_debuginfo_enabled(false)
+    , m_enable_diag_output((std::getenv("NGRAPH_COMPILER_DIAG_ENABLE") != nullptr))
     , m_source_name("code.cpp")
 {
+    initialize();
+}
+
+void codegen::StaticCompiler::initialize()
+{
+    m_extra_search_path_list.clear();
 #if NGCPU_DEBUGINFO
     m_debuginfo_enabled = true;
 #endif
@@ -144,27 +150,27 @@ StaticCompiler::StaticCompiler()
     args.push_back("-inline-threshold=1000000");
 
     // Prepare DiagnosticEngine
-    IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
-    TextDiagnosticPrinter* textDiagPrinter = new clang::TextDiagnosticPrinter(errs(), &*DiagOpts);
-    IntrusiveRefCntPtr<DiagnosticIDs> DiagID(new DiagnosticIDs());
-    DiagnosticsEngine DiagEngine(DiagID, &*DiagOpts, textDiagPrinter);
+    IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
+    diag_options->ErrorLimit = 20;
+    IntrusiveRefCntPtr<DiagnosticIDs> diag_id(new DiagnosticIDs());
+    DiagnosticsEngine diag_engine(diag_id, &*diag_options);
 
     // Create and initialize CompilerInstance
     m_compiler = std::unique_ptr<CompilerInstance>(new CompilerInstance());
-    m_compiler->createDiagnostics();
+    DiagnosticConsumer* diag_consumer;
+    if (m_enable_diag_output)
+    {
+        diag_consumer = new TextDiagnosticPrinter(errs(), &*diag_options);
+    }
+    else
+    {
+        diag_consumer = new IgnoringDiagConsumer();
+    }
+    m_compiler->createDiagnostics(diag_consumer);
 
     // Initialize CompilerInvocation
     CompilerInvocation::CreateFromArgs(
-        m_compiler->getInvocation(), &args[0], &args[0] + args.size(), DiagEngine);
-
-    // Infer the builtin include path if unspecified.
-    if (m_compiler->getHeaderSearchOpts().UseBuiltinIncludes &&
-        m_compiler->getHeaderSearchOpts().ResourceDir.empty())
-    {
-        void* MainAddr = reinterpret_cast<void*>(GetExecutablePath);
-        auto path = CompilerInvocation::GetResourcesPath(args[0], MainAddr);
-        m_compiler->getHeaderSearchOpts().ResourceDir = path;
-    }
+        m_compiler->getInvocation(), &args[0], &args[0] + args.size(), diag_engine);
 
     configure_search_path();
 
@@ -216,14 +222,26 @@ StaticCompiler::StaticCompiler()
     TO.FeaturesAsWritten.emplace_back("+fma");
 }
 
-StaticCompiler::~StaticCompiler()
+codegen::StaticCompiler::~StaticCompiler()
 {
+    // This is causing a segfault after program terminates
+    // will address later
+    // if (m_compiler)
+    // {
+    //     PreprocessorOptions& preprocessor_options =
+    //         m_compiler->getInvocation().getPreprocessorOpts();
+    //     for (auto& x : preprocessor_options.RemappedFileBuffers)
+    //     {
+    //         delete x.second;
+    //     }
+    //     m_compiler = nullptr;
+    // }
 }
 
-bool StaticCompiler::is_version_number(const string& path)
+bool codegen::StaticCompiler::is_version_number(const string& path)
 {
     bool rc = true;
-    vector<string> tokens = ngraph::split(path, '.');
+    vector<string> tokens = split(path, '.');
     for (string s : tokens)
     {
         for (char c : s)
@@ -237,7 +255,7 @@ bool StaticCompiler::is_version_number(const string& path)
     return rc;
 }
 
-void StaticCompiler::add_header_search_path(const string& path)
+void codegen::StaticCompiler::add_header_search_path(const string& path)
 {
     if (!contains(m_extra_search_path_list, path))
     {
@@ -247,10 +265,11 @@ void StaticCompiler::add_header_search_path(const string& path)
     }
 }
 
-std::unique_ptr<ngraph::codegen::Module>
-    StaticCompiler::compile(std::unique_ptr<clang::CodeGenAction>& compiler_action,
-                            const string& source)
+std::unique_ptr<codegen::Module>
+    codegen::StaticCompiler::compile(std::unique_ptr<clang::CodeGenAction>& m_compiler_action,
+                                     const string& source)
 {
+    PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
     if (!m_precompiled_header_valid && m_precomiled_header_source.empty() == false)
     {
         generate_pch(m_precomiled_header_source);
@@ -258,40 +277,60 @@ std::unique_ptr<ngraph::codegen::Module>
     if (m_precompiled_header_valid)
     {
         // Preprocessor options
-        auto& PPO = m_compiler->getInvocation().getPreprocessorOpts();
-        PPO.ImplicitPCHInclude = m_pch_path;
-        PPO.DisablePCHValidation = 0;
+        preprocessor_options.ImplicitPCHInclude = m_pch_path;
+        preprocessor_options.DisablePCHValidation = 0;
     }
 
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
     unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);
-    m_compiler->getInvocation().getPreprocessorOpts().addRemappedFile(m_source_name, buffer.get());
+    preprocessor_options.RemappedFileBuffers.push_back({m_source_name, buffer.get()});
 
     // Create and execute action
-    compiler_action.reset(new EmitCodeGenOnlyAction());
+    m_compiler_action.reset(new EmitCodeGenOnlyAction());
     std::unique_ptr<llvm::Module> rc;
-    if (m_compiler->ExecuteAction(*compiler_action) == true)
+    bool reinitialize = false;
+    if (m_compiler->ExecuteAction(*m_compiler_action) == true)
     {
-        rc = compiler_action->takeModule();
+        rc = m_compiler_action->takeModule();
+    }
+    else
+    {
+        reinitialize = true;
     }
 
     buffer.release();
 
-    m_compiler->getInvocation().getPreprocessorOpts().clearRemappedFiles();
+    preprocessor_options.RemappedFileBuffers.pop_back();
 
-    return unique_ptr<ngraph::codegen::Module>(new ngraph::codegen::Module(move(rc)));
+    unique_ptr<codegen::Module> result;
+    if (rc)
+    {
+        result = move(unique_ptr<codegen::Module>(new codegen::Module(move(rc))));
+    }
+    else
+    {
+        result = move(unique_ptr<codegen::Module>(nullptr));
+    }
+
+    if (reinitialize)
+    {
+        codegen::StaticCompiler::initialize();
+    }
+
+    return result;
 }
 
-void StaticCompiler::generate_pch(const string& source)
+void codegen::StaticCompiler::generate_pch(const string& source)
 {
+    PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
     m_pch_path = file_util::tmp_filename();
     m_compiler->getFrontendOpts().OutputFile = m_pch_path;
 
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
     unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);
-    m_compiler->getInvocation().getPreprocessorOpts().addRemappedFile(m_source_name, buffer.get());
+    preprocessor_options.RemappedFileBuffers.push_back({m_source_name, buffer.get()});
 
     // Create and execute action
     clang::GeneratePCHAction* compilerAction = new clang::GeneratePCHAction();
@@ -301,15 +340,14 @@ void StaticCompiler::generate_pch(const string& source)
     }
 
     buffer.release();
+    preprocessor_options.RemappedFileBuffers.pop_back();
 
-    m_compiler->getInvocation().getPreprocessorOpts().clearRemappedFiles();
     delete compilerAction;
 }
 
-void StaticCompiler::configure_search_path()
+void codegen::StaticCompiler::configure_search_path()
 {
 #ifdef USE_BUILTIN
-    load_header_search_path_from_resource();
     load_headers_from_resource();
 #else
     // Add base toolchain-supplied header paths
@@ -361,26 +399,11 @@ void StaticCompiler::configure_search_path()
 #endif
 }
 
-void StaticCompiler::load_header_search_path_from_resource()
+void codegen::StaticCompiler::load_headers_from_resource()
 {
     HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
-
-    std::vector<std::string> header_search_paths;
-    for (const HeaderInfo& hi : header_info)
-    {
-        string search_path = hi.search_path;
-        if (!contains(header_search_paths, search_path))
-        {
-            string builtin = "/$builtin" + search_path;
-            hso.AddPath(builtin, clang::frontend::System, false, false);
-            header_search_paths.push_back(search_path);
-        }
-    }
-}
-
-void StaticCompiler::load_headers_from_resource()
-{
-    HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
+    PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
+    std::set<std::string> header_search_paths;
     for (const HeaderInfo& hi : header_info)
     {
         string search_path = hi.search_path;
@@ -388,6 +411,18 @@ void StaticCompiler::load_headers_from_resource()
         string builtin = "/$builtin" + absolute_path;
         std::unique_ptr<llvm::MemoryBuffer> mb(
             llvm::MemoryBuffer::getMemBuffer(hi.header_data, builtin));
-        m_compiler->getPreprocessorOpts().addRemappedFile(builtin, mb.release());
+        preprocessor_options.addRemappedFile(builtin, mb.release());
+
+        if (!contains(header_search_paths, search_path))
+        {
+            string builtin = "/$builtin" + search_path;
+            hso.AddPath(builtin, clang::frontend::System, false, false);
+            header_search_paths.insert(search_path);
+        }
     }
+}
+
+void codegen::StaticCompiler::set_precompiled_header_source(const std::string& source)
+{
+    m_precomiled_header_source = source;
 }

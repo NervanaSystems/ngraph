@@ -31,8 +31,17 @@ namespace ngraph
                             const Coordinate& source_end_corner,
                             const Strides& source_strides,
                             const AxisVector& source_axis_order,
-                            const Shape& source_padding_below,
-                            const Shape& source_padding_above);
+                            const CoordinateDiff& target_padding_below,
+                            const CoordinateDiff& target_padding_above,
+                            const Strides& source_dilation_strides);
+
+        CoordinateTransform(const Shape& source_shape,
+                            const Coordinate& source_start_corner,
+                            const Coordinate& source_end_corner,
+                            const Strides& source_strides,
+                            const AxisVector& source_axis_order,
+                            const CoordinateDiff& target_padding_below,
+                            const CoordinateDiff& target_padding_above);
 
         CoordinateTransform(const Shape& source_shape,
                             const Coordinate& source_start_corner,
@@ -52,8 +61,7 @@ namespace ngraph
         CoordinateTransform(const Shape& source_shape);
 
         size_t index(const Coordinate& c) const;
-        bool in_bounds(const Coordinate& c) const;
-        bool in_padding(const Coordinate& c) const;
+        bool has_source_coordinate(const Coordinate& c) const;
         Coordinate to_source_coordinate(const Coordinate& c) const;
         Coordinate get_target_shape() const;
 
@@ -62,6 +70,7 @@ namespace ngraph
         Coordinate get_source_end_corner() { return m_source_end_corner; }
         Strides get_source_strides() { return m_source_strides; }
         AxisVector get_source_axis_order() { return m_source_axis_order; }
+        Strides get_target_dilation_strides() { return m_target_dilation_strides; }
         class Iterator
         {
         public:
@@ -86,9 +95,9 @@ namespace ngraph
         Iterator end() noexcept { return Iterator(m_target_shape, true); }
     private:
         size_t index_source(const Coordinate& c) const;
-        static Shape default_padding(size_t n_axes);
+        static Strides default_strides(size_t n_axes);
+        static CoordinateDiff default_padding(size_t n_axes);
         static AxisVector default_axis_order(size_t n_axes);
-        static Strides default_source_strides(size_t n_axes);
         static Coordinate default_source_start_corner(size_t n_axes);
         static Coordinate default_source_end_corner(const Shape& source_shape);
 
@@ -97,8 +106,9 @@ namespace ngraph
         Shape m_source_end_corner;
         Strides m_source_strides;
         AxisVector m_source_axis_order;
-        Shape m_source_padding_below;
-        Shape m_source_padding_above;
+        CoordinateDiff m_target_padding_below;
+        CoordinateDiff m_target_padding_above;
+        Strides m_target_dilation_strides;
 
         Shape m_target_shape;
         size_t m_n_axes;

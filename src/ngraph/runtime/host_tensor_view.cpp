@@ -17,29 +17,27 @@
 
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
-#include "ngraph/log.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
-#include "ngraph/runtime/interpreter/int_tensor_view.hpp"
+#include "ngraph/runtime/host_tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-runtime::interpreter::INT_TensorView::INT_TensorView(const element::Type& element_type,
-                                                     const Shape& shape,
-                                                     const string& name)
-    : runtime::TensorView(std::make_shared<descriptor::PrimaryTensorView>(
-          std::make_shared<TensorViewType>(element_type, shape), name, true, true, false))
+runtime::HostTensorView::HostTensorView(const ngraph::element::Type& element_type,
+                                        const Shape& shape,
+                                        const string& name)
+    : runtime::TensorView(std::make_shared<ngraph::descriptor::PrimaryTensorView>(
+          std::make_shared<ngraph::TensorViewType>(element_type, shape), name, true, true, false))
     , m_allocated_buffer_pool(nullptr)
     , m_aligned_buffer_pool(nullptr)
 
 {
     m_descriptor->set_tensor_view_layout(
-        std::make_shared<descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
+        std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
 
     m_buffer_size = m_descriptor->get_tensor_view_layout()->get_size() * element_type.size();
     if (m_buffer_size > 0)
     {
-        size_t allocation_size = m_buffer_size + runtime::interpreter::alignment;
+        size_t allocation_size = m_buffer_size + runtime::alignment;
         m_allocated_buffer_pool = static_cast<char*>(malloc(allocation_size));
         m_aligned_buffer_pool = m_allocated_buffer_pool;
         size_t mod = size_t(m_aligned_buffer_pool) % alignment;
@@ -50,7 +48,7 @@ runtime::interpreter::INT_TensorView::INT_TensorView(const element::Type& elemen
     }
 }
 
-runtime::interpreter::INT_TensorView::~INT_TensorView()
+runtime::HostTensorView::~HostTensorView()
 {
     if (m_allocated_buffer_pool != nullptr)
     {
@@ -58,17 +56,17 @@ runtime::interpreter::INT_TensorView::~INT_TensorView()
     }
 }
 
-char* runtime::interpreter::INT_TensorView::get_data_ptr()
+char* runtime::HostTensorView::get_data_ptr()
 {
     return m_aligned_buffer_pool;
 }
 
-const char* runtime::interpreter::INT_TensorView::get_data_ptr() const
+const char* runtime::HostTensorView::get_data_ptr() const
 {
     return m_aligned_buffer_pool;
 }
 
-void runtime::interpreter::INT_TensorView::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::HostTensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
     if (tensor_offset + n > m_buffer_size)
     {
@@ -78,7 +76,7 @@ void runtime::interpreter::INT_TensorView::write(const void* source, size_t tens
     memcpy(&target[tensor_offset], source, n);
 }
 
-void runtime::interpreter::INT_TensorView::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::HostTensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
     if (tensor_offset + n > m_buffer_size)
     {
@@ -86,4 +84,14 @@ void runtime::interpreter::INT_TensorView::read(void* target, size_t tensor_offs
     }
     const char* source = get_data_ptr();
     memcpy(target, &source[tensor_offset], n);
+}
+
+size_t runtime::HostTensorView::get_size() const
+{
+    return get_tensor_view_layout()->get_size();
+}
+
+const element::Type& runtime::HostTensorView::get_element_type() const
+{
+    return get_tensor_view_layout()->get_element_type();
 }

@@ -47,8 +47,8 @@ namespace ngraph
                 if (pattern_map[label] != graph_node)
                 {
                     NGRAPH_DEBUG << "[MATCHER] get_bound_node " << pattern_map[label]->get_name()
-                                 << " , " << pattern_map[label] << " NOT match "
-                                 << graph_node->get_name() << " , " << graph_node;
+                                 << " , " << pattern_map[label] << " does NOT match "
+                                 << graph_node->get_name();
                     is_match = false;
                 }
             }
@@ -71,9 +71,8 @@ namespace ngraph
 
                 if (is_match)
                 {
-                    NGRAPH_DEBUG << "[MATCHER] (Re)binding get_bound_node "
-                                 << graph_node->get_name() << " , " << graph_node << " , "
-                                 << graph_node->get_name();
+                    NGRAPH_DEBUG << "[MATCHER] (Re)binding get_bound_node " << label->get_name()
+                                 << " , " << graph_node << " , " << graph_node->get_name();
                     pattern_map[label] = graph_node;
                 }
             }
@@ -105,8 +104,8 @@ namespace ngraph
             assert(pattern_node && graph_node);
 
             NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] in match_node : "
-                         << "pattern = " << pattern_node << " , " << pattern_node->get_name() << " "
-                         << "matched " << graph_node << " , " << graph_node->get_name();
+                         << "pattern = " << pattern_node->get_name() << " matched "
+                         << graph_node->get_name();
 
             if (auto label_node = std::dynamic_pointer_cast<op::Label>(pattern_node))
             {
@@ -151,9 +150,9 @@ namespace ngraph
                                       const std::shared_ptr<ngraph::Node>& graph_node,
                                       PatternMap& pattern_map)
         {
-            NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] "
-                         << "pattern = " << pattern_node << " , " << pattern_node->get_name() << " "
-                         << "matched " << graph_node << " , " << graph_node->get_name();
+            NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] in match_arguments : "
+                         << "pattern = " << pattern_node->get_name() << " "
+                         << "matched " << graph_node->get_name();
 
             auto args = get_arguments(graph_node);
             auto pattern_args = get_arguments(pattern_node);
@@ -171,7 +170,7 @@ namespace ngraph
                 do
                 {
                     NGRAPH_DEBUG << pad(2 * m_depth) << "Running a permutation for graph_node "
-                                 << graph_node->get_name() << " , " << graph_node;
+                                 << graph_node->get_name();
                     PatternMap copy{pattern_map};
                     if (match_permutation(pattern_args, args, copy))
                     {
@@ -231,14 +230,10 @@ namespace ngraph
                 throw "m_pattern_node or graph_node are not set!";
             }
 
-            if (get_users(m_pattern_node).size())
-            {
-                throw "Pattern Node must not be used elsewhere!";
-            }
+            (void)get_users; //to supress an unused function warning
 
-            NGRAPH_DEBUG << "Starting match pattern = " << m_pattern_node << " , "
-                         << m_pattern_node->get_name() << " , graph_node = " << graph_node << " , "
-                         << graph_node->get_name();
+            NGRAPH_DEBUG << "[MATCHER] Starting match pattern = " << m_pattern_node->get_name()
+                         << " , graph_node = " << graph_node->get_name();
 
             bool is_match = match_node(m_pattern_node, graph_node, m_pattern_map);
             if (is_match)

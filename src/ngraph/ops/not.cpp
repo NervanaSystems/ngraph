@@ -16,21 +16,14 @@
 #include "ngraph/ops/op.hpp"
 
 using namespace ngraph;
-using namespace ngraph::op;
+using namespace std;
 
-op::Not::Not(const std::shared_ptr<Node>& arg)
-    : UnaryElementwise(
-          "Not",
-          [](const ngraph::element::Type& arg_element_type) -> const ngraph::element::Type& {
-              if (arg_element_type != element::boolean)
-              {
-                  throw ngraph_error(
-                      "Operands for logical operators must have boolean element "
-                      "type");
-              }
-
-              return arg_element_type;
-          },
-          arg)
+op::Not::Not(const shared_ptr<Node>& arg)
+    : op::UnaryElementwise("Not", arg->get_element_type(), arg)
 {
+}
+
+bool ngraph::op::Not::is_functionally_identical(const Node& other) const
+{
+    return test_identical(other);
 }

@@ -22,7 +22,11 @@
 #include <cudnn.h>
 
 #include "ngraph/codegen/compiler.hpp"
+#include "ngraph/runtime/gpu/gpu_external_function.hpp"
+
 #include "ngraph/ngraph.hpp"
+#include "util/ndarray.hpp"
+#include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -36,11 +40,12 @@ TEST(cudnn, loadTest)
 TEST(cudnn, compileTest)
 {
     const auto source = R"###(
+// Example developed from LLVM documentation https://llvm.org/docs/NVPTXUsage.html
+
 #include <cassert>
 #include <fstream>
 #include <iostream>
 #include "cuda.h"
-
 
 void check_cuda_errors(CUresult err) {
   assert(err == CUDA_SUCCESS);
@@ -202,7 +207,6 @@ const auto str = R"(
   check_cuda_errors(cuMemcpyHtoD(dev_bufferA, &host_A[0], sizeof(float)*16));
   check_cuda_errors(cuMemcpyHtoD(dev_bufferB, &host_B[0], sizeof(float)*16));
 
-
   unsigned block_size_X = 16;
   unsigned block_size_Y = 1;
   unsigned block_size_Z = 1;
@@ -223,12 +227,10 @@ const auto str = R"(
   // Retrieve device data
   check_cuda_errors(cuMemcpyDtoH(&host_C[0], dev_bufferC, sizeof(float)*16));
 
-
   std::cout << "Results:\n";
   for (unsigned i = 0; i != 16; ++i) {
     std::cout << host_A[i] << " + " << host_B[i] << " = " << host_C[i] << "\n";
   }
-
 
   // Clean up after ourselves
   delete [] host_A;
@@ -261,4 +263,50 @@ TEST(cudnn, abc)
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> c = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
+
+    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
+    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
+    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
+
+    cf->call({a, b, c}, {result});
+    EXPECT_EQ(result->read_vector<float>(),
+              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+
+    cf->call({b, a, c}, {result});
+    EXPECT_EQ(result->read_vector<float>(),
+              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
+
+    cf->call({a, c, b}, {result});
+    EXPECT_EQ(result->read_vector<float>(),
+              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
+}
+
+TEST(cudnn, dot1d)
+{
+    auto shape = Shape{4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto shape_r = Shape{};
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("GPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(a, vector<float>{2, 4, 8, 16});
+    auto b = backend->make_primary_tensor_view(element::f32, shape);
+    copy_data(b, vector<float>{1, 2, 4, 8});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ((vector<float>{170}), result->read_vector<float>());
 }

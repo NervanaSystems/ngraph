@@ -14,22 +14,37 @@
 
 #pragma once
 
-#include <list>
 #include <memory>
 
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/types/element_type.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace runtime
     {
-        class TopologicalSort;
+        namespace gpu
+        {
+            class GPU_TensorViewWrapper;
+        }
     }
 }
 
-class ngraph::pass::TopologicalSort : public FunctionPass
+class ngraph::runtime::gpu::GPU_TensorViewWrapper
 {
 public:
-    TopologicalSort() {}
-    bool run_on_function(std::shared_ptr<ngraph::Function>) override;
+    GPU_TensorViewWrapper(const std::shared_ptr<descriptor::TensorView>&,
+                          const std::string& alias = "");
+
+    size_t get_size() const;
+    const std::vector<size_t>& get_shape() const;
+    const std::vector<size_t>& get_strides() const;
+    const element::Type& get_element_type() const;
+    const std::string& get_name() const;
+    const std::string& get_type() const;
+    bool is_output() const;
+
+private:
+    std::shared_ptr<descriptor::TensorView> m_tensor_view;
+    std::string m_alias;
 };

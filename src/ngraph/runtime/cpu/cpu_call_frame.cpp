@@ -16,7 +16,7 @@
 
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/host_tensor_view.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -36,14 +36,14 @@ void runtime::cpu::CPU_CallFrame::tensor_call(
     vector<void*> outputs;
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
-        shared_ptr<runtime::cpu::CPU_TensorView> tv =
-            static_pointer_cast<runtime::cpu::CPU_TensorView>(input_tvs[i]);
+        shared_ptr<runtime::HostTensorView> tv =
+            static_pointer_cast<runtime::HostTensorView>(input_tvs[i]);
         inputs.push_back(tv->get_data_ptr());
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        shared_ptr<runtime::cpu::CPU_TensorView> tv =
-            static_pointer_cast<runtime::cpu::CPU_TensorView>(output_tvs[i]);
+        shared_ptr<runtime::HostTensorView> tv =
+            static_pointer_cast<runtime::HostTensorView>(output_tvs[i]);
         outputs.push_back(tv->get_data_ptr());
     }
 
@@ -71,39 +71,26 @@ void runtime::cpu::CPU_CallFrame::call(
     tensor_call(inputs, outputs);
 }
 
-vector<runtime::cpu::PerformanceCounter> runtime::cpu::CPU_CallFrame::get_performance_data() const
+vector<runtime::PerformanceCounter> runtime::cpu::CPU_CallFrame::get_performance_data() const
 {
+    vector<runtime::PerformanceCounter> rc;
     auto* engine = m_external_function->m_execution_engine.get();
-    auto get_count = engine->find_function<size_t()>("get_debug_timer_count");
-    auto get_name = engine->find_function<const char*(size_t)>("get_debug_timer_name");
-    auto get_microseconds = engine->find_function<size_t(size_t)>("get_debug_timer_microseconds");
-    auto get_call_count = engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
-
-    if (!get_count)
+    if (engine)
     {
-        throw runtime_error("failed to find accessor function 'get_debug_timer_count'");
-    }
+        auto get_count = engine->find_function<size_t()>("get_debug_timer_count");
+        auto get_name = engine->find_function<const char*(size_t)>("get_debug_timer_name");
+        auto get_microseconds =
+            engine->find_function<size_t(size_t)>("get_debug_timer_microseconds");
+        auto get_call_count = engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
 
-    if (!get_name)
-    {
-        throw runtime_error("failed to find accessor function 'get_debug_timer_name'");
-    }
-
-    if (!get_microseconds)
-    {
-        throw runtime_error("failed to find accessor function 'get_debug_timer_microseconds'");
-    }
-
-    if (!get_call_count)
-    {
-        throw runtime_error("failed to find accessor function 'get_debug_timer_call_count'");
-    }
-
-    vector<runtime::cpu::PerformanceCounter> rc;
-    size_t count = get_count();
-    for (size_t i = 0; i < count; i++)
-    {
-        rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
+        if (get_count && get_name && get_microseconds && get_call_count)
+        {
+            size_t count = get_count();
+            for (size_t i = 0; i < count; i++)
+            {
+                rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
+            }
+        }
     }
     return rc;
 }

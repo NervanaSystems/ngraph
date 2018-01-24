@@ -20,12 +20,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::BinaryElementwise::BinaryElementwise(
-    const std::string& node_type,
-    std::function<const element::Type&(const element::Type&, const element::Type&)>
-        element_type_function,
-    const std::shared_ptr<Node>& arg0,
-    const std::shared_ptr<Node>& arg1)
+op::BinaryElementwise::BinaryElementwise(const std::string& node_type,
+                                         const element::Type& result_element_type,
+                                         const std::shared_ptr<Node>& arg0,
+                                         const std::shared_ptr<Node>& arg1)
     : RequiresTensorViewArgs(node_type, Nodes{arg0, arg1})
 {
     auto& input_0 = get_inputs().at(0);
@@ -34,9 +32,6 @@ op::BinaryElementwise::BinaryElementwise(
     {
         throw ngraph_error("Arguments must have the same tensor view shape");
     }
-
-    const element::Type& result_element_type =
-        element_type_function(input_0.get_element_type(), input_1.get_element_type());
 
     set_value_type_checked(make_shared<TensorViewType>(result_element_type, input_0.get_shape()));
 }

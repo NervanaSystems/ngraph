@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
+// Copyright 2018 Nervana Systems Inc.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -12,21 +12,13 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <deque>
-#include <unordered_map>
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
 
-#include "ngraph/function.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/log.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/topological_sort.hpp"
-
-using namespace ngraph;
 using namespace std;
 
-bool ngraph::pass::TopologicalSort::run_on_function(shared_ptr<ngraph::Function> func)
+TEST(runtime_manager, invalidName)
 {
-    func->set_ordered_ops(topological_sort(func->get_ops()));
-    return false;
+    ASSERT_THROW(ngraph::runtime::Manager::get("COMPLETELY-BOGUS-MANAGER-NAME"),
+                 ngraph::ngraph_error);
 }

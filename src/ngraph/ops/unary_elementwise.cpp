@@ -19,14 +19,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::UnaryElementwise::UnaryElementwise(
-    const std::string& node_type,
-    std::function<const element::Type&(const element::Type&)> element_type_function,
-    const std::shared_ptr<Node>& arg)
+op::UnaryElementwise::UnaryElementwise(const std::string& node_type,
+                                       const element::Type& result_element_type,
+                                       const std::shared_ptr<Node>& arg)
     : RequiresTensorViewArgs(node_type, Nodes{arg})
 {
     auto& input = get_inputs().at(0);
-    const element::Type& result_element_type = element_type_function(input.get_element_type());
 
     set_value_type_checked(result_element_type, input.get_shape());
 }

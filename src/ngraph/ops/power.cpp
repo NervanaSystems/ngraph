@@ -28,3 +28,8 @@ void ngraph::op::Power::generate_adjoints(autodiff::Adjoints& adjoints,
     adjoints.add_delta(x, delta * y * shared_from_this() / x);
     adjoints.add_delta(y, delta * shared_from_this() * log_x);
 }
+
+bool ngraph::op::Power::is_functionally_identical(const Node& other) const
+{
+    return test_identical(other);
+}

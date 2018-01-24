@@ -21,14 +21,13 @@
 
 using namespace std;
 using namespace ngraph;
-using namespace ngraph::descriptor;
 
 pass::DumpSorted::DumpSorted(const string& output_file)
     : m_output_file{output_file}
 {
 }
 
-bool pass::DumpSorted::run_on_module(vector<shared_ptr<ngraph::Function>>& functions)
+bool pass::DumpSorted::run_on_module(vector<shared_ptr<Function>>& functions)
 {
     ofstream out{m_output_file};
     if (out)
@@ -42,7 +41,7 @@ bool pass::DumpSorted::run_on_module(vector<shared_ptr<ngraph::Function>>& funct
             {
                 out << node->get_name() << "(";
                 vector<string> inputs;
-                for (const Input& input : node->get_inputs())
+                for (const descriptor::Input& input : node->get_inputs())
                 {
                     inputs.push_back(input.get_tensor().get_name());
                 }
@@ -57,15 +56,15 @@ bool pass::DumpSorted::run_on_module(vector<shared_ptr<ngraph::Function>>& funct
                 out << join(outputs);
                 out << "\n";
 
-                for (const Tensor* tensor : node->liveness_live_list)
+                for (const descriptor::Tensor* tensor : node->liveness_live_list)
                 {
                     out << "    L " << tensor->get_name() << "\n";
                 }
-                for (const Tensor* tensor : node->liveness_new_list)
+                for (const descriptor::Tensor* tensor : node->liveness_new_list)
                 {
                     out << "    N " << tensor->get_name() << "\n";
                 }
-                for (const Tensor* tensor : node->liveness_free_list)
+                for (const descriptor::Tensor* tensor : node->liveness_free_list)
                 {
                     out << "    F " << tensor->get_name() << "\n";
                 }
