@@ -17,6 +17,8 @@
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
 
+using namespace std;
+
 bool ngraph::pass::GraphRewrite::run_matchers_on_nodes_list(
     const std::list<std::shared_ptr<ngraph::Node>>& nodes,
     const std::vector<std::shared_ptr<pattern::Matcher>>& matchers,

@@ -280,13 +280,37 @@ public:
         this->add_matcher(m);
     }
 
+    void construct_variance()
+    {
+        // Todo determine 
+        auto N = construct_constant_node(9)
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{3, 3});
+        auto input_sq = std::make_shared<op::Multiply>(input, input);
+        auto sum_input = std::make_shared<op::Sum>(input, AxisSet{});
+        auto input_sum_sq = std::make_shared<op::Multiply>(sum_input, sum_input);
+        auto avg_input_sum_sq = std::make_shared<op::Divide>(input_sum_sq, N);
+        auto xmu = std::make_shared<op::Subtract>(sum_input, avg_input_sum_sq)
+        auto variance  = std::make_shared<op::Divide>(xmu, N)
+
+        ngraph::pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In a callback for construct_variance_pattern against "
+                         << m.match_root()->get_name();
+            return; 
+        };
+
+        auto m = std::make_shared<TestMatcher>(variance, callback)
+        this->add_matcher(m);
+    }
+
     TestGraphRewrite()
         : GraphRewrite()
     {
         construct_multiply_by_one();
         construct_add_zero();
         construct_sum();
+        construct_variance();
     }
+
 };
 
 static void run_passes(pass::Manager& pass_manager,
@@ -654,3 +678,4 @@ TEST(pattern, cpu_fusion_rewrite_mlp)
         NGRAPH_DEBUG << "n = " << n->get_name();
     }
 }
+
