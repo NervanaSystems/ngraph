@@ -45,6 +45,7 @@
 #include "ngraph/runtime/kernel/abs.hpp"
 #include "ngraph/runtime/kernel/acos.hpp"
 #include "ngraph/runtime/kernel/add.hpp"
+#include "ngraph/runtime/kernel/allreduce.hpp"
 #include "ngraph/runtime/kernel/asin.hpp"
 #include "ngraph/runtime/kernel/atan.hpp"
 #include "ngraph/runtime/kernel/avg_pool.hpp"
@@ -234,6 +235,12 @@ private:
                            reinterpret_cast<T*>(args[1]->get_data_ptr()),
                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
                            out[0]->get_element_count());
+        }
+        else if (node_op == "AllReduce")
+        {
+            kernel::allreduce<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                 reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                 out[0]->get_element_count());
         }
         else if (node_op == "Asin")
         {

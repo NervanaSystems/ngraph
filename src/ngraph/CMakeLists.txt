@@ -35,6 +35,7 @@ set (SRC
     node.cpp
     ops/abs.cpp
     ops/add.cpp
+    ops/allreduce.cpp
     ops/avg_pool.cpp
     ops/binary_elementwise_arithmetic.cpp
     ops/binary_elementwise_comparison.cpp

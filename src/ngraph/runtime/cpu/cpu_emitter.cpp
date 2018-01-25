@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
+#include "ngraph/ops/allreduce.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
@@ -101,6 +102,12 @@ void runtime::cpu::CPU_Emitter::EmitNop(codegen::CodeWriter& writer,
                                         const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+}
+
+void runtime::cpu::CPU_Emitter::EmitAllReduce(const ngraph::Node* n,
+                                              const vector<runtime::cpu::TensorViewWrapper>& args,
+                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
 }
 

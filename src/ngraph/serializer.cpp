@@ -19,6 +19,7 @@
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/acos.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/allreduce.hpp"
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
@@ -323,6 +324,10 @@ static shared_ptr<ngraph::Function>
         else if (node_op == "Add")
         {
             node = make_shared<op::Add>(args[0], args[1]);
+        }
+        else if (node_op == "AllReduce")
+        {
+            node = make_shared<op::AllReduce>(args[0]);
         }
         else if (node_op == "Asin")
         {
@@ -802,6 +807,9 @@ static json write(const Node& n)
     {
     }
     else if (node_op == "Add")
+    {
+    }
+    else if (node_op == "AllReduce")
     {
     }
     else if (node_op == "Asin")

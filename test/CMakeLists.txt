@@ -111,6 +111,13 @@ if(NGRAPH_ARGON_ENABLE)
     set(SRC ${SRC} ${ADDITIONAL_ARGON_TEST})
 endif()
 
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    foreach(BACKEND_NAME ${BACKEND_NAMES})
+        configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
+        set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp)
+endforeach()
+endif()
+
 foreach(BACKEND_NAME ${BACKEND_NAMES})
     configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
     configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)

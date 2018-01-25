@@ -37,6 +37,7 @@
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/acos.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/allreduce.hpp"
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
@@ -147,6 +148,7 @@ static StaticInitializers s_static_initializers;
 
 static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::EmitAdd},
+    {TI(ngraph::op::AllReduce), &runtime::cpu::CPU_Emitter::EmitAllReduce},
     {TI(ngraph::op::MatmulBias), &runtime::cpu::CPU_Emitter::EmitMatmulBias},
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::EmitDot},
     {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::EmitMultiply},

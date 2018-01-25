@@ -41,6 +41,7 @@ namespace ngraph
             public:
                 static void EMITTER_DECL(EmitNop);
                 static void EMITTER_DECL(EmitAdd);
+                static void EMITTER_DECL(EmitAllReduce);
                 static void EMITTER_DECL(EmitDot);
                 static void EMITTER_DECL(EmitMultiply);
                 static void EMITTER_DECL(EmitGetOutputElement);
