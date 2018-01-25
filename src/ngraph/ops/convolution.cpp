@@ -22,31 +22,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
-                             const std::shared_ptr<Node>& filters,
-                             const Strides& window_movement_strides,
-                             const Strides& window_dilation_strides,
-                             const CoordinateDiff& padding_below,
-                             const CoordinateDiff& padding_above,
-                             const Strides& image_dilation_strides)
-    : RequiresTensorViewArgs("Convolution", {image_batch, filters})
-    , m_window_movement_strides(window_movement_strides)
-    , m_window_dilation_strides(window_dilation_strides)
-    , m_padding_below(padding_below)
-    , m_padding_above(padding_above)
-    , m_image_dilation_strides(image_dilation_strides)
+static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
+                                            const Shape& filters_shape,
+                                            const Strides& window_movement_strides,
+                                            const Strides& window_dilation_strides,
+                                            const CoordinateDiff& padding_below,
+                                            const CoordinateDiff& padding_above,
+                                            const Strides& image_dilation_strides)
 {
-    auto& image_batch_shape = get_inputs().at(0).get_shape();
-    auto& filters_shape = get_inputs().at(1).get_shape();
-
-    //
-    // Make sure image batch and filter element types match.
-    //
-    if (get_inputs().at(0).get_element_type() != get_inputs().at(1).get_element_type())
-    {
-        throw ngraph_error("Convolution image batch and filter element types do not match");
-    }
-
     //
     // Make sure image_batch: NCiDi for some Di of rank>0, N != 0, Ci != 0.
     //
@@ -215,7 +198,44 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
                                         window_movement_strides[i]));
     }
 
-    set_value_type_checked(get_inputs().at(0).get_element_type(), result_shape);
+    return result_shape;
+}
+
+op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
+                             const std::shared_ptr<Node>& filters,
+                             const Strides& window_movement_strides,
+                             const Strides& window_dilation_strides,
+                             const CoordinateDiff& padding_below,
+                             const CoordinateDiff& padding_above,
+                             const Strides& image_dilation_strides)
+    : RequiresTensorViewArgs("Convolution", {image_batch, filters})
+    , m_window_movement_strides(window_movement_strides)
+    , m_window_dilation_strides(window_dilation_strides)
+    , m_padding_below(padding_below)
+    , m_padding_above(padding_above)
+    , m_image_dilation_strides(image_dilation_strides)
+{
+    auto& image_batch_shape = get_inputs().at(0).get_shape();
+    auto& image_batch_et = get_inputs().at(0).get_element_type();
+    auto& filters_shape = get_inputs().at(1).get_shape();
+    auto& filters_et = get_inputs().at(1).get_element_type();
+
+    //
+    // Make sure image batch and filter element types match.
+    //
+    if (image_batch_et != filters_et)
+    {
+        throw ngraph_error("Convolution image batch and filter element types do not match");
+    }
+
+    set_value_type_checked(image_batch_et,
+                           infer_convolution_output_shape(image_batch_shape,
+                                                          filters_shape,
+                                                          window_movement_strides,
+                                                          window_dilation_strides,
+                                                          padding_below,
+                                                          padding_above,
+                                                          image_dilation_strides));
 }
 
 Strides op::Convolution::default_strides(const std::shared_ptr<Node>& image_batch)
