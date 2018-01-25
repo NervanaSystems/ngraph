@@ -11,31 +11,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set(NGRAPH_BUILD_SPHINX_DOCS FALSE
-    CACHE BOOL
-    "The nGraph build system shall contain a target for '.rst'-based overview docs."
+find_package(Sphinx REQUIRED)
+
+set(SPHINX_IN ${CMAKE_CURRENT_SOURCE_DIR}/source)
+set(SPHINX_OUT ${CMAKE_CURRENT_BINARY_DIR}/build)
+
+add_custom_target(sphinx-docs
+    ALL
+    COMMAND ${SPHINX_EXECUTABLE} -b html "${SPHINX_IN}" "${SPHINX_OUT}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    COMMENT "Generating documentation with Sphinx"
+    VERBATIM )
+
+# Doxygen is used to generate docstrings that will be imported into
+# Sphinx with the "breathe" package, so we need to run doxygen-docs
+# first.
+add_dependencies( sphinx-docs doxygen-docs )
+
+add_dependencies( docs sphinx-docs )
+
+install(
+    DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/build/"
+    DESTINATION "${NGRAPH_INSTALL_DOC}/overview/html"
+    OPTIONAL
     )
-
-if (NGRAPH_BUILD_SPHINX_DOCS)
-    find_package(Sphinx REQUIRED)
-
-    set(SPHINX_IN ${CMAKE_CURRENT_SOURCE_DIR}/source)
-    set(SPHINX_OUT ${CMAKE_CURRENT_BINARY_DIR}/build)
-
-    add_custom_target(sphinx-docs
-        ALL
-        COMMAND ${SPHINX_EXECUTABLE} -b html "${SPHINX_IN}" "${SPHINX_OUT}"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        COMMENT "Generating documentation with Sphinx"
-        VERBATIM )
-
-    add_dependencies( docs sphinx-docs )
-    set(DOCS_TARGET_IS_EMPTY FALSE PARENT_SCOPE)
-
-    install(
-        DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/build/"
-        DESTINATION "${NGRAPH_INSTALL_DOC}/overview/html"
-        OPTIONAL
-        )
-endif()
-
