@@ -1769,19 +1769,6 @@ TEST(type_prop, conv_1d_deduce)
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), Shape{100});
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), Shape{100});
-    EXPECT_EQ(conv->get_output_image_shape(), Shape{91});
-
-    EXPECT_EQ(conv->get_window_physical_shape(), Shape{10});
-    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{10});
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_1d_deduce_padded)
@@ -1804,19 +1791,6 @@ TEST(type_prop, conv_1d_deduce_padded)
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{3});
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), Shape{100});
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), Shape{105});
-    EXPECT_EQ(conv->get_output_image_shape(), Shape{96});
-
-    EXPECT_EQ(conv->get_window_physical_shape(), Shape{10});
-    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{10});
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_1d_deduce_strided)
@@ -1835,19 +1809,6 @@ TEST(type_prop, conv_1d_deduce_strided)
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), Shape{100});
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), Shape{100});
-    EXPECT_EQ(conv->get_output_image_shape(), Shape{46});
-
-    EXPECT_EQ(conv->get_window_physical_shape(), Shape{10});
-    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{10});
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_1d_deduce_strided_padded)
@@ -1870,19 +1831,6 @@ TEST(type_prop, conv_1d_deduce_strided_padded)
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{3});
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), Shape{100});
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), Shape{105});
-    EXPECT_EQ(conv->get_output_image_shape(), Shape{48});
-
-    EXPECT_EQ(conv->get_window_physical_shape(), Shape{10});
-    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{10});
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_1d_deduce_strided_small_uneven)
@@ -1901,19 +1849,6 @@ TEST(type_prop, conv_1d_deduce_strided_small_uneven)
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), Shape{5});
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), Shape{5});
-    EXPECT_EQ(conv->get_output_image_shape(), Shape{2});
-
-    EXPECT_EQ(conv->get_window_physical_shape(), Shape{2});
-    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{2});
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_1d_deduce_strided_small_even)
@@ -1932,19 +1867,6 @@ TEST(type_prop, conv_1d_deduce_strided_small_even)
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), Shape{6});
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), Shape{6});
-    EXPECT_EQ(conv->get_output_image_shape(), Shape{3});
-
-    EXPECT_EQ(conv->get_window_physical_shape(), Shape{2});
-    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{2});
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_1d_deduce_window_dilated)
@@ -1964,19 +1886,6 @@ TEST(type_prop, conv_1d_deduce_window_dilated)
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), Shape{100});
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), Shape{100});
-    EXPECT_EQ(conv->get_output_image_shape(), Shape{82});
-
-    EXPECT_EQ(conv->get_window_physical_shape(), Shape{10});
-    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{19});
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_1d_deduce_window_dilated_padded)
@@ -1999,19 +1908,6 @@ TEST(type_prop, conv_1d_deduce_window_dilated_padded)
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{3});
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), Shape{100});
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), Shape{105});
-    EXPECT_EQ(conv->get_output_image_shape(), Shape{87});
-
-    EXPECT_EQ(conv->get_window_physical_shape(), Shape{10});
-    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{19});
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_1d_deduce_window_dilated_images_dilated_padded)
@@ -2040,19 +1936,6 @@ TEST(type_prop, conv_1d_deduce_window_dilated_images_dilated_padded)
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{3});
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), Shape{100});
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), Shape{303});
-    EXPECT_EQ(conv->get_output_image_shape(), Shape{285});
-
-    EXPECT_EQ(conv->get_window_physical_shape(), Shape{10});
-    EXPECT_EQ(conv->get_window_virtual_shape(), Shape{19});
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, conv_2d_deduce)
@@ -2070,19 +1953,6 @@ TEST(type_prop, conv_2d_deduce)
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0}));
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), (Shape{100, 150}));
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), (Shape{100, 150}));
-    EXPECT_EQ(conv->get_output_image_shape(), (Shape{91, 131}));
-
-    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{10, 20}));
-    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{10, 20}));
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, conv_2d_deduce_padded)
@@ -2105,19 +1975,6 @@ TEST(type_prop, conv_2d_deduce_padded)
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{2, 3}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{3, 4}));
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), (Shape{100, 150}));
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), (Shape{105, 157}));
-    EXPECT_EQ(conv->get_output_image_shape(), (Shape{96, 138}));
-
-    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{10, 20}));
-    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{10, 20}));
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, conv_2d_deduce_padded_neg)
@@ -2140,19 +1997,6 @@ TEST(type_prop, conv_2d_deduce_padded_neg)
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{2, -3}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{3, -4}));
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), (Shape{100, 150}));
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), (Shape{105, 143}));
-    EXPECT_EQ(conv->get_output_image_shape(), (Shape{96, 124}));
-
-    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{10, 20}));
-    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{10, 20}));
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, conv_2d_deduce_strided)
@@ -2171,19 +2015,6 @@ TEST(type_prop, conv_2d_deduce_strided)
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0}));
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), (Shape{100, 150}));
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), (Shape{100, 150}));
-    EXPECT_EQ(conv->get_output_image_shape(), (Shape{46, 44}));
-
-    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{10, 20}));
-    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{10, 20}));
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, conv_2d_deduce_strided_window_dilated)
@@ -2203,19 +2034,6 @@ TEST(type_prop, conv_2d_deduce_strided_window_dilated)
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0}));
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), (Shape{100, 150}));
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), (Shape{100, 150}));
-    EXPECT_EQ(conv->get_output_image_shape(), (Shape{37, 38}));
-
-    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{10, 20}));
-    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{28, 39}));
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, conv_2d_deduce_strided_window_dilated_images_dilated)
@@ -2244,19 +2062,6 @@ TEST(type_prop, conv_2d_deduce_strided_window_dilated_images_dilated)
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0}));
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), (Shape{100, 150}));
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), (Shape{199, 448}));
-    EXPECT_EQ(conv->get_output_image_shape(), (Shape{86, 137}));
-
-    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{10, 20}));
-    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{28, 39}));
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, conv_2d_deduce_strided_window_dilated_small)
@@ -2276,19 +2081,6 @@ TEST(type_prop, conv_2d_deduce_strided_window_dilated_small)
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0}));
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), (Shape{7, 8}));
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), (Shape{7, 8}));
-    EXPECT_EQ(conv->get_output_image_shape(), (Shape{2, 2}));
-
-    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{2, 3}));
-    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{4, 5}));
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, conv_3d_deduce_strided_window_dilated_small)
@@ -2308,19 +2100,6 @@ TEST(type_prop, conv_3d_deduce_strided_window_dilated_small)
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0, 0}));
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), (Shape{7, 8, 10}));
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), (Shape{7, 8, 10}));
-    EXPECT_EQ(conv->get_output_image_shape(), (Shape{2, 2, 2}));
-
-    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{2, 3, 2}));
-    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{4, 5, 3}));
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 3);
 }
 
 TEST(type_prop, conv_3d_deduce_strided_window_dilated_image_dilated_small)
@@ -2349,19 +2128,6 @@ TEST(type_prop, conv_3d_deduce_strided_window_dilated_image_dilated_small)
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0, 0}));
-
-    EXPECT_EQ(conv->get_input_channel_count(), 3);
-    EXPECT_EQ(conv->get_output_channel_count(), 128);
-
-    EXPECT_EQ(conv->get_input_image_physical_shape(), (Shape{7, 8, 10}));
-    EXPECT_EQ(conv->get_input_image_virtual_shape(), (Shape{13, 22, 19}));
-    EXPECT_EQ(conv->get_output_image_shape(), (Shape{5, 6, 5}));
-
-    EXPECT_EQ(conv->get_window_physical_shape(), (Shape{2, 3, 2}));
-    EXPECT_EQ(conv->get_window_virtual_shape(), (Shape{4, 5, 3}));
-
-    EXPECT_EQ(conv->get_batch_size(), 64);
-    EXPECT_EQ(conv->get_image_dimension_count(), 3);
 }
 
 TEST(type_prop, conv_invalid_0d_input)

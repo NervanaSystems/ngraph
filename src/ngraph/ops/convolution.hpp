@@ -127,30 +127,6 @@ namespace ngraph
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             /// \return The input image dilation strides.
             const Strides& get_image_dilation_strides() const { return m_image_dilation_strides; }
-            /// \return The number of input channels.
-            size_t get_input_channel_count() const { return m_input_channel_count; }
-            /// \return The number of output channels.
-            size_t get_output_channel_count() const { return m_output_channel_count; }
-            /// \return The physical input image shape, not including padding and dilation.
-            const Shape& get_input_image_physical_shape() const
-            {
-                return m_input_image_physical_shape;
-            }
-            /// \return The virtual input image shape, including padding and dilation.
-            const Shape& get_input_image_virtual_shape() const
-            {
-                return m_input_image_virtual_shape;
-            }
-            /// \return The output image shape.
-            const Shape& get_output_image_shape() const { return m_output_image_shape; }
-            /// \return The physical window shape.
-            const Shape& get_window_physical_shape() const { return m_window_physical_shape; }
-            /// \return The virtual window shape.
-            const Shape& get_window_virtual_shape() const { return m_window_virtual_shape; }
-            /// \return The batch size.
-            size_t get_batch_size() const { return m_batch_size; }
-            /// \return The number of image dimensions.
-            size_t get_image_dimension_count() const { return m_image_dimension_count; }
             bool is_functionally_identical(const Node&) const override;
             void generate_adjoints(autodiff::Adjoints& adjoints,
                                    const std::shared_ptr<Node>& delta) override;
@@ -161,17 +137,6 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_image_dilation_strides;
-
-            // TODO: Some or all of these values should probably be computed dynamically rather than stored here.
-            size_t m_input_channel_count;
-            size_t m_output_channel_count;
-            Shape m_input_image_physical_shape;
-            Shape m_input_image_virtual_shape;
-            Shape m_output_image_shape;
-            Shape m_window_physical_shape;
-            Shape m_window_virtual_shape;
-            size_t m_batch_size;
-            size_t m_image_dimension_count;
 
         private:
             static Strides default_strides(const std::shared_ptr<Node>& image_batch);
