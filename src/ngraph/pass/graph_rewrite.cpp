@@ -4,7 +4,7 @@
 #include <unordered_set>
 #include "ngraph/log.hpp"
 #include "ngraph/pattern/matcher.hpp"
-
+#include <numeric>
 //cpufusion headers
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ops/add.hpp"
@@ -17,7 +17,7 @@
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
 
-using namespace std;
+
 
 bool ngraph::pass::GraphRewrite::run_matchers_on_nodes_list(
     const std::list<std::shared_ptr<ngraph::Node>>& nodes,

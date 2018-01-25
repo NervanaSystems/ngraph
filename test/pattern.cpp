@@ -282,23 +282,29 @@ public:
 
     void construct_variance()
     {
-        // Todo determine 
-        auto N = construct_constant_node(9)
-        auto input = std::make_shared<op::Parameter>(element::f32, Shape{3, 3});
+        auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{2, 3});
         auto input_sq = std::make_shared<op::Multiply>(input, input);
-        auto sum_input = std::make_shared<op::Sum>(input, AxisSet{});
+        auto sum_input = std::make_shared<op::Sum>(input, AxisSet{0});
         auto input_sum_sq = std::make_shared<op::Multiply>(sum_input, sum_input);
         auto avg_input_sum_sq = std::make_shared<op::Divide>(input_sum_sq, N);
-        auto xmu = std::make_shared<op::Subtract>(sum_input, avg_input_sum_sq)
-        auto variance  = std::make_shared<op::Divide>(xmu, N)
+        auto xmu = std::make_shared<op::Subtract>(sum_input, avg_input_sum_sq);
+        auto variance  = std::make_shared<op::Divide>(xmu, N);
+        auto pattern = std::make_shared<pattern::op::Label>(variance);
 
-        ngraph::pattern::gr_callback_fn callback = [](pattern::Matcher& m) {
+        ngraph::pattern::gr_callback_fn callback = [variance](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_variance_pattern against "
                          << m.match_root()->get_name();
-            return; 
+
+            std::shared_ptr<Node> nn = nullptr;
+            //TODO - add assert's based on the matched node
+            // auto var = m.get_pattern_map()[variance]
+            // NGRAPH_DEBUG << "Variance= " << var->get_name();
+
+            return nn;
         };
 
-        auto m = std::make_shared<TestMatcher>(variance, callback)
+        auto m = std::make_shared<TestMatcher>(variance, callback);
         this->add_matcher(m);
     }
 
@@ -435,6 +441,24 @@ TEST(pattern, graph_rewrite)
         ASSERT_TRUE(sum);
         ASSERT_EQ(sum->get_reduction_axes(), axes);
         ASSERT_EQ(sum->get_input_op(0), parm);
+    }
+
+    // test variance 
+    {
+        auto a = make_shared<op::Parameter>(element::f32, Shape{3});
+        auto b = make_shared<op::Parameter>(element::f32, Shape{3});
+        auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{2, 3});
+        auto input_sq = std::make_shared<op::Multiply>(input, input);
+        auto sum_input = std::make_shared<op::Sum>(input, AxisSet{0});
+        auto input_sum_sq = std::make_shared<op::Multiply>(sum_input, sum_input);
+        auto avg_input_sum_sq = std::make_shared<op::Divide>(input_sum_sq, N);
+        auto xmu = std::make_shared<op::Subtract>(sum_input, avg_input_sum_sq);
+        auto variance  = std::make_shared<op::Divide>(xmu, N);
+        auto graph = a + (variance + b); 
+    
+        run_passes(pass_manager, graph, {input, a, b});
+        //TODO: add asserts based on the return typ
     }
 }
 
