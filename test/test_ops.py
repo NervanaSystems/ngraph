@@ -28,7 +28,7 @@ from pyngraph.op import Constant, Abs, Exp, Log, Sum
 from pyngraph.op import Greater, Less, Equal, NotEqual, GreaterEq, LessEq, Not
 from pyngraph.op import OneHot, Broadcast, Reshape, Convert, Reduce
 from pyngraph.op import Concat, Select
-#from pyngraph.op import Reverse
+from pyngraph.op import Reverse, MaxPool, Convolution, ReplaceSlice, Slice
 
 
 def make_backend_call_frame(function):
@@ -480,7 +480,6 @@ def test_tanh():
     unary_op_exec(op_str, input_list)
 
 
-@pytest.mark.skip('Not implemented')
 def test_reverse():
     return
     input_list = [[-1, 0], [0.5, 1]]
@@ -771,5 +770,51 @@ def test_select():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-if  __name__ == '__main__':
-    test_cos()
+def test_slice():
+
+    element_type = Type.f32
+    shape = [6,6]
+    A = Parameter(element_type, shape)
+    parameter_list = [A]
+
+    input_arr = np.arange(36, dtype=np.float32).reshape(6,6)
+    lower_bounds = [1, 1]
+    upper_bounds = [5, 5]
+
+    function = Function([Slice(A,  lower_bounds, upper_bounds)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(element_type, shape)
+    result = backend.make_primary_tensor_view(element_type, [4, 4])
+
+    a.write(util.numpy_to_c(input_arr), 0, 36*4)
+
+    result_arr = np.zeros(16, dtype=np.float32).reshape(4, 4)
+    result.write(util.numpy_to_c(result_arr), 0, 16*4)
+    cf.call([a], [result])
+    result.read(util.numpy_to_c(result_arr), 0, 64)
+
+    result_arr_ref = input_arr[lower_bounds[0]:upper_bounds[1], lower_bounds[0]:upper_bounds[1]]
+
+    assert np.allclose(result_arr, result_arr_ref)
+
+
+    #test with strides
+    strides = [1, 2]
+
+    function = Function([Slice(A,  lower_bounds, upper_bounds, strides)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    result = backend.make_primary_tensor_view(element_type, [4, 2])
+    result_arr = np.zeros(8, dtype=np.float32).reshape(4, 2)
+
+    result.write(util.numpy_to_c(result_arr), 0, 8*4)
+    cf.call([a], [result])
+    result.read(util.numpy_to_c(result_arr), 0, 32)
+
+    result_arr_ref = result_arr_ref[::strides[0], ::strides[1]]
+
+    assert np.allclose(result_arr, result_arr_ref)
+
+
+

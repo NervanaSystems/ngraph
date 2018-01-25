@@ -16,7 +16,6 @@
 #include <pybind11/stl.h>
 //#include <string>
 #include "ngraph/node.hpp"          // ngraph::Node
-#include "ngraph/types/type.hpp"    // ngraph::ValueType
 #include "ngraph/ops/add.hpp"       // ngraph::op::Add
 #include "ngraph/ops/multiply.hpp"  // ngraph::op::Multiply
 #include "ngraph/ops/divide.hpp"    // ngraph::op::Divide

@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # ----------------------------------------------------------------------------
 
-from setuptools import setup, Extension, find_packages
+# ----------------------------------------------------------------------------
+#
+# This file is auto generated from cmake. Do not manually modify content!
+#
+# ----------------------------------------------------------------------------
+
+from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
@@ -70,11 +76,9 @@ def cpp_flag(compiler):
                            'is needed!')
 
 
-if "NGRAPH_CPP_BUILD_PATH" in os.environ:
-    NGRAPH_CPP_INCLUDE_DIR = os.environ["NGRAPH_CPP_BUILD_PATH"] + "/include"
-    NGRAPH_CPP_LIBRARY_DIR = os.environ["NGRAPH_CPP_BUILD_PATH"] + "/lib"
-else:
-    raise RuntimeError('NGRAPH_CPP_BUILD_PATH must be defined')
+PYNGRAPH_SOURCE_DIR = "${CMAKE_SOURCE_DIR}"
+NGRAPH_CPP_INCLUDE_DIR = "${NGRAPH_INSTALL_PREFIX}" + "/include"
+NGRAPH_CPP_LIBRARY_DIR = "${NGRAPH_INSTALL_PREFIX}" + "/lib"
 
 
 sources = ['pyngraph/function.cpp',
@@ -90,7 +94,6 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/ops/concatenate.cpp',
            'pyngraph/ops/constant.cpp',
            'pyngraph/ops/convert.cpp',
-           'pyngraph/ops/convolution.cpp',
            'pyngraph/ops/cos.cpp',
            'pyngraph/ops/cosh.cpp',
            'pyngraph/ops/ceiling.cpp',
@@ -105,7 +108,6 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/ops/less_eq.cpp',
            'pyngraph/ops/log.cpp',
            'pyngraph/ops/maximum.cpp',
-           'pyngraph/ops/max_pool.cpp',
            'pyngraph/ops/minimum.cpp',
            'pyngraph/ops/multiply.cpp',
            'pyngraph/ops/negative.cpp',
@@ -117,14 +119,12 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/ops/power.cpp',
            'pyngraph/ops/reduce.cpp',
            'pyngraph/ops/regmodule_pyngraph_op.cpp',
-           'pyngraph/ops/replace_slice.cpp',
            'pyngraph/ops/reshape.cpp',
            'pyngraph/ops/reverse.cpp',
            'pyngraph/ops/select.cpp',
            'pyngraph/ops/sign.cpp',
            'pyngraph/ops/sin.cpp',
            'pyngraph/ops/sinh.cpp',
-           'pyngraph/ops/slice.cpp',
            'pyngraph/ops/sqrt.cpp',
            'pyngraph/ops/subtract.cpp',
            'pyngraph/ops/sum.cpp',
@@ -141,10 +141,12 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/types/type.cpp',
            ]
 
+sources = [PYNGRAPH_SOURCE_DIR + "/" + source for source in sources]
+
 include_dirs = [# Path to pybind11 headers
-                "pybind11/include",
+                PYNGRAPH_SOURCE_DIR + "/pybind11/include",
+                PYNGRAPH_SOURCE_DIR,
                 NGRAPH_CPP_INCLUDE_DIR,
-                ".",
                ]
 
 library_dirs = [NGRAPH_CPP_LIBRARY_DIR,
@@ -206,7 +208,10 @@ setup(
     description='Python wrapper for ngraph',
     long_description='',
     ext_modules=ext_modules,
-    packages = find_packages(exclude=['pybind11', 'build', 'test']),
+    package_dir={'pyngraph': PYNGRAPH_SOURCE_DIR + "/pyngraph",
+                 'pyngraph.op': PYNGRAPH_SOURCE_DIR + "/pyngraph/op",
+                 'pyngraph.runtime': PYNGRAPH_SOURCE_DIR + "/pyngraph/runtime"},
+    packages = ['pyngraph', 'pyngraph.op', 'pyngraph.runtime'],
     cmdclass={'build_ext': BuildExt},
     data_files = data_files,
     install_requires = requirements,

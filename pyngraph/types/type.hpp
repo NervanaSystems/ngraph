@@ -18,5 +18,4 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_ValueType(py::module m);
 void regclass_pyngraph_TensorViewType(py::module m);
