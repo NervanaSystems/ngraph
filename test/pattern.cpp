@@ -282,7 +282,7 @@ public:
     void construct_mean()
     {
         auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
-        auto input = std::make_shared<op::Parameter>(element::f32, Shape{2, 3});
+        auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
         auto sum_input = std::make_shared<op::Sum>(input, AxisSet{0});
         auto mean = std::make_shared<op::Divide>(sum_input, N);
         auto pattern = std::make_shared<pattern::op::Label>(mean);
@@ -299,7 +299,7 @@ public:
             return nn;
         };
 
-        auto m = std::make_shared<TestMatcher>(mean, callback);
+        auto m = std::make_shared<ngraph::pattern::Matcher>(mean, callback);
         this->add_matcher(m);
 
     }
