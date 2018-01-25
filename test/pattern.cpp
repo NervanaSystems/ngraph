@@ -36,6 +36,39 @@
 #include "ngraph/util.hpp"
 #include "util/test_tools.hpp"
 
+
+//visualize headers
+
+#include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include "gtest/gtest.h"
+
+#include "ngraph/log.hpp"
+#include "ngraph/ngraph.hpp"
+#include "ngraph/pass/dump_sorted.hpp"
+#include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
+
+#include "util/test_tools.hpp"
+
+
+#include <fstream>
+#include <sstream>
+
+#include "gtest/gtest.h"
+
+#include "ngraph/file_util.hpp"
+#include "ngraph/json.hpp"
+#include "ngraph/ngraph.hpp"
+#include "ngraph/serializer.hpp"
+#include "ngraph/util.hpp"
+#include "util/test_tools.hpp"
+
 using namespace ngraph;
 using namespace std;
 
@@ -703,3 +736,38 @@ TEST(pattern, cpu_fusion_rewrite_mlp)
     }
 }
 
+TEST(batchnorm, remove_reshapes)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_before.png");
+    pass_manager.register_pass<pass::CPUFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_after.png");
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/bn_fprop.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    NGRAPH_DEBUG << " GET_ORDERED_OPS BEFORE : ";
+    for (auto n : func->get_ordered_ops())
+    {
+        NGRAPH_DEBUG << "n = " << n->get_name();
+    }
+    pass_manager.run_passes(func);
+    NGRAPH_DEBUG << " GET_ORDERED_OPS AFTER : ";
+    for (auto n : func->get_ordered_ops())
+    {
+        NGRAPH_DEBUG << "n = " << n->get_name();
+    }
+}
+
+TEST(batchnorm, remove_transposes)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("transpose_before.png");
+    pass_manager.register_pass<pass::CPUFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("transpose_after.png");
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/transpose.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+}

@@ -76,8 +76,10 @@ public:
         : GraphRewrite()
     {
         construct_gemm_pattern();
+        construct_reshapex2_pattern();
     }
 
 private:
     void construct_gemm_pattern();
+    void construct_reshapex2_pattern();
 };
