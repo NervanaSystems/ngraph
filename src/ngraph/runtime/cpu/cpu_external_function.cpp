@@ -231,6 +231,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
 #include <Eigen/Dense>
 
+#include <mkldnn.hpp>
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"

@@ -70,7 +70,7 @@ void Node::add_output(const element::Type& element_type, const Shape& shape)
     m_outputs.emplace_back(this, i, tensor_view_descriptor);
 }
 
-void Node::set_value_type_checked(const shared_ptr<const ValueType>& value_type)
+void Node::set_value_type_checked(const shared_ptr<const TensorViewType>& value_type)
 {
     set_value_type_checked(value_type->get_element_type(), value_type->get_shape());
 }
