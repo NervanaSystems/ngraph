@@ -279,7 +279,30 @@ public:
         auto m = make_shared<TestMatcher>(sum_pattern, callback);
         this->add_matcher(m);
     }
+    void construct_mean()
+    {
+        auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{2, 3});
+        auto sum_input = std::make_shared<op::Sum>(input, AxisSet{0});
+        auto mean = std::make_shared<op::Divide>(sum_input, N);
+        auto pattern = std::make_shared<pattern::op::Label>(mean);
 
+        ngraph::pattern::gr_callback_fn callback = [mean](pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In a callback for construct_mean_pattern against "
+                         << m.match_root()->get_name();
+
+            std::shared_ptr<Node> nn = nullptr;
+            //TODO - add assert's based on the matched node
+            // auto mean = m.get_pattern_map()[mean]
+            // NGRAPH_DEBUG << "Mean = " << mean->get_name();
+
+            return nn;
+        };
+
+        auto m = std::make_shared<TestMatcher>(mean, callback);
+        this->add_matcher(m);
+
+    }
     void construct_variance()
     {
         auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
@@ -314,6 +337,7 @@ public:
         construct_multiply_by_one();
         construct_add_zero();
         construct_sum();
+        construct_mean();
         construct_variance();
     }
 
@@ -443,6 +467,20 @@ TEST(pattern, graph_rewrite)
         ASSERT_EQ(sum->get_input_op(0), parm);
     }
 
+    // test mean
+    {
+        auto a = make_shared<op::Parameter>(element::f32, Shape{3});
+        auto b = make_shared<op::Parameter>(element::f32, Shape{3});
+        auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{2, 3});
+        auto input_sum = std::make_shared<op::Sum>(input, AxisSet{0});
+        auto mean = std::make_shared<op::Divide>(input_sum, N);
+        auto graph = a + (mean + b);
+
+        run_passes(pass_manager, graph, {input, a, b});
+        //TODO: add asserts based on the return type
+    }
+
     // test variance 
     {
         auto a = make_shared<op::Parameter>(element::f32, Shape{3});
@@ -458,7 +496,7 @@ TEST(pattern, graph_rewrite)
         auto graph = a + (variance + b); 
     
         run_passes(pass_manager, graph, {input, a, b});
-        //TODO: add asserts based on the return typ
+        //TODO: add asserts based on the return type
     }
 }
 
