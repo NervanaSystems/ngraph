@@ -33,7 +33,7 @@ namespace ngraph
             }
 
 	    	template<>
-            inline void add(float* arg0, float* arg1, float* out, size_t count)
+            inline void add<float>(float* arg0, float* arg1, float* out, size_t count)
             {
 				float* d_arg0;
 				float* d_arg1;

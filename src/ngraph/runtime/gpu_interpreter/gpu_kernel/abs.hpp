@@ -15,7 +15,15 @@
 #pragma once
 
 #include <cmath>
+#include <cuda.h>
 
+
+__global__ void VecAdd(float* A, float* B) 
+{ 
+    int i = threadIdx.x; 
+    B[i] = A[i] < 0 ? -A[i] : A[i]; 
+} 
+ß
 namespace ngraph
 {
     namespace runtime
@@ -30,6 +38,12 @@ namespace ngraph
                     // TODO: generic "abs" doesn't work here for some reason.
                     out[i] = (arg[i] < 0 ? -arg[i] : arg[i]);
                 }
+            }
+
+            template <>
+            inline void abs<float>(float* arg, float* out, size_t count)
+            {
+                VecAbs<<<1, count>>>(arg, out);
             }
         }
     }
