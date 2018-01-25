@@ -2130,6 +2130,29 @@ TEST(type_prop, conv_3d_deduce_strided_window_dilated_image_dilated_small)
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0, 0}));
 }
 
+TEST(type_prop, conv_invalid_element_type_mismatch)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{3, 3, 3, 3});
+    auto param1 = make_shared<op::Parameter>(element::i32, Shape{3, 3, 2, 2});
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0, param1);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input with element type mismatch not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution image batch and filter element types do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, conv_invalid_0d_input)
 {
     // Deduce type

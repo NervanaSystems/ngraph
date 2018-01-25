@@ -40,6 +40,14 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
     auto& filters_shape = get_inputs().at(1).get_shape();
 
     //
+    // Make sure image batch and filter element types match.
+    //
+    if (get_inputs().at(0).get_element_type() != get_inputs().at(1).get_element_type())
+    {
+        throw ngraph_error("Convolution image batch and filter element types do not match");
+    }
+
+    //
     // Make sure image_batch: NCiDi for some Di of rank>0, N != 0, Ci != 0.
     //
     if (image_batch_shape.size() < 3)
