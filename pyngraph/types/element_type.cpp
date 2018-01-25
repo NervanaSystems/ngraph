@@ -42,7 +42,7 @@ void regclass_pyngraph_Type(py::module m){
         return "<Type: 'u" + self.c_type_string() + bitwidth + "'>";
     });
 
-    type.def("__eq__", [](ngraph::element::Type a, ngraph::element::Type b) {
+    type.def("__eq__", [](const ngraph::element::Type &a, const ngraph::element::Type &b) {
         return a == b;
     }, py::is_operator());
 
