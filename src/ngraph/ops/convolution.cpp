@@ -34,13 +34,15 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
                                             size_t input_channel_axis_filters,
                                             size_t output_channel_axis_filters,
                                             size_t batch_axis_result,
-                                            size_t output_channel_axis_result)
+                                            size_t output_channel_axis_result,
+                                            std::string error_prefix)
 {
     if (batch_axis_image_batch > 1 || input_channel_axis_image_batch > 1 ||
         input_channel_axis_filters > 1 || output_channel_axis_filters > 1 ||
         batch_axis_result > 1 || output_channel_axis_result > 1)
     {
         throw ngraph_error(
+            error_prefix +
             "Internal nGraph error: infer_convolution_output_shape: batch_axis_image_batch, "
             "input_channel_axis_image_batch, input_channel_axis_filters, "
             "output_channel_axis_filters, "
@@ -53,6 +55,7 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
     if (image_batch_shape.size() < 3)
     {
         throw ngraph_error(
+            error_prefix +
             "Convolution image batch input must have rank of at least 3 (one batch axis, one "
             "input-channel axis, at least one image dimension).");
     }
@@ -60,13 +63,13 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
     size_t batch_size = image_batch_shape[batch_axis_image_batch];
     if (batch_size == 0)
     {
-        throw ngraph_error("Convolution image batch size is zero.");
+        throw ngraph_error(error_prefix + "Convolution image batch size is zero.");
     }
 
     size_t input_channel_count = image_batch_shape[input_channel_axis_image_batch];
     if (input_channel_count == 0)
     {
-        throw ngraph_error("Convolution requires at least one input channel.");
+        throw ngraph_error(error_prefix + "Convolution requires at least one input channel.");
     }
 
     size_t image_dimension_count = image_batch_shape.size() - 2;
@@ -76,18 +79,20 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
     //
     if (filters_shape.size() != 2 + image_dimension_count)
     {
-        throw ngraph_error("Convolution filter input must have rank of 2 + n_image_dimensions.");
+        throw ngraph_error(error_prefix +
+                           "Convolution filter input must have rank of 2 + n_image_dimensions.");
     }
 
     size_t output_channel_count = filters_shape[output_channel_axis_filters];
     if (output_channel_count == 0)
     {
-        throw ngraph_error("Convolution requires at least one output channel.");
+        throw ngraph_error(error_prefix + "Convolution requires at least one output channel.");
     }
 
     if (filters_shape[input_channel_axis_filters] != input_channel_count)
     {
-        throw ngraph_error("Convolution image batch and filter input channel counts do not match.");
+        throw ngraph_error(error_prefix +
+                           "Convolution image batch and filter input channel counts do not match.");
     }
 
     //
@@ -97,18 +102,21 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
     if (window_movement_strides.size() != image_dimension_count)
     {
         throw ngraph_error(
+            error_prefix +
             "Convolution window movement stride rank does not match number of image dimensions.");
     }
 
     if (window_dilation_strides.size() != image_dimension_count)
     {
         throw ngraph_error(
+            error_prefix +
             "Convolution window dilation stride rank does not match number of image dimensions.");
     }
 
     if (image_dilation_strides.size() != image_dimension_count)
     {
         throw ngraph_error(
+            error_prefix +
             "Convolution image dilation stride rank does not match number of image dimensions.");
     }
 
@@ -118,12 +126,14 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
     if (padding_below.size() != image_dimension_count)
     {
         throw ngraph_error(
+            error_prefix +
             "Convolution padding-below rank does not match number of image dimensions.");
     }
 
     if (padding_above.size() != image_dimension_count)
     {
         throw ngraph_error(
+            error_prefix +
             "Convolution padding-above rank does not match number of image dimensions.");
     }
 
@@ -136,7 +146,7 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
     {
         if (image_dilation_strides[i] == 0)
         {
-            throw ngraph_error("Convolution image dilation stride is zero.");
+            throw ngraph_error(error_prefix + "Convolution image dilation stride is zero.");
         }
 
         size_t dim_size = image_batch_shape[1 + 1 + i];
@@ -148,6 +158,7 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
         if (padded_dilated_dim_size < 0)
         {
             throw ngraph_error(
+                error_prefix +
                 "Convolution input image dimension after padding and dilation is negative.");
         }
 
@@ -156,6 +167,7 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
         if (input_image_virtual_shape[i] == 0)
         {
             throw ngraph_error(
+                error_prefix +
                 "Convolution input image dimension after dilation is zero even with padding.");
         }
     }
@@ -171,7 +183,7 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
         window_physical_shape.push_back(filters_shape[1 + 1 + i]);
         if (window_physical_shape[i] == 0)
         {
-            throw ngraph_error("Convolution window shape has a zero-length axis.");
+            throw ngraph_error(error_prefix + "Convolution window shape has a zero-length axis.");
         }
     }
 
@@ -185,7 +197,7 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
     {
         if (window_dilation_strides[i] == 0)
         {
-            throw ngraph_error("Convolution window axis dilation stride is zero.");
+            throw ngraph_error(error_prefix + "Convolution window axis dilation stride is zero.");
         }
 
         window_virtual_shape.push_back((window_physical_shape[i] - 1) * window_dilation_strides[i] +
@@ -194,6 +206,7 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
         if (window_virtual_shape[i] > input_image_virtual_shape[i])
         {
             throw ngraph_error(
+                error_prefix +
                 "Convolution window after dilation is larger than the image even with padding.");
         }
     }
@@ -210,7 +223,7 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
     {
         if (window_movement_strides[i] == 0)
         {
-            throw ngraph_error("Convolution window axis movement stride is zero.");
+            throw ngraph_error(error_prefix + "Convolution window axis movement stride is zero.");
         }
         result_shape[i + 2] = ceil_div(input_image_virtual_shape[i] - window_virtual_shape[i] + 1,
                                        window_movement_strides[i]);
@@ -259,7 +272,8 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
                                                           1,
                                                           0,
                                                           0,
-                                                          1));
+                                                          1,
+                                                          ""));
 }
 
 Strides op::Convolution::default_strides(const std::shared_ptr<Node>& image_batch)
@@ -475,7 +489,8 @@ op::ConvolutionBackpropImageBatch::ConvolutionBackpropImageBatch(
                                        0,
                                        1,
                                        0,
-                                       1);
+                                       1,
+                                       "In ConvolutionBackpropImageBatch: ");
 
     // Not sure if this can ever actually happen (i.e., I think it will trip on something else
     // inside infer_convolution_output_shape before we get here) but it seems worth checking.
@@ -595,7 +610,8 @@ op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
                                        0,
                                        1,
                                        1,
-                                       0);
+                                       0,
+                                       "In ConvolutionBackpropFilters: ");
 
     // Not sure if this can ever actually happen (i.e., I think it will trip on something else
     // inside infer_convolution_output_shape before we get here) but it seems worth checking.
