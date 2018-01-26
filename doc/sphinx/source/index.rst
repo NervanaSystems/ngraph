@@ -17,6 +17,23 @@
 
 Intel nGraph library
 ====================
+Intel nGraph is a suite of components that serve as backends for deep learning
+frameworks, allowing the framework to be used on a variety of Intel and 
+non-Intel execution platforms. There is a *framework bridge* for each
+supported framework which acts as an intermediary between the *ngraph core*
+and the framework. A *transformer* plays a similar role between the ngraph
+core and the various execution platforms.
+
+The *nGraph core* uses a strongly typed platform-neutral statelss graph 
+representation for computations. Each node, or *op*, in the graph corresponds
+to one step in a computation, where each step produces zero or more tensor
+outputs from zero or more tensor inputs.
+
+Transformers compile the graph using a combination of generic and 
+platform-specific graph transformation. The result is a function that
+can be executed from the framework bridge. Transformers also allocate
+and deallocate, as well as read and write, tensors under direction of the
+bridge.
 
 .. toctree::
    :maxdepth: 1
@@ -44,6 +61,13 @@ Intel nGraph library
    api.rst
    autodiff.rst
    glossary.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Ops
+
+   op/convolution.rst
+
 
 .. toctree::
    :maxdepth: 1
