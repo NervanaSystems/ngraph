@@ -375,28 +375,12 @@ bool op::Convolution::is_functionally_identical(const Node& other) const
     return rc;
 }
 
-std::shared_ptr<op::Reshape> flipDim0and1(std::shared_ptr<Node> node, const Shape& shape)
-{
-    AxisVector input_order(shape.size());
-    std::iota(input_order.begin(), input_order.end(), 0);
-    std::swap(input_order[0], input_order[1]);
-
-    auto output_shape = shape;
-    std::swap(output_shape[0], output_shape[1]);
-
-    return std::make_shared<op::Reshape>(node, input_order, output_shape);
-}
-
 void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
                                         const std::shared_ptr<Node>& delta)
 {
-    // input
-    // {N, Cin, d1,...,dn}
     auto x = get_input_op(0);
     const auto x_shape = x->get_shape();
 
-    // filters
-    // {Cout, Cin, df1,...,dfn}
     auto f = get_input_op(1);
     const auto f_shape = f->get_shape();
 
@@ -411,53 +395,15 @@ void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
                                                             m_padding_above,
                                                             m_image_dilation_strides));
 
-    // {N, Cout, d'1,...,d'n}
-    const auto delta_shape = delta->get_shape();
-
-    // adjust padding for x and f adjoints per:
-    // https://wiki.ith.intel.com/display/intelnervana/Autodiff
-    CoordinateDiff f_adjoint_padding_below;
-    CoordinateDiff f_adjoint_padding_above;
-
-    // loop over data axes
-    for (auto i = 0; i < delta_shape.size() - 2; ++i)
-    {
-        // (Sw - 1)%Q
-        // (Ax + (Sx - 1)Px + Bx - (Sf - 1)Pf) % Q
-        auto sw_mod_q = (m_padding_below[i] + (x_shape[i + 2] - 1) * m_image_dilation_strides[i] +
-                         m_padding_above[i] - (f_shape[i + 2] - 1) * m_window_dilation_strides[i]) %
-                        m_window_movement_strides[i];
-
-        // Bx  - (SW - 1)%Q
-        f_adjoint_padding_above.push_back(m_padding_above[i] - sw_mod_q);
-
-        // Ax
-        f_adjoint_padding_below.push_back(m_padding_below[i]);
-    }
-
-    // to calculate adjoint of the filter...
-    // 1) reshape input
-    // {Cin, N, d1,...,dn}
-    auto x_reshape = flipDim0and1(x, x_shape);
-
-    // 2) reshape delta
-    // {Cout, N, d'1,...d'n}
-    auto delta_reshape = flipDim0and1(delta, delta_shape);
-
-    // 3) convolve reshaped input with reshaped delta
-    //    swap window_movement_stride and window_dilation_stride
-    // {Cin, Cout, df1,...,dfn}
-    auto f_adjoint = std::make_shared<op::Convolution>(x_reshape,
-                                                       delta_reshape,
-                                                       m_window_dilation_strides,
-                                                       m_window_movement_strides,
-                                                       f_adjoint_padding_below,
-                                                       f_adjoint_padding_above,
-                                                       m_image_dilation_strides);
-
-    // 4) reshape result to match filter dimentions
-    // {Cout, Cin, df1,...,dfn}
-    adjoints.add_delta(f, flipDim0and1(f_adjoint, f_adjoint->get_shape()));
+    adjoints.add_delta(f,
+                       std::make_shared<op::ConvolutionBackpropFilters>(x,
+                                                                        f_shape,
+                                                                        delta,
+                                                                        m_window_movement_strides,
+                                                                        m_window_dilation_strides,
+                                                                        m_padding_below,
+                                                                        m_padding_above,
+                                                                        m_image_dilation_strides));
 }
 
 op::ConvolutionBackpropImageBatch::ConvolutionBackpropImageBatch(
@@ -587,18 +533,18 @@ op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     const std::shared_ptr<Node>& image_batch,
     const Shape& filters_shape,
     const std::shared_ptr<Node>& output_delta,
-    const Strides& window_movement_strides,
-    const Strides& window_dilation_strides,
-    const CoordinateDiff& padding_below,
-    const CoordinateDiff& padding_above,
-    const Strides& image_dilation_strides)
+    const Strides& window_movement_strides_forward,
+    const Strides& window_dilation_strides_forward,
+    const CoordinateDiff& padding_below_forward,
+    const CoordinateDiff& padding_above_forward,
+    const Strides& image_dilation_strides_forward)
     : RequiresTensorViewArgs("ConvolutionBackpropFilters", {image_batch, output_delta})
     , m_filters_shape(filters_shape)
-    , m_window_movement_strides(window_movement_strides)
-    , m_window_dilation_strides(window_dilation_strides)
-    , m_padding_below(padding_below)
-    , m_padding_above(padding_above)
-    , m_image_dilation_strides(image_dilation_strides)
+    , m_window_movement_strides_forward(window_movement_strides_forward)
+    , m_window_dilation_strides_forward(window_dilation_strides_forward)
+    , m_padding_below_forward(padding_below_forward)
+    , m_padding_above_forward(padding_above_forward)
+    , m_image_dilation_strides_forward(image_dilation_strides_forward)
 {
     auto& image_batch_shape = get_inputs().at(0).get_shape();
     auto& image_batch_et = get_inputs().at(0).get_element_type();
@@ -621,33 +567,29 @@ op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     // Padding above                b_x                   b_x - (a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q
     // Image dilation strides       p_x                   p_x
 
-    Strides window_movement_strides_back;
-    Strides window_dilation_strides_back;
-    CoordinateDiff padding_below_back;
-    CoordinateDiff padding_above_back;
-    Strides image_dilation_strides_back;
-
     for (size_t i = 0; i < filters_shape.size() - 2; i++)
     {
-        window_movement_strides_back.push_back(window_dilation_strides[i]);
-        window_dilation_strides_back.push_back(window_movement_strides[i]);
-        padding_below_back.push_back(padding_below[i]);
-        padding_above_back.push_back(
-            padding_above[i] -
-            (padding_below[i] + (image_batch_shape[i + 2] - 1) * image_dilation_strides[i] +
-             padding_above[i] - (filters_shape[i + 2] - 1) * window_dilation_strides[i]) %
-                window_movement_strides[i]);
-        image_dilation_strides_back.push_back(image_dilation_strides[i]);
+        m_window_movement_strides_backward.push_back(window_dilation_strides_forward[i]);
+        m_window_dilation_strides_backward.push_back(window_movement_strides_forward[i]);
+        m_padding_below_backward.push_back(padding_below_forward[i]);
+        m_padding_above_backward.push_back(
+            padding_above_forward[i] -
+            (padding_below_forward[i] +
+             (image_batch_shape[i + 2] - 1) * image_dilation_strides_forward[i] +
+             padding_above_forward[i] -
+             (filters_shape[i + 2] - 1) * window_dilation_strides_forward[i]) %
+                window_movement_strides_forward[i]);
+        m_image_dilation_strides_backward.push_back(image_dilation_strides_forward[i]);
     }
 
     Shape inferred_convolution_output_shape =
         infer_convolution_output_shape(image_batch_shape,
                                        output_delta_shape,
-                                       window_movement_strides_back,
-                                       window_dilation_strides_back,
-                                       padding_below_back,
-                                       padding_above_back,
-                                       image_dilation_strides_back,
+                                       m_window_movement_strides_backward,
+                                       m_window_dilation_strides_backward,
+                                       m_padding_below_backward,
+                                       m_padding_above_backward,
+                                       m_image_dilation_strides_backward,
                                        1,
                                        0,
                                        0,
@@ -677,11 +619,11 @@ std::shared_ptr<Node> op::ConvolutionBackpropFilters::copy_with_new_args(
     return std::make_shared<ConvolutionBackpropFilters>(new_args.at(0),
                                                         m_filters_shape,
                                                         new_args.at(1),
-                                                        m_window_movement_strides,
-                                                        m_window_dilation_strides,
-                                                        m_padding_below,
-                                                        m_padding_above,
-                                                        m_image_dilation_strides);
+                                                        m_window_movement_strides_forward,
+                                                        m_window_dilation_strides_forward,
+                                                        m_padding_below_forward,
+                                                        m_padding_above_forward,
+                                                        m_image_dilation_strides_forward);
 }
 
 bool op::ConvolutionBackpropFilters::is_functionally_identical(const Node& other) const
@@ -692,11 +634,13 @@ bool op::ConvolutionBackpropFilters::is_functionally_identical(const Node& other
         const ConvolutionBackpropFilters& rhs =
             dynamic_cast<const ConvolutionBackpropFilters&>(other);
         rc &= m_filters_shape == rhs.m_filters_shape;
-        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
-        rc &= m_window_dilation_strides == rhs.m_window_dilation_strides;
-        rc &= m_padding_below == rhs.m_padding_below;
-        rc &= m_padding_above == rhs.m_padding_above;
-        rc &= m_image_dilation_strides == rhs.m_image_dilation_strides;
+        rc &= m_window_movement_strides_forward == rhs.m_window_movement_strides_forward;
+        rc &= m_window_dilation_strides_forward == rhs.m_window_dilation_strides_forward;
+        rc &= m_padding_below_forward == rhs.m_padding_below_forward;
+        rc &= m_padding_above_forward == rhs.m_padding_above_forward;
+        rc &= m_image_dilation_strides_forward == rhs.m_image_dilation_strides_forward;
+        // The _backward fields do not need to be tested here since they are derived from the
+        // _forward ones.
     }
     else
     {
