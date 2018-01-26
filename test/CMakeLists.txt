@@ -59,7 +59,6 @@ add_subdirectory(models)
 #================================================================================================
 # TODO add interpreter back to unit tests when it works
 set(BACKEND_NAMES ${BACKEND_NAMES} "INTERPRETER")
-set(BACKEND_NAMES ${BACKEND_NAMES} "GPU_INTERPRETER")
 
 if(MKLDNN_INCLUDE_DIR)
     include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})
@@ -75,6 +74,7 @@ if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
 endif()
 
 if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
+    set(BACKEND_NAMES ${BACKEND_NAMES} "GPU_INTERPRETER")
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${CUDA_INCLUDE_DIRS})
     link_directories(${LLVM_LIB_DIR} ${CUDA_LIBRARIES})
     set(SRC

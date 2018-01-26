@@ -92,12 +92,6 @@ set (SRC
     runtime/interpreter/int_kernels.cpp
     runtime/interpreter/int_manager.cpp
     runtime/interpreter/int_tensor_view.cpp
-    runtime/gpu_interpreter/int_backend.cpp
-    runtime/gpu_interpreter/int_call_frame.cpp
-    runtime/gpu_interpreter/int_external_function.cpp
-    runtime/gpu_interpreter/int_kernels.cpp
-    runtime/gpu_interpreter/int_manager.cpp
-    runtime/gpu_interpreter/int_tensor_view.cpp
     runtime/manager.cpp
     runtime/tensor_view.cpp
     serializer.cpp
@@ -202,6 +196,13 @@ endif()
             runtime/gpu/gpu_manager.cpp
             runtime/gpu/gpu_tensor_view.cpp
             runtime/gpu/gpu_tensor_view_wrapper.cpp
+	    runtime/gpu_interpreter/int_backend.cpp
+	    runtime/gpu_interpreter/int_call_frame.cpp
+	    runtime/gpu_interpreter/int_external_function.cpp
+	    runtime/gpu_interpreter/int_kernels.cpp
+	    runtime/gpu_interpreter/int_manager.cpp
+	    runtime/gpu_interpreter/int_tensor_view.cpp
+	    runtime/gpu_interpreter/gpu_kernel/abs.cu
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
@@ -274,7 +275,12 @@ if(NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    target_link_libraries(ngraph PRIVATE cuda ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+	LIST(APPEND CUDA_NVCC_FLAGS --compiler-options -fPIC -fno-strict-aliasing -lineinfo -use_fast_math -Xptxas -dlcm=cg)
+	LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20)
+	LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_30,code=sm_30)
+	LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_35,code=sm_35)
+
+    target_link_libraries(ngraph PRIVATE cuda /usr/local/cuda/lib64/libcudart.so ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 # Argon

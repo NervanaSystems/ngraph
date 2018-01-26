@@ -12,33 +12,32 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#idndef _CUDA_VEC_ABS_
+#define _CUDA_VEC_ABS_
 
-#include <cmath>
+#include <abs.hpp>
+#include <cuda_runtime.h>
 
-void runVecAbs(float* arg, float* out, size_t count);
+__global__ void VecAbs(float* A, float* B) 
+{ 
+    int i = threadIdx.x; 
+    B[i] = A[i] < 0 ? -A[i] : A[i]; 
+} 
 
-namespace ngraph
+void runVecAbs(float* arg, float* out, size_t count)
 {
-    namespace runtime
-    {
-        namespace gpu_kernel
-        {
-            template <typename T>
-            void abs(T* arg, T* out, size_t count)
-            {
-                for (size_t i = 0; i < count; i++)
-                {
-                    // TODO: generic "abs" doesn't work here for some reason.
-                    out[i] = (arg[i] < 0 ? -arg[i] : arg[i]);
-                }
-            }
+	float *d_arg, *d_out;
+	
+	cudaMalloc((void **)& d_arg, sizeof(float) * count);
+	cudaMalloc((void **)& d_out, sizeof(float) * count);
+  	
+	cudaMemcpy(d_arg, arg, count, cudaMemcpyHostToDevice);
+	
+        VecAbs<<<1, count>>>(d_arg, d_out);
 
-            template <>
-            inline void abs<float>(float* arg, float* out, size_t count)
-            {
-		runVecAbs(arg, out, count);
-            }
-        }
-    }
+	cudaMemcpy(out, d_out, count, cudaMemcpyDeviceToHost);
+	
+	cudaFree(d_arg);
+	cudaFree(d_out);
 }
+#endif
