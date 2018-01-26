@@ -16,7 +16,8 @@
 
 #include <Eigen/Dense>
 
-#include "ngraph/common.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {

@@ -15,6 +15,7 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 #include "ngraph/log.hpp"
 #include "ngraph/log.hpp"

@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "ngraph/axis_set.hpp"
 #include "ngraph/ops/op.hpp"
 
 namespace ngraph
@@ -83,8 +84,7 @@ namespace ngraph
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
             Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 1)
                     throw ngraph_error("Incorrect number of new arguments");

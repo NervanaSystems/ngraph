@@ -41,7 +41,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
     auto window_shape = Shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
     auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
-    auto f = make_shared<Function>(maxpool, op::Parameters{A});
+    auto f = make_shared<Function>(maxpool, std::vector<std::shared_ptr<op::Parameter>>{A});
 
     shared_ptr<runtime::TensorView> ep =
         backend->make_primary_tensor_view(element::i32, maxpool_shape);
@@ -87,7 +87,7 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
     auto window_shape = Shape{3, 3};
     auto window_movement_strides = Strides{2, 2};
     auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
-    auto f = make_shared<Function>(maxpool, op::Parameters{A});
+    auto f = make_shared<Function>(maxpool, std::vector<std::shared_ptr<op::Parameter>>{A});
 
     shared_ptr<runtime::TensorView> ep =
         backend->make_primary_tensor_view(element::i32, maxpool_shape);

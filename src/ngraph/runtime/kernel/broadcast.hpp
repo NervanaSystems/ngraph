@@ -16,7 +16,6 @@
 
 #include <cmath>
 
-#include "ngraph/common.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
@@ -37,7 +36,7 @@ namespace ngraph
 
                 for (const Coordinate& output_coord : output_transform)
                 {
-                    Coordinate input_coord = project_coordinate(output_coord, broadcast_axes);
+                    Coordinate input_coord = project(output_coord, broadcast_axes);
 
                     out[output_transform.index(output_coord)] =
                         arg[input_transform.index(input_coord)];

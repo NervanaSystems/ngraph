@@ -64,7 +64,7 @@ namespace ngraph
         }
 
         /// Return the ops that generate the results
-        const std::vector<std::shared_ptr<Node>> get_results() const { return m_results; }
+        const Nodes get_results() const { return m_results; }
         /// Check that there is a single result and return it.
         std::shared_ptr<Node> get_result() const;
 

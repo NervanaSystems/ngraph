@@ -15,7 +15,7 @@
 
 #include "ngraph/builder/autobroadcast.hpp"
 
-#include "ngraph/common.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/util.hpp"
@@ -53,7 +53,8 @@ namespace ngraph
         {
             ostringstream os;
             os << "Auto-broadcast not possible for these input shapes:"
-               << " shape1=" << vector_to_string(shape1) << " shape2=" << vector_to_string(shape2);
+               << " shape1=" << vector_to_string(shape1.get_vector())
+               << " shape2=" << vector_to_string(shape2.get_vector());
             return os.str();
         }
 

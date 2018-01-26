@@ -26,10 +26,10 @@
 #include <vector>
 
 #include "ngraph/autodiff/adjoints.hpp"
-#include "ngraph/common.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/nodes.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph
@@ -158,8 +158,7 @@ namespace ngraph
 
         std::shared_ptr<Node> get_input_op(size_t index);
 
-        virtual std::shared_ptr<Node>
-            copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const = 0;
+        virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const = 0;
 
         virtual std::vector<std::shared_ptr<Function>> get_functions() const;
 

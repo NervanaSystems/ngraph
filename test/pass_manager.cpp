@@ -47,7 +47,8 @@ TEST(pass_manager, module_add_function)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
+    auto f =
+        make_shared<Function>((A + B) * C, std::vector<std::shared_ptr<op::Parameter>>{A, B, C});
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -55,5 +56,5 @@ TEST(pass_manager, module_add_function)
     auto Z = make_shared<op::Parameter>(element::f32, shape);
     auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}) +
                                        make_shared<op::FunctionCall>(f, Nodes{X, Y, Z}),
-                                   op::Parameters{X, Y, Z});
+                                   std::vector<std::shared_ptr<op::Parameter>>{X, Y, Z});
 }

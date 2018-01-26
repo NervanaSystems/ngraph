@@ -85,8 +85,7 @@ namespace ngraph
                              const Shape& window_shape,
                              const Strides& window_movement_strides);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 3)
                     throw ngraph_error("Incorrect number of new arguments");

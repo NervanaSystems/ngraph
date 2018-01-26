@@ -19,7 +19,11 @@
 #include <iostream>
 #include <vector>
 
-#include "ngraph/common.hpp"
+#include "ngraph/axis_vector.hpp"
+#include "ngraph/coordinate.hpp"
+#include "ngraph/coordinate_diff.hpp"
+#include "ngraph/shape.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
@@ -102,8 +106,8 @@ namespace ngraph
         static Coordinate default_source_end_corner(const Shape& source_shape);
 
         Shape m_source_shape;
-        Shape m_source_start_corner;
-        Shape m_source_end_corner;
+        Coordinate m_source_start_corner;
+        Coordinate m_source_end_corner;
         Strides m_source_strides;
         AxisVector m_source_axis_order;
         CoordinateDiff m_target_padding_below;

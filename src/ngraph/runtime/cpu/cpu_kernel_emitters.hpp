@@ -14,8 +14,10 @@
 
 #pragma once
 
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/common.hpp"
+#include "ngraph/coordinate.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {

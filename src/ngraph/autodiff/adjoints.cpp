@@ -19,6 +19,7 @@
 #include <unordered_set>
 
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/axis_set.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/add.hpp"
@@ -27,6 +28,7 @@
 #include "ngraph/ops/convert.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/strides.hpp"
 #include "ngraph/types/type.hpp"
 
 using namespace ngraph;

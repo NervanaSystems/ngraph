@@ -39,8 +39,8 @@ namespace ngraph
                 {
                 }
 
-                virtual std::shared_ptr<Node> copy_with_new_args(
-                    const std::vector<std::shared_ptr<Node>>& new_args) const override
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const Nodes& new_args) const override
                 {
                     throw ngraph_error("Uncopyable");
                 }

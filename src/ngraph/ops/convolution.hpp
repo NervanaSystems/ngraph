@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/ops/op.hpp"
 
 namespace ngraph
@@ -114,8 +115,7 @@ namespace ngraph
             Convolution(const std::shared_ptr<Node>& image_batch,
                         const std::shared_ptr<Node>& filters);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override;
+            virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override;
 
             /// \return The window movement strides.
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }

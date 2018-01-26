@@ -31,7 +31,8 @@ TEST(INTERPRETER, nan_check_input)
     auto shape = Shape{4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Divide>(A, B),
+                                   std::vector<std::shared_ptr<op::Parameter>>{A, B});
 
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
@@ -57,7 +58,8 @@ TEST(INTERPRETER, nan_check_output)
     auto shape = Shape{4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::Parameters{A, B});
+    auto f = make_shared<Function>(make_shared<op::Divide>(A, B),
+                                   std::vector<std::shared_ptr<op::Parameter>>{A, B});
 
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);

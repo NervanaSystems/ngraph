@@ -26,7 +26,7 @@ shared_ptr<runtime::TensorView>
     auto shape_a = Shape{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{2};
-    auto f = make_shared<Function>(func(A, {0}), op::Parameters{A});
+    auto f = make_shared<Function>(func(A, {0}), std::vector<std::shared_ptr<op::Parameter>>{A});
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
@@ -46,7 +46,8 @@ shared_ptr<runtime::TensorView> make_reduce_result_true(
     auto shape_a = Shape{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{2};
-    auto f = make_shared<Function>(func(A, {0}, true), op::Parameters{A});
+    auto f =
+        make_shared<Function>(func(A, {0}, true), std::vector<std::shared_ptr<op::Parameter>>{A});
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
@@ -66,7 +67,8 @@ shared_ptr<runtime::TensorView> make_reduce_result_false(
     auto shape_a = Shape{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto shape_rt = Shape{2};
-    auto f = make_shared<Function>(func(A, {0}, false), op::Parameters{A});
+    auto f =
+        make_shared<Function>(func(A, {0}, false), std::vector<std::shared_ptr<op::Parameter>>{A});
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();

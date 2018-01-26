@@ -52,8 +52,7 @@ namespace ngraph
             /// \param element_type Element type for the output tensor.
             Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 1)
                     throw ngraph_error("Incorrect number of new arguments");

@@ -183,16 +183,17 @@ void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints,
     auto SEL_A = make_shared<op::Parameter>(etype, shape_sel_a);
     auto shape_sel_b = Shape{};
     auto SEL_B = make_shared<op::Parameter>(etype, shape_sel_b);
-    auto sel_f = std::make_shared<Function>(std::make_shared<op::Greater>(SEL_A, SEL_B),
-                                            op::Parameters{SEL_A, SEL_B});
+    auto sel_f =
+        std::make_shared<Function>(std::make_shared<op::Greater>(SEL_A, SEL_B),
+                                   std::vector<std::shared_ptr<op::Parameter>>{SEL_A, SEL_B});
 
     //Update Cell
     auto shape_scatter_a = Shape{};
     auto SCATTER_A = make_shared<op::Parameter>(etype, shape_scatter_a);
     auto shape_scatter_b = Shape{};
     auto SCATTER_B = make_shared<op::Parameter>(etype, shape_scatter_b);
-    auto scatter_f =
-        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+    auto scatter_f = make_shared<Function>(
+        SCATTER_A + SCATTER_B, std::vector<std::shared_ptr<op::Parameter>>{SCATTER_A, SCATTER_B});
 
     auto operand = get_input_op(0);
     auto init_value =

@@ -227,7 +227,8 @@ TEST(memory_layout, constant)
 
     auto shape = Shape{1};
     auto c = op::Constant::create(element::i32, shape, {5});
-    auto f = make_shared<Function>(make_shared<op::Negative>(c), op::Parameters{});
+    auto f = make_shared<Function>(make_shared<op::Negative>(c),
+                                   std::vector<std::shared_ptr<op::Parameter>>{});
 
     pass_manager.run_passes(f);
     auto sorted = f->get_ordered_ops();

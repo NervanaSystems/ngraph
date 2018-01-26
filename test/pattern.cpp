@@ -77,7 +77,8 @@ std::shared_ptr<Node> create_reduction(const std::shared_ptr<Node>& node,
     const auto& et = node->get_element_type();
     auto f_A = std::make_shared<op::Parameter>(et, Shape{});
     auto f_B = std::make_shared<op::Parameter>(et, Shape{});
-    auto f = std::make_shared<Function>(std::make_shared<T>(f_A, f_B), op::Parameters{f_A, f_B});
+    auto f = std::make_shared<Function>(std::make_shared<T>(f_A, f_B),
+                                        std::vector<std::shared_ptr<op::Parameter>>{f_A, f_B});
 
     auto init = std::make_shared<op::Constant>(et, Shape{}, std::vector<std::string>({init_val}));
     return std::make_shared<op::Reduce>(node, init, f, reduction_axes);
@@ -282,7 +283,7 @@ static void run_passes(pass::Manager& pass_manager,
                        shared_ptr<Node> graph,
                        std::vector<shared_ptr<op::Parameter>> parms)
 {
-    auto func = make_shared<Function>(graph, op::Parameters{parms});
+    auto func = make_shared<Function>(graph, std::vector<std::shared_ptr<op::Parameter>>{parms});
     pass_manager.run_passes(func);
 }
 

@@ -26,7 +26,7 @@ op::Broadcast::Broadcast(const std::shared_ptr<Node>& arg,
     , m_broadcast_axes(broadcast_axes)
 {
     auto& input = m_inputs.at(0);
-    vector<size_t> target_shape = m_shape;
+    Shape target_shape = m_shape;
     for (auto i = m_broadcast_axes.rbegin(); i != m_broadcast_axes.rend(); ++i)
     {
         target_shape.erase(target_shape.begin() + *i);
