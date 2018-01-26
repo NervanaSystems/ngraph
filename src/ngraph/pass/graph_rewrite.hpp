@@ -82,4 +82,5 @@ public:
 private:
     void construct_gemm_pattern();
     void construct_reshapex2_pattern();
+    void construct_fprop_bn();
 };
