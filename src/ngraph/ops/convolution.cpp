@@ -28,8 +28,21 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
                                             const Strides& window_dilation_strides,
                                             const CoordinateDiff& padding_below,
                                             const CoordinateDiff& padding_above,
-                                            const Strides& image_dilation_strides)
+                                            const Strides& image_dilation_strides,
+                                            size_t batch_axis,
+                                            size_t input_channel_axis_image_batch,
+                                            size_t input_channel_axis_filters,
+                                            size_t output_channel_axis)
 {
+    if (batch_axis > 1 || input_channel_axis_image_batch > 1 || input_channel_axis_filters > 1 ||
+        output_channel_axis > 1)
+    {
+        throw ngraph_error(
+            "Internal nGraph error: infer_convolution_output_shape: batch_axis, "
+            "input_channel_axis_image_batch, input_channel_axis_filters, and output_channel_axis "
+            "must all be 0 or 1.");
+    }
+
     //
     // Make sure image_batch: NCiDi for some Di of rank>0, N != 0, Ci != 0.
     //
@@ -40,13 +53,13 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
             "input-channel axis, at least one image dimension).");
     }
 
-    size_t batch_size = image_batch_shape[0];
+    size_t batch_size = image_batch_shape[batch_axis];
     if (batch_size == 0)
     {
         throw ngraph_error("Convolution image batch size is zero.");
     }
 
-    size_t input_channel_count = image_batch_shape[1];
+    size_t input_channel_count = image_batch_shape[input_channel_axis_image_batch];
     if (input_channel_count == 0)
     {
         throw ngraph_error("Convolution requires at least one input channel.");
@@ -62,13 +75,13 @@ static Shape infer_convolution_output_shape(const Shape& image_batch_shape,
         throw ngraph_error("Convolution filter input must have rank of 2 + n_image_dimensions.");
     }
 
-    size_t output_channel_count = filters_shape[0];
+    size_t output_channel_count = filters_shape[output_channel_axis];
     if (output_channel_count == 0)
     {
         throw ngraph_error("Convolution requires at least one output channel.");
     }
 
-    if (filters_shape[1] != input_channel_count)
+    if (filters_shape[input_channel_axis_filters] != input_channel_count)
     {
         throw ngraph_error("Convolution image batch and filter input channel counts do not match.");
     }
@@ -235,7 +248,11 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& image_batch,
                                                           window_dilation_strides,
                                                           padding_below,
                                                           padding_above,
-                                                          image_dilation_strides));
+                                                          image_dilation_strides,
+                                                          0,
+                                                          1,
+                                                          1,
+                                                          0));
 }
 
 Strides op::Convolution::default_strides(const std::shared_ptr<Node>& image_batch)
@@ -458,4 +475,126 @@ void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
     // 4) reshape result to match filter dimentions
     // {Cout, Cin, df1,...,dfn}
     adjoints.add_delta(f, flipDim0and1(f_adjoint, f_adjoint->get_shape()));
+}
+
+op::ConvolutionBackpropImageBatch::ConvolutionBackpropImageBatch(
+    const Shape& image_batch_shape,
+    const std::shared_ptr<Node>& filters,
+    const std::shared_ptr<Node>& output_delta,
+    const Strides& window_movement_strides,
+    const Strides& window_dilation_strides,
+    const CoordinateDiff& padding_below,
+    const CoordinateDiff& padding_above,
+    const Strides& image_dilation_strides)
+    : RequiresTensorViewArgs("ConvolutionBackpropImageBatch", {filters, output_delta})
+    , m_image_batch_shape(image_batch_shape)
+    , m_window_movement_strides(window_movement_strides)
+    , m_window_dilation_strides(window_dilation_strides)
+    , m_padding_below(padding_below)
+    , m_padding_above(padding_above)
+    , m_image_dilation_strides(image_dilation_strides)
+{
+    auto& filters_shape = get_inputs().at(0).get_shape();
+    auto& filters_et = get_inputs().at(0).get_element_type();
+    auto& output_delta_shape = get_inputs().at(1).get_shape();
+    auto& output_delta_et = get_inputs().at(1).get_element_type();
+
+    //
+    // Make sure filter and output delta element types match.
+    //
+    if (filters_et != output_delta_et)
+    {
+        throw ngraph_error(
+            "Convolution image batch backprop filter and output delta element types do not match");
+    }
+
+    //                              Forward               Backward
+    // Window movement strides      q                     p_x
+    // Window dilation strides      p_f                   p_f
+    // Padding below                a_x                   (S_F - 1)p_f - a_x
+    // Padding above                b_x                   (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q) - b_x
+    // Image dilation strides       p_x                   q
+
+    Strides window_movement_strides_back;
+    Strides window_dilation_strides_back;
+    CoordinateDiff padding_below_back;
+    CoordinateDiff padding_above_back;
+    Strides image_dilation_strides_back;
+
+    for (size_t i = 0; i < image_batch_shape.size() - 2; i++)
+    {
+        window_movement_strides_back.push_back(image_dilation_strides[i]);
+        window_dilation_strides_back.push_back(window_dilation_strides[i]);
+        padding_below_back.push_back((filters_shape[i + 2] - 1) * window_dilation_strides[i] -
+                                     padding_below[i]);
+        padding_above_back.push_back(
+            (filters_shape[i + 2] - 1) * window_dilation_strides[i] +
+            ((padding_below[i] + (image_batch_shape[i + 2] - 1) * image_dilation_strides[i] +
+              padding_above[i] - (filters_shape[i + 2] - 1) * window_dilation_strides[i]) %
+             window_movement_strides[i]) -
+            padding_above[i]);
+        image_dilation_strides_back.push_back(window_movement_strides[i]);
+    }
+
+    Shape inferred_convolution_output_shape =
+        infer_convolution_output_shape(output_delta_shape,
+                                       filters_shape,
+                                       window_movement_strides_back,
+                                       window_dilation_strides_back,
+                                       padding_below_back,
+                                       padding_above_back,
+                                       image_dilation_strides_back,
+                                       0,
+                                       1,
+                                       0,
+                                       1);
+
+    // Not sure if this can ever actually happen (i.e., I think it will trip on something else
+    // inside infer_convolution_output_shape before we get here) but it seems worth checking.
+    if (inferred_convolution_output_shape != image_batch_shape)
+    {
+        throw ngraph_error(
+            "Convolution image batch backprop filter inferred output shape does not match "
+            "specified image batch shape");
+    }
+
+    set_value_type_checked(filters_et, inferred_convolution_output_shape);
+}
+
+std::shared_ptr<Node> op::ConvolutionBackpropImageBatch::copy_with_new_args(
+    const std::vector<std::shared_ptr<Node>>& new_args) const
+{
+    if (new_args.size() != 2)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return std::make_shared<ConvolutionBackpropImageBatch>(m_image_batch_shape,
+                                                           new_args.at(0),
+                                                           new_args.at(1),
+                                                           m_window_movement_strides,
+                                                           m_window_dilation_strides,
+                                                           m_padding_below,
+                                                           m_padding_above,
+                                                           m_image_dilation_strides);
+}
+
+bool op::ConvolutionBackpropImageBatch::is_functionally_identical(const Node& other) const
+{
+    bool rc = true;
+    if (Node::test_identical(other))
+    {
+        const ConvolutionBackpropImageBatch& rhs =
+            dynamic_cast<const ConvolutionBackpropImageBatch&>(other);
+        rc &= m_image_batch_shape == rhs.m_image_batch_shape;
+        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
+        rc &= m_window_dilation_strides == rhs.m_window_dilation_strides;
+        rc &= m_padding_below == rhs.m_padding_below;
+        rc &= m_padding_above == rhs.m_padding_above;
+        rc &= m_image_dilation_strides == rhs.m_image_dilation_strides;
+    }
+    else
+    {
+        rc = false;
+    }
+    return rc;
 }

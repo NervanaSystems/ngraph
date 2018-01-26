@@ -142,5 +142,52 @@ namespace ngraph
             static Strides default_strides(const std::shared_ptr<Node>& image_batch);
             static CoordinateDiff default_padding(const std::shared_ptr<Node>& image_batch);
         };
+
+        /// \brief Image batch backprop for batched convolution operation.
+        class ConvolutionBackpropImageBatch : public RequiresTensorViewArgs
+        {
+        public:
+            /// \brief Constructs a batched-convolution image batch-backprop operation.
+            ///
+            /// \param image_batch_shape The shape of the image batch from forward-prop.
+            /// \param filters The node producing the filters from forward-prop.
+            /// \param output_delta The node producing output delta.
+            /// \param window_movement_strides The window movement strides from forward-prop.
+            /// \param window_dilation_strides The window dilation strides from forward-prop.
+            /// \param padding_below The padding-below sizes from forward-prop.
+            /// \param padding_above The padding-above sizes from forward-prop.
+            /// \param image_dilation_strides The image dilation strides from forward-prop.
+            ConvolutionBackpropImageBatch(const Shape& image_batch_shape,
+                                          const std::shared_ptr<Node>& filters,
+                                          const std::shared_ptr<Node>& output_delta,
+                                          const Strides& window_movement_strides,
+                                          const Strides& window_dilation_strides,
+                                          const CoordinateDiff& padding_below,
+                                          const CoordinateDiff& padding_above,
+                                          const Strides& image_dilation_strides);
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override;
+
+            /// \return The window movement strides.
+            const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
+            /// \return The window dilation strides.
+            const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
+            /// \return The padding-below sizes (possibly negative).
+            const CoordinateDiff& get_padding_below() const { return m_padding_below; }
+            /// \return The padding-above sizes (possibly negative).
+            const CoordinateDiff& get_padding_above() const { return m_padding_above; }
+            /// \return The input image dilation strides.
+            const Strides& get_image_dilation_strides() const { return m_image_dilation_strides; }
+            bool is_functionally_identical(const Node&) const override;
+
+        protected:
+            Shape m_image_batch_shape;
+            Strides m_window_movement_strides;
+            Strides m_window_dilation_strides;
+            CoordinateDiff m_padding_below;
+            CoordinateDiff m_padding_above;
+            Strides m_image_dilation_strides;
+        };
     }
 }
