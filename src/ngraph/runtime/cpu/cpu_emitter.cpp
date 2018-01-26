@@ -63,6 +63,13 @@ static string eigen_matrix_format(const ngraph::Shape& shape, const ngraph::Stri
     return ss.str();
 }
 
+void runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(codegen::CodeWriter& writer)
+{
+    writer << "using namespace mkldnn;\n";
+    writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
+    writer.emitted_mkldnn_preamble = true;
+}
+
 void runtime::cpu::CPU_Emitter::EmitNop(codegen::CodeWriter& writer,
                                         const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
@@ -1823,16 +1830,23 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         images_dilated = images_dilated || (s != 1);
     }
 
+    if (!writer.emitted_mkldnn_preamble)
+    {
+        EmitMKLDNNPreamble(writer);
+    }
+
+    // TODO: MKLDNN streams should be static so we need to either implement
+    // codegen for statics or move primitive and stream construction out
+    // of the generated function and only generate code to run/rerun the stream
+
     if (!filter_dilated && !images_dilated && arg0_rank == 4 && arg1_rank == 4 &&
         args[0].get_element_type() == element::f32)
     {
-        string et = "memory::data_type::f32";
+        const string et = "memory::data_type::f32";
 
         writer << "{\n";
         writer.indent++;
-        writer << "using namespace mkldnn;\n";
 
-        writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
         writer << "auto input_data_desc = memory::desc({" << join(arg0_shape) << "}, " << et
                << ", memory::format::nchw);\n";
         writer << "auto weights_desc = memory::desc({" << join(arg1_shape) << "}, " << et
@@ -1870,13 +1884,11 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
             window_dilation_strides_adjusted.push_back(s - 1);
         }
 
-        string et = "memory::data_type::f32";
+        const string et = "memory::data_type::f32";
 
         writer << "{\n";
         writer.indent++;
-        writer << "using namespace mkldnn;\n";
 
-        writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
         writer << "auto input_data_desc = memory::desc({" << join(arg0_shape) << "}, " << et
                << ", memory::format::nchw);\n";
         writer << "auto weights_desc = memory::desc({" << join(arg1_shape) << "}, " << et
@@ -1942,13 +1954,16 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
 
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
-
+#if 0
+    writer << "foo;\n";
+#else
     writer << "kernel::max_pool<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
     writer << "                 " << out[0].get_name() << ",\n";
     writer << "                 {" << join(arg_shape) << "},\n";
     writer << "                 {" << join(result_shape) << "},\n";
     writer << "                 {" << join(max_pool->get_window_shape()) << "},\n";
     writer << "                 {" << join(max_pool->get_window_movement_strides()) << "});\n";
+#endif
 }
 
 void runtime::cpu::CPU_Emitter::EmitReverse(codegen::CodeWriter& writer,

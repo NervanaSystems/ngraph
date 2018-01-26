@@ -19,6 +19,7 @@ using namespace ngraph;
 
 codegen::CodeWriter::CodeWriter()
     : indent(0)
+    , emitted_mkldnn_preamble(false)
     , m_pending_indent(true)
     , m_temporary_name_count(0)
 {

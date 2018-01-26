@@ -36,6 +36,7 @@ public:
     void operator+=(const std::string&);
 
     size_t indent;
+    bool emitted_mkldnn_preamble;
 
     template <typename T>
     friend CodeWriter& operator<<(CodeWriter& out, const T& obj)
