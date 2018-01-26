@@ -13,7 +13,6 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/runtime/tensor_view.hpp"
-#include "ngraph/common.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/types/type.hpp"

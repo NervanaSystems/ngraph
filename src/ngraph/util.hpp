@@ -56,7 +56,7 @@ namespace ngraph
     }
 
     template <typename T>
-    static std::string vector_to_string(const std::vector<T>& v)
+    static std::string vector_to_string(const T& v)
     {
         std::ostringstream os;
         os << "[ " << ngraph::join(v) << " ]";

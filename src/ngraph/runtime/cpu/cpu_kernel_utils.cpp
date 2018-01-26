@@ -14,7 +14,6 @@
 
 #include "ngraph/runtime/cpu/cpu_kernel_utils.hpp"
 #include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/common.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/util.hpp"
 
@@ -190,8 +189,8 @@ void ngraph::runtime::cpu::kernel::emit_pointwise_copy(codegen::CodeWriter& writ
 {
     vector<string> index_vars;
 
-    Shape source_start_corner = source_trans.get_source_start_corner();
-    Shape source_end_corner = source_trans.get_source_end_corner();
+    Coordinate source_start_corner = source_trans.get_source_start_corner();
+    Coordinate source_end_corner = source_trans.get_source_end_corner();
 
     size_t n_axes = source_start_corner.size();
 

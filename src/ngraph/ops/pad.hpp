@@ -70,8 +70,7 @@ namespace ngraph
                 const Shape& padding_above,
                 const Shape& padding_interior);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override;
+            virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override;
             /// \return The padding-below sizes.
             const Shape& get_padding_below() const { return m_padding_below; }
             /// \return The padding-above sizes.

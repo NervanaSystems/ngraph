@@ -23,8 +23,7 @@
 using namespace ngraph;
 using namespace std;
 
-op::RequiresTensorViewArgs::RequiresTensorViewArgs(const std::string& node_type,
-                                                   const std::vector<std::shared_ptr<Node>>& args)
+op::RequiresTensorViewArgs::RequiresTensorViewArgs(const std::string& node_type, const Nodes& args)
     : Node(node_type, args)
 {
     for (auto arg : args)

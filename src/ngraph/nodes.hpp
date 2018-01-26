@@ -12,33 +12,33 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <algorithm>
+#pragma once
+
 #include <vector>
 
-#include "ngraph/shape.hpp"
-
-using namespace std;
-using namespace ngraph;
-
-size_t ngraph::shape_size(const Shape& shape)
+namespace ngraph
 {
-    size_t size = 1;
-    for (auto d : shape)
-    {
-        size *= d;
-    }
-    return size;
-}
+    class Node;
 
-Strides ngraph::row_major_strides(const Shape& shape)
-{
-    Strides strides;
-    size_t s = 1;
-    for (auto d = shape.rbegin(); d != shape.rend(); d++)
+    /// \brief Zero or more nodes.
+    class Nodes : public std::vector<std::shared_ptr<Node>>
     {
-        strides.push_back(s);
-        s *= *d;
-    }
-    reverse(strides.begin(), strides.end());
-    return strides;
+    public:
+        Nodes(const std::initializer_list<std::shared_ptr<Node>>& nodes)
+            : std::vector<std::shared_ptr<Node>>(nodes)
+        {
+        }
+
+        Nodes(const std::vector<std::shared_ptr<Node>>& nodes)
+            : std::vector<std::shared_ptr<Node>>(nodes)
+        {
+        }
+
+        Nodes(const Nodes& nodes)
+            : std::vector<std::shared_ptr<Node>>(nodes)
+        {
+        }
+
+        Nodes() {}
+    };
 }

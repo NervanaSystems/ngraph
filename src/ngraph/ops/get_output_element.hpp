@@ -48,8 +48,7 @@ namespace ngraph
             /// \param n The index of the tuple element to get.
             GetOutputElement(const std::shared_ptr<Node>& arg, size_t n);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 1)
                     throw ngraph_error("Incorrect number of new arguments");

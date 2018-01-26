@@ -14,6 +14,8 @@
 
 #include <numeric>
 
+#include "ngraph/axis_vector.hpp"
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/reverse.hpp"
@@ -353,8 +355,7 @@ op::Convolution::Convolution(const std::shared_ptr<Node>& data_batch,
 {
 }
 
-std::shared_ptr<Node>
-    op::Convolution::copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const
+std::shared_ptr<Node> op::Convolution::copy_with_new_args(const Nodes& new_args) const
 {
     if (new_args.size() != 2)
     {
@@ -501,8 +502,7 @@ op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_sha
     set_value_type_checked(filters_et, inferred_convolution_output_shape);
 }
 
-std::shared_ptr<Node> op::ConvolutionBackpropData::copy_with_new_args(
-    const std::vector<std::shared_ptr<Node>>& new_args) const
+std::shared_ptr<Node> op::ConvolutionBackpropData::copy_with_new_args(const Nodes& new_args) const
 {
     if (new_args.size() != 2)
     {
@@ -621,8 +621,8 @@ op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     set_value_type_checked(data_batch_et, inferred_convolution_output_shape);
 }
 
-std::shared_ptr<Node> op::ConvolutionBackpropFilters::copy_with_new_args(
-    const std::vector<std::shared_ptr<Node>>& new_args) const
+std::shared_ptr<Node>
+    op::ConvolutionBackpropFilters::copy_with_new_args(const Nodes& new_args) const
 {
     if (new_args.size() != 2)
     {

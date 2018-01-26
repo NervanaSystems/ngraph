@@ -66,8 +66,7 @@ namespace ngraph
             /// \param concatenation_axis The axis along which to concatenate the input tensors.
             Concat(const Nodes& args, size_t concatenation_axis);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 return std::make_shared<Concat>(new_args, m_concatenation_axis);
             }

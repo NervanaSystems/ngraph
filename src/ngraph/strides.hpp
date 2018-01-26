@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
+// Copyright 2018 Nervana Systems Inc.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,59 +14,44 @@
 
 #pragma once
 
-#include <cstdio>
-#include <iostream>
 #include <vector>
-
-#include "ngraph/axis_set.hpp"
-#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
-    /// \brief Shape for a tensor.
-    class Shape : public std::vector<size_t>
+    /// \brief Strides for a tensor.
+    class Strides : public std::vector<size_t>
     {
     public:
-        Shape(const std::initializer_list<size_t>& axes)
+        Strides(const std::initializer_list<size_t>& axes)
             : std::vector<size_t>(axes)
         {
         }
 
-        Shape(const std::vector<size_t>& axes)
+        Strides(const std::vector<size_t>& axes)
             : std::vector<size_t>(axes)
         {
         }
 
-        Shape(const Shape& axes)
+        Strides(const Strides& axes)
             : std::vector<size_t>(axes)
         {
         }
 
-        explicit Shape(size_t n, size_t initial_value = 0)
+        explicit Strides(size_t n, size_t initial_value = 0)
             : std::vector<size_t>(n, initial_value)
         {
         }
 
-        Shape() {}
-        Shape& operator=(const Shape& v)
+        Strides() {}
+        Strides& operator=(const Strides& v)
         {
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
         }
-        Shape& operator=(Shape&& v)
+        Strides& operator=(Strides&& v)
         {
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
         }
     };
-
-    /// Number of elements in spanned by a shape
-    size_t shape_size(const Shape& shape);
-
-    /// Row-major strides for a shape
-    Strides row_major_strides(const Shape& shape);
-
-    inline bool is_scalar(const Shape& shape) { return 0 == shape.size(); }
-    inline bool is_vector(const Shape& shape) { return 1 == shape.size(); }
-    Shape project_shape(const Shape& shape, const AxisSet& deleted_axes);
 }

@@ -33,8 +33,7 @@ namespace ngraph
             /// \brief Constructs an operation on tensor view arguments.
             ///
             /// \param args The nodes producing this node's input tensors.
-            RequiresTensorViewArgs(const std::string& node_type,
-                                   const std::vector<std::shared_ptr<Node>>& args);
+            RequiresTensorViewArgs(const std::string& node_type, const Nodes& args);
         };
 
         /// \brief Abstract base class for elementwise unary operations, i.e., operations where the same

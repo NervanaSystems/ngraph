@@ -67,7 +67,7 @@ op::Concat::Concat(const Nodes& args, size_t concatenation_axis)
             }
         }
     }
-    vector<size_t> concatenated_shape = input_0_shape;
+    Shape concatenated_shape = input_0_shape;
     concatenated_shape.at(m_concatenation_axis) = concatenation_axis_length;
 
     set_value_type_checked(make_shared<TensorViewType>(input_0_element_type, concatenated_shape));
@@ -79,7 +79,7 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const std::shar
 
     Coordinate arg_delta_slice_lower = Coordinate(concat_result_shape.size(), 0);
     Coordinate arg_delta_slice_upper = concat_result_shape;
-    Coordinate arg_delta_slice_strides = Coordinate(concat_result_shape.size(), 1);
+    Strides arg_delta_slice_strides = Strides(concat_result_shape.size(), 1);
 
     size_t pos = 0;
 

@@ -14,8 +14,8 @@
 
 #include "matmul_bias.hpp"
 
-std::shared_ptr<ngraph::Node> ngraph::op::MatmulBias::copy_with_new_args(
-    const std::vector<std::shared_ptr<ngraph::Node>>& new_args) const
+std::shared_ptr<ngraph::Node>
+    ngraph::op::MatmulBias::copy_with_new_args(const Nodes& new_args) const
 {
     if (new_args.size() != 2)
         throw ngraph_error("Incorrect number of new arguments");

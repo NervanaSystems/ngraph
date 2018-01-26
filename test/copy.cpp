@@ -29,7 +29,7 @@ bool check_unary()
 {
     Shape shape{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape)};
+    Nodes new_args{make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<OP>(arg0);
     auto new_node = node->copy_with_new_args(new_args);
@@ -43,8 +43,8 @@ bool check_binary()
     Shape shape{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape),
-                                                make_shared<op::Parameter>(element::f32, shape)};
+    Nodes new_args{make_shared<op::Parameter>(element::f32, shape),
+                   make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<OP>(arg0, arg1);
     auto new_node = node->copy_with_new_args(new_args);
@@ -81,7 +81,7 @@ TEST(copy, broadcast)
 {
     Shape shape1{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape1);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape1)};
+    Nodes new_args{make_shared<op::Parameter>(element::f32, shape1)};
 
     Shape shape{4, 1, 3};
     AxisSet axes{0, 2};
@@ -107,8 +107,8 @@ TEST(copy, concat)
     Shape shape{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape),
-                                                make_shared<op::Parameter>(element::f32, shape)};
+    Nodes new_args{make_shared<op::Parameter>(element::f32, shape),
+                   make_shared<op::Parameter>(element::f32, shape)};
     size_t axis = 0;
     auto node = make_shared<op::Concat>(Nodes{arg0, arg1}, axis);
     auto new_node = node->copy_with_new_args(new_args);
@@ -141,7 +141,7 @@ TEST(copy, convert)
     Shape shape;
     auto& et = element::f64;
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape)};
+    Nodes new_args{make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<op::Convert>(arg0, et);
     auto new_node = node->copy_with_new_args(new_args);
@@ -201,9 +201,9 @@ TEST(copy, FunctionCall)
     auto arg2 = make_shared<op::Parameter>(element::f32, shape);
     auto node = make_shared<op::FunctionCall>(f, Nodes{arg0, arg1, arg2});
 
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape),
-                                                make_shared<op::Parameter>(element::f32, shape),
-                                                make_shared<op::Parameter>(element::f32, shape)};
+    Nodes new_args{make_shared<op::Parameter>(element::f32, shape),
+                   make_shared<op::Parameter>(element::f32, shape),
+                   make_shared<op::Parameter>(element::f32, shape)};
     auto new_node = node->copy_with_new_args(new_args);
     auto node_cast = dynamic_pointer_cast<op::FunctionCall>(new_node);
     ASSERT_NE(node_cast, nullptr);
@@ -292,9 +292,8 @@ TEST(copy, reduce)
     AxisSet axes{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
     auto arg_init = make_shared<op::Parameter>(element::f32, scalar_shape);
-    std::vector<std::shared_ptr<Node>> new_args{
-        make_shared<op::Parameter>(element::f32, shape),
-        make_shared<op::Parameter>(element::f32, scalar_shape)};
+    Nodes new_args{make_shared<op::Parameter>(element::f32, shape),
+                   make_shared<op::Parameter>(element::f32, scalar_shape)};
 
     auto node = make_shared<op::Reduce>(arg0, arg_init, f, axes);
     auto new_node = node->copy_with_new_args(new_args);
@@ -319,7 +318,7 @@ TEST(copy, reshape)
     Shape shape_out{6, 4};
 
     auto arg0 = make_shared<op::Parameter>(element::f32, shape_in);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape_in)};
+    Nodes new_args{make_shared<op::Parameter>(element::f32, shape_in)};
 
     auto node = make_shared<op::Reshape>(arg0, axes, shape_out);
     auto new_node = node->copy_with_new_args(new_args);
@@ -338,9 +337,9 @@ TEST(copy, select)
     auto arg0 = make_shared<op::Parameter>(element::boolean, shape);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape);
     auto arg2 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::boolean, shape),
-                                                make_shared<op::Parameter>(element::f32, shape),
-                                                make_shared<op::Parameter>(element::f32, shape)};
+    Nodes new_args{make_shared<op::Parameter>(element::boolean, shape),
+                   make_shared<op::Parameter>(element::f32, shape),
+                   make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<op::Select>(arg0, arg1, arg2);
     auto new_node = node->copy_with_new_args(new_args);
@@ -374,7 +373,7 @@ TEST(copy, slice)
     Strides strides{1, 1, 1};
 
     auto arg0 = make_shared<op::Parameter>(element::f32, shape_in);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape_in)};
+    Nodes new_args{make_shared<op::Parameter>(element::f32, shape_in)};
 
     auto node = make_shared<op::Slice>(arg0, lower, upper, strides);
     auto new_node = node->copy_with_new_args(new_args);
@@ -398,7 +397,7 @@ TEST(copy, sum)
     Shape shape{4, 3};
     AxisSet axes{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
-    std::vector<std::shared_ptr<Node>> new_args{make_shared<op::Parameter>(element::f32, shape)};
+    Nodes new_args{make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<op::Sum>(arg0, axes);
     auto new_node = node->copy_with_new_args(new_args);
