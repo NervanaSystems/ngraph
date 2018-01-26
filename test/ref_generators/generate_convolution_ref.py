@@ -291,7 +291,7 @@ tests = [
          ("convolution_2d_1image_2o1i_img_dilated",(1,1,3,5),    (2,1,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
          ("convolution_2d_1image_2o2i_img_dilated",(1,2,3,5),    (2,2,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
          ("convolution_2d_1image_5o3i_img_dilated",(1,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
-         ("convolution_2d_8image_5o3i_img_dilated",(8,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
+         ("convolution_2d_2image_5o3i_img_dilated",(2,3,3,5),    (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "true"),
          ("convolution_2d_8image_large_5o3i_img_dilated",
                                                    (8,3,16,16),  (5,3,2,2),    (1,1),    (1,1),    (0,0),      (0,0),      (2,2),     "false"),
          ("convolution_2d_8image_large_5o3i_uneven_filter_img_dilated",
