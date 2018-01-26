@@ -1919,8 +1919,72 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         writer << "                         {" << join(convolution->get_padding_below()) << "},\n";
         writer << "                         {" << join(convolution->get_padding_above()) << "},\n";
         writer << "                         {" << join(convolution->get_image_dilation_strides())
-               << "});\n";
+               << "},\n";
+        writer << "                         0, 1, 1, 0, 0, 1, false);\n";
     }
+}
+
+void runtime::cpu::CPU_Emitter::EmitConvolutionBackpropFilters(
+    codegen::CodeWriter& writer,
+    const ngraph::Node* n,
+    const vector<runtime::cpu::TensorViewWrapper>& args,
+    const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto convolution = static_cast<const op::ConvolutionBackpropFilters*>(n);
+
+    auto arg0_shape = args[0].get_shape();
+    auto arg1_shape = args[1].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    writer << "kernel::convolution<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    writer << "                         " << args[1].get_name() << ",\n";
+    writer << "                         " << out[0].get_name() << ",\n";
+    writer << "                         {" << join(arg0_shape) << "},\n";
+    writer << "                         {" << join(arg1_shape) << "},\n";
+    writer << "                         {" << join(result_shape) << "},\n";
+    writer << "                         {"
+           << join(convolution->get_window_movement_strides_backward()) << "},\n";
+    writer << "                         {"
+           << join(convolution->get_window_dilation_strides_backward()) << "},\n";
+    writer << "                         {" << join(convolution->get_padding_below_backward())
+           << "},\n";
+    writer << "                         {" << join(convolution->get_padding_above_backward())
+           << "},\n";
+    writer << "                         {"
+           << join(convolution->get_image_dilation_strides_backward()) << "},\n";
+    writer << "                         1, 0, 0, 1, 1, 0, false);\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitConvolutionBackpropImageBatch(
+    codegen::CodeWriter& writer,
+    const ngraph::Node* n,
+    const vector<runtime::cpu::TensorViewWrapper>& args,
+    const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto convolution = static_cast<const op::ConvolutionBackpropImageBatch*>(n);
+
+    auto arg0_shape = args[0].get_shape();
+    auto arg1_shape = args[1].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    // Note that args[1] and args[0] are switched here from the usual order.
+    writer << "kernel::convolution<" << out[0].get_type() << ">(" << args[1].get_name() << ",\n";
+    writer << "                         " << args[0].get_name() << ",\n";
+    writer << "                         " << out[0].get_name() << ",\n";
+    writer << "                         {" << join(arg1_shape) << "},\n";
+    writer << "                         {" << join(arg0_shape) << "},\n";
+    writer << "                         {" << join(result_shape) << "},\n";
+    writer << "                         {"
+           << join(convolution->get_window_movement_strides_backward()) << "},\n";
+    writer << "                         {"
+           << join(convolution->get_window_dilation_strides_backward()) << "},\n";
+    writer << "                         {" << join(convolution->get_padding_below_backward())
+           << "},\n";
+    writer << "                         {" << join(convolution->get_padding_above_backward())
+           << "},\n";
+    writer << "                         {"
+           << join(convolution->get_image_dilation_strides_backward()) << "},\n";
+    writer << "                         0, 1, 0, 1, 0, 1, true);\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitNot(codegen::CodeWriter& writer,
