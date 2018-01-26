@@ -1,5 +1,5 @@
 .. ---------------------------------------------------------------------------
-.. Copyright 2017 Intel Corporation
+.. Copyright 2018 Intel Corporation
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -13,33 +13,26 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-.. Intel nGraph library core documentation master file, created on Mon Dec 25 13:04:12 2017.
 
-Intel nGraph library
-====================
-Intel nGraph is a suite of components that serve as backends for deep learning
-frameworks, allowing the framework to be used on a variety of Intel and 
-non-Intel execution platforms. There is a *framework bridge* for each
-supported framework which acts as an intermediary between the *ngraph core*
-and the framework. A *transformer* plays a similar role between the ngraph
-core and the various execution platforms.
+Intel nGraph
+============
 
-The *nGraph core* uses a strongly typed platform-neutral statelss graph 
-representation for computations. Each node, or *op*, in the graph corresponds
-to one step in a computation, where each step produces zero or more tensor
-outputs from zero or more tensor inputs.
+An open-source C++ library for evolving deep learning 
+------------------------------------------------------
 
-Transformers compile the graph using a combination of generic and 
-platform-specific graph transformation. The result is a function that
-can be executed from the framework bridge. Transformers also allocate
-and deallocate, as well as read and write, tensors under direction of the
-bridge.
+Intel nGraph library provides a suite of components to promote computational 
+efficiency and enable portability of Deep Neural Network (DNN) models defined in 
+a variety of frameworks. The library translates a framework's representation of 
+computations into a neutral-intermediate representation specifically designed to 
+run better on target hardware, on both Intel and non-Intel platforms.
+
 
 .. toctree::
    :maxdepth: 1
    :caption: Table Of Contents
    :name: tocmaster
 
+   about.rst
    installation.rst
    testing-libngraph.rst
    framework-integration-guides.rst
