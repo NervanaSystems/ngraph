@@ -170,6 +170,8 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override;
             bool is_functionally_identical(const Node&) const override;
 
+            /// \return The image batch shape.
+            const Shape& get_image_batch_shape() const { return m_image_batch_shape; }
             /// \return The window movement strides from the forward prop.
             const Strides& get_window_movement_strides_forward() const
             {
@@ -264,6 +266,8 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override;
             bool is_functionally_identical(const Node&) const override;
 
+            /// \return The filters tensor shape.
+            const Shape& get_filters_shape() const { return m_filters_shape; }
             /// \return The window movement strides.
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             /// \return The window dilation strides.
