@@ -1788,12 +1788,12 @@ TEST(type_prop, conv_1d_back_image_batch_deduce)
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), image_batch_shape);
 
-    EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
-    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
-    EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
+    EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
+    EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
 }
 
 TEST(type_prop, conv_1d_back_filters_deduce)
@@ -1865,12 +1865,12 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_padded)
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), image_batch_shape);
 
-    EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
-    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{2});
-    EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{3});
+    EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{2});
+    EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{3});
 }
 
 TEST(type_prop, conv_1d_back_filters_deduce_padded)
@@ -1939,12 +1939,12 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_strided)
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), image_batch_shape);
 
-    EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
-    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{2});
+    EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
-    EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
+    EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
+    EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
 }
 
 TEST(type_prop, conv_1d_back_filters_deduce_strided)
@@ -2017,12 +2017,12 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_strided_padded)
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), image_batch_shape);
 
-    EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
-    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{2});
+    EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{2});
-    EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{3});
+    EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{2});
+    EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{3});
 }
 
 TEST(type_prop, conv_1d_back_filters_deduce_strided_padded)
@@ -2091,12 +2091,12 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_strided_small_uneven)
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), image_batch_shape);
 
-    EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
-    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{2});
+    EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
-    EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
+    EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
+    EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
 }
 
 TEST(type_prop, conv_1d_back_filters_deduce_strided_small_uneven)
@@ -2162,12 +2162,12 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_strided_small_even)
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), image_batch_shape);
 
-    EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
-    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{2});
+    EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
-    EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
+    EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
+    EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
 }
 
 TEST(type_prop, conv_1d_back_filters_deduce_strided_small_even)
@@ -2235,12 +2235,12 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_window_dilated)
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), image_batch_shape);
 
-    EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
-    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{2});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{2});
+    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
-    EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
+    EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
+    EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
 }
 
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated)
@@ -2314,12 +2314,12 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_window_dilated_padded)
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), image_batch_shape);
 
-    EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
-    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{2});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{2});
+    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
 
-    EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{2});
-    EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{3});
+    EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{2});
+    EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{3});
 }
 
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_padded)
@@ -2402,12 +2402,12 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_window_dilated_images_dilated_pa
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), image_batch_shape);
 
-    EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
-    EXPECT_EQ(conv->get_window_dilation_strides(), Strides{2});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{3});
+    EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{2});
+    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{3});
 
-    EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{2});
-    EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{3});
+    EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{2});
+    EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{3});
 }
 
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_images_dilated_padded)

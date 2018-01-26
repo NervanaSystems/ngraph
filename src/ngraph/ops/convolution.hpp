@@ -152,42 +152,89 @@ namespace ngraph
             /// \param image_batch_shape The shape of the image batch from forward-prop.
             /// \param filters The node producing the filters from forward-prop.
             /// \param output_delta The node producing output delta.
-            /// \param window_movement_strides The window movement strides from forward-prop.
-            /// \param window_dilation_strides The window dilation strides from forward-prop.
-            /// \param padding_below The padding-below sizes from forward-prop.
-            /// \param padding_above The padding-above sizes from forward-prop.
-            /// \param image_dilation_strides The image dilation strides from forward-prop.
+            /// \param window_movement_strides_forward The window movement strides from forward-prop.
+            /// \param window_dilation_strides_forward The window dilation strides from forward-prop.
+            /// \param padding_below_forward The padding-below sizes from forward-prop.
+            /// \param padding_above_forward The padding-above sizes from forward-prop.
+            /// \param image_dilation_strides_forward The image dilation strides from forward-prop.
             ConvolutionBackpropImageBatch(const Shape& image_batch_shape,
                                           const std::shared_ptr<Node>& filters,
                                           const std::shared_ptr<Node>& output_delta,
-                                          const Strides& window_movement_strides,
-                                          const Strides& window_dilation_strides,
-                                          const CoordinateDiff& padding_below,
-                                          const CoordinateDiff& padding_above,
-                                          const Strides& image_dilation_strides);
+                                          const Strides& window_movement_strides_forward,
+                                          const Strides& window_dilation_strides_forward,
+                                          const CoordinateDiff& padding_below_forward,
+                                          const CoordinateDiff& padding_above_forward,
+                                          const Strides& image_dilation_strides_forward);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override;
-
-            /// \return The window movement strides.
-            const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
-            /// \return The window dilation strides.
-            const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
-            /// \return The padding-below sizes (possibly negative).
-            const CoordinateDiff& get_padding_below() const { return m_padding_below; }
-            /// \return The padding-above sizes (possibly negative).
-            const CoordinateDiff& get_padding_above() const { return m_padding_above; }
-            /// \return The input image dilation strides.
-            const Strides& get_image_dilation_strides() const { return m_image_dilation_strides; }
             bool is_functionally_identical(const Node&) const override;
+
+            /// \return The window movement strides from the forward prop.
+            const Strides& get_window_movement_strides_forward() const
+            {
+                return m_window_movement_strides_forward;
+            }
+            /// \return The window dilation strides from the forward prop.
+            const Strides& get_window_dilation_strides_forward() const
+            {
+                return m_window_dilation_strides_forward;
+            }
+            /// \return The padding-below sizes (possibly negative) from the forward prop.
+            const CoordinateDiff& get_padding_below_forward() const
+            {
+                return m_padding_below_forward;
+            }
+            /// \return The padding-above sizes (possibly negative) from the forward prop.
+            const CoordinateDiff& get_padding_above_forward() const
+            {
+                return m_padding_above_forward;
+            }
+            /// \return The input image dilation strides from the forward prop.
+            const Strides& get_image_dilation_strides_forward() const
+            {
+                return m_image_dilation_strides_forward;
+            }
+
+            /// \return The window movement strides for the backward prop.
+            const Strides& get_window_movement_strides_backward() const
+            {
+                return m_window_movement_strides_backward;
+            }
+            /// \return The window dilation strides for the backward prop.
+            const Strides& get_window_dilation_strides_backward() const
+            {
+                return m_window_dilation_strides_backward;
+            }
+            /// \return The padding-below sizes (possibly negative) for the backward prop.
+            const CoordinateDiff& get_padding_below_backward() const
+            {
+                return m_padding_below_backward;
+            }
+            /// \return The padding-above sizes (possibly negative) for the backward prop.
+            const CoordinateDiff& get_padding_above_backward() const
+            {
+                return m_padding_above_backward;
+            }
+            /// \return The input image dilation strides for the backward prop.
+            const Strides& get_image_dilation_strides_backward() const
+            {
+                return m_image_dilation_strides_backward;
+            }
 
         protected:
             Shape m_image_batch_shape;
-            Strides m_window_movement_strides;
-            Strides m_window_dilation_strides;
-            CoordinateDiff m_padding_below;
-            CoordinateDiff m_padding_above;
-            Strides m_image_dilation_strides;
+            Strides m_window_movement_strides_forward;
+            Strides m_window_dilation_strides_forward;
+            CoordinateDiff m_padding_below_forward;
+            CoordinateDiff m_padding_above_forward;
+            Strides m_image_dilation_strides_forward;
+
+            Strides m_window_movement_strides_backward;
+            Strides m_window_dilation_strides_backward;
+            CoordinateDiff m_padding_below_backward;
+            CoordinateDiff m_padding_above_backward;
+            Strides m_image_dilation_strides_backward;
         };
 
         /// \brief Filters backprop for batched convolution operation.
@@ -215,6 +262,7 @@ namespace ngraph
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override;
+            bool is_functionally_identical(const Node&) const override;
 
             /// \return The window movement strides.
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -226,8 +274,6 @@ namespace ngraph
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             /// \return The input image dilation strides.
             const Strides& get_image_dilation_strides() const { return m_image_dilation_strides; }
-            bool is_functionally_identical(const Node&) const override;
-
         protected:
             Shape m_filters_shape;
             Strides m_window_movement_strides;

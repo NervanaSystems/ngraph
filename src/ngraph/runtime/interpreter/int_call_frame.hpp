@@ -322,7 +322,37 @@ private:
                                    c->get_window_dilation_strides(),
                                    c->get_padding_below(),
                                    c->get_padding_above(),
-                                   c->get_image_dilation_strides());
+                                   c->get_image_dilation_strides(),
+                                   0,
+                                   1,
+                                   1,
+                                   0,
+                                   0,
+                                   1,
+                                   false);
+        }
+        else if (node_op == "ConvolutionBackpropImageBatch")
+        {
+            // Note that args[1] and args[0] are reversed here.
+            auto c = static_cast<const op::ConvolutionBackpropImageBatch*>(&node);
+            kernel::convolution<T>(reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                   reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                   args[1]->get_shape(),
+                                   args[0]->get_shape(),
+                                   out[0]->get_shape(),
+                                   c->get_window_movement_strides_backward(),
+                                   c->get_window_dilation_strides_backward(),
+                                   c->get_padding_below_backward(),
+                                   c->get_padding_above_backward(),
+                                   c->get_image_dilation_strides_backward(),
+                                   0,
+                                   1,
+                                   0,
+                                   1,
+                                   0,
+                                   1,
+                                   true);
         }
         else if (node_op == "Cos")
         {

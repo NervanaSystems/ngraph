@@ -37,8 +37,23 @@ namespace ngraph
                              const Strides& window_dilation_strides,
                              const CoordinateDiff& padding_below,
                              const CoordinateDiff& padding_above,
-                             const Strides& image_dilation_strides)
+                             const Strides& image_dilation_strides,
+                             size_t batch_axis_image_batch,
+                             size_t input_channel_axis_image_batch,
+                             size_t input_channel_axis_filters,
+                             size_t output_channel_axis_filters,
+                             size_t batch_axis_result,
+                             size_t output_channel_axis_result,
+                             bool rotate_filter)
             {
+                // Comments throughout assume without loss of generality that:
+                //
+                // * batch axes for both input images and output images are 0
+                // * input channel axes for both input images and filters are 1
+                // * output channel axes for filters is 0
+                // * output channel axis for output images is 1
+                // * rotate_filter is false
+
                 // At the outermost level we will walk over every output coordinate O.
                 CoordinateTransform output_transform(out_shape);
 
@@ -48,8 +63,8 @@ namespace ngraph
                     //
                     //   (img,chan_out,i_1,...,i_n)
 
-                    size_t img_index = out_coord[0];
-                    size_t output_channel = out_coord[1];
+                    size_t img_index = out_coord[batch_axis_result];
+                    size_t output_channel = out_coord[output_channel_axis_result];
 
                     // For the input images we need to iterate the coordinate:
                     //
@@ -69,7 +84,7 @@ namespace ngraph
                     // down we must check the current coordinate is in the padding or dilation gap.
 
                     size_t n_image_dimensions = arg0_shape.size() - 2;
-                    size_t n_input_channels = arg0_shape[1];
+                    size_t n_input_channels = arg0_shape[input_channel_axis_image_batch];
 
                     Coordinate input_batch_transform_start(2 + n_image_dimensions);
                     Coordinate input_batch_transform_end(2 + n_image_dimensions);
@@ -78,10 +93,10 @@ namespace ngraph
                     CoordinateDiff input_batch_transform_padding_above(2 + n_image_dimensions, 0);
                     Strides input_batch_transform_dilation_strides(2 + n_image_dimensions, 1);
 
-                    input_batch_transform_start[0] = img_index;
-                    input_batch_transform_end[0] = img_index + 1;
-                    input_batch_transform_start[1] = 0;
-                    input_batch_transform_end[1] = n_input_channels;
+                    input_batch_transform_start[batch_axis_image_batch] = img_index;
+                    input_batch_transform_end[batch_axis_image_batch] = img_index + 1;
+                    input_batch_transform_start[input_channel_axis_image_batch] = 0;
+                    input_batch_transform_end[input_channel_axis_image_batch] = n_input_channels;
 
                     for (size_t i = 2; i < n_image_dimensions + 2; i++)
                     {
@@ -130,10 +145,10 @@ namespace ngraph
                     Shape filter_transform_start(2 + n_image_dimensions);
                     Shape filter_transform_end(2 + n_image_dimensions);
 
-                    filter_transform_start[0] = output_channel;
-                    filter_transform_end[0] = output_channel + 1;
-                    filter_transform_start[1] = 0;
-                    filter_transform_end[1] = n_input_channels;
+                    filter_transform_start[output_channel_axis_filters] = output_channel;
+                    filter_transform_end[output_channel_axis_filters] = output_channel + 1;
+                    filter_transform_start[input_channel_axis_filters] = 0;
+                    filter_transform_end[input_channel_axis_filters] = n_input_channels;
 
                     for (size_t i = 2; i < n_image_dimensions + 2; i++)
                     {
@@ -157,7 +172,19 @@ namespace ngraph
                            filter_it != filter_transform.end())
                     {
                         const Coordinate& input_batch_coord = *input_it;
-                        const Coordinate& filter_coord = *filter_it;
+                        Coordinate filter_coord = *filter_it;
+
+                        if (rotate_filter)
+                        {
+                            Shape target_shape = filter_transform.get_target_shape();
+
+                            // Note that we only reverse the spatial dimensions here (loop
+                            // starts at 2)
+                            for (size_t i = 2; i < filter_coord.size(); i++)
+                            {
+                                filter_coord[i] = target_shape[i] - filter_coord[i] - 1;
+                            }
+                        }
 
                         T v = input_batch_transform.has_source_coordinate(input_batch_coord)
                                   ? arg0[input_batch_transform.index(input_batch_coord)]
