@@ -24,8 +24,25 @@ namespace ngraph
             const AxisVector LayoutDescriptor::Native4DAxisOrder{0, 1, 2, 3};
             const AxisVector LayoutDescriptor::CHWNAxisOrder{1, 2, 3, 0};
 
-            size_t
-            LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
+            LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
+                                               const AxisVector& tv_axis_order)
+                : TensorViewLayout(tv)
+                , axis_order(tv_axis_order)
+                , offset(0)
+                , size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
+                , mkldnn_format(mkldnn_format_undef)
+            {
+                if (tv_axis_order == Native2DAxisOrder ||
+                    tv_axis_order == Native4DAxisOrder) {
+                    strides = ngraph::row_major_strides(get_shape());
+                }
+                else
+                {
+                    throw ngraph_error("Axis ordering not handled yet");
+                }
+            }
+
+            size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
             {
                 if (indices.size() != strides.size())
                 {

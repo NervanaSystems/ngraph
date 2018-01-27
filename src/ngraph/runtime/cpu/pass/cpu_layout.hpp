@@ -15,7 +15,6 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
-#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 
 namespace ngraph
 {

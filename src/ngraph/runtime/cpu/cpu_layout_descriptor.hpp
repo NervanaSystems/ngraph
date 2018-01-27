@@ -33,22 +33,7 @@ namespace ngraph
             {
             public:
                 LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
-                                 const AxisVector& tv_axis_order)
-                    : TensorViewLayout(tv)
-                    , axis_order(tv_axis_order)
-                    , offset(0)
-                    , size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
-                    , mkldnn_format(mkldnn_format_undef)
-                {
-                    if (tv_axis_order == Native2DAxisOrder ||
-                        tv_axis_order == Native4DAxisOrder) {
-                        strides = ngraph::row_major_strides(get_shape());
-                    }
-                    else
-                    {
-                        throw ngraph_error("Axis ordering not handled yet");
-                    }
-                }
+                                 const AxisVector& tv_axis_order);
 
                 size_t get_size() override { return size; }
                 size_t get_offset() const { return offset; }

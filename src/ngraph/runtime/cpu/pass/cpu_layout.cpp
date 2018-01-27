@@ -13,6 +13,8 @@
 // ----------------------------------------------------------------------------
 
 #include "cpu_layout.hpp"
+#include "ngraph/descriptor/output.hpp"
+#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 
 using namespace ngraph::runtime::cpu::pass;
 
@@ -20,7 +22,21 @@ bool CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
 {
     for (const auto& node : nodes)
     {
-        
+        for (size_t i = 0; i < node->get_output_size(); ++i)
+        {
+            auto tv = node->get_output_tensor_view(i);
+            if (tv->get_tensor_view_layout())
+            {
+                continue;
+            }
+
+            auto tvt = tv.get_tensor_view_type();
+            auto rank = tvt->get_shape().size();
+
+
+            auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
+            tv->set_tensor_view_layout(layout);
+        }
     }
 
     return false;
