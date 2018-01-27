@@ -1866,7 +1866,7 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
     if (!filter_dilated && !images_dilated && arg0_rank == 4 && arg1_rank == 4 &&
         args[0].get_element_type() == element::f32)
     {
-        const string et = "memory::data_type::f32";
+        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
 
         writer << "{\n";
         writer.indent++;
@@ -1908,7 +1908,7 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
             window_dilation_strides_adjusted.push_back(s - 1);
         }
 
-        const string et = "memory::data_type::f32";
+        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
 
         writer << "{\n";
         writer.indent++;
@@ -1992,7 +1992,7 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
     if (arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
         args[0].get_element_type() == element::f32)
     {
-        const string et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
 
         writer << "{\n";
         writer.indent++;
