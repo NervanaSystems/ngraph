@@ -322,7 +322,7 @@ private:
                                    c->get_window_dilation_strides(),
                                    c->get_padding_below(),
                                    c->get_padding_above(),
-                                   c->get_image_dilation_strides(),
+                                   c->get_data_dilation_strides(),
                                    0,
                                    1,
                                    1,
@@ -344,7 +344,7 @@ private:
                                    c->get_window_dilation_strides_backward(),
                                    c->get_padding_below_backward(),
                                    c->get_padding_above_backward(),
-                                   c->get_image_dilation_strides_backward(),
+                                   c->get_data_dilation_strides_backward(),
                                    1,
                                    0,
                                    0,
@@ -353,10 +353,10 @@ private:
                                    0,
                                    false);
         }
-        else if (node_op == "ConvolutionBackpropImageBatch")
+        else if (node_op == "ConvolutionBackpropData")
         {
             // Note that args[1] and args[0] are switched here from the usual order.
-            auto c = static_cast<const op::ConvolutionBackpropImageBatch*>(&node);
+            auto c = static_cast<const op::ConvolutionBackpropData*>(&node);
             kernel::convolution<T>(reinterpret_cast<T*>(args[1]->get_data_ptr()),
                                    reinterpret_cast<T*>(args[0]->get_data_ptr()),
                                    reinterpret_cast<T*>(out[0]->get_data_ptr()),
@@ -367,7 +367,7 @@ private:
                                    c->get_window_dilation_strides_backward(),
                                    c->get_padding_below_backward(),
                                    c->get_padding_above_backward(),
-                                   c->get_image_dilation_strides_backward(),
+                                   c->get_data_dilation_strides_backward(),
                                    0,
                                    1,
                                    0,

@@ -1765,32 +1765,32 @@ TEST(type_prop, conv_1d_deduce)
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
 }
 
-TEST(type_prop, conv_1d_back_image_batch_deduce)
+TEST(type_prop, conv_1d_back_data_batch_deduce)
 {
     // Deduce type
-    auto image_batch_shape = Shape{64, 3, 100};
+    auto data_batch_shape = Shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91}); // output delta
-    auto conv = make_shared<op::ConvolutionBackpropImageBatch>(image_batch_shape,
-                                                               param0,
-                                                               param1,
-                                                               Strides{1},
-                                                               Strides{1},
-                                                               CoordinateDiff{0},
-                                                               CoordinateDiff{0},
-                                                               Strides{1});
+    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
+                                                         param0,
+                                                         param1,
+                                                         Strides{1},
+                                                         Strides{1},
+                                                         CoordinateDiff{0},
+                                                         CoordinateDiff{0},
+                                                         Strides{1});
     EXPECT_EQ(conv->get_element_type(), element::f32);
-    EXPECT_EQ(conv->get_shape(), image_batch_shape);
+    EXPECT_EQ(conv->get_shape(), data_batch_shape);
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
@@ -1799,9 +1799,9 @@ TEST(type_prop, conv_1d_back_image_batch_deduce)
 TEST(type_prop, conv_1d_back_filters_deduce)
 {
     // Deduce type
-    //auto image_batch_shape = Shape{64, 3, 100};
+    //auto data_batch_shape = Shape{64, 3, 100};
     auto filters_shape = Shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // image batch
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91}); // output delta
     auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
                                                             filters_shape,
@@ -1816,7 +1816,7 @@ TEST(type_prop, conv_1d_back_filters_deduce)
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
@@ -1838,36 +1838,36 @@ TEST(type_prop, conv_1d_deduce_padded)
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{3});
 }
 
-TEST(type_prop, conv_1d_back_image_batch_deduce_padded)
+TEST(type_prop, conv_1d_back_data_batch_deduce_padded)
 {
     // Deduce type
-    auto image_batch_shape = Shape{64, 3, 100};
+    auto data_batch_shape = Shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96}); // output delta
     auto move_strides = Strides{1};
     auto dilation_strides = Strides{1};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto conv = make_shared<op::ConvolutionBackpropImageBatch>(image_batch_shape,
-                                                               param0,
-                                                               param1,
-                                                               move_strides,
-                                                               dilation_strides,
-                                                               padding_below,
-                                                               padding_above,
-                                                               Strides{1});
+    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
+                                                         param0,
+                                                         param1,
+                                                         move_strides,
+                                                         dilation_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         Strides{1});
     EXPECT_EQ(conv->get_element_type(), element::f32);
-    EXPECT_EQ(conv->get_shape(), image_batch_shape);
+    EXPECT_EQ(conv->get_shape(), data_batch_shape);
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{3});
@@ -1876,9 +1876,9 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_padded)
 {
     // Deduce type
-    //auto image_batch_shape = Shape{64, 3, 100};
+    //auto data_batch_shape = Shape{64, 3, 100};
     auto filters_shape = Shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // image batch
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96}); // output delta
     auto move_strides = Strides{1};
     auto dilation_strides = Strides{1};
@@ -1897,7 +1897,7 @@ TEST(type_prop, conv_1d_back_filters_deduce_padded)
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{3});
@@ -1915,33 +1915,33 @@ TEST(type_prop, conv_1d_deduce_strided)
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
 }
 
-TEST(type_prop, conv_1d_back_image_batch_deduce_strided)
+TEST(type_prop, conv_1d_back_data_batch_deduce_strided)
 {
     // Deduce type
-    auto image_batch_shape = Shape{64, 3, 100};
+    auto data_batch_shape = Shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 46}); // output delta
     auto move_strides = Strides{2};
-    auto conv = make_shared<op::ConvolutionBackpropImageBatch>(image_batch_shape,
-                                                               param0,
-                                                               param1,
-                                                               move_strides,
-                                                               Strides{1},
-                                                               CoordinateDiff{0},
-                                                               CoordinateDiff{0},
-                                                               Strides{1});
+    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
+                                                         param0,
+                                                         param1,
+                                                         move_strides,
+                                                         Strides{1},
+                                                         CoordinateDiff{0},
+                                                         CoordinateDiff{0},
+                                                         Strides{1});
     EXPECT_EQ(conv->get_element_type(), element::f32);
-    EXPECT_EQ(conv->get_shape(), image_batch_shape);
+    EXPECT_EQ(conv->get_shape(), data_batch_shape);
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
@@ -1950,9 +1950,9 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_strided)
 TEST(type_prop, conv_1d_back_filters_deduce_strided)
 {
     // Deduce type
-    //auto image_batch_shape = Shape{64, 3, 100};
+    //auto data_batch_shape = Shape{64, 3, 100};
     auto filters_shape = Shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // image batch
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 46}); // output delta
     auto move_strides = Strides{2};
     auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
@@ -1968,7 +1968,7 @@ TEST(type_prop, conv_1d_back_filters_deduce_strided)
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
@@ -1990,36 +1990,36 @@ TEST(type_prop, conv_1d_deduce_strided_padded)
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{3});
 }
 
-TEST(type_prop, conv_1d_back_image_batch_deduce_strided_padded)
+TEST(type_prop, conv_1d_back_data_batch_deduce_strided_padded)
 {
     // Deduce type
-    auto image_batch_shape = Shape{64, 3, 100};
+    auto data_batch_shape = Shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 48}); // output delta
     auto move_strides = Strides{2};
     auto dilation_strides = Strides{1};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto conv = make_shared<op::ConvolutionBackpropImageBatch>(image_batch_shape,
-                                                               param0,
-                                                               param1,
-                                                               move_strides,
-                                                               dilation_strides,
-                                                               padding_below,
-                                                               padding_above,
-                                                               Strides{1});
+    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
+                                                         param0,
+                                                         param1,
+                                                         move_strides,
+                                                         dilation_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         Strides{1});
     EXPECT_EQ(conv->get_element_type(), element::f32);
-    EXPECT_EQ(conv->get_shape(), image_batch_shape);
+    EXPECT_EQ(conv->get_shape(), data_batch_shape);
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{3});
@@ -2028,9 +2028,9 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_strided_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_padded)
 {
     // Deduce type
-    //auto image_batch_shape = Shape{64, 3, 100};
+    //auto data_batch_shape = Shape{64, 3, 100};
     auto filters_shape = Shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // image batch
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 48}); // output delta
     auto move_strides = Strides{2};
     auto dilation_strides = Strides{1};
@@ -2049,7 +2049,7 @@ TEST(type_prop, conv_1d_back_filters_deduce_strided_padded)
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{3});
@@ -2067,33 +2067,33 @@ TEST(type_prop, conv_1d_deduce_strided_small_uneven)
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
 }
 
-TEST(type_prop, conv_1d_back_image_batch_deduce_strided_small_uneven)
+TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_uneven)
 {
     // Deduce type
-    auto image_batch_shape = Shape{64, 3, 5};
+    auto data_batch_shape = Shape{64, 3, 5};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 2}); // output delta
     auto move_strides = Strides{2};
-    auto conv = make_shared<op::ConvolutionBackpropImageBatch>(image_batch_shape,
-                                                               param0,
-                                                               param1,
-                                                               move_strides,
-                                                               Strides{1},
-                                                               CoordinateDiff{0},
-                                                               CoordinateDiff{0},
-                                                               Strides{1});
+    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
+                                                         param0,
+                                                         param1,
+                                                         move_strides,
+                                                         Strides{1},
+                                                         CoordinateDiff{0},
+                                                         CoordinateDiff{0},
+                                                         Strides{1});
     EXPECT_EQ(conv->get_element_type(), element::f32);
-    EXPECT_EQ(conv->get_shape(), image_batch_shape);
+    EXPECT_EQ(conv->get_shape(), data_batch_shape);
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
@@ -2102,9 +2102,9 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_strided_small_uneven)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_small_uneven)
 {
     // Deduce type
-    //auto image_batch_shape = Shape{64, 3, 5};
+    //auto data_batch_shape = Shape{64, 3, 5};
     auto filters_shape = Shape{128, 3, 2};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});   // image batch
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 2}); // output delta
     auto move_strides = Strides{2};
     auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
@@ -2120,7 +2120,7 @@ TEST(type_prop, conv_1d_back_filters_deduce_strided_small_uneven)
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
@@ -2138,33 +2138,33 @@ TEST(type_prop, conv_1d_deduce_strided_small_even)
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
 }
 
-TEST(type_prop, conv_1d_back_image_batch_deduce_strided_small_even)
+TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_even)
 {
     // Deduce type
-    auto image_batch_shape = Shape{64, 3, 6};
+    auto data_batch_shape = Shape{64, 3, 6};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 3}); // output delta
     auto move_strides = Strides{2};
-    auto conv = make_shared<op::ConvolutionBackpropImageBatch>(image_batch_shape,
-                                                               param0,
-                                                               param1,
-                                                               move_strides,
-                                                               Strides{1},
-                                                               CoordinateDiff{0},
-                                                               CoordinateDiff{0},
-                                                               Strides{1});
+    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
+                                                         param0,
+                                                         param1,
+                                                         move_strides,
+                                                         Strides{1},
+                                                         CoordinateDiff{0},
+                                                         CoordinateDiff{0},
+                                                         Strides{1});
     EXPECT_EQ(conv->get_element_type(), element::f32);
-    EXPECT_EQ(conv->get_shape(), image_batch_shape);
+    EXPECT_EQ(conv->get_shape(), data_batch_shape);
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
@@ -2173,9 +2173,9 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_strided_small_even)
 TEST(type_prop, conv_1d_back_filters_deduce_strided_small_even)
 {
     // Deduce type
-    //auto image_batch_shape = Shape{64, 3, 6};
+    //auto data_batch_shape = Shape{64, 3, 6};
     auto filters_shape = Shape{128, 3, 2};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 6});   // image batch
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 6});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 3}); // output delta
     auto move_strides = Strides{2};
     auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
@@ -2191,7 +2191,7 @@ TEST(type_prop, conv_1d_back_filters_deduce_strided_small_even)
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{2});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{1});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
@@ -2210,34 +2210,34 @@ TEST(type_prop, conv_1d_deduce_window_dilated)
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{2});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{0});
 }
 
-TEST(type_prop, conv_1d_back_image_batch_deduce_window_dilated)
+TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated)
 {
     // Deduce type
-    auto image_batch_shape = Shape{64, 3, 100};
+    auto data_batch_shape = Shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 82}); // output delta
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
-    auto conv = make_shared<op::ConvolutionBackpropImageBatch>(image_batch_shape,
-                                                               param0,
-                                                               param1,
-                                                               move_strides,
-                                                               dilate_strides,
-                                                               CoordinateDiff{0},
-                                                               CoordinateDiff{0},
-                                                               Strides{1});
+    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
+                                                         param0,
+                                                         param1,
+                                                         move_strides,
+                                                         dilate_strides,
+                                                         CoordinateDiff{0},
+                                                         CoordinateDiff{0},
+                                                         Strides{1});
     EXPECT_EQ(conv->get_element_type(), element::f32);
-    EXPECT_EQ(conv->get_shape(), image_batch_shape);
+    EXPECT_EQ(conv->get_shape(), data_batch_shape);
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{2});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
@@ -2246,9 +2246,9 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_window_dilated)
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated)
 {
     // Deduce type
-    //auto image_batch_shape = Shape{64, 3, 100};
+    //auto data_batch_shape = Shape{64, 3, 100};
     auto filters_shape = Shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // image batch
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 82}); // output delta
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
@@ -2265,7 +2265,7 @@ TEST(type_prop, conv_1d_back_filters_deduce_window_dilated)
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{2});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{0});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{0});
@@ -2287,36 +2287,36 @@ TEST(type_prop, conv_1d_deduce_window_dilated_padded)
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{2});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{3});
 }
 
-TEST(type_prop, conv_1d_back_image_batch_deduce_window_dilated_padded)
+TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_padded)
 {
     // Deduce type
-    auto image_batch_shape = Shape{64, 3, 100};
+    auto data_batch_shape = Shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 87}); // output delta
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto conv = make_shared<op::ConvolutionBackpropImageBatch>(image_batch_shape,
-                                                               param0,
-                                                               param1,
-                                                               move_strides,
-                                                               dilate_strides,
-                                                               padding_below,
-                                                               padding_above,
-                                                               Strides{1});
+    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
+                                                         param0,
+                                                         param1,
+                                                         move_strides,
+                                                         dilate_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         Strides{1});
     EXPECT_EQ(conv->get_element_type(), element::f32);
-    EXPECT_EQ(conv->get_shape(), image_batch_shape);
+    EXPECT_EQ(conv->get_shape(), data_batch_shape);
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{2});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{3});
@@ -2325,9 +2325,9 @@ TEST(type_prop, conv_1d_back_image_batch_deduce_window_dilated_padded)
 TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_padded)
 {
     // Deduce type
-    //auto image_batch_shape = Shape{64, 3, 100};
+    //auto data_batch_shape = Shape{64, 3, 100};
     auto filters_shape = Shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // image batch
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 87}); // output delta
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
@@ -2346,13 +2346,13 @@ TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_padded)
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{2});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{1});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{1});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{3});
 }
 
-TEST(type_prop, conv_1d_deduce_window_dilated_images_dilated_padded)
+TEST(type_prop, conv_1d_deduce_window_dilated_data_dilated_padded)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
@@ -2361,67 +2361,67 @@ TEST(type_prop, conv_1d_deduce_window_dilated_images_dilated_padded)
     auto dilate_strides = Strides{2};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto img_dilate_strides = Strides{3};
+    auto data_dilate_strides = Strides{3};
     auto conv = make_shared<op::Convolution>(param0,
                                              param1,
                                              move_strides,
                                              dilate_strides,
                                              padding_below,
                                              padding_above,
-                                             img_dilate_strides);
+                                             data_dilate_strides);
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 285}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides(), Strides{2});
-    EXPECT_EQ(conv->get_image_dilation_strides(), Strides{3});
+    EXPECT_EQ(conv->get_data_dilation_strides(), Strides{3});
 
     EXPECT_EQ(conv->get_padding_below(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above(), CoordinateDiff{3});
 }
 
-TEST(type_prop, conv_1d_back_image_batch_deduce_window_dilated_images_dilated_padded)
+TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_data_dilated_padded)
 {
     // Deduce type
-    auto image_batch_shape = Shape{64, 3, 100};
+    auto data_batch_shape = Shape{64, 3, 100};
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});   // filters
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 285}); // output delta
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto img_dilate_strides = Strides{3};
-    auto conv = make_shared<op::ConvolutionBackpropImageBatch>(image_batch_shape,
-                                                               param0,
-                                                               param1,
-                                                               move_strides,
-                                                               dilate_strides,
-                                                               padding_below,
-                                                               padding_above,
-                                                               img_dilate_strides);
+    auto data_dilate_strides = Strides{3};
+    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
+                                                         param0,
+                                                         param1,
+                                                         move_strides,
+                                                         dilate_strides,
+                                                         padding_below,
+                                                         padding_above,
+                                                         data_dilate_strides);
     EXPECT_EQ(conv->get_element_type(), element::f32);
-    EXPECT_EQ(conv->get_shape(), image_batch_shape);
+    EXPECT_EQ(conv->get_shape(), data_batch_shape);
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{2});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{3});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{3});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{3});
 }
 
-TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_images_dilated_padded)
+TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_data_dilated_padded)
 {
     // Deduce type
-    //auto image_batch_shape = Shape{64, 3, 100};
+    //auto data_batch_shape = Shape{64, 3, 100};
     auto filters_shape = Shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});   // image batch
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});   // data batch
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 285}); // output delta
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto img_dilate_strides = Strides{3};
+    auto data_dilate_strides = Strides{3};
     auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
                                                             filters_shape,
                                                             param1,
@@ -2429,13 +2429,13 @@ TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_images_dilated_padded
                                                             dilate_strides,
                                                             padding_below,
                                                             padding_above,
-                                                            img_dilate_strides);
+                                                            data_dilate_strides);
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), filters_shape);
 
     EXPECT_EQ(conv->get_window_movement_strides_forward(), Strides{1});
     EXPECT_EQ(conv->get_window_dilation_strides_forward(), Strides{2});
-    EXPECT_EQ(conv->get_image_dilation_strides_forward(), Strides{3});
+    EXPECT_EQ(conv->get_data_dilation_strides_forward(), Strides{3});
 
     EXPECT_EQ(conv->get_padding_below_forward(), CoordinateDiff{2});
     EXPECT_EQ(conv->get_padding_above_forward(), CoordinateDiff{3});
@@ -2452,7 +2452,7 @@ TEST(type_prop, conv_2d_deduce)
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{1, 1}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
-    EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_data_dilation_strides(), (Strides{1, 1}));
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0}));
@@ -2474,7 +2474,7 @@ TEST(type_prop, conv_2d_deduce_padded)
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{1, 1}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
-    EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_data_dilation_strides(), (Strides{1, 1}));
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{2, 3}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{3, 4}));
@@ -2496,7 +2496,7 @@ TEST(type_prop, conv_2d_deduce_padded_neg)
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{1, 1}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
-    EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_data_dilation_strides(), (Strides{1, 1}));
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{2, -3}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{3, -4}));
@@ -2514,7 +2514,7 @@ TEST(type_prop, conv_2d_deduce_strided)
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
-    EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_data_dilation_strides(), (Strides{1, 1}));
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0}));
@@ -2533,13 +2533,13 @@ TEST(type_prop, conv_2d_deduce_strided_window_dilated)
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2}));
-    EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_data_dilation_strides(), (Strides{1, 1}));
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0}));
 }
 
-TEST(type_prop, conv_2d_deduce_strided_window_dilated_images_dilated)
+TEST(type_prop, conv_2d_deduce_strided_window_dilated_data_dilated)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
@@ -2548,20 +2548,20 @@ TEST(type_prop, conv_2d_deduce_strided_window_dilated_images_dilated)
     auto dilate_strides = Strides{3, 2};
     auto padding_below = CoordinateDiff{0, 0};
     auto padding_above = CoordinateDiff{0, 0};
-    auto img_dilate_strides = Strides{2, 3};
+    auto data_dilate_strides = Strides{2, 3};
     auto conv = make_shared<op::Convolution>(param0,
                                              param1,
                                              move_strides,
                                              dilate_strides,
                                              padding_below,
                                              padding_above,
-                                             img_dilate_strides);
+                                             data_dilate_strides);
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 86, 137}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2}));
-    EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{2, 3}));
+    EXPECT_EQ(conv->get_data_dilation_strides(), (Strides{2, 3}));
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0}));
@@ -2580,7 +2580,7 @@ TEST(type_prop, conv_2d_deduce_strided_window_dilated_small)
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2}));
-    EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_data_dilation_strides(), (Strides{1, 1}));
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0}));
@@ -2599,13 +2599,13 @@ TEST(type_prop, conv_3d_deduce_strided_window_dilated_small)
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3, 4}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2, 2}));
-    EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{1, 1, 1}));
+    EXPECT_EQ(conv->get_data_dilation_strides(), (Strides{1, 1, 1}));
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0, 0}));
 }
 
-TEST(type_prop, conv_3d_deduce_strided_window_dilated_image_dilated_small)
+TEST(type_prop, conv_3d_deduce_strided_window_dilated_data_dilated_small)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 7, 8, 10});
@@ -2614,20 +2614,20 @@ TEST(type_prop, conv_3d_deduce_strided_window_dilated_image_dilated_small)
     auto dilate_strides = Strides{3, 2, 2};
     auto padding_below = CoordinateDiff{0, 0, 0};
     auto padding_above = CoordinateDiff{0, 0, 0};
-    auto img_dilate_strides = Strides{2, 3, 2};
+    auto data_dilate_strides = Strides{2, 3, 2};
     auto conv = make_shared<op::Convolution>(param0,
                                              param1,
                                              move_strides,
                                              dilate_strides,
                                              padding_below,
                                              padding_above,
-                                             img_dilate_strides);
+                                             data_dilate_strides);
     EXPECT_EQ(conv->get_element_type(), element::f32);
     EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 5, 6, 5}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{2, 3, 4}));
     EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{3, 2, 2}));
-    EXPECT_EQ(conv->get_image_dilation_strides(), (Strides{2, 3, 2}));
+    EXPECT_EQ(conv->get_data_dilation_strides(), (Strides{2, 3, 2}));
 
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0, 0}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0, 0}));
@@ -2648,7 +2648,7 @@ TEST(type_prop, conv_invalid_element_type_mismatch)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Convolution image batch and filter element types do not match"));
+                  std::string("Convolution data batch and filter element types do not match"));
     }
     catch (...)
     {
@@ -2671,9 +2671,9 @@ TEST(type_prop, conv_invalid_0d_input)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Convolution image batch input must have rank of at "
+                  std::string("Convolution data batch input must have rank of at "
                               "least 3 (one batch axis, one input-channel axis, at "
-                              "least one image dimension)."));
+                              "least one spatial dimension)."));
     }
     catch (...)
     {
@@ -2696,9 +2696,9 @@ TEST(type_prop, conv_invalid_1d_input)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Convolution image batch input must have rank of at "
+                  std::string("Convolution data batch input must have rank of at "
                               "least 3 (one batch axis, one input-channel axis, at "
-                              "least one image dimension)."));
+                              "least one spatial dimension)."));
     }
     catch (...)
     {
@@ -2721,9 +2721,9 @@ TEST(type_prop, conv_invalid_2d_input)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Convolution image batch input must have rank of at "
+                  std::string("Convolution data batch input must have rank of at "
                               "least 3 (one batch axis, one input-channel axis, at "
-                              "least one image dimension)."));
+                              "least one spatial dimension)."));
     }
     catch (...)
     {
@@ -2745,7 +2745,7 @@ TEST(type_prop, conv_invalid_0_batch_size)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution image batch size is zero."));
+        EXPECT_EQ(error.what(), std::string("Convolution data batch size is zero."));
     }
     catch (...)
     {
@@ -2791,7 +2791,7 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_many)
     {
         EXPECT_EQ(
             error.what(),
-            std::string("Convolution filter input must have rank of 2 + n_image_dimensions."));
+            std::string("Convolution filter input must have rank of 2 + n_spatial_dimensions."));
     }
     catch (...)
     {
@@ -2815,7 +2815,7 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_few)
     {
         EXPECT_EQ(
             error.what(),
-            std::string("Convolution filter input must have rank of 2 + n_image_dimensions."));
+            std::string("Convolution filter input must have rank of 2 + n_spatial_dimensions."));
     }
     catch (...)
     {
@@ -2861,7 +2861,7 @@ TEST(type_prop, conv_invalid_input_channel_mismatch)
     {
         EXPECT_EQ(
             error.what(),
-            std::string("Convolution image batch and filter input channel counts do not match."));
+            std::string("Convolution data batch and filter input channel counts do not match."));
     }
     catch (...)
     {
@@ -2885,7 +2885,7 @@ TEST(type_prop, conv_invalid_movement_stride_rank)
     {
         EXPECT_EQ(error.what(),
                   std::string("Convolution window movement stride rank does not "
-                              "match number of image dimensions."));
+                              "match number of spatial dimensions."));
     }
     catch (...)
     {
@@ -2909,7 +2909,7 @@ TEST(type_prop, conv_invalid_window_dilation_stride_rank)
     {
         EXPECT_EQ(error.what(),
                   std::string("Convolution window dilation stride rank does not "
-                              "match number of image dimensions."));
+                              "match number of spatial dimensions."));
     }
     catch (...)
     {
@@ -2917,7 +2917,7 @@ TEST(type_prop, conv_invalid_window_dilation_stride_rank)
     }
 }
 
-TEST(type_prop, conv_invalid_image_dilation_stride_rank)
+TEST(type_prop, conv_invalid_data_dilation_stride_rank)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
@@ -2933,13 +2933,13 @@ TEST(type_prop, conv_invalid_image_dilation_stride_rank)
                                                  Strides{2, 3, 8});
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid input with wrong image dilation stride rank not detected";
+        FAIL() << "Invalid input with wrong data dilation stride rank not detected";
     }
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Convolution image dilation stride rank does not "
-                              "match number of image dimensions."));
+                  std::string("Convolution data dilation stride rank does not "
+                              "match number of spatial dimensions."));
     }
     catch (...)
     {
@@ -2968,7 +2968,7 @@ TEST(type_prop, conv_invalid_padding_below_rank)
     {
         EXPECT_EQ(error.what(),
                   std::string("Convolution padding-below rank does not "
-                              "match number of image dimensions."));
+                              "match number of spatial dimensions."));
     }
     catch (...)
     {
@@ -2997,7 +2997,7 @@ TEST(type_prop, conv_invalid_padding_above_rank)
     {
         EXPECT_EQ(error.what(),
                   std::string("Convolution padding-above rank does not "
-                              "match number of image dimensions."));
+                              "match number of spatial dimensions."));
     }
     catch (...)
     {
@@ -3005,7 +3005,7 @@ TEST(type_prop, conv_invalid_padding_above_rank)
     }
 }
 
-TEST(type_prop, conv_invalid_input_image_size_negative_after_padding)
+TEST(type_prop, conv_invalid_input_spatial_size_negative_after_padding)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
@@ -3020,13 +3020,14 @@ TEST(type_prop, conv_invalid_input_image_size_negative_after_padding)
                                                  CoordinateDiff{-7, 0});
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid input with negative-length post-padding image axis not detected";
+        FAIL() << "Invalid input with negative-length post-padding spatial axis not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string(
-                      "Convolution input image dimension after padding and dilation is negative."));
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Convolution input spatial dimension after padding and dilation is negative."));
     }
     catch (...)
     {
@@ -3034,7 +3035,7 @@ TEST(type_prop, conv_invalid_input_image_size_negative_after_padding)
     }
 }
 
-TEST(type_prop, conv_invalid_input_image_size_zero_after_padding)
+TEST(type_prop, conv_invalid_input_spatial_size_zero_after_padding)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
@@ -3049,14 +3050,14 @@ TEST(type_prop, conv_invalid_input_image_size_zero_after_padding)
                                                  CoordinateDiff{-6, 0});
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid input with zero-length post-padding image axis not detected";
+        FAIL() << "Invalid input with zero-length post-padding spatial axis not detected";
     }
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(
             error.what(),
             std::string(
-                "Convolution input image dimension after dilation is zero even with padding."));
+                "Convolution input spatial dimension after dilation is zero even with padding."));
     }
     catch (...)
     {
@@ -3064,7 +3065,7 @@ TEST(type_prop, conv_invalid_input_image_size_zero_after_padding)
     }
 }
 
-TEST(type_prop, conv_invalid_input_image_size_0)
+TEST(type_prop, conv_invalid_input_spatial_size_0)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 0, 10});
@@ -3074,14 +3075,14 @@ TEST(type_prop, conv_invalid_input_image_size_0)
         auto conv = make_shared<op::Convolution>(param0, param1);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid input with zero-length image axis not detected";
+        FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(
             error.what(),
             std::string(
-                "Convolution input image dimension after dilation is zero even with padding."));
+                "Convolution input spatial dimension after dilation is zero even with padding."));
     }
     catch (...)
     {
@@ -3133,7 +3134,7 @@ TEST(type_prop, conv_invalid_window_dilation_stride_0)
     }
 }
 
-TEST(type_prop, conv_invalid_image_dilation_stride_0)
+TEST(type_prop, conv_invalid_data_dilation_stride_0)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
@@ -3149,11 +3150,11 @@ TEST(type_prop, conv_invalid_image_dilation_stride_0)
                                                  Strides{2, 0});
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid input with wrong 0-length image dilation stride axis not detected";
+        FAIL() << "Invalid input with wrong 0-length data dilation stride axis not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution image dilation stride is zero."));
+        EXPECT_EQ(error.what(), std::string("Convolution data dilation stride is zero."));
     }
     catch (...)
     {
@@ -3175,10 +3176,8 @@ TEST(type_prop, conv_invalid_dilated_window_too_large)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string(
-                "Convolution window after dilation is larger than the image even with padding."));
+        EXPECT_EQ(error.what(), std::string("Convolution window after dilation is larger than the "
+                                            "spatial dimensions even with padding."));
     }
     catch (...)
     {
@@ -3219,16 +3218,7 @@ TEST(type_prop, max_pool_1d_deduce)
     EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 91}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{1});
-
-    EXPECT_EQ(max_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(max_pool->get_input_image_shape(), Shape{100});
-    EXPECT_EQ(max_pool->get_output_image_shape(), Shape{91});
-
     EXPECT_EQ(max_pool->get_window_shape(), Shape{10});
-
-    EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, max_pool_1d_deduce_strided)
@@ -3243,16 +3233,7 @@ TEST(type_prop, max_pool_1d_deduce_strided)
     EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 46}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
-
-    EXPECT_EQ(max_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(max_pool->get_input_image_shape(), Shape{100});
-    EXPECT_EQ(max_pool->get_output_image_shape(), Shape{46});
-
     EXPECT_EQ(max_pool->get_window_shape(), Shape{10});
-
-    EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, max_pool_1d_deduce_strided_small_uneven)
@@ -3267,16 +3248,7 @@ TEST(type_prop, max_pool_1d_deduce_strided_small_uneven)
     EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 2}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
-
-    EXPECT_EQ(max_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(max_pool->get_input_image_shape(), Shape{5});
-    EXPECT_EQ(max_pool->get_output_image_shape(), Shape{2});
-
     EXPECT_EQ(max_pool->get_window_shape(), Shape{2});
-
-    EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, max_pool_1d_deduce_strided_small_even)
@@ -3291,16 +3263,7 @@ TEST(type_prop, max_pool_1d_deduce_strided_small_even)
     EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 3}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
-
-    EXPECT_EQ(max_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(max_pool->get_input_image_shape(), Shape{6});
-    EXPECT_EQ(max_pool->get_output_image_shape(), Shape{3});
-
     EXPECT_EQ(max_pool->get_window_shape(), Shape{2});
-
-    EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, max_pool_2d_deduce)
@@ -3314,16 +3277,7 @@ TEST(type_prop, max_pool_2d_deduce)
     EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 91, 131}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{1, 1}));
-
-    EXPECT_EQ(max_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(max_pool->get_input_image_shape(), (Shape{100, 150}));
-    EXPECT_EQ(max_pool->get_output_image_shape(), (Shape{91, 131}));
-
     EXPECT_EQ(max_pool->get_window_shape(), (Shape{10, 20}));
-
-    EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, max_pool_2d_deduce_strided)
@@ -3338,16 +3292,7 @@ TEST(type_prop, max_pool_2d_deduce_strided)
     EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 46, 44}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{2, 3}));
-
-    EXPECT_EQ(max_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(max_pool->get_input_image_shape(), (Shape{100, 150}));
-    EXPECT_EQ(max_pool->get_output_image_shape(), (Shape{46, 44}));
-
     EXPECT_EQ(max_pool->get_window_shape(), (Shape{10, 20}));
-
-    EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, max_pool_3d_deduce_strided_small)
@@ -3362,16 +3307,7 @@ TEST(type_prop, max_pool_3d_deduce_strided_small)
     EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 3, 2, 3}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{2, 3, 4}));
-
-    EXPECT_EQ(max_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(max_pool->get_input_image_shape(), (Shape{7, 8, 10}));
-    EXPECT_EQ(max_pool->get_output_image_shape(), (Shape{3, 2, 3}));
-
     EXPECT_EQ(max_pool->get_window_shape(), (Shape{2, 3, 2}));
-
-    EXPECT_EQ(max_pool->get_batch_size(), 64);
-    EXPECT_EQ(max_pool->get_image_dimension_count(), 3);
 }
 
 TEST(type_prop, max_pool_invalid_0d_input)
@@ -3389,9 +3325,9 @@ TEST(type_prop, max_pool_invalid_0d_input)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Max pool image batch input must have rank of at "
+                  std::string("Max pool data batch input must have rank of at "
                               "least 3 (one batch axis, one channel axis, at "
-                              "least one image dimension)."));
+                              "least one spatial dimension)."));
     }
     catch (...)
     {
@@ -3414,9 +3350,9 @@ TEST(type_prop, max_pool_invalid_1d_input)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Max pool image batch input must have rank of at "
+                  std::string("Max pool data batch input must have rank of at "
                               "least 3 (one batch axis, one channel axis, at "
-                              "least one image dimension)."));
+                              "least one spatial dimension)."));
     }
     catch (...)
     {
@@ -3439,9 +3375,9 @@ TEST(type_prop, max_pool_invalid_2d_input)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Max pool image batch input must have rank of at "
+                  std::string("Max pool data batch input must have rank of at "
                               "least 3 (one batch axis, one channel axis, at "
-                              "least one image dimension)."));
+                              "least one spatial dimension)."));
     }
     catch (...)
     {
@@ -3463,7 +3399,7 @@ TEST(type_prop, max_pool_invalid_0_batch_size)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max pool image batch size is zero."));
+        EXPECT_EQ(error.what(), std::string("Max pool data batch size is zero."));
     }
     catch (...)
     {
@@ -3485,7 +3421,7 @@ TEST(type_prop, max_pool_invalid_0_channels)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max pool requires at least one image depth channel."));
+        EXPECT_EQ(error.what(), std::string("Max pool requires at least one feature channel."));
     }
     catch (...)
     {
@@ -3509,7 +3445,7 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_many)
     {
         EXPECT_EQ(
             error.what(),
-            std::string("Max pool window shape rank does not match number of image dimensions."));
+            std::string("Max pool window shape rank does not match number of spatial dimensions."));
     }
     catch (...)
     {
@@ -3533,7 +3469,7 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_few)
     {
         EXPECT_EQ(
             error.what(),
-            std::string("Max pool window shape rank does not match number of image dimensions."));
+            std::string("Max pool window shape rank does not match number of spatial dimensions."));
     }
     catch (...)
     {
@@ -3558,7 +3494,7 @@ TEST(type_prop, max_pool_invalid_movement_stride_rank)
     {
         EXPECT_EQ(error.what(),
                   std::string("Max pool window movement stride rank does not "
-                              "match number of image dimensions."));
+                              "match number of spatial dimensions."));
     }
     catch (...)
     {
@@ -3566,7 +3502,7 @@ TEST(type_prop, max_pool_invalid_movement_stride_rank)
     }
 }
 
-TEST(type_prop, max_pool_invalid_input_image_size_0)
+TEST(type_prop, max_pool_invalid_input_data_size_0)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 0, 10});
@@ -3576,11 +3512,11 @@ TEST(type_prop, max_pool_invalid_input_image_size_0)
         auto max_pool = make_shared<op::MaxPool>(param, window_shape);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid input with zero-length image axis not detected";
+        FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max pool input image dimension is zero."));
+        EXPECT_EQ(error.what(), std::string("Max pool input spatial dimension is zero."));
     }
     catch (...)
     {
@@ -3624,7 +3560,8 @@ TEST(type_prop, max_pool_invalid_dilated_too_large)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Max pool window shape is larger than the image."));
+        EXPECT_EQ(error.what(),
+                  std::string("Max pool window shape is larger than the spatial dimensions."));
     }
     catch (...)
     {
@@ -5418,20 +5355,9 @@ TEST(type_prop, avg_pool_1d_deduce)
     EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 91}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), Strides{1});
-
-    EXPECT_EQ(avg_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), Shape{100});
-    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), Shape{100});
-    EXPECT_EQ(avg_pool->get_output_image_shape(), Shape{91});
-
+    EXPECT_EQ(avg_pool->get_window_shape(), Shape{10});
     EXPECT_EQ(avg_pool->get_padding_below(), Shape{0});
     EXPECT_EQ(avg_pool->get_padding_above(), Shape{0});
-
-    EXPECT_EQ(avg_pool->get_window_shape(), Shape{10});
-
-    EXPECT_EQ(avg_pool->get_batch_size(), 64);
-    EXPECT_EQ(avg_pool->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, avg_pool_1d_deduce_strided)
@@ -5446,20 +5372,9 @@ TEST(type_prop, avg_pool_1d_deduce_strided)
     EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 46}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), Strides{2});
-
-    EXPECT_EQ(avg_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), Shape{100});
-    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), Shape{100});
-    EXPECT_EQ(avg_pool->get_output_image_shape(), Shape{46});
-
+    EXPECT_EQ(avg_pool->get_window_shape(), Shape{10});
     EXPECT_EQ(avg_pool->get_padding_below(), Shape{0});
     EXPECT_EQ(avg_pool->get_padding_above(), Shape{0});
-
-    EXPECT_EQ(avg_pool->get_window_shape(), Shape{10});
-
-    EXPECT_EQ(avg_pool->get_batch_size(), 64);
-    EXPECT_EQ(avg_pool->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, avg_pool_1d_deduce_strided_small_uneven)
@@ -5474,20 +5389,9 @@ TEST(type_prop, avg_pool_1d_deduce_strided_small_uneven)
     EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 2}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), Strides{2});
-
-    EXPECT_EQ(avg_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), Shape{5});
-    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), Shape{5});
-    EXPECT_EQ(avg_pool->get_output_image_shape(), Shape{2});
-
+    EXPECT_EQ(avg_pool->get_window_shape(), Shape{2});
     EXPECT_EQ(avg_pool->get_padding_below(), Shape{0});
     EXPECT_EQ(avg_pool->get_padding_above(), Shape{0});
-
-    EXPECT_EQ(avg_pool->get_window_shape(), Shape{2});
-
-    EXPECT_EQ(avg_pool->get_batch_size(), 64);
-    EXPECT_EQ(avg_pool->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, avg_pool_1d_deduce_strided_small_even)
@@ -5502,20 +5406,9 @@ TEST(type_prop, avg_pool_1d_deduce_strided_small_even)
     EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 3}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), Strides{2});
-
-    EXPECT_EQ(avg_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), Shape{6});
-    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), Shape{6});
-    EXPECT_EQ(avg_pool->get_output_image_shape(), Shape{3});
-
+    EXPECT_EQ(avg_pool->get_window_shape(), Shape{2});
     EXPECT_EQ(avg_pool->get_padding_below(), Shape{0});
     EXPECT_EQ(avg_pool->get_padding_above(), Shape{0});
-
-    EXPECT_EQ(avg_pool->get_window_shape(), Shape{2});
-
-    EXPECT_EQ(avg_pool->get_batch_size(), 64);
-    EXPECT_EQ(avg_pool->get_image_dimension_count(), 1);
 }
 
 TEST(type_prop, avg_pool_2d_deduce)
@@ -5529,20 +5422,9 @@ TEST(type_prop, avg_pool_2d_deduce)
     EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 91, 131}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), (Strides{1, 1}));
-
-    EXPECT_EQ(avg_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), (Shape{100, 150}));
-    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), (Shape{100, 150}));
-    EXPECT_EQ(avg_pool->get_output_image_shape(), (Shape{91, 131}));
-
+    EXPECT_EQ(avg_pool->get_window_shape(), (Shape{10, 20}));
     EXPECT_EQ(avg_pool->get_padding_below(), (Shape{0, 0}));
     EXPECT_EQ(avg_pool->get_padding_above(), (Shape{0, 0}));
-
-    EXPECT_EQ(avg_pool->get_window_shape(), (Shape{10, 20}));
-
-    EXPECT_EQ(avg_pool->get_batch_size(), 64);
-    EXPECT_EQ(avg_pool->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, avg_pool_2d_deduce_strided)
@@ -5557,20 +5439,9 @@ TEST(type_prop, avg_pool_2d_deduce_strided)
     EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 46, 44}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), (Strides{2, 3}));
-
-    EXPECT_EQ(avg_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), (Shape{100, 150}));
-    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), (Shape{100, 150}));
-    EXPECT_EQ(avg_pool->get_output_image_shape(), (Shape{46, 44}));
-
+    EXPECT_EQ(avg_pool->get_window_shape(), (Shape{10, 20}));
     EXPECT_EQ(avg_pool->get_padding_below(), (Shape{0, 0}));
     EXPECT_EQ(avg_pool->get_padding_above(), (Shape{0, 0}));
-
-    EXPECT_EQ(avg_pool->get_window_shape(), (Shape{10, 20}));
-
-    EXPECT_EQ(avg_pool->get_batch_size(), 64);
-    EXPECT_EQ(avg_pool->get_image_dimension_count(), 2);
 }
 
 TEST(type_prop, avg_pool_3d_deduce_strided_small)
@@ -5585,20 +5456,9 @@ TEST(type_prop, avg_pool_3d_deduce_strided_small)
     EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 3, 2, 3}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), (Strides{2, 3, 4}));
-
-    EXPECT_EQ(avg_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), (Shape{7, 8, 10}));
-    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), (Shape{7, 8, 10}));
-    EXPECT_EQ(avg_pool->get_output_image_shape(), (Shape{3, 2, 3}));
-
+    EXPECT_EQ(avg_pool->get_window_shape(), (Shape{2, 3, 2}));
     EXPECT_EQ(avg_pool->get_padding_below(), (Shape{0, 0, 0}));
     EXPECT_EQ(avg_pool->get_padding_above(), (Shape{0, 0, 0}));
-
-    EXPECT_EQ(avg_pool->get_window_shape(), (Shape{2, 3, 2}));
-
-    EXPECT_EQ(avg_pool->get_batch_size(), 64);
-    EXPECT_EQ(avg_pool->get_image_dimension_count(), 3);
 }
 
 TEST(type_prop, avg_pool_3d_deduce_strided_padded_small)
@@ -5616,20 +5476,9 @@ TEST(type_prop, avg_pool_3d_deduce_strided_padded_small)
     EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 9, 6, 5}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), (Strides{2, 3, 4}));
-
-    EXPECT_EQ(avg_pool->get_channel_count(), 3);
-
-    EXPECT_EQ(avg_pool->get_input_image_physical_shape(), (Shape{7, 8, 10}));
-    EXPECT_EQ(avg_pool->get_input_image_virtual_shape(), (Shape{18, 18, 19}));
-    EXPECT_EQ(avg_pool->get_output_image_shape(), (Shape{9, 6, 5}));
-
+    EXPECT_EQ(avg_pool->get_window_shape(), (Shape{2, 3, 2}));
     EXPECT_EQ(avg_pool->get_padding_below(), (Shape{5, 6, 4}));
     EXPECT_EQ(avg_pool->get_padding_above(), (Shape{6, 4, 5}));
-
-    EXPECT_EQ(avg_pool->get_window_shape(), (Shape{2, 3, 2}));
-
-    EXPECT_EQ(avg_pool->get_batch_size(), 64);
-    EXPECT_EQ(avg_pool->get_image_dimension_count(), 3);
 }
 
 TEST(type_prop, avg_pool_invalid_0d_input)
@@ -5647,9 +5496,9 @@ TEST(type_prop, avg_pool_invalid_0d_input)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Average-pool image batch input must have rank of at "
+                  std::string("Average-pool data batch input must have rank of at "
                               "least 3 (one batch axis, one channel axis, at "
-                              "least one image dimension)."));
+                              "least one spatial dimension)."));
     }
     catch (...)
     {
@@ -5672,9 +5521,9 @@ TEST(type_prop, avg_pool_invalid_1d_input)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Average-pool image batch input must have rank of at "
+                  std::string("Average-pool data batch input must have rank of at "
                               "least 3 (one batch axis, one channel axis, at "
-                              "least one image dimension)."));
+                              "least one spatial dimension)."));
     }
     catch (...)
     {
@@ -5697,9 +5546,9 @@ TEST(type_prop, avg_pool_invalid_2d_input)
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Average-pool image batch input must have rank of at "
+                  std::string("Average-pool data batch input must have rank of at "
                               "least 3 (one batch axis, one channel axis, at "
-                              "least one image dimension)."));
+                              "least one spatial dimension)."));
     }
     catch (...)
     {
@@ -5721,7 +5570,7 @@ TEST(type_prop, avg_pool_invalid_0_batch_size)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool image batch size is zero."));
+        EXPECT_EQ(error.what(), std::string("Average-pool data batch size is zero."));
     }
     catch (...)
     {
@@ -5743,8 +5592,7 @@ TEST(type_prop, avg_pool_invalid_0_channels)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string("Average-pool requires at least one image depth channel."));
+        EXPECT_EQ(error.what(), std::string("Average-pool requires at least one feature channel."));
     }
     catch (...)
     {
@@ -5766,9 +5614,10 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_many)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string(
-                      "Average-pool window shape rank does not match number of image dimensions."));
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Average-pool window shape rank does not match number of spatial dimensions."));
     }
     catch (...)
     {
@@ -5790,9 +5639,10 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_few)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(),
-                  std::string(
-                      "Average-pool window shape rank does not match number of image dimensions."));
+        EXPECT_EQ(
+            error.what(),
+            std::string(
+                "Average-pool window shape rank does not match number of spatial dimensions."));
     }
     catch (...)
     {
@@ -5817,7 +5667,7 @@ TEST(type_prop, avg_pool_invalid_movement_stride_rank)
     {
         EXPECT_EQ(error.what(),
                   std::string("Average-pool window movement stride rank does not "
-                              "match number of image dimensions."));
+                              "match number of spatial dimensions."));
     }
     catch (...)
     {
@@ -5845,7 +5695,7 @@ TEST(type_prop, avg_pool_invalid_padding_below_rank)
     {
         EXPECT_EQ(error.what(),
                   std::string("Average-pool below-padding rank does not "
-                              "match number of image dimensions."));
+                              "match number of spatial dimensions."));
     }
     catch (...)
     {
@@ -5873,7 +5723,7 @@ TEST(type_prop, avg_pool_invalid_padding_above_rank)
     {
         EXPECT_EQ(error.what(),
                   std::string("Average-pool above-padding rank does not "
-                              "match number of image dimensions."));
+                              "match number of spatial dimensions."));
     }
     catch (...)
     {
@@ -5881,7 +5731,7 @@ TEST(type_prop, avg_pool_invalid_padding_above_rank)
     }
 }
 
-TEST(type_prop, avg_pool_invalid_input_image_size_0)
+TEST(type_prop, avg_pool_invalid_input_item_size_0)
 {
     // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 0, 10});
@@ -5891,12 +5741,12 @@ TEST(type_prop, avg_pool_invalid_input_image_size_0)
         auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
 
         // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid input with zero-length image axis not detected";
+        FAIL() << "Invalid input with zero-length spatial axis not detected";
     }
     catch (const ngraph_error& error)
     {
         EXPECT_EQ(error.what(),
-                  std::string("Average-pool input image dimension is zero even after padding."));
+                  std::string("Average-pool input spatial dimension is zero even after padding."));
     }
     catch (...)
     {
@@ -5940,9 +5790,8 @@ TEST(type_prop, avg_pool_invalid_dilated_too_large)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(
-            error.what(),
-            std::string("Average-pool window shape is larger than the image even after padding."));
+        EXPECT_EQ(error.what(), std::string("Average-pool window shape is larger than the spatial "
+                                            "dimensions even after padding."));
     }
     catch (...)
     {
