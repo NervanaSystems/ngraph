@@ -3176,8 +3176,9 @@ TEST(type_prop, conv_invalid_dilated_window_too_large)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Convolution window after dilation is larger than the "
-                                            "spatial dimensions even with padding."));
+        EXPECT_EQ(error.what(),
+                  std::string("Convolution window after dilation is larger than the "
+                              "spatial dimensions even with padding."));
     }
     catch (...)
     {
@@ -5790,8 +5791,9 @@ TEST(type_prop, avg_pool_invalid_dilated_too_large)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Average-pool window shape is larger than the spatial "
-                                            "dimensions even after padding."));
+        EXPECT_EQ(error.what(),
+                  std::string("Average-pool window shape is larger than the spatial "
+                              "dimensions even after padding."));
     }
     catch (...)
     {
