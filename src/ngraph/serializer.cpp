@@ -409,8 +409,16 @@ static shared_ptr<ngraph::Function>
         }
         else if (node_op == "Dot")
         {
-            auto reduction_axes_count = node_js.at("reduction_axes_count").get<size_t>();
-            node = make_shared<op::Dot>(args[0], args[1], reduction_axes_count);
+            // For backwards compatibility, reduction_axes_count is optional.
+            try
+            {
+                auto reduction_axes_count = node_js.at("reduction_axes_count").get<size_t>();
+                node = make_shared<op::Dot>(args[0], args[1], reduction_axes_count);
+            }
+            catch (json::out_of_range)
+            {
+                node = make_shared<op::Dot>(args[0], args[1]);
+            }
         }
         else if (node_op == "Equal")
         {
@@ -514,7 +522,7 @@ static shared_ptr<ngraph::Function>
         else if (node_op == "Reduce")
         {
             auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
-            string function_name = node_js.at("reduction_function").get<string>();
+            string function_name = node_js.at("function").get<string>();
             shared_ptr<Function> f_ptr = function_map.at(function_name);
             node = make_shared<op::Reduce>(args[0], args[1], f_ptr, reduction_axes);
         }
@@ -523,7 +531,7 @@ static shared_ptr<ngraph::Function>
             auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
             auto window_movement_strides =
                 node_js.at("window_movement_strides").get<vector<size_t>>();
-            string function_name = node_js.at("reduction_function").get<string>();
+            string function_name = node_js.at("function").get<string>();
             shared_ptr<Function> f_ptr = function_map.at(function_name);
             node = make_shared<op::ReduceWindow>(
                 args[0], args[1], f_ptr, window_shape, window_movement_strides);
@@ -811,13 +819,13 @@ static json write(const Node& n)
     else if (node_op == "Reduce")
     {
         auto tmp = dynamic_cast<const op::Reduce*>(&n);
-        node["reduction_function"] = tmp->get_functions()[0]->get_name();
+        node["function"] = tmp->get_functions()[0]->get_name();
         node["reduction_axes"] = tmp->get_reduction_axes();
     }
     else if (node_op == "ReduceWindow")
     {
         auto tmp = dynamic_cast<const op::ReduceWindow*>(&n);
-        node["reduction_function"] = tmp->get_functions()[0]->get_name();
+        node["function"] = tmp->get_functions()[0]->get_name();
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
     }
