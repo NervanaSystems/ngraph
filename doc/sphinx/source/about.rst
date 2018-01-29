@@ -22,5 +22,5 @@ outputs from zero or more tensor inputs.
 Transformers compile the graph using a combination of generic and 
 platform-specific graph transformations. The result is a function that
 can be executed from the framework bridge. Under the direction of the 
-bridge, transformers may also allocate and deallocate, well as read 
-and write tensors under direction of the bridge.
+bridge, transformers may also allocate and deallocate, as well as read 
+and write tensors.
