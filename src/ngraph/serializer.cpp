@@ -308,12 +308,6 @@ static shared_ptr<ngraph::Function>
             args.push_back(node_map.at(name));
         }
 
-        vector<string> known_nodes;
-        for (auto x : node_map)
-        {
-            known_nodes.push_back(x.first);
-        }
-
         if (node_op == "Abs")
         {
             node = make_shared<op::Abs>(args[0]);
