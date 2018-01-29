@@ -85,10 +85,6 @@ if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
     # set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
 endif()
 
-if(NGRAPH_ARGON_ENABLE)
-    set(BACKEND_NAMES ${BACKEND_NAMES} "ARGON")
-endif()
-
 foreach(BACKEND_NAME ${BACKEND_NAMES})
     configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
     configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)
