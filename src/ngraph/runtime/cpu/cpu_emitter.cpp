@@ -91,7 +91,6 @@ void runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(codegen::CodeWriter& writer)
 {
     writer << "using namespace mkldnn;\n";
     writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
-    writer.emitted_mkldnn_preamble = true;
 }
 
 void runtime::cpu::CPU_Emitter::EmitNop(codegen::CodeWriter& writer,
@@ -1854,11 +1853,6 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         images_dilated = images_dilated || (s != 1);
     }
 
-    if (!writer.emitted_mkldnn_preamble)
-    {
-        EmitMKLDNNPreamble(writer);
-    }
-
     // TODO: MKLDNN streams should be static so we need to either implement
     // codegen for statics or move primitive and stream construction out
     // of the generated function and only generate code to run/rerun the stream
@@ -1982,11 +1976,6 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
     auto result_shape = out[0].get_shape();
 
     // TODO: Optimize for 1D
-
-    if (!writer.emitted_mkldnn_preamble)
-    {
-        EmitMKLDNNPreamble(writer);
-    }
 
     // TODO: Remove element type restriction
     if (arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
