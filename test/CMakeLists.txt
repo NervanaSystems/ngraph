@@ -108,7 +108,7 @@ include_directories(".")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
 
-add_executable(unit-test ${SRC})
+cuda_add_executable(unit-test ${SRC})
 
 if(MKLDNN_INCLUDE_DIR)
     target_link_libraries(unit-test mkldnn)

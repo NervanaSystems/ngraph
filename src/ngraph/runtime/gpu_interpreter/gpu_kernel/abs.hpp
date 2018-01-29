@@ -16,6 +16,7 @@
 
 #include <cmath>
 
+extern "C"
 void runVecAbs(float* arg, float* out, size_t count);
 
 namespace ngraph

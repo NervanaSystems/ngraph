@@ -209,7 +209,7 @@ endif()
     endif()
 endif()
 
-add_library(ngraph SHARED ${SRC})
+cuda_add_library(ngraph SHARED ${SRC})
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     # Generate the resource file containing all headers used by the codegen compiler
     add_custom_target(header_resource
@@ -257,7 +257,7 @@ endif()
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
 if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_LINK_LIBS)
-    target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
+    target_link_libraries(ngraph ${LLVM_LINK_LIBS})
 endif()
 
 if (APPLE)
@@ -267,25 +267,23 @@ if (APPLE)
 endif()
 
 if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
-    target_link_libraries(ngraph PRIVATE mkldnn)
+    target_link_libraries(ngraph mkldnn)
 endif()
 
 if(NGRAPH_CPU_ENABLE)
-    target_link_libraries(ngraph PRIVATE ${TBB_IMPORTED_TARGETS})
+    target_link_libraries(ngraph  ${TBB_IMPORTED_TARGETS})
 endif()
 
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
 	LIST(APPEND CUDA_NVCC_FLAGS --compiler-options -fPIC -fno-strict-aliasing -lineinfo -use_fast_math -Xptxas -dlcm=cg)
-	LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20)
-	LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_30,code=sm_30)
 	LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_35,code=sm_35)
 
-    target_link_libraries(ngraph PRIVATE cuda /usr/local/cuda/lib64/libcudart.so ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+    target_link_libraries(ngraph cuda /usr/local/cuda/lib64/libcudart.so ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 # Argon
 if (NGRAPH_ARGON_ENABLE)
-    target_link_libraries(ngraph PRIVATE argon)
+    target_link_libraries(ngraph argon)
     add_dependencies(ngraph ext_argon)
     add_dependencies(ext_argon ext_llvm)
 endif()

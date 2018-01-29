@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#idndef _CUDA_VEC_ABS_
+#ifndef _CUDA_VEC_ABS_
 #define _CUDA_VEC_ABS_
 
-#include <abs.hpp>
+#include "abs.hpp"
 #include <cuda_runtime.h>
 
 __global__ void VecAbs(float* A, float* B) 
@@ -24,6 +24,7 @@ __global__ void VecAbs(float* A, float* B)
     B[i] = A[i] < 0 ? -A[i] : A[i]; 
 } 
 
+extern "C"
 void runVecAbs(float* arg, float* out, size_t count)
 {
 	float *d_arg, *d_out;
