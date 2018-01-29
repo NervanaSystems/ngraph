@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <iostream>
 #include <string>
@@ -62,6 +63,55 @@ void runtime::gpu::GPU_Emitter::EmitAdd(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    const Shape& arg0_shape = args[0].get_shape();
+    const Shape& arg1_shape = args[1].get_shape();
+    if (arg0_shape.empty() || arg1_shape.empty())
+    {
+        auto& first = (arg0_shape.empty() ? args[0] : args[1]);
+        auto& second = (arg0_shape.empty() ? args[1] : args[0]);
+    }
+
+    // clang-format off
+    else if ((arg0_shape.size() <= 2) && (arg1_shape.size() <= 2))
+    {
+      // TODO Assert arg0_shape[0] == arg1_shape[0]?
+      writer << "{   // " << n->get_name() << "\n";
+      writer.indent++;
+      writer << "static const float alpha = 1.0;\n";
+      writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";;
+      writer << "cublasScopy("
+          << "cublas_handle,"
+          << out[0].get_size() << ","
+          << args[0].get_name() << ","
+          // Todo handle striding?
+          << "1,"
+          << out[0].get_name() << ","
+          << "1);\n";
+      writer << "cublasSaxpy("
+             << "cublas_handle,"
+             << out[0].get_size() << ","
+             << "&alpha," //alpha
+             << args[1].get_name() << ","
+        // Todo handle striding?
+             << "1,"
+             << out[0].get_name() << ","
+             << "1);\n";
+      writer.indent--;
+      writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";;
+      writer << "}\n";
+    }
+    // clang-format on
+    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
+    {
+    }
+    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
+    {
+        // GEMM Call
+    }
+    else
+    {
+        // General ND Call?
+    }
 }
 
 void runtime::gpu::GPU_Emitter::EmitConcat(codegen::CodeWriter& writer,
@@ -82,33 +132,101 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
     {
         auto& first = (arg0_shape.empty() ? args[0] : args[1]);
         auto& second = (arg0_shape.empty() ? args[1] : args[0]);
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        // clang-format off
+        writer << "cublasSdot("
+               << "cublas_handle,"
+               << second.get_size() << ","
+               << first.get_name() << ","
+               << "1,"
+               << second.get_name() << ","
+               << "1,"
+               << out[0].get_name() << ");\n";
+        // clang-format on
+        writer.indent--;
+        writer << "}\n";
     }
 
-    // clang-format off
     else if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
     {
-      // TODO Assert arg0_shape[0] == arg1_shape[0]?
-      writer << "{   // " << n->get_name() << "\n";
-      writer.indent++;
-      writer << "cublasSdot("
-          << "cublas_handle,"
-          << arg0_shape[0] << ","
-          << args[0].get_name() << ","
-          // Todo handle striding?
-          << "1,"
-          << args[1].get_name() << ","
-          << "1,"
-          << out[0].get_name() << ");\n";
-      writer.indent--;
-      writer << "}\n";
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        // clang-format off
+        writer << "cublasSdot("
+            << "cublas_handle,"
+            << arg0_shape[0] << ","
+            << args[0].get_name() << ","
+            << "1,"
+            << args[1].get_name() << ","
+            << "1,"
+            << out[0].get_name() << ");\n";
+        // clang-format on
+        writer.indent--;
+        writer << "}\n";
     }
-    // clang-format on
     else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
     {
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << "static const float alpha = 1.0;\n";
+        writer << "static const float beta  = 1.0;\n";
+        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+        ;
+        // clang-format off
+        writer << "cublasSgemv("
+            << "cublas_handle,"
+            << "CUBLAS_OP_T,"
+            << arg0_shape[0] << ","
+            << arg0_shape[1] << ","
+            << "&alpha,"                      // Alpha
+            << args[0].get_name() << ","
+            << arg0_shape[1] << ","
+            << args[1].get_name() << ","
+            << "1,"
+            << "&beta,"                      // beta
+            << out[0].get_name() << ","
+            << "1);\n";
+        // clang-format on
+        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
+        ;
+        writer.indent--;
+        writer << "}\n";
     }
     else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
     {
         // GEMM Call
+        assert(arg0_shape[0] == out[0].get_shape()[0]); // m
+        assert(arg1_shape[1] == out[0].get_shape()[1]); // n
+        assert(arg0_shape[1] == arg1_shape[0]);         // k
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << "static const float alpha = 1.0;\n";
+        writer << "static const float beta  = 0.0;\n";
+        writer << "int m = " << arg0_shape[0] << ";\n";
+        writer << "int n = " << arg1_shape[1] << ";\n";
+        writer << "int k = " << arg0_shape[0] << ";\n";
+        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+        // clang-format off
+        writer << "cublasSgemm("
+             << "cublas_handle,"
+             << "CUBLAS_OP_N,"
+             << "CUBLAS_OP_N,"
+             << "n,"
+             << "m,"
+             << "k,"
+             << "&alpha,"                      // Alpha
+             << args[1].get_name() << ","
+             << "n,"
+             << args[0].get_name() << ","
+             << "k,"
+             << "&beta,"                      // beta
+             << out[0].get_name() << ","
+             << "n);\n";
+        // clang-format on
+        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
+        writer.indent--;
+        writer << "}\n";
     }
     else
     {
@@ -171,6 +289,55 @@ void runtime::gpu::GPU_Emitter::EmitMaximum(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    const Shape& arg0_shape = args[0].get_shape();
+    const Shape& arg1_shape = args[1].get_shape();
+    // clang-format off
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
+    writer << "int count = " << out[0].get_size() << ";\n";
+    // writer << "static const float beta  = 0.0;\n";
+      writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";;
+      writer +=  R"(
+      float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
+              cudnnHandle_t cudnnHandle;
+              (cudnnCreate(&cudnnHandle));
+              cudnnTensorDescriptor_t descriptor;
+              (cudnnCreateTensorDescriptor(&descriptor));
+              (cudnnSetTensor4dDescriptor(descriptor,
+                                          /*format=*/CUDNN_TENSOR_NHWC,
+                                          /*dataType=*/CUDNN_DATA_FLOAT,
+                                          /*batch_size=*/1,
+                                          /*channels=*/1,
+                                          /*image_height=*/1,
+                                          /*image_width=*/count));
+
+              cudnnOpTensorDescriptor_t opTensorDesc;
+              (cudnnCreateOpTensorDescriptor(&opTensorDesc));
+              (cudnnSetOpTensorDescriptor(opTensorDesc,
+                                          CUDNN_OP_TENSOR_MAX,
+                                          CUDNN_DATA_FLOAT,
+                                          CUDNN_NOT_PROPAGATE_NAN));
+      )";
+
+      writer  << "cudnnOpTensor(cudnnHandle,"
+              <<                      "opTensorDesc,"
+              <<                         "&alpha1,"
+              <<                         "descriptor,"
+              <<                         args[0].get_name() << ","
+              <<                         "&alpha2,"
+              <<                         "descriptor,"
+              <<                         args[1].get_name() << ","
+              <<                         "&beta,"
+              <<                         "descriptor,"
+              <<                         out[0].get_name() << ");\n";
+
+        writer +=  R"(
+                cudnnDestroy(cudnnHandle);
+      )";
+        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";;
+        writer.indent--;
+        writer << "}\n";
+    // clang-format on
 }
 
 void runtime::gpu::GPU_Emitter::EmitMinimum(codegen::CodeWriter& writer,
@@ -238,6 +405,73 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    auto reshape = static_cast<const op::Reshape*>(n);
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
+    auto arg_shape = args[0].get_shape();
+    auto arg_rank = arg_shape.size();
+
+    auto result_shape = out[0].get_shape();
+    auto& result_element_type = out[0].get_element_type();
+
+    auto input_order = reshape->get_input_order();
+
+    bool same_layout = is_sorted(input_order.begin(), input_order.end());
+
+    size_t result_shape_product = 1;
+    for (auto i : result_shape)
+    {
+        result_shape_product *= i;
+    }
+
+    // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor,
+    //  we can just copy.
+    if (same_layout || result_shape_product < 2)
+    {
+        writer << "{   // " << n->get_name() << " 1\n";
+        writer.indent++;
+        writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", " << args[0].get_name()
+               << ", " << out[0].get_size() << "," << out[0].get_element_type().size() << ");\n";
+        writer.indent--;
+        writer << "}\n";
+    }
+    // If there *is* a layout change in the 2D case, we transpose the input.
+    else if (arg_rank == 2)
+    {
+        // clang-format off
+          // TODO Assert arg0_shape[0] == arg1_shape[0]?
+          writer << "{   // " << n->get_name() << "\n";
+          writer.indent++;
+          writer << "static const float alpha = 1.0;\n";
+          writer << "static const float beta = 0.0;\n";
+          writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";;
+          writer << "cublasSgeam("
+                 << "cublas_handle,"
+                 << "CUBLAS_OP_T,"
+                 << "CUBLAS_OP_T,"
+                 << arg_shape[0] << ","
+                 << arg_shape[1] << ","
+                 << "&alpha,"                      // Alpha
+                 << args[0].get_name() << ","
+                 << arg_shape[1] << ","
+                 << "&beta,"                      // beta
+                 << args[0].get_name() << ","
+                 << arg_shape[1] << ","
+                 << out[0].get_name() << ","
+                 << out[0].get_shape()[1] << ");\n";
+          writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";;
+          writer.indent--;
+          writer << "}\n";
+          //clang-format on
+    }
+    // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
+    else
+    {
+        throw ngraph_error(
+            "Axis permutation in reshape is not implemented yet for tensors with rank>2");
+    }
+    writer.indent--;
+    writer << "}\n";
 }
 
 void runtime::gpu::GPU_Emitter::EmitFunctionCall(
@@ -282,6 +516,36 @@ void runtime::gpu::GPU_Emitter::EmitMultiply(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    const Shape& arg0_shape = args[0].get_shape();
+    const Shape& arg1_shape = args[1].get_shape();
+    // Until we have EW kernel gen, use cuBLAS
+    // From https://stackoverflow.com/questions/7621520/element-wise-vector-vector-multiplication-in-bl as/7634831
+
+    // clang-format off
+    writer << "{   // " << n->get_name() << "\n";
+    writer.indent++;
+    writer << "static const float alpha = 1.0;\n";
+    writer << "static const float beta  = 0.0;\n";
+    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";;
+    writer << "cublasSsbmv("
+           << "cublas_handle,"
+           << "CUBLAS_FILL_MODE_LOWER," // Corresponds to FORTRAN "L"
+           // << arg0_shape[0] << ","      // N = input size
+           << "4,"      // N = input size
+           << "0,"                      // k = super-diagonal i.e. just use the diagonal of A
+           << "&alpha,"                      // Alpha
+           << args[0].get_name() << "," // vec A (broadcast to a matrix)
+           << "1,"                      // LDA = 1
+           << args[1].get_name() << "," // vector x
+           << "1,"                      // Stride x
+           << "&beta,"                      // beta
+           << out[0].get_name() << ","  // y
+           << "1"                      // Stride y
+           << ");\n";
+    writer.indent--;
+    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";;
+    writer << "}\n";
+    // clang-format on
 }
 
 void runtime::gpu::GPU_Emitter::EmitExp(codegen::CodeWriter& writer,

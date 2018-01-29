@@ -22,6 +22,8 @@ namespace ngraph
         {
             void print_gpu_f32_tensor(void* p, size_t element_count, size_t element_size);
             void check_cuda_errors(CUresult err);
+            void cuda_memcpyDtD(void* d, void* s, size_t element_count, size_t element_size);
+            void cuda_memcpyHtD(void* d, void* s, size_t buffer_size);
         }
     }
 }

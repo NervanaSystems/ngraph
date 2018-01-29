@@ -15,8 +15,10 @@
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <stddef.h>
 #include <stdio.h>
+#include <string>
 
 #include "cuda.h"
 #include "cuda_runtime.h"
@@ -41,4 +43,15 @@ void runtime::gpu::print_gpu_f32_tensor(void* p, size_t element_count, size_t el
 void runtime::gpu::check_cuda_errors(CUresult err)
 {
     assert(err == CUDA_SUCCESS);
+}
+
+void runtime::gpu::cuda_memcpyDtD(void* d, void* s, size_t element_count, size_t element_size)
+{
+    size_t size_in_bytes = element_size * element_count;
+    cudaMemcpy(d, s, size_in_bytes, cudaMemcpyDeviceToDevice);
+}
+
+void runtime::gpu::cuda_memcpyHtD(void* d, void* s, size_t buffer_size)
+{
+    cudaMemcpy(d, s, buffer_size, cudaMemcpyHostToDevice);
 }
