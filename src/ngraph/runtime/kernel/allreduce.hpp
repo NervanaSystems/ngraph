@@ -14,6 +14,11 @@
 
 #pragma once
 
+#ifdef NGRAPH_DISTRIBUTED
+
+#include <mpi.h>
+#include "ngraph/types/element_type.hpp"
+
 namespace ngraph
 {
     namespace runtime
@@ -21,16 +26,27 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void allreduce(T* arg, T* out, size_t count)
+            void allreduce(T* arg, T* out, const element::Type element_type, size_t count)
             {
-                std::cout << "Hello, I'm AllReduce!" << std::endl;
+                int data_type;
 
-                //MPI_AllReduce(arg, out, count, MPI_DATATYPE, MPI_MEAN, MPI_COMM_WORLD);
-                for (size_t i = 0; i < count; i++)
+                if (element_type == element::f32)
                 {
-                    out[i] = arg[i];
+                    data_type = MPI_FLOAT;
                 }
+                else if (element_type == element::f64)
+                {
+                    data_type = MPI_DOUBLE;
+                }
+                else
+                {
+                    throw ngraph_error("Unsupported data type");
+                }
+
+                MPI_Allreduce(arg, out, count, data_type, MPI_SUM, MPI_COMM_WORLD);
             }
         }
     }
 }
+
+#endif

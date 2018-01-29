@@ -65,12 +65,6 @@ add_subdirectory(models)
 # TODO add interpreter back to unit tests when it works
 set(BACKEND_NAMES ${BACKEND_NAMES} "INTERPRETER")
 
-if(MPI_C_INCLUDE_PATH)
-    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    set(SRC ${SRC} hetr.cpp)
-endif()
-
 if(MKLDNN_INCLUDE_DIR)
     include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})
     link_directories(${MKLDNN_LIB_DIR})
@@ -117,7 +111,9 @@ if(NGRAPH_ARGON_ENABLE)
     set(SRC ${SRC} ${ADDITIONAL_ARGON_TEST})
 endif()
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
+if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_C_INCLUDE_PATH)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
     foreach(BACKEND_NAME ${BACKEND_NAMES})
         configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
         set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp)

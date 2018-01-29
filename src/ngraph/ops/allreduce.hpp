@@ -14,6 +14,8 @@
 
 #pragma once
 
+#ifdef NGRAPH_DISTRIBUTED
+
 #include <memory>
 #include "ngraph/ops/op.hpp"
 
@@ -36,3 +38,5 @@ namespace ngraph
         };
     }
 }
+
+#endif

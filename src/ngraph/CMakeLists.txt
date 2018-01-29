@@ -35,7 +35,6 @@ set (SRC
     node.cpp
     ops/abs.cpp
     ops/add.cpp
-    ops/allreduce.cpp
     ops/avg_pool.cpp
     ops/binary_elementwise_arithmetic.cpp
     ops/binary_elementwise_comparison.cpp
@@ -190,10 +189,17 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
       "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE};")
 
-if(MPI_CXX_INCLUDE_PATH)
+if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_CXX_INCLUDE_PATH)
     include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
     link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    set(SRC ${SRC} runtime/hetr/hetr.hpp)
+
+    # Add sources for distributed ngraph
+    # and all its dependencies
+    set(SRC ${SRC}
+        ops/allreduce.cpp
+    )
+    set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+        "MPI_HEADER_PATH=\"${MPI_C_INCLUDE_PATH}\";")
 endif()
 
     # GPU backend current requires CPU because they share compiler.cpp,

@@ -45,7 +45,6 @@
 #include "ngraph/runtime/kernel/abs.hpp"
 #include "ngraph/runtime/kernel/acos.hpp"
 #include "ngraph/runtime/kernel/add.hpp"
-#include "ngraph/runtime/kernel/allreduce.hpp"
 #include "ngraph/runtime/kernel/asin.hpp"
 #include "ngraph/runtime/kernel/atan.hpp"
 #include "ngraph/runtime/kernel/avg_pool.hpp"
@@ -96,6 +95,10 @@
 #include "ngraph/runtime/kernel/tanh.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/util.hpp"
+
+#ifdef NGRAPH_DISTRIBUTED
+#include "ngraph/runtime/kernel/allreduce.hpp"
+#endif
 
 namespace ngraph
 {
@@ -236,12 +239,15 @@ private:
                            reinterpret_cast<T*>(out[0]->get_data_ptr()),
                            out[0]->get_element_count());
         }
+#ifdef NGRAPH_DISTRIBUTED
         else if (node_op == "AllReduce")
         {
             kernel::allreduce<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                                  reinterpret_cast<T*>(out[0]->get_data_ptr()),
-                                 out[0]->get_element_count());
+                                 args[0]->get_element_type(),
+                                 args[0]->get_element_count());
         }
+#endif
         else if (node_op == "Asin")
         {
             kernel::asin<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),

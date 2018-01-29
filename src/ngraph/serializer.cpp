@@ -19,7 +19,6 @@
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/acos.hpp"
 #include "ngraph/ops/add.hpp"
-#include "ngraph/ops/allreduce.hpp"
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
@@ -71,6 +70,10 @@
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/util.hpp"
+
+#ifdef NGRAPH_DISTRIBUTED
+#include "ngraph/ops/allreduce.hpp"
+#endif
 
 using namespace ngraph;
 using namespace std;
@@ -325,10 +328,12 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Add>(args[0], args[1]);
         }
+#ifdef NGRAPH_DISTRIBUTED
         else if (node_op == "AllReduce")
         {
             node = make_shared<op::AllReduce>(args[0]);
         }
+#endif
         else if (node_op == "Asin")
         {
             node = make_shared<op::Asin>(args[0]);

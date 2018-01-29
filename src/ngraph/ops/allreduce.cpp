@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#ifdef NGRAPH_DISTRIBUTED
+
 #include "ngraph/ops/allreduce.hpp"
 
 using namespace std;
@@ -24,3 +26,5 @@ op::AllReduce::AllReduce(const std::shared_ptr<Node>& arg)
     set_value_type_checked(
         make_shared<TensorViewType>(input.get_element_type(), input.get_shape()));
 }
+
+#endif
