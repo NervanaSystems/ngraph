@@ -404,14 +404,15 @@ static shared_ptr<ngraph::Function>
         else if (node_op == "Dot")
         {
             // For backwards compatibility, reduction_axes_count is optional.
-            try
-            {
-                auto reduction_axes_count = node_js.at("reduction_axes_count").get<size_t>();
-                node = make_shared<op::Dot>(args[0], args[1], reduction_axes_count);
-            }
-            catch (json::out_of_range)
+            auto obj = node_js["reduction_axes_count"];
+            if (obj.empty())
             {
                 node = make_shared<op::Dot>(args[0], args[1]);
+            }
+            else
+            {
+                size_t reduction_axes_count = obj.get<size_t>();
+                node = make_shared<op::Dot>(args[0], args[1], reduction_axes_count);
             }
         }
         else if (node_op == "Equal")
