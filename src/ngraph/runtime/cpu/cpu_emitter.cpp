@@ -63,6 +63,36 @@ static string eigen_matrix_format(const ngraph::Shape& shape, const ngraph::Stri
     return ss.str();
 }
 
+// Mapping from POD types to MKLDNN data types
+// An empty string implies the corresponding MKLDNN data type
+// is not supported
+static const unordered_map<string, const string> mkldnn_data_type_map{
+    {"char", "memory::data_type::s8"},
+    {"float", "memory::data_type::f32"},
+    {"double", ""},
+    {"int8_t", "memory::data_type::s8"},
+    {"int16_t", "memory::data_type::s16"},
+    {"int32_t", "memory::data_type::s32"},
+    {"int64_t", ""},
+    {"uint8_t", "memory::data_type::u8"},
+    {"uint16_t", ""},
+    {"uint32_t", ""},
+    {"uint64_t", ""}};
+
+static const string& get_mkldnn_data_type(const string& type)
+{
+    auto it = mkldnn_data_type_map.find(type);
+    if (it == mkldnn_data_type_map.end() || it->second.empty())
+        throw ngraph_error("No MKLDNN data type exists for the given element type");
+    return it->second;
+}
+
+void runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(codegen::CodeWriter& writer)
+{
+    writer << "using namespace mkldnn;\n";
+    writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
+}
+
 void runtime::cpu::CPU_Emitter::EmitNop(codegen::CodeWriter& writer,
                                         const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
@@ -1823,16 +1853,18 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         images_dilated = images_dilated || (s != 1);
     }
 
+    // TODO(jmenon): MKLDNN streams should be static so we need to either implement
+    // codegen for statics or move primitive and stream construction out
+    // of the generated function and only generate code to run/rerun the stream
+
     if (!filter_dilated && !images_dilated && arg0_rank == 4 && arg1_rank == 4 &&
         args[0].get_element_type() == element::f32)
     {
-        string et = "memory::data_type::f32";
+        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
 
         writer << "{\n";
         writer.indent++;
-        writer << "using namespace mkldnn;\n";
 
-        writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
         writer << "auto input_data_desc = memory::desc({" << join(arg0_shape) << "}, " << et
                << ", memory::format::nchw);\n";
         writer << "auto weights_desc = memory::desc({" << join(arg1_shape) << "}, " << et
@@ -1870,13 +1902,11 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
             window_dilation_strides_adjusted.push_back(s - 1);
         }
 
-        string et = "memory::data_type::f32";
+        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
 
         writer << "{\n";
         writer.indent++;
-        writer << "using namespace mkldnn;\n";
 
-        writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
         writer << "auto input_data_desc = memory::desc({" << join(arg0_shape) << "}, " << et
                << ", memory::format::nchw);\n";
         writer << "auto weights_desc = memory::desc({" << join(arg1_shape) << "}, " << et
@@ -1941,14 +1971,52 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
     auto max_pool = static_cast<const op::MaxPool*>(n);
 
     auto arg_shape = args[0].get_shape();
+    auto arg_rank = arg_shape.size();
+
     auto result_shape = out[0].get_shape();
 
-    writer << "kernel::max_pool<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-    writer << "                 " << out[0].get_name() << ",\n";
-    writer << "                 {" << join(arg_shape) << "},\n";
-    writer << "                 {" << join(result_shape) << "},\n";
-    writer << "                 {" << join(max_pool->get_window_shape()) << "},\n";
-    writer << "                 {" << join(max_pool->get_window_movement_strides()) << "});\n";
+    // TODO(jmenon): Optimize for 1D
+
+    // TODO(jmenon): Remove element type restriction
+    if (arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
+        args[0].get_element_type() == element::f32)
+    {
+        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+
+        writer << "{\n";
+        writer.indent++;
+
+        writer << "auto input_data_desc = memory::desc({" << join(arg_shape) << "}, " << et
+               << ", memory::format::nchw);\n";
+        writer << "auto result_desc = memory::desc({" << join(result_shape) << "}, " << et
+               << ", memory::format::nchw);\n";
+
+        writer << "auto input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+               << ");\n";
+        writer << "auto result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
+
+        // TODO(jmenon): Use a workspace
+        writer << "auto max_pooling = pooling_forward({"
+               << "{prop_kind::forward_inference, algorithm::pooling_max, "
+               << "input_data_desc, result_desc, {" << join(max_pool->get_window_movement_strides())
+               << "}, {" << join(max_pool->get_window_shape()) << "}, {0, 0}, "
+               << "{0, 0}, padding_kind::zero}, cpu_engine}, "
+               << "input_data, result);\n";
+
+        writer << "auto s = stream(stream::kind::eager);\n"
+               << "s.submit({max_pooling}).wait();\n";
+        writer.indent--;
+        writer << "}\n";
+    }
+    else
+    {
+        writer << "kernel::max_pool<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        writer << "                 " << out[0].get_name() << ",\n";
+        writer << "                 {" << join(arg_shape) << "},\n";
+        writer << "                 {" << join(result_shape) << "},\n";
+        writer << "                 {" << join(max_pool->get_window_shape()) << "},\n";
+        writer << "                 {" << join(max_pool->get_window_movement_strides()) << "});\n";
+    }
 }
 
 void runtime::cpu::CPU_Emitter::EmitReverse(codegen::CodeWriter& writer,
@@ -2077,16 +2145,59 @@ void runtime::cpu::CPU_Emitter::EmitAvgPool(codegen::CodeWriter& writer,
     auto avg_pool = static_cast<const op::AvgPool*>(n);
 
     auto arg_shape = args[0].get_shape();
+    auto arg_rank = arg_shape.size();
+
     auto result_shape = out[0].get_shape();
 
-    writer << "kernel::avg_pool<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-    writer << "                 " << out[0].get_name() << ",\n";
-    writer << "                 {" << join(arg_shape) << "},\n";
-    writer << "                 {" << join(result_shape) << "},\n";
-    writer << "                 {" << join(avg_pool->get_window_shape()) << "},\n";
-    writer << "                 {" << join(avg_pool->get_window_movement_strides()) << "},\n";
-    writer << "                 {" << join(avg_pool->get_padding_below()) << "},\n";
-    writer << "                 {" << join(avg_pool->get_padding_above()) << "});\n";
+    // TODO(jmenon): Refactor into an MKLDNN Pooling emitter that handles
+    // all pooling variants
+
+    // TODO(jmenon): Optimize for 1D
+
+    // TODO(jmenon): Remove element type restriction
+    if (arg_rank == 4 && avg_pool->get_window_shape().size() == 2 &&
+        args[0].get_element_type() == element::f32)
+    {
+        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+
+        writer << "{\n";
+        writer.indent++;
+
+        writer << "auto input_data_desc = memory::desc({" << join(arg_shape) << "}, " << et
+               << ", memory::format::nchw);\n";
+        writer << "auto result_desc = memory::desc({" << join(result_shape) << "}, " << et
+               << ", memory::format::nchw);\n";
+
+        writer << "auto input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+               << ");\n";
+        writer << "auto result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
+
+        // TODO(jmenon): Use a workspace
+        writer << "auto avg_pooling = pooling_forward({"
+               << "{prop_kind::forward_inference, algorithm::pooling_avg, "
+               << "input_data_desc, result_desc, {" << join(avg_pool->get_window_movement_strides())
+               << "}, {" << join(avg_pool->get_window_shape()) << "}, "
+               << "{" << join(avg_pool->get_padding_below()) << "}, "
+               << "{" << join(avg_pool->get_padding_above()) << "}, "
+               << "padding_kind::zero}, cpu_engine}, "
+               << "input_data, result);\n";
+
+        writer << "auto s = stream(stream::kind::eager);\n"
+               << "s.submit({avg_pooling}).wait();\n";
+        writer.indent--;
+        writer << "}\n";
+    }
+    else
+    {
+        writer << "kernel::avg_pool<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        writer << "                 " << out[0].get_name() << ",\n";
+        writer << "                 {" << join(arg_shape) << "},\n";
+        writer << "                 {" << join(result_shape) << "},\n";
+        writer << "                 {" << join(avg_pool->get_window_shape()) << "},\n";
+        writer << "                 {" << join(avg_pool->get_window_movement_strides()) << "},\n";
+        writer << "                 {" << join(avg_pool->get_padding_below()) << "},\n";
+        writer << "                 {" << join(avg_pool->get_padding_above()) << "});\n";
+    }
 }
 
 void runtime::cpu::CPU_Emitter::EmitPad(codegen::CodeWriter& writer,

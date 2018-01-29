@@ -481,6 +481,8 @@ using namespace ngraph::runtime;
             writer << "tbb::flow::graph G;\n\n";
         }
 
+        runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(writer);
+
         bool temporaries_used = false;
         size_t worst_case_tmp_size = 0;
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
