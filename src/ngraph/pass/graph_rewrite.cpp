@@ -253,14 +253,15 @@ void ngraph::pass::CPUFusion::construct_gemm_pattern()
 
 void ngraph::pass::CPUFusion::construct_fprop_bn(){
 
-            // construct varaiance
+        // construct varaiance
         auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
         auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
         auto input_sq = std::make_shared<op::Multiply>(input, input);
         auto sum_input = std::make_shared<op::Sum>(input, AxisSet{0});
-        auto input_sum_sq = std::make_shared<op::Multiply>(sum_input, sum_input);
-        auto avg_input_sum_sq = std::make_shared<op::Divide>(input_sum_sq, N);
-        auto xmu = std::make_shared<op::Subtract>(sum_input, avg_input_sum_sq);
+        auto square_sumed_input = std::make_shared<op::Multiply>(sum_input, sum_input);
+        auto sum_squared_input = std::make_shared<op::Sum>(input_sq, AxisSet{0});
+        auto avg_input_sum_sq = std::make_shared<op::Divide>(square_sumed_input, N);
+        auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
         auto variance  = std::make_shared<op::Divide>(xmu, N);
         auto variance_label = std::make_shared<pattern::op::Label>(variance, nullptr, Nodes{variance});
         auto variance_with_broadcast = std::make_shared<op::Broadcast>(variance_label, Shape{2, 3}, AxisSet{0});

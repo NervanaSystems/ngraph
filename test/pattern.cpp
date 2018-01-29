@@ -349,13 +349,13 @@ public:
         auto avg_input_sum_sq = std::make_shared<op::Divide>(square_sumed_input, N);
         auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
         auto variance  = std::make_shared<op::Divide>(xmu, N);
-        //auto variance_label = std::make_shared<pattern::op::Label>(variance);//, nullptr, Nodes{variance});
-        auto variance_with_broadcast = std::make_shared<op::Broadcast>(variance, Shape{2, 3}, AxisSet{0});
+        auto variance_label = std::make_shared<pattern::op::Label>(variance, nullptr, Nodes{variance});
+        auto variance_with_broadcast = std::make_shared<op::Broadcast>(variance_label, Shape{2, 3}, AxisSet{0});
 
         // construct mean
         auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
         auto mean = std::make_shared<op::Divide>(sum_input1, N);
-        auto mean_label = std::make_shared<pattern::op::Label>(mean);//, nullptr, Nodes{mean});
+        auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, Nodes{mean});
         auto mean_with_broadcast = std::make_shared<op::Broadcast>(mean_label, Shape{2, 3}, AxisSet{0});
         auto input_diff_mean = std::make_shared<op::Subtract>(input, mean_with_broadcast);
 
@@ -380,14 +380,14 @@ public:
         auto add_beta =  std::make_shared<op::Add>(beta_with_broadcast, multiply_gamma);
         // This completes fprop bn pattern
 
-        ngraph::pattern::gr_callback_fn callback = [mean_label, input, eps_label, gamma_label, beta_label](pattern::Matcher& m) {
+        ngraph::pattern::gr_callback_fn callback = [variance_label, mean_label, input, eps_label, gamma_label, beta_label](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
                          << m.match_root()->get_name();
 
             std::shared_ptr<Node> nn = nullptr;
             //TODO - add assert's based on the matched node
             auto pattern_map = m.get_pattern_map();
-            //NGRAPH_DEBUG << "Variance: " << pattern_map[variance_label]->get_name();
+            NGRAPH_DEBUG << "Variance: " << pattern_map[variance_label]->get_name();
             NGRAPH_DEBUG << "Mean: "  <<  pattern_map[mean_label]->get_name();
             NGRAPH_DEBUG << "eps: " << pattern_map[eps_label]->get_name();
             NGRAPH_DEBUG << "gamma: " << pattern_map[gamma_label]->get_name();
@@ -438,123 +438,115 @@ TEST(pattern, graph_rewrite)
     pass::Manager pass_manager;
     pass_manager.register_pass<TestGraphRewrite>();
 
-    // {
-    //     auto a = make_shared<op::Parameter>(element::i32, shape);
-    //     auto b = make_shared<op::Parameter>(element::i32, shape);
-    //     auto c = make_shared<op::Parameter>(element::i32, shape);
-    //     auto iconst0 = construct_constant_node(0);
-    //     auto graph_a = a + iconst0;
-    //     auto graph_b = b + iconst0;
+    {
+        auto a = make_shared<op::Parameter>(element::i32, shape);
+        auto b = make_shared<op::Parameter>(element::i32, shape);
+        auto c = make_shared<op::Parameter>(element::i32, shape);
+        auto iconst0 = construct_constant_node(0);
+        auto graph_a = a + iconst0;
+        auto graph_b = b + iconst0;
 
-    //     auto f = std::make_shared<Function>(ngraph::Nodes{a, b, graph_a, c, graph_b},
-    //                                         op::Parameters{a, b, c});
-    //     pass_manager.run_passes(f);
+        auto f = std::make_shared<Function>(ngraph::Nodes{a, b, graph_a, c, graph_b},
+                                            op::Parameters{a, b, c});
+        pass_manager.run_passes(f);
 
-    //     ASSERT_TRUE(graph_a->get_output_inputs(0).empty());
-    //     ASSERT_TRUE(graph_b->get_output_inputs(0).empty());
+        ASSERT_TRUE(graph_a->get_output_inputs(0).empty());
+        ASSERT_TRUE(graph_b->get_output_inputs(0).empty());
 
-    //     auto expected = ngraph::Nodes{a, b, a, c, b};
-    //     ASSERT_TRUE(f->get_results() == expected);
-    // }
+        auto expected = ngraph::Nodes{a, b, a, c, b};
+        ASSERT_TRUE(f->get_results() == expected);
+    }
 
-    // {
-    //     auto a = make_shared<op::Parameter>(element::i32, shape);
-    //     auto b = make_shared<op::Parameter>(element::i32, shape);
-    //     auto iconst0 = construct_constant_node(0);
-    //     auto sum = (a + iconst0);
-    //     auto graph = b + sum;
-    //     run_passes(pass_manager, graph, {a, b});
-    //     ASSERT_EQ(graph->get_input_ops().at(1), a);
-    //     ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
-    //               &a->get_outputs().at(0)); //graph's input points to a's output
-    //     ASSERT_TRUE(sum->get_output_inputs(0)
-    //                     .empty()); //graph's input is removed from sum's output.get_inputs()
-    //     ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-    //         &graph->get_inputs().at(1))); //a's output feeds into graph's input
-    // }
+    {
+        auto a = make_shared<op::Parameter>(element::i32, shape);
+        auto b = make_shared<op::Parameter>(element::i32, shape);
+        auto iconst0 = construct_constant_node(0);
+        auto sum = (a + iconst0);
+        auto graph = b + sum;
+        run_passes(pass_manager, graph, {a, b});
+        ASSERT_EQ(graph->get_input_ops().at(1), a);
+        ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
+                  &a->get_outputs().at(0)); //graph's input points to a's output
+        ASSERT_TRUE(sum->get_output_inputs(0)
+                        .empty()); //graph's input is removed from sum's output.get_inputs()
+        ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
+            &graph->get_inputs().at(1))); //a's output feeds into graph's input
+    }
 
-    // {
-    //     auto a = make_shared<op::Parameter>(element::i32, shape);
-    //     auto b = make_shared<op::Parameter>(element::i32, shape);
-    //     auto iconst1 = construct_constant_node(1);
-    //     auto mul = (a * iconst1);
-    //     auto graph = b + mul;
-    //     run_passes(pass_manager, graph, {a, b});
-    //     ASSERT_EQ(graph->get_input_ops().at(1), a);
-    //     ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
-    //               &a->get_outputs().at(0)); //graph's input points to a's output
-    //     ASSERT_TRUE(mul->get_outputs()
-    //                     .at(0)
-    //                     .get_inputs()
-    //                     .empty()); //graph's input is removed from sum's output.get_inputs()
-    //     ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-    //         &graph->get_inputs().at(1))); //a's output feeds into graph's input
-    // }
+    {
+        auto a = make_shared<op::Parameter>(element::i32, shape);
+        auto b = make_shared<op::Parameter>(element::i32, shape);
+        auto iconst1 = construct_constant_node(1);
+        auto mul = (a * iconst1);
+        auto graph = b + mul;
+        run_passes(pass_manager, graph, {a, b});
+        ASSERT_EQ(graph->get_input_ops().at(1), a);
+        ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
+                  &a->get_outputs().at(0)); //graph's input points to a's output
+        ASSERT_TRUE(mul->get_outputs()
+                        .at(0)
+                        .get_inputs()
+                        .empty()); //graph's input is removed from sum's output.get_inputs()
+        ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
+            &graph->get_inputs().at(1))); //a's output feeds into graph's input
+    }
 
-    // {
-    //     auto a = make_shared<op::Parameter>(element::i32, shape);
-    //     auto b = make_shared<op::Parameter>(element::i32, shape);
-    //     auto iconst1 = construct_constant_node(1);
-    //     auto graph = ((((a * iconst1) * iconst1) * iconst1) * iconst1) + b;
-    //     run_passes(pass_manager, graph, {a, b});
-    //     ASSERT_EQ(graph->get_input_ops().at(0), a);
-    //     ASSERT_EQ(&graph->get_inputs().at(0).get_output(),
-    //               &a->get_outputs().at(0)); //graph's input points to a's output
-    //     ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-    //         &graph->get_inputs().at(0))); //a's output feeds into graph's input
-    // }
+    {
+        auto a = make_shared<op::Parameter>(element::i32, shape);
+        auto b = make_shared<op::Parameter>(element::i32, shape);
+        auto iconst1 = construct_constant_node(1);
+        auto graph = ((((a * iconst1) * iconst1) * iconst1) * iconst1) + b;
+        run_passes(pass_manager, graph, {a, b});
+        ASSERT_EQ(graph->get_input_ops().at(0), a);
+        ASSERT_EQ(&graph->get_inputs().at(0).get_output(),
+                  &a->get_outputs().at(0)); //graph's input points to a's output
+        ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
+            &graph->get_inputs().at(0))); //a's output feeds into graph's input
+    }
 
-    // {
-    //     auto a = make_shared<op::Parameter>(element::i32, shape);
-    //     auto b = make_shared<op::Parameter>(element::i32, shape);
-    //     auto iconst0 = construct_constant_node(0);
-    //     auto iconst1 = construct_constant_node(1);
-    //     auto graph = b + (iconst0 + ((a + iconst0) * iconst1));
-    //     run_passes(pass_manager, graph, {a, b});
-    //     ASSERT_EQ(graph->get_input_ops().at(1), a);
-    //     ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
-    //               &a->get_outputs().at(0)); //graph's input points to a's output
-    //     ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-    //         &graph->get_inputs().at(1))); //a's output feeds into graph's input
-    // }
+    {
+        auto a = make_shared<op::Parameter>(element::i32, shape);
+        auto b = make_shared<op::Parameter>(element::i32, shape);
+        auto iconst0 = construct_constant_node(0);
+        auto iconst1 = construct_constant_node(1);
+        auto graph = b + (iconst0 + ((a + iconst0) * iconst1));
+        run_passes(pass_manager, graph, {a, b});
+        ASSERT_EQ(graph->get_input_ops().at(1), a);
+        ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
+                  &a->get_outputs().at(0)); //graph's input points to a's output
+        ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
+            &graph->get_inputs().at(1))); //a's output feeds into graph's input
+    }
 
-    // {
-    //     auto a = make_shared<op::Parameter>(element::i32, shape);
-    //     auto b = make_shared<op::Parameter>(element::i32, shape);
-    //     auto iconst1 = construct_constant_node(1);
-    //     auto graph = b + (iconst1 * (iconst1 * (iconst1 * (iconst1 * a))));
-    //     run_passes(pass_manager, graph, {a, b});
-    //     ASSERT_EQ(graph->get_input_ops().at(1), a);
-    //     ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
-    //               &a->get_outputs().at(0)); //graph's input points to a's output
-    //     ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
-    //         &graph->get_inputs().at(1))); //a's output feeds into graph's input
-    // }
+    {
+        auto a = make_shared<op::Parameter>(element::i32, shape);
+        auto b = make_shared<op::Parameter>(element::i32, shape);
+        auto iconst1 = construct_constant_node(1);
+        auto graph = b + (iconst1 * (iconst1 * (iconst1 * (iconst1 * a))));
+        run_passes(pass_manager, graph, {a, b});
+        ASSERT_EQ(graph->get_input_ops().at(1), a);
+        ASSERT_EQ(&graph->get_inputs().at(1).get_output(),
+                  &a->get_outputs().at(0)); //graph's input points to a's output
+        ASSERT_TRUE(a->get_outputs().at(0).get_inputs().count(
+            &graph->get_inputs().at(1))); //a's output feeds into graph's input
+    }
 
-    // //Sum rewrite
-    // {
-    //     auto parm = make_shared<op::Parameter>(element::i32, Shape{2, 2});
-    //     auto axes = AxisSet{0, 1};
-    //     auto sum_graph = xla_sum(parm, axes);
-    //     auto innermost_abs = make_shared<op::Abs>(sum_graph);
+    //Sum rewrite
+    {
+        auto parm = make_shared<op::Parameter>(element::i32, Shape{2, 2});
+        auto axes = AxisSet{0, 1};
+        auto sum_graph = xla_sum(parm, axes);
+        auto innermost_abs = make_shared<op::Abs>(sum_graph);
 
-    //     auto nested_sum_graph = make_shared<op::Abs>(
-    //         make_shared<op::Abs>(make_shared<op::Abs>(make_shared<op::Abs>(innermost_abs))));
+        auto nested_sum_graph = make_shared<op::Abs>(
+            make_shared<op::Abs>(make_shared<op::Abs>(make_shared<op::Abs>(innermost_abs))));
 
-    //     run_passes(pass_manager, nested_sum_graph, {parm});
-    //     auto sum = std::dynamic_pointer_cast<op::Sum>(innermost_abs->get_input_op(0));
-    //     ASSERT_TRUE(sum);
-    //     ASSERT_EQ(sum->get_reduction_axes(), axes);
-    //     ASSERT_EQ(sum->get_input_op(0), parm);
-    // }
-
-    // // test mean
-    // {
-       
-
-    //     run_passes(pass_manager, add_beta, {});
-    //     //TODO: add asserts based on the return type
-    // }
+        run_passes(pass_manager, nested_sum_graph, {parm});
+        auto sum = std::dynamic_pointer_cast<op::Sum>(innermost_abs->get_input_op(0));
+        ASSERT_TRUE(sum);
+        ASSERT_EQ(sum->get_reduction_axes(), axes);
+        ASSERT_EQ(sum->get_input_op(0), parm);
+    }
 
     // test fprop_bn 
     {
@@ -878,12 +870,10 @@ TEST(batchnorm, remove_transposes)
 TEST(batchnorm,  fuse_fprop_bn)
 {
     pass::Manager pass_manager;
-    
-    //pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("bn_before.png");
+    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_before_fusion.png");
     pass_manager.register_pass<pass::CPUFusion>();
     pass_manager.register_pass<TestGraphRewrite>();
-    pass_manager.register_pass<pass::VisualizeTree>("bn_after.png");
+    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_after_fusion.png");
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/bn_fprop.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
@@ -895,12 +885,10 @@ TEST(batchnorm,  fuse_fprop_bn)
 TEST(batchnorm,  fuse_bprop_bn)
 {
     pass::Manager pass_manager;
-    
-    //pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("bn_bprop_before.png");
+    pass_manager.register_pass<pass::VisualizeTree>("bn_bprop_before_fusion.png");
     pass_manager.register_pass<pass::CPUFusion>();
     pass_manager.register_pass<TestGraphRewrite>();
-    pass_manager.register_pass<pass::VisualizeTree>("bn_bprop_after.png");
+    pass_manager.register_pass<pass::VisualizeTree>("bn_bprop_after.after.png");
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/bn_bprop.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
