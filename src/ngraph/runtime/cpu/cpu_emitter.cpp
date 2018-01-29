@@ -1853,7 +1853,7 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         images_dilated = images_dilated || (s != 1);
     }
 
-    // TODO: MKLDNN streams should be static so we need to either implement
+    // TODO(jmenon): MKLDNN streams should be static so we need to either implement
     // codegen for statics or move primitive and stream construction out
     // of the generated function and only generate code to run/rerun the stream
 
@@ -1975,9 +1975,9 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
 
     auto result_shape = out[0].get_shape();
 
-    // TODO: Optimize for 1D
+    // TODO(jmenon): Optimize for 1D
 
-    // TODO: Remove element type restriction
+    // TODO(jmenon): Remove element type restriction
     if (arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
         args[0].get_element_type() == element::f32)
     {
@@ -1995,7 +1995,7 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
                << ");\n";
         writer << "auto result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
 
-        // TODO: Use a workspace
+        // TODO(jmenon): Use a workspace
         writer << "auto max_pooling = pooling_forward({"
                << "{prop_kind::forward_inference, algorithm::pooling_max, "
                << "input_data_desc, result_desc, {" << join(max_pool->get_window_movement_strides())
