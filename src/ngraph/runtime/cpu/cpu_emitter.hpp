@@ -95,6 +95,8 @@ namespace ngraph
                 static void EMITTER_DECL(EmitAvgPool);
                 static void EMITTER_DECL(EmitPad);
 
+                static void EmitMKLDNNPreamble(codegen::CodeWriter& writer);
+
             private:
                 static std::string emit_vector(const TensorViewWrapper&,
                                                const std::string& name = "");
