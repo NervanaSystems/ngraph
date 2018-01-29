@@ -126,13 +126,15 @@ Build the Documentation
 
 Right now the minimal version of Sphinx needed to build the documentation is 
 Sphinx v. 1.6.5.  This can be installed with `pip3`, either to a virtual 
-environment, or to your base system if you plan to contribute much to docs.    
+environment, or to your base system if you plan to contribute much to docs.
+`Breathe`_ can also be installed to build C++ API documentation (currently WIP).      
 
 To build documentation locally, run: 
 
    .. code-block:: console
 
-      $ pip3 install breathe
+      $ pip3 install [-I] Sphinx==1.6.5 [--user] 
+      $ pip3 install [-I] breathe [--user]
       $ cd doc/sphinx/
       $ make html
 
@@ -143,5 +145,6 @@ For tips similar to this, see the `sphinx`_ stable reST documentation.
 .. _documentation repo: https://github.com/NervanaSystems/ngraph/tree/master/doc
 .. _sphinx: http://www.sphinx-doc.org/en/stable/rest.html
 .. _wiki: https://github.com/NervanaSystems/ngraph/wiki/
+.. _Breathe: https://breathe.readthedocs.io/en/latest/
 
 

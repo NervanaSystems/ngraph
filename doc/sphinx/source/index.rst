@@ -14,11 +14,8 @@
 .. ---------------------------------------------------------------------------
 
 
-Intel nGraph
-============
-
-An open-source C++ library for evolving deep learning 
-------------------------------------------------------
+Intel nGraph library project
+============================
 
 Intel nGraph library provides a suite of components to promote computational 
 efficiency and enable portability of Deep Neural Network (DNN) models defined in 

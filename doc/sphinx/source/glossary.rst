@@ -24,3 +24,8 @@ Glossary
        In the context of a function graph, the term "result" refers to what 
        stands in for the returned *value*.
 
+   step
+       An abstract "action" that produces zero or more tensor outputs from zero or more tensor 
+       inputs. Steps correspond to *ops* that connect *nodes*.
+           
+
