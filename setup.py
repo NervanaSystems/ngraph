@@ -189,6 +189,7 @@ class BuildExt(build_ext):
 requirements = [
     "setuptools",
     "six",
+    "numpy" 
 ]
 
 
@@ -201,7 +202,6 @@ setup(
     license='License :: OSI Approved :: Apache Software License',
     description='Python wrapper for ngraph',
     long_description='',
-    packages=['ngraph_api'],
     ext_modules=ext_modules,
     packages = find_packages(exclude=['pybind11', 'build', 'test']),
     cmdclass={'build_ext': BuildExt},
