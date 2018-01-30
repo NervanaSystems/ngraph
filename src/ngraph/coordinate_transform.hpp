@@ -67,7 +67,7 @@ namespace ngraph
         size_t index(const Coordinate& c) const;
         bool has_source_coordinate(const Coordinate& c) const;
         Coordinate to_source_coordinate(const Coordinate& c) const;
-        Coordinate get_target_shape() const;
+        Shape get_target_shape() const;
 
         Shape get_source_shape() { return m_source_shape; }
         Coordinate get_source_start_corner() { return m_source_start_corner; }

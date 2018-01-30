@@ -368,7 +368,7 @@ bool CoordinateTransform::has_source_coordinate(const Coordinate& c_target) cons
     return true;
 }
 
-Coordinate CoordinateTransform::get_target_shape() const
+Shape CoordinateTransform::get_target_shape() const
 {
     return m_target_shape;
 }

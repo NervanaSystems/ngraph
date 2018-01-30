@@ -39,34 +39,34 @@ namespace ngraph
                 {
                     // Our output coordinate O will have the form:
                     //
-                    //   (img,chan,i_1,...,i_n)
+                    //   (N,chan,i_1,...,i_n)
 
-                    size_t img_index = out_coord[0];
+                    size_t batch_index = out_coord[0];
                     size_t channel = out_coord[1];
 
-                    // For the input images we need to iterate the coordinate:
+                    // For the input data we need to iterate the coordinate:
                     //
                     //   I:
                     //
                     // over the range (noninclusive on the right):
                     //
-                    //   (img,chan,s_1*i_1,s_2*i_2,...,s_n*i_n) ->
+                    //   (N,chan,s_1*i_1,s_2*i_2,...,s_n*i_n) ->
                     //
-                    //     (img+1,chan+1,s_1*i_1 + window_shape_1,...,s_n*i_n + window_shape_n)
+                    //     (N+1,chan+1,s_1*i_1 + window_shape_1,...,s_n*i_n + window_shape_n)
                     //
                     // with unit stride.
 
-                    size_t n_image_dimensions = arg_shape.size() - 2;
+                    size_t n_spatial_dimensions = arg_shape.size() - 2;
 
-                    Coordinate input_batch_transform_start(2 + n_image_dimensions);
-                    Coordinate input_batch_transform_end(2 + n_image_dimensions);
+                    Coordinate input_batch_transform_start(2 + n_spatial_dimensions);
+                    Coordinate input_batch_transform_end(2 + n_spatial_dimensions);
 
-                    input_batch_transform_start[0] = img_index;
-                    input_batch_transform_end[0] = img_index + 1;
+                    input_batch_transform_start[0] = batch_index;
+                    input_batch_transform_end[0] = batch_index + 1;
                     input_batch_transform_start[1] = channel;
                     input_batch_transform_end[1] = channel + 1;
 
-                    for (size_t i = 2; i < n_image_dimensions + 2; i++)
+                    for (size_t i = 2; i < n_spatial_dimensions + 2; i++)
                     {
                         size_t window_shape_this_dim = window_shape[i - 2];
                         size_t movement_stride = window_movement_strides[i - 2];

@@ -1,5 +1,18 @@
 # API Changes
 
+## Changes to convolution and pooling ops
+
+* Backprop ops have been added for convolution ops.
+* The convolution and pooling ops have had several methods/fields renamed, to reflect a shift
+  in terminology from "images" to "data". Generally this just means that you will have to
+  `s/image_batch/data_batch/` and `s/image_dilation_strides/data_dilation_strides/`.
+* The following functions have been removed:
+  + `AvgPool`: `get_channel_count get_input_image_physical_shape get_input_image_virtual_shape get_output_image_shape get_batch_size get_image_dimension_count`
+  + `MaxPool`: `get_channel_count get_input_image_shape get_output_image_shape get_batch_size get_image_dimension_count`
+  + `Convolution`: `get_input_channel_count get_output_channel_count get_input_image_physical_shape get_input_image_virtual_shape get_output_image_shape get_window_physical_shape get_window_virtual_shape get_batch_size get_image_dimension_count`
+
+  All of the above information can be inferred from the shapes and parameters of the op.
+
 ## Negative convolution padding
 
 `Convolution` now allows negative padding. This means that the `padding_below` and `padding_above`
