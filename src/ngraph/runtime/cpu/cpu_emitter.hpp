@@ -85,6 +85,8 @@ namespace ngraph
                 static void EMITTER_DECL(EmitCeiling);
                 static void EMITTER_DECL(EmitSqrt);
                 static void EMITTER_DECL(EmitConvolution);
+                static void EMITTER_DECL(EmitConvolutionBackpropFilters);
+                static void EMITTER_DECL(EmitConvolutionBackpropData);
                 static void EMITTER_DECL(EmitNot);
                 static void EMITTER_DECL(EmitMaxPool);
                 static void EMITTER_DECL(EmitReverse);
