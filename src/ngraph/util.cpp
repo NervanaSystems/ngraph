@@ -251,7 +251,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     }
 
     // get clone bprop parameters
-    std::vector<std::shared_ptr<op::Parameter>> bprop_input_params;
+    op::Parameters bprop_input_params;
     for (auto param : adjoints)
     {
         bprop_input_params.push_back(

@@ -32,7 +32,7 @@ namespace ngraph
         }
 
         Coordinate(const Shape& shape)
-            : VectorForwarder<size_t, Coordinate>(shape.get_vector())
+            : VectorForwarder<size_t, Coordinate>(static_cast<const std::vector<size_t>&>(shape))
         {
         }
 

@@ -38,7 +38,6 @@ public:
     using reverse_iterator = typename vector_t::reverse_iterator;
     using value_type = typename vector_t::value_type;
 
-    const vector_t& get_vector() const { return m_vector; }
     reference at(size_type n) { return m_vector.at(n); }
     const_reference at(size_type n) const { return m_vector.at(n); }
     iterator begin() { return m_vector.begin(); }

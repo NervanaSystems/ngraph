@@ -24,7 +24,7 @@ using namespace std;
 // Function to take a vector of data, say 1,2,3 and return
 // a string representing multi-index access, i.e "[1][2][3]"
 template <typename T>
-string emit_bracketed_string(vector<T> data)
+string emit_bracketed_string(T data)
 {
     stringstream ss;
 
@@ -47,7 +47,7 @@ string recast_tmp_var(codegen::CodeWriter& writer,
                       const string& tmp_name)
 {
     string nd_name = writer.generate_temporary_name(tmp_name);
-    string bracketed_shape = emit_bracketed_string(arg_shape.get_vector());
+    string bracketed_shape = emit_bracketed_string(arg_shape);
 
     writer << element_type << "(&" << nd_name << ")" << bracketed_shape << " = *reinterpret_cast<"
            << element_type << "(*)" << bracketed_shape << ">(" << arg_name << ");\n";
@@ -306,7 +306,7 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
     }
     else
     {
-        writer << element_type << " residual" << emit_bracketed_string(out_shape.get_vector())
+        writer << element_type << " residual" << emit_bracketed_string(out_shape)
                << ";\n";
         auto output_vars = open_for_loops(writer, out_shape);
 
