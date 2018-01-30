@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <iterator>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 //#include <pybind11/operators.h>
