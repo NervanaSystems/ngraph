@@ -29,7 +29,7 @@ namespace ngraph
 
     namespace pattern
     {
-        using gr_callback_fn = std::function<void(class Matcher& m)>;
+        using gr_callback_fn = std::function<std::shared_ptr<Node>(class Matcher& m)>;
 
         namespace op
         {
@@ -60,7 +60,7 @@ namespace ngraph
             /// \param graph_node is an input graph to be matched against
             bool match(const std::shared_ptr<Node>& graph_node);
 
-            void process_match(gr_callback_fn callback = nullptr);
+            std::shared_ptr<Node> process_match(gr_callback_fn callback = nullptr);
 
             void reset() {}
             std::shared_ptr<Node> pattern_node() { return m_pattern_node; }

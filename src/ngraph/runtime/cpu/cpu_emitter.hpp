@@ -60,6 +60,7 @@ namespace ngraph
                 static void EMITTER_DECL(EmitSelect);
                 static void EMITTER_DECL(EmitSubtract);
                 static void EMITTER_DECL(EmitBroadcast);
+                static void EMITTER_DECL(EmitMatmulBias);
                 static void EMITTER_DECL(EmitConvert);
                 static void EMITTER_DECL(EmitConstant);
                 static void EMITTER_DECL(EmitReshape);
@@ -85,6 +86,8 @@ namespace ngraph
                 static void EMITTER_DECL(EmitCeiling);
                 static void EMITTER_DECL(EmitSqrt);
                 static void EMITTER_DECL(EmitConvolution);
+                static void EMITTER_DECL(EmitConvolutionBackpropFilters);
+                static void EMITTER_DECL(EmitConvolutionBackpropData);
                 static void EMITTER_DECL(EmitNot);
                 static void EMITTER_DECL(EmitMaxPool);
                 static void EMITTER_DECL(EmitReverse);
@@ -92,6 +95,8 @@ namespace ngraph
                 static void EMITTER_DECL(EmitSelectAndScatter);
                 static void EMITTER_DECL(EmitAvgPool);
                 static void EMITTER_DECL(EmitPad);
+
+                static void EmitMKLDNNPreamble(codegen::CodeWriter& writer);
 
             private:
                 static std::string emit_vector(const TensorViewWrapper&,

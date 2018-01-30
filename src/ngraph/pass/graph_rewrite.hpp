@@ -40,19 +40,21 @@ namespace ngraph
 /// Patterns can be added by using \sa add_matcher
 /// Callbacks should use \sa replace_node to transform matched sub graphs
 
-class ngraph::pass::GraphRewrite : public CallGraphPass
+class ngraph::pass::GraphRewrite : public FunctionPass
 {
 public:
     GraphRewrite()
-        : CallGraphPass()
+        : FunctionPass()
     {
     }
 
     void add_matcher(std::shared_ptr<pattern::Matcher> m) { m_matchers.push_back(m); }
-    virtual bool run_on_call_graph(const std::list<std::shared_ptr<ngraph::Node>>&) override;
     static bool
         run_matchers_on_nodes_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes,
-                                   const std::vector<std::shared_ptr<pattern::Matcher>>& matchers);
+                                   const std::vector<std::shared_ptr<pattern::Matcher>>& matchers,
+                                   std::shared_ptr<ngraph::Function> f);
+
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
 private:
     //enable cascading rewrites

@@ -19,6 +19,7 @@
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
+#include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/ceiling.hpp"
 #include "ngraph/ops/concatenate.hpp"
@@ -47,12 +48,16 @@
 #include "ngraph/ops/not.hpp"
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/one_hot.hpp"
+#include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select.hpp"
+#include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/sign.hpp"
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
@@ -301,7 +306,6 @@ static shared_ptr<ngraph::Function>
         vector<string> node_inputs = node_js.at("inputs").get<vector<string>>();
         vector<string> node_outputs = node_js.at("outputs").get<vector<string>>();
         shared_ptr<Node> node;
-        shared_ptr<Function> function_ptr = nullptr;
         vector<shared_ptr<Node>> args;
         for (const string& name : node_inputs)
         {
@@ -327,6 +331,16 @@ static shared_ptr<ngraph::Function>
         else if (node_op == "Atan")
         {
             node = make_shared<op::Atan>(args[0]);
+        }
+        else if (node_op == "AvgPool")
+        {
+            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+            auto window_movement_strides =
+                node_js.at("window_movement_strides").get<vector<size_t>>();
+            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+            node = make_shared<op::AvgPool>(
+                args[0], window_shape, window_movement_strides, padding_below, padding_above);
         }
         else if (node_op == "Broadcast")
         {
@@ -365,12 +379,79 @@ static shared_ptr<ngraph::Function>
                 node_js.at("window_dilation_strides").get<vector<size_t>>();
             auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
             auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
-            node = make_shared<op::Convolution>(args[0],
-                                                args[1],
-                                                window_movement_strides,
-                                                window_dilation_strides,
-                                                padding_below,
-                                                padding_above);
+
+            // For backwards compatibility, we accept "image_dilation_strides" in place of
+            // "data_dilation_strides", and we also allow it to be omitted altogether.
+            auto data_dilation_strides_maybe = node_js["data_dilation_strides"];
+            if (data_dilation_strides_maybe.empty())
+            {
+                data_dilation_strides_maybe = node_js["image_dilation_strides"];
+            }
+
+            if (data_dilation_strides_maybe.empty())
+            {
+                node = make_shared<op::Convolution>(args[0],
+                                                    args[1],
+                                                    window_movement_strides,
+                                                    window_dilation_strides,
+                                                    padding_below,
+                                                    padding_above);
+            }
+            else
+            {
+                node = make_shared<op::Convolution>(
+                    args[0],
+                    args[1],
+                    window_movement_strides,
+                    window_dilation_strides,
+                    padding_below,
+                    padding_above,
+                    data_dilation_strides_maybe.get<std::vector<size_t>>());
+            }
+        }
+        else if (node_op == "ConvolutionBackpropData")
+        {
+            auto data_batch_shape = node_js.at("data_batch_shape").get<vector<size_t>>();
+            auto window_movement_strides_forward =
+                node_js.at("window_movement_strides_forward").get<vector<size_t>>();
+            auto window_dilation_strides_forward =
+                node_js.at("window_dilation_strides_forward").get<vector<size_t>>();
+            auto padding_below_forward =
+                node_js.at("padding_below_forward").get<vector<std::ptrdiff_t>>();
+            auto padding_above_forward =
+                node_js.at("padding_above_forward").get<vector<std::ptrdiff_t>>();
+            auto data_dilation_strides_forward =
+                node_js.at("data_dilation_strides_forward").get<vector<size_t>>();
+            node = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
+                                                            args[0],
+                                                            args[1],
+                                                            window_movement_strides_forward,
+                                                            window_dilation_strides_forward,
+                                                            padding_below_forward,
+                                                            padding_above_forward,
+                                                            data_dilation_strides_forward);
+        }
+        else if (node_op == "ConvolutionBackpropFilters")
+        {
+            auto filters_shape = node_js.at("filters_shape").get<vector<size_t>>();
+            auto window_movement_strides_forward =
+                node_js.at("window_movement_strides_forward").get<vector<size_t>>();
+            auto window_dilation_strides_forward =
+                node_js.at("window_dilation_strides_forward").get<vector<size_t>>();
+            auto padding_below_forward =
+                node_js.at("padding_below_forward").get<vector<std::ptrdiff_t>>();
+            auto padding_above_forward =
+                node_js.at("padding_above_forward").get<vector<std::ptrdiff_t>>();
+            auto data_dilation_strides_forward =
+                node_js.at("data_dilation_strides_forward").get<vector<size_t>>();
+            node = make_shared<op::ConvolutionBackpropFilters>(args[0],
+                                                               filters_shape,
+                                                               args[1],
+                                                               window_movement_strides_forward,
+                                                               window_dilation_strides_forward,
+                                                               padding_below_forward,
+                                                               padding_above_forward,
+                                                               data_dilation_strides_forward);
         }
         else if (node_op == "Cos")
         {
@@ -386,7 +467,17 @@ static shared_ptr<ngraph::Function>
         }
         else if (node_op == "Dot")
         {
-            node = make_shared<op::Dot>(args[0], args[1]);
+            // For backwards compatibility, reduction_axes_count is optional.
+            auto obj = node_js["reduction_axes_count"];
+            if (obj.empty())
+            {
+                node = make_shared<op::Dot>(args[0], args[1]);
+            }
+            else
+            {
+                size_t reduction_axes_count = obj.get<size_t>();
+                node = make_shared<op::Dot>(args[0], args[1], reduction_axes_count);
+            }
         }
         else if (node_op == "Equal")
         {
@@ -467,6 +558,14 @@ static shared_ptr<ngraph::Function>
             auto one_hot_axis = node_js.at("one_hot_axis").get<size_t>();
             node = make_shared<op::OneHot>(args[0], shape, one_hot_axis);
         }
+        else if (node_op == "Pad")
+        {
+            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+            auto padding_interior = node_js.at("padding_interior").get<vector<size_t>>();
+            node = make_shared<op::Pad>(
+                args[0], args[1], padding_below, padding_above, padding_interior);
+        }
         else if (node_op == "Parameter")
         {
             auto type_node_js =
@@ -482,7 +581,19 @@ static shared_ptr<ngraph::Function>
         else if (node_op == "Reduce")
         {
             auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
-            node = make_shared<op::Reduce>(args[0], args[1], function_ptr, reduction_axes);
+            string function_name = node_js.at("function").get<string>();
+            shared_ptr<Function> f_ptr = function_map.at(function_name);
+            node = make_shared<op::Reduce>(args[0], args[1], f_ptr, reduction_axes);
+        }
+        else if (node_op == "ReduceWindow")
+        {
+            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+            auto window_movement_strides =
+                node_js.at("window_movement_strides").get<vector<size_t>>();
+            string function_name = node_js.at("function").get<string>();
+            shared_ptr<Function> f_ptr = function_map.at(function_name);
+            node = make_shared<op::ReduceWindow>(
+                args[0], args[1], f_ptr, window_shape, window_movement_strides);
         }
         else if (node_op == "Remainder")
         {
@@ -502,9 +613,33 @@ static shared_ptr<ngraph::Function>
             auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
             node = make_shared<op::Reshape>(args[0], input_order, output_shape);
         }
+        else if (node_op == "Reverse")
+        {
+            auto reversed_axes = node_js.at("reversed_axes").get<set<size_t>>();
+            node = make_shared<op::Reverse>(args[0], reversed_axes);
+        }
         else if (node_op == "Select")
         {
             node = make_shared<op::Select>(args[0], args[1], args[2]);
+        }
+        else if (node_op == "SelectAndScatter")
+        {
+            string selection_function_name = node_js.at("selection_function").get<string>();
+            shared_ptr<Function> selection_f_ptr = function_map.at(selection_function_name);
+            string scatter_function_name = node_js.at("scatter_function").get<string>();
+            shared_ptr<Function> scatter_f_ptr = function_map.at(scatter_function_name);
+
+            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+            auto window_movement_strides =
+                node_js.at("window_movement_strides").get<vector<size_t>>();
+
+            node = make_shared<op::SelectAndScatter>(args[0],
+                                                     args[1],
+                                                     args[2],
+                                                     selection_f_ptr,
+                                                     scatter_f_ptr,
+                                                     window_shape,
+                                                     window_movement_strides);
         }
         else if (node_op == "Sign")
         {
@@ -606,6 +741,14 @@ static json write(const Node& n)
     else if (node_op == "Atan")
     {
     }
+    else if (node_op == "AvgPool")
+    {
+        auto tmp = dynamic_cast<const op::AvgPool*>(&n);
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+    }
     else if (node_op == "Broadcast")
     {
         auto tmp = dynamic_cast<const op::Broadcast*>(&n);
@@ -639,6 +782,27 @@ static json write(const Node& n)
         node["window_dilation_strides"] = tmp->get_window_dilation_strides();
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
+        node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+    }
+    else if (node_op == "ConvolutionBackpropData")
+    {
+        auto tmp = dynamic_cast<const op::ConvolutionBackpropData*>(&n);
+        node["data_batch_shape"] = tmp->get_data_batch_shape();
+        node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
+        node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
+        node["padding_below_forward"] = tmp->get_padding_below_forward();
+        node["padding_above_forward"] = tmp->get_padding_above_forward();
+        node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
+    }
+    else if (node_op == "ConvolutionBackpropFilters")
+    {
+        auto tmp = dynamic_cast<const op::ConvolutionBackpropFilters*>(&n);
+        node["filters_shape"] = tmp->get_filters_shape();
+        node["window_movement_strides_forward"] = tmp->get_window_movement_strides_forward();
+        node["window_dilation_strides_forward"] = tmp->get_window_dilation_strides_forward();
+        node["padding_below_forward"] = tmp->get_padding_below_forward();
+        node["padding_above_forward"] = tmp->get_padding_above_forward();
+        node["data_dilation_strides_forward"] = tmp->get_data_dilation_strides_forward();
     }
     else if (node_op == "Cos")
     {
@@ -651,6 +815,8 @@ static json write(const Node& n)
     }
     else if (node_op == "Dot")
     {
+        auto tmp = dynamic_cast<const op::Dot*>(&n);
+        node["reduction_axes_count"] = tmp->get_reduction_axes_count();
     }
     else if (node_op == "Equal")
     {
@@ -713,6 +879,13 @@ static json write(const Node& n)
         node["shape"] = tmp->get_shape();
         node["one_hot_axis"] = tmp->get_one_hot_axis();
     }
+    else if (node_op == "Pad")
+    {
+        auto tmp = dynamic_cast<const op::Pad*>(&n);
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+        node["padding_interior"] = tmp->get_padding_interior();
+    }
     else if (node_op == "Parameter")
     {
         auto tmp = dynamic_cast<const op::Parameter*>(&n);
@@ -727,6 +900,13 @@ static json write(const Node& n)
         auto tmp = dynamic_cast<const op::Reduce*>(&n);
         node["function"] = tmp->get_functions()[0]->get_name();
         node["reduction_axes"] = tmp->get_reduction_axes();
+    }
+    else if (node_op == "ReduceWindow")
+    {
+        auto tmp = dynamic_cast<const op::ReduceWindow*>(&n);
+        node["function"] = tmp->get_functions()[0]->get_name();
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
     }
     else if (node_op == "Remainder")
     {
@@ -744,8 +924,21 @@ static json write(const Node& n)
         node["input_order"] = tmp->get_input_order();
         node["output_shape"] = tmp->get_output_shape();
     }
+    else if (node_op == "Reverse")
+    {
+        auto tmp = dynamic_cast<const op::Reverse*>(&n);
+        node["reversed_axes"] = tmp->get_reversed_axes();
+    }
     else if (node_op == "Select")
     {
+    }
+    else if (node_op == "SelectAndScatter")
+    {
+        auto tmp = dynamic_cast<const op::SelectAndScatter*>(&n);
+        node["selection_function"] = tmp->get_functions()[0]->get_name();
+        node["scatter_function"] = tmp->get_functions()[1]->get_name();
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
     }
     else if (node_op == "Sign")
     {
