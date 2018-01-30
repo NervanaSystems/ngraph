@@ -1904,17 +1904,17 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         filter_dilated = filter_dilated || (s != 1);
     }
 
-    bool images_dilated = false;
-    for (size_t s : convolution->get_image_dilation_strides())
+    bool data_dilated = false;
+    for (size_t s : convolution->get_data_dilation_strides())
     {
-        images_dilated = images_dilated || (s != 1);
+        data_dilated = data_dilated || (s != 1);
     }
 
     // TODO(jmenon): MKLDNN streams should be static so we need to either implement
     // codegen for statics or move primitive and stream construction out
     // of the generated function and only generate code to run/rerun the stream
 
-    if (!filter_dilated && !images_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+    if (!filter_dilated && !data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
         args[0].get_element_type() == element::f32)
     {
         const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
@@ -1947,7 +1947,7 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         writer.indent--;
         writer << "}\n";
     }
-    else if (filter_dilated && !images_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+    else if (filter_dilated && !data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
              args[0].get_element_type() == element::f32)
     {
         // For dilation, MKLDNN wants to know how many elements to insert between, not how far
@@ -2005,9 +2005,73 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
                << "},\n";
         writer << "                         {" << join(convolution->get_padding_below()) << "},\n";
         writer << "                         {" << join(convolution->get_padding_above()) << "},\n";
-        writer << "                         {" << join(convolution->get_image_dilation_strides())
-               << "});\n";
+        writer << "                         {" << join(convolution->get_data_dilation_strides())
+               << "},\n";
+        writer << "                         0, 1, 1, 0, 0, 1, false);\n";
     }
+}
+
+void runtime::cpu::CPU_Emitter::EmitConvolutionBackpropFilters(
+    codegen::CodeWriter& writer,
+    const ngraph::Node* n,
+    const vector<runtime::cpu::TensorViewWrapper>& args,
+    const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto convolution = static_cast<const op::ConvolutionBackpropFilters*>(n);
+
+    auto arg0_shape = args[0].get_shape();
+    auto arg1_shape = args[1].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    writer << "kernel::convolution<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    writer << "                         " << args[1].get_name() << ",\n";
+    writer << "                         " << out[0].get_name() << ",\n";
+    writer << "                         {" << join(arg0_shape) << "},\n";
+    writer << "                         {" << join(arg1_shape) << "},\n";
+    writer << "                         {" << join(result_shape) << "},\n";
+    writer << "                         {"
+           << join(convolution->get_window_movement_strides_backward()) << "},\n";
+    writer << "                         {"
+           << join(convolution->get_window_dilation_strides_backward()) << "},\n";
+    writer << "                         {" << join(convolution->get_padding_below_backward())
+           << "},\n";
+    writer << "                         {" << join(convolution->get_padding_above_backward())
+           << "},\n";
+    writer << "                         {"
+           << join(convolution->get_data_dilation_strides_backward()) << "},\n";
+    writer << "                         1, 0, 0, 1, 1, 0, false);\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitConvolutionBackpropData(
+    codegen::CodeWriter& writer,
+    const ngraph::Node* n,
+    const vector<runtime::cpu::TensorViewWrapper>& args,
+    const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto convolution = static_cast<const op::ConvolutionBackpropData*>(n);
+
+    auto arg0_shape = args[0].get_shape();
+    auto arg1_shape = args[1].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    // Note that args[1] and args[0] are switched here from the usual order.
+    writer << "kernel::convolution<" << out[0].get_type() << ">(" << args[1].get_name() << ",\n";
+    writer << "                         " << args[0].get_name() << ",\n";
+    writer << "                         " << out[0].get_name() << ",\n";
+    writer << "                         {" << join(arg1_shape) << "},\n";
+    writer << "                         {" << join(arg0_shape) << "},\n";
+    writer << "                         {" << join(result_shape) << "},\n";
+    writer << "                         {"
+           << join(convolution->get_window_movement_strides_backward()) << "},\n";
+    writer << "                         {"
+           << join(convolution->get_window_dilation_strides_backward()) << "},\n";
+    writer << "                         {" << join(convolution->get_padding_below_backward())
+           << "},\n";
+    writer << "                         {" << join(convolution->get_padding_above_backward())
+           << "},\n";
+    writer << "                         {"
+           << join(convolution->get_data_dilation_strides_backward()) << "},\n";
+    writer << "                         0, 1, 0, 1, 0, 1, true);\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitNot(codegen::CodeWriter& writer,
