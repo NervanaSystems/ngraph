@@ -49,8 +49,8 @@ static std::vector<T> apply_permutation(std::vector<T> input, ngraph::AxisVector
 
 void ngraph::pass::Simplification::construct_identity_reshape_pattern()
 {
-    auto shape_op = Shape{3};
-    auto shape_r1 = Shape{1, 3};
+    Shape shape_op {3};
+    Shape shape_r1 {1, 3};
 
     auto op = std::make_shared<pattern::op::Label>(element::f32, shape_op);
     auto reshape1 = std::make_shared<op::Reshape>(op, AxisVector{0}, shape_r1);
@@ -60,7 +60,7 @@ void ngraph::pass::Simplification::construct_identity_reshape_pattern()
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        std::shared_ptr<ngraph::Node> nn = nullptr;
+        std::shared_ptr<ngraph::Node> nn;
         auto gop = pattern_map[op];
 
         auto r1 = std::dynamic_pointer_cast<op::Reshape>(m.match_root());
@@ -89,8 +89,8 @@ void ngraph::pass::Simplification::construct_identity_reshape_pattern()
 
 void ngraph::pass::Simplification::construct_reshapex2_pattern()
 {
-    auto shape_op = Shape{3};
-    auto shape_r1 = Shape{1, 3};
+    Shape shape_op {3};
+    Shape shape_r1 {1, 3};
 
     auto op = std::make_shared<pattern::op::Label>(element::f32, shape_op);
     auto reshape1 = std::make_shared<op::Reshape>(op, AxisVector{0}, shape_r1);
