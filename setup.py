@@ -17,35 +17,41 @@ from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
 import os
+import distutils.ccompiler
 
 __version__ = '0.0.1'
 
 
-# Parallel build from http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
+# Parallel build from:
+# http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
 # monkey-patch for parallel compilation
-def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=None, debug=0, extra_preargs=None, extra_postargs=None, depends=None):
+def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=None,
+                     debug=0, extra_preargs=None, extra_postargs=None, depends=None):
     # those lines are copied from distutils.ccompiler.CCompiler directly
-    macros, objects, extra_postargs, pp_opts, build = self._setup_compile(output_dir, macros, include_dirs, sources, depends, extra_postargs)
+    macros, objects, extra_postargs, pp_opts, build = self._setup_compile(
+        output_dir, macros, include_dirs, sources, depends, extra_postargs)
     cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
     # parallel code
     import multiprocessing.pool
+
     def _single_compile(obj):
-        try: src, ext = build[obj]
-        except KeyError: return
+        try:
+            src, ext = build[obj]
+        except KeyError:
+            return
         self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
     # convert to list, imap is evaluated on-demand
-    list(multiprocessing.pool.ThreadPool().imap(_single_compile,objects))
+    list(multiprocessing.pool.ThreadPool().imap(_single_compile, objects))
     return objects
-import distutils.ccompiler
-distutils.ccompiler.CCompiler.compile=parallelCCompile
+
+
+distutils.ccompiler.CCompiler.compile = parallelCCompile
 
 
 # As of Python 3.6, CCompiler has a `has_flag` method.
 # cf http://bugs.python.org/issue26689
 def has_flag(compiler, flagname):
-    """Return a boolean indicating whether a flag name is supported on
-    the specified compiler.
-    """
+    """Return a boolean indicating whether a flag name is supported on the specified compiler."""
     import tempfile
     with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
         f.write('int main (int argc, char **argv) { return 0; }')
@@ -70,9 +76,9 @@ def cpp_flag(compiler):
                            'is needed!')
 
 
-if "NGRAPH_CPP_BUILD_PATH" in os.environ:
-    NGRAPH_CPP_INCLUDE_DIR = os.environ["NGRAPH_CPP_BUILD_PATH"] + "/include"
-    NGRAPH_CPP_LIBRARY_DIR = os.environ["NGRAPH_CPP_BUILD_PATH"] + "/lib"
+if 'NGRAPH_CPP_BUILD_PATH' in os.environ:
+    NGRAPH_CPP_INCLUDE_DIR = os.environ['NGRAPH_CPP_BUILD_PATH'] + '/include'
+    NGRAPH_CPP_LIBRARY_DIR = os.environ['NGRAPH_CPP_BUILD_PATH'] + '/lib'
 else:
     raise RuntimeError('NGRAPH_CPP_BUILD_PATH must be defined')
 
@@ -137,58 +143,57 @@ sources = ['pyngraph/function.cpp',
            'pyngraph/types/type.cpp',
            ]
 
-include_dirs = [# Path to pybind11 headers
-                "pybind11/include",
-                NGRAPH_CPP_INCLUDE_DIR,
-                ".",
-               ]
+include_dirs = [  # Path to pybind11 headers
+    'pybind11/include',
+    NGRAPH_CPP_INCLUDE_DIR,
+    '.',
+]
 
-library_dirs = [NGRAPH_CPP_LIBRARY_DIR,
-               ]
+library_dirs = [NGRAPH_CPP_LIBRARY_DIR]
 
-libraries    = ["ngraph",
-               ]
+libraries = ['ngraph']
 
 extra_compile_args = []
 
 extra_link_args = []
 
-data_files = [('lib', [NGRAPH_CPP_LIBRARY_DIR + "/" + library for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR)]),]
+data_files = [('lib', [NGRAPH_CPP_LIBRARY_DIR + '/' +
+                       library for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR)])]
 
 ext_modules = [Extension(
-                   '_pyngraph',
-                   sources = sources,
-                   include_dirs = include_dirs,
-                   define_macros = [("VERSION_INFO", __version__)],
-                   library_dirs = library_dirs,
-                   libraries = libraries,
-                   extra_link_args = extra_link_args,
-                   language = "c++",
-                   )
-              ]
+    '_pyngraph',
+    sources=sources,
+    include_dirs=include_dirs,
+    define_macros=[('VERSION_INFO', __version__)],
+    library_dirs=library_dirs,
+    libraries=libraries,
+    extra_link_args=extra_link_args,
+    language='c++',
+),
+]
 
 
 class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
+
     def build_extensions(self):
-        ct = self.compiler.compiler_type
         for ext in self.extensions:
             ext.extra_compile_args += [cpp_flag(self.compiler)]
             if has_flag(self.compiler, '-frtti'):
                 ext.extra_compile_args += ['-frtti']
             if sys.platform == 'darwin':
                 ext.extra_compile_args += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
-                ext.extra_link_args += ["-Wl,-rpath,@loader_path/../.."]
+                ext.extra_link_args += ['-Wl,-rpath,@loader_path/../..']
             else:
                 if has_flag(self.compiler, '-fvisibility=hidden'):
                     ext.extra_compile_args += ['-fvisibility=hidden']
-                ext.extra_link_args += ["-Wl,-rpath,$ORIGIN/../.."]
+                ext.extra_link_args += ['-Wl,-rpath,$ORIGIN/../..']
         build_ext.build_extensions(self)
 
 
 requirements = [
-    "setuptools",
-    "six",
+    'setuptools',
+    'six',
 ]
 
 
@@ -202,9 +207,9 @@ setup(
     description='Python wrapper for ngraph',
     long_description='',
     ext_modules=ext_modules,
-    packages = find_packages(exclude=['pybind11', 'build', 'test']),
+    packages=find_packages(exclude=['pybind11', 'build', 'test']),
     cmdclass={'build_ext': BuildExt},
-    data_files = data_files,
-    install_requires = requirements,
+    data_files=data_files,
+    install_requires=requirements,
     zip_safe=False,
 )

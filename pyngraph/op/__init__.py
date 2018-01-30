@@ -15,14 +15,6 @@
 
 import sys
 import six
-# workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
-else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)
 
 from _pyngraph.op import Abs
 from _pyngraph.op import Acos
@@ -67,7 +59,6 @@ from _pyngraph.op import Subtract
 from _pyngraph.op import Sum
 from _pyngraph.op import Tan
 from _pyngraph.op import Tanh
-
 from _pyngraph.op import RequiresTensorViewArgs
 from _pyngraph.op import UnaryElementwise
 from _pyngraph.op import UnaryElementwiseArithmetic
@@ -75,5 +66,11 @@ from _pyngraph.op import BinaryElementwise
 from _pyngraph.op import BinaryElementwiseComparison
 from _pyngraph.op import BinaryElementwiseArithmetic
 
-
-
+# workaround to load the libngraph.so with RTLD_GLOBAL
+if six.PY3:
+    import os
+    flags = os.RTLD_NOW | os.RTLD_GLOBAL
+else:
+    import ctypes
+    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
+sys.setdlopenflags(flags)

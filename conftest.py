@@ -16,8 +16,8 @@ import pytest
 
 
 def pytest_addoption(parser):
-    parser.addoption("--backend", default="INTERPRETER", choices=["INTERPRETER", "CPU", "GPU"],
-                     help="Select from available backends")
+    parser.addoption('--backend', default='INTERPRETER',
+                     choices=['INTERPRETER', 'CPU', 'GPU'], help='Select from available backends')
 
 
 def pass_method(*args, **kwargs):
@@ -25,7 +25,6 @@ def pass_method(*args, **kwargs):
 
 
 def pytest_configure(config):
-    config.gpu_skip = pytest.mark.skipif(config.getvalue("backend") == "GPU")
-    config.cpu_skip = pytest.mark.skipif(config.getvalue("backend") == "CPU")
-    config.interpreter_skip = pytest.mark.skipif(config.getvalue("backend") == "INTERPRETER")
-
+    config.gpu_skip = pytest.mark.skipif(config.getvalue('backend') == 'GPU')
+    config.cpu_skip = pytest.mark.skipif(config.getvalue('backend') == 'CPU')
+    config.interpreter_skip = pytest.mark.skipif(config.getvalue('backend') == 'INTERPRETER')

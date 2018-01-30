@@ -15,6 +15,10 @@
 
 import sys
 import six
+from _pyngraph import Function
+from _pyngraph import Node
+from _pyngraph import Type
+from _pyngraph import TensorViewType
 # workaround to load the libngraph.so with RTLD_GLOBAL
 if six.PY3:
     import os
@@ -23,8 +27,3 @@ else:
     import ctypes
     flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
 sys.setdlopenflags(flags)
-
-from _pyngraph import Function
-from _pyngraph import Node
-from _pyngraph import Type
-from _pyngraph import TensorViewType

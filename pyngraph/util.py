@@ -15,6 +15,9 @@
 
 import sys
 import six
+
+from _pyngraph import util
+
 # workaround to load the libngraph.so with RTLD_GLOBAL
 if six.PY3:
     import os
@@ -24,7 +27,4 @@ else:
     flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
 sys.setdlopenflags(flags)
 
-from _pyngraph import util
-
 numpy_to_c = util.numpy_to_c
-

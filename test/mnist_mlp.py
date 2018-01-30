@@ -69,6 +69,7 @@ def transpose(op, order):
 def relu(op):
     return Maximum(op, makeFloat32ConstantLike(0., op))
 
+
 # Flatten
 X1 = Reshape(Input, [0, 1, 2], [bz, 784])
 

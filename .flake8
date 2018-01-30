@@ -1,0 +1,16 @@
+[flake8]
+max-line-length=100
+exclude=.git,venv,build,venv2,venv3,pybind11
+max-complexity=7
+# ignore:
+# D100 - Missing docstring in public module
+# D101 - Missing docstring in public class
+# D102 - Missing docstring in public method
+# D103 - Missing docstring in public function
+# D104 - Missing docstring in public package
+# D105 - Missing docstring in magic method
+# D107 - Missing docstring in __init__
+# D400 - First line should end with a period.
+# F401 - module imported but unused
+ignore=D100,D101,D102,D103,D104,D105,D107,D400,F401
+

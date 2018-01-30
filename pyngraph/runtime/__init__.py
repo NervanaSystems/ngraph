@@ -15,6 +15,13 @@
 
 import sys
 import six
+
+from _pyngraph.runtime import Backend
+from _pyngraph.runtime import CallFrame
+from _pyngraph.runtime import ExternalFunction
+from _pyngraph.runtime import Manager
+from _pyngraph.runtime import TensorView
+
 # workaround to load the libngraph.so with RTLD_GLOBAL
 if six.PY3:
     import os
@@ -23,10 +30,3 @@ else:
     import ctypes
     flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
 sys.setdlopenflags(flags)
-
-from _pyngraph.runtime import Backend
-from _pyngraph.runtime import CallFrame
-from _pyngraph.runtime import ExternalFunction
-from _pyngraph.runtime import Manager
-from _pyngraph.runtime import TensorView
-

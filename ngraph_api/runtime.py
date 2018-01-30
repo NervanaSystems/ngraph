@@ -27,9 +27,10 @@ log = logging.getLogger(__file__)
 
 
 def runtime(manager_name: str='INTERPRETER') -> 'Runtime':
-    """Helper factory to create a Runtime object.
+    """Create a Runtime object (helper factory).
 
-    Use signature to parametrize runtime as needed."""
+    Use signature to parametrize runtime as needed.
+    """
     return Runtime(manager_name)
 
 
@@ -66,10 +67,9 @@ class Computation:
         return '<Computation: {}({})>'.format(self.node.name, params_string)
 
     def __call__(self, *input_values: py_numeric_type) -> py_numeric_type:
-        """This is a quick and dirty implementation of the logic needed to calculate and return
-        a value of the computation."""
+        """Q&D logic implementation needed to calculate and return a value of the computation."""
         for tensor_view, value in zip(self.tensor_views, input_values):
-            if not type(value) == np.ndarray:
+            if not isinstance(value, np.ndarray):
                 value = np.array(value)
             Computation._write_ndarray_to_tensor_view(value, tensor_view)
 
@@ -77,7 +77,8 @@ class Computation:
         result_shape = self.node.get_shape()
         result_dtype = get_dtype(result_element_type)
 
-        result_view = self.runtime.backend.make_primary_tensor_view(result_element_type, result_shape)
+        result_view = self.runtime.backend.make_primary_tensor_view(
+            result_element_type, result_shape)
         result_arr = np.empty(result_shape, dtype=result_dtype)
 
         function = Function(self.node, self.parameters, 'ngraph API computation')
@@ -97,14 +98,18 @@ class Computation:
     def _write_ndarray_to_tensor_view(value: np.ndarray, tensor_view):
         tensor_view_dtype = get_dtype(tensor_view.element_type)
         if value.dtype != tensor_view_dtype:
-            log.warning('Attempting to write a %s value to a %s tensor. Will attempt type conversion.',
-                        value.dtype, tensor_view.element_type)
+            log.warning(
+                'Attempting to write a %s value to a %s tensor. Will attempt type conversion.',
+                value.dtype,
+                tensor_view.element_type)
             value = value.astype(tensor_view_dtype, casting='safe')
 
-        buffer_size = Computation._get_buffer_size(tensor_view.element_type, tensor_view.element_count)
+        buffer_size = Computation._get_buffer_size(
+            tensor_view.element_type, tensor_view.element_count)
         tensor_view.write(util.numpy_to_c(value), 0, buffer_size)
 
     @staticmethod
     def _read_tensor_view_to_ndarray(tensor_view, output: np.ndarray):
-        buffer_size = Computation._get_buffer_size(tensor_view.element_type, tensor_view.element_count)
+        buffer_size = Computation._get_buffer_size(
+            tensor_view.element_type, tensor_view.element_count)
         tensor_view.read(util.numpy_to_c(output), 0, buffer_size)
