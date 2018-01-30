@@ -175,36 +175,32 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     # This must be kept in sync with the LLVM + Clang version in use
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS
-      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";TBB_HEADERS_PATH=\"${TBB_ROOT}/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\";")
+      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";TBB_HEADERS_PATH=\"${TBB_ROOT}/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\";")
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
     set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
       "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE};")
-
-if (NGRAPH_ARGON_ENABLE)
-    link_directories(${ARGON_LIB_DIR})
 endif()
 
-    # GPU backend current requires CPU because they share compiler.cpp,
-    # and compiler.cpp requires MKLDNN
-    if(NGRAPH_GPU_ENABLE)
-        include_directories(${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
-        link_directories(${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+# GPU backend current requires CPU because they share compiler.cpp,
+# and compiler.cpp requires MKLDNN
+if(NGRAPH_GPU_ENABLE)
+    include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
 
-        # Add sources for the GPU backend
-        # and all its dependencies
-        set(SRC ${SRC}
-            runtime/gpu/gpu_call_frame.cpp
-            runtime/gpu/gpu_backend.cpp
-            runtime/gpu/gpu_emitter.cpp
-            runtime/gpu/gpu_external_function.cpp
-            runtime/gpu/gpu_kernel_emitters.cpp
-            runtime/gpu/gpu_manager.cpp
-            runtime/gpu/gpu_tensor_view.cpp
-            runtime/gpu/gpu_tensor_view_wrapper.cpp
-            )
-        set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-        "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
-    endif()
+    # Add sources for the GPU backend
+    # and all its dependencies
+    set(SRC ${SRC}
+        runtime/gpu/gpu_call_frame.cpp
+        runtime/gpu/gpu_backend.cpp
+        runtime/gpu/gpu_emitter.cpp
+        runtime/gpu/gpu_external_function.cpp
+        runtime/gpu/gpu_kernel_emitters.cpp
+        runtime/gpu/gpu_manager.cpp
+        runtime/gpu/gpu_tensor_view.cpp
+        runtime/gpu/gpu_tensor_view_wrapper.cpp
+        runtime/gpu/gpu_util.cpp
+        )
+    set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
+    "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
 endif()
 
 add_library(ngraph SHARED ${SRC})
@@ -240,11 +236,6 @@ endif()
 # Colon separated string for specified runtime plugin loading, this is made explicit s.t. if a
 # plugin is specified at compile time but the corresponding library could not be resolved at run-
 # time, an error will be generated.
-# E.g. assume compiling with Argon and Xpu, then -DRUNTIME_PLUGIN_LIBS="libargon.so:libxpu.so".
-
-if (NGRAPH_ARGON_ENABLE)
-    set(RUNTIME_PLUGIN_LIBS "libargon.so")  # TODO: currently hardcoded argon lib name if enabled
-endif()
 
 if (DEFINED RUNTIME_PLUGIN_LIBS)
     target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS="${RUNTIME_PLUGIN_LIBS}")
@@ -272,15 +263,9 @@ if(NGRAPH_CPU_ENABLE)
     target_link_libraries(ngraph PRIVATE ${TBB_IMPORTED_TARGETS})
 endif()
 
+# Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    target_link_libraries(ngraph PRIVATE cuda)
-endif()
-
-# Argon
-if (NGRAPH_ARGON_ENABLE)
-    target_link_libraries(ngraph PRIVATE argon)
-    add_dependencies(ngraph ext_argon)
-    add_dependencies(ext_argon ext_llvm)
+    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -309,13 +294,6 @@ if (NOT APPLE)
         install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
             DESTINATION ${NGRAPH_INSTALL_LIB}
             FILES_MATCHING PATTERN "libtbb_debug.so.*"
-        )
-    endif()
-
-    if (NGRAPH_ARGON_ENABLE)
-        install(DIRECTORY ${ARGON_LIB_DIR}/
-            DESTINATION ${NGRAPH_INSTALL_LIB}
-            FILES_MATCHING PATTERN "*.so"
         )
     endif()
 endif()

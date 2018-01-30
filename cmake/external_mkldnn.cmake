@@ -19,8 +19,8 @@ include(ExternalProject)
 
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
-    set(MKLDNN_GIT_REPO_URL https://github.com/01org/mkl-dnn)
-    set(MKLDNN_GIT_TAG "144e0db")
+    set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
+    set(MKLDNN_GIT_TAG "3e1f8f5")
     set(MKLDNN_INSTALL_DIR ${EXTERNAL_INSTALL_DIR}/mkldnn)
 
     # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
