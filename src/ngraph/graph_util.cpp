@@ -105,12 +105,15 @@ void ngraph::free_nodes(shared_ptr<Function> p)
     }
 }
 
-void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
+void ngraph::replace_node(std::shared_ptr<Node> target,
+                          std::shared_ptr<Node> replacement,
+                          bool replace_output)
 {
-    if (target->is_output()) //this restriction can be lifted when we find an use case for it
+    if (target->is_output() && !replace_output)
     {
         return;
     }
+
     //fix input/output descriptors
     assert(target->get_outputs().size() == replacement->get_outputs().size());
     for (size_t i = 0; i < target->get_outputs().size(); i++)

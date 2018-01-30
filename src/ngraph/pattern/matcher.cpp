@@ -63,8 +63,10 @@ namespace ngraph
                 auto args = get_arguments(label);
                 if (args.size() > 0)
                 {
-                    assert(args.size() ==
-                           1); //it should be impossible to construct labels w/ more than one arg
+                    if (args.size() != 1)
+                    {
+                        throw ngraph_error("Labels can only take 1 argument!");
+                    }
                     NGRAPH_DEBUG << "[MATCHER] Label describes a sub graph in the pattern";
                     is_match = match_node(args.at(0), graph_node, pattern_map);
                 }
@@ -92,7 +94,11 @@ namespace ngraph
             else
             {
                 auto args = get_arguments(any);
-                assert(args.size() == 1);
+                if (args.size() != 1)
+                {
+                    throw ngraph_error("Any can only take one argument");
+                }
+
                 return match_node(args.at(0), graph_node, pattern_map);
             }
         }
@@ -101,7 +107,10 @@ namespace ngraph
                                  const std::shared_ptr<Node>& graph_node,
                                  PatternMap& pattern_map)
         {
-            assert(pattern_node && graph_node);
+            if (!pattern_node || !graph_node)
+            {
+                throw ngraph_error("pattern_node or graph_node shouldn't be nullptrs!");
+            }
 
             NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] in match_node : "
                          << "pattern = " << pattern_node->get_name() << " matched "
@@ -191,17 +200,24 @@ namespace ngraph
             return false;
         }
 
-        void Matcher::process_match(::ngraph::pattern::gr_callback_fn callback)
+        std::shared_ptr<Node> Matcher::process_match(::ngraph::pattern::gr_callback_fn callback)
         {
             gr_callback_fn cb = m_callback;
             if (callback)
             {
                 cb = callback;
             }
+            if (!cb)
+            {
+                throw ngraph_error("process_match invoked w/o a callback function");
+            }
 
-            assert(cb);
-            assert(this->m_match_root);
-            cb(*this);
+            if (!this->m_match_root)
+            {
+                throw ngraph_error("process_match invoked w/o a match");
+            }
+
+            return cb(*this);
         }
 
         static Nodes get_users(std::shared_ptr<Node> node)
