@@ -306,8 +306,7 @@ void ngraph::runtime::cpu::kernel::emit_sum(codegen::CodeWriter& writer,
     }
     else
     {
-        writer << element_type << " residual" << emit_bracketed_string(out_shape)
-               << ";\n";
+        writer << element_type << " residual" << emit_bracketed_string(out_shape) << ";\n";
         auto output_vars = open_for_loops(writer, out_shape);
 
         writer << dest_nd_name << emit_bracketed_string(output_vars) << " = 0;\n";
