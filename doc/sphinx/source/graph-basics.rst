@@ -1,37 +1,43 @@
-.. build-a-functiongraph:
-
-Defining a function graph on the nGraph library
-###############################################
+.. graph-basics:
 
 Graph Basics
-============
+=============
 
-*Tensors* are maps from *coordinates* to
-scalar values, all of the same type, called the *element type*
-of the tensor.
-Coordinates are tuples of non-negative integers;
-all the coordinates for a tensor have the same length, called
-the *rank* of the tensor. We often use :math:`n`-tensor for
-tensors with rank :math:`n`.
-The *shape* of a tensor is a tuple
-of non-negative integers that is an exclusive upper bound for
-coordinate values. A tensor has an element for every coordinate 
-less than the shape, so the *size* of the tensor is the product
-of the values in the shape.
+.. contents::
 
-An :math:`n`-dimensional array is a common implementation of a
-tensor, and the two terms are often used interchangeably, but 
-a tensor could just as easily be a function that returns 0
-for every coordinate.
+   defining-fxg.rst 
+   
+
+.. defining-fxg:
+
+Defining a function graph with the nGraph library
+--------------------------------------------------
+
+The graph is a composition of tensor computations, called :term:`ops`, which are 
+nodes in the graph. In the graph, every op *input* must be associated with an op 
+*output,* and every op output must have a constant element type and shape that 
+will correspond to the tensors used in the computation. Every op has zero or more 
+inputs and zero or more outputs which represent :term:`tensors` that will be 
+provided during execution. 
+
+*Tensors* are maps from *coordinates* to scalar values, all of the same type, 
+called the *element type* of the tensor. Coordinates are tuples of non-negative 
+integers; all the coordinates for a tensor have the same length, called the 
+*rank* of the tensor. We often use :math:`n`-tensor for tensors with rank 
+:math:`n`. An :math:`n`-dimensional array is a common implementation of a tensor, 
+and the two terms are often used interchangeably. However, a tensor could just 
+as easily be a function that returns 0 for every coordinate.
+
+The *shape* of a tensor is a tuple of non-negative integers that represents an  
+exclusive upper bound for coordinate values. A tensor has an element for every 
+coordinate less than the shape, so the *size* of the tensor is the product of 
+the values in the shape.
+
+.. editing wip 
+
 
 A graph function describes a computation whose inputs and outputs are all 
-tensors. The graph is a composition of simpler
-tensor computations, called *ops*, which are nodes in the graph.
-Every op has zero or more inputs and zero or more outputs which
-represent tensors that will be provided during execution. In the graph,
-every op input must be associated with an op output, and every op
-output must have a constant element type and shape that will
-correspond to the tensors used in the computation.
+tensors. 
 Ops may also have additional attributes that do not change during
 execution.
 
@@ -119,7 +125,7 @@ sources: *literals*, *calls* to ops (built-in ops or user-defined ops AKA
      - The result's ``type`` of call to a function is determined from the 
        types of the arguments.
      - Any external function interacting with the graph at the level of 
-       user-defined ``op`` must specify a type for each of its parameters.   
+       user-defined ``op`` must specify a type for each of its parameters. 
 
 #. *Parameters* of user-defined *functions* may also be a source of a graph's
    values. Externally-callable functions must specify a type for each parameter.

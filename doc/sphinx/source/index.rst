@@ -33,7 +33,7 @@ run better on target hardware, on both Intel and non-Intel platforms.
    installation.rst
    testing-libngraph.rst
    framework-integration-guides.rst
-   build-a-functiongraph.rst
+   graph-basics.rst
 
 .. toctree::
    :maxdepth: 1

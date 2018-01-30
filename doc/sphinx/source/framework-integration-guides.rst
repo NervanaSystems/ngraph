@@ -1,7 +1,8 @@
 .. framework-integration-guides:
 
+#############################
 Framework Integration Guides
-############################
+#############################
 
 .. contents::
 
@@ -119,8 +120,8 @@ Building TensorFlow\* with an XLA plugin to ``libngraph``
       $ chmod +x bazel-0.5.4-installer-linux-x86_64.sh
       $ ./bazel-0.5.4-installer-linux-x86_64.sh --user
 
-#. Add and "source" the ``bin`` path to your ``~/.bashrc`` file in order to be 
-   able to call bazel from the "user" installation we set up:
+#. Add and source the ``bin`` path to your ``~/.bashrc`` file in order to be 
+   able to call bazel from the user's installation we set up:
 
    .. code-block:: bash
    
