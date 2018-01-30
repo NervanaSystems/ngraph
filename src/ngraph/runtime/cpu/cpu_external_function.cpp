@@ -91,14 +91,18 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
-#include "ngraph/runtime/host_tensor_view.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_tensor_allocation.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 static const string s_output_dir = "cpu_codegen";
+
+// Temporary Memory pool alignment
+static const size_t MemoryPoolAlignment = 64;
 
 class StaticInitializers
 {
@@ -510,7 +514,7 @@ using namespace ngraph::runtime;
             writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
             writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
             writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
-                   << ngraph::runtime::alignment << ");\n";
+                   << MemoryPoolAlignment << ");\n";
             writer << "size_t pool_base_ptr = (size_t)memory_handler.get_ptr();\n";
             writer << "\n";
 
