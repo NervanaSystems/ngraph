@@ -152,7 +152,7 @@ void runtime::cpu::CPU_Emitter::EmitCblasGemm(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitCblasGemm(codegen::CodeWriter& writer,
+void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
                                               const ngraph::Node* node,
                                               const vector<runtime::cpu::TensorViewWrapper>& args,
                                               const vector<runtime::cpu::TensorViewWrapper>& out)
@@ -171,18 +171,61 @@ void runtime::cpu::CPU_Emitter::EmitCblasGemm(codegen::CodeWriter& writer,
     writer << "{\n";
     writer.indent++;
 
-    
+    // read the shape of the input and extract channel axis (N, C, H, W)
+    auto channel_axis = input_shape[1];
 
-    // mkldnn::batch_normalization_forward::batch_normalization_forward	(	const primitive_desc & 	aprimitive_desc,
-    // const primitive::at & 	src,
-    // const primitive::at & 	weights,
-    // const memory & 	dst 
-    // )	
+    // create a vector of vector to hold the gamma and bias
+    writer << "auto weight_et =  batchnorm.get_input_element_type(1);\n";
+    writer << "auto weight_size = batchnorm.get_input_shape(1).size();\n";
+    writer << "auto vector<vector<weight_et> > bn_weights(2);\n";
+
+    //push gamma and beta
+    writer << "auto& gamma = args[1].get_name();\n"
+    writer << "auto& beta = args[2].get_name();\n"
+    writer << "for (auto i :weight_size) \n";
+    writer << "{ \n";
+    writer << "bn_weights[0].push_back(gamma[j]);\n";
+    writer << "bn_weights[1].push_back(beta[j]);\n";
+    writer << "} \n";
+    
+    // get the eps value from the bn node
+    writer << "float epsilon = static_cast<float>(args[0].get_name());\n";
+	
     //Bind to CPU engine
     writer << "using namespace mkldnn; \n";
     writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
-    writer << 
-    //create memory descriptors 
+
+    // create memory descriptors 
+    writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
+    writer << "auto input_data_desc = memory::desc({" << join(input_shape) << "}, " << et
+           << ", memory::format::nchw);\n";
+    // TODO define weights by stacking gamma and beta values
+    writer << "auto weights_desc = memory::desc({" << join(weights_shape) << "}, " << et
+           << ", memory::format::oihw);\n";
+    writer << "auto result_desc = memory::desc({" << join(result_shape) << "}, " << et
+           << ", memory::format::nchw);\n";
+
+    // Define memory for the user data
+    writer << "auto input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+           << ");\n";
+    writer << "auto weights = memory({weights_desc, cpu_engine}, " << bn_weights
+           << ");\n";
+    writer << "auto result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
+
+    // create batchnorm descriptor 
+    writer << "auto bn_fprop_desc = batch_normalization_forward::desc(mkldnn::prop_kind::froward_training,"
+           << "input_data_desc, epsilon, mkldnn::batch_normalization_flag::use_scale_shift);\n";
+    // bn fprop primitive descriptor
+    writer << "auto bn_fprop_prim_desc = batch_normalization_forward::primitive_desc(bn_fprop_desc, cpu_engine);\n";
+
+    // create a batchnorm fprop primitive
+    writer << "auto bn_fprop = batch_normalization_forward(bn_fprop_prim_desc, input_data, weights, result); \n";
+
+    // create stream and execute
+    writer << "auto s = stream(stream::kind::eager);\n"
+        << "s.submit({bn_fprop}).wait();\n";
+    writer.indent--;
+    writer << "}\n";
 
 }
 void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
