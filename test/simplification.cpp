@@ -19,19 +19,18 @@
 #include <memory>
 
 #include "gtest/gtest.h"
+#include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/json.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/simplification.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
-//
-#include "ngraph/file_util.hpp"
-#include "ngraph/json.hpp"
-#include "ngraph/pass/simplification.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "util/matcher.hpp"
@@ -51,6 +50,7 @@ TEST(simplification, remove_reshape)
     size_t count_before = count_ops_of_type<op::Reshape>(func);
     pass_manager.run_passes(func);
     size_t count_after = count_ops_of_type<op::Reshape>(func);
+    ASSERT_TRUE(count_after < count_before);
 }
 
 TEST(simplification, remove_tranpose)
