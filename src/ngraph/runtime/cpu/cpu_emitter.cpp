@@ -152,6 +152,39 @@ void runtime::cpu::CPU_Emitter::EmitCblasGemm(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
+void runtime::cpu::CPU_Emitter::EmitCblasGemm(codegen::CodeWriter& writer,
+                                              const ngraph::Node* node,
+                                              const vector<runtime::cpu::TensorViewWrapper>& args,
+                                              const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto batchnorm = static_cast<const op::BatchnormFprop>(node);
+
+    //get the shape of all the inputs and output to batchnorm
+    auto gamma_shape = args[1].get_shape();
+    auto beta_shape = args[2].get_shape();
+    auto input_shape = args[3].get_shape();
+    auto mean_shape = batchnorm->get_mean_shape()
+    auto variance_shape = batchnorm->get_variance_shape();
+    auto result_shape = out[0].get_shape();
+
+    string element_type = "memory::data_type::f32";
+    writer << "{\n";
+    writer.indent++;
+
+    
+
+    // mkldnn::batch_normalization_forward::batch_normalization_forward	(	const primitive_desc & 	aprimitive_desc,
+    // const primitive::at & 	src,
+    // const primitive::at & 	weights,
+    // const memory & 	dst 
+    // )	
+    //Bind to CPU engine
+    writer << "using namespace mkldnn; \n";
+    writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
+    writer << 
+    //create memory descriptors 
+
+}
 void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
                                         const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,

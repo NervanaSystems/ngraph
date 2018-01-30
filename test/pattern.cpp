@@ -403,6 +403,8 @@ public:
                                                                        pattern_map[gamma_label],
                                                                        pattern_map[beta_label],
                                                                        pattern_map[input],
+                                                                       pattern_map[mean_label],
+                                                                       pattern_map[variance_label],
                                                                        bn_output_shape));
 
             return bn_node;

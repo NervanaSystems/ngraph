@@ -93,6 +93,7 @@ namespace ngraph
                 static void EMITTER_DECL(EmitSelectAndScatter);
                 static void EMITTER_DECL(EmitAvgPool);
                 static void EMITTER_DECL(EmitPad);
+                static void EMITTER_DECL(EmitBatchnormFprop);
 
             private:
                 static std::string emit_vector(const TensorViewWrapper&,

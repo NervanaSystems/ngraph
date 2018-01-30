@@ -39,6 +39,7 @@
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
+#include "ngraph/ops/batchnorm.hpp"
 #include "ngraph/ops/cblas_gemm.hpp"
 #include "ngraph/ops/ceiling.hpp"
 #include "ngraph/ops/concatenate.hpp"
@@ -196,6 +197,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPU_Emitter::EmitSelectAndScatter},
     {TI(ngraph::op::AvgPool), &runtime::cpu::CPU_Emitter::EmitAvgPool},
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::EmitPad},
+    {TI(ngraph::op::BatchnormFprop), &runtime::cpu::CPU_Emitter::EmitBatchnormFprop},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(

@@ -31,10 +31,16 @@ namespace ngraph
                            std::shared_ptr<Node> gamma,
                            std::shared_ptr<Node> beta,
                            std::shared_ptr<Node> input,
+                           std::shared_ptr<Node> mean,
+                           std::shared_ptr<Node> variance,
                            Shape output_shape)
                         :RequiresTensorViewArgs("BatchnormFprop", {eps, gamma, beta, input})
-                        ,mkl_output_shape (output_shape)
+                        ,mkl_output_shape(output_shape)
+                        ,mkl_variance_shape(variance->get_shape())
+                        ,mkl_mean_shape(mean->get_shape)
+                        ,mkl_input_shape(input->get_shape())
             {
+              
                 add_output(input->get_element_type(), mkl_output_shape);
             }
             
@@ -48,6 +54,14 @@ namespace ngraph
 
         const Shape& get_output_shape() const{
             return mkl_output_shape;
+        }
+
+        const Shape& get_variance_shape() const{
+            return mkl_variance_shape;
+        }
+
+        const Shape& get_mean_shape() const{
+            return mkl_mean_shape;
         }
 
         virtual std::shared_ptr<Node> copy_with_new_args(
@@ -66,6 +80,8 @@ namespace ngraph
                 Shape mkl_input_shape;
                 Shape mkl_output_shape;
                 Shape mkl_weights_shape; // MKLDNN expects gamma and weights to be stacked in a single tensor;
+                Shape mkl_variance_shape;
+                Shape mkl_mean_shape;
 
         };
     }

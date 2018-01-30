@@ -88,7 +88,7 @@ void pass::VisualizeTree::render() const
         out.close();
 
         stringstream ss;
-        ss << "dot -Tpng " << tmp_file << " -o " << m_name;
+        ss << "dot -Tpdf " << tmp_file << " -o " << m_name;
         auto cmd = ss.str();
         auto stream = popen(cmd.c_str(), "r");
         pclose(stream);
