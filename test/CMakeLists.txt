@@ -121,7 +121,7 @@ if(LLVM_INCLUDE_DIR)
 endif()
 
 if(CUDA_INCLUDE_DIRS)
-  target_link_libraries(unit-test cuda ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+  target_link_libraries(unit-test cuda /usr/local/cuda/lib64/libcudart.so ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)

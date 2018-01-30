@@ -275,10 +275,9 @@ if(NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-	LIST(APPEND CUDA_NVCC_FLAGS --compiler-options -fPIC -fno-strict-aliasing -lineinfo -use_fast_math -Xptxas -dlcm=cg)
-	LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_35,code=sm_35)
-
     target_link_libraries(ngraph cuda /usr/local/cuda/lib64/libcudart.so ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+     #LIST(APPEND CMAKE_CXX_FLAGS "-std=c++0x -O3 -ffast-math -Wall")
+     #LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_35,code=sm_35)
 endif()
 
 # Argon

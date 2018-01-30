@@ -21,22 +21,21 @@
 __global__ void VecAbs(float* A, float* B) 
 { 
     int i = threadIdx.x; 
-    B[i] = A[i] < 0 ? -A[i] : A[i]; 
+    B[i] = fabsf(A[i]); 
 } 
 
-extern "C"
-void runVecAbs(float* arg, float* out, size_t count)
+void runVecAbs(float* arg, float* out, int count)
 {
 	float *d_arg, *d_out;
 	
-	cudaMalloc((void **)& d_arg, sizeof(float) * count);
-	cudaMalloc((void **)& d_out, sizeof(float) * count);
-  	
-	cudaMemcpy(d_arg, arg, count, cudaMemcpyHostToDevice);
+	cudaMalloc(&d_arg, sizeof(float) * count);
+	cudaMalloc(&d_out, sizeof(float) * count);
+  
+	cudaMemcpy(d_arg, arg, sizeof(float) * count, cudaMemcpyHostToDevice);
 	
         VecAbs<<<1, count>>>(d_arg, d_out);
 
-	cudaMemcpy(out, d_out, count, cudaMemcpyDeviceToHost);
+	cudaMemcpy(out, d_out, sizeof(float) * count, cudaMemcpyDeviceToHost);
 	
 	cudaFree(d_arg);
 	cudaFree(d_out);

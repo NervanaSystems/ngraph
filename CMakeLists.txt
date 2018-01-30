@@ -108,9 +108,10 @@ endif()
 #-----------------------------------------------------------------------------------------------
 # Setup CUDA and cuDNN if NGRAPH_GPU_ENABLE=TRUE
 if(NGRAPH_GPU_ENABLE)
-  find_package(CUDA 8 REQUIRED)
+  find_package(CUDA REQUIRED)
+  INCLUDE(FindCUDA)
   find_package(CUDNN 5 QUIET REQUIRED)
-  include_directories(${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
+  include_directories(/usr/local/cude/include ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
   if (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND
         NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 6.0 AND
         CUDA_HOST_COMPILER STREQUAL CMAKE_C_COMPILER)
@@ -118,11 +119,7 @@ if(NGRAPH_GPU_ENABLE)
         "CUDA 8.0 is not compatible with GCC version >= 6.\n"
         "Please select a correct compiler version\n"
         )
-    endif()
-	LIST(APPEND CUDA_NVCC_FLAGS --compiler-options -fPIC -lineinfo -use_fast_math -Xptxas -dlcm=cg)
-	LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_35,code=sm_35)
-
-#	TARGET_LINK_LIBRARIES(ngraph /usr/local/cuda/lib64/libcudart.so)
+  endif()
 endif()
 
 #-----------------------------------------------------------------------------------------------

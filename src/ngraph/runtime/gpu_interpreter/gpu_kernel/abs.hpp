@@ -15,9 +15,9 @@
 #pragma once
 
 #include <cmath>
+#include <iostream>
 
-extern "C"
-void runVecAbs(float* arg, float* out, size_t count);
+void runVecAbs(float* arg, float* out, int count);
 
 namespace ngraph
 {
@@ -38,7 +38,7 @@ namespace ngraph
             template <>
             inline void abs<float>(float* arg, float* out, size_t count)
             {
-		runVecAbs(arg, out, count);
+		runVecAbs(arg, out, (int)count);
             }
         }
     }
