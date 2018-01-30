@@ -16,6 +16,7 @@
 #include <memory>
 #include <utility>
 
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/multiply.hpp"

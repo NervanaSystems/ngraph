@@ -27,7 +27,7 @@ using namespace ngraph;
 
 atomic<size_t> Node::m_next_instance_id(0);
 
-Node::Node(const std::string& node_type, const std::vector<shared_ptr<Node>>& arguments)
+Node::Node(const std::string& node_type, const Nodes& arguments)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_is_output(false)

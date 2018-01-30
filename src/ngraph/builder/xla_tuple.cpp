@@ -32,13 +32,12 @@ xla::op::Tuple::Tuple(const Nodes& nodes)
 {
 }
 
-std::shared_ptr<Node>
-    xla::op::Tuple::copy_with_new_args(const std::vector<std::shared_ptr<Node>>& new_args) const
+std::shared_ptr<Node> xla::op::Tuple::copy_with_new_args(const Nodes& new_args) const
 {
     return make_shared<Tuple>(new_args);
 }
 
-const vector<shared_ptr<Node>>& xla::op::Tuple::get_elements() const
+const Nodes& xla::op::Tuple::get_elements() const
 {
     return m_elements;
 }
@@ -101,9 +100,7 @@ namespace
     }
 }
 
-xla::XLAFunction::XLAFunction(const vector<shared_ptr<Node>>& results,
-                              const vector<shared_ptr<Node>>& parameters,
-                              const string& name)
+xla::XLAFunction::XLAFunction(const Nodes& results, const Nodes& parameters, const string& name)
     : Function(flatten<Node>(results), flatten<ngraph::op::Parameter>(parameters), name)
 {
 }

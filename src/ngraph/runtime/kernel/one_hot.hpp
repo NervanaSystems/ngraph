@@ -16,7 +16,6 @@
 
 #include <cmath>
 
-#include "ngraph/common.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
@@ -59,8 +58,7 @@ namespace ngraph
                         throw(std::range_error("One-hot: value is out of category range"));
                     }
 
-                    Coordinate one_hot_coord =
-                        inject_coordinate(input_coord, one_hot_axis, one_hot_pos);
+                    Coordinate one_hot_coord = inject(input_coord, one_hot_axis, one_hot_pos);
 
                     out[output_transform.index(one_hot_coord)] = 1;
                 }

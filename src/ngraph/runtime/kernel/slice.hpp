@@ -16,7 +16,6 @@
 
 #include <cmath>
 
-#include "ngraph/common.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph

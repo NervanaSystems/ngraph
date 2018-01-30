@@ -19,6 +19,7 @@
 
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph

@@ -41,8 +41,7 @@ namespace ngraph
             /// \param arg Node that produces the input tensor.
             Not(const std::shared_ptr<Node>& arg);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override
             {
                 if (new_args.size() != 1)
                     throw ngraph_error("Incorrect number of new arguments");

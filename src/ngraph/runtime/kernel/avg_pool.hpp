@@ -16,7 +16,7 @@
 
 #include <cmath>
 
-#include "ngraph/common.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph

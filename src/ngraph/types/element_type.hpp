@@ -23,8 +23,8 @@
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <vector>
 
-#include "ngraph/common.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/log.hpp"
 

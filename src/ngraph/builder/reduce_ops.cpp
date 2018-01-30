@@ -14,6 +14,7 @@
 */
 
 #include "ngraph/builder/reduce_ops.hpp"
+#include "ngraph/axis_set.hpp"
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/multiply.hpp"

@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/ops/op.hpp"
 
 namespace ngraph
@@ -114,8 +115,7 @@ namespace ngraph
             Convolution(const std::shared_ptr<Node>& data_batch,
                         const std::shared_ptr<Node>& filters);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override;
+            virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override;
             bool is_functionally_identical(const Node&) const override;
             void generate_adjoints(autodiff::Adjoints& adjoints,
                                    const std::shared_ptr<Node>& delta) override;
@@ -165,8 +165,7 @@ namespace ngraph
                                     const CoordinateDiff& padding_above_forward,
                                     const Strides& data_dilation_strides_forward);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override;
+            virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override;
             bool is_functionally_identical(const Node&) const override;
 
             /// \return The data batch shape.
@@ -261,8 +260,7 @@ namespace ngraph
                                        const CoordinateDiff& padding_above_forward,
                                        const Strides& data_dilation_strides_forward);
 
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override;
+            virtual std::shared_ptr<Node> copy_with_new_args(const Nodes& new_args) const override;
             bool is_functionally_identical(const Node&) const override;
 
             /// \return The filters tensor shape.
