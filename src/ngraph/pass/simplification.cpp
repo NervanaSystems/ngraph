@@ -101,7 +101,7 @@ void ngraph::pass::Simplification::construct_reshapex2_pattern()
                      << m.match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        std::shared_ptr<ngraph::Node> nn = nullptr;
+        std::shared_ptr<ngraph::Node> nn;
         auto gop = pattern_map[op];
 
         if (gop->get_shape() != m.match_root()->get_shape())
