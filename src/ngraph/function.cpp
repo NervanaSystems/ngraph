@@ -152,3 +152,19 @@ std::list<shared_ptr<Node>> Function::get_ops() const
     });
     return ops;
 }
+
+void Function::replace_output_op(std::shared_ptr<Node> old, std::shared_ptr<Node> repl)
+{
+    auto it = std::find(begin(m_results), end(m_results), old);
+    if (it != end(m_results))
+    {
+        NGRAPH_DEBUG << "Replacing output " << old->get_name() << " w/ " << repl->get_name();
+        *it = repl;
+    }
+}
+
+void Function::replace_node(std::shared_ptr<Node> old, std::shared_ptr<Node> repl)
+{
+    replace_output_op(old, repl);
+    ngraph::replace_node(old, repl, true);
+}
