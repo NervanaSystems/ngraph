@@ -76,6 +76,8 @@ public:
     bool operator==(const set_t& vt) const { return vt == m_set; }
     bool operator!=(const SET_TYPE& vt) const { return vt.m_set != m_set; }
     bool operator!=(const set_t& vt) const { return vt != m_set; }
+    operator set_t&() { return m_set; }
+    operator const set_t&() const { return m_set; }
 protected:
     SetForwarder() {}
     SetForwarder(const set_t& v)

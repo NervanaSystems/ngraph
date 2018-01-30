@@ -76,6 +76,8 @@ public:
     bool operator==(const vector_t& vt) const { return vt == m_vector; }
     bool operator!=(const VECTOR_TYPE& vt) const { return vt.m_vector != m_vector; }
     bool operator!=(const vector_t& vt) const { return vt != m_vector; }
+    operator vector_t&() { return m_vector; }
+    operator const vector_t&() const { return m_vector; }
 protected:
     VectorForwarder() {}
     VectorForwarder(size_t n)
