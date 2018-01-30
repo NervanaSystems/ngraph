@@ -39,7 +39,6 @@ public:
     using reverse_iterator = typename set_t::reverse_iterator;
     using value_type = typename set_t::value_type;
 
-    const set_t& get_set() const { return m_set; }
     iterator begin() { return m_set.begin(); }
     const_iterator begin() const { return m_set.begin(); }
     void clear() { m_set.clear(); }
