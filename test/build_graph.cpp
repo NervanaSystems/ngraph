@@ -34,8 +34,7 @@ TEST(build_graph, build_simple)
     ASSERT_EQ(dot->get_input_ops()[0], arg2);
     ASSERT_EQ(dot->get_input_ops()[1], arg0);
 
-    auto cluster_0 = make_shared<Function>(
-        dot, std::vector<std::shared_ptr<op::Parameter>>{arg0, arg1, arg2, arg3});
+    auto cluster_0 = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg2, arg3});
 
     ASSERT_EQ(cluster_0->get_output_op(0), dot);
 }
@@ -115,8 +114,7 @@ TEST(build_graph, function_undeclared_parameters)
     ASSERT_EQ(dot->get_input_ops()[1], arg0);
     try
     {
-        auto f = make_shared<Function>(
-            dot, std::vector<std::shared_ptr<op::Parameter>>{arg0, arg1, arg3});
+        auto f = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg3});
         f->get_ops();
         // Should have thrown, so fail if it didn't
         FAIL() << "Undeclared parameter not detected.";

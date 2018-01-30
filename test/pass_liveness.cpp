@@ -37,8 +37,7 @@ TEST(liveness, constant)
 {
     auto shape = Shape{1};
     auto c = op::Constant::create(element::i32, shape, {5});
-    auto f = make_shared<Function>(make_shared<op::Negative>(c),
-                                   std::vector<std::shared_ptr<op::Parameter>>{});
+    auto f = make_shared<Function>(make_shared<op::Negative>(c), op::Parameters{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Liveness>();

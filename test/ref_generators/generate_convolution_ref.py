@@ -222,7 +222,7 @@ TEST (${BACKEND_NAME}, %s)
                                                                   CoordinateDiff{%s}, // below_pads
                                                                   CoordinateDiff{%s}, // above_pads
                                                                   Strides{%s}),       // data_dilation
-                                     std::vector<std::shared_ptr<op::Parameter>>{A, B});
+                                     op::Parameters{A, B});
     };
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");

@@ -194,8 +194,7 @@ TEST(copy, FunctionCall)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f =
-        make_shared<Function>((A + B) * C, std::vector<std::shared_ptr<op::Parameter>>{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
 
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape);
@@ -287,7 +286,7 @@ TEST(copy, reduce)
     Shape scalar_shape{};
     auto A = make_shared<op::Parameter>(element::f32, scalar_shape);
     auto B = make_shared<op::Parameter>(element::f32, scalar_shape);
-    auto f = make_shared<Function>(A + B, std::vector<std::shared_ptr<op::Parameter>>{A, B});
+    auto f = make_shared<Function>(A + B, op::Parameters{A, B});
 
     Shape shape{4, 3};
     AxisSet axes{1};

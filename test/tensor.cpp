@@ -37,7 +37,7 @@ TEST(tensor, size)
     {
         auto arg0 = make_shared<op::Parameter>(element::f32, Shape{2, 3});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto f0 = make_shared<Function>(add, std::vector<std::shared_ptr<op::Parameter>>{arg0});
+        auto f0 = make_shared<Function>(add, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -50,7 +50,7 @@ TEST(tensor, size)
     {
         auto arg0 = make_shared<op::Parameter>(element::f32, Shape{});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto f0 = make_shared<Function>(add, std::vector<std::shared_ptr<op::Parameter>>{arg0});
+        auto f0 = make_shared<Function>(add, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -63,7 +63,7 @@ TEST(tensor, size)
     {
         auto arg0 = make_shared<op::Parameter>(element::f32, Shape{1});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto f0 = make_shared<Function>(add, std::vector<std::shared_ptr<op::Parameter>>{arg0});
+        auto f0 = make_shared<Function>(add, op::Parameters{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -113,7 +113,7 @@ TEST(tensor, output_flag)
 
     auto arg0 = make_shared<op::Parameter>(element::f32, Shape{1});
     auto add = make_shared<op::Add>(arg0, arg0);
-    auto f0 = make_shared<Function>(add, std::vector<std::shared_ptr<op::Parameter>>{arg0});
+    auto f0 = make_shared<Function>(add, op::Parameters{arg0});
 
     pass_manager.run_passes(f0);
 
