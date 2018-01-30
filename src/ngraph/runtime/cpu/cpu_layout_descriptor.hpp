@@ -19,8 +19,8 @@
 #include <mkldnn_types.h>
 
 #include "ngraph/common.hpp"
-#include "ngraph/shape.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/shape.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph
@@ -42,21 +42,19 @@ namespace ngraph
                 const Strides& get_strides() const override { return strides; }
                 bool operator==(const TensorViewLayout& other) const override;
 
-                mkldnn_memory_format_t get_mkldnn_format() const
-                {
-                    return mkldnn_format;
-                }
-
+                mkldnn_memory_format_t get_mkldnn_format() const { return mkldnn_format; }
+                const AxisVector& get_axis_order() const { return axis_order; }
                 static const AxisVector Native2DAxisOrder;
                 static const AxisVector Native4DAxisOrder;
                 static const AxisVector CHWNAxisOrder;
+
             private:
                 AxisVector axis_order;
                 Strides strides;
                 size_t offset;
                 size_t size;
 
-                // Numeric backend-specific fields 
+                // Numeric backend-specific fields
                 mkldnn_memory_format_t mkldnn_format;
             };
         }

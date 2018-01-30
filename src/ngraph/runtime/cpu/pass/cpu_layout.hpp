@@ -27,7 +27,8 @@ namespace ngraph
                 class CPULayout : public ngraph::pass::CallGraphPass
                 {
                 public:
-                    virtual bool run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
+                    virtual bool
+                        run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
                 };
             }
         }

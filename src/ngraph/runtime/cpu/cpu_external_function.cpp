@@ -83,7 +83,6 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -93,6 +92,7 @@
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
 
 using namespace std;
@@ -220,11 +220,12 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     string function_name = m_function->get_name();
 
-    pass::Manager pass_manager;
+    ngraph::pass::Manager pass_manager;
     // For now, just make everyone row-major.
-    pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
-    pass_manager.register_pass<pass::Liveness>();
-    pass_manager.register_pass<pass::MemoryLayout>(64);
+    //pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
+    pass_manager.register_pass<runtime::cpu::pass::CPULayout>();
+    pass_manager.register_pass<ngraph::pass::Liveness>();
+    pass_manager.register_pass<ngraph::pass::MemoryLayout>(64);
     pass_manager.run_passes(m_function);
 
     codegen::CodeWriter writer;

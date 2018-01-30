@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <algorithm>
+
 #include "cpu_layout_descriptor.hpp"
 
 namespace ngraph
@@ -32,21 +34,32 @@ namespace ngraph
                 , size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
                 , mkldnn_format(mkldnn_format_undef)
             {
-                if (tv_axis_order == Native2DAxisOrder ||
-                    tv_axis_order == Native4DAxisOrder) {
-                    strides = ngraph::row_major_strides(get_shape());
-                }
-                else
+                auto shape = get_shape();
+                size_t s = 1;
+
+                if (tv_axis_order.size() != shape.size())
                 {
-                    throw ngraph_error("Axis ordering not handled yet");
+                    throw ngraph_error("Axis order is incomplete");
                 }
+
+                for (auto it = tv_axis_order.crbegin(); it != tv_axis_order.crend(); it++)
+                {
+                    if (*it >= shape.size())
+                    {
+                        throw ngraph_error("Axis is out of bounds");
+                    }
+
+                    strides.emplace_back(shape[*it]);
+                    s *= shape[*it];
+                }
+                std::reverse(strides.begin(), strides.end());
             }
 
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
             {
                 if (indices.size() != strides.size())
                 {
-                    throw ngraph_error("Indices have the incorrect rank.");
+                    throw ngraph_error("Indices have incorrect rank");
                 }
                 size_t result = 0;
                 for (int i = 0; i < indices.size(); i++)
@@ -56,7 +69,8 @@ namespace ngraph
                 return result;
             }
 
-            bool LayoutDescriptor::operator==(const ngraph::descriptor::layout::TensorViewLayout& other) const
+            bool LayoutDescriptor::
+                operator==(const ngraph::descriptor::layout::TensorViewLayout& other) const
             {
                 const LayoutDescriptor* p_other = dynamic_cast<const LayoutDescriptor*>(&other);
                 if (!p_other)

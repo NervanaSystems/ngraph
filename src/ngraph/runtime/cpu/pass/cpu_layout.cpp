@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <algorithm>
+
 #include "cpu_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
@@ -30,12 +32,25 @@ bool CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
                 continue;
             }
 
-            auto tvt = tv.get_tensor_view_type();
+            auto tvt = tv->get_tensor_view_type();
+            auto& tensor = tv->get_tensor();
             auto rank = tvt->get_shape().size();
 
+            AxisVector native_axis_order(rank);
+            std::iota(native_axis_order.begin(), native_axis_order.end(), 0);
 
-            auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
-            tv->set_tensor_view_layout(layout);
+            if (tensor.is_output() || tensor.is_input() || tensor.is_constant())
+            {
+                auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
+                    *tv, native_axis_order);
+                tv->set_tensor_view_layout(layout);
+            }
+            else
+            {
+                auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
+                    *tv, native_axis_order);
+                tv->set_tensor_view_layout(layout);
+            }
         }
     }
 
