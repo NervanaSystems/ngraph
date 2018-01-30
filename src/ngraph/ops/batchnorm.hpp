@@ -40,13 +40,10 @@ namespace ngraph
                         ,mkl_mean_shape(mean->get_shape)
                         ,mkl_input_shape(input->get_shape())
             {
-              
                 add_output(input->get_element_type(), mkl_output_shape);
+                add_output(mean->get_element_type(), mkl_mean_shape);
+                add_output(variance->get_element_type(), mkl_variance_shape);
             }
-            
-        const Shape& get_weights_shape() const{
-            return mkl_weights_shape;
-        }
 
         const Shape& get_inputs_shape() const{
             return mkl_input_shape;
@@ -79,7 +76,6 @@ namespace ngraph
         private:
                 Shape mkl_input_shape;
                 Shape mkl_output_shape;
-                Shape mkl_weights_shape; // MKLDNN expects gamma and weights to be stacked in a single tensor;
                 Shape mkl_variance_shape;
                 Shape mkl_mean_shape;
 

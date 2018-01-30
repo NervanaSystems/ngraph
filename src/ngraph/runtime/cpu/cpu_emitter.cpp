@@ -167,7 +167,7 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     auto variance_shape = batchnorm->get_variance_shape();
     auto result_shape = out[0].get_shape();
 
-    string element_type = "memory::data_type::f32";
+    string et = "memory::data_type::f32";
     writer << "{\n";
     writer.indent++;
 
@@ -175,13 +175,13 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     auto channel_axis = input_shape[1];
 
     // create a vector of vector to hold the gamma and bias
-    writer << "auto weight_et =  batchnorm.get_input_element_type(1);\n";
-    writer << "auto weight_size = batchnorm.get_input_shape(1).size();\n";
+    writer << "auto weight_et =" <<  batchnorm.get_input_element_type(1) << ";\n" ;
+    writer << "auto weight_size ="  << batchnorm.get_input_shape(1).size() << ";\n";
     writer << "auto vector<vector<weight_et> > bn_weights(2);\n";
 
     //push gamma and beta
-    writer << "auto& gamma = args[1].get_name();\n"
-    writer << "auto& beta = args[2].get_name();\n"
+    writer << "auto& gamma = " << args[1].get_name() << ";\n"
+    writer << "auto& beta = " << args[2].get_name() << ";\n"
     writer << "for (auto i :weight_size) \n";
     writer << "{ \n";
     writer << "bn_weights[0].push_back(gamma[j]);\n";
@@ -189,7 +189,7 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     writer << "} \n";
     
     // get the eps value from the bn node
-    writer << "float epsilon = static_cast<float>(args[0].get_name());\n";
+    writer << "float epsilon = static_cast<float>(" << args[0].get_name()) << ";\n";
 	
     //Bind to CPU engine
     writer << "using namespace mkldnn; \n";
