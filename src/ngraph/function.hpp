@@ -27,7 +27,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/ops/op.hpp"
 #include "ngraph/ops/parameter.hpp"
-#include "ngraph/parameters.hpp"
+#include "ngraph/ops/parameters.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph
@@ -36,10 +36,12 @@ namespace ngraph
     class Function
     {
     public:
-        Function(const Nodes& results, const Parameters& parameters, const std::string& name = "");
+        Function(const Nodes& results,
+                 const op::Parameters& parameters,
+                 const std::string& name = "");
 
         Function(const std::shared_ptr<Node>& result,
-                 const Parameters& parameters,
+                 const op::Parameters& parameters,
                  const std::string& name = "");
 
         virtual ~Function() {}
@@ -57,7 +59,7 @@ namespace ngraph
         const Shape& get_output_shape(size_t i) const;
 
         /// Return the function parameters
-        const Parameters& get_parameters() const { return m_parameters; }
+        const op::Parameters& get_parameters() const { return m_parameters; }
         /// Return the ops that generate the results
         const Nodes get_results() const { return m_results; }
         /// Check that there is a single result and return it.
@@ -76,7 +78,7 @@ namespace ngraph
 
     protected:
         Nodes m_results;
-        Parameters m_parameters;
+        op::Parameters m_parameters;
         std::string m_name;
         size_t m_temporary_pool_size;
 

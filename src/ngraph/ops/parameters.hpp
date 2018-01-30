@@ -21,27 +21,27 @@ namespace ngraph
     namespace op
     {
         class Parameter;
+
+        /// \brief Zero or more nodes.
+        class Parameters : public VectorForwarder<std::shared_ptr<op::Parameter>, Parameters>
+        {
+        public:
+            Parameters(const std::initializer_list<std::shared_ptr<op::Parameter>>& parameters)
+                : VectorForwarder<std::shared_ptr<op::Parameter>, Parameters>(parameters)
+            {
+            }
+
+            Parameters(const std::vector<std::shared_ptr<op::Parameter>>& parameters)
+                : VectorForwarder<std::shared_ptr<op::Parameter>, Parameters>(parameters)
+            {
+            }
+
+            Parameters(const Parameters& parameters)
+                : VectorForwarder<std::shared_ptr<op::Parameter>, Parameters>(parameters)
+            {
+            }
+
+            Parameters() {}
+        };
     }
-
-    /// \brief Zero or more nodes.
-    class Parameters : public VectorForwarder<std::shared_ptr<op::Parameter>, Parameters>
-    {
-    public:
-        Parameters(const std::initializer_list<std::shared_ptr<op::Parameter>>& parameters)
-            : VectorForwarder<std::shared_ptr<op::Parameter>, Parameters>(parameters)
-        {
-        }
-
-        Parameters(const std::vector<std::shared_ptr<op::Parameter>>& parameters)
-            : VectorForwarder<std::shared_ptr<op::Parameter>, Parameters>(parameters)
-        {
-        }
-
-        Parameters(const Parameters& parameters)
-            : VectorForwarder<std::shared_ptr<op::Parameter>, Parameters>(parameters)
-        {
-        }
-
-        Parameters() {}
-    };
 }
