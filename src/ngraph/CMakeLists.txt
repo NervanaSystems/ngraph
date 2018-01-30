@@ -168,6 +168,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_kernel_utils.cpp
         runtime/cpu/cpu_emitter.cpp
         runtime/cpu/cpu_external_function.cpp
+        runtime/cpu/cpu_tensor_view.cpp
         runtime/cpu/cpu_tensor_view_wrapper.cpp
         runtime/cpu/cpu_layout_descriptor.cpp
         runtime/cpu/ops/matmul_bias.cpp
