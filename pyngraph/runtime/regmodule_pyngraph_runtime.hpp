@@ -20,7 +20,6 @@
 #include "pyngraph/runtime/external_function.hpp"
 #include "pyngraph/runtime/manager.hpp"
 #include "pyngraph/runtime/tensor_view.hpp"
-#include "pyngraph/runtime/value.hpp"
 
 namespace py = pybind11;
 

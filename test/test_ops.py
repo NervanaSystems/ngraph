@@ -480,7 +480,6 @@ def test_tanh():
     unary_op_exec(op_str, input_list)
 
 
-@pytest.mark.skip('Not implemented')
 def test_reverse():
     return
     input_list = [[-1, 0], [0.5, 1]]

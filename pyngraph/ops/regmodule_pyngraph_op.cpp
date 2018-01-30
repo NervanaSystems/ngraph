@@ -58,7 +58,7 @@ void regmodule_pyngraph_op(py::module m){
     regclass_pyngraph_op_OneHot(m_op);
     regclass_pyngraph_op_Reduce(m_op);
     regclass_pyngraph_op_Reshape(m_op);
-    //regclass_pyngraph_op_Reverse(m_op);  //implemented after Jan. 2
+    regclass_pyngraph_op_Reverse(m_op);
     regclass_pyngraph_op_Select(m_op);
     regclass_pyngraph_op_Sign(m_op);
     regclass_pyngraph_op_Sin(m_op);
