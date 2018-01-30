@@ -13,15 +13,21 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-
+#############################
 Intel nGraph library project
-============================
+#############################
 
-Intel nGraph library provides a suite of components to promote computational 
-efficiency and enable portability of Deep Neural Network (DNN) models defined in 
-a variety of frameworks. The library translates a framework's representation of 
-computations into a neutral-intermediate representation specifically designed to 
-run better on target hardware, on both Intel and non-Intel platforms.
+Welcome to the Intel nGraph project, an open source C++ library for developers
+of :abbr:`Deep Learning (DL)` (DL) systems and frameworks. Here you will find 
+a suite of components, documentation, and APIs that can be used with 
+:abbr:`Deep Neural Network (DNN)` models defined in a variety of frameworks.  
+
+The nGraph library translates a framework’s representation of computations into 
+a neutral-:abbr:`Intermediate Representation (IR)` designed to promote 
+computational efficiency on target hardware; it works on Intel and non-Intel 
+platforms.
+
+For further overview details, see the :doc:`about` page.
 
 
 .. toctree::
@@ -29,7 +35,6 @@ run better on target hardware, on both Intel and non-Intel platforms.
    :caption: Table Of Contents
    :name: tocmaster
 
-   about.rst
    installation.rst
    testing-libngraph.rst
    framework-integration-guides.rst
@@ -37,8 +42,8 @@ run better on target hardware, on both Intel and non-Intel platforms.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Models 
-   :name: Models
+   :caption: Algorithms 
+   :name: 
 
 .. toctree::
    :maxdepth: 2
@@ -56,13 +61,13 @@ run better on target hardware, on both Intel and non-Intel platforms.
    :maxdepth: 1
    :caption: Ops
 
-   op/convolution.rst
-
+   ops/convolution.rst
 
 .. toctree::
    :maxdepth: 1
    :caption: Project Docs
 
+   about.rst
    release-notes.rst
    code-contributor-README.rst
 

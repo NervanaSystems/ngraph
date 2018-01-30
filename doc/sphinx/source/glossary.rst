@@ -28,6 +28,10 @@ Glossary
        In the context of a function graph, the term "result" refers to what 
        stands in for the returned value.
 
+   shape
+       The shape of a tensor is a tuple of non-negative integers that represents an  
+       exclusive upper bound for coordinate values.
+
    step
        An abstract "action" that produces zero or more tensor outputs from zero or more tensor 
        inputs. Steps correspond to *ops* that connect *nodes*.

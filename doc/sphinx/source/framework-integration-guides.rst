@@ -7,9 +7,9 @@ Framework Integration Guides
 .. contents::
 
 
-.. mxnet_intg:
+.. _mxnet_intg:
 
-Compile MXNet with ``libngraph``
+Compile MXNet\* with ``libngraph``
 ================================
 
 .. important:: These instructions pick up from where the :doc:`installation`
@@ -91,10 +91,10 @@ Compile MXNet with ``libngraph``
 
 
 
-.. tensorflow_intg:
+.. _tensorflow_intg:
 
-Building TensorFlow\* with an XLA plugin to ``libngraph``
-=========================================================
+Build TensorFlow\* with an XLA plugin to ``libngraph``
+======================================================
 
 .. important:: These instructions pick up where the :doc:`installation` 
    installation instructions left off, so they presume that your system already
@@ -213,7 +213,7 @@ your cloned version of `ngraph-tensorflow`_:
    $ python mnist_softmax_ngraph.py
 
 
-.. _MXNet: http://mxnet.incubator.apache.org/
+.. _MXNet: http://mxnet.incubator.apache.org
 .. _bazel version 0.5.4: https://github.com/bazelbuild/bazel/releases/tag/0.5.4
 .. _1.3 installation guide: https://www.tensorflow.org/versions/r1.3/install/install_sources#prepare_environment_for_linux
 .. _ngraph-tensorflow: https://github.com/NervanaSystems/ngraph-tensorflow
