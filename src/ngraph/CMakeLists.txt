@@ -112,7 +112,7 @@ foreach(OP ${OPS})
     foreach(LINE ${OP_CLASS})
         string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1:\\2" CLASS_FOUND ${LINE})
         set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
-   endforeach(LINE ${OP_CLASS})
+    endforeach(LINE ${OP_CLASS})
 endforeach()
 message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt")
 string(REPLACE ";" "\n" OP_CLASS_LINES "${OP_CLASS_LIST}")
@@ -129,14 +129,8 @@ if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
-include_directories(
-    "${NGRAPH_INCLUDE_PATH}"
-    )
-
-include_directories(
-    SYSTEM
-    "${EIGEN_INCLUDE_DIR}"
-    )
+include_directories("${NGRAPH_INCLUDE_PATH}")
+include_directories(SYSTEM "${EIGEN_INCLUDE_DIR}")
 
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     MKLDNN_INCLUDE_DIR)
