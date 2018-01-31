@@ -66,6 +66,11 @@ SOFTWARE.
         #error "unsupported Clang version - see https://github.com/nlohmann/json#supported-compilers"
     #endif
 #elif defined(__GNUC__) && !(defined(__ICC) || defined(__INTEL_COMPILER))
+    // [Modified by Intel] The minimum GCC version below has been changed to
+    // gcc-4.8.5, from gcc-4.9.0. This library is not warranted to work with
+    // 4.8.5 due to certain compiler/runtime bugs, but testing seems to
+    // indicate that our usage of it is not actually triggering those bugs,
+    // since the relevant templates do not happen to be instantiated.
     #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40805
         #error "unsupported GCC version - see https://github.com/nlohmann/json#supported-compilers"
     #endif
