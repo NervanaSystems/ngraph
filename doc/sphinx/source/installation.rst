@@ -1,8 +1,8 @@
 .. installation:
 
-
-Building the Intel® nGraph™ library 
-####################################
+###################################
+Install the Intel® nGraph™ library 
+###################################
 
 Build Environments
 ==================
@@ -16,25 +16,25 @@ packages and prerequisites:
    :widths: 25, 15, 25, 20, 25
    :escape: ~
 
-   CentOS 7.4 64-bit,, CMake 3.5.1 + GNU Make, supported,
+   CentOS 7.4 64-bit, CLang 3.4, GCC 4.8 + CMake 2.8, supported, ``patch diffutils zlib1g-dev libtinfo-dev`` 
    Ubuntu 16.04 (LTS) 64-bit, CLang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 git libtinfo-dev``
    Ubuntu 16.04 (LTS) 64-bit, CLang 4.0, CMake 3.5.1 + GNU Make, officially unsupported, ``build-essential cmake clang-4.0 git libtinfo-dev``
-   Clear Linux\* OS for Intel Architecture, Clang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
+   Clear Linux\* OS for Intel Architecture, CLang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
 Installation Steps
 ==================
 
 To build |nGl| on one of the supported systems, the default CMake procedure 
-will install ``ngraph_dist`` to your user's ``$HOME`` directory as
-the default install location.  See the :file:`CMakeLists.txt` file for more 
-information.
+will install ``ngraph_dist`` to the installing user's ``$HOME`` directory as
+the default install location. See the :file:`CMakeLists.txt` file for more 
+information about how to change or customize this location.
 
 This guide provides one possible configuration that does not rely on a 
 virtual environment. You are, of course, free to use a virtual environment, 
 or to set up user directories and permissions however you like. 
 
 #.  Since most of a developer's interaction with a frontend framework 
-    will take place locally through Python, set a placeholder directory 
+    will take place locally through Pythonic APIs, set a placeholder directory 
     where Python bindings can interact more efficiently with the nGraph 
     library backend components. Create something like ``/opt/local`` and 
     (presuming you have sudo permissions), give ownership of that local 
@@ -81,7 +81,7 @@ or to set up user directories and permissions however you like.
 #. (Optional, requires `Sphinx`_.)  Run ``make html`` inside the  
    ``doc/sphinx`` directory to build HTML docs for the nGraph library.    
 
-#. (COMING SOON -- optional, requires `doxygen`_.)  TBD
+#. (COMING SOON -- Generate API docs optional, requires `doxygen`_.)  TBD
 
 
 
@@ -106,14 +106,6 @@ according to those conventions. These scripts require the command
   $ mkdir -p $HOME/bin
   $ ln -s /usr/local/opt/llvm@3.9/bin/clang-format $HOME/bin/clang-format-3.9
   $ echo 'export PATH=$HOME/bin:$PATH' >> $HOME/.bash_profile
-
-
-
-External library requirements
-==============================
-TBD
-
-
 
 .. _doxygen: https://www.stack.nl/~dimitri/doxygen/
 .. _Sphinx:  http://www.sphinx-doc.org/en/stable/

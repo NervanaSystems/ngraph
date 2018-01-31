@@ -1,10 +1,6 @@
-.. build-a-functiongraph:
-
-Defining a function graph on the nGraph library
-###############################################
+.. graph-basics:
 
 Graph Basics
-============
 
 *Tensors* are maps from *coordinates* to
 scalar values, all of the same type, called the *element type*
@@ -32,6 +28,37 @@ represent tensors that will be provided during execution. In the graph,
 every op input must be associated with an op output, and every op
 output must have a constant element type and shape that will
 correspond to the tensors used in the computation.
+=======
+=============
+
+Ops
+---
+
+The graph is a composition of tensor computations, called ``ops``, which are 
+nodes in the graph. In the graph, every :term:`op` *input* must be associated 
+with an op *output*, and every op output must have a constant element type and 
+shape to correspond with the tensors used in the computation. Every op has zero 
+or more inputs and zero or more outputs representing tensors that will be 
+provided during execution. 
+
+Tensors
+-------
+
+*Tensors* are maps from coordinates to scalar values, all of the same type, 
+called the *element type* of the tensor. Coordinates are tuples of non-negative 
+integers; all the coordinates for a tensor have the same length, called the 
+*rank* of the tensor. We often use :math:`n`-tensor for tensors with rank 
+:math:`n`. An :math:`n`-dimensional array is a common implementation of a tensor, 
+and the two terms are often used interchangeably. However, a tensor could just 
+as easily be a function that returns 0 for every coordinate.
+
+The :term:`shape` of a tensor is a tuple of non-negative integers that represents an  
+exclusive upper bound for coordinate values. A tensor has an element for every 
+coordinate less than the shape, so the *size* of the tensor is the product of 
+the values in the shape.
+
+A graph function describes a computation whose inputs and outputs are all 
+tensors. 
 Ops may also have additional attributes that do not change during
 execution.
 
@@ -72,8 +99,11 @@ Since all nodes supplying outputs for inputs to a new node must exist
 before the new node can be created, it is impossible to construct a 
 cyclic graph. Furthermore, type-checking can be performed as the ops 
 are constructed.
+<<<<<<< HEAD:doc/sphinx/source/build-a-functiongraph.rst
 
 .. TODO add basic semantics 
+=======
+>>>>>>> amazon_codeshare:doc/sphinx/source/graph-basics.rst
 
 .. important:: During graph building, most of the storage associated 
    with values is *implicit*. During compilation, *explicit* storage 
@@ -113,13 +143,11 @@ sources: *literals*, *calls* to ops (built-in ops or user-defined ops AKA
    zero or more run-time parameters of *arbitrary* value types and a result 
    whose type is the tuple type of the types of the parameters. 
 
-   - *functions* are user-defined ops.
-     - A user-defined function is "external" if it can be called externally.   
-     - The result is a graph node that  depends only on parameters.
-     - The result's ``type`` of call to a function is determined from the 
-       types of the arguments.
-     - Any external function interacting with the graph at the level of 
-       user-defined ``op`` must specify a type for each of its parameters.   
+   #. **Functions*** are user-defined ops.
+      - A user-defined function is "external" if it can be called externally.
+      - The result is a graph node that depends only on parameters.
+     - The result's type of call to a function is determined from the types of the arguments.
+     - Any external function interacting with the graph at the level of user-defined op must specify a type for each of its parameters.
 
 #. *Parameters* of user-defined *functions* may also be a source of a graph's
    values. Externally-callable functions must specify a type for each parameter.
