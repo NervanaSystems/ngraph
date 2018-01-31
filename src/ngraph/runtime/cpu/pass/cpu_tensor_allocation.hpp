@@ -34,7 +34,9 @@ namespace ngraph
                     {
                         for (size_t i = 0; i < node->get_output_size(); ++i)
                         {
-                            auto tv = node->get_output_tensor_view(i);
+                            auto tensor_view = node->get_output_tensor_view(i);
+                            auto cpu_tensor_view = std::static_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(tensor_view);
+
                         }
                     }
                     return false;

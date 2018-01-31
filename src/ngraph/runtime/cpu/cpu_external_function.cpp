@@ -94,14 +94,14 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_tensor_allocation.hpp"
+//#include "ngraph/runtime/cpu/pass/cpu_tensor_allocation.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 static const string s_output_dir = "cpu_codegen";
 
-// Temporary Memory pool alignment
+// Temporary Memory Pool alignment
 static const size_t MemoryPoolAlignment = 64;
 
 class StaticInitializers
