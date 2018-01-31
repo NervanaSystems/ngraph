@@ -96,6 +96,7 @@ namespace ngraph
             {
                 if (new_args.size() != 1)
                     throw ngraph_error("Incorrect number of new arguments");
+
                 return std::make_shared<AvgPool>(new_args.at(0),
                                                  m_window_shape,
                                                  m_window_movement_strides,
@@ -103,6 +104,9 @@ namespace ngraph
                                                  m_padding_above);
             }
             bool is_functionally_identical(const Node&) const override;
+
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
 
             /// \return The window shape.
             const Shape& get_window_shape() const { return m_window_shape; }
@@ -112,6 +116,44 @@ namespace ngraph
             const Shape& get_padding_below() const { return m_padding_below; }
             /// \return The above-padding shape.
             const Shape& get_padding_above() const { return m_padding_above; }
+        protected:
+            Shape m_window_shape;
+            Strides m_window_movement_strides;
+            Shape m_padding_below;
+            Shape m_padding_above;
+        };
+
+        class AvgPoolBprop : public RequiresTensorViewArgs
+        {
+        public:
+            AvgPoolBprop(const std::shared_ptr<Node>& arg,
+                         const std::shared_ptr<Node>& delta,
+                         const Shape& window_shape,
+                         const Strides& window_movement_strides,
+                         const Shape& padding_below,
+                         const Shape& padding_above);
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 2)
+                    throw ngraph_error("Incorrect number of new arguments");
+
+                AvgPoolBprop* avpn = new AvgPoolBprop(new_args.at(0),
+                                                      new_args.at(1),
+                                                      m_window_shape,
+                                                      m_window_movement_strides,
+                                                      m_padding_below,
+                                                      m_padding_above);
+                return std::shared_ptr<op::AvgPoolBprop>(avpn);
+            }
+
+            const Shape& get_window_shape() const { return m_window_shape; }
+            const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
+            const Shape& get_padding_below() const { return m_padding_below; }
+            const Shape& get_padding_above() const { return m_padding_above; }
+            bool is_functionally_identical(const Node&) const override;
+
         protected:
             Shape m_window_shape;
             Strides m_window_movement_strides;

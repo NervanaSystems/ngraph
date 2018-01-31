@@ -2341,6 +2341,29 @@ void runtime::cpu::CPU_Emitter::EmitPad(codegen::CodeWriter& writer,
     writer << "            {" << join(pad->get_padding_interior()) << "});\n";
 }
 
+void runtime::cpu::CPU_Emitter::EmitAvgPoolBprop(
+    codegen::CodeWriter& writer,
+    const ngraph::Node* n,
+    const vector<runtime::cpu::TensorViewWrapper>& args,
+    const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto apb = static_cast<const op::AvgPoolBprop*>(n);
+
+    auto arg_shape = args[0].get_shape();
+    auto delta_shape = args[1].get_shape();
+
+    writer << "kernel::avg_pool_bprop<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    writer << "                 " << args[1].get_name() << ",\n";
+    writer << "                 " << out[0].get_name() << ",\n";
+    writer << "                 {" << join(arg_shape) << "},\n";
+    writer << "                 {" << join(delta_shape) << "},\n";
+    writer << "                 {" << join(apb->get_window_shape()) << "},\n";
+    writer << "                 {" << join(apb->get_window_movement_strides()) << "},\n";
+    writer << "                 {" << join(apb->get_padding_below()) << "},\n";
+    writer << "                 {" << join(apb->get_padding_above()) << "},\n";
+    writer << "                 true);\n";
+}
+
 //------------------------------------------------------------------------------------------------
 // Utility methods
 //------------------------------------------------------------------------------------------------
