@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required (VERSION 3.1)
+cmake_minimum_required (VERSION 2.8.12.2)
 
 set(NGRAPH_INCLUDE_PATH
     ${CMAKE_CURRENT_SOURCE_DIR}/src
