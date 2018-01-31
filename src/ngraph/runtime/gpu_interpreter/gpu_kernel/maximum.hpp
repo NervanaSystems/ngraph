@@ -42,59 +42,55 @@ namespace ngraph
                  }
             }
         
-        template<>
-        inline void maximum(float* arg0, float* arg1, float* out, size_t count)
-        {
-        cudnnHandle_t cudnnHandle;
-        checkCUDNN(cudnnCreate(&cudnnHandle));
-        
-        cudnnTensorDescriptor_t descriptor;
-        checkCUDNN(cudnnCreateTensorDescriptor(&descriptor));
-        checkCUDNN(cudnnSetTensor4dDescriptor(descriptor,
-                                      /*format=*/CUDNN_TENSOR_NHWC,
-                                      /*dataType=*/CUDNN_DATA_FLOAT,
-                                      /*batch_size=*/1,
-                                      /*channels=*/1,
-                                      /*image_height=*/1,
-                                      /*image_width=*/count));
+            template<>
+            inline void maximum(float* arg0, float* arg1, float* out, size_t count)
+            {
+                cudnnHandle_t cudnnHandle;
+                checkCUDNN(cudnnCreate(&cudnnHandle));
+                cudnnTensorDescriptor_t descriptor;
+                checkCUDNN(cudnnCreateTensorDescriptor(&descriptor));
+                checkCUDNN(cudnnSetTensor4dDescriptor(descriptor,
+                                            /*format=*/CUDNN_TENSOR_NHWC,
+                                            /*dataType=*/CUDNN_DATA_FLOAT,
+                                            /*batch_size=*/1,
+                                            /*channels=*/1,
+                                            /*image_height=*/1,
+                                            /*image_width=*/count));
 
+                cudnnOpTensorDescriptor_t opTensorDesc;
+                checkCUDNN(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+                checkCUDNN(cudnnSetOpTensorDescriptor(opTensorDesc,
+                                            CUDNN_OP_TENSOR_MAX,
+                                            CUDNN_DATA_FLOAT,
+                                            CUDNN_NOT_PROPAGATE_NAN));
 
-        cudnnOpTensorDescriptor_t opTensorDesc;
-        checkCUDNN(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+                float* d_arg0;
+                float* d_arg1;
+                float* d_out;
+                cudaMalloc((void**) &d_arg0, sizeof(float) * count);
+                cudaMalloc((void**) &d_arg1, sizeof(float) * count);
+                cudaMalloc((void**) &d_out, sizeof(float) * count);
+                cudaMemcpy(d_arg0, (float *)arg0, sizeof(float) * count, cudaMemcpyHostToDevice);	
+                cudaMemcpy(d_arg1, (float *)arg1, sizeof(float) * count, cudaMemcpyHostToDevice);
+                
+                float alpha1 = 1.0, alpha2 = 1.0, beta = 0;	
+                checkCUDNN(cudnnOpTensor( cudnnHandle, 
+                                        opTensorDesc, 
+                                        &alpha1, 
+                                        descriptor, 
+                                        d_arg0,
+                                        &alpha2, 
+                                        descriptor, 
+                                        d_arg1,
+                                        &beta, 
+                                        descriptor, 
+                                        d_out));
 
-        checkCUDNN(cudnnSetOpTensorDescriptor(opTensorDesc,
-                                      CUDNN_OP_TENSOR_MAX,
-                      CUDNN_DATA_FLOAT,
-                      CUDNN_NOT_PROPAGATE_NAN));
-
-        float* d_arg0;
-        float* d_arg1;
-        float* d_out;
-
-         cudaMalloc((void**) &d_arg0, sizeof(float) * count);
-         cudaMalloc((void**) &d_arg1, sizeof(float) * count);
-         cudaMalloc((void**) &d_out, sizeof(float) * count);
-        cudaMemcpy(d_arg0, (float *)arg0, sizeof(float) * count, cudaMemcpyHostToDevice);	
-        cudaMemcpy(d_arg1, (float *)arg1, sizeof(float) * count, cudaMemcpyHostToDevice);
-        
-        float alpha1 = 1.0, alpha2 = 1.0, beta = 0;	
-        checkCUDNN(cudnnOpTensor( cudnnHandle, 
-             opTensorDesc, 
-             &alpha1, 
-             descriptor, 
-             d_arg0,
-             &alpha2, 
-             descriptor, 
-             d_arg1,
-             &beta, 
-             descriptor, 
-             d_out));
-
-        cudaMemcpy(out, d_out, sizeof(float) * count, cudaMemcpyDeviceToHost);
-        cudaFree(d_arg0);
-        cudaFree(d_arg1);
-        cudaFree(d_out);	
-         cudnnDestory(cudnnHandle);
+                cudaMemcpy(out, d_out, sizeof(float) * count, cudaMemcpyDeviceToHost);
+                cudaFree(d_arg0);
+                cudaFree(d_arg1);
+                cudaFree(d_out);	
+                cudnnDestory(cudnnHandle);
             }
         }
     }

@@ -38,7 +38,7 @@ namespace ngraph
             template <>
             inline void abs<float>(float* arg, float* out, size_t count)
             {
-		runVecAbs(arg, out, (int)count);
+                runVecAbs(arg, out, (int)count);
             }
         }
     }
