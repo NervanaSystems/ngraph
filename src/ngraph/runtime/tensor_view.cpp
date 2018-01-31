@@ -47,6 +47,11 @@ const Strides& runtime::TensorView::get_strides() const
     return m_descriptor->get_tensor_view_layout()->get_strides();
 }
 
+const element::Type& runtime::TensorView::get_element_type() const
+{
+    return m_descriptor->get_tensor_view_type()->get_element_type();
+}
+
 shared_ptr<descriptor::layout::TensorViewLayout> runtime::TensorView::get_tensor_view_layout() const
 {
     return m_descriptor->get_tensor_view_layout();

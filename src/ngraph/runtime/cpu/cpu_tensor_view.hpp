@@ -52,6 +52,8 @@ namespace ngraph
                 void read(void* p, size_t tensor_offset, size_t n) const override;
 
             private:
+                static const size_t BufferAlignment;
+
                 char* buffer;
                 char* aligned_buffer;
                 size_t buffer_size;

@@ -16,7 +16,7 @@
 
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/host_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -36,14 +36,14 @@ void runtime::cpu::CPU_CallFrame::tensor_call(
     vector<void*> outputs;
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
-        shared_ptr<runtime::HostTensorView> tv =
-            static_pointer_cast<runtime::HostTensorView>(input_tvs[i]);
+        shared_ptr<runtime::cpu::CPUTensorView> tv =
+            static_pointer_cast<runtime::cpu::CPUTensorView>(input_tvs[i]);
         inputs.push_back(tv->get_data_ptr());
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        shared_ptr<runtime::HostTensorView> tv =
-            static_pointer_cast<runtime::HostTensorView>(output_tvs[i]);
+        shared_ptr<runtime::cpu::CPUTensorView> tv =
+            static_pointer_cast<runtime::cpu::CPUTensorView>(output_tvs[i]);
         outputs.push_back(tv->get_data_ptr());
     }
 

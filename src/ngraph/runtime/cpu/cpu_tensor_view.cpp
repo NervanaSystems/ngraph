@@ -15,12 +15,19 @@
 #include <cstring>
 #include <memory>
 
-#include "cpu_tensor_view.hpp"
+#include "ngraph/except.hpp"
+#include "ngraph/shape.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
+#include "cpu_tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;
+
+// TODO(jmenon): Refactor all the alignment specifications into
+// a single place and allow lower or no alignment when possible
+
+const size_t runtime::cpu::CPUTensorView::BufferAlignment = 64;
 
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape,
@@ -30,6 +37,19 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     , buffer(nullptr)
     , aligned_buffer(nullptr)
 {
+    buffer_size = shape_size(shape) * element_type.size();
+    if (buffer_size)
+    {
+        size_t allocation_size = buffer_size + BufferAlignment;
+        auto ptr = malloc(allocation_size);
+        if (!ptr)
+        {
+            throw ngraph_error("Error allocating CPU Tensor View memory");
+        }
+        buffer = static_cast<char*>(ptr);
+        std::align(BufferAlignment, buffer_size, ptr, allocation_size);
+        aligned_buffer = static_cast<char*>(ptr);
+    }
 }
 
 runtime::cpu::CPUTensorView::~CPUTensorView()
@@ -69,10 +89,5 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
 
 size_t runtime::cpu::CPUTensorView::get_size() const
 {
-    return get_tensor_view_layout()->get_size();
-}
-
-const element::Type& runtime::cpu::CPUTensorView::get_element_type() const
-{
-    return get_tensor_view_layout()->get_element_type();
+    return get_element_count();
 }
