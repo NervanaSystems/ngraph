@@ -190,6 +190,10 @@ texinfo_documents = [
 
 html_add_permalinks = ""
 
+breathe_projects = {
+    "nGraph": "../../../build/doc/doxygen/xml",
+}
+breathe_default_project = "nGraph"
 
 breathe_projects = {
     "nGraph": "xml"
