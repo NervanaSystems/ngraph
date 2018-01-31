@@ -225,8 +225,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     string function_name = m_function->get_name();
 
     ngraph::pass::Manager pass_manager;
-    // For now, just make everyone row-major.
-    //pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
+
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(64);
