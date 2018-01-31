@@ -25,6 +25,11 @@ op::AllReduce::AllReduce(const std::shared_ptr<Node>& arg)
     auto& input = m_inputs.at(0);
     set_value_type_checked(
         make_shared<TensorViewType>(input.get_element_type(), input.get_shape()));
+
+    if ((arg->get_element_type() != element::f32) && (arg->get_element_type() != element::f64))
+    {
+        throw ngraph_error("Unsupported data type");
+    }
 }
 
 #endif

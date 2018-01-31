@@ -157,10 +157,6 @@ void runtime::cpu::CPU_Emitter::EmitAllReduce(codegen::CodeWriter& writer,
     {
         data_type = MPI_DOUBLE;
     }
-    else
-    {
-        throw ngraph_error("Unsupported data type");
-    }
 
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;

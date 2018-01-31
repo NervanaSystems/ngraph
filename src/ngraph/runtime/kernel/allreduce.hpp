@@ -38,10 +38,6 @@ namespace ngraph
                 {
                     data_type = MPI_DOUBLE;
                 }
-                else
-                {
-                    throw ngraph_error("Unsupported data type");
-                }
 
                 MPI_Allreduce(arg, out, count, data_type, MPI_SUM, MPI_COMM_WORLD);
             }
