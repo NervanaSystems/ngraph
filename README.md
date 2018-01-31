@@ -7,8 +7,16 @@ Checkout ngraph++ and python wrapper code and build bdist wheel.
 ```
 git clone --branch python_binding --recursive https://github.com/NervanaSystems/private-ngraph-cpp.git
 cd private-ngraph-cpp/python
-./build.sh
 ```
+To build python2 bdist wheel type
+```
+./build2.sh
+```
+To build python3 bdist wheel type
+```
+./build3.sh
+```
+
 The bdist wheel will be placed in private-ngraph-cpp/python/build/dist
 Activate your virtual environment and install the bdist wheel
 
