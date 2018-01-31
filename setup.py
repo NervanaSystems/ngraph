@@ -192,8 +192,9 @@ class BuildExt(build_ext):
 
 
 requirements = [
-    'setuptools',
-    'six',
+    "setuptools",
+    "six",
+    "numpy" 
 ]
 
 
