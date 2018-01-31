@@ -27,18 +27,18 @@ namespace ngraph
     class Shape : public std::vector<size_t>
     {
     public:
-        Shape(const std::initializer_list<size_t>& axes)
-            : std::vector<size_t>(axes)
+        Shape(const std::initializer_list<size_t>& axis_lengths)
+            : std::vector<size_t>(axis_lengths)
         {
         }
 
-        Shape(const std::vector<size_t>& axes)
-            : std::vector<size_t>(axes)
+        Shape(const std::vector<size_t>& axis_lengths)
+            : std::vector<size_t>(axis_lengths)
         {
         }
 
-        Shape(const Shape& axes)
-            : std::vector<size_t>(axes)
+        Shape(const Shape& axis_lengths)
+            : std::vector<size_t>(axis_lengths)
         {
         }
 

@@ -22,18 +22,18 @@ namespace ngraph
     class Strides : public std::vector<size_t>
     {
     public:
-        Strides(const std::initializer_list<size_t>& axes)
-            : std::vector<size_t>(axes)
+        Strides(const std::initializer_list<size_t>& axis_strides)
+            : std::vector<size_t>(axis_strides)
         {
         }
 
-        Strides(const std::vector<size_t>& axes)
-            : std::vector<size_t>(axes)
+        Strides(const std::vector<size_t>& axis_strides)
+            : std::vector<size_t>(axis_strides)
         {
         }
 
-        Strides(const Strides& axes)
-            : std::vector<size_t>(axes)
+        Strides(const Strides& axis_strides)
+            : std::vector<size_t>(axis_strides)
         {
         }
 

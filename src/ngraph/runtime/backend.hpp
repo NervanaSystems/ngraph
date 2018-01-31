@@ -17,12 +17,11 @@
 #include <memory>
 
 #include "ngraph/log.hpp"
+#include "ngraph/shape.hpp"
 #include "ngraph/types/element_type.hpp"
 
 namespace ngraph
 {
-    class Shape;
-
     namespace element
     {
         class Type;

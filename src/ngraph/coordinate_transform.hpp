@@ -67,14 +67,14 @@ namespace ngraph
         size_t index(const Coordinate& c) const;
         bool has_source_coordinate(const Coordinate& c) const;
         Coordinate to_source_coordinate(const Coordinate& c) const;
-        Shape get_target_shape() const;
+        const Shape& get_target_shape() const;
 
-        Shape get_source_shape() { return m_source_shape; }
-        Coordinate get_source_start_corner() { return m_source_start_corner; }
-        Coordinate get_source_end_corner() { return m_source_end_corner; }
-        Strides get_source_strides() { return m_source_strides; }
-        AxisVector get_source_axis_order() { return m_source_axis_order; }
-        Strides get_target_dilation_strides() { return m_target_dilation_strides; }
+        const Shape& get_source_shape() const { return m_source_shape; }
+        const Coordinate& get_source_start_corner() const { return m_source_start_corner; }
+        const Coordinate& get_source_end_corner() const { return m_source_end_corner; }
+        const Strides& get_source_strides() const { return m_source_strides; }
+        const AxisVector& get_source_axis_order() const { return m_source_axis_order; }
+        const Strides& get_target_dilation_strides() const { return m_target_dilation_strides; }
         class Iterator
         {
         public:
