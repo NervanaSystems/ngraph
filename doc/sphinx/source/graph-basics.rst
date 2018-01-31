@@ -1,6 +1,7 @@
 .. graph-basics:
 
 Graph Basics
+============
 
 *Tensors* are maps from *coordinates* to
 scalar values, all of the same type, called the *element type*
@@ -28,8 +29,6 @@ represent tensors that will be provided during execution. In the graph,
 every op input must be associated with an op output, and every op
 output must have a constant element type and shape that will
 correspond to the tensors used in the computation.
-=======
-=============
 
 Ops
 ---
@@ -88,8 +87,8 @@ elements are that coordinate for the two inputs. Unlike many
 frameowrks, it says nothing about storage or arrays.
 
 An ``Add`` op is used to represent a tensor sum. To construct an Add op,
-two op outputs are needed. For example, two parameters could be used,
-or the same parameter twice. All outputs of constructed ops have
+each of the two inputs of the ``Add`` must be associated with some output
+of some already created op.  All outputs of constructed ops have
 element types and shapes, so when the Add is constructed, it verifies
 that the two outputs associated with its two inputs have the same
 element type and shape and sets its output to have the same element
@@ -99,6 +98,31 @@ Since all nodes supplying outputs for inputs to a new node must exist
 before the new node can be created, it is impossible to construct a 
 cyclic graph. Furthermore, type-checking can be performed as the ops 
 are constructed.
+
+Functions
+---------
+
+Ops are grouped together in an ``ExternalFunction``, which describes a 
+computation that can be invoked on tensor arguments to compute tensor 
+results. The caller provides tensors in the form of row-major arrays 
+for each argument and each computed result. The same array can be used 
+for more than one argument, but each result must use a distinct array,
+and argument arrays cannot be used as result arrays.
+
+The ``ExternalFunction`` has ``Parameter``, a vector of ``Parameter`` ops,
+where no ``Parameter`` op may appear more than once in the vector.
+Each ``Parameter`` op has attributes for its shape and element type; 
+arrays passed to the function must have the same shape and element type.
+The ``ExternalFunction`` also has ``Nodes``, a vector of ops that
+are the results being computed (Note: We may require the results to 
+be ``Result`` ops in the future. A ``Result`` op would have a single 
+input and no outputs, and complement the zero input single output 
+``Parameter`` op.)
+
+During execution, the output of the nth ``Parameter`` op will be the tensor
+corresponding to the array provided as the nth argument, and the outputs
+of all result ops will be written into the result arrays in row-major
+order.
 
 .. TODO add basic semantics 
 
@@ -143,8 +167,8 @@ sources: *literals*, *calls* to ops (built-in ops or user-defined ops AKA
    #. **Functions*** are user-defined ops.
       - A user-defined function is "external" if it can be called externally.
       - The result is a graph node that depends only on parameters.
-     - The result's type of call to a function is determined from the types of the arguments.
-     - Any external function interacting with the graph at the level of user-defined op must specify a type for each of its parameters.
+      - The result's type of call to a function is determined from the types of the arguments.
+      - Any external function interacting with the graph at the level of user-defined op must specify a type for each of its parameters.
 
 #. *Parameters* of user-defined *functions* may also be a source of a graph's
    values. Externally-callable functions must specify a type for each parameter.
