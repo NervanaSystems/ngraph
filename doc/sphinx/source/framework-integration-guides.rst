@@ -10,7 +10,7 @@ Framework Integration Guides
 .. _mxnet_intg:
 
 Compile MXNet\* with ``libngraph``
-================================
+==================================
 
 .. important:: These instructions pick up from where the :doc:`installation`
    installation instructions left off, so they presume that your system already
