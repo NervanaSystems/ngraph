@@ -111,7 +111,7 @@ foreach(OP ${OPS})
     foreach(LINE ${OP_CLASS})
         string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1:\\2" CLASS_FOUND ${LINE})
         set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
-   endforeach(LINE ${OP_CLASS})
+    endforeach(LINE ${OP_CLASS})
 endforeach()
 message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt")
 string(REPLACE ";" "\n" OP_CLASS_LINES "${OP_CLASS_LIST}")
@@ -128,14 +128,8 @@ if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
-include_directories(
-    "${NGRAPH_INCLUDE_PATH}"
-    )
-
-include_directories(
-    SYSTEM
-    "${EIGEN_INCLUDE_DIR}"
-    )
+include_directories("${NGRAPH_INCLUDE_PATH}")
+include_directories(SYSTEM "${EIGEN_INCLUDE_DIR}")
 
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     MKLDNN_INCLUDE_DIR)
@@ -169,13 +163,15 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_emitter.cpp
         runtime/cpu/cpu_external_function.cpp
         runtime/cpu/cpu_tensor_view_wrapper.cpp
+        runtime/cpu/ops/matmul_bias.cpp
+        runtime/cpu/pass/cpu_fusion.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
     # This must be kept in sync with the LLVM + Clang version in use
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS
-      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";TBB_HEADERS_PATH=\"${TBB_ROOT}/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\";")
+      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";TBB_HEADERS_PATH=\"${TBB_ROOT}/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\";")
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
     set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
       "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE};")
