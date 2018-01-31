@@ -31,18 +31,22 @@ namespace ngraph
                            std::shared_ptr<Node> gamma,
                            std::shared_ptr<Node> beta,
                            std::shared_ptr<Node> input,
-                           std::shared_ptr<Node> mean,
-                           std::shared_ptr<Node> variance,
-                           Shape output_shape)
+                           Shape mean_shape,
+                           Shape variance_shape,
+                           Shape output_shape,
+                           const element::Type& mean_et,
+                           const element::Type& variance_et)
                         :RequiresTensorViewArgs("BatchnormFprop", {eps, gamma, beta, input})
                         ,mkl_output_shape(output_shape)
-                        ,mkl_variance_shape(variance->get_shape())
-                        ,mkl_mean_shape(mean->get_shape)
+                        ,mkl_variance_shape(variance_shape)
+                        ,mkl_mean_shape(mean_shape)
                         ,mkl_input_shape(input->get_shape())
+                        ,mean_element_type(mean_et)
+                        ,variance_element_type(variance_et)
             {
                 add_output(input->get_element_type(), mkl_output_shape);
-                add_output(mean->get_element_type(), mkl_mean_shape);
-                add_output(variance->get_element_type(), mkl_variance_shape);
+                add_output(mean_element_type, mkl_mean_shape);
+                add_output(variance_element_type, mkl_variance_shape);
             }
 
         const Shape& get_inputs_shape() const{
@@ -70,7 +74,11 @@ namespace ngraph
                                                 new_args.at(1),
                                                 new_args.at(2),
                                                 new_args.at(3),
-                                                mkl_output_shape);
+                                                mkl_mean_shape,
+                                                mkl_variance_shape,
+                                                mkl_output_shape,
+                                                mean_element_type,
+                                                variance_element_type);
         }
         
         private:
@@ -78,6 +86,8 @@ namespace ngraph
                 Shape mkl_output_shape;
                 Shape mkl_variance_shape;
                 Shape mkl_mean_shape;
+                const element::Type& mean_element_type;
+                const element::Type& variance_element_type;
 
         };
     }

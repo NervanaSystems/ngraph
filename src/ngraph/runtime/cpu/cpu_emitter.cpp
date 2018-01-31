@@ -23,6 +23,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
+#include "ngraph/ops/batchnorm.hpp"
 #include "ngraph/ops/cblas_gemm.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
@@ -157,13 +158,13 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
                                               const vector<runtime::cpu::TensorViewWrapper>& args,
                                               const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    auto batchnorm = static_cast<const op::BatchnormFprop>(node);
+    const ngraph::op::BatchnormFprop* batchnorm = static_cast<const ngraph::op::BatchnormFprop* >(node);
 
     //get the shape of all the inputs and output to batchnorm
     auto gamma_shape = args[1].get_shape();
     auto beta_shape = args[2].get_shape();
     auto input_shape = args[3].get_shape();
-    auto mean_shape = batchnorm->get_mean_shape()
+    auto mean_shape = batchnorm->get_mean_shape();
     auto variance_shape = batchnorm->get_variance_shape();
     auto result_shape = out[0].get_shape();
 
@@ -175,13 +176,14 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     auto channel_axis = input_shape[1];
 
     // create a vector of vector to hold the gamma and bias
-    writer << "auto weight_et =" <<  batchnorm.get_input_element_type(1) << ";\n" ;
-    writer << "auto weight_size ="  << batchnorm.get_input_shape(1).size() << ";\n";
+    writer << "auto weight_et =" <<  batchnorm->get_input_element_type(1) << ";\n" ;
+    writer << "auto weight_size ="  << batchnorm->get_input_shape(1).size() << ";\n";
     writer << "auto vector<vector<weight_et> > bn_weights(2);\n";
+    auto weights_shape = Shape{2, batchnorm->get_input_shape(1).size()};
 
     //push gamma and beta
-    writer << "auto& gamma = " << args[1].get_name() << ";\n"
-    writer << "auto& beta = " << args[2].get_name() << ";\n"
+    writer << "auto& gamma = " << args[1].get_name() << ";\n";
+    writer << "auto& beta = " << args[2].get_name() << ";\n";
     writer << "for (auto i :weight_size) \n";
     writer << "{ \n";
     writer << "bn_weights[0].push_back(gamma[j]);\n";
@@ -189,7 +191,7 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     writer << "} \n";
     
     // get the eps value from the bn node
-    writer << "float epsilon = static_cast<float>(" << args[0].get_name()) << ";\n";
+    writer << "float epsilon = static_cast<float>(" << args[0].get_name() << ";\n";
 	
     //Bind to CPU engine
     writer << "using namespace mkldnn; \n";
@@ -208,7 +210,7 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     // Define memory for the user data
     writer << "auto input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
            << ");\n";
-    writer << "auto weights = memory({weights_desc, cpu_engine}, " << bn_weights
+    writer << "auto weights = memory({weights_desc, cpu_engine}, bn_weights" 
            << ");\n";
     writer << "auto result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
 

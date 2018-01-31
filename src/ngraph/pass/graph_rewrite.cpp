@@ -251,8 +251,8 @@ void ngraph::pass::CPUFusion::construct_gemm_pattern()
     this->add_matcher(m);
 }
 
-void ngraph::pass::CPUFusion::construct_fprop_bn(){
-
+void ngraph::pass::CPUFusion::construct_fprop_bn()
+{
         // construct varaiance
         auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
         auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
@@ -277,7 +277,8 @@ void ngraph::pass::CPUFusion::construct_fprop_bn(){
         auto eps_label = std::make_shared<pattern::op::Label>(element::f32, Shape{3});
         auto eps_with_broadcast = std::make_shared<op::Broadcast>(eps_label, Shape{2, 3}, AxisSet{0});
 
-        auto sqrt_variance_eps = std::make_shared<op::Sqrt>(std::make_shared<op::Add>(variance_with_broadcast, eps_with_broadcast));
+        auto add1 = std::make_shared<op::Add>(eps_with_broadcast, variance_with_broadcast);
+        auto sqrt_variance_eps = std::make_shared<op::Sqrt>(add1);
         auto divide_mean_variance = std::make_shared<op::Divide>(input_diff_mean, sqrt_variance_eps);
 
         //Gamma
@@ -291,8 +292,9 @@ void ngraph::pass::CPUFusion::construct_fprop_bn(){
         auto beta_with_broadcast = std::make_shared<op::Broadcast>(beta_label, Shape{2, 3}, AxisSet{0});
 
         auto add_beta =  std::make_shared<op::Add>(beta_with_broadcast, multiply_gamma);
+        // This completes fprop bn pattern
 
-        ngraph::pattern::gr_callback_fn callback = [input, variance_label, mean_label, eps_label, gamma_label, beta_label](pattern::Matcher& m) {
+        ngraph::pattern::gr_callback_fn callback = [variance_label, mean_label, input, eps_label, gamma_label, beta_label](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
                          << m.match_root()->get_name();
 
@@ -303,21 +305,31 @@ void ngraph::pass::CPUFusion::construct_fprop_bn(){
             NGRAPH_DEBUG << "Mean: "  <<  pattern_map[mean_label]->get_name();
             NGRAPH_DEBUG << "eps: " << pattern_map[eps_label]->get_name();
             NGRAPH_DEBUG << "gamma: " << pattern_map[gamma_label]->get_name();
-            NGRAPH_DEBUG << "beta: " << pattern_map[beta_label]->get_name();
-            NGRAPH_DEBUG << "input: " << pattern_map[input]->get_name();
+            NGRAPH_DEBUG << "beat: " << pattern_map[beta_label]->get_name();
 
+            // //check if the root node matched by the Matcher and pattern_map are of same type
+            // if (pattern_map[variance_label]->get_element_type() != m.match_root()->get_element_type()){
+            //     NGRAPH_DEBUG << "Operand's types don't match";
+            //     return nn;
+            // }
             Shape bn_output_shape{m.match_root()->get_shape()};
-
+            Shape bn_mean_shape{pattern_map[mean_label]->get_shape()};
+            Shape bn_variance_shape{pattern_map[variance_label]->get_shape()};
+            const auto& variance_et = pattern_map[variance_label]->get_element_type();
+            const auto& mean_et = pattern_map[mean_label]->get_element_type();
             auto bn_node = std::shared_ptr<Node>(new op::BatchnormFprop(pattern_map[eps_label],
                                                                        pattern_map[gamma_label],
                                                                        pattern_map[beta_label],
                                                                        pattern_map[input],
-                                                                       bn_output_shape));
-
+                                                                       bn_mean_shape,
+                                                                       bn_variance_shape,
+                                                                       bn_output_shape,
+                                                                       mean_et,
+                                                                       variance_et));
 
             return bn_node;
         };
 
-        auto m = std::make_shared<ngraph::pattern::Matcher>(variance_label, callback);
+        auto m = std::make_shared<ngraph::pattern::Matcher>(add_beta, callback);
         this->add_matcher(m);
 }

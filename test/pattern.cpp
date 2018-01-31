@@ -391,7 +391,7 @@ public:
             NGRAPH_DEBUG << "Mean: "  <<  pattern_map[mean_label]->get_name();
             NGRAPH_DEBUG << "eps: " << pattern_map[eps_label]->get_name();
             NGRAPH_DEBUG << "gamma: " << pattern_map[gamma_label]->get_name();
-            NGRAPH_DEBUG << "beat: " << pattern_map[beta_label]->get_name();
+            NGRAPH_DEBUG << "beta: " << pattern_map[beta_label]->get_name();
 
             // //check if the root node matched by the Matcher and pattern_map are of same type
             // if (pattern_map[variance_label]->get_element_type() != m.match_root()->get_element_type()){
@@ -399,13 +399,19 @@ public:
             //     return nn;
             // }
             Shape bn_output_shape{m.match_root()->get_shape()};
+            Shape bn_mean_shape{pattern_map[mean_label]->get_shape()};
+            Shape bn_variance_shape{pattern_map[variance_label]->get_shape()};
+            const auto& variance_et = pattern_map[variance_label]->get_element_type();
+            const auto& mean_et = pattern_map[mean_label]->get_element_type();
             auto bn_node = std::shared_ptr<Node>(new op::BatchnormFprop(pattern_map[eps_label],
                                                                        pattern_map[gamma_label],
                                                                        pattern_map[beta_label],
                                                                        pattern_map[input],
-                                                                       pattern_map[mean_label],
-                                                                       pattern_map[variance_label],
-                                                                       bn_output_shape));
+                                                                       bn_mean_shape,
+                                                                       bn_variance_shape,
+                                                                       bn_output_shape,
+                                                                       mean_et,
+                                                                       variance_et));
 
             return bn_node;
         };
