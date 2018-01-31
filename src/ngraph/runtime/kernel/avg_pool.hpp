@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 #include <vector>
 
 #include "ngraph/common.hpp"
