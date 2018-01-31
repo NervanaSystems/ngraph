@@ -28,7 +28,7 @@ namespace ngraph
             template <typename T>
             void allreduce(T* arg, T* out, const element::Type element_type, size_t count)
             {
-                int data_type;
+                auto data_type = MPI_FLOAT;
 
                 if (element_type == element::f32)
                 {

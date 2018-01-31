@@ -147,7 +147,7 @@ void runtime::cpu::CPU_Emitter::EmitAllReduce(codegen::CodeWriter& writer,
 {
     const Shape& arg_shape = arg[0].get_shape();
     const element::Type& element_type = arg[0].get_element_type();
-    int data_type;
+    auto data_type = MPI_FLOAT;
 
     if (element_type == element::f32)
     {

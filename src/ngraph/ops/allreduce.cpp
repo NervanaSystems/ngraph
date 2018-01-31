@@ -28,7 +28,7 @@ op::AllReduce::AllReduce(const std::shared_ptr<Node>& arg)
 
     if ((arg->get_element_type() != element::f32) && (arg->get_element_type() != element::f64))
     {
-        throw ngraph_error("Unsupported data type");
+        throw ngraph_error("Unsupported data type for AllReduce");
     }
 }
 
