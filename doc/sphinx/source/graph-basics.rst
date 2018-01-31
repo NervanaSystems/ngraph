@@ -99,11 +99,8 @@ Since all nodes supplying outputs for inputs to a new node must exist
 before the new node can be created, it is impossible to construct a 
 cyclic graph. Furthermore, type-checking can be performed as the ops 
 are constructed.
-<<<<<<< HEAD:doc/sphinx/source/build-a-functiongraph.rst
 
 .. TODO add basic semantics 
-=======
->>>>>>> amazon_codeshare:doc/sphinx/source/graph-basics.rst
 
 .. important:: During graph building, most of the storage associated 
    with values is *implicit*. During compilation, *explicit* storage 
