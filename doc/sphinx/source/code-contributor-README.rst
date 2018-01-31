@@ -22,10 +22,11 @@ This script does *not* modify the source code.
 Core Ops
 --------
 
-We have some core ops. Other ops may be added to core when they
-have sufficient documentation and examples of those ops in practice
-or potentially-practical use cases.  
-
+Our design philosophy is that the graph is not a script for running kernels, but, rather,
+that the graph should describe the computation in terms of ops that are building blocks,
+and compilation should match these ops to appropriate kernels for the backend(s) in use.
+Thus, we expect that adding core ops should be infrequent. Instead, functionality should
+be added by adding functions that build sub-graphs from existing core ops.
 
 
 Coding style  

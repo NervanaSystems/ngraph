@@ -1,50 +1,106 @@
-.. build-a-functiongraph:
-
-Defining a function graph on the nGraph library
-###############################################
+.. graph-basics:
 
 Graph Basics
 ============
 
-To build a function graph with the nGraph library, first understand the ways
-that the library will handle graph values before and during compilation. Since
-it can be fairly easy to confuse C++ terms with their counterparts in the 
-``ngraph`` function (and with the lower-level C++ representations of those 
-counterparts), we provide this reference.  
+Tensors
+-------
 
-Descriptions of ngraph values
------------------------------
+*Tensors* are maps from coordinates to scalar values, all of the same type, 
+called the *element type* of the tensor. Coordinates are tuples of non-negative 
+integers; all the coordinates for a tensor have the same length, called the 
+*rank* of the tensor. We often use :math:`n`-tensor for tensors with rank 
+:math:`n`. An :math:`n`-dimensional array is a common implementation of a 
+tensor, and the two terms are often used interchangeably. However, a tensor 
+could just as easily be a function that returns 0 for every coordinate.
 
--  *Element values* are integers, floats, etc.
+The :term:`shape` of a tensor is a tuple of non-negative integers that 
+represents an exclusive upper bound for coordinate values. A tensor has an 
+element for every coordinate less than the shape, so the *size* of the tensor 
+is the product of the values in the shape.
 
-   -  Each ``type`` of element value is described by an ``ElementType``.
-   -  A C++ :cpp:type:`type` is required for referencing literals during
-      compilation.
-   -  The :cpp:type:`type`'s ``value`` may be represented differently in a 
-      compiled compilation. For example, a 32-bit float can hold a 16-bit float.
+An :math:`n`-dimensional array is a common implementation of a tensor, and the 
+two terms are often used interchangeably, but a tensor could just as easily be 
+a function that returns 0 for every coordinate.
 
--  A *value* in a graph is either a tensor view or a tuple.
+In the graph, every op input must be associated with an op output, and every op
+output must have a constant element type and shape that will correspond to the 
+tensors used in the computation.
 
-   -  A **tensor view** is an indexed collection of element values, all of
-      the same element type. An element value is not a graph value; a 0-rank 
-      tensor holds one element value and serves the same purpose.
-   -  A **tuple** is 0 or more values, which can consist of tuples and
-      tensor views.
+Ops
+---
 
--  Analogous to the value are "value types", also defined recursively.
+The graph is a composition of tensor computations, called ``ops``, which are 
+nodes in the graph. In the graph, every :term:`op` *input* must be associated 
+with an op *output*, and every op output must have a constant element type and 
+shape to correspond with the tensors used in the computation. Every op has:
 
-   -  **Tensor view types** These types describe indexed collections of
-      primitive types. They are specified by a shape and an primitive
-      type for the elements.
+* zero or more inputs, and 
+* zero or more outputs; 
 
-      .. TODO add Doxy links corresponding to these tensor view types'
-         APIs or use the literalinclude better 
+these represent tensors that will be provided during execution. Ops may also 
+have additional attributes that do not change during execution.
 
-   -  **Tuple types** These are cartesian product types for tuples of
-      tuples and tensors, described by a sequence of tuple types and
-      tensor view types.
+Graph function
+---------------
 
-      .. TODO add basic semantics 
+Function definition begins with creating one or more ``Parameter`` ops,
+which represent the tensors that will be supplied as arguments to the function.
+Parameters have no inputs and attributes for the element type and shape of the 
+tensor that will be provided as an argument. The unique output of the 
+``Parameter`` will have the provided element type and shape.
+
+Constructed ops have element types and shapes for each of their outputs, which 
+are determined during op construction from the element types and shapes 
+associated with the inputs, as well as additional attributes of the ops. For 
+example, tensor addition is defined for two tensors of the same shape and size 
+and results in a tensor with the same element type and shape:
+
+.. math::
+
+  (A+B)_I = A_I + B_I
+
+Here, :math:`X_I` means the value of a coordinate :math:`I` for the tensor 
+:math:`X`. So the value of sum of two tensors is a tensor whose value at a 
+coordinate is the sum of the elements are that coordinate for the two inputs. 
+Unlike many frameowrks, it says nothing about storage or arrays.
+
+An ``Add`` op is used to represent a tensor sum. To construct an Add op, each of 
+the two inputs of the ``Add`` must be associated with some output of some 
+already-created op. All outputs of constructed ops have element types and shapes, 
+so when the Add is constructed, it verifies that the two outputs associated with 
+its two inputs have the same element type and shape and sets its output to have 
+the same element type and shape.
+
+Since all nodes supplying outputs for inputs to a new node must exist before the 
+new node can be created, it is impossible to construct a cyclic graph. 
+Furthermore, type-checking can be performed as the ops are constructed.
+
+
+Functions
+---------
+
+Ops are grouped together in an ``ExternalFunction``, which describes a 
+computation that can be invoked on tensor arguments to compute tensor 
+results. The caller provides tensors in the form of row-major arrays 
+for each argument and each computed result. The same array can be used 
+for more than one argument, but each result must use a distinct array,
+and argument arrays cannot be used as result arrays.
+
+The ``ExternalFunction`` has ``Parameter``, a vector of ``Parameter`` ops,
+where no ``Parameter`` op may appear more than once in the vector.
+Each ``Parameter`` op has attributes for its shape and element type; 
+arrays passed to the function must have the same shape and element type.
+The ``ExternalFunction`` also has ``Nodes``, a vector of ops that
+are the results being computed (Note: We may require the results to 
+be ``Result`` ops in the future. A ``Result`` op would have a single 
+input and no outputs, and complement the zero input single output 
+``Parameter`` op.)
+
+During execution, the output of the nth ``Parameter`` op will be the tensor
+corresponding to the array provided as the nth argument, and the outputs
+of all result ops will be written into the result arrays in row-major
+order.
 
 .. important:: During graph building, most of the storage associated 
    with values is *implicit*. During compilation, *explicit* storage 
@@ -84,18 +140,14 @@ sources: *literals*, *calls* to ops (built-in ops or user-defined ops AKA
    zero or more run-time parameters of *arbitrary* value types and a result 
    whose type is the tuple type of the types of the parameters. 
 
-   - *functions* are user-defined ops.
-     - A user-defined function is "external" if it can be called externally.   
-     - The result is a graph node that  depends only on parameters.
-     - The result's ``type`` of call to a function is determined from the 
-       types of the arguments.
-     - Any external function interacting with the graph at the level of 
-       user-defined ``op`` must specify a type for each of its parameters.   
+   #. **Functions*** are user-defined ops.
+      - A user-defined function is "external" if it can be called externally.
+      - The result is a graph node that depends only on parameters.
+      - The result's type of call to a function is determined from the types of the arguments.
+      - Any external function interacting with the graph at the level of user-defined op must specify a type for each of its parameters.
 
 #. *Parameters* of user-defined *functions* may also be a source of a graph's
    values. Externally-callable functions must specify a type for each parameter.
-
-
 
 
 Building a Graph
