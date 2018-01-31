@@ -136,7 +136,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     find_package(ZLIB REQUIRED)
 
     include(${TBB_ROOT}/cmake/TBBBuild.cmake)
-    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS compiler=gcc tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
+    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS compiler=clang tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
               tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
     find_package(TBB REQUIRED tbb)
     if (NOT TBB_FOUND)
