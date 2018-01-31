@@ -94,7 +94,7 @@ namespace ngraph
 		cudaFree(d_arg0);
 		cudaFree(d_arg1);
 		cudaFree(d_out);	
-
+ 		cudnnDestory(cudnnHandle);
             }
         }
     }

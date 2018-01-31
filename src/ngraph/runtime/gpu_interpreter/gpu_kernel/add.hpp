@@ -57,6 +57,10 @@ namespace ngraph
 							d_out, count);
 
 				cudaMemcpy((float*) out, d_out, sizeof(float) * count, cudaMemcpyDeviceToHost);
+				cudaFree(d_arg0);
+				cudaFree(d_arg1);
+				cudaFree(d_out);
+
 				cublasDestroy(handle);
             }
         }
