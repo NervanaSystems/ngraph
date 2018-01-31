@@ -187,6 +187,10 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Ceiling), &runtime::cpu::CPU_Emitter::EmitCeiling},
     {TI(ngraph::op::Sqrt), &runtime::cpu::CPU_Emitter::EmitSqrt},
     {TI(ngraph::op::Convolution), &runtime::cpu::CPU_Emitter::EmitConvolution},
+    {TI(ngraph::op::ConvolutionBackpropFilters),
+     &runtime::cpu::CPU_Emitter::EmitConvolutionBackpropFilters},
+    {TI(ngraph::op::ConvolutionBackpropData),
+     &runtime::cpu::CPU_Emitter::EmitConvolutionBackpropData},
     {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::EmitNot},
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::EmitMaxPool},
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::EmitReverse},
@@ -231,6 +235,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
 #include <Eigen/Dense>
 
+#include <mkldnn.hpp>
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
@@ -479,6 +484,8 @@ using namespace ngraph::runtime;
             // TODO: This should be static but we don't codegen statics correctly yet
             writer << "tbb::flow::graph G;\n\n";
         }
+
+        runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(writer);
 
         bool temporaries_used = false;
         size_t worst_case_tmp_size = 0;
