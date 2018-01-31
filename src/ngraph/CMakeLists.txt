@@ -85,7 +85,7 @@ set (SRC
     pass/memory_layout.cpp
     pass/memory_visualize.cpp
     pass/pass.cpp
-    pass/simplification.cpp
+    pass/reshape_elimination.cpp
     pass/visualize_tree.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp

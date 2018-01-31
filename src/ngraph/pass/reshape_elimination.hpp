@@ -20,14 +20,14 @@ namespace ngraph
 {
     namespace pass
     {
-        class Simplification;
+        class ReshapeElimination;
     }
 }
 
-class ngraph::pass::Simplification : public ngraph::pass::GraphRewrite
+class ngraph::pass::ReshapeElimination : public ngraph::pass::GraphRewrite
 {
 public:
-    Simplification()
+    ReshapeElimination()
         : GraphRewrite()
     {
         construct_identity_reshape_pattern();

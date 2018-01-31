@@ -41,7 +41,7 @@ set (SRC
     serialize.cpp
     pattern.cpp
     shape.cpp
-    simplification.cpp
+    reshape_elimination.cpp
     tensor.cpp
     type_prop.cpp
     util/autodiff/backprop_function.cpp

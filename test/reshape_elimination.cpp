@@ -27,7 +27,7 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/simplification.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -39,10 +39,10 @@
 using namespace ngraph;
 using namespace std;
 
-TEST(simplification, remove_reshape)
+TEST(reshape_elimination, remove_reshape)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Simplification>();
+    pass_manager.register_pass<pass::ReshapeElimination>();
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/bn_fprop.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
@@ -53,10 +53,10 @@ TEST(simplification, remove_reshape)
     ASSERT_TRUE(count_after < count_before);
 }
 
-TEST(simplification, remove_tranpose)
+TEST(reshape_elimination, remove_tranpose)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Simplification>();
+    pass_manager.register_pass<pass::ReshapeElimination>();
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/tranpose.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
@@ -67,10 +67,10 @@ TEST(simplification, remove_tranpose)
     ASSERT_TRUE(count_after < count_before);
 }
 
-TEST(simplification, bn_bprop_rewrite)
+TEST(reshape_elimination, bn_bprop_rewrite)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Simplification>();
+    pass_manager.register_pass<pass::ReshapeElimination>();
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/bn_bprop.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);

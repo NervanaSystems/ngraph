@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "simplification.hpp"
+#include "reshape_elimination.hpp"
 #include <algorithm>
 #include <iostream>
 #include <unordered_set>
@@ -47,7 +47,7 @@ static std::vector<T> apply_permutation(std::vector<T> input, ngraph::AxisVector
     return output;
 }
 
-void ngraph::pass::Simplification::construct_identity_reshape_pattern()
+void ngraph::pass::ReshapeElimination::construct_identity_reshape_pattern()
 {
     Shape shape_op{3};
     Shape shape_r1{1, 3};
@@ -87,7 +87,7 @@ void ngraph::pass::Simplification::construct_identity_reshape_pattern()
     this->add_matcher(m);
 }
 
-void ngraph::pass::Simplification::construct_reshapex2_pattern()
+void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
 {
     Shape shape_op{3};
     Shape shape_r1{1, 3};
