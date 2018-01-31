@@ -3,43 +3,6 @@
 Graph Basics
 ============
 
-*Tensors* are maps from *coordinates* to
-scalar values, all of the same type, called the *element type*
-of the tensor.
-Coordinates are tuples of non-negative integers;
-all the coordinates for a tensor have the same length, called
-the *rank* of the tensor. We often use :math:`n`-tensor for
-tensors with rank :math:`n`.
-The *shape* of a tensor is a tuple
-of non-negative integers that is an exclusive upper bound for
-coordinate values. A tensor has an element for every coordinate 
-less than the shape, so the *size* of the tensor is the product
-of the values in the shape.
-
-An :math:`n`-dimensional array is a common implementation of a
-tensor, and the two terms are often used interchangeably, but 
-a tensor could just as easily be a function that returns 0
-for every coordinate.
-
-A graph function describes a computation whose inputs and outputs are all 
-tensors. The graph is a composition of simpler
-tensor computations, called *ops*, which are nodes in the graph.
-Every op has zero or more inputs and zero or more outputs which
-represent tensors that will be provided during execution. In the graph,
-every op input must be associated with an op output, and every op
-output must have a constant element type and shape that will
-correspond to the tensors used in the computation.
-
-Ops
----
-
-The graph is a composition of tensor computations, called ``ops``, which are 
-nodes in the graph. In the graph, every :term:`op` *input* must be associated 
-with an op *output*, and every op output must have a constant element type and 
-shape to correspond with the tensors used in the computation. Every op has zero 
-or more inputs and zero or more outputs representing tensors that will be 
-provided during execution. 
-
 Tensors
 -------
 
@@ -47,57 +10,72 @@ Tensors
 called the *element type* of the tensor. Coordinates are tuples of non-negative 
 integers; all the coordinates for a tensor have the same length, called the 
 *rank* of the tensor. We often use :math:`n`-tensor for tensors with rank 
-:math:`n`. An :math:`n`-dimensional array is a common implementation of a tensor, 
-and the two terms are often used interchangeably. However, a tensor could just 
-as easily be a function that returns 0 for every coordinate.
+:math:`n`. An :math:`n`-dimensional array is a common implementation of a 
+tensor, and the two terms are often used interchangeably. However, a tensor 
+could just as easily be a function that returns 0 for every coordinate.
 
-The :term:`shape` of a tensor is a tuple of non-negative integers that represents an  
-exclusive upper bound for coordinate values. A tensor has an element for every 
-coordinate less than the shape, so the *size* of the tensor is the product of 
-the values in the shape.
+The :term:`shape` of a tensor is a tuple of non-negative integers that 
+represents an exclusive upper bound for coordinate values. A tensor has an 
+element for every coordinate less than the shape, so the *size* of the tensor 
+is the product of the values in the shape.
 
-A graph function describes a computation whose inputs and outputs are all 
-tensors. 
-Ops may also have additional attributes that do not change during
-execution.
+An :math:`n`-dimensional array is a common implementation of a tensor, and the 
+two terms are often used interchangeably, but a tensor could just as easily be 
+a function that returns 0 for every coordinate.
+
+In the graph, every op input must be associated with an op output, and every op
+output must have a constant element type and shape that will correspond to the 
+tensors used in the computation.
+
+Ops
+---
+
+The graph is a composition of tensor computations, called ``ops``, which are 
+nodes in the graph. In the graph, every :term:`op` *input* must be associated 
+with an op *output*, and every op output must have a constant element type and 
+shape to correspond with the tensors used in the computation. Every op has:
+
+* zero or more inputs, and 
+* zero or more outputs; 
+
+these represent tensors that will be provided during execution. Ops may also 
+have additional attributes that do not change during execution.
+
+Graph function
+---------------
 
 Function definition begins with creating one or more ``Parameter`` ops,
-which represent 
-the tensors that will be supplied as arguments to the function.
-Parameters have no inputs and attributes for the element type and 
-shape of the tensor that will be provided as an argument.
-The unique output of the ``Parameter`` will have the provided
-element type and shape.
+which represent the tensors that will be supplied as arguments to the function.
+Parameters have no inputs and attributes for the element type and shape of the 
+tensor that will be provided as an argument. The unique output of the 
+``Parameter`` will have the provided element type and shape.
 
-Constructed ops have element types and shapes for each of their outputs,
-which are determined during op construction from the element types and
-shapes associated with the inputs, as well as additional attributes of
-the ops. For example, tensor addition is defined for two tensors of the
-same shape and size and results in a tensor with the same element type
-and shape:
+Constructed ops have element types and shapes for each of their outputs, which 
+are determined during op construction from the element types and shapes 
+associated with the inputs, as well as additional attributes of the ops. For 
+example, tensor addition is defined for two tensors of the same shape and size 
+and results in a tensor with the same element type and shape:
 
 .. math::
 
   (A+B)_I = A_I + B_I
 
-Here, :math:`X_I` means the value of a coordinate :math:`I` 
-for the tensor :math:`X`. So the value of sum of two tensors
-is a tensor whose value at a coordinate is the sum of the
-elements are that coordinate for the two inputs. Unlike many
-frameowrks, it says nothing about storage or arrays.
+Here, :math:`X_I` means the value of a coordinate :math:`I` for the tensor 
+:math:`X`. So the value of sum of two tensors is a tensor whose value at a 
+coordinate is the sum of the elements are that coordinate for the two inputs. 
+Unlike many frameowrks, it says nothing about storage or arrays.
 
-An ``Add`` op is used to represent a tensor sum. To construct an Add op,
-each of the two inputs of the ``Add`` must be associated with some output
-of some already created op.  All outputs of constructed ops have
-element types and shapes, so when the Add is constructed, it verifies
-that the two outputs associated with its two inputs have the same
-element type and shape and sets its output to have the same element
-type and shape.
+An ``Add`` op is used to represent a tensor sum. To construct an Add op, each of 
+the two inputs of the ``Add`` must be associated with some output of some 
+already-created op. All outputs of constructed ops have element types and shapes, 
+so when the Add is constructed, it verifies that the two outputs associated with 
+its two inputs have the same element type and shape and sets its output to have 
+the same element type and shape.
 
-Since all nodes supplying outputs for inputs to a new node must exist
-before the new node can be created, it is impossible to construct a 
-cyclic graph. Furthermore, type-checking can be performed as the ops 
-are constructed.
+Since all nodes supplying outputs for inputs to a new node must exist before the 
+new node can be created, it is impossible to construct a cyclic graph. 
+Furthermore, type-checking can be performed as the ops are constructed.
+
 
 Functions
 ---------
@@ -123,8 +101,6 @@ During execution, the output of the nth ``Parameter`` op will be the tensor
 corresponding to the array provided as the nth argument, and the outputs
 of all result ops will be written into the result arrays in row-major
 order.
-
-.. TODO add basic semantics 
 
 .. important:: During graph building, most of the storage associated 
    with values is *implicit*. During compilation, *explicit* storage 

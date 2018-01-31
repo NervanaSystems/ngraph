@@ -21,25 +21,23 @@ packages and prerequisites:
    Ubuntu 16.04 (LTS) 64-bit, CLang 4.0, CMake 3.5.1 + GNU Make, officially unsupported, ``build-essential cmake clang-4.0 git libtinfo-dev``
    Clear Linux\* OS for Intel Architecture, CLang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
+macOS support is limited; see the macOS development prerequisites section 
+at the end of this page for details.
+
+
 Installation Steps
 ==================
 
-To build |nGl| on one of the supported systems, the default CMake procedure 
-will install ``ngraph_dist`` to the installing user's ``$HOME`` directory as
-the default install location. See the :file:`CMakeLists.txt` file for more 
+To build |nGl| on one of the supported systems, the CMake procedure will 
+install ``ngraph_dist`` to the installing user's ``$HOME`` directory as
+the default location. See the :file:`CMakeLists.txt` file for more 
 information about how to change or customize this location.
 
-This guide provides one possible configuration that does not rely on a 
-virtual environment. You are, of course, free to use a virtual environment, 
-or to set up user directories and permissions however you like. 
-
-#.  Since most of a developer's interaction with a frontend framework 
-    will take place locally through Pythonic APIs, set a placeholder directory 
-    where Python bindings can interact more efficiently with the nGraph 
-    library backend components. Create something like ``/opt/local`` and 
-    (presuming you have sudo permissions), give ownership of that local 
-    directory to your user. This will make configuring for various ``PATH`` 
-    and environmental variables much more simple later. 
+#.  (Optional) Since most of a developer's interaction with a frontend 
+    framework will take place locally through Pythonic APIs to the C++
+    library, you can set a reference placeholder for the documented source 
+    cloned from the repo. Create something like ``/opt/local`` and (with sudo 
+    permissions), give ownership of that local directory to your user.  
 
     .. code-block:: console
 
@@ -81,11 +79,9 @@ or to set up user directories and permissions however you like.
 #. (Optional, requires `Sphinx`_.)  Run ``make html`` inside the  
    ``doc/sphinx`` directory to build HTML docs for the nGraph library.    
 
-#. (COMING SOON -- Generate API docs optional, requires `doxygen`_.)  TBD
+#. (COMING SOON -- Generate API docs. Optional, requires `doxygen`_.)  TBD
 
 
-
-.. macOS Development Prerequisites:
 
 macOS Development Prerequisites
 -------------------------------

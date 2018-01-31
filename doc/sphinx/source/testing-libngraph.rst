@@ -42,10 +42,7 @@ documentation:
 * `Chainer`_, 
 * `PyTorch`_, 
 * `Caffe2`_, and 
-
-* ... . 
-
-.. Frameworks not yet written / algorithms that do not yet exist 
+* Frameworks not yet written (for algorithms that do not yet exist). 
 
 .. _GTest framework: https://github.com/google/googletest.git
 .. _MXNet: http://mxnet.incubator.apache.org/

@@ -13,23 +13,41 @@ a neutral-:abbr:`Intermediate Representation (IR)` designed to promote
 computational efficiency on target hardware; it works on Intel and non-Intel 
 platforms. 
 
-For this early release, we provide framework integration guides to: 
-
-* :ref:`mxnet_intg`
-* :ref:`tensorflow_intg`
-
 .. figure:: graphics/fig.jpeg  
 
-A *framework bridge* for each supported framework acts as an intermediary 
-between the *nGraph core* and the framework. A *transformer* plays a similar 
-role to the various execution platforms. And the *nGraph core* uses a 
-strongly-typed and platform-neutral stateless graph representation for 
-computations. Each node, or :term:`op`, in the graph corresponds to one 
-:term:`step` in a computation, where each step produces zero or more tensor 
+The *nGraph core* uses a strongly-typed and platform-neutral stateless graph 
+representation for computations. Each node, or *op*, in the graph corresponds
+to one step in a computation, where each step produces zero or more tensor
 outputs from zero or more tensor inputs.
+
+There is a *framework bridge* for each supported framework which acts as 
+an intermediary between the *ngraph core* and the framework. A *transformer* 
+plays a similar role between the ngraphcore and the various execution 
+platforms.
 
 Transformers compile the graph using a combination of generic and 
 platform-specific graph transformations. The result is a function that
-can be executed from the framework bridge. Under the direction of the 
-bridge, transformers may also allocate and deallocate, as well as read 
-and write tensors.
+can be executed from the framework bridge. Transformers also allocate
+and deallocate, as well as read and write, tensors under direction of the
+bridge.
+
+For this early |release| release, we provide framework integration guides 
+to
+
+* :ref:`mxnet_intg`,
+* :ref:`tensorflow_intg`, and
+* Try neon™ `frontend`_ framework for training GPU-performant models.
+  
+Integration guides for each of these other frameworks is tentatively
+forthcoming and/or open to the community for contributions and sample
+documentation:
+
+* `Chainer`_, 
+* `PyTorch`_, 
+* `Caffe2`_, and 
+* Frameworks not yet written (for algorithms that do not yet exist). 
+
+.. _Caffe2: https://github.com/caffe2/
+.. _PyTorch: http://pytorch.org/
+.. _Chainer: https://chainer.org/
+.. _frontend: http://neon.nervanasys.com/index.html/
