@@ -15,50 +15,47 @@ include(ExternalProject)
 
 if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") AND
                          (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows"))
-    set(CMAKE_DISABLE_SOURCE_CHANGES ON)
-    set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+    message(STATUS "Fetching LLVM from llvm.org")
+    set(LLVM_RELEASE_URL http://releases.llvm.org/5.0.0/clang+llvm-5.0.0-linux-x86_64-ubuntu16.04.tar.xz)
+    set(LLVM_SHA1_HASH 9cb81c92aa4d3f9707a9b8413c4d24b8dee90c59)
 
-    set(RELEASE_TAG release_50)
+    # Override default LLVM binaries
+    if(PREBUILT_LLVM)
+        if(NOT DEFINED PREBUILT_LLVM_HASH)
+            message(FATAL_ERROR "SHA1 hash of prebuilt llvm tarball not provided in PREBUILT_LLVM_HASH.")
+        endif()
+        set(LLVM_RELEASE_URL ${PREBUILT_LLVM})
+        set(LLVM_SHA1_HASH ${PREBUILT_LLVM_HASH})
+    endif()
 
-    set(EXTERNAL_INSTALL_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/ext_llvm-prefix)
+    # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
+    if(${CMAKE_VERSION} VERSION_LESS 3.2)
+        ExternalProject_Add(
+            ext_llvm
+            URL ${LLVM_RELEASE_URL}
+            URL_HASH SHA1=${LLVM_SHA1_HASH}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ""
+            INSTALL_COMMAND ""
+            UPDATE_COMMAND ""
+            )
+    else()
+        ExternalProject_Add(
+            ext_llvm
+            URL ${LLVM_RELEASE_URL}
+            URL_HASH SHA1=${LLVM_SHA1_HASH}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ""
+            INSTALL_COMMAND ""
+            UPDATE_COMMAND ""
+            BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/ext_llvm-prefix/src/ext_llvm/lib/libLLVMCore.a"
+            )
+    endif()
 
-    ExternalProject_Add(clang
-        GIT_REPOSITORY https://github.com/llvm-mirror/clang.git
-        GIT_TAG ${RELEASE_TAG}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        UPDATE_COMMAND ""
-    )
-
-    ExternalProject_Get_Property(clang SOURCE_DIR)
-
-    ExternalProject_Add(ext_llvm
-        DEPENDS clang
-        GIT_REPOSITORY https://github.com/llvm-mirror/llvm.git
-        GIT_TAG ${RELEASE_TAG}
-        CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                   -DCMAKE_ASM_COMPILER=${CMAKE_ASM_COMPILER}
-                   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                   -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
-                   -DLLVM_INCLUDE_TESTS=OFF
-                   -DLLVM_INCLUDE_EXAMPLES=OFF
-                   -DLLVM_BUILD_TOOLS=ON
-                   -DLLVM_TARGETS_TO_BUILD=X86
-                   -DLLVM_EXTERNAL_CLANG_SOURCE_DIR:PATH=${SOURCE_DIR}
-        UPDATE_COMMAND ""
-    )
-
-    ExternalProject_Get_Property(ext_llvm SOURCE_DIR)
-    ExternalProject_Get_Property(ext_llvm BINARY_DIR)
-    ExternalProject_Get_Property(ext_llvm INSTALL_DIR)
-    message("SOURCE_DIR = ${SOURCE_DIR}")
-    message("BINARY_DIR = ${BINARY_DIR}")
-    message("INSTALL_DIR = ${INSTALL_DIR}")
-
-    set(LLVM_INCLUDE_DIR "${INSTALL_DIR}/include" PARENT_SCOPE)
-    set(LLVM_INCLUDE_DIR "${SOURCE_DIR}/include")  # used by other external projects in current scope
-    set(LLVM_LIB_DIR "${INSTALL_DIR}/lib" PARENT_SCOPE)
+    ExternalProject_Get_Property(ext_llvm source_dir)
+    set(LLVM_INCLUDE_DIR "${source_dir}/include" PARENT_SCOPE)
+    set(LLVM_INCLUDE_DIR "${source_dir}/include")  # used by other external projects in current scope
+    set(LLVM_LIB_DIR "${source_dir}/lib" PARENT_SCOPE)
 
     set(LLVM_LINK_LIBS
         clangTooling
@@ -138,4 +135,5 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
         z
         m
         PARENT_SCOPE)
+
 endif()
