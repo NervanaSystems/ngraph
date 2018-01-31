@@ -127,8 +127,13 @@ namespace ngraph
         class AvgPoolBprop : public RequiresTensorViewArgs
         {
         public:
-            friend class ngraph::op::AvgPool;
-            //TODO: make it private so only AvgPool->generate_adjoints can call this?
+            AvgPoolBprop(const std::shared_ptr<Node>& arg,
+                         const std::shared_ptr<Node>& delta,
+                         const Shape& window_shape,
+                         const Strides& window_movement_strides,
+                         const Shape& padding_below,
+                         const Shape& padding_above);
+
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
@@ -151,12 +156,6 @@ namespace ngraph
             bool is_functionally_identical(const Node&) const override;
 
         protected:
-            AvgPoolBprop(const std::shared_ptr<Node>& arg,
-                         const std::shared_ptr<Node>& delta,
-                         const Shape& window_shape,
-                         const Strides& window_movement_strides,
-                         const Shape& padding_below,
-                         const Shape& padding_above);
             Shape m_window_shape;
             Strides m_window_movement_strides;
             Shape m_padding_below;

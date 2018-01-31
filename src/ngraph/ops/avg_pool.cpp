@@ -254,12 +254,11 @@ void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints,
                                     const std::shared_ptr<Node>& delta)
 {
     auto operand = get_input_op(0);
-    AvgPoolBprop* avpn = new AvgPoolBprop(operand,
-                                          delta,
-                                          m_window_shape,
-                                          m_window_movement_strides,
-                                          m_padding_below,
-                                          m_padding_above);
-    auto bprop = std::shared_ptr<op::AvgPoolBprop>(avpn);
+    auto bprop = std::make_shared<op::AvgPoolBprop>(operand,
+                                                    delta,
+                                                    m_window_shape,
+                                                    m_window_movement_strides,
+                                                    m_padding_below,
+                                                    m_padding_above);
     adjoints.add_delta(operand, bprop);
 }
