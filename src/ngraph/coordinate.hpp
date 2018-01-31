@@ -26,6 +26,7 @@ namespace ngraph
     class Coordinate : public std::vector<size_t>
     {
     public:
+        Coordinate() {}
         Coordinate(const std::initializer_list<size_t>& axes)
             : std::vector<size_t>(axes)
         {
@@ -51,12 +52,12 @@ namespace ngraph
         {
         }
 
-        Coordinate() {}
         Coordinate& operator=(const Coordinate& v)
         {
             static_cast<std::vector<size_t>*>(this)->operator=(v);
             return *this;
         }
+
         Coordinate& operator=(Coordinate&& v)
         {
             static_cast<std::vector<size_t>*>(this)->operator=(v);
@@ -64,41 +65,45 @@ namespace ngraph
         }
     };
 
-    template <typename T>
-    T project(const T& coord, const AxisSet& deleted_axes)
+    // Removes some values from a vector of axis values
+    template <typename AXIS_VALUES>
+    AXIS_VALUES project(const AXIS_VALUES& axis_values, const AxisSet& deleted_axes)
     {
-        T result;
+        AXIS_VALUES result;
 
-        for (size_t i = 0; i < coord.size(); i++)
+        for (size_t i = 0; i < axis_values.size(); i++)
         {
             if (deleted_axes.find(i) == deleted_axes.end())
             {
-                result.push_back(coord[i]);
+                result.push_back(axis_values[i]);
             }
         }
 
         return result;
     }
 
-    // TODO: check validity, i.e. that the new axis indices are all < coord_size+num_new_axes.
-    template <typename T>
-    T inject_pairs(const T& coord, std::vector<std::pair<size_t, size_t>> new_axis_pos_val_pairs)
+    // TODO: check validity, i.e. that the new axis indices are all < axis_values.size()+num_new_axes.
+    // Add new values at particular axis positions
+    template <typename AXIS_VALUES>
+    AXIS_VALUES inject_pairs(const AXIS_VALUES& axis_values,
+                             std::vector<std::pair<size_t, size_t>> new_axis_pos_value_pairs)
     {
-        T result;
+        AXIS_VALUES result;
 
         size_t original_pos = 0;
 
-        for (size_t result_pos = 0; result_pos < coord.size() + new_axis_pos_val_pairs.size();
+        for (size_t result_pos = 0;
+             result_pos < axis_values.size() + new_axis_pos_value_pairs.size();
              result_pos++)
         {
             auto search_it = std::find_if(
-                new_axis_pos_val_pairs.begin(),
-                new_axis_pos_val_pairs.end(),
+                new_axis_pos_value_pairs.begin(),
+                new_axis_pos_value_pairs.end(),
                 [result_pos](std::pair<size_t, size_t> p) { return p.first == result_pos; });
 
-            if (search_it == new_axis_pos_val_pairs.end())
+            if (search_it == new_axis_pos_value_pairs.end())
             {
-                result.push_back(coord[original_pos++]);
+                result.push_back(axis_values[original_pos++]);
             }
             else
             {
@@ -109,10 +114,11 @@ namespace ngraph
         return result;
     }
 
-    template <typename T>
-    T inject(const T& coord, size_t new_axis_pos, size_t new_axis_val)
+    // Add a new value at a particular axis position
+    template <typename AXIS_VALUES>
+    AXIS_VALUES inject(const AXIS_VALUES& axis_values, size_t new_axis_pos, size_t new_axis_val)
     {
-        return inject_pairs(coord,
+        return inject_pairs(axis_values,
                             std::vector<std::pair<size_t, size_t>>{
                                 std::pair<size_t, size_t>(new_axis_pos, new_axis_val)});
     }

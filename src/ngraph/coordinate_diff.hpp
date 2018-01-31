@@ -23,18 +23,18 @@ namespace ngraph
     class CoordinateDiff : public std::vector<std::ptrdiff_t>
     {
     public:
-        CoordinateDiff(const std::initializer_list<std::ptrdiff_t>& axes)
-            : std::vector<std::ptrdiff_t>(axes)
+        CoordinateDiff(const std::initializer_list<std::ptrdiff_t>& diffs)
+            : std::vector<std::ptrdiff_t>(diffs)
         {
         }
 
-        CoordinateDiff(const std::vector<std::ptrdiff_t>& axes)
-            : std::vector<std::ptrdiff_t>(axes)
+        CoordinateDiff(const std::vector<std::ptrdiff_t>& diffs)
+            : std::vector<std::ptrdiff_t>(diffs)
         {
         }
 
-        CoordinateDiff(const CoordinateDiff& axes)
-            : std::vector<std::ptrdiff_t>(axes)
+        CoordinateDiff(const CoordinateDiff& diffs)
+            : std::vector<std::ptrdiff_t>(diffs)
         {
         }
 

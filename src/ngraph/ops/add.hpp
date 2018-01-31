@@ -43,7 +43,7 @@ namespace ngraph
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
-            Add(std::shared_ptr<Node> arg0, std::shared_ptr<Node> arg1)
+            Add(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
                 : BinaryElementwiseArithmetic("Add", arg0, arg1)
             {
             }

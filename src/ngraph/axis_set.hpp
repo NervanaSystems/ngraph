@@ -23,6 +23,7 @@ namespace ngraph
     class AxisSet : public std::set<size_t>
     {
     public:
+        AxisSet() {}
         AxisSet(const std::initializer_list<size_t>& axes)
             : std::set<size_t>(axes)
         {
@@ -38,12 +39,12 @@ namespace ngraph
         {
         }
 
-        AxisSet() {}
         AxisSet& operator=(const AxisSet& v)
         {
             static_cast<std::set<size_t>*>(this)->operator=(v);
             return *this;
         }
+
         AxisSet& operator=(AxisSet&& v)
         {
             static_cast<std::set<size_t>*>(this)->operator=(v);
