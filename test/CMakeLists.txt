@@ -69,7 +69,7 @@ endif()
 if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
     link_directories(${LLVM_LIB_DIR})
-    set(SRC ${SRC} backend_performance.cpp codegen.cpp)
+    set(SRC ${SRC} backend_performance.cpp codegen.cpp cpu_fusion.cpp)
     set(BACKEND_NAMES ${BACKEND_NAMES} "CPU")
 endif()
 
