@@ -171,6 +171,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_tensor_view.cpp
         runtime/cpu/cpu_tensor_view_wrapper.cpp
         runtime/cpu/cpu_layout_descriptor.cpp
+        runtime/cpu/mkldnn_utils.cpp
         runtime/cpu/ops/matmul_bias.cpp
         runtime/cpu/pass/cpu_fusion.cpp
         runtime/cpu/pass/cpu_layout.cpp

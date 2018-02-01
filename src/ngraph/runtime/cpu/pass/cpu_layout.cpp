@@ -15,9 +15,12 @@
 #include <algorithm>
 #include <memory>
 
+#include <mkldnn.hpp>
+
 #include "cpu_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 using namespace ngraph::runtime::cpu::pass;
 
@@ -39,18 +42,37 @@ bool CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
 
             auto native_axis_order = ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(rank);
 
+            auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
+                *tv, native_axis_order);
+
             if (tensor.is_output() || tensor.is_input() || tensor.is_constant())
             {
-                auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
-                    *tv, native_axis_order);
-                tv->set_tensor_view_layout(layout);
+                // Set the MKLDNN format to native row-major variants
+                layout->set_mkldnn_format(MKLDNN::CreateNativeDataFormat(*layout));
             }
             else
             {
-                auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
-                    *tv, native_axis_order);
-                tv->set_tensor_view_layout(layout);
+                if (ngraph::runtime::cpu::MKLDNN::IsMKLDNNOp(*node))
+                {
+                    // TODO(jmenon): get_inputs is marked as to-be-deprecated
+                    // but get_input_ops isn't a suitable API so this needs to be
+                    // reworked
+                    for (const descriptor::Input& input : node->get_inputs())
+                    {
+                        const auto& output = input.get_output();
+                        auto output_tv = output.get_tensor_view();
+                        auto output_tvl = output_tv->get_tensor_view_layout();
+
+                        // TODO(jmenon): Propagate layout based on inputs
+                        // TODO(jmenon): Insert layout conversions when needed
+                    }
+                }
+                else
+                {
+                    layout->set_mkldnn_format(mkldnn::memory::format::format_undef);
+                }
             }
+            tv->set_tensor_view_layout(layout);
         }
     }
 

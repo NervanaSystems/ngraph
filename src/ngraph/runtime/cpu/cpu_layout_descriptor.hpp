@@ -18,7 +18,7 @@
 #include <memory>
 #include <vector>
 
-#include <mkldnn_types.h>
+#include <mkldnn.hpp>
 
 #include "ngraph/common.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
@@ -45,7 +45,8 @@ namespace ngraph
                 const Strides& get_strides() const override { return strides; }
                 bool operator==(const TensorViewLayout& other) const override;
 
-                mkldnn_memory_format_t get_mkldnn_format() const { return mkldnn_format; }
+                void set_mkldnn_format(const mkldnn::memory::format& format) { mkldnn_format = format; }
+                mkldnn::memory::format get_mkldnn_format() const { return mkldnn_format; }
                 const AxisVector& get_axis_order() const { return axis_order; }
 
                 static const AxisVector Native2DAxisOrder;
@@ -60,7 +61,7 @@ namespace ngraph
                 size_t size;
 
                 // Numeric backend-specific fields
-                mkldnn_memory_format_t mkldnn_format;
+                mkldnn::memory::format mkldnn_format;
             };
 
             typedef std::vector<std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>> LayoutDescriptorPtrs;

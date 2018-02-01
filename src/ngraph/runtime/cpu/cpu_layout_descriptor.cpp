@@ -39,7 +39,7 @@ namespace ngraph
                 , axis_order(tv_axis_order)
                 , offset(0)
                 , size(ngraph::shape_size(tv.get_tensor_view_type()->get_shape()))
-                , mkldnn_format(mkldnn_format_undef)
+                , mkldnn_format(mkldnn::memory::format::format_undef)
             {
                 auto shape = get_shape();
                 size_t s = 1;
@@ -93,8 +93,8 @@ namespace ngraph
                     return false;
 
                 //TODO: Numeric backend-specific properties
-                if (mkldnn_format != p_other->mkldnn_format)
-                    return false;
+                // if (mkldnn_format != p_other->mkldnn_format)
+                //     return false;
 
                 return true;
             }
