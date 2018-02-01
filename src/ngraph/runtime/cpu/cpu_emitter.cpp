@@ -203,14 +203,22 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
            << ", memory::format::nchw);\n";
     // TODO define weights by stacking gamma and beta values
     writer << "auto weights_desc = memory::desc({" << join(weights_shape) << "}, " << et
-           << ", memory::format::oihw);\n";
+           << ", memory::format::oihw);\n";    
     writer << "auto result_desc = memory::desc({" << join(result_shape) << "}, " << et
            << ", memory::format::nchw);\n";
+    writer << "auto mean_desc = memory::desc({" << join(mean_shape) << "}, " << et
+           << ", memory::format::nc);\n";
+    writer << "auto variance_desc = memory::desc({" << join(variance_shape) << "}, " << et
+           << ", memory::format::nc);\n";       
 
     // Define memory for the user data
     writer << "auto input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
            << ");\n";
     writer << "auto weights = memory({weights_desc, cpu_engine}, bn_weights" 
+           << ");\n";
+    writer << "auto mean = memory({mean_desc, cpu_engine}, " << args[4].get_name()
+           << ");\n";
+    writer << "auto variance = memory({variance_desc, cpu_engine}, " << args[5].get_name()
            << ");\n";
     writer << "auto result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
 
@@ -221,7 +229,8 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     writer << "auto bn_fprop_prim_desc = batch_normalization_forward::primitive_desc(bn_fprop_desc, cpu_engine);\n";
 
     // create a batchnorm fprop primitive
-    writer << "auto bn_fprop = batch_normalization_forward(bn_fprop_prim_desc, input_data, weights, result); \n";
+    writer << "auto bn_fprop = batch_normalization_forward(bn_fprop_prim_desc, input_data, mean, variance,"
+           << "weights, result); \n";
 
     // create stream and execute
     writer << "auto s = stream(stream::kind::eager);\n"

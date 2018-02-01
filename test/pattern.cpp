@@ -407,8 +407,8 @@ public:
                                                                        pattern_map[gamma_label],
                                                                        pattern_map[beta_label],
                                                                        pattern_map[input],
-                                                                       bn_mean_shape,
-                                                                       bn_variance_shape,
+                                                                       pattern_map[mean_label],
+                                                                       pattern_map[variance_label],
                                                                        bn_output_shape,
                                                                        mean_et,
                                                                        variance_et));
