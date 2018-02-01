@@ -49,7 +49,7 @@ namespace ngraph
                         throw ngraph_error("Axis is out of bounds");
                     }
 
-                    strides.emplace_back(shape[*it]);
+                    strides.emplace_back(s);
                     s *= shape[*it];
                 }
                 std::reverse(strides.begin(), strides.end());

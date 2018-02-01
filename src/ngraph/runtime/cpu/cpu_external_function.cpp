@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <cassert>
 #include <cstdlib>
 #include <fstream>
 #include <memory>
@@ -25,7 +26,6 @@
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/descriptor/input.hpp"
-#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/file_util.hpp"

@@ -34,6 +34,7 @@ namespace ngraph
             public:
                 LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
                                  const AxisVector& tv_axis_order);
+                ~LayoutDescriptor() { }
 
                 size_t get_size() override { return size; }
                 size_t get_offset() const { return offset; }

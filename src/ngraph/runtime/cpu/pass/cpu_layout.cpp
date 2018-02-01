@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include <algorithm>
+#include <memory>
 
 #include "cpu_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
