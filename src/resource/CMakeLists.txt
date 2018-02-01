@@ -19,6 +19,16 @@ set (SRC
 )
 
 add_executable(resource_generator ${SRC})
+add_dependencies(resource_generator ext_llvm eigen ext_mkldnn)
 
-set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS
-    "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";TBB_HEADERS_PATH=\"${TBB_ROOT}/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";")
+set(HEADER_PATHS
+    "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
+    "MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\""
+    "CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\""
+    "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\""
+    "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
+)
+
+message("HEADER_PATHS ${HEADER_PATHS}")
+
+set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_PATHS}")
