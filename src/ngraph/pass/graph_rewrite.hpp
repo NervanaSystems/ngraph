@@ -60,27 +60,3 @@ private:
     //enable cascading rewrites
     std::vector<std::shared_ptr<pattern::Matcher>> m_matchers;
 };
-
-namespace ngraph
-{
-    namespace pass
-    {
-        class CPUFusion;
-    }
-}
-
-class ngraph::pass::CPUFusion : public GraphRewrite
-{
-public:
-    CPUFusion()
-        : GraphRewrite()
-    {
-        construct_gemm_pattern();
-        construct_reshapex2_pattern();
-    }
-
-private:
-    void construct_gemm_pattern();
-    void construct_reshapex2_pattern();
-    void construct_fprop_bn();
-};

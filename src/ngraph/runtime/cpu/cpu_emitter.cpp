@@ -19,7 +19,7 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-
+#include <numeric>
 #include "ngraph/node.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
@@ -142,7 +142,6 @@ void runtime::cpu::CPU_Emitter::EmitMatmulBias(codegen::CodeWriter& writer,
                                                const vector<runtime::cpu::TensorViewWrapper>& out)
 {
     const ngraph::op::MatmulBias* cg = static_cast<const ngraph::op::MatmulBias*>(node);
->>>>>>> origin/master
 
     const Shape& arg0_shape = cg->get_arg0_shape(); //W
     const Shape& arg1_shape = cg->get_arg1_shape(); //x
@@ -275,8 +274,7 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     writer << "}\n";
 
 }
-=======
->>>>>>> origin/master
+
 void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
                                         const ngraph::Node* n,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
