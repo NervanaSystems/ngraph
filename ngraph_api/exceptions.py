@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
-"""ngraph exceptions hierarchy. All exceptions are descendants of NgraphError"""
+"""ngraph exceptions hierarchy. All exceptions are descendants of NgraphError."""
 
 
 class NgraphError(Exception):
-    pass
+    """Base class for Ngraph exceptions."""
 
 
 class UserInputError(NgraphError):
-    pass
+    """User provided unexpected input."""
 
 
 class NgraphTypeError(NgraphError, TypeError):
-    pass
+    """Type mismatch error."""

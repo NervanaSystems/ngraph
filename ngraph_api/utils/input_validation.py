@@ -23,7 +23,7 @@ from ngraph_api.exceptions import UserInputError
 log = logging.getLogger(__file__)
 
 
-def assert_list_of_ints(value_list: Iterable[int], message: str) -> None:
+def assert_list_of_ints(value_list, message):  # type: (Iterable[int], str) -> None
     """Verify that the provided value is an iterable of integers."""
     try:
         for value in value_list:

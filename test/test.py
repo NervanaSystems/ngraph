@@ -22,7 +22,7 @@ from pyngraph.runtime import Manager
 
 element_type = Type.f32
 
-shape = [2,2]
+shape = [2, 2]
 A = Parameter(element_type, shape)
 B = Parameter(element_type, shape)
 C = Parameter(element_type, shape)
@@ -37,9 +37,9 @@ b = backend.make_primary_tensor_view(element_type, shape)
 c = backend.make_primary_tensor_view(element_type, shape)
 result = backend.make_primary_tensor_view(element_type, shape)
 
-a.write(util.numpy_to_c(np.array([1,2,3,4], dtype=np.float32)), 0, 16)
-b.write(util.numpy_to_c(np.array([5,6,7,8], dtype=np.float32)), 0, 16)
-c.write(util.numpy_to_c(np.array([9,10,11,12], dtype=np.float32)), 0, 16)
+a.write(util.numpy_to_c(np.array([1, 2, 3, 4], dtype=np.float32)), 0, 16)
+b.write(util.numpy_to_c(np.array([5, 6, 7, 8], dtype=np.float32)), 0, 16)
+c.write(util.numpy_to_c(np.array([9, 10, 11, 12], dtype=np.float32)), 0, 16)
 
 a_arr = np.array([0, 0, 0, 0], dtype=np.float32)
 b_arr = np.array([0, 0, 0, 0], dtype=np.float32)

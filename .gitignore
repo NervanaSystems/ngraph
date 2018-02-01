@@ -1,4 +1,6 @@
 tmp/
+.idea
+.pytest_cache/
 
 ### Standard Python .gitignore file: https://github.com/github/gitignore/blob/master/Python.gitignore ###
 # Byte-compiled / optimized / DLL files

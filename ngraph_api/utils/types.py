@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
-"""Functions related to converting between Python and numpy types and ngraph types"""
+"""Functions related to converting between Python and numpy types and ngraph types."""
+
 import logging
-from typing import Union
+from typing import Union, Iterable
 
 import numpy as np
 
@@ -24,24 +25,25 @@ from ngraph_api.exceptions import NgraphTypeError
 
 log = logging.getLogger(__file__)
 
+tensor_shape = Iterable[int]
 py_numeric_data = Union[int, float, np.ndarray]
 py_numeric_type = Union[type, np.dtype]
 
 ngraph_to_numpy_types_map = [
     (NgraphType.f32, np.float32),
     (NgraphType.f64, np.float64),
-    (NgraphType.i8,  np.int8),
+    (NgraphType.i8, np.int8),
     (NgraphType.i16, np.int16),
     (NgraphType.i32, np.int32),
     (NgraphType.i64, np.int64),
-    (NgraphType.u8,  np.uint8),
+    (NgraphType.u8, np.uint8),
     (NgraphType.u16, np.uint16),
     (NgraphType.u32, np.uint32),
-    (NgraphType.u64, np.uint64)
+    (NgraphType.u64, np.uint64),
 ]
 
 
-def get_element_type(data_type: type) -> NgraphType:
+def get_element_type(data_type):  # type: (py_numeric_type) -> NgraphType
     """Return an ngraph element type for a Python type or numpy.dtype."""
     if data_type == int:
         log.warning('Converting int type of undefined bitwidth to 32-bit ngraph integer.')
@@ -51,16 +53,18 @@ def get_element_type(data_type: type) -> NgraphType:
         log.warning('Converting float type of undefined bitwidth to 32-bit ngraph float.')
         return NgraphType.f32
 
-    ng_type = next((ng_type for (ng_type, np_type) in ngraph_to_numpy_types_map if np_type == data_type), None)
+    ng_type = next((ng_type for (ng_type, np_type)
+                    in ngraph_to_numpy_types_map if np_type == data_type), None)
     if ng_type:
         return ng_type
 
     raise NgraphTypeError('Unidentified data type %s', data_type)
 
 
-def get_dtype(ngraph_type: NgraphType) -> np.dtype:
+def get_dtype(ngraph_type):  # type: (NgraphType) -> np.dtype
     """Return a numpy.dtype for an ngraph element type."""
-    np_type = next((np_type for (ng_type, np_type) in ngraph_to_numpy_types_map if ng_type == ngraph_type), None)
+    np_type = next((np_type for (ng_type, np_type)
+                    in ngraph_to_numpy_types_map if ng_type == ngraph_type), None)
 
     if np_type:
         return np.dtype(np_type)

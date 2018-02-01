@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
+# flake8: noqa
 import pytest
 import numpy as np
 
@@ -28,12 +29,11 @@ from pyngraph.op import Constant, Abs, Exp, Log, Sum
 from pyngraph.op import Greater, Less, Equal, NotEqual, GreaterEq, LessEq, Not
 from pyngraph.op import OneHot, Broadcast, Reshape, Convert, Reduce
 from pyngraph.op import Concat, Select
-#from pyngraph.op import Reverse
 
 
 def make_backend_call_frame(function):
 
-    manager = Manager.get(pytest.config.getoption('backend'));
+    manager = Manager.get(pytest.config.getoption('backend'))
     external = manager.compile(function)
     backend = manager.allocate_backend()
     cf = backend.make_call_frame(external)
@@ -43,80 +43,80 @@ def make_backend_call_frame(function):
 
 def binary_op(op_str, a, b):
 
-    if op_str == "+":
+    if op_str == '+':
         return a + b
-    elif op_str == "Add":
+    elif op_str == 'Add':
         return Add(a, b)
-    elif op_str == "-":
+    elif op_str == '-':
         return a - b
-    elif op_str == "Sub":
+    elif op_str == 'Sub':
         return Subtract(a, b)
-    elif op_str == "*":
+    elif op_str == '*':
         return a * b
-    elif op_str == "Mul":
+    elif op_str == 'Mul':
         return Multiply(a, b)
-    elif op_str == "/":
+    elif op_str == '/':
         return a / b
-    elif op_str == "Div":
+    elif op_str == 'Div':
         return Divide(a, b)
-    elif op_str == "Dot":
+    elif op_str == 'Dot':
         return Dot(a, b)
-    elif op_str == "Equal":
+    elif op_str == 'Equal':
         return Equal(a, b)
-    elif op_str == "Greater":
+    elif op_str == 'Greater':
         return Greater(a, b)
-    elif op_str == "GreaterEq":
+    elif op_str == 'GreaterEq':
         return GreaterEq(a, b)
-    elif op_str == "Less":
+    elif op_str == 'Less':
         return Less(a, b)
-    elif op_str == "LessEq":
+    elif op_str == 'LessEq':
         return LessEq(a, b)
-    elif op_str == "Maximum":
+    elif op_str == 'Maximum':
         return Maximum(a, b)
-    elif op_str == "Minimum":
+    elif op_str == 'Minimum':
         return Minimum(a, b)
-    elif op_str == "NotEqual":
+    elif op_str == 'NotEqual':
         return NotEqual(a, b)
-    elif op_str == "Power":
+    elif op_str == 'Power':
         return Power(a, b)
 
 
 def binary_op_ref(op_str, a, b):
 
-    if op_str == "+" or op_str == "Add":
+    if op_str == '+' or op_str == 'Add':
         return a + b
-    elif op_str == "-" or op_str == "Sub":
+    elif op_str == '-' or op_str == 'Sub':
         return a - b
-    elif op_str == "*" or op_str == "Mul":
+    elif op_str == '*' or op_str == 'Mul':
         return a * b
-    elif op_str == "/" or op_str == "Div":
+    elif op_str == '/' or op_str == 'Div':
         return a / b
-    elif op_str == "Dot":
+    elif op_str == 'Dot':
         return np.dot(a, b)
-    elif op_str == "Equal":
+    elif op_str == 'Equal':
         return np.equal(a, b)
-    elif op_str == "Greater":
+    elif op_str == 'Greater':
         return np.greater(a, b)
-    elif op_str == "GreaterEq":
+    elif op_str == 'GreaterEq':
         return np.greater_equal(a, b)
-    elif op_str == "Less":
+    elif op_str == 'Less':
         return np.less(a, b)
-    elif op_str == "LessEq":
+    elif op_str == 'LessEq':
         return np.less_equal(a, b)
-    elif op_str == "Maximum":
+    elif op_str == 'Maximum':
         return np.maximum(a, b)
-    elif op_str == "Minimum":
+    elif op_str == 'Minimum':
         return np.minimum(a, b)
-    elif op_str == "NotEqual":
+    elif op_str == 'NotEqual':
         return np.not_equal(a, b)
-    elif op_str == "Power":
+    elif op_str == 'Power':
         return np.power(a, b)
 
 
 def binary_op_exec(op_str):
 
     element_type = Type.f32
-    shape = [2,2]
+    shape = [2, 2]
     A = Parameter(element_type, shape)
     B = Parameter(element_type, shape)
     parameter_list = [A, B]
@@ -127,8 +127,8 @@ def binary_op_exec(op_str):
     b = backend.make_primary_tensor_view(element_type, shape)
     result = backend.make_primary_tensor_view(element_type, shape)
 
-    a.write(util.numpy_to_c(np.array([[1,6],[7,4]], dtype=np.float32)), 0, 16)
-    b.write(util.numpy_to_c(np.array([[5,2],[3,8]], dtype=np.float32)), 0, 16)
+    a.write(util.numpy_to_c(np.array([[1, 6], [7, 4]], dtype=np.float32)), 0, 16)
+    b.write(util.numpy_to_c(np.array([[5, 2], [3, 8]], dtype=np.float32)), 0, 16)
 
     result_arr = np.array([[0, 0], [0, 0]], dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 16)
@@ -149,7 +149,7 @@ def binary_op_comparison(op_str):
     A = Parameter(element_type, shape)
     B = Parameter(element_type, shape)
     parameter_list = [A, B]
-    function = Function([binary_op(op_str, A,  B)], parameter_list, 'test')
+    function = Function([binary_op(op_str, A, B)], parameter_list, 'test')
     backend, cf = make_backend_call_frame(function)
 
     a = backend.make_primary_tensor_view(element_type, shape)
@@ -172,82 +172,82 @@ def binary_op_comparison(op_str):
 
 
 def test_add():
-    binary_op_exec("+")
+    binary_op_exec('+')
 
 
 def test_add_op():
-    binary_op_exec("Add")
+    binary_op_exec('Add')
 
 
 def test_sub():
-    binary_op_exec("-")
+    binary_op_exec('-')
 
 
 def test_sub_op():
-    binary_op_exec("Sub")
+    binary_op_exec('Sub')
 
 
 def test_mul():
-    binary_op_exec("*")
+    binary_op_exec('*')
 
 
 def test_mul_op():
-    binary_op_exec("Mul")
+    binary_op_exec('Mul')
 
 
 def test_div():
-    binary_op_exec("/")
+    binary_op_exec('/')
 
 
 def test_div_op():
-    binary_op_exec("Div")
+    binary_op_exec('Div')
 
 
 def test_dot():
-    binary_op_exec("Dot")
+    binary_op_exec('Dot')
 
 
 def test_maximum():
-    binary_op_exec("Maximum")
+    binary_op_exec('Maximum')
 
 
 def test_minimum():
-    binary_op_exec("Minimum")
+    binary_op_exec('Minimum')
 
 
 def test_power():
-    binary_op_exec("Power")
+    binary_op_exec('Power')
 
 
 def test_greater():
-    binary_op_comparison("Greater")
+    binary_op_comparison('Greater')
 
 
 def test_greater_eq():
-    binary_op_comparison("GreaterEq")
+    binary_op_comparison('GreaterEq')
 
 
 def test_less():
-    binary_op_comparison("Less")
+    binary_op_comparison('Less')
 
 
 def test_less_eq():
-    binary_op_comparison("LessEq")
+    binary_op_comparison('LessEq')
 
 
 def test_not_equal():
-    binary_op_comparison("NotEqual")
+    binary_op_comparison('NotEqual')
 
 
 def test_add_with_mul():
 
     element_type = Type.f32
-    shape = [2,2]
+    shape = [2, 2]
     A = Parameter(element_type, shape)
     B = Parameter(element_type, shape)
     C = Parameter(element_type, shape)
     parameter_list = [A, B, C]
-    function = Function([Multiply(Add(A,  B), C)], parameter_list, 'test')
+    function = Function([Multiply(Add(A, B), C)], parameter_list, 'test')
     backend, cf = make_backend_call_frame(function)
 
     a = backend.make_primary_tensor_view(element_type, shape)
@@ -255,9 +255,9 @@ def test_add_with_mul():
     c = backend.make_primary_tensor_view(element_type, shape)
     result = backend.make_primary_tensor_view(element_type, shape)
 
-    a.write(util.numpy_to_c(np.array([1,2,3,4], dtype=np.float32)), 0, 16)
-    b.write(util.numpy_to_c(np.array([5,6,7,8], dtype=np.float32)), 0, 16)
-    c.write(util.numpy_to_c(np.array([9,10,11,12], dtype=np.float32)), 0, 16)
+    a.write(util.numpy_to_c(np.array([1, 2, 3, 4], dtype=np.float32)), 0, 16)
+    b.write(util.numpy_to_c(np.array([5, 6, 7, 8], dtype=np.float32)), 0, 16)
+    c.write(util.numpy_to_c(np.array([9, 10, 11, 12], dtype=np.float32)), 0, 16)
 
     result_arr = np.array([0, 0, 0, 0], dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 16)
@@ -351,12 +351,9 @@ def unary_op_ref(op_str, a):
 
 
 def unary_op_exec(op_str, input_list):
-
-    """
-    input_list needs to have deep length of 4
-    """
+    """input_list needs to have deep length of 4"""
     element_type = Type.f32
-    shape = [2,2]
+    shape = [2, 2]
     A = Parameter(element_type, shape)
     parameter_list = [A]
     function = Function([unary_op(op_str, A)], parameter_list, 'test')
@@ -445,7 +442,7 @@ def test_negative():
 
 
 def test_sign():
-    input_list = [-1, 0, 0.5,  1]
+    input_list = [-1, 0, 0.5, 1]
     op_str = 'Sign'
     unary_op_exec(op_str, input_list)
 
@@ -469,7 +466,7 @@ def test_sqrt():
 
 
 def test_tan():
-    input_list = [-np.pi/4, 0, np.pi/8, np.pi/8]
+    input_list = [-np.pi / 4, 0, np.pi / 8, np.pi / 8]
     op_str = 'Tan'
     unary_op_exec(op_str, input_list)
 
@@ -496,7 +493,6 @@ def test_not():
     backend, cf = make_backend_call_frame(function)
 
     a = backend.make_primary_tensor_view(element_type, shape)
-    b = backend.make_primary_tensor_view(element_type, shape)
     result = backend.make_primary_tensor_view(Type.boolean, shape)
 
     a.write(util.numpy_to_c(np.array([True, False], dtype=np.bool)), 0, 2)
@@ -540,16 +536,16 @@ def test_sum():
 def test_reshape():
 
     element_type = Type.f32
-    shape = [2,3]
+    shape = [2, 3]
     A = Parameter(element_type, shape)
     parameter_list = [A]
-    function = Function([Reshape(A,  [0, 1], [3, 2])], parameter_list, 'test')
+    function = Function([Reshape(A, [0, 1], [3, 2])], parameter_list, 'test')
     backend, cf = make_backend_call_frame(function)
 
     a = backend.make_primary_tensor_view(element_type, shape)
     result = backend.make_primary_tensor_view(element_type, [3, 2])
 
-    a.write(util.numpy_to_c(np.array([[1,2,3],[4,5,6]], dtype=np.float32)), 0, 24)
+    a.write(util.numpy_to_c(np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)), 0, 24)
 
     result_arr = np.array([[0, 0], [0, 0], [0, 0]], dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 24)
@@ -565,10 +561,10 @@ def test_reshape():
 def test_convert():
 
     element_type = Type.f32
-    shape = [1,3]
+    shape = [1, 3]
     A = Parameter(element_type, shape)
     parameter_list = [A]
-    #f32 to boolean
+    # f32 to boolean
     function = Function([Convert(A, Type.boolean)], parameter_list, 'test')
     backend, cf = make_backend_call_frame(function)
 
@@ -586,7 +582,7 @@ def test_convert():
     result_arr_ref = a_arr.astype(bool)
     assert np.allclose(result_arr, result_arr_ref)
 
-    #f32 to i32
+    # f32 to i32
     function = Function([Convert(A, Type.i32)], parameter_list, 'test')
     backend, cf = make_backend_call_frame(function)
 
@@ -614,16 +610,16 @@ def test_broadcast():
     backend, cf = make_backend_call_frame(function)
 
     a = backend.make_primary_tensor_view(element_type, [3])
-    result = backend.make_primary_tensor_view(element_type, [3,3])
+    result = backend.make_primary_tensor_view(element_type, [3, 3])
 
-    a.write(util.numpy_to_c(np.array([1,2,3], dtype=np.float32)), 0, 12)
+    a.write(util.numpy_to_c(np.array([1, 2, 3], dtype=np.float32)), 0, 12)
 
-    result_arr = np.zeros((3,3), dtype=np.float32)
+    result_arr = np.zeros((3, 3), dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 36)
     cf.call([a], [result])
     result.read(util.numpy_to_c(result_arr), 0, 36)
 
-    a_arr = np.array([[0],[0],[0]], dtype=np.float32)
+    a_arr = np.array([[0], [0], [0]], dtype=np.float32)
     b_arr = np.array([[1, 2, 3]], dtype=np.float32)
     result_arr_ref = np.add(a_arr, b_arr)
 
@@ -634,18 +630,18 @@ def test_constant():
 
     element_type = Type.f32
     parameter_list = []
-    function = Function([Constant(element_type, [3,3], list(range(9)))],
-                                 parameter_list, 'test')
+    function = Function([Constant(element_type, [3, 3], list(range(9)))],
+                        parameter_list, 'test')
     backend, cf = make_backend_call_frame(function)
 
-    result = backend.make_primary_tensor_view(element_type, [3,3])
+    result = backend.make_primary_tensor_view(element_type, [3, 3])
 
-    result_arr = np.zeros((3,3), dtype=np.float32)
+    result_arr = np.zeros((3, 3), dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 36)
     cf.call([], [result])
     result.read(util.numpy_to_c(result_arr), 0, 36)
 
-    result_arr_ref = np.arange(9).reshape(3,3)
+    result_arr_ref = np.arange(9).reshape(3, 3)
 
     assert np.allclose(result_arr, result_arr_ref)
 
@@ -658,26 +654,26 @@ def test_reduce():
     AddParam2 = Parameter(float_element_type, [])
     constant_op = Constant(float_element_type, [], [0.])
     reduce_function = Function([Add(AddParam1, AddParam2)],
-                                        [AddParam1, AddParam2], 'add')
+                               [AddParam1, AddParam2], 'add')
 
     A = Parameter(float_element_type, [2, 2, 2])
     parameter_list = [A]
 
     function = Function([Reduce(A, constant_op, reduce_function, {0})],
-                                 parameter_list, 'test')
+                        parameter_list, 'test')
     backend, cf = make_backend_call_frame(function)
 
     a = backend.make_primary_tensor_view(float_element_type, [2, 2, 2])
-    result = backend.make_primary_tensor_view(float_element_type, [2,2])
+    result = backend.make_primary_tensor_view(float_element_type, [2, 2])
 
-    a.write(util.numpy_to_c(np.arange(8, dtype=np.float32).reshape(2,2,2)), 0, 32)
+    a.write(util.numpy_to_c(np.arange(8, dtype=np.float32).reshape(2, 2, 2)), 0, 32)
 
-    result_arr = np.zeros((2,2), dtype=np.float32)
+    result_arr = np.zeros((2, 2), dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 16)
     cf.call([a], [result])
     result.read(util.numpy_to_c(result_arr), 0, 16)
 
-    a_arr = np.arange(8).reshape(2,2,2)
+    a_arr = np.arange(8).reshape(2, 2, 2)
     result_arr_ref = np.add.reduce(a_arr)
 
     assert np.allclose(result_arr, result_arr_ref)
@@ -692,16 +688,16 @@ def test_onehot():
     backend, cf = make_backend_call_frame(function)
 
     a = backend.make_primary_tensor_view(element_type, [3])
-    result = backend.make_primary_tensor_view(element_type, [3,3])
+    result = backend.make_primary_tensor_view(element_type, [3, 3])
 
-    a.write(util.numpy_to_c(np.array([1,0,2], dtype=np.float32)), 0, 12)
+    a.write(util.numpy_to_c(np.array([1, 0, 2], dtype=np.float32)), 0, 12)
 
-    result_arr = np.zeros((3,3), dtype=np.float32)
+    result_arr = np.zeros((3, 3), dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 36)
     cf.call([a], [result])
     result.read(util.numpy_to_c(result_arr), 0, 36)
 
-    a_arr = np.array([1,0,2])
+    a_arr = np.array([1, 0, 2])
     result_arr_ref = np.eye(3)[a_arr]
 
     assert np.allclose(result_arr, result_arr_ref)
@@ -715,7 +711,7 @@ def test_concat():
     C = Parameter(element_type, [1, 2])
     parameter_list = [A, B, C]
     axis = 0
-    function = Function([Concat([A,  B, C], axis)], parameter_list, 'test')
+    function = Function([Concat([A, B, C], axis)], parameter_list, 'test')
     backend, cf = make_backend_call_frame(function)
 
     a = backend.make_primary_tensor_view(element_type, [1, 2])
@@ -723,9 +719,9 @@ def test_concat():
     c = backend.make_primary_tensor_view(element_type, [1, 2])
     result = backend.make_primary_tensor_view(element_type, [3, 2])
 
-    a.write(util.numpy_to_c(np.array([1,2], dtype=np.float32)), 0, 8)
-    b.write(util.numpy_to_c(np.array([5,6], dtype=np.float32)), 0, 8)
-    c.write(util.numpy_to_c(np.array([7,8], dtype=np.float32)), 0, 8)
+    a.write(util.numpy_to_c(np.array([1, 2], dtype=np.float32)), 0, 8)
+    b.write(util.numpy_to_c(np.array([5, 6], dtype=np.float32)), 0, 8)
+    c.write(util.numpy_to_c(np.array([7, 8], dtype=np.float32)), 0, 8)
 
     result_arr = np.zeros(6, dtype=np.float32).reshape(3, 2)
     result.write(util.numpy_to_c(result_arr), 0, 24)
@@ -748,7 +744,7 @@ def test_select():
     C = Parameter(element_type, [1, 2])
     parameter_list = [A, B, C]
 
-    function = Function([Select(A,  B, C)], parameter_list, 'test')
+    function = Function([Select(A, B, C)], parameter_list, 'test')
     backend, cf = make_backend_call_frame(function)
 
     a = backend.make_primary_tensor_view(Type.boolean, [1, 2])
@@ -757,18 +753,18 @@ def test_select():
     result = backend.make_primary_tensor_view(element_type, [1, 2])
 
     a.write(util.numpy_to_c(np.array([[True, False]], dtype=np.bool)), 0, 2)
-    b.write(util.numpy_to_c(np.array([[5,6]], dtype=np.float32)), 0, 8)
-    c.write(util.numpy_to_c(np.array([[7,8]], dtype=np.float32)), 0, 8)
+    b.write(util.numpy_to_c(np.array([[5, 6]], dtype=np.float32)), 0, 8)
+    c.write(util.numpy_to_c(np.array([[7, 8]], dtype=np.float32)), 0, 8)
 
     result_arr = np.array([[0, 0]], dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 8)
     cf.call([a, b, c], [result])
     result.read(util.numpy_to_c(result_arr), 0, 8)
 
-    result_arr_ref = np.array([[5,8]])
+    result_arr_ref = np.array([[5, 8]])
 
     assert np.allclose(result_arr, result_arr_ref)
 
 
-if  __name__ == '__main__':
+if __name__ == '__main__':
     test_cos()

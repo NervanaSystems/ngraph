@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
+"""Usage example for the ngraph Pythonic API."""
 
 import numpy as np
 import ngraph_api as ng

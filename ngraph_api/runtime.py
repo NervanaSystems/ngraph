@@ -14,62 +14,64 @@
 # ----------------------------------------------------------------------------
 """Provide a layer of abstraction for the ngraph++ runtime environment."""
 import logging
+from typing import List
 
 import numpy as np
 
-from pyngraph import Function, Node, util
+from pyngraph import Function, Node, TensorViewType, util
 from pyngraph.runtime import Manager
 from pyngraph.op import Parameter
 
-from ngraph_api.utils.types import py_numeric_type, get_dtype
+from ngraph_api.utils.types import py_numeric_type, get_dtype, py_numeric_data
 
 log = logging.getLogger(__file__)
 
 
-def runtime(manager_name: str='INTERPRETER') -> 'Runtime':
-    """Helper factory to create a Runtime object.
+def runtime(manager_name='INTERPRETER'):  # type: (str) -> 'Runtime'
+    """Create a Runtime object (helper factory).
 
-    Use signature to parametrize runtime as needed."""
+    Use signature to parametrize runtime as needed.
+    """
     return Runtime(manager_name)
 
 
 class Runtime:
     """Represents the ngraph++ runtime environment."""
 
-    def __init__(self, manager_name: str) -> None:
+    def __init__(self, manager_name):  # type: (str) -> None
         self.manager_name = manager_name
         self.manager = Manager.get(manager_name)
         self.backend = self.manager.allocate_backend()
 
-    def __repr__(self):
+    def __repr__(self):  # type: () -> str
         return '<Runtime: Manager=\'{}\'>'.format(self.manager_name)
 
-    def computation(self, node: Node, *inputs: py_numeric_type) -> 'Computation':
+    def computation(self, node, *inputs):  # type: (Node, py_numeric_type) -> 'Computation'
+        """Return a callable Computation object."""
         return Computation(self, node, *inputs)
 
 
 class Computation:
-    """ngraph callable computation object"""
+    """ngraph callable computation object."""
 
-    def __init__(self, runtime: Runtime, node: Node, *parameters: Parameter) -> None:
+    def __init__(self, runtime, node, *parameters):  # type: (Runtime, Node, Parameter) -> None
         self.runtime = runtime
         self.node = node
         self.parameters = parameters
-        self.tensor_views = []
+        self.tensor_views = []  # type: List[TensorViewType]
         for parameter in parameters:
             shape = parameter.get_shape()
             element_type = parameter.get_element_type()
             self.tensor_views.append(runtime.backend.make_primary_tensor_view(element_type, shape))
 
-    def __repr__(self) -> str:
+    def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])
         return '<Computation: {}({})>'.format(self.node.name, params_string)
 
-    def __call__(self, *input_values: py_numeric_type) -> py_numeric_type:
-        """This is a quick and dirty implementation of the logic needed to calculate and return
-        a value of the computation."""
+    def __call__(self, *input_values):  # type: (py_numeric_data) -> py_numeric_data
+        """Q&D logic implementation needed to calculate and return a value of the computation."""
         for tensor_view, value in zip(self.tensor_views, input_values):
-            if not type(value) == np.ndarray:
+            if not isinstance(value, np.ndarray):
                 value = np.array(value)
             Computation._write_ndarray_to_tensor_view(value, tensor_view)
 
@@ -77,7 +79,8 @@ class Computation:
         result_shape = self.node.get_shape()
         result_dtype = get_dtype(result_element_type)
 
-        result_view = self.runtime.backend.make_primary_tensor_view(result_element_type, result_shape)
+        result_view = self.runtime.backend.make_primary_tensor_view(
+            result_element_type, result_shape)
         result_arr = np.empty(result_shape, dtype=result_dtype)
 
         function = Function(self.node, self.parameters, 'ngraph API computation')
@@ -90,21 +93,27 @@ class Computation:
         return result_arr
 
     @staticmethod
-    def _get_buffer_size(element_type, element_count):
+    def _get_buffer_size(element_type, element_count):  # type: (TensorViewType, int) -> int
         return int((element_type.bitwidth / 8) * element_count)
 
     @staticmethod
-    def _write_ndarray_to_tensor_view(value: np.ndarray, tensor_view):
+    def _write_ndarray_to_tensor_view(value, tensor_view):
+        # type: (np.ndarray, TensorViewType) -> None
         tensor_view_dtype = get_dtype(tensor_view.element_type)
         if value.dtype != tensor_view_dtype:
-            log.warning('Attempting to write a %s value to a %s tensor. Will attempt type conversion.',
-                        value.dtype, tensor_view.element_type)
+            log.warning(
+                'Attempting to write a %s value to a %s tensor. Will attempt type conversion.',
+                value.dtype,
+                tensor_view.element_type)
             value = value.astype(tensor_view_dtype, casting='safe')
 
-        buffer_size = Computation._get_buffer_size(tensor_view.element_type, tensor_view.element_count)
+        buffer_size = Computation._get_buffer_size(
+            tensor_view.element_type, tensor_view.element_count)
         tensor_view.write(util.numpy_to_c(value), 0, buffer_size)
 
     @staticmethod
-    def _read_tensor_view_to_ndarray(tensor_view, output: np.ndarray):
-        buffer_size = Computation._get_buffer_size(tensor_view.element_type, tensor_view.element_count)
+    def _read_tensor_view_to_ndarray(tensor_view, output):
+        # type: (TensorViewType, np.ndarray) -> None
+        buffer_size = Computation._get_buffer_size(
+            tensor_view.element_type, tensor_view.element_count)
         tensor_view.read(util.numpy_to_c(output), 0, buffer_size)
