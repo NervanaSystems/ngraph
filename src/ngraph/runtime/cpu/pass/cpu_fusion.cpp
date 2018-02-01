@@ -29,6 +29,14 @@
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
+#include "ngraph/ops/sum.hpp"
+#include "ngraph/ops/divide.hpp"
+#include "ngraph/ops/multiply.hpp"
+#include "ngraph/ops/subtract.hpp"
+#include "ngraph/ops/add.hpp"
+#include "ngraph/ops/sqrt.hpp"
+#include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/batchnorm.hpp"
 
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
                            std::shared_ptr<ngraph::Node> arg,
@@ -220,7 +228,7 @@ void ngraph::pass::CPUFusion::construct_fprop_bn()
             NGRAPH_DEBUG << "Mean: "  <<  pattern_map[mean_label]->get_name();
             NGRAPH_DEBUG << "eps: " << pattern_map[eps_label]->get_name();
             NGRAPH_DEBUG << "gamma: " << pattern_map[gamma_label]->get_name();
-            NGRAPH_DEBUG << "beat: " << pattern_map[beta_label]->get_name();
+            NGRAPH_DEBUG << "beta: " << pattern_map[beta_label]->get_name();
 
             // //check if the root node matched by the Matcher and pattern_map are of same type
             // if (pattern_map[variance_label]->get_element_type() != m.match_root()->get_element_type()){
