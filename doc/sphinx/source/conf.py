@@ -191,15 +191,8 @@ texinfo_documents = [
 html_add_permalinks = ""
 
 breathe_projects = {
-    "nGraph": "../../../build/doc/doxygen/xml",
+    "nGraph": "../../../doxygen/xml",
 }
-breathe_default_project = "nGraph"
-
-breathe_projects = {
-    "nGraph": "xml"
-}
-
-
 
 rst_epilog = u"""
 .. |codename| replace:: Intel nGraph
