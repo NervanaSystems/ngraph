@@ -34,6 +34,10 @@ void runtime::cpu::CPU_CallFrame::tensor_call(
 {
     vector<void*> inputs;
     vector<void*> outputs;
+
+    propagate_layouts(input_tvs, m_external_function->get_parameter_layout_descriptors());
+    propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
+
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
         shared_ptr<runtime::cpu::CPUTensorView> tv =
@@ -69,6 +73,20 @@ void runtime::cpu::CPU_CallFrame::call(
     }
 
     tensor_call(inputs, outputs);
+}
+
+void runtime::cpu::CPU_CallFrame::propagate_layouts(
+    const std::vector<std::shared_ptr<runtime::TensorView>>& tvs, const LayoutDescriptorPtrs& layouts) const
+{
+    if (layouts.size() != tvs.size())
+    {
+        throw ngraph_error("Error propagating layouts - tensor view and layout descriptor counts do not match");
+    }
+    for (size_t i = 0; i < tvs.size(); i++)
+    {
+        assert(layouts[i]);
+        tvs[i]->get_descriptor()->set_tensor_view_layout(layouts[i]);
+    }
 }
 
 vector<runtime::PerformanceCounter> runtime::cpu::CPU_CallFrame::get_performance_data() const

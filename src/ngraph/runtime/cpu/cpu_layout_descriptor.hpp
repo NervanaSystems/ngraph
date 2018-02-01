@@ -15,6 +15,8 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
+#include <vector>
 
 #include <mkldnn_types.h>
 
@@ -45,9 +47,11 @@ namespace ngraph
 
                 mkldnn_memory_format_t get_mkldnn_format() const { return mkldnn_format; }
                 const AxisVector& get_axis_order() const { return axis_order; }
+
                 static const AxisVector Native2DAxisOrder;
                 static const AxisVector Native4DAxisOrder;
                 static const AxisVector CHWNAxisOrder;
+                static AxisVector create_native_axis_order(size_t rank);
 
             private:
                 AxisVector axis_order;
@@ -58,6 +62,8 @@ namespace ngraph
                 // Numeric backend-specific fields
                 mkldnn_memory_format_t mkldnn_format;
             };
+
+            typedef std::vector<std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>> LayoutDescriptorPtrs;
         }
     }
 }

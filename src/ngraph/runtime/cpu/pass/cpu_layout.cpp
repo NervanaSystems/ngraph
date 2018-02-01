@@ -37,8 +37,7 @@ bool CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
             auto& tensor = tv->get_tensor();
             auto rank = tvt->get_shape().size();
 
-            AxisVector native_axis_order(rank);
-            std::iota(native_axis_order.begin(), native_axis_order.end(), 0);
+            auto native_axis_order = ngraph::runtime::cpu::LayoutDescriptor::create_native_axis_order(rank);
 
             if (tensor.is_output() || tensor.is_input() || tensor.is_constant())
             {

@@ -26,6 +26,13 @@ namespace ngraph
             const AxisVector LayoutDescriptor::Native4DAxisOrder{0, 1, 2, 3};
             const AxisVector LayoutDescriptor::CHWNAxisOrder{1, 2, 3, 0};
 
+            AxisVector LayoutDescriptor::create_native_axis_order(size_t rank)
+            {
+                AxisVector native_axis_order(rank);
+                std::iota(native_axis_order.begin(), native_axis_order.end(), 0);
+                return native_axis_order;
+            }
+
             LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
                                                const AxisVector& tv_axis_order)
                 : TensorViewLayout(tv)
@@ -86,6 +93,9 @@ namespace ngraph
                     return false;
 
                 //TODO: Numeric backend-specific properties
+                if (mkldnn_format != p_other->mkldnn_format)
+                    return false;
+
                 return true;
             }
         }

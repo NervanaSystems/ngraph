@@ -94,7 +94,6 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
-//#include "ngraph/runtime/cpu/pass/cpu_tensor_allocation.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -735,6 +734,31 @@ using namespace ngraph::runtime;
         writer += "}\n\n";
     }
 
+    // Store layouts assigned for arguments
+    for (const auto& parameter : m_function->get_parameters())
+    {
+        for (size_t i = 0; i < parameter->get_output_size(); ++i)
+        {
+            auto tv = parameter->get_output_tensor_view(i);
+            assert(tv->get_tensor_view_layout());
+            parameter_layout_descriptors.emplace_back(
+                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
+        }
+    }
+    // Store layouts assigned for results
+    assert(result_layout_descriptors.empty());
+    for (size_t i = 0; i < m_function->get_output_size(); ++i)
+    {
+        const auto& output = m_function->get_output_op(i);
+        for (size_t j = 0; j < output->get_output_size(); ++j)
+        {
+            auto tv = output->get_output_tensor_view(j);
+            assert(tv->get_tensor_view_layout());
+            result_layout_descriptors.emplace_back(
+                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
+        }
+    }
+
     // TODO: Cleanup and make this a utility function
 
     file_util::make_directory(s_output_dir);
@@ -805,6 +829,18 @@ shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPU_ExternalFunction::make_
 
     return make_shared<ngraph::runtime::cpu::CPU_CallFrame>(shared_from_this(),
                                                             m_compiled_function);
+}
+
+const runtime::cpu::LayoutDescriptorPtrs& runtime::cpu::CPU_ExternalFunction::get_parameter_layout_descriptors()
+{
+    assert(!parameter_layout_descriptors.empty());
+    return parameter_layout_descriptors;
+}
+
+const runtime::cpu::LayoutDescriptorPtrs& runtime::cpu::CPU_ExternalFunction::get_result_layout_descriptors()
+{
+    assert(!result_layout_descriptors.empty());
+    return result_layout_descriptors;
 }
 
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(

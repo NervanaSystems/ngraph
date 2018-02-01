@@ -37,6 +37,9 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     , buffer(nullptr)
     , aligned_buffer(nullptr)
 {
+    // m_descriptor->set_tensor_view_layout(
+    //     std::make_shared<ngraph::descriptor::layout::DenseTensorViewLayout>(*m_descriptor));
+
     buffer_size = shape_size(shape) * element_type.size();
     if (buffer_size)
     {
