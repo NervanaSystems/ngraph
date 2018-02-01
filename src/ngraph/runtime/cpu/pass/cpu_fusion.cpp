@@ -165,3 +165,86 @@ void ngraph::pass::CPUFusion::construct_gemm_pattern()
     auto m = std::make_shared<ngraph::pattern::Matcher>(padd, callback);
     this->add_matcher(m);
 }
+
+void ngraph::pass::CPUFusion::construct_fprop_bn()
+{
+        // construct varaiance
+        auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
+        auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
+        auto input_sq = std::make_shared<op::Multiply>(input, input);
+        auto sum_input = std::make_shared<op::Sum>(input, AxisSet{0});
+        auto square_sumed_input = std::make_shared<op::Multiply>(sum_input, sum_input);
+        auto sum_squared_input = std::make_shared<op::Sum>(input_sq, AxisSet{0});
+        auto avg_input_sum_sq = std::make_shared<op::Divide>(square_sumed_input, N);
+        auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
+        auto variance  = std::make_shared<op::Divide>(xmu, N);
+        auto variance_label = std::make_shared<pattern::op::Label>(variance, nullptr, Nodes{variance});
+        auto variance_with_broadcast = std::make_shared<op::Broadcast>(variance_label, Shape{2, 3}, AxisSet{0});
+
+        // construct mean
+        auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
+        auto mean = std::make_shared<op::Divide>(sum_input1, N);
+        auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, Nodes{mean});
+        auto mean_with_broadcast = std::make_shared<op::Broadcast>(mean_label, Shape{2, 3}, AxisSet{0});
+        auto input_diff_mean = std::make_shared<op::Subtract>(input, mean_with_broadcast);
+
+        // Eps
+        auto eps_label = std::make_shared<pattern::op::Label>(element::f32, Shape{3});
+        auto eps_with_broadcast = std::make_shared<op::Broadcast>(eps_label, Shape{2, 3}, AxisSet{0});
+
+        auto add1 = std::make_shared<op::Add>(eps_with_broadcast, variance_with_broadcast);
+        auto sqrt_variance_eps = std::make_shared<op::Sqrt>(add1);
+        auto divide_mean_variance = std::make_shared<op::Divide>(input_diff_mean, sqrt_variance_eps);
+
+        //Gamma
+        auto gamma_label = std::make_shared<pattern::op::Label>(element::f32, Shape{3});
+        auto gamma_with_broadcast = std::make_shared<op::Broadcast>(gamma_label, Shape{2, 3}, AxisSet{0});
+
+        auto multiply_gamma =  std::make_shared<op::Multiply>(gamma_with_broadcast, divide_mean_variance);
+        
+        //Beta
+        auto beta_label = std::make_shared<pattern::op::Label>(element::f32, Shape{3});
+        auto beta_with_broadcast = std::make_shared<op::Broadcast>(beta_label, Shape{2, 3}, AxisSet{0});
+
+        auto add_beta =  std::make_shared<op::Add>(beta_with_broadcast, multiply_gamma);
+        // This completes fprop bn pattern
+
+        ngraph::pattern::gr_callback_fn callback = [variance_label, mean_label, input, eps_label, gamma_label, beta_label](pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
+                         << m.match_root()->get_name();
+
+            std::shared_ptr<Node> nn = nullptr;
+            //TODO - add assert's based on the matched node
+            auto pattern_map = m.get_pattern_map();
+            NGRAPH_DEBUG << "Variance: " << pattern_map[variance_label]->get_name();
+            NGRAPH_DEBUG << "Mean: "  <<  pattern_map[mean_label]->get_name();
+            NGRAPH_DEBUG << "eps: " << pattern_map[eps_label]->get_name();
+            NGRAPH_DEBUG << "gamma: " << pattern_map[gamma_label]->get_name();
+            NGRAPH_DEBUG << "beat: " << pattern_map[beta_label]->get_name();
+
+            // //check if the root node matched by the Matcher and pattern_map are of same type
+            // if (pattern_map[variance_label]->get_element_type() != m.match_root()->get_element_type()){
+            //     NGRAPH_DEBUG << "Operand's types don't match";
+            //     return nn;
+            // }
+            Shape bn_output_shape{m.match_root()->get_shape()};
+            Shape bn_mean_shape{pattern_map[mean_label]->get_shape()};
+            Shape bn_variance_shape{pattern_map[variance_label]->get_shape()};
+            const auto& variance_et = pattern_map[variance_label]->get_element_type();
+            const auto& mean_et = pattern_map[mean_label]->get_element_type();
+            auto bn_node = std::shared_ptr<Node>(new op::BatchnormFprop(pattern_map[eps_label],
+                                                                       pattern_map[gamma_label],
+                                                                       pattern_map[beta_label],
+                                                                       pattern_map[input],
+                                                                       pattern_map[mean_label],
+                                                                       pattern_map[variance_label],
+                                                                       bn_output_shape,
+                                                                       mean_et,
+                                                                       variance_et));
+
+            return bn_node;
+        };
+
+        auto m = std::make_shared<ngraph::pattern::Matcher>(add_beta, callback);
+        this->add_matcher(m);
+}

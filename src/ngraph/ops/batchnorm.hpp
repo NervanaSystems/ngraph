@@ -35,17 +35,7 @@ namespace ngraph
                            std::shared_ptr<Node> variance,
                            Shape output_shape,
                            const element::Type& mean_et,
-                           const element::Type& variance_et)
-                        :RequiresTensorViewArgs("BatchnormFprop", {eps, gamma, beta, input, mean, variance})
-                        ,mkl_output_shape(output_shape)
-                        ,mkl_variance_shape(variance->get_shape())
-                        ,mkl_mean_shape(mean->get_shape())
-                        ,mkl_input_shape(input->get_shape())
-                        ,mean_element_type(mean_et)
-                        ,variance_element_type(variance_et)
-            {
-                add_output(input->get_element_type(), mkl_output_shape);
-            }
+                           const element::Type& variance_et);
 
         const Shape& get_inputs_shape() const{
             return mkl_input_shape;
@@ -62,23 +52,9 @@ namespace ngraph
         const Shape& get_mean_shape() const{
             return mkl_mean_shape;
         }
-
         virtual std::shared_ptr<Node> copy_with_new_args(
-            const std::vector<std::shared_ptr<Node>>& new_args) const override
-        {
-            if (new_args.size() != 4)
-                throw ngraph_error("Incorrect number of new arguments");
-            return std::make_shared<BatchnormFprop>(new_args.at(0),
-                                                new_args.at(1),
-                                                new_args.at(2),
-                                                new_args.at(3),
-                                                new_args.at(4),
-                                                new_args.at(5),
-                                                mkl_output_shape,
-                                                mean_element_type,
-                                                variance_element_type);
-        }
-        
+                const std::vector<std::shared_ptr<Node>>& new_args) const override; 
+
         private:
                 Shape mkl_input_shape;
                 Shape mkl_output_shape;
