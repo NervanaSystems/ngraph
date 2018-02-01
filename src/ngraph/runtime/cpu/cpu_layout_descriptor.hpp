@@ -36,8 +36,7 @@ namespace ngraph
             public:
                 LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
                                  const AxisVector& tv_axis_order);
-                ~LayoutDescriptor() { }
-
+                ~LayoutDescriptor() {}
                 size_t get_size() override { return size; }
                 size_t get_offset() const { return offset; }
                 size_t get_index_offset(const std::vector<size_t>& indices) override;
@@ -45,10 +44,12 @@ namespace ngraph
                 const Strides& get_strides() const override { return strides; }
                 bool operator==(const TensorViewLayout& other) const override;
 
-                void set_mkldnn_format(const mkldnn::memory::format& format) { mkldnn_format = format; }
+                void set_mkldnn_format(const mkldnn::memory::format& format)
+                {
+                    mkldnn_format = format;
+                }
                 mkldnn::memory::format get_mkldnn_format() const { return mkldnn_format; }
                 const AxisVector& get_axis_order() const { return axis_order; }
-
                 static const AxisVector Native2DAxisOrder;
                 static const AxisVector Native4DAxisOrder;
                 static const AxisVector CHWNAxisOrder;
@@ -64,7 +65,8 @@ namespace ngraph
                 mkldnn::memory::format mkldnn_format;
             };
 
-            typedef std::vector<std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>> LayoutDescriptorPtrs;
+            typedef std::vector<std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>>
+                LayoutDescriptorPtrs;
         }
     }
 }

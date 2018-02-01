@@ -14,8 +14,8 @@
 
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/runtime/external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/external_function.hpp"
 
 using namespace ngraph;
 using namespace std;

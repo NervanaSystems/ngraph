@@ -32,7 +32,8 @@ namespace ngraph
             namespace MKLDNN
             {
                 bool IsMKLDNNOp(ngraph::Node& op);
-                mkldnn::memory::format CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
+                mkldnn::memory::format
+                    CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
             }
         }
     }

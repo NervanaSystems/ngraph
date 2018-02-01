@@ -15,12 +15,12 @@
 #include <cstring>
 #include <memory>
 
-#include "ngraph/except.hpp"
-#include "ngraph/shape.hpp"
+#include "cpu_tensor_view.hpp"
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
+#include "ngraph/except.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "cpu_tensor_view.hpp"
+#include "ngraph/shape.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -41,9 +41,8 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
     // TODO(jmenon): A fallback layout should not be needed but is required
     // because of how some unit test functionality is written (ex. 'backprop_derivative')
     // This needs to be removed
-    m_descriptor->set_tensor_view_layout(
-        std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor,
-                                                         runtime::cpu::LayoutDescriptor::create_native_axis_order(shape.size())));
+    m_descriptor->set_tensor_view_layout(std::make_shared<runtime::cpu::LayoutDescriptor>(
+        *m_descriptor, runtime::cpu::LayoutDescriptor::create_native_axis_order(shape.size())));
 
     buffer_size = shape_size(shape) * element_type.size();
     if (buffer_size)

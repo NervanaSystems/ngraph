@@ -76,11 +76,13 @@ void runtime::cpu::CPU_CallFrame::call(
 }
 
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
-    const std::vector<std::shared_ptr<runtime::TensorView>>& tvs, const LayoutDescriptorPtrs& layouts) const
+    const std::vector<std::shared_ptr<runtime::TensorView>>& tvs,
+    const LayoutDescriptorPtrs& layouts) const
 {
     if (layouts.size() != tvs.size())
     {
-        throw ngraph_error("Error propagating layouts - tensor view and layout descriptor counts do not match");
+        throw ngraph_error(
+            "Error propagating layouts - tensor view and layout descriptor counts do not match");
     }
     for (size_t i = 0; i < tvs.size(); i++)
     {

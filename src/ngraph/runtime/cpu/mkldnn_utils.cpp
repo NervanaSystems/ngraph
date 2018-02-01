@@ -31,13 +31,10 @@ namespace ngraph
         {
             namespace MKLDNN
             {
-
 #define TI(x) std::type_index(typeid(x))
 
                 const std::unordered_set<std::type_index> OpRegistry{
-                    TI(ngraph::op::Convolution),
-                    TI(ngraph::op::AvgPool),
-                    TI(ngraph::op::MaxPool),
+                    TI(ngraph::op::Convolution), TI(ngraph::op::AvgPool), TI(ngraph::op::MaxPool),
                 };
 
                 bool IsMKLDNNOp(ngraph::Node& op)
@@ -45,18 +42,15 @@ namespace ngraph
                     return (OpRegistry.find(TI(op)) != OpRegistry.end());
                 }
 
-                mkldnn::memory::format CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout)
+                mkldnn::memory::format
+                    CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout)
                 {
-                    switch(layout.get_shape().size())
+                    switch (layout.get_shape().size())
                     {
-                    case 1:
-                        return mkldnn::memory::format::x;
-                    case 2:
-                        return mkldnn::memory::format::nc;
-                    case 4:
-                        return mkldnn::memory::format::nchw;
-                    default:
-                        return mkldnn::memory::format::format_undef;
+                    case 1: return mkldnn::memory::format::x;
+                    case 2: return mkldnn::memory::format::nc;
+                    case 4: return mkldnn::memory::format::nchw;
+                    default: return mkldnn::memory::format::format_undef;
                     }
                 }
             }

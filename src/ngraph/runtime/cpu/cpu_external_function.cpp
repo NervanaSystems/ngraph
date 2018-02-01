@@ -832,12 +832,14 @@ shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPU_ExternalFunction::make_
                                                             m_compiled_function);
 }
 
-const runtime::cpu::LayoutDescriptorPtrs& runtime::cpu::CPU_ExternalFunction::get_parameter_layout_descriptors()
+const runtime::cpu::LayoutDescriptorPtrs&
+    runtime::cpu::CPU_ExternalFunction::get_parameter_layout_descriptors()
 {
     return parameter_layout_descriptors;
 }
 
-const runtime::cpu::LayoutDescriptorPtrs& runtime::cpu::CPU_ExternalFunction::get_result_layout_descriptors()
+const runtime::cpu::LayoutDescriptorPtrs&
+    runtime::cpu::CPU_ExternalFunction::get_result_layout_descriptors()
 {
     return result_layout_descriptors;
 }

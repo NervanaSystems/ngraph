@@ -20,8 +20,8 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
 {
