@@ -159,6 +159,7 @@ op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg, const Shape& window_shape
 
 bool op::MaxPool::is_functionally_identical(const Node& other) const
 {
+    return false; // TODO: temporary workaround for MKLDNN issue
     bool rc = true;
     if (Node::test_identical(other))
     {

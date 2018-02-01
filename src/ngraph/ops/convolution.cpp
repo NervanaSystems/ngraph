@@ -371,6 +371,7 @@ std::shared_ptr<Node>
 
 bool op::Convolution::is_functionally_identical(const Node& other) const
 {
+    return false; // TODO: temporary workaround for MKLDNN issue
     bool rc = true;
     if (Node::test_identical(other))
     {

@@ -201,6 +201,7 @@ op::AvgPool::AvgPool(const std::shared_ptr<Node>& arg, const Shape& window_shape
 
 bool op::AvgPool::is_functionally_identical(const Node& other) const
 {
+    return false; // TODO: temporary workaround for MKLDNN issue
     bool rc = true;
     if (Node::is_functionally_identical(other))
     {
