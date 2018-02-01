@@ -494,7 +494,9 @@ private:
                                 args[0]->get_shape(),
                                 out[0]->get_shape(),
                                 max_pool->get_window_shape(),
-                                max_pool->get_window_movement_strides());
+                                max_pool->get_window_movement_strides(),
+                                max_pool->get_padding_below(),
+                                max_pool->get_padding_above());
         }
         else if (node_op == "Minimum")
         {

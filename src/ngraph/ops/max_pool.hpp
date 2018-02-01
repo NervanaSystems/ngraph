@@ -22,6 +22,8 @@ namespace ngraph
     {
         /// \brief Batched max pooling operation, with optional window stride.
         ///
+        /// (TODO: add an account of the optional padding into the below definition.)
+        ///
         /// Max pooling takes as its input a data batch tensor of shape \f$(N,C,d_1,\dots,d_n)\f$ where \f$n > 0\f$, every \f$d_i > 0\f$, and where \f$N\f$ is
         /// the batch size, and \f$C > 0\f$ is the number of channels (sometimes called features). The dimensions \f$(d_1,\dots,d_n)\f$ correspond to the shape of
         /// an \f$n\f$-dimensional data item in a batch. For example, where \f$n=2\f$, the data may represent a two-dimensional image. It also takes two parameters:
@@ -45,11 +47,24 @@ namespace ngraph
             /// \param arg The node producing the input data batch tensor.
             /// \param window_shape The window shape.
             /// \param window_movement_strides The window movement strides.
+            /// \param padding_below The below-padding shape.
+            /// \param padding_above The above-padding shape.
+            MaxPool(const std::shared_ptr<Node>& arg,
+                    const Shape& window_shape,
+                    const Strides& window_movement_strides,
+                    const Shape& padding_below,
+                    const Shape& padding_above);
+
+            /// \brief Constructs a batched, unpadded max pooling operation (i.e., all padding shapes are set to 0).
+            ///
+            /// \param arg The node producing the input data batch tensor.
+            /// \param window_shape The window shape.
+            /// \param window_movement_strides The window movement strides.
             MaxPool(const std::shared_ptr<Node>& arg,
                     const Shape& window_shape,
                     const Strides& window_movement_strides);
 
-            /// \brief Constructs an unstrided batched convolution operation (i.e., all window movement strides are 1).
+            /// \brief Constructs an unstrided batched max pooling operation (i.e., all window movement strides are 1 and all padding shapes are set to 0).
             ///
             /// \param arg The node producing the input data batch tensor.
             /// \param window_shape The window shape.
@@ -69,12 +84,18 @@ namespace ngraph
             const Shape& get_window_shape() const { return m_window_shape; }
             /// \return The window movement strides.
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
+            /// \return The below-padding shape.
+            const Shape& get_padding_below() const { return m_padding_below; }
+            /// \return The above-padding shape.
+            const Shape& get_padding_above() const { return m_padding_above; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
 
             Shape m_window_shape;
             Strides m_window_movement_strides;
+            Shape m_padding_below;
+            Shape m_padding_above;
         };
     }
 }
