@@ -1,6 +1,0 @@
-.. training:
-
-Training
-########
-
-

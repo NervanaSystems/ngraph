@@ -10,25 +10,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+ 
+if ("${NGRAPH_BUILD_DOCS}" MATCHES "^ON$")
+    add_custom_target( docs
+        COMMENT "Build all of the documentation types selected during CMake configuration."
+        )
 
-add_custom_target( docs
-    COMMENT "Build all of the documentation types selected during CMake configuration."
-    )
-
-set(DOCS_TARGET_IS_EMPTY TRUE)
-
-add_subdirectory( doxygen )
-add_subdirectory( sphinx )
-
-if (DOCS_TARGET_IS_EMPTY)
-    add_custom_target( docs-is-noop-error
+    add_subdirectory( doxygen )
+    add_subdirectory( sphinx )
+else()
+    add_custom_target( docs
         COMMAND echo
-        COMMAND echo "The 'docs' target does nothing because every kind of doc was disabled during configuration"
+        COMMAND echo "The 'docs' target is disabled. To enable the building of documentation, re-run cmake with the option -DNGRAPH_BUILD_DOCS=ON."
         COMMAND echo
         COMMAND false
         VERBATIM
         )
-
-    add_dependencies( docs docs-is-noop-error )
 endif()
-
