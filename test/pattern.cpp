@@ -28,87 +28,10 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/ops/batchnorm.hpp"
-//
-#include "ngraph/file_util.hpp"
-#include "ngraph/json.hpp"
-#include "ngraph/ops/cblas_gemm.hpp"
-#include "ngraph/serializer.hpp"
-#include "ngraph/util.hpp"
-#include "util/test_tools.hpp"
-
-
-//visualize headers
-
-#include <memory>
-#include <sstream>
-#include <string>
-#include <vector>
-
-#include "gtest/gtest.h"
-
-#include "ngraph/log.hpp"
-#include "ngraph/ngraph.hpp"
-#include "ngraph/pass/dump_sorted.hpp"
-#include "ngraph/pass/liveness.hpp"
-#include "ngraph/pass/liveness.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/visualize_tree.hpp"
-
-#include "util/test_tools.hpp"
-
-
-#include <fstream>
-#include <sstream>
-
-#include "gtest/gtest.h"
-
-#include "ngraph/file_util.hpp"
-#include "ngraph/json.hpp"
-#include "ngraph/ngraph.hpp"
-#include "ngraph/serializer.hpp"
-#include "ngraph/util.hpp"
-#include "util/test_tools.hpp"
+#include "util/matcher.hpp"
 
 using namespace ngraph;
 using namespace std;
-
-//this is for more nuanced testing
-class TestMatcher : public pattern::Matcher
-{
-    using pattern::Matcher::Matcher;
-    bool virtual match_node(const std::shared_ptr<Node>& pattern_node,
-                            const std::shared_ptr<Node>& graph_node,
-                            PatternMap& pattern_map) override
-    {
-        if (std::dynamic_pointer_cast<::ngraph::op::Parameter>(pattern_node))
-        {
-            return pattern_node.get() == dynamic_cast<::ngraph::op::Parameter*>(graph_node.get());
-        }
-
-        return this->pattern::Matcher::match_node(pattern_node, graph_node, pattern_map);
-    }
-
-public:
-    bool match(const std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node)
-    {
-        assert(
-            pattern_node &&
-            graph_node); //the same condition throws an exception in the non-test version of `match`
-        NGRAPH_DEBUG << "Starting match pattern = " << pattern_node->get_name()
-                     << " , graph_node = " << graph_node->get_name();
-
-        m_pattern_map.clear();
-        m_match_root.reset();
-
-        bool is_match = match_node(pattern_node, graph_node, m_pattern_map);
-        if (is_match)
-        {
-            m_match_root = graph_node;
-        }
-        return is_match;
-    }
-};
 
 template <typename T>
 std::shared_ptr<Node> create_reduction(const std::shared_ptr<Node>& node,
@@ -222,7 +145,6 @@ public:
             auto second_node = m.match_root()->get_input_ops().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
-            //ASSERT_TRUE(const_node);
 
             std::shared_ptr<ngraph::Node> nn = nullptr;
             if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||

@@ -94,6 +94,7 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
 
 using namespace std;
@@ -145,7 +146,7 @@ static StaticInitializers s_static_initializers;
 
 static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::EmitAdd},
-    {TI(ngraph::op::CblasGemm), &runtime::cpu::CPU_Emitter::EmitCblasGemm},
+    {TI(ngraph::op::MatmulBias), &runtime::cpu::CPU_Emitter::EmitMatmulBias},
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::EmitDot},
     {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::EmitMultiply},
     {TI(ngraph::op::Parameter), &runtime::cpu::CPU_Emitter::EmitNop},
@@ -190,12 +191,17 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Ceiling), &runtime::cpu::CPU_Emitter::EmitCeiling},
     {TI(ngraph::op::Sqrt), &runtime::cpu::CPU_Emitter::EmitSqrt},
     {TI(ngraph::op::Convolution), &runtime::cpu::CPU_Emitter::EmitConvolution},
+    {TI(ngraph::op::ConvolutionBackpropFilters),
+     &runtime::cpu::CPU_Emitter::EmitConvolutionBackpropFilters},
+    {TI(ngraph::op::ConvolutionBackpropData),
+     &runtime::cpu::CPU_Emitter::EmitConvolutionBackpropData},
     {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::EmitNot},
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::EmitMaxPool},
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::EmitReverse},
     {TI(ngraph::op::ReduceWindow), &runtime::cpu::CPU_Emitter::EmitReduceWindow},
     {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPU_Emitter::EmitSelectAndScatter},
     {TI(ngraph::op::AvgPool), &runtime::cpu::CPU_Emitter::EmitAvgPool},
+    {TI(ngraph::op::AvgPoolBprop), &runtime::cpu::CPU_Emitter::EmitAvgPoolBprop},
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::EmitPad},
     {TI(ngraph::op::BatchnormFprop), &runtime::cpu::CPU_Emitter::EmitBatchnormFprop},
 };
@@ -235,6 +241,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
 #include <Eigen/Dense>
 
+#include <mkldnn.hpp>
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
@@ -483,6 +490,8 @@ using namespace ngraph::runtime;
             // TODO: This should be static but we don't codegen statics correctly yet
             writer << "tbb::flow::graph G;\n\n";
         }
+
+        runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(writer);
 
         bool temporaries_used = false;
         size_t worst_case_tmp_size = 0;

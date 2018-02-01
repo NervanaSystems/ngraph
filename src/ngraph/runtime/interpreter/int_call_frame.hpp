@@ -262,6 +262,21 @@ private:
                                 avg_pool->get_padding_below(),
                                 avg_pool->get_padding_above());
         }
+        else if (node_op == "AvgPoolBprop")
+        {
+            ngraph::op::AvgPoolBprop* apb = dynamic_cast<ngraph::op::AvgPoolBprop*>(&node);
+            kernel::avg_pool_bprop<T>(
+                reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                args[0]->get_shape(),
+                args[1]->get_shape(), /*delta shape*/
+                apb->get_window_shape(),
+                apb->get_window_movement_strides(),
+                apb->get_padding_below(),
+                apb->get_padding_above(),
+                true /*divide by the number of physical elements in a window*/);
+        }
         else if (node_op == "Broadcast")
         {
             ngraph::op::Broadcast* broadcast = dynamic_cast<ngraph::op::Broadcast*>(&node);
@@ -322,7 +337,59 @@ private:
                                    c->get_window_dilation_strides(),
                                    c->get_padding_below(),
                                    c->get_padding_above(),
-                                   c->get_image_dilation_strides());
+                                   c->get_data_dilation_strides(),
+                                   0,
+                                   1,
+                                   1,
+                                   0,
+                                   0,
+                                   1,
+                                   false);
+        }
+        else if (node_op == "ConvolutionBackpropFilters")
+        {
+            auto c = static_cast<const op::ConvolutionBackpropFilters*>(&node);
+            kernel::convolution<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                   reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                   args[0]->get_shape(),
+                                   args[1]->get_shape(),
+                                   out[0]->get_shape(),
+                                   c->get_window_movement_strides_backward(),
+                                   c->get_window_dilation_strides_backward(),
+                                   c->get_padding_below_backward(),
+                                   c->get_padding_above_backward(),
+                                   c->get_data_dilation_strides_backward(),
+                                   1,
+                                   0,
+                                   0,
+                                   1,
+                                   1,
+                                   0,
+                                   false);
+        }
+        else if (node_op == "ConvolutionBackpropData")
+        {
+            // Note that args[1] and args[0] are switched here from the usual order.
+            auto c = static_cast<const op::ConvolutionBackpropData*>(&node);
+            kernel::convolution<T>(reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                   reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                   args[1]->get_shape(),
+                                   args[0]->get_shape(),
+                                   out[0]->get_shape(),
+                                   c->get_window_movement_strides_backward(),
+                                   c->get_window_dilation_strides_backward(),
+                                   c->get_padding_below_backward(),
+                                   c->get_padding_above_backward(),
+                                   c->get_data_dilation_strides_backward(),
+                                   0,
+                                   1,
+                                   0,
+                                   1,
+                                   0,
+                                   1,
+                                   true);
         }
         else if (node_op == "Cos")
         {
