@@ -15,7 +15,9 @@
 #include "reshape_elimination.hpp"
 #include <algorithm>
 #include <iostream>
+#include <numeric>
 #include <unordered_set>
+
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ops/add.hpp"
