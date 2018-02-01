@@ -159,7 +159,10 @@ op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg, const Shape& window_shape
 
 bool op::MaxPool::is_functionally_identical(const Node& other) const
 {
-    return false; // TODO: temporary workaround for MKLDNN issue
+    // TODO: temporary workaround for MKLDNN issue
+    //       remove 'return false' and uncomment below when fixed
+    return false;
+    /*
     bool rc = true;
     if (Node::test_identical(other))
     {
@@ -172,6 +175,7 @@ bool op::MaxPool::is_functionally_identical(const Node& other) const
         rc = false;
     }
     return rc;
+    */
 }
 
 void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints,
