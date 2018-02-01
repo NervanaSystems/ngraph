@@ -104,8 +104,13 @@ if (NOT NGRAPH_CPU_ENABLE)
     set(NGRAPH_TBB_ENABLE FALSE)
 endif()
 
-if (NOT DEFINED NGRAPH_TBB_ENABLE)
+# We have to disable TBB if CMake <= 3.1, due to a version requirement in TBB's
+# build scripts.
+if (NOT DEFINED NGRAPH_TBB_ENABLE AND NOT (CMAKE_VERSION VERSION_LESS 3.1))
     set(NGRAPH_TBB_ENABLE TRUE)
+elseif(NGRAPH_TBB_ENABLE AND (CMAKE_VERSION VERSION_LESS 3.1))
+    message(WARNING "TBB build requires CMake version 3.1 or above. Ignoring NGRAPH_TBB_ENABLE")
+    set(NGRAPH_TBB_ENABLE FALSE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
