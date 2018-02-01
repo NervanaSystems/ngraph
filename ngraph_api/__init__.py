@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
-"""ngraph module namespace, exposing factory functions for all ops and other classes"""
+"""ngraph module namespace, exposing factory functions for all ops and other classes."""
 
 from ngraph_api.ops import parameter
 from ngraph_api.runtime import runtime

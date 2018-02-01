@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
-"""Functions related to converting between Python and numpy types and ngraph types"""
+"""Functions related to converting between Python and numpy types and ngraph types."""
+
 import logging
-from typing import Union
+from typing import Union, Iterable
 
 import numpy as np
 
@@ -24,6 +25,7 @@ from ngraph_api.exceptions import NgraphTypeError
 
 log = logging.getLogger(__file__)
 
+tensor_shape = Iterable[int]
 py_numeric_data = Union[int, float, np.ndarray]
 py_numeric_type = Union[type, np.dtype]
 
@@ -41,7 +43,7 @@ ngraph_to_numpy_types_map = [
 ]
 
 
-def get_element_type(data_type: type) -> NgraphType:
+def get_element_type(data_type):  # type: (py_numeric_type) -> NgraphType
     """Return an ngraph element type for a Python type or numpy.dtype."""
     if data_type == int:
         log.warning('Converting int type of undefined bitwidth to 32-bit ngraph integer.')
@@ -59,7 +61,7 @@ def get_element_type(data_type: type) -> NgraphType:
     raise NgraphTypeError('Unidentified data type %s', data_type)
 
 
-def get_dtype(ngraph_type: NgraphType) -> np.dtype:
+def get_dtype(ngraph_type):  # type: (NgraphType) -> np.dtype
     """Return a numpy.dtype for an ngraph element type."""
     np_type = next((np_type for (ng_type, np_type)
                     in ngraph_to_numpy_types_map if ng_type == ngraph_type), None)

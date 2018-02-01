@@ -12,9 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
+# flake8: noqa
 
 import sys
 import six
+
+# workaround to load the libngraph.so with RTLD_GLOBAL
+if six.PY3:
+    import os
+    flags = os.RTLD_NOW | os.RTLD_GLOBAL
+else:
+    import ctypes
+    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
+sys.setdlopenflags(flags)
 
 from _pyngraph.op import Abs
 from _pyngraph.op import Acos
@@ -65,12 +75,3 @@ from _pyngraph.op import UnaryElementwiseArithmetic
 from _pyngraph.op import BinaryElementwise
 from _pyngraph.op import BinaryElementwiseComparison
 from _pyngraph.op import BinaryElementwiseArithmetic
-
-# workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
-else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)

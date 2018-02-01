@@ -13,10 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
-import numpy as np
-
-import pyngraph.util as util
-from pyngraph import Type, Function, TensorViewType
+from pyngraph import Type, Function
 from pyngraph.op import Parameter, Maximum, Reshape, Dot, Broadcast
 from pyngraph.op import Constant, Exp, Log, Sum
 from pyngraph.op import Greater, Convert, Reduce

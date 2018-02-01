@@ -20,12 +20,14 @@ import numpy as np
 from pyngraph.op import Parameter
 
 from ngraph_api.utils.input_validation import assert_list_of_ints
-from ngraph_api.utils.types import get_element_type, py_numeric_type
+from ngraph_api.utils.types import get_element_type, py_numeric_type, tensor_shape
 from ngraph_api.utils import nameable_op
 
 
 @nameable_op
-def parameter(shape, dtype: py_numeric_type = np.float32, name: str=None) -> Parameter:
+def parameter(shape, dtype=np.float32, name=None):
+    # type: (tensor_shape, py_numeric_type, str) -> Parameter
+    """Return an ngraph Parameter object."""
     assert_list_of_ints(shape, 'Parameter shape must be a list of integer values.')
     element_type = get_element_type(dtype)
     return Parameter(element_type, shape)

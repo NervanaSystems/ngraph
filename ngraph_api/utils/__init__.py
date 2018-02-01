@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
-"""Factor related functions out to separate files"""
+"""Generic utilities. Factor related functions out to separate files."""
 
 from functools import wraps
-from typing import Callable
+from typing import Callable, Any
 
 
-def nameable_op(op_factory_function: Callable) -> Callable:
+def nameable_op(op_factory_function):  # type: (Callable) -> Callable
+    """Set the name to the ngraph operator returned by the wrapped function."""
     @wraps(op_factory_function)
-    def wrapper(*args, **kwds):
+    def wrapper(*args, **kwds):  # type: (Any, Any) -> Any
         op = op_factory_function(*args, **kwds)
         if 'name' in kwds:
             op.name = kwds['name']
