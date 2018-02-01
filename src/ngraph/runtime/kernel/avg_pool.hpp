@@ -30,90 +30,89 @@ namespace ngraph
         namespace kernel
         {
             template <typename T>
-            void avg_pool_bprop(T* arg,
-                                T* delta,
-                                T* out, //out is also arg_shape
-                                const Shape& arg_shape,
-                                const Shape& delta_shape,
-                                const Shape& window_shape,
-                                const Strides& window_movement_strides,
-                                const Shape& padding_below,
-                                const Shape& padding_above,
-                                bool count_only_physical)
+            void avg_pool_backprop(T* delta,
+                                   T* out,
+                                   const Shape& delta_shape,
+                                   const Shape& out_shape,
+                                   const Shape& window_shape,
+                                   const Strides& window_movement_strides,
+                                   const Shape& padding_below,
+                                   const Shape& padding_above)
             {
-                memset(out, 0, sizeof(T) * shape_size(arg_shape));
-                size_t j = 0; //for iterating over delta (ep) elements
-                size_t num_elements_in_window = shape_size(window_shape);
-                CoordinateTransform output_transform(delta_shape);
+                CoordinateTransform out_transform(out_shape);
 
-                for (const Coordinate& out_coord : output_transform)
+                for (const Coordinate& out_coord : out_transform)
                 {
-                    size_t img_index = out_coord[0];
-                    size_t channel = out_coord[1];
+                    out[out_transform.index(out_coord)] = 0;
+                }
 
-                    size_t n_image_dimensions = arg_shape.size() - 2;
-                    Coordinate input_batch_transform_start(2 + n_image_dimensions);
-                    Coordinate input_batch_transform_end(2 + n_image_dimensions);
-                    Strides input_batch_transform_source_strides(2 + n_image_dimensions, 1);
-                    AxisVector input_batch_transform_source_axis_order(2 + n_image_dimensions);
-                    CoordinateDiff input_batch_transform_padding_below(2 + n_image_dimensions);
-                    CoordinateDiff input_batch_transform_padding_above(2 + n_image_dimensions);
+                CoordinateTransform delta_transform(delta_shape);
 
-                    input_batch_transform_start[0] = img_index;
-                    input_batch_transform_end[0] = img_index + 1;
-                    input_batch_transform_start[1] = channel;
-                    input_batch_transform_end[1] = channel + 1;
-                    input_batch_transform_padding_below[0] = 0;
-                    input_batch_transform_padding_below[1] = 0;
-                    input_batch_transform_padding_above[0] = 0;
-                    input_batch_transform_padding_above[1] = 0;
+                for (const Coordinate& delta_coord : delta_transform)
+                {
+                    size_t img_index = delta_coord[0];
+                    size_t channel = delta_coord[1];
+
+                    size_t n_image_dimensions = out_shape.size() - 2;
+                    Coordinate source_window_transform_start(2 + n_image_dimensions);
+                    Coordinate source_window_transform_end(2 + n_image_dimensions);
+                    Strides source_window_transform_source_strides(2 + n_image_dimensions, 1);
+                    AxisVector source_window_transform_source_axis_order(2 + n_image_dimensions);
+                    CoordinateDiff source_window_transform_padding_below(2 + n_image_dimensions);
+                    CoordinateDiff source_window_transform_padding_above(2 + n_image_dimensions);
+
+                    source_window_transform_start[0] = img_index;
+                    source_window_transform_end[0] = img_index + 1;
+                    source_window_transform_start[1] = channel;
+                    source_window_transform_end[1] = channel + 1;
+                    source_window_transform_padding_below[0] = 0;
+                    source_window_transform_padding_below[1] = 0;
+                    source_window_transform_padding_above[0] = 0;
+                    source_window_transform_padding_above[1] = 0;
 
                     for (size_t i = 2; i < n_image_dimensions + 2; i++)
                     {
                         size_t window_shape_this_dim = window_shape[i - 2];
                         size_t movement_stride = window_movement_strides[i - 2];
 
-                        input_batch_transform_start[i] = movement_stride * out_coord[i];
-                        input_batch_transform_end[i] =
-                            input_batch_transform_start[i] + window_shape_this_dim;
-                        input_batch_transform_padding_below[i] = padding_below[i - 2];
-                        input_batch_transform_padding_above[i] = padding_above[i - 2];
+                        source_window_transform_start[i] = movement_stride * delta_coord[i];
+                        source_window_transform_end[i] =
+                            source_window_transform_start[i] + window_shape_this_dim;
+                        source_window_transform_padding_below[i] = padding_below[i - 2];
+                        source_window_transform_padding_above[i] = padding_above[i - 2];
                     }
-                    std::iota(begin(input_batch_transform_source_axis_order),
-                              end(input_batch_transform_source_axis_order),
+                    std::iota(begin(source_window_transform_source_axis_order),
+                              end(source_window_transform_source_axis_order),
                               0);
 
-                    CoordinateTransform input_batch_transform(
-                        arg_shape,
-                        input_batch_transform_start,
-                        input_batch_transform_end,
-                        input_batch_transform_source_strides,
-                        input_batch_transform_source_axis_order,
-                        input_batch_transform_padding_below,
-                        input_batch_transform_padding_above);
+                    CoordinateTransform source_window_transform(
+                        out_shape,
+                        source_window_transform_start,
+                        source_window_transform_end,
+                        source_window_transform_source_strides,
+                        source_window_transform_source_axis_order,
+                        source_window_transform_padding_below,
+                        source_window_transform_padding_above);
 
-                    if (count_only_physical)
+                    size_t num_elements_in_window = 0;
+
+                    for (const Coordinate& source_window_coord : source_window_transform)
                     {
-                        num_elements_in_window = 0;
-                        //Dumb! But should work for now
-                        for (const Coordinate& input_batch_coord : input_batch_transform)
+                        if (source_window_transform.has_source_coordinate(source_window_coord))
                         {
-                            if (input_batch_transform.has_source_coordinate(input_batch_coord))
-                            {
-                                num_elements_in_window++;
-                            }
+                            num_elements_in_window++;
                         }
                     }
 
-                    for (const Coordinate& input_batch_coord : input_batch_transform)
+                    for (const Coordinate& source_window_coord : source_window_transform)
                     {
-                        if (input_batch_transform.has_source_coordinate(input_batch_coord))
+                        if (source_window_transform.has_source_coordinate(source_window_coord))
                         {
-                            size_t index = input_batch_transform.index(input_batch_coord);
-                            out[index] += delta[j] / num_elements_in_window;
+                            size_t index = source_window_transform.index(source_window_coord);
+                            out[index] +=
+                                delta[delta_transform.index(delta_coord)] / num_elements_in_window;
                         }
                     }
-                    j++; //move to the next ep
                 }
             }
 

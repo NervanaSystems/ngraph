@@ -217,27 +217,29 @@ bool op::AvgPool::is_functionally_identical(const Node& other) const
     return rc;
 }
 
-op::AvgPoolBprop::AvgPoolBprop(const std::shared_ptr<Node>& arg,
-                               const std::shared_ptr<Node>& delta,
-                               const Shape& window_shape,
-                               const Strides& window_movement_strides,
-                               const Shape& padding_below,
-                               const Shape& padding_above)
-    : RequiresTensorViewArgs("AvgPoolBprop", {arg, delta})
+op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
+                                     const std::shared_ptr<Node>& delta,
+                                     const Shape& window_shape,
+                                     const Strides& window_movement_strides,
+                                     const Shape& padding_below,
+                                     const Shape& padding_above)
+    : RequiresTensorViewArgs("AvgPoolBackprop", {delta})
+    , m_forward_arg_shape(forward_arg_shape)
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
 {
-    set_value_type_checked(get_input_element_type(0), arg->get_shape());
+    set_value_type_checked(get_input_element_type(0), forward_arg_shape);
 }
 
-bool op::AvgPoolBprop::is_functionally_identical(const Node& other) const
+bool op::AvgPoolBackprop::is_functionally_identical(const Node& other) const
 {
     bool rc = true;
     if (Node::is_functionally_identical(other))
     {
-        const AvgPoolBprop& rhs = dynamic_cast<const AvgPoolBprop&>(other);
+        const AvgPoolBackprop& rhs = dynamic_cast<const AvgPoolBackprop&>(other);
+        rc &= m_forward_arg_shape == rhs.m_forward_arg_shape;
         rc &= m_window_shape == rhs.m_window_shape;
         rc &= m_window_movement_strides == rhs.m_window_movement_strides;
         rc &= m_padding_below == rhs.m_padding_below;
@@ -254,11 +256,11 @@ void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints,
                                     const std::shared_ptr<Node>& delta)
 {
     auto operand = get_input_op(0);
-    auto bprop = std::make_shared<op::AvgPoolBprop>(operand,
-                                                    delta,
-                                                    m_window_shape,
-                                                    m_window_movement_strides,
-                                                    m_padding_below,
-                                                    m_padding_above);
-    adjoints.add_delta(operand, bprop);
+    auto backprop = std::make_shared<op::AvgPoolBackprop>(get_input_shape(0),
+                                                          delta,
+                                                          m_window_shape,
+                                                          m_window_movement_strides,
+                                                          m_padding_below,
+                                                          m_padding_above);
+    adjoints.add_delta(operand, backprop);
 }

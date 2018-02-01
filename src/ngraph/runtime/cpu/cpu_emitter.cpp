@@ -2341,18 +2341,19 @@ void runtime::cpu::CPU_Emitter::EmitPad(codegen::CodeWriter& writer,
     writer << "            {" << join(pad->get_padding_interior()) << "});\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitAvgPoolBprop(
+void runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop(
     codegen::CodeWriter& writer,
     const ngraph::Node* n,
     const vector<runtime::cpu::TensorViewWrapper>& args,
     const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    auto apb = static_cast<const op::AvgPoolBprop*>(n);
+    auto apb = static_cast<const op::AvgPoolBackprop*>(n);
 
     auto arg_shape = args[0].get_shape();
     auto delta_shape = args[1].get_shape();
 
-    writer << "kernel::avg_pool_bprop<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+    writer << "kernel::avg_pool_backprop<" << out[0].get_type() << ">(" << args[0].get_name()
+           << ",\n";
     writer << "                 " << args[1].get_name() << ",\n";
     writer << "                 " << out[0].get_name() << ",\n";
     writer << "                 {" << join(arg_shape) << "},\n";
