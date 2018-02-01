@@ -33,12 +33,18 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
 
     ExternalProject_Get_Property(clang SOURCE_DIR)
 
+    if(DEFINED CMAKE_ASM_COMPILER)
+        set(LLVM_CMAKE_ASM_COMPILER ${CMAKE_ASM_COMPILER})
+    else()
+        set(LLVM_CMAKE_ASM_COMPILER ${CMAKE_C_COMPILER})
+    endif()
+
     ExternalProject_Add(ext_llvm
         DEPENDS clang
         GIT_REPOSITORY https://github.com/llvm-mirror/llvm.git
         GIT_TAG ${RELEASE_TAG}
         CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                   -DCMAKE_ASM_COMPILER=${CMAKE_ASM_COMPILER}
+                   -DCMAKE_ASM_COMPILER=${LLVM_CMAKE_ASM_COMPILER}
                    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                    -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
                    -DLLVM_INCLUDE_TESTS=OFF
