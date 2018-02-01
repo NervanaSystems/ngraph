@@ -97,7 +97,15 @@ endif()
 
 # Set true if CPU backend is built by default
 if (NOT DEFINED NGRAPH_CPU_ENABLE)
-    SET(NGRAPH_CPU_ENABLE TRUE)
+    set(NGRAPH_CPU_ENABLE TRUE)
+endif()
+
+if (NOT NGRAPH_CPU_ENABLE)
+    set(NGRAPH_TBB_ENABLE FALSE)
+endif()
+
+if (NOT DEFINED NGRAPH_TBB_ENABLE)
+    set(NGRAPH_TBB_ENABLE TRUE)
 endif()
 
 #-----------------------------------------------------------------------------------------------

@@ -15,7 +15,7 @@
 # Fetch and configure TBB
 #----------------------------------------------------------------------------------------------------------
 
-if(NGRAPH_CPU_ENABLE)
+if(NGRAPH_TBB_ENABLE)
     set(TBB_GIT_REPO_URL https://github.com/01org/tbb)
     set(TBB_GIT_TAG "tbb_2018")
 

@@ -93,7 +93,9 @@ int main(int argc, char** argv)
     include_paths.push_back({EIGEN_HEADERS_PATH, {}, true});
     include_paths.push_back({MKLDNN_HEADERS_PATH, {}, true});
     include_paths.push_back({NGRAPH_HEADERS_PATH, {}, true});
-    //include_paths.push_back({TBB_HEADERS_PATH, {}, true});
+#ifdef NGRAPH_TBB_ENABLE
+    include_paths.push_back({TBB_HEADERS_PATH, {}, true});
+#endif
 
     if (output_path.empty())
     {
