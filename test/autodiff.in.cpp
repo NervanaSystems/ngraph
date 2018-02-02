@@ -20,78 +20,360 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "util/all_close.hpp"
-#include "util/autodiff/backprop_derivative.hpp"
 #include "util/autodiff/backprop_function.hpp"
-#include "util/autodiff/numeric_derivative.hpp"
+#include "util/autodiff/numeric_compare.hpp"
 #include "util/random.hpp"
+
+#include "ngraph/runtime/kernel/avg_pool.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-template <typename T>
-bool autodiff_numeric_compare(const std::shared_ptr<runtime::Manager>& manager,
-                              const std::shared_ptr<runtime::Backend>& backend,
-                              std::function<std::shared_ptr<Function>()> make_graph,
-                              const std::vector<std::shared_ptr<runtime::TensorView>>& args,
-                              T rtol,
-                              T atol)
+TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 {
-    auto f = make_graph();
-    auto results_num =
-        autodiff::numeric_derivative<T>(manager, backend, f, args, .001f, f->get_parameters());
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
 
-    auto g = make_graph();
-    auto results_sym =
-        autodiff::backprop_derivative<T>(manager, backend, g, args, g->get_parameters());
+    auto shape_a = Shape{1, 4, 4, 4}; //in CHWN
+    auto maxpool_shape = Shape{1, 4, 3, 3};
 
-    return test::all_close(results_num, results_sym, rtol, atol);
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto reshape = make_shared<op::Reshape>(
+        A, AxisVector{0, 3, 1, 2}, Shape{1, 4, 4, 4}); //convert CHWN to CNHW
+    auto window_shape = Shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
+    auto f = make_shared<Function>(maxpool, op::Parameters{A});
+
+    shared_ptr<runtime::TensorView> ep =
+        backend->make_primary_tensor_view(element::i32, maxpool_shape);
+    vector<int> dataEp(shape_size(maxpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> output =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    vector<int> dataInput{11, 65, 44, 28, 31, 33, 21, 66, 40, 49, 69, 57, 47, 30, 24, 27,
+                          13, 56, 46, 60, 61, 41, 25, 42, 48, 53, 51, 43, 59, 58, 29, 71,
+                          17, 22, 72, 18, 39, 35, 15, 38, 64, 52, 73, 67, 62, 50, 10, 68,
+                          45, 63, 16, 14, 55, 54, 37, 20, 36, 12, 70, 34, 19, 26, 32, 23};
+
+    vector<int> expected{//delta
+                         0, 4, 0, 0, 0, 0, 0, 8, 0, 0, 8, 0, 0, 0, 0, 0, 0, 4, 4,  4, 12, 0,
+                         0, 0, 0, 8, 0, 0, 4, 8, 0, 8, 0, 0, 8, 0, 0, 0, 0, 4, 16, 4, 16, 8,
+                         0, 0, 0, 4, 0, 4, 0, 0, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::i32, maxpool_shape);
+    auto df = autodiff::backprop_function(f);
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+    cf->tensor_call({input, ep}, {output});
+    ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
-template <typename T>
-bool autodiff_numeric_compare_selective(
-    const std::shared_ptr<runtime::Manager>& manager,
-    const std::shared_ptr<runtime::Backend>& backend,
-    std::function<std::shared_ptr<Function>()> make_graph,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& args,
-    T rtol,
-    T atol,
-    const std::vector<bool>& indep_param_mask)
+TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
 {
-    std::vector<std::shared_ptr<op::Parameter>> f_indep_params;
-    auto f = make_graph();
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
 
-    size_t i = 0;
+    auto shape_a = Shape{1, 5, 5, 2}; //in CHWN
+    auto maxpool_shape = Shape{1, 2, 2, 2};
 
-    for (auto b : indep_param_mask)
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto reshape = make_shared<op::Reshape>(
+        A, AxisVector{0, 3, 1, 2}, Shape{1, 2, 5, 5}); //convert CHWN to CNHW
+    auto window_shape = Shape{3, 3};
+    auto window_movement_strides = Strides{2, 2};
+    auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
+    auto f = make_shared<Function>(maxpool, op::Parameters{A});
+
+    shared_ptr<runtime::TensorView> ep =
+        backend->make_primary_tensor_view(element::i32, maxpool_shape);
+    vector<int> dataEp(shape_size(maxpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+    shared_ptr<runtime::TensorView> output =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    vector<int> dataInput{58, 15, 51, 35, 18, 47, 31, 32, 52, 21, 36, 38, 57, 54, 25, 45, 23,
+                          30, 16, 27, 48, 20, 41, 37, 43, 39, 22, 28, 33, 29, 12, 17, 44, 42,
+                          19, 40, 10, 46, 34, 53, 26, 55, 50, 13, 24, 14, 49, 56, 59, 11};
+
+    vector<int> expected{//delta
+                         4, 0, 0, 0, 0, 4, 0, 0, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 0, 4, 4, 0};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::i32, maxpool_shape);
+    auto df = autodiff::backprop_function(f);
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+    cf->tensor_call({input, ep}, {output});
+    ASSERT_TRUE(read_vector<int>(output) == expected);
+}
+
+TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    auto padding = Shape{1, 1};
+
+    auto shape_a = Shape{1, 1, 2, 2};
+    auto avgpool_shape = Shape{1, 1, 2, 2};
+
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto window_shape = Shape{2, 2};
+    auto window_movement_strides = Strides{2, 2};
+    auto avgpool =
+        make_shared<op::AvgPool>(A, window_shape, window_movement_strides, padding, padding);
+    auto f = make_shared<Function>(avgpool, op::Parameters{A});
+
+    shared_ptr<runtime::TensorView> ep =
+        backend->make_primary_tensor_view(element::i32, avgpool_shape);
+    vector<int> dataEp(shape_size(avgpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    shared_ptr<runtime::TensorView> output =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    vector<int> dataInput{4, 8, 12, 16};
+
+    vector<int> expected{1, 2, 3, 4};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
+    auto df = autodiff::backprop_function(f);
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+    cf->tensor_call({input, ep}, {output});
+    ASSERT_TRUE(read_vector<int>(output) == dataEp);
+}
+
+TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    auto shape_a = Shape{1, 1, 4, 4};
+    auto avgpool_shape = Shape{1, 1, 3, 3};
+
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto window_shape = Shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
+    auto f = make_shared<Function>(avgpool, op::Parameters{A});
+
+    shared_ptr<runtime::TensorView> ep =
+        backend->make_primary_tensor_view(element::i32, avgpool_shape);
+    vector<int> dataEp(shape_size(avgpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    shared_ptr<runtime::TensorView> output =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    vector<int> dataInput{1, 3, 1, 3, 1, 3, 1, 3, 3, 5, 3, 5, 3, 5, 3, 5};
+
+    vector<int> expected{1, 2, 2, 1, 2, 4, 4, 2, 2, 4, 4, 2, 1, 2, 2, 1};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
+    auto df = autodiff::backprop_function(f);
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+    cf->tensor_call({input, ep}, {output});
+    ASSERT_TRUE(read_vector<int>(output) == expected);
+}
+
+TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    auto shape_a = Shape{2, 2, 4, 4};
+    auto avgpool_shape = Shape{2, 2, 2, 2};
+
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto window_shape = Shape{2, 2};
+    auto window_movement_strides = Strides{2, 2};
+    auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
+    auto f = make_shared<Function>(avgpool, op::Parameters{A});
+
+    shared_ptr<runtime::TensorView> ep =
+        backend->make_primary_tensor_view(element::i32, avgpool_shape);
+    vector<int> dataEp(shape_size(avgpool_shape), 12);
+
+    shared_ptr<runtime::TensorView> input =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    shared_ptr<runtime::TensorView> output =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    vector<int> dataInput{//i1c1
+                          1,
+                          2,
+                          6,
+                          7,
+                          3,
+                          4,
+                          4,
+                          3,
+                          19,
+                          1,
+                          2,
+                          3,
+                          18,
+                          2,
+                          3,
+                          2,
+                          //i1c2
+                          4,
+                          1,
+                          5,
+                          5,
+                          1,
+                          4,
+                          5,
+                          5,
+                          12,
+                          8,
+                          2,
+                          3,
+                          15,
+                          5,
+                          3,
+                          2,
+                          //i2c1
+                          2,
+                          3,
+                          7,
+                          7,
+                          3,
+                          2,
+                          3,
+                          3,
+                          13,
+                          7,
+                          1,
+                          2,
+                          7,
+                          13,
+                          3,
+                          4,
+                          //i2c2
+                          1,
+                          1,
+                          2,
+                          2,
+                          7,
+                          1,
+                          2,
+                          14,
+                          6,
+                          16,
+                          4,
+                          1,
+                          14,
+                          4,
+                          4,
+                          1};
+
+    vector<int> expected(shape_size(shape_a), 3);
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
+    auto df = autodiff::backprop_function(f);
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+    cf->tensor_call({input, ep}, {output});
+    ASSERT_TRUE(read_vector<int>(output) == expected);
+}
+
+TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+    auto shape_a = Shape{2, 2, 4, 4};
+    test::Uniform<float> rng(1.0f, 10.0f);
+
+    auto make_graph = [shape_a]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto window_shape = Shape{2, 2};
+        auto window_movement_strides = Strides{2, 2};
+        auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
+        return make_shared<Function>(avgpool, op::Parameters{A});
+
+    };
+
+    for (auto i = 0; i < 100; i++)
     {
-        if (b)
-        {
-            f_indep_params.push_back(f->get_parameters().at(i));
-        }
-        i++;
+        auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
     }
+}
 
-    auto results_num =
-        autodiff::numeric_derivative<T>(manager, backend, f, args, .001f, f_indep_params);
+TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+    auto shape_a = Shape{2, 2, 4, 4};
+    test::Uniform<float> rng(1.0f, 10.0f);
 
-    std::vector<std::shared_ptr<op::Parameter>> g_indep_params;
-    auto g = make_graph();
+    auto make_graph = [shape_a]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto window_shape = Shape{2, 2};
+        auto window_movement_strides = Strides{1, 1};
+        auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
+        return make_shared<Function>(avgpool, op::Parameters{A});
 
-    i = 0;
+    };
 
-    for (auto b : indep_param_mask)
+    for (auto i = 0; i < 100; i++)
     {
-        if (b)
-        {
-            g_indep_params.push_back(g->get_parameters().at(i));
-        }
-        i++;
+        auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
     }
+}
 
-    auto results_sym = autodiff::backprop_derivative<T>(manager, backend, g, args, g_indep_params);
+TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_numeric)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+    auto shape_a = Shape{2, 2, 4, 4};
+    test::Uniform<float> rng(1.0f, 10.0f);
 
-    return test::all_close(results_num, results_sym, rtol, atol);
+    auto make_graph = [shape_a]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto window_shape = Shape{2, 2};
+        auto padding = Shape{1, 1};
+        auto window_movement_strides = Strides{2, 2};
+        auto avgpool =
+            make_shared<op::AvgPool>(A, window_shape, window_movement_strides, padding, padding);
+        return make_shared<Function>(avgpool, op::Parameters{A});
+
+    };
+
+    for (auto i = 0; i < 100; i++)
+    {
+        auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+    }
 }
 
 TEST(${BACKEND_NAME}, backwards_abs)
@@ -783,7 +1065,7 @@ TEST(${BACKEND_NAME}, backwards_select)
     for (auto i = 0; i < 100; i++)
     {
         auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
-        x0->write(vector<char>{0, 1, 0, 1, 0, 1});
+        write_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
         auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
         auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -816,7 +1098,7 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
     for (auto i = 0; i < 100; i++)
     {
         auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
-        x0->write(vector<char>{0, 1, 0, 1, 0, 1});
+        write_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
         auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
         auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 

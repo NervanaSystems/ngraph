@@ -19,5 +19,6 @@ RUN pip install --upgrade pip
 # installed sphinx with pip to get the updated version 1.6.5
 # allows for make html build under the doc/source directory as an interim build process
 RUN pip install sphinx
+RUN pip install breathe
 
 WORKDIR /home

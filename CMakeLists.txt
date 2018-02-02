@@ -1,4 +1,4 @@
-# Copyright 2017 Nervana Systems Inc.
+# Copyright 2018 Nervana Systems Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -78,9 +78,6 @@ set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/doc")
 # Compiler-specific logic...
 #-----------------------------------------------------------------------------------------------
 
-# Default values...
-set(NGRAPH_CXX_WARNING_FLAGS "")
-
 # Compiler-specific logic...
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     message( STATUS "Setting clang flags...")
@@ -107,19 +104,22 @@ endif()
 # GPU support
 #-----------------------------------------------------------------------------------------------
 # Setup CUDA and cuDNN if NGRAPH_GPU_ENABLE=TRUE
-if(NGRAPH_GPU_ENABLE)
-  find_package(CUDA REQUIRED)
-  INCLUDE(FindCUDA)
-  find_package(CUDNN 5 QUIET REQUIRED)
-  include_directories(/usr/local/cude/include ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
-  if (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND
+find_package(CUDA 8 QUIET)
+if(CUDA_FOUND AND (NOT DEFINED NGRAPH_GPU_ENABLE OR NGRAPH_GPU_ENABLE))
+    message(STATUS "GPU Backend Enabled")
+    set(NGRAPH_GPU_ENABLE TRUE)
+    find_package(CUDNN 5 QUIET REQUIRED)
+    include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
+    if (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND
         NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 6.0 AND
         CUDA_HOST_COMPILER STREQUAL CMAKE_C_COMPILER)
-      message(FATAL_ERROR
+        message(FATAL_ERROR
         "CUDA 8.0 is not compatible with GCC version >= 6.\n"
         "Please select a correct compiler version\n"
         )
-  endif()
+    endif()
+elseif(NGRAPH_GPU_ENABLE)
+    message(FATAL_ERROR "GPU was required but CUDA library was not found")
 endif()
 
 #-----------------------------------------------------------------------------------------------

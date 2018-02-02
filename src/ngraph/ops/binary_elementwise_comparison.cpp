@@ -16,23 +16,14 @@
 
 using namespace std;
 using namespace ngraph;
-using namespace ngraph;
 
-op::BinaryElementwiseComparison::BinaryElementwiseComparison(const std::string& node_type,
-                                                             const std::shared_ptr<Node>& arg0,
-                                                             const std::shared_ptr<Node>& arg1)
-    : BinaryElementwise(node_type,
-                        [](const element::Type& arg0_element_type,
-                           const element::Type& arg1_element_type) -> const element::Type& {
-                            if (arg0_element_type != arg1_element_type)
-                            {
-                                throw ngraph_error(
-                                    "Arguments must have the same tensor view element type");
-                            }
-
-                            return element::boolean;
-                        },
-                        arg0,
-                        arg1)
+op::BinaryElementwiseComparison::BinaryElementwiseComparison(const string& node_type,
+                                                             const shared_ptr<Node>& arg0,
+                                                             const shared_ptr<Node>& arg1)
+    : BinaryElementwise(node_type, element::boolean, arg0, arg1)
 {
+    if (arg0->get_element_type() != arg1->get_element_type())
+    {
+        throw ngraph_error("Arguments must have the same tensor view element type");
+    }
 }

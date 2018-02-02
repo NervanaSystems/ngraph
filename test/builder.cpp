@@ -15,20 +15,13 @@
 
 #include "ngraph/ngraph.hpp"
 #include "util/all_close.hpp"
+#include "util/test_tools.hpp"
 
 using namespace ngraph;
-using namespace ngraph::test;
 using namespace std;
 
-template <typename T>
-static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
-{
-    size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
-}
-
-std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result(
-    std::function<std::shared_ptr<Node>(const std::shared_ptr<Node>&, const AxisSet&)> func)
+shared_ptr<runtime::TensorView>
+    make_reduce_result(function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&)> func)
 {
     auto shape_a = Shape{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -47,8 +40,8 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result(
     return result;
 }
 
-std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_true(
-    std::function<std::shared_ptr<Node>(const std::shared_ptr<Node>&, const AxisSet&, bool)> func)
+shared_ptr<runtime::TensorView> make_reduce_result_true(
+    function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
     auto shape_a = Shape{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -67,8 +60,8 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_true(
     return result;
 }
 
-std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_false(
-    std::function<std::shared_ptr<Node>(const std::shared_ptr<Node>&, const AxisSet&, bool)> func)
+shared_ptr<runtime::TensorView> make_reduce_result_false(
+    function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
     auto shape_a = Shape{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -90,58 +83,58 @@ std::shared_ptr<ngraph::runtime::TensorView> make_reduce_result_false(
 TEST(builder, l2_norm)
 {
     auto result = make_reduce_result(builder::l2_norm);
-    ASSERT_TRUE(
-        all_close((vector<float>{5.9160797831f, 7.48331477355f}), result->get_vector<float>()));
+    ASSERT_TRUE(test::all_close((vector<float>{5.9160797831f, 7.48331477355f}),
+                                read_vector<float>(result)));
 }
 
 TEST(builder, mean)
 {
     auto result = make_reduce_result(builder::mean);
-    ASSERT_TRUE(all_close((vector<float>{3, 4}), result->get_vector<float>()));
+    ASSERT_TRUE(test::all_close((vector<float>{3, 4}), read_vector<float>(result)));
 }
 
 TEST(builder, std_dev)
 {
     auto result = make_reduce_result_false(builder::std_dev);
-    ASSERT_TRUE(
-        all_close((vector<float>{1.63299316186f, 1.63299316186f}), result->get_vector<float>()));
+    ASSERT_TRUE(test::all_close((vector<float>{1.63299316186f, 1.63299316186f}),
+                                read_vector<float>(result)));
     result = make_reduce_result_true(builder::std_dev);
-    ASSERT_TRUE(all_close((vector<float>{2, 2}), result->get_vector<float>()));
+    ASSERT_TRUE(test::all_close((vector<float>{2, 2}), read_vector<float>(result)));
 }
 
 TEST(builder, variance)
 {
     auto result = make_reduce_result_false(builder::variance);
-    ASSERT_TRUE(
-        all_close((vector<float>{2.66666666666f, 2.66666666666f}), result->get_vector<float>()));
+    ASSERT_TRUE(test::all_close((vector<float>{2.66666666666f, 2.66666666666f}),
+                                read_vector<float>(result)));
     result = make_reduce_result_true(builder::variance);
-    ASSERT_TRUE(all_close((vector<float>{4, 4}), result->get_vector<float>()));
+    ASSERT_TRUE(test::all_close((vector<float>{4, 4}), read_vector<float>(result)));
 }
 
 TEST(builder, numpy_transpose)
 {
     // 2D Transpose
     Shape shape{2, 4};
-    auto param = std::make_shared<op::Parameter>(ngraph::element::f32, shape);
-    auto transposed = std::dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param));
+    auto param = make_shared<op::Parameter>(element::f32, shape);
+    auto transposed = dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param));
     EXPECT_EQ(Shape({4, 2}), transposed->get_output_shape());
 
     // Multidimensional Transpose
     shape = Shape{2, 4, 8};
-    param = std::make_shared<op::Parameter>(ngraph::element::f32, shape);
-    transposed = std::dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param));
+    param = make_shared<op::Parameter>(element::f32, shape);
+    transposed = dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param));
     EXPECT_EQ(Shape({8, 4, 2}), transposed->get_output_shape());
 
     // Dimshuffle
     shape = Shape{2, 4, 8};
-    param = std::make_shared<op::Parameter>(ngraph::element::f32, shape);
-    transposed = std::dynamic_pointer_cast<op::Reshape>(
-        builder::numpy_transpose(param, AxisVector{2, 0, 1}));
+    param = make_shared<op::Parameter>(element::f32, shape);
+    transposed =
+        dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2, 0, 1}));
     EXPECT_EQ(Shape({8, 2, 4}), transposed->get_output_shape());
 
     // Bad Orders
     EXPECT_ANY_THROW(
-        std::dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2})));
-    EXPECT_ANY_THROW(std::dynamic_pointer_cast<op::Reshape>(
-        builder::numpy_transpose(param, AxisVector{2, 2, 1})));
+        dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2})));
+    EXPECT_ANY_THROW(
+        dynamic_pointer_cast<op::Reshape>(builder::numpy_transpose(param, AxisVector{2, 2, 1})));
 }

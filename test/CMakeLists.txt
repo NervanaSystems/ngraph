@@ -41,6 +41,7 @@ set (SRC
     serialize.cpp
     pattern.cpp
     shape.cpp
+    reshape_elimination.cpp
     tensor.cpp
     type_prop.cpp
     util/autodiff/backprop_function.cpp
@@ -69,14 +70,14 @@ endif()
 if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
     link_directories(${LLVM_LIB_DIR})
-    set(SRC ${SRC} backend_performance.cpp codegen.cpp)
+    set(SRC ${SRC} backend_performance.cpp codegen.cpp cpu_fusion.cpp)
     set(BACKEND_NAMES ${BACKEND_NAMES} "CPU")
 endif()
 
 if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
     set(BACKEND_NAMES ${BACKEND_NAMES} "GPU_INTERPRETER")
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${CUDA_INCLUDE_DIRS})
-    link_directories(${LLVM_LIB_DIR} ${CUDA_LIBRARIES})
+    link_directories(${LLVM_LIB_DIR} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
     set(SRC
         ${SRC}
         cudnn.cpp)
@@ -107,6 +108,9 @@ include_directories(".")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
+if(NGRAPH_ADDRESS_SANITIZER)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
+endif()
 
 cuda_add_executable(unit-test ${SRC})
 
@@ -122,6 +126,7 @@ endif()
 
 if(CUDA_INCLUDE_DIRS)
   target_link_libraries(unit-test cuda /usr/local/cuda/lib64/libcudart.so ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+  #target_link_libraries(unit-test ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)

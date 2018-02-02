@@ -53,11 +53,10 @@ namespace ngraph
             virtual ~CallFrame() {}
             /// @brief Invoke the function with values matching the signature of the function.
             ///
-            /// Tuples will be expanded into their tensor views to build the call frame.
             virtual void call(const std::vector<std::shared_ptr<runtime::TensorView>>& inputs,
                               const std::vector<std::shared_ptr<runtime::TensorView>>& outputs) = 0;
 
-            /// @brief Invoke the function with tuples pre-expanded to their underlying tensor views.
+            /// @brief Invoke the function
             virtual void tensor_call(const TensorViewPtrs& inputs,
                                      const TensorViewPtrs& outputs) = 0;
 

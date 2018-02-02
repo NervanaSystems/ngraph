@@ -15,9 +15,10 @@
 #include "ngraph/descriptor/tensor_view.hpp"
 #include "ngraph/types/type.hpp"
 
-using namespace ngraph::descriptor;
+using namespace ngraph;
+using namespace std;
 
-std::shared_ptr<const ngraph::ValueType> TensorView::get_value_type() const
+shared_ptr<const ngraph::TensorViewType> descriptor::TensorView::get_value_type() const
 {
     return m_tensor_view_type;
 }

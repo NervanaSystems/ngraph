@@ -22,16 +22,10 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "util/test_tools.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-template <typename T>
-static void copy_data(shared_ptr<runtime::TensorView> tv, const vector<T>& data)
-{
-    size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
-}
 
 TEST(serialize, main)
 {
@@ -85,13 +79,13 @@ TEST(serialize, main)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({x, y, z}, {result});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
     cf->call({y, x, z}, {result});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), result->get_vector<float>());
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
     cf->call({x, z, y}, {result});
-    EXPECT_EQ((vector<float>{50, 72, 98, 128}), result->get_vector<float>());
+    EXPECT_EQ((vector<float>{50, 72, 98, 128}), read_vector<float>(result));
 }
 
 TEST(serialize, existing_models)
@@ -105,7 +99,22 @@ TEST(serialize, existing_models)
     {
         const string json_path = file_util::path_join(SERIALIZED_ZOO, model);
         const string json_string = file_util::read_file_to_string(json_path);
-        stringstream ss(json_string);
-        shared_ptr<Function> f = ngraph::deserialize(ss);
+        shared_ptr<Function> f = ngraph::deserialize(json_string);
     }
+}
+
+TEST(benchmark, serialize)
+{
+    stopwatch timer;
+    string model = "mxnet/LSTM_backward.json";
+
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, model);
+    timer.start();
+    const string json_string = file_util::read_file_to_string(json_path);
+    timer.stop();
+    cout << "file read took " << timer.get_milliseconds() << "ms\n";
+    timer.start();
+    shared_ptr<Function> f = ngraph::deserialize(json_string);
+    timer.stop();
+    cout << "deserialize took " << timer.get_milliseconds() << "ms\n";
 }

@@ -13,6 +13,11 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/ops/max_pool.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/ops/add.hpp"
+#include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/greater.hpp"
+#include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -33,93 +38,98 @@ op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg,
     if (arg_shape.size() < 3)
     {
         throw ngraph_error(
-            "Max pool image batch input must have rank of at least 3 (one batch axis, one "
-            "channel axis, at least one image dimension).");
+            "Max pool data batch input must have rank of at least 3 (one batch axis, one "
+            "channel axis, at least one spatial dimension).");
     }
 
-    m_batch_size = arg_shape[0];
-    if (m_batch_size == 0)
+    size_t batch_size = arg_shape[0];
+    if (batch_size == 0)
     {
-        throw ngraph_error("Max pool image batch size is zero.");
+        throw ngraph_error("Max pool data batch size is zero.");
     }
 
-    m_channel_count = arg_shape[1];
-    if (m_channel_count == 0)
+    size_t channel_count = arg_shape[1];
+    if (channel_count == 0)
     {
-        throw ngraph_error("Max pool requires at least one image depth channel.");
+        throw ngraph_error("Max pool requires at least one feature channel.");
     }
 
-    m_image_dimension_count = arg_shape.size() - 2;
+    size_t spatial_dimension_count = arg_shape.size() - 2;
 
     //
     // Make sure window shape and movement strides have same rank as Di.
     //
-    if (m_window_shape.size() != m_image_dimension_count)
-    {
-        throw ngraph_error("Max pool window shape rank does not match number of image dimensions.");
-    }
-
-    if (m_window_movement_strides.size() != m_image_dimension_count)
+    if (window_shape.size() != spatial_dimension_count)
     {
         throw ngraph_error(
-            "Max pool window movement stride rank does not match number of image dimensions.");
+            "Max pool window shape rank does not match number of spatial dimensions.");
+    }
+
+    if (window_movement_strides.size() != spatial_dimension_count)
+    {
+        throw ngraph_error(
+            "Max pool window movement stride rank does not match number of spatial dimensions.");
     }
 
     //
-    // Extract input image shape Di and make sure all dimensions are larger than 0.
+    // Extract input item shape Di and make sure all dimensions are larger than 0.
     //
-    for (size_t i = 0; i < m_image_dimension_count; i++)
-    {
-        m_input_image_shape.push_back(arg_shape[1 + 1 + i]);
+    Shape input_spatial_shape;
 
-        if (m_input_image_shape[i] == 0)
+    for (size_t i = 0; i < spatial_dimension_count; i++)
+    {
+        input_spatial_shape.push_back(arg_shape[1 + 1 + i]);
+
+        if (input_spatial_shape[i] == 0)
         {
-            throw ngraph_error("Max pool input image dimension is zero.");
+            throw ngraph_error("Max pool input spatial dimension is zero.");
         }
     }
 
     //
     // Make sure window shape dimensions are all larger than 0.
     //
-    for (size_t i = 0; i < m_image_dimension_count; i++)
+    for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        if (m_window_shape[i] == 0)
+        if (window_shape[i] == 0)
         {
             throw ngraph_error("Max pool window shape has a zero-length axis.");
         }
     }
 
     //
-    // Make the max pooling window fits within the image dimensions.
+    // Make the max pooling window fits within the spatial dimensions.
     //
-    for (size_t i = 0; i < m_image_dimension_count; i++)
+    for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        if (m_window_shape[i] > m_input_image_shape[i])
+        if (window_shape[i] > input_spatial_shape[i])
         {
-            throw ngraph_error("Max pool window shape is larger than the image.");
+            throw ngraph_error("Max pool window shape is larger than the spatial dimensions.");
         }
     }
 
     //
-    // Compute image output shape Do, checking at the same time that all window movement strides are larger than 0.
+    // Compute output item shape Do, checking at the same time that all window movement strides are larger than 0.
     //
-    for (size_t i = 0; i < m_image_dimension_count; i++)
+    Shape output_spatial_shape;
+
+    for (size_t i = 0; i < spatial_dimension_count; i++)
     {
-        if (m_window_movement_strides[i] == 0)
+        if (window_movement_strides[i] == 0)
         {
             throw ngraph_error("Max pool window axis movement stride is zero.");
         }
-        m_output_image_shape.push_back(
-            ceil_div(m_input_image_shape[i] - m_window_shape[i] + 1, m_window_movement_strides[i]));
+        output_spatial_shape.push_back(
+            ceil_div(input_spatial_shape[i] - window_shape[i] + 1, window_movement_strides[i]));
     }
 
     //
     // Construct result shape: NCDo.
     //
-    Shape result_shape(1 + 1 + m_image_dimension_count);
-    result_shape[0] = m_batch_size;
-    result_shape[1] = m_channel_count;
-    std::copy(m_output_image_shape.begin(), m_output_image_shape.end(), result_shape.begin() + 2);
+    Shape result_shape(1 + 1 + spatial_dimension_count);
+    result_shape[0] = batch_size;
+    result_shape[1] = channel_count;
+    std::copy(output_spatial_shape.begin(), output_spatial_shape.end(), result_shape.begin() + 2);
 
     set_value_type_checked(get_inputs().at(0).get_element_type(), result_shape);
 }
@@ -128,7 +138,7 @@ static Strides default_strides(const std::shared_ptr<Node>& arg)
 {
     if (arg->get_outputs().size() != 1)
     {
-        throw ngraph_error("Max pool image batch argument must have exactly one output");
+        throw ngraph_error("Max pool data batch argument must have exactly one output");
     }
 
     auto& arg_shape = arg->get_outputs().at(0).get_shape();
@@ -136,8 +146,8 @@ static Strides default_strides(const std::shared_ptr<Node>& arg)
     {
         // For consistency we should throw the same error message here that we throw in the constructor.
         throw ngraph_error(
-            "Max pool image batch input must have rank of at least 3 (one batch axis, one "
-            "channel axis, at least one image dimension).");
+            "Max pool data batch input must have rank of at least 3 (one batch axis, one "
+            "channel axis, at least one spatial dimension).");
     }
     return Strides(arg_shape.size() - 2, 1);
 }
@@ -149,27 +159,59 @@ op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg, const Shape& window_shape
 
 bool op::MaxPool::is_functionally_identical(const Node& other) const
 {
+    // TODO: temporary workaround for MKLDNN issue
+    //       remove 'return false' and uncomment below when fixed
+    return false;
+    /*
     bool rc = true;
     if (Node::test_identical(other))
     {
         const MaxPool& rhs = dynamic_cast<const MaxPool&>(other);
         rc &= m_window_shape == rhs.m_window_shape;
         rc &= m_window_movement_strides == rhs.m_window_movement_strides;
-        rc &= m_channel_count == rhs.m_channel_count;
-        rc &= m_input_image_shape == rhs.m_input_image_shape;
-        rc &= m_output_image_shape == rhs.m_output_image_shape;
-        rc &= m_batch_size == rhs.m_batch_size;
-        rc &= m_image_dimension_count == rhs.m_image_dimension_count;
     }
     else
     {
         rc = false;
     }
     return rc;
+    */
 }
 
-/*
-void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints,
+                                    const std::shared_ptr<Node>& delta)
 {
+    auto shape_sel_a = Shape{};
+    auto etype = delta->get_element_type();
+
+    //Select Max
+    auto SEL_A = make_shared<op::Parameter>(etype, shape_sel_a);
+    auto shape_sel_b = Shape{};
+    auto SEL_B = make_shared<op::Parameter>(etype, shape_sel_b);
+    auto sel_f = std::make_shared<Function>(std::make_shared<op::Greater>(SEL_A, SEL_B),
+                                            op::Parameters{SEL_A, SEL_B});
+
+    //Update Cell
+    auto shape_scatter_a = Shape{};
+    auto SCATTER_A = make_shared<op::Parameter>(etype, shape_scatter_a);
+    auto shape_scatter_b = Shape{};
+    auto SCATTER_B = make_shared<op::Parameter>(etype, shape_scatter_b);
+    auto scatter_f =
+        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
+
+    auto operand = get_input_op(0);
+    auto init_value =
+        std::make_shared<op::Constant>(etype, Shape{}, std::vector<std::string>({"0"}));
+
+    Strides strides{1, 1};
+    strides.push_back(m_window_movement_strides.at(0));
+    strides.push_back(m_window_movement_strides.at(1));
+
+    Shape shape{1, 1};
+    shape.push_back(m_window_shape.at(0));
+    shape.push_back(m_window_shape.at(1));
+
+    auto sas = std::make_shared<op::SelectAndScatter>(
+        operand, delta, init_value, sel_f, scatter_f, shape, strides);
+    adjoints.add_delta(operand, sas);
 }
-*/

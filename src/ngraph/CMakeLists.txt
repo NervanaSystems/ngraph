@@ -32,6 +32,7 @@ set (SRC
     node.cpp
     ops/abs.cpp
     ops/add.cpp
+    ops/avg_pool.cpp
     ops/binary_elementwise_arithmetic.cpp
     ops/binary_elementwise_comparison.cpp
     ops/binary_elementwise.cpp
@@ -56,6 +57,7 @@ set (SRC
     ops/not.cpp
     ops/one_hot.cpp
     ops/op.cpp
+    ops/pad.cpp
     ops/parameter.cpp
     ops/power.cpp
     ops/reduce.cpp
@@ -83,15 +85,16 @@ set (SRC
     pass/memory_layout.cpp
     pass/memory_visualize.cpp
     pass/pass.cpp
+    pass/reshape_elimination.cpp
     pass/visualize_tree.cpp
     pattern/matcher.cpp
     runtime/aligned_buffer.cpp
+    runtime/host_tensor_view.cpp
     runtime/interpreter/int_backend.cpp
     runtime/interpreter/int_call_frame.cpp
     runtime/interpreter/int_external_function.cpp
     runtime/interpreter/int_kernels.cpp
     runtime/interpreter/int_manager.cpp
-    runtime/interpreter/int_tensor_view.cpp
     runtime/manager.cpp
     runtime/tensor_view.cpp
     serializer.cpp
@@ -109,7 +112,7 @@ foreach(OP ${OPS})
     foreach(LINE ${OP_CLASS})
         string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1:\\2" CLASS_FOUND ${LINE})
         set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
-   endforeach(LINE ${OP_CLASS})
+    endforeach(LINE ${OP_CLASS})
 endforeach()
 message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt")
 string(REPLACE ";" "\n" OP_CLASS_LINES "${OP_CLASS_LIST}")
@@ -121,15 +124,13 @@ find_package(Graphviz QUIET)
 if (GRAPHVIZ_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGRAPHVIZ_FOUND")
 endif()
+if(NGRAPH_ADDRESS_SANITIZER)
+    message(STATUS "Enable Address Sanitizer")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
+endif()
 
-include_directories(
-    "${NGRAPH_INCLUDE_PATH}"
-    )
-
-include_directories(
-    SYSTEM
-    "${EIGEN_INCLUDE_DIR}"
-    )
+include_directories("${NGRAPH_INCLUDE_PATH}")
+include_directories(SYSTEM "${EIGEN_INCLUDE_DIR}")
 
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     MKLDNN_INCLUDE_DIR)
@@ -162,15 +163,16 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_kernel_utils.cpp
         runtime/cpu/cpu_emitter.cpp
         runtime/cpu/cpu_external_function.cpp
-        runtime/cpu/cpu_tensor_view.cpp
         runtime/cpu/cpu_tensor_view_wrapper.cpp
+        runtime/cpu/ops/matmul_bias.cpp
+        runtime/cpu/pass/cpu_fusion.cpp
     )
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
     # This must be kept in sync with the LLVM + Clang version in use
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS
-      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";TBB_HEADERS_PATH=\"${TBB_ROOT}/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\";")
+      "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\";TBB_HEADERS_PATH=\"${TBB_ROOT}/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\";")
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
     set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
       "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE};")
@@ -182,8 +184,7 @@ endif()
     # GPU backend current requires CPU because they share compiler.cpp,
     # and compiler.cpp requires MKLDNN
     if(NGRAPH_GPU_ENABLE)
-        include_directories(${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
-        link_directories(${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+        include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
 
         # Add sources for the GPU backend
         # and all its dependencies
@@ -196,13 +197,14 @@ endif()
             runtime/gpu/gpu_manager.cpp
             runtime/gpu/gpu_tensor_view.cpp
             runtime/gpu/gpu_tensor_view_wrapper.cpp
-	    runtime/gpu_interpreter/int_backend.cpp
-	    runtime/gpu_interpreter/int_call_frame.cpp
-	    runtime/gpu_interpreter/int_external_function.cpp
-	    runtime/gpu_interpreter/int_kernels.cpp
-	    runtime/gpu_interpreter/int_manager.cpp
-	    runtime/gpu_interpreter/int_tensor_view.cpp
-	    runtime/gpu_interpreter/gpu_kernel/abs.cu
+	          runtime/gpu_interpreter/int_backend.cpp
+	          runtime/gpu_interpreter/int_call_frame.cpp
+	          runtime/gpu_interpreter/int_external_function.cpp
+	          runtime/gpu_interpreter/int_kernels.cpp
+	          runtime/gpu_interpreter/int_manager.cpp
+	          runtime/gpu_interpreter/int_tensor_view.cpp
+	          runtime/gpu_interpreter/gpu_kernel/abs.cu
+            runtime/gpu/gpu_util.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
@@ -274,10 +276,10 @@ if(NGRAPH_CPU_ENABLE)
     target_link_libraries(ngraph  ${TBB_IMPORTED_TARGETS})
 endif()
 
+# Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
     target_link_libraries(ngraph cuda /usr/local/cuda/lib64/libcudart.so ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
-     #LIST(APPEND CMAKE_CXX_FLAGS "-std=c++0x -O3 -ffast-math -Wall")
-     #LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_35,code=sm_35)
+    #target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 # Argon

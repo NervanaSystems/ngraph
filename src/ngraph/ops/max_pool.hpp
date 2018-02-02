@@ -22,18 +22,19 @@ namespace ngraph
     {
         /// \brief Batched max pooling operation, with optional window stride.
         ///
-        /// Max pooling takes as its input an image batch tensor of shape \f$(N,C,d_1,\dots,d_n)\f$ where \f$n > 0\f$, every \f$d_i > 0\f$, and where \f$N\f$ is
-        /// the batch size, and \f$C > 0\f$ is the number of channels (sometimes called features). It also takes two parameters:
+        /// Max pooling takes as its input a data batch tensor of shape \f$(N,C,d_1,\dots,d_n)\f$ where \f$n > 0\f$, every \f$d_i > 0\f$, and where \f$N\f$ is
+        /// the batch size, and \f$C > 0\f$ is the number of channels (sometimes called features). The dimensions \f$(d_1,\dots,d_n)\f$ correspond to the shape of
+        /// an \f$n\f$-dimensional data item in a batch. For example, where \f$n=2\f$, the data may represent a two-dimensional image. It also takes two parameters:
         ///
         /// 1. <i>(the window shape)</i> a size vector \f$(w_1,\dots,w_n)\f$ where every \f$w_i \le d_i\f$; and
         /// 2. <i>(the window movement strides, optional)</i> a vector of positive integers \f$(s_1,\dots,s_n)\f$.
         ///
         /// The output has the shape \f$(N,C,d'_1,\dots,d'_n)\f$, where \f$d'_n = \lceil \frac{d_i - w_i + 1}{s_i} \rceil\f$.
         ///
-        /// Given an input image batch tensor \f$T_\textit{in}\f$, the output tensor is defined by the equation
+        /// Given an input data batch tensor \f$T_\textit{in}\f$, the output tensor is defined by the equation
         ///
         /// \f[
-        ///      T_\textit{out}[a,c,i_1,\dots,i_n] = \max_{j_1 = i_1, \dots, j_n = i_n}^{j_1 = i_1 + w_1 - 1, \dots, j_n = i_n + w_n - 1} (T_\textit{in}[a,c,j_1,\dots,j_n])
+        ///      T_\textit{out}[a,c,i_1,\dots,i_n] = \max_{j_1 = s_1 i_1, \dots, j_n = s_n i_n}^{j_1 = s_1 i_1 + w_1 - 1, \dots, j_n = s_n i_n + w_n - 1} (T_\textit{in}[a,c,j_1,\dots,j_n])
         /// \f]
         ///
         class MaxPool : public RequiresTensorViewArgs
@@ -41,7 +42,7 @@ namespace ngraph
         public:
             /// \brief Constructs a batched max pooling operation.
             ///
-            /// \param arg The node producing the input image batch tensor.
+            /// \param arg The node producing the input data batch tensor.
             /// \param window_shape The window shape.
             /// \param window_movement_strides The window movement strides.
             MaxPool(const std::shared_ptr<Node>& arg,
@@ -50,7 +51,7 @@ namespace ngraph
 
             /// \brief Constructs an unstrided batched convolution operation (i.e., all window movement strides are 1).
             ///
-            /// \param arg The node producing the input image batch tensor.
+            /// \param arg The node producing the input data batch tensor.
             /// \param window_shape The window shape.
             MaxPool(const std::shared_ptr<Node>& arg, const Shape& window_shape);
 
@@ -62,32 +63,18 @@ namespace ngraph
                 return std::make_shared<MaxPool>(
                     new_args.at(0), m_window_shape, m_window_movement_strides);
             }
+            bool is_functionally_identical(const Node&) const override;
 
             /// \return The window shape.
             const Shape& get_window_shape() const { return m_window_shape; }
             /// \return The window movement strides.
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
-            /// \return The number of image channels.
-            size_t get_channel_count() const { return m_channel_count; }
-            /// \return The input image shape.
-            const Shape& get_input_image_shape() const { return m_input_image_shape; }
-            /// \return The output image shape.
-            const Shape& get_output_image_shape() const { return m_output_image_shape; }
-            /// \return The batch size.
-            size_t get_batch_size() const { return m_batch_size; }
-            /// \return The number of image dimensions.
-            size_t get_image_dimension_count() const { return m_image_dimension_count; }
-            bool is_functionally_identical(const Node&) const override;
-
         protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
+
             Shape m_window_shape;
             Strides m_window_movement_strides;
-
-            size_t m_channel_count;
-            Shape m_input_image_shape;
-            Shape m_output_image_shape;
-            size_t m_batch_size;
-            size_t m_image_dimension_count;
         };
     }
 }

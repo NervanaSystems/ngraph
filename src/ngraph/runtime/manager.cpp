@@ -22,24 +22,25 @@
 #include "ngraph/runtime/manager.hpp"
 #include "ngraph/util.hpp"
 
-using namespace ngraph::runtime;
+using namespace ngraph;
+using namespace std;
 
-static std::mutex load_plugins_mutex;
-static std::mutex close_plugins_mutex;
+static mutex load_plugins_mutex;
+static mutex close_plugins_mutex;
 
-bool Manager::m_is_factory_map_initialized = false;
-std::vector<void*> Manager::m_plugin_handles = {};
+bool runtime::Manager::m_is_factory_map_initialized = false;
+vector<void*> runtime::Manager::m_plugin_handles = {};
 
-void Manager::load_plugins(const std::string& runtime_plugin_libs)
+void runtime::Manager::load_plugins(const string& runtime_plugin_libs)
 {
-    std::lock_guard<std::mutex> lock(load_plugins_mutex);
+    lock_guard<mutex> lock(load_plugins_mutex);
 
-    if (Manager::m_is_factory_map_initialized)
+    if (m_is_factory_map_initialized)
     {
         return;
     }
 
-    std::vector<std::string> plugin_paths = ngraph::split(runtime_plugin_libs, ':', false);
+    vector<string> plugin_paths = ngraph::split(runtime_plugin_libs, ':', false);
     for (auto plugin_path : plugin_paths)
     {
         if (plugin_path.size() > 0)
@@ -52,7 +53,7 @@ void Manager::load_plugins(const std::string& runtime_plugin_libs)
                 if (register_plugin != NULL)
                 {
                     register_plugin();
-                    Manager::m_plugin_handles.push_back(plugin_handle);
+                    m_plugin_handles.push_back(plugin_handle);
                 }
                 else
                 {
@@ -66,31 +67,31 @@ void Manager::load_plugins(const std::string& runtime_plugin_libs)
         }
     }
 
-    Manager::m_is_factory_map_initialized = true;
+    m_is_factory_map_initialized = true;
 }
 
 // TODO: Should call this function after plugin is not needed anymore.
-void Manager::close_plugins()
+void runtime::Manager::close_plugins()
 {
-    std::lock_guard<std::mutex> lock(close_plugins_mutex);
+    lock_guard<mutex> lock(close_plugins_mutex);
 
-    for (auto plugin_handle : Manager::m_plugin_handles)
+    for (auto plugin_handle : m_plugin_handles)
     {
         dlclose(plugin_handle);
     }
-    Manager::m_plugin_handles.clear();
+    m_plugin_handles.clear();
 }
 
-Manager::FactoryMap& Manager::get_factory_map()
+runtime::Manager::FactoryMap& runtime::Manager::get_factory_map()
 {
     // Stores Manager Factories
     static FactoryMap factory_map;
     return factory_map;
 }
 
-std::shared_ptr<Manager> Manager::get(const std::string& name)
+shared_ptr<runtime::Manager> runtime::Manager::get(const string& name)
 {
-    Manager::load_plugins(RUNTIME_PLUGIN_LIBS);
+    load_plugins(RUNTIME_PLUGIN_LIBS);
 
     auto iter = get_factory_map().find(name);
 
@@ -103,7 +104,7 @@ std::shared_ptr<Manager> Manager::get(const std::string& name)
     return f(name);
 }
 
-Manager::Factory Manager::register_factory(const std::string& name, Factory factory)
+runtime::Manager::Factory runtime::Manager::register_factory(const string& name, Factory factory)
 {
     get_factory_map()[name] = factory;
     return factory;

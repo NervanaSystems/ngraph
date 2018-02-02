@@ -15,6 +15,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "util/test_tools.hpp"
 
 #include <memory>
 using namespace std;
@@ -36,24 +37,6 @@ TEST(build_graph, build_simple)
     auto cluster_0 = make_shared<Function>(dot, op::Parameters{arg0, arg1, arg2, arg3});
 
     ASSERT_EQ(cluster_0->get_output_op(0), dot);
-}
-
-// Check upcasting from ValueType.
-TEST(build_graph, as_type)
-{
-    // Check upcasting a ValueType::ptr that is a TensorViewType to a TensorViewType and Tuple.
-    auto tv_vt = make_shared<TensorViewType>(element::f32, Shape{2, 3, 5});
-    auto tv_tv = dynamic_pointer_cast<TensorViewType>(tv_vt);
-    ASSERT_EQ(tv_vt, tv_tv);
-    auto tv_tp = dynamic_pointer_cast<TupleType>(tv_vt);
-    ASSERT_EQ(nullptr, tv_tp);
-
-    // Check upcasting a ValueType::ptr that is a TupleType to a TensorViewType and Tuple.
-    auto tp_vt = make_shared<TupleType>(ValueTypes{tv_vt, tv_vt});
-    auto tp_tv = dynamic_pointer_cast<TensorViewType>(tp_vt);
-    ASSERT_EQ(nullptr, tp_tv);
-    auto tp_tp = dynamic_pointer_cast<TupleType>(tp_vt);
-    ASSERT_EQ(tp_vt, tp_tp);
 }
 
 // Check node comparisons

@@ -37,6 +37,7 @@
 #include "ngraph/ops/add.hpp"
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
+#include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/ceiling.hpp"
 #include "ngraph/ops/concatenate.hpp"
@@ -64,6 +65,7 @@
 #include "ngraph/ops/not.hpp"
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/one_hot.hpp"
+#include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
@@ -90,6 +92,8 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
+#include "ngraph/runtime/host_tensor_view.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -140,6 +144,7 @@ static StaticInitializers s_static_initializers;
 
 static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::EmitAdd},
+    {TI(ngraph::op::MatmulBias), &runtime::cpu::CPU_Emitter::EmitMatmulBias},
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::EmitDot},
     {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::EmitMultiply},
     {TI(ngraph::op::Parameter), &runtime::cpu::CPU_Emitter::EmitNop},
@@ -184,11 +189,18 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Ceiling), &runtime::cpu::CPU_Emitter::EmitCeiling},
     {TI(ngraph::op::Sqrt), &runtime::cpu::CPU_Emitter::EmitSqrt},
     {TI(ngraph::op::Convolution), &runtime::cpu::CPU_Emitter::EmitConvolution},
+    {TI(ngraph::op::ConvolutionBackpropFilters),
+     &runtime::cpu::CPU_Emitter::EmitConvolutionBackpropFilters},
+    {TI(ngraph::op::ConvolutionBackpropData),
+     &runtime::cpu::CPU_Emitter::EmitConvolutionBackpropData},
     {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::EmitNot},
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::EmitMaxPool},
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::EmitReverse},
     {TI(ngraph::op::ReduceWindow), &runtime::cpu::CPU_Emitter::EmitReduceWindow},
     {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPU_Emitter::EmitSelectAndScatter},
+    {TI(ngraph::op::AvgPool), &runtime::cpu::CPU_Emitter::EmitAvgPool},
+    {TI(ngraph::op::AvgPoolBprop), &runtime::cpu::CPU_Emitter::EmitAvgPoolBprop},
+    {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::EmitPad},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
@@ -208,14 +220,12 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     }
 
     string function_name = m_function->get_name();
-    string dump_filename = file_util::path_join(s_output_dir, function_name + "_ops.txt");
 
     pass::Manager pass_manager;
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>(64);
-    pass_manager.register_pass<pass::DumpSorted>(dump_filename);
     pass_manager.run_passes(m_function);
 
     codegen::CodeWriter writer;
@@ -228,9 +238,11 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
 #include <Eigen/Dense>
 
+#include <mkldnn.hpp>
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
+#include "ngraph/runtime/kernel/avg_pool.hpp"
 #include "ngraph/runtime/kernel/broadcast.hpp"
 #include "ngraph/runtime/kernel/concat.hpp"
 #include "ngraph/runtime/kernel/convolution.hpp"
@@ -238,6 +250,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/kernel/max_pool.hpp"
 #include "ngraph/runtime/kernel/not.hpp"
 #include "ngraph/runtime/kernel/one_hot.hpp"
+#include "ngraph/runtime/kernel/pad.hpp"
 #include "ngraph/runtime/kernel/reduce.hpp"
 #include "ngraph/runtime/kernel/reduce_window.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
@@ -475,6 +488,8 @@ using namespace ngraph::runtime;
             writer << "tbb::flow::graph G;\n\n";
         }
 
+        runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(writer);
+
         bool temporaries_used = false;
         size_t worst_case_tmp_size = 0;
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
@@ -495,7 +510,7 @@ using namespace ngraph::runtime;
             writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
             writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
             writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
-                   << ngraph::runtime::cpu::alignment << ");\n";
+                   << ngraph::runtime::alignment << ");\n";
             writer << "size_t pool_base_ptr = (size_t)memory_handler.get_ptr();\n";
             writer << "\n";
 

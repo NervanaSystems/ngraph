@@ -17,14 +17,14 @@
 #include "ngraph/node.hpp"
 
 using namespace ngraph;
-using namespace ngraph::descriptor;
+using namespace std;
 
-Tensor::Tensor(const element::Type& element_type,
-               PrimaryTensorView* primary_tensor_view,
-               const std::string& name,
-               bool is_output,
-               bool is_input,
-               bool is_constant)
+descriptor::Tensor::Tensor(const element::Type& element_type,
+                           PrimaryTensorView* primary_tensor_view,
+                           const string& name,
+                           bool is_output,
+                           bool is_input,
+                           bool is_constant)
     : m_element_type(element_type)
     , m_primary_tensor_view(primary_tensor_view)
     , m_is_output{is_output}
@@ -42,32 +42,32 @@ Tensor::Tensor(const element::Type& element_type,
     m_size = size * m_element_type.size();
 }
 
-std::string Tensor::make_tensor_name(const Node* node, size_t value_index)
+string descriptor::Tensor::make_tensor_name(const Node* node, size_t value_index)
 {
-    return node->get_node_id() + "_" + std::to_string(value_index);
+    return node->get_node_id() + "_" + to_string(value_index);
 }
 
-std::string Tensor::get_next_view_name()
+string descriptor::Tensor::get_next_view_name()
 {
-    return m_name + "_TV" + std::to_string(m_next_view_id++);
+    return m_name + "_TV" + to_string(m_next_view_id++);
 }
 
-size_t Tensor::size() const
+size_t descriptor::Tensor::size() const
 {
     return m_size;
 }
 
-void Tensor::set_pool_offset(size_t offset)
+void descriptor::Tensor::set_pool_offset(size_t offset)
 {
     m_pool_offset = offset;
 }
 
-size_t Tensor::get_pool_offset() const
+size_t descriptor::Tensor::get_pool_offset() const
 {
     return m_pool_offset;
 }
 
-std::ostream& operator<<(std::ostream& out, const Tensor& tensor)
+ostream& operator<<(ostream& out, const descriptor::Tensor& tensor)
 {
     out << "Tensor(" << tensor.get_name() << ", ";
     out << (tensor.is_persistent() ? "P" : "");
