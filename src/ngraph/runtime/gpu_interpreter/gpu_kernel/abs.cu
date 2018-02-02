@@ -26,18 +26,18 @@ __global__ void VecAbs(float* A, float* B)
 
 void runVecAbs(float* arg, float* out, int count)
 {
-	float *d_arg, *d_out;
-	
-	cudaMalloc(&d_arg, sizeof(float) * count);
-	cudaMalloc(&d_out, sizeof(float) * count);
+    float *d_arg, *d_out;
+    
+    cudaMalloc(&d_arg, sizeof(float) * count);
+    cudaMalloc(&d_out, sizeof(float) * count);
   
-	cudaMemcpy(d_arg, arg, sizeof(float) * count, cudaMemcpyHostToDevice);
-	
+    cudaMemcpy(d_arg, arg, sizeof(float) * count, cudaMemcpyHostToDevice);
+    
         VecAbs<<<1, count>>>(d_arg, d_out);
 
-	cudaMemcpy(out, d_out, sizeof(float) * count, cudaMemcpyDeviceToHost);
-	
-	cudaFree(d_arg);
-	cudaFree(d_out);
+    cudaMemcpy(out, d_out, sizeof(float) * count, cudaMemcpyDeviceToHost);
+    
+    cudaFree(d_arg);
+    cudaFree(d_out);
 }
 #endif
