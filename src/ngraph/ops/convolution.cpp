@@ -371,6 +371,10 @@ std::shared_ptr<Node>
 
 bool op::Convolution::is_functionally_identical(const Node& other) const
 {
+    // TODO: temporary workaround for MKLDNN issue
+    //       remove 'return false' and uncomment below when fixed
+    return false;
+    /*
     bool rc = true;
     if (Node::test_identical(other))
     {
@@ -386,6 +390,7 @@ bool op::Convolution::is_functionally_identical(const Node& other) const
         rc = false;
     }
     return rc;
+    */
 }
 
 void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
