@@ -177,10 +177,6 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
       "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE};")
 
-if (NGRAPH_ARGON_ENABLE)
-    link_directories(${ARGON_LIB_DIR})
-endif()
-
     # GPU backend current requires CPU because they share compiler.cpp,
     # and compiler.cpp requires MKLDNN
     if(NGRAPH_GPU_ENABLE)
@@ -202,6 +198,11 @@ endif()
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
     endif()
+
+endif()
+
+if (NGRAPH_ARGON_ENABLE)
+    link_directories(${ARGON_TRANSFORMER_LIB_DIR})
 endif()
 
 add_library(ngraph SHARED ${SRC})
@@ -234,19 +235,9 @@ if (NOT APPLE)
     endif()
 endif()
 
-# Colon separated string for specified runtime plugin loading, this is made explicit s.t. if a
-# plugin is specified at compile time but the corresponding library could not be resolved at run-
-# time, an error will be generated.
-# E.g. assume compiling with Argon and Xpu, then -DRUNTIME_PLUGIN_LIBS="libargon.so:libxpu.so".
-
+# Defines macro in C++ to load backend plugin
 if (NGRAPH_ARGON_ENABLE)
-    set(RUNTIME_PLUGIN_LIBS "libargon.so")  # TODO: currently hardcoded argon lib name if enabled
-endif()
-
-if (DEFINED RUNTIME_PLUGIN_LIBS)
-    target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS="${RUNTIME_PLUGIN_LIBS}")
-else()
-    target_compile_definitions(ngraph PRIVATE RUNTIME_PLUGIN_LIBS="")
+    target_compile_definitions(ngraph PRIVATE NGRAPH_ARGON_ENABLE)
 endif()
 
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
@@ -276,9 +267,10 @@ endif()
 
 # Argon
 if (NGRAPH_ARGON_ENABLE)
-    target_link_libraries(ngraph PRIVATE argon)
-    add_dependencies(ngraph ext_argon)
-    add_dependencies(ext_argon ext_llvm)
+    target_link_libraries(ngraph PRIVATE ${ARGON_TRANSFORMER_LIB_DIR}/libargon.a)
+    target_link_libraries(ngraph PRIVATE ${ARGON_API_LIBS})
+    add_dependencies(ngraph ext_argon_transformer)
+    add_dependencies(ext_argon_transformer ext_llvm)
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -311,10 +303,9 @@ if (NOT APPLE)
     endif()
 
     if (NGRAPH_ARGON_ENABLE)
-        install(DIRECTORY ${ARGON_LIB_DIR}/
+        install(DIRECTORY ${ARGON_TRANSFORMER_LIB_DIR}/
             DESTINATION ${NGRAPH_INSTALL_LIB}
             FILES_MATCHING PATTERN "*.so"
         )
     endif()
 endif()
-
