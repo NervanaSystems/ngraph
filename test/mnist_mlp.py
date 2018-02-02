@@ -13,10 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
-import numpy as np
-
-import pyngraph.util as util
-from pyngraph import Type, Function, TensorViewType
+from pyngraph import Type, Function
 from pyngraph.op import Parameter, Maximum, Reshape, Dot, Broadcast
 from pyngraph.op import Constant, Exp, Log, Sum
 from pyngraph.op import Greater, Convert, Reduce
@@ -68,6 +65,7 @@ def transpose(op, order):
 
 def relu(op):
     return Maximum(op, makeFloat32ConstantLike(0., op))
+
 
 # Flatten
 X1 = Reshape(Input, [0, 1, 2], [bz, 784])

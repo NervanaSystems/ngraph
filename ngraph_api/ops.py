@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright 2017 Nervana Systems Inc.
+# Copyright 2018 Nervana Systems Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,21 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
-# flake8: noqa
 
-import sys
-import six
+"""Factory functions for all ngraph ops."""
 
-# workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
-else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)
+import numpy as np
 
-from _pyngraph import Function
-from _pyngraph import Node
-from _pyngraph import Type
-from _pyngraph import TensorViewType
+from pyngraph.op import Parameter
+
+from ngraph_api.utils.input_validation import assert_list_of_ints
+from ngraph_api.utils.types import get_element_type, py_numeric_type, tensor_shape
+from ngraph_api.utils import nameable_op
+
+
+@nameable_op
+def parameter(shape, dtype=np.float32, name=None):
+    # type: (tensor_shape, py_numeric_type, str) -> Parameter
+    """Return an ngraph Parameter object."""
+    assert_list_of_ints(shape, 'Parameter shape must be a list of integer values.')
+    element_type = get_element_type(dtype)
+    return Parameter(element_type, shape)

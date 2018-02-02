@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <iterator>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 //#include <pybind11/operators.h>
@@ -28,7 +29,18 @@ void regclass_pyngraph_op_Parameter(py::module m){
     //py::module::import("wrapper.ngraph.Node");
     py::class_<ngraph::op::Parameter, std::shared_ptr<ngraph::op::Parameter>, ngraph::Node> parameter(m, "Parameter");
 
+    parameter.def("__repr__", [](const ngraph::Node &self) {
+        std::string class_name = py::cast(self).get_type().attr("__name__").cast<std::string>();
+
+        std::stringstream shape_string_stream;
+        std::copy(self.get_shape().begin(), self.get_shape().end(), std::ostream_iterator<int>(shape_string_stream, ", "));
+        std::string shape = shape_string_stream.str();
+        std::string type = self.get_element_type().c_type_string();
+
+        return "<" + class_name + ": '" + self.get_name() + "' (" + shape + type + ")>";
+    });
+
     parameter.def(py::init<const ngraph::element::Type&, const ngraph::Shape& >());
-    parameter.def("description", &ngraph::op::Parameter::description);
+    parameter.def_property_readonly("description", &ngraph::op::Parameter::description);
 }
 

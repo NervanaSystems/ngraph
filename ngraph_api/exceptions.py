@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright 2017 Nervana Systems Inc.
+# Copyright 2018 Nervana Systems Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,21 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
-# flake8: noqa
+"""ngraph exceptions hierarchy. All exceptions are descendants of NgraphError."""
 
-import sys
-import six
 
-# workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
-else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)
+class NgraphError(Exception):
+    """Base class for Ngraph exceptions."""
 
-from _pyngraph import Function
-from _pyngraph import Node
-from _pyngraph import Type
-from _pyngraph import TensorViewType
+
+class UserInputError(NgraphError):
+    """User provided unexpected input."""
+
+
+class NgraphTypeError(NgraphError, TypeError):
+    """Type mismatch error."""

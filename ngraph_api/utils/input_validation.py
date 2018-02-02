@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright 2017 Nervana Systems Inc.
+# Copyright 2018 Nervana Systems Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,21 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
-# flake8: noqa
 
-import sys
-import six
+"""Helper functions for validating user input."""
 
-# workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
-else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)
+import logging
+from typing import Iterable
 
-from _pyngraph import Function
-from _pyngraph import Node
-from _pyngraph import Type
-from _pyngraph import TensorViewType
+from ngraph_api.exceptions import UserInputError
+
+log = logging.getLogger(__file__)
+
+
+def assert_list_of_ints(value_list, message):  # type: (Iterable[int], str) -> None
+    """Verify that the provided value is an iterable of integers."""
+    try:
+        for value in value_list:
+            if not isinstance(value, int):
+                raise TypeError
+    except TypeError:
+        log.warning(message)
+        raise UserInputError(message, value_list)

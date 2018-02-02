@@ -1,3 +1,4 @@
+#!/bin/sh
 # ----------------------------------------------------------------------------
 # Copyright 2017 Nervana Systems Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,21 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
-# flake8: noqa
 
-import sys
-import six
+if [ -d build ]; then
+    rm -rf build
+fi
 
-# workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
-else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)
+mkdir build
 
-from _pyngraph import Function
-from _pyngraph import Node
-from _pyngraph import Type
-from _pyngraph import TensorViewType
+cd build && cmake .. && make -j && python3 setup.py bdist_wheel
+

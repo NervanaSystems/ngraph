@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
+# flake8: noqa
 
 import sys
 import six
+
 # workaround to load the libngraph.so with RTLD_GLOBAL
 if six.PY3:
     import os
@@ -71,7 +73,6 @@ from _pyngraph.op import Subtract
 from _pyngraph.op import Sum
 from _pyngraph.op import Tan
 from _pyngraph.op import Tanh
-
 from _pyngraph.op import RequiresTensorViewArgs
 from _pyngraph.op import UnaryElementwise
 from _pyngraph.op import UnaryElementwiseArithmetic

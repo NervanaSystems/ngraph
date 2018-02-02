@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright 2017 Nervana Systems Inc.
+# Copyright 2018 Nervana Systems Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,21 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ----------------------------------------------------------------------------
-# flake8: noqa
+"""Generic utilities. Factor related functions out to separate files."""
 
-import sys
-import six
+from functools import wraps
+from typing import Callable, Any
 
-# workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
-else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)
 
-from _pyngraph import Function
-from _pyngraph import Node
-from _pyngraph import Type
-from _pyngraph import TensorViewType
+def nameable_op(op_factory_function):  # type: (Callable) -> Callable
+    """Set the name to the ngraph operator returned by the wrapped function."""
+    @wraps(op_factory_function)
+    def wrapper(*args, **kwds):  # type: (Any, Any) -> Any
+        op = op_factory_function(*args, **kwds)
+        if 'name' in kwds:
+            op.name = kwds['name']
+        return op
+    return wrapper
