@@ -298,8 +298,9 @@ const auto str = R"(
 //               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 // }
 
+/*
 TEST(cudnn, dot1d)
-{
+
     auto shape = Shape{4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -321,3 +322,4 @@ TEST(cudnn, dot1d)
     cf->call({a, b}, {result});
     EXPECT_EQ((vector<float>{170}), read_vector<float>(result));
 }
+*/

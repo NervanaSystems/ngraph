@@ -197,6 +197,13 @@ endif()
             runtime/gpu/gpu_manager.cpp
             runtime/gpu/gpu_tensor_view.cpp
             runtime/gpu/gpu_tensor_view_wrapper.cpp
+	          runtime/gpu_interpreter/int_backend.cpp
+	          runtime/gpu_interpreter/int_call_frame.cpp
+	          runtime/gpu_interpreter/int_external_function.cpp
+	          runtime/gpu_interpreter/int_kernels.cpp
+	          runtime/gpu_interpreter/int_manager.cpp
+	          runtime/gpu_interpreter/int_tensor_view.cpp
+	          runtime/gpu_interpreter/gpu_kernel/abs.cu
             runtime/gpu/gpu_util.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
@@ -204,7 +211,7 @@ endif()
     endif()
 endif()
 
-add_library(ngraph SHARED ${SRC})
+cuda_add_library(ngraph SHARED ${SRC})
 if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND MKLDNN_INCLUDE_DIR)
     # Generate the resource file containing all headers used by the codegen compiler
     add_custom_target(header_resource
@@ -252,7 +259,7 @@ endif()
 target_include_directories(ngraph PUBLIC "${NGRAPH_INCLUDE_PATH}")
 
 if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND LLVM_LINK_LIBS)
-    target_link_libraries(ngraph PRIVATE ${LLVM_LINK_LIBS})
+    target_link_libraries(ngraph ${LLVM_LINK_LIBS})
 endif()
 
 if (APPLE)
@@ -262,21 +269,22 @@ if (APPLE)
 endif()
 
 if(NGRAPH_CPU_ENABLE AND MKLDNN_LIB_DIR)
-    target_link_libraries(ngraph PRIVATE mkldnn)
+    target_link_libraries(ngraph mkldnn)
 endif()
 
 if(NGRAPH_CPU_ENABLE)
-    target_link_libraries(ngraph PRIVATE ${TBB_IMPORTED_TARGETS})
+    target_link_libraries(ngraph  ${TBB_IMPORTED_TARGETS})
 endif()
 
 # Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+    target_link_libraries(ngraph cuda /usr/local/cuda/lib64/libcudart.so ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+    #target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 # Argon
 if (NGRAPH_ARGON_ENABLE)
-    target_link_libraries(ngraph PRIVATE argon)
+    target_link_libraries(ngraph argon)
     add_dependencies(ngraph ext_argon)
     add_dependencies(ext_argon ext_llvm)
 endif()

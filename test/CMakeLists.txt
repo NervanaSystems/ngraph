@@ -75,10 +75,9 @@ if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
 endif()
 
 if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
-    include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
-    link_directories(${LLVM_LIB_DIR})
-    link_directories(${CUDA_LIBRARIES})
-    link_directories(${CUDA_CUBLAS_LIBRARIES})
+    set(BACKEND_NAMES ${BACKEND_NAMES} "GPU_INTERPRETER")
+    include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${CUDA_INCLUDE_DIRS})
+    link_directories(${LLVM_LIB_DIR} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
     set(SRC
         ${SRC}
         cudnn.cpp)
@@ -113,7 +112,7 @@ if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
-add_executable(unit-test ${SRC})
+cuda_add_executable(unit-test ${SRC})
 
 if(MKLDNN_INCLUDE_DIR)
     target_link_libraries(unit-test mkldnn)
@@ -126,7 +125,8 @@ if(LLVM_INCLUDE_DIR)
 endif()
 
 if(CUDA_INCLUDE_DIRS)
-  target_link_libraries(unit-test ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+  target_link_libraries(unit-test cuda /usr/local/cuda/lib64/libcudart.so ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES})
+  #target_link_libraries(unit-test ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)
