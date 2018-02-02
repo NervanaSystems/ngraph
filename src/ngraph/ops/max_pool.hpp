@@ -20,9 +20,9 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Batched max pooling operation, with optional window stride.
+        /// \brief Batched max pooling operation, with optional padding and window stride.
         ///
-        /// (TODO: add an account of the optional padding into the below definition.)
+        /// (TODO: add an account of the optional padding to this comment.)
         ///
         /// Max pooling takes as its input a data batch tensor of shape \f$(N,C,d_1,\dots,d_n)\f$ where \f$n > 0\f$, every \f$d_i > 0\f$, and where \f$N\f$ is
         /// the batch size, and \f$C > 0\f$ is the number of channels (sometimes called features). The dimensions \f$(d_1,\dots,d_n)\f$ correspond to the shape of
