@@ -35,6 +35,10 @@ namespace ngraph
             template<>
             inline void add<float>(float* arg0, float* arg1, float* out, size_t count)
             {
+                if(count == 0)
+                {
+                  return;
+                }
                 float* d_arg0;
                 float* d_arg1;
                 float* d_out;

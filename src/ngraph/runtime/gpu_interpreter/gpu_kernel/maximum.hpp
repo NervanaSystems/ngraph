@@ -45,7 +45,11 @@ namespace ngraph
             template<>
             inline void maximum(float* arg0, float* arg1, float* out, size_t count)
             {
-                cudnnHandle_t cudnnHandle;
+                if(count == 0)
+               {
+                  return;
+               } 
+               cudnnHandle_t cudnnHandle;
                 checkCUDNN(cudnnCreate(&cudnnHandle));
                 cudnnTensorDescriptor_t descriptor;
                 checkCUDNN(cudnnCreateTensorDescriptor(&descriptor));
