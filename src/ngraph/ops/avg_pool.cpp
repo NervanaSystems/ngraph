@@ -394,7 +394,8 @@ void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints,
                                     const std::shared_ptr<Node>& delta)
 {
     auto operand = get_input_op(0);
-    auto backprop = std::make_shared<op::AvgPoolBackprop>(get_input_shape(0),
+    auto& operand_shape = get_input_shape(0);
+    auto backprop = std::make_shared<op::AvgPoolBackprop>(operand_shape,
                                                           delta,
                                                           m_window_shape,
                                                           m_window_movement_strides,
