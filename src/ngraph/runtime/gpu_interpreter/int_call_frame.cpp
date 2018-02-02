@@ -16,8 +16,8 @@
 #include <cstdlib>
 #include <iomanip>
 
+#include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/gpu_interpreter/int_call_frame.hpp"
-#include "ngraph/runtime/gpu_interpreter/int_tensor_view.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -26,22 +26,21 @@ runtime::gpu_interpreter::INT_CallFrame::INT_CallFrame(shared_ptr<ExternalFuncti
                                                    shared_ptr<Function> func)
     : m_external_function(external_function)
     , m_function(func)
-    , m_emit_timing(std::getenv("NGRAPH_INTERPRETER_EMIT_TIMING") != nullptr)
-    , m_nan_check(std::getenv("NGRAPH_INTERPRETER_NAN_CHECK") != nullptr)
+    , m_emit_timing(std::getenv("NGRAPH_gpu_interpreter_EMIT_TIMING") != nullptr)
+    , m_nan_check(std::getenv("NGRAPH_gpu_interpreter_NAN_CHECK") != nullptr)
 {
 }
 
 void runtime::gpu_interpreter::INT_CallFrame::call(
     std::shared_ptr<Function> function,
-    const vector<shared_ptr<runtime::gpu_interpreter::INT_TensorView>>& input_tvs,
-    const vector<shared_ptr<runtime::gpu_interpreter::INT_TensorView>>& output_tvs)
+    const vector<shared_ptr<runtime::HostTensorView>>& input_tvs,
+    const vector<shared_ptr<runtime::HostTensorView>>& output_tvs)
 {
     if (m_nan_check)
     {
         perform_nan_check(input_tvs);
     }
-    unordered_map<descriptor::TensorView*, shared_ptr<runtime::gpu_interpreter::INT_TensorView>>
-        tensor_map;
+    unordered_map<descriptor::TensorView*, shared_ptr<runtime::HostTensorView>> tensor_map;
 
     size_t arg_index = 0;
     for (shared_ptr<op::Parameter> param : function->get_parameters())
@@ -95,8 +94,8 @@ void runtime::gpu_interpreter::INT_CallFrame::call(
             continue;
         }
 
-        vector<shared_ptr<runtime::gpu_interpreter::INT_TensorView>> inputs;
-        vector<shared_ptr<runtime::gpu_interpreter::INT_TensorView>> outputs;
+        vector<shared_ptr<runtime::HostTensorView>> inputs;
+        vector<shared_ptr<runtime::HostTensorView>> outputs;
         for (const descriptor::Input& input : op->get_inputs())
         {
             descriptor::TensorView* tv = input.get_output().get_tensor_view().get();
@@ -107,15 +106,14 @@ void runtime::gpu_interpreter::INT_CallFrame::call(
         {
             descriptor::TensorView* tv = op->get_output_tensor_view(i).get();
             string name = tv->get_tensor().get_name();
-            shared_ptr<runtime::gpu_interpreter::INT_TensorView> itv;
+            shared_ptr<runtime::HostTensorView> itv;
             if (!contains_key(tensor_map, tv))
             {
                 // The output tensor is not in the tensor map so create a new tensor
                 const Shape& shape = op->get_output_shape(i);
                 const element::Type& element_type = op->get_output_element_type(i);
                 string tensor_name = op->get_output_tensor(i).get_name();
-                itv = make_shared<runtime::gpu_interpreter::INT_TensorView>(
-                    element_type, shape, tensor_name);
+                itv = make_shared<runtime::HostTensorView>(element_type, shape, tensor_name);
                 tensor_map.insert({tv, itv});
             }
             else
@@ -179,7 +177,7 @@ void runtime::gpu_interpreter::INT_CallFrame::call(
 void runtime::gpu_interpreter::INT_CallFrame::handle_output_alias(
     const Node& node,
     const unordered_map<descriptor::TensorView*, vector<size_t>>& output_alias_map,
-    const vector<shared_ptr<runtime::gpu_interpreter::INT_TensorView>>& output_tvs)
+    const vector<shared_ptr<runtime::HostTensorView>>& output_tvs)
 {
     for (size_t i = 0; i < node.get_output_size(); ++i)
     {
@@ -205,8 +203,8 @@ void runtime::gpu_interpreter::INT_CallFrame::generate_calls(
     const element::Type& base_type,
     const element::Type& secondary_type,
     ngraph::Node& op,
-    const std::vector<std::shared_ptr<INT_TensorView>>& args,
-    const std::vector<std::shared_ptr<INT_TensorView>>& out)
+    const std::vector<std::shared_ptr<HostTensorView>>& args,
+    const std::vector<std::shared_ptr<HostTensorView>>& out)
 {
     if (base_type == element::boolean)
     {
@@ -261,8 +259,8 @@ void runtime::gpu_interpreter::INT_CallFrame::generate_calls(
 }
 
 void runtime::gpu_interpreter::INT_CallFrame::tensor_call(
-    const vector<shared_ptr<runtime::gpu_interpreter::INT_TensorView>>& input_tvs,
-    const vector<shared_ptr<runtime::gpu_interpreter::INT_TensorView>>& output_tvs)
+    const vector<shared_ptr<runtime::HostTensorView>>& input_tvs,
+    const vector<shared_ptr<runtime::HostTensorView>>& output_tvs)
 {
     call(m_function, input_tvs, output_tvs);
 }
@@ -271,15 +269,15 @@ void runtime::gpu_interpreter::INT_CallFrame::tensor_call(
     const vector<shared_ptr<runtime::TensorView>>& input_tvs,
     const vector<shared_ptr<runtime::TensorView>>& output_tvs)
 {
-    vector<shared_ptr<runtime::gpu_interpreter::INT_TensorView>> args;
-    vector<shared_ptr<runtime::gpu_interpreter::INT_TensorView>> out;
+    vector<shared_ptr<runtime::HostTensorView>> args;
+    vector<shared_ptr<runtime::HostTensorView>> out;
     for (auto tv : input_tvs)
     {
-        args.push_back(static_pointer_cast<runtime::gpu_interpreter::INT_TensorView>(tv));
+        args.push_back(static_pointer_cast<runtime::HostTensorView>(tv));
     }
     for (auto tv : output_tvs)
     {
-        out.push_back(static_pointer_cast<runtime::gpu_interpreter::INT_TensorView>(tv));
+        out.push_back(static_pointer_cast<runtime::HostTensorView>(tv));
     }
     tensor_call(args, out);
 }
@@ -317,10 +315,10 @@ vector<runtime::PerformanceCounter>
 }
 
 void runtime::gpu_interpreter::INT_CallFrame::perform_nan_check(
-    const vector<shared_ptr<INT_TensorView>>& tvs, const Node* op)
+    const vector<shared_ptr<HostTensorView>>& tvs, const Node* op)
 {
     size_t arg_number = 1;
-    for (shared_ptr<INT_TensorView> tv : tvs)
+    for (shared_ptr<HostTensorView> tv : tvs)
     {
         const element::Type& type = tv->get_tensor().get_element_type();
         if (type == element::f32)

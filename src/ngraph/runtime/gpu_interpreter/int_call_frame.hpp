@@ -21,6 +21,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
@@ -28,6 +29,7 @@
 #include "ngraph/ops/dot.hpp"
 #include "ngraph/ops/max_pool.hpp"
 #include "ngraph/ops/one_hot.hpp"
+#include "ngraph/ops/pad.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/replace_slice.hpp"
@@ -37,13 +39,13 @@
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/call_frame.hpp"
-#include "ngraph/runtime/gpu_interpreter/int_tensor_view.hpp"
-#include "ngraph/runtime/gpu_interpreter/int_tensor_view.hpp"
+#include "ngraph/runtime/host_tensor_view.hpp"
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/abs.hpp"
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/acos.hpp"
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/add.hpp"
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/asin.hpp"
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/atan.hpp"
+#include "ngraph/runtime/gpu_interpreter/gpu_kernel/avg_pool.hpp"
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/broadcast.hpp"
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/ceiling.hpp"
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/concat.hpp"
@@ -71,6 +73,7 @@
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/not.hpp"
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/not_equal.hpp"
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/one_hot.hpp"
+#include "ngraph/runtime/gpu_interpreter/gpu_kernel/pad.hpp"
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/power.hpp"
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/reduce.hpp"
 #include "ngraph/runtime/gpu_interpreter/gpu_kernel/reduce_window.hpp"
@@ -126,17 +129,17 @@ private:
     /// tensor views.
     void tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
                      const std::vector<std::shared_ptr<TensorView>>& outputs) override;
-    void tensor_call(const std::vector<std::shared_ptr<INT_TensorView>>& inputs,
-                     const std::vector<std::shared_ptr<INT_TensorView>>& outputs);
+    void tensor_call(const std::vector<std::shared_ptr<HostTensorView>>& inputs,
+                     const std::vector<std::shared_ptr<HostTensorView>>& outputs);
     void call(std::shared_ptr<Function> function,
-              const std::vector<std::shared_ptr<runtime::gpu_interpreter::INT_TensorView>>& input_tvs,
-              const std::vector<std::shared_ptr<runtime::gpu_interpreter::INT_TensorView>>& output_tvs);
+              const std::vector<std::shared_ptr<runtime::HostTensorView>>& input_tvs,
+              const std::vector<std::shared_ptr<runtime::HostTensorView>>& output_tvs);
     void handle_output_alias(
         const Node& node,
         const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>& output_alias_map,
-        const std::vector<std::shared_ptr<runtime::gpu_interpreter::INT_TensorView>>& output_tvs);
+        const std::vector<std::shared_ptr<runtime::HostTensorView>>& output_tvs);
 
-    static void perform_nan_check(const std::vector<std::shared_ptr<INT_TensorView>>&,
+    static void perform_nan_check(const std::vector<std::shared_ptr<HostTensorView>>&,
                                   const Node* op = nullptr);
 
     std::shared_ptr<ExternalFunction> m_external_function;
@@ -148,14 +151,14 @@ private:
     void generate_calls(const element::Type& base_type,
                         const element::Type& secondary_type,
                         ngraph::Node& op,
-                        const std::vector<std::shared_ptr<INT_TensorView>>& args,
-                        const std::vector<std::shared_ptr<INT_TensorView>>& out);
+                        const std::vector<std::shared_ptr<HostTensorView>>& args,
+                        const std::vector<std::shared_ptr<HostTensorView>>& out);
 
     template <typename BASE>
     void generate_calls(const element::Type& type,
                         ngraph::Node& op,
-                        const std::vector<std::shared_ptr<INT_TensorView>>& args,
-                        const std::vector<std::shared_ptr<INT_TensorView>>& out)
+                        const std::vector<std::shared_ptr<HostTensorView>>& args,
+                        const std::vector<std::shared_ptr<HostTensorView>>& out)
     {
         if (type == element::boolean)
         {
@@ -211,8 +214,8 @@ private:
 
     template <typename T, typename S>
     void op_engine(ngraph::Node& node,
-                   const std::vector<std::shared_ptr<INT_TensorView>>& args,
-                   const std::vector<std::shared_ptr<INT_TensorView>>& out)
+                   const std::vector<std::shared_ptr<HostTensorView>>& args,
+                   const std::vector<std::shared_ptr<HostTensorView>>& out)
     {
         std::string node_op = node.description();
         if (node_op == "Abs")
@@ -246,6 +249,34 @@ private:
                             reinterpret_cast<T*>(out[0]->get_data_ptr()),
                             out[0]->get_element_count());
         }
+        else if (node_op == "AvgPool")
+        {
+            ngraph::op::AvgPool* avg_pool = dynamic_cast<ngraph::op::AvgPool*>(&node);
+
+            gpu_kernel::avg_pool<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                args[0]->get_shape(),
+                                out[0]->get_shape(),
+                                avg_pool->get_window_shape(),
+                                avg_pool->get_window_movement_strides(),
+                                avg_pool->get_padding_below(),
+                                avg_pool->get_padding_above());
+        }
+        else if (node_op == "AvgPoolBprop")
+        {
+            ngraph::op::AvgPoolBprop* apb = dynamic_cast<ngraph::op::AvgPoolBprop*>(&node);
+            gpu_kernel::avg_pool_bprop<T>(
+                reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                args[0]->get_shape(),
+                args[1]->get_shape(), /*delta shape*/
+                apb->get_window_shape(),
+                apb->get_window_movement_strides(),
+                apb->get_padding_below(),
+                apb->get_padding_above(),
+                true /*divide by the number of physical elements in a window*/);
+        }
         else if (node_op == "Broadcast")
         {
             ngraph::op::Broadcast* broadcast = dynamic_cast<ngraph::op::Broadcast*>(&node);
@@ -269,7 +300,7 @@ private:
             const op::Concat* concat = static_cast<const op::Concat*>(&node);
             std::vector<T*> in_args;
             std::vector<Shape> in_shapes;
-            for (std::shared_ptr<INT_TensorView> arg : args)
+            for (std::shared_ptr<HostTensorView> arg : args)
             {
                 in_args.push_back(reinterpret_cast<T*>(arg->get_data_ptr()));
                 in_shapes.push_back(arg->get_shape());
@@ -306,7 +337,59 @@ private:
                                    c->get_window_dilation_strides(),
                                    c->get_padding_below(),
                                    c->get_padding_above(),
-                                   c->get_image_dilation_strides());
+                                   c->get_data_dilation_strides(),
+                                   0,
+                                   1,
+                                   1,
+                                   0,
+                                   0,
+                                   1,
+                                   false);
+        }
+        else if (node_op == "ConvolutionBackpropFilters")
+        {
+            auto c = static_cast<const op::ConvolutionBackpropFilters*>(&node);
+            gpu_kernel::convolution<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                   reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                   args[0]->get_shape(),
+                                   args[1]->get_shape(),
+                                   out[0]->get_shape(),
+                                   c->get_window_movement_strides_backward(),
+                                   c->get_window_dilation_strides_backward(),
+                                   c->get_padding_below_backward(),
+                                   c->get_padding_above_backward(),
+                                   c->get_data_dilation_strides_backward(),
+                                   1,
+                                   0,
+                                   0,
+                                   1,
+                                   1,
+                                   0,
+                                   false);
+        }
+        else if (node_op == "ConvolutionBackpropData")
+        {
+            // Note that args[1] and args[0] are switched here from the usual order.
+            auto c = static_cast<const op::ConvolutionBackpropData*>(&node);
+            gpu_kernel::convolution<T>(reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                   reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                   reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                   args[1]->get_shape(),
+                                   args[0]->get_shape(),
+                                   out[0]->get_shape(),
+                                   c->get_window_movement_strides_backward(),
+                                   c->get_window_dilation_strides_backward(),
+                                   c->get_padding_below_backward(),
+                                   c->get_padding_above_backward(),
+                                   c->get_data_dilation_strides_backward(),
+                                   0,
+                                   1,
+                                   0,
+                                   1,
+                                   0,
+                                   1,
+                                   true);
         }
         else if (node_op == "Cos")
         {
@@ -461,6 +544,19 @@ private:
         else if (node_op == "Parameter")
         {
         }
+        else if (node_op == "Pad")
+        {
+            ngraph::op::Pad* pad = dynamic_cast<ngraph::op::Pad*>(&node);
+
+            gpu_kernel::pad(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                        reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                        reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                        node.get_inputs().at(0).get_shape(),
+                        node.get_output_shape(0),
+                        pad->get_padding_below(),
+                        pad->get_padding_above(),
+                        pad->get_padding_interior());
+        }
         else if (node_op == "Power")
         {
             gpu_kernel::power<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
@@ -474,11 +570,11 @@ private:
             std::shared_ptr<ngraph::Function> reduction_function = reduce->get_functions()[0];
 
             std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
-                auto tx = std::make_shared<runtime::gpu_interpreter::INT_TensorView>(
+                auto tx = std::make_shared<runtime::HostTensorView>(
                     node.get_inputs().at(0).get_element_type(), Shape{}, "reduce_temp_x");
-                auto ty = std::make_shared<runtime::gpu_interpreter::INT_TensorView>(
+                auto ty = std::make_shared<runtime::HostTensorView>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "reduce_temp_y");
-                auto tr = std::make_shared<runtime::gpu_interpreter::INT_TensorView>(
+                auto tr = std::make_shared<runtime::HostTensorView>(
                     node.get_output_element_type(0), Shape{}, "reduce_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
@@ -502,11 +598,11 @@ private:
                 reduce_window->get_functions()[0];
 
             std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
-                auto tx = std::make_shared<runtime::gpu_interpreter::INT_TensorView>(
+                auto tx = std::make_shared<runtime::HostTensorView>(
                     node.get_inputs().at(0).get_element_type(), Shape{}, "reduce_window_temp_x");
-                auto ty = std::make_shared<runtime::gpu_interpreter::INT_TensorView>(
+                auto ty = std::make_shared<runtime::HostTensorView>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "reduce_window_temp_y");
-                auto tr = std::make_shared<runtime::gpu_interpreter::INT_TensorView>(
+                auto tr = std::make_shared<runtime::HostTensorView>(
                     node.get_output_element_type(0), Shape{}, "reduce_window_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
@@ -574,11 +670,11 @@ private:
                 select_and_scatter->get_functions()[0];
             std::function<bool(T, T)> f_selection = [this, &node, selection_function](T x,
                                                                                       T y) -> bool {
-                auto tx = std::make_shared<runtime::gpu_interpreter::INT_TensorView>(
+                auto tx = std::make_shared<runtime::HostTensorView>(
                     node.get_inputs().at(0).get_element_type(), Shape{}, "selection_temp_x");
-                auto ty = std::make_shared<runtime::gpu_interpreter::INT_TensorView>(
+                auto ty = std::make_shared<runtime::HostTensorView>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "selection_temp_y");
-                auto tr = std::make_shared<runtime::gpu_interpreter::INT_TensorView>(
+                auto tr = std::make_shared<runtime::HostTensorView>(
                     element::boolean, Shape{}, "selection_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;
@@ -589,11 +685,11 @@ private:
             std::shared_ptr<ngraph::Function> scatter_function =
                 select_and_scatter->get_functions()[1];
             std::function<T(T, T)> f_scatter = [this, &node, scatter_function](T x, T y) -> T {
-                auto tx = std::make_shared<runtime::gpu_interpreter::INT_TensorView>(
+                auto tx = std::make_shared<runtime::HostTensorView>(
                     node.get_inputs().at(0).get_element_type(), Shape{}, "scatter_temp_x");
-                auto ty = std::make_shared<runtime::gpu_interpreter::INT_TensorView>(
+                auto ty = std::make_shared<runtime::HostTensorView>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "scatter_temp_y");
-                auto tr = std::make_shared<runtime::gpu_interpreter::INT_TensorView>(
+                auto tr = std::make_shared<runtime::HostTensorView>(
                     node.get_output_element_type(0), Shape{}, "scatter_temp_r");
                 *(reinterpret_cast<T*>(tx->get_data_ptr())) = x;
                 *(reinterpret_cast<T*>(ty->get_data_ptr())) = y;

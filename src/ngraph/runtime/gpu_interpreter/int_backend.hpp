@@ -22,8 +22,6 @@ namespace ngraph
     {
         namespace gpu_interpreter
         {
-            static size_t alignment = 64;
-
             class INT_Backend : public runtime::Backend
             {
             public:

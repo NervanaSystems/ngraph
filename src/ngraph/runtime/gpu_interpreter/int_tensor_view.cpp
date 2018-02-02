@@ -18,13 +18,13 @@
 #include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/runtime/gpu_interpreter/int_backend.hpp"
-#include "ngraph/runtime/gpu_interpreter/int_tensor_view.hpp"
+#include "ngraph/runtime/gpu_gpu_interpreter/int_backend.hpp"
+#include "ngraph/runtime/gpu_gpu_interpreter/int_tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-runtime::gpu_interpreter::INT_TensorView::INT_TensorView(const element::Type& element_type,
+runtime::gpu_gpu_interpreter::INT_TensorView::INT_TensorView(const element::Type& element_type,
                                                      const Shape& shape,
                                                      const string& name)
     : runtime::TensorView(std::make_shared<descriptor::PrimaryTensorView>(
@@ -39,7 +39,7 @@ runtime::gpu_interpreter::INT_TensorView::INT_TensorView(const element::Type& el
     m_buffer_size = m_descriptor->get_tensor_view_layout()->get_size() * element_type.size();
     if (m_buffer_size > 0)
     {
-        size_t allocation_size = m_buffer_size + runtime::gpu_interpreter::alignment;
+        size_t allocation_size = m_buffer_size + runtime::gpu_gpu_interpreter::alignment;
         m_allocated_buffer_pool = static_cast<char*>(malloc(allocation_size));
         m_aligned_buffer_pool = m_allocated_buffer_pool;
         size_t mod = size_t(m_aligned_buffer_pool) % alignment;
@@ -50,7 +50,7 @@ runtime::gpu_interpreter::INT_TensorView::INT_TensorView(const element::Type& el
     }
 }
 
-runtime::gpu_interpreter::INT_TensorView::~INT_TensorView()
+runtime::gpu_gpu_interpreter::INT_TensorView::~INT_TensorView()
 {
     if (m_allocated_buffer_pool != nullptr)
     {
@@ -58,17 +58,17 @@ runtime::gpu_interpreter::INT_TensorView::~INT_TensorView()
     }
 }
 
-char* runtime::gpu_interpreter::INT_TensorView::get_data_ptr()
+char* runtime::gpu_gpu_interpreter::INT_TensorView::get_data_ptr()
 {
     return m_aligned_buffer_pool;
 }
 
-const char* runtime::gpu_interpreter::INT_TensorView::get_data_ptr() const
+const char* runtime::gpu_gpu_interpreter::INT_TensorView::get_data_ptr() const
 {
     return m_aligned_buffer_pool;
 }
 
-void runtime::gpu_interpreter::INT_TensorView::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::gpu_gpu_interpreter::INT_TensorView::write(const void* source, size_t tensor_offset, size_t n)
 {
     if (tensor_offset + n > m_buffer_size)
     {
@@ -78,7 +78,7 @@ void runtime::gpu_interpreter::INT_TensorView::write(const void* source, size_t 
     memcpy(&target[tensor_offset], source, n);
 }
 
-void runtime::gpu_interpreter::INT_TensorView::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::gpu_gpu_interpreter::INT_TensorView::read(void* target, size_t tensor_offset, size_t n) const
 {
     if (tensor_offset + n > m_buffer_size)
     {

@@ -33,7 +33,7 @@ shared_ptr<runtime::ExternalFunction>
 }
 
 runtime::Manager::Factory runtime::gpu_interpreter::INT_Manager::factory =
-    runtime::Manager::register_factory("GPU_INTERPRETER",
+    runtime::Manager::register_factory("gpu_interpreter",
                                        [](const string& name) -> shared_ptr<runtime::Manager> {
                                            return make_shared<INT_Manager>();
                                        });
