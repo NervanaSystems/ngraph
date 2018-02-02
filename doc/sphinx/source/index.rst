@@ -18,16 +18,21 @@ Intel nGraph library project
 #############################
 
 Welcome to the Intel nGraph project, an open source C++ library for developers
-of :abbr:`Deep Learning (DL)` (DL) systems and frameworks. Here you will find 
-a suite of components, documentation, and APIs that can be used with 
-:abbr:`Deep Neural Network (DNN)` models defined in a variety of frameworks.  
+of :abbr:`Deep Learning (DL)` (DL) systems. Here you will find a suite of 
+components, APIs, and documentation that can be used to compile and run  
+:abbr:`Deep Neural Network (DNN)` (DNN) models defined in a variety of frameworks.  
+
+For this early release, we provide :doc:`framework-integration-guides` to compile 
+and run MXNet and TensorFlow-based projects.
 
 The nGraph library translates a framework’s representation of computations into 
-a neutral :abbr:`Intermediate Representation (IR)` designed to promote 
-computational efficiency on target hardware; it works on Intel and non-Intel 
-platforms.
+an :abbr:`Intermediate Representation (IR)` designed to promote computational 
+efficiency on target hardware. Initially-supported backends include Intel 
+Architecture CPUs (CPU), the Intel® Nervana Neural Network Processor™ (NNP), 
+and NVIDIA\* GPUs. Currently-supported compiler optimizations include efficient 
+memory management and data layout abstraction. 
 
-For further overview details, see the :doc:`about` page.
+Further overview details can be found on our :doc:`about` page. 
 
 =======
 
@@ -45,10 +50,6 @@ For further overview details, see the :doc:`about` page.
    :maxdepth: 1
    :caption: Algorithms 
    :name: 
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Backend Components
 
 .. toctree::
    :maxdepth: 1
@@ -80,9 +81,9 @@ For further overview details, see the :doc:`about` page.
    doc-contributor-README.rst
 
 
-
 Indices and tables
 ==================
 
    * :ref:`search`   
    * :ref:`genindex`
+     

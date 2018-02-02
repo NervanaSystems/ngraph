@@ -55,7 +55,7 @@ information about how to change or customize this location.
       $ cd private-ngraph-cpp
 
 #. Create a build directory outside of the ``private-ngraph-cpp/src`` directory 
-   tree; something like ``private-ngraph-cpp/build`` should work.
+   tree; somewhere like ``private-ngraph-cpp/build``, for example.
 
    .. code-block:: console
 
