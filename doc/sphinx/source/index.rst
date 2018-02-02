@@ -23,7 +23,7 @@ a suite of components, documentation, and APIs that can be used with
 :abbr:`Deep Neural Network (DNN)` models defined in a variety of frameworks.  
 
 The nGraph library translates a framework’s representation of computations into 
-a neutral-:abbr:`Intermediate Representation (IR)` designed to promote 
+a neutral :abbr:`Intermediate Representation (IR)` designed to promote 
 computational efficiency on target hardware; it works on Intel and non-Intel 
 platforms.
 
