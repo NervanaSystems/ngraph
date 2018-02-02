@@ -92,10 +92,6 @@ namespace ngraph
                 if (offset != p_other->offset)
                     return false;
 
-                //TODO: Numeric backend-specific properties
-                // if (mkldnn_format != p_other->mkldnn_format)
-                //     return false;
-
                 return true;
             }
         }

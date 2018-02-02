@@ -228,7 +228,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(64);
+    pass_manager.register_pass<ngraph::pass::MemoryLayout>(MemoryPoolAlignment);
     pass_manager.run_passes(m_function);
 
     codegen::CodeWriter writer;

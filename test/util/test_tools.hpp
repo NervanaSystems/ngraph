@@ -40,7 +40,7 @@ void copy_data(std::shared_ptr<ngraph::runtime::TensorView> tv, const std::vecto
 template <typename T>
 std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::TensorView> tv)
 {
-    if (ngraph::element::from<T>() != tv->get_element_type())
+    if (ngraph::element::from<T>() != tv->get_tensor_view_layout()->get_element_type())
     {
         throw std::invalid_argument("read_vector type must match TensorView type");
     }
