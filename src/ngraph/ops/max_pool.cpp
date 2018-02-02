@@ -414,7 +414,8 @@ void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints,
                                                           m_window_shape,
                                                           m_window_movement_strides,
                                                           m_padding_below,
-                                                          m_padding_above);
+                                                          m_padding_above,
+                                                          static_pointer_cast<op::MaxPool>(shared_from_this()));
 
     adjoints.add_delta(operand, backprop);
 }
