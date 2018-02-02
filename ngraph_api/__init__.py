@@ -14,5 +14,7 @@
 # ----------------------------------------------------------------------------
 """ngraph module namespace, exposing factory functions for all ops and other classes."""
 
+from ngraph_api.ops import absolute, sqrt, exp, log, negative, floor, ceil
+from ngraph_api.ops import absolute as abs
 from ngraph_api.ops import parameter
 from ngraph_api.runtime import runtime

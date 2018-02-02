@@ -105,7 +105,7 @@ class Computation:
                 'Attempting to write a %s value to a %s tensor. Will attempt type conversion.',
                 value.dtype,
                 tensor_view.element_type)
-            value = value.astype(tensor_view_dtype, casting='safe')
+            value = value.astype(tensor_view_dtype)
 
         buffer_size = Computation._get_buffer_size(
             tensor_view.element_type, tensor_view.element_count)
