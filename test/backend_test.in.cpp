@@ -4445,6 +4445,46 @@ TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded)
               read_vector<float>(result));
 }
 
+// Test to make sure that negative elements and padding are handled properly. Added this because
+// mkldnn calls its padding "zero padding" but apparently that is not technically true (negative
+// values still "win" versus out-of-bounds values), which is good.
+TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
+{
+    auto shape_a = Shape{
+        1,
+        1,
+        1,
+        14}; // 1 image, 1 channel, 1 row, 14 columns (if it's 1D we don't get mkldnn as of this writing)
+    auto window_shape = Shape{1, 3};
+    auto window_movement_strides = Strides{1, 1};
+    auto padding_below = Shape{0, 1};
+    auto padding_above = Shape{0, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_r = Shape{1, 1, 1, 15};
+    auto f = make_shared<Function>(
+        make_shared<op::MaxPool>(
+            A, window_shape, window_movement_strides, padding_below, padding_above),
+        op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>{{{{-1, -2, -3, -3, -2, -1, -3, -2, -2, -2, -2, -3, -4, -5}}}}
+                  .get_vector());
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    cf->call({a}, {result});
+    EXPECT_EQ(
+        (test::NDArray<float, 4>({{{{-1, -1, -2, -2, -1, -1, -1, -2, -2, -2, -2, -2, -3, -4, -5}}}})
+             .get_vector()),
+        read_vector<float>(result));
+}
+
 TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
 {
     auto shape_a = Shape{1, 1, 8, 8};

@@ -2096,23 +2096,10 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
 
     auto result_shape = out[0].get_shape();
 
-    bool has_padding = false;
-
-    for (auto p : max_pool->get_padding_below())
-    {
-        has_padding |= (p != 0);
-    }
-    for (auto p : max_pool->get_padding_above())
-    {
-        has_padding |= (p != 0);
-    }
-
-    // TODO(amprocte): Support padding
-
     // TODO(jmenon): Optimize for 1D
 
     // TODO(jmenon): Remove element type restriction
-    if (!has_padding && arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
+    if (arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
         args[0].get_element_type() == element::f32)
     {
         const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
@@ -2133,8 +2120,10 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
         writer << "auto max_pooling = pooling_forward({"
                << "{prop_kind::forward_inference, algorithm::pooling_max, "
                << "input_data_desc, result_desc, {" << join(max_pool->get_window_movement_strides())
-               << "}, {" << join(max_pool->get_window_shape()) << "}, {0, 0}, "
-               << "{0, 0}, padding_kind::zero}, cpu_engine}, "
+               << "}, {" << join(max_pool->get_window_shape()) << "}, {"
+               << join(max_pool->get_padding_below()) << "}, "
+               << "{" << join(max_pool->get_padding_above())
+               << "}, padding_kind::zero}, cpu_engine}, "
                << "input_data, result);\n";
 
         writer << "auto s = stream(stream::kind::eager);\n"
