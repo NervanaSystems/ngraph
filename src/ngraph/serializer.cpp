@@ -62,6 +62,7 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
@@ -660,6 +661,10 @@ static shared_ptr<ngraph::Function>
             auto strides = node_js.at("strides").get<vector<size_t>>();
             node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
         }
+        else if (node_op == "Sqrt")
+        {
+            node = make_shared<op::Sqrt>(args[0]);
+        }
         else if (node_op == "Subtract")
         {
             node = make_shared<op::Subtract>(args[0], args[1]);
@@ -955,6 +960,9 @@ static json write(const Node& n)
         node["lower_bounds"] = tmp->get_lower_bounds();
         node["upper_bounds"] = tmp->get_upper_bounds();
         node["strides"] = tmp->get_strides();
+    }
+    else if (node_op == "Sqrt")
+    {
     }
     else if (node_op == "Subtract")
     {

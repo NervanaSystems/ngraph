@@ -53,14 +53,6 @@ namespace ngraph
             static Factory register_factory(const std::string& name, Factory factory);
 
         private:
-            static void load_plugins(const std::string& runtime_plugin_libs);
-
-            static void close_plugins();
-
-            static std::vector<void*> m_plugin_handles;
-
-            static bool m_is_factory_map_initialized;
-
             using FactoryMap = std::map<std::string, Factory>;
 
             static FactoryMap& get_factory_map();

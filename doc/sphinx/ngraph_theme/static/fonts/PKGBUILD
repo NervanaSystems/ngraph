@@ -1,0 +1,28 @@
+# Maintainer: Gavin Lloyd 
+# https://github.intel.com/gavinllo/ttf-neo-sans-intel
+
+pkgname=ttf-neo-sans-intel
+pkgver=1.00
+pkgrel=3
+pkgdesc='Versatile, futuristic typeface for Intel-branded material'
+arch=('ANY')
+depends=('fontconfig' 'xorg-font-utils')
+
+source=('NeoSansIntel-Italic.ttf'
+        'NeoSansIntel-LightItalic.ttf'
+        'NeoSansIntel-Light.ttf'
+        'NeoSansIntel-MediumItalic.ttf'
+        'NeoSansIntel-Medium.ttf'
+        'NeoSansIntel.ttf')
+
+sha256sums=('be2f036d58320bd0fab7cca7327b806840ddfedfdc4e44a520a85bd53a1ed7b3'
+            'ce45deb38ad2749ba25cbb76084955e34a86f627043f1f0f8f8073720115545c'
+            'd522c9c3905532680f8bb8068fa340200d2e5e45376ea89d97bcc8edbce8eff8'
+            '61b3ce0ed96b6f343c8ac0a94471ed504708782bee7d9df88fadc564640ffbba'
+            '6cd878034142c390eeb98d2a17ee1b949c2f8ded0a8684d3b17e0fe4203a8fd8'
+            '303bc44874e23a563775e5d463a6ec3dd7bdfc7948fa95d65a45fa965bf5ee28')
+
+package() {
+	install -d $pkgdir/usr/share/fonts/TTF/
+	install -m644 *.ttf $pkgdir/usr/share/fonts/TTF/
+}
