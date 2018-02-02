@@ -32,6 +32,19 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
     )
 
     ExternalProject_Get_Property(clang SOURCE_DIR)
+    set(CLANG_SOURCE_DIR ${SOURCE_DIR})
+
+    ExternalProject_Add(openmp
+        GIT_REPOSITORY https://github.com/llvm-mirror/openmp.git
+        GIT_TAG ${RELEASE_TAG}
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        UPDATE_COMMAND ""
+    )
+
+    ExternalProject_Get_Property(openmp SOURCE_DIR)
+    set(OPENMP_SOURCE_DIR ${SOURCE_DIR})
 
     if(DEFINED CMAKE_ASM_COMPILER)
         set(LLVM_CMAKE_ASM_COMPILER ${CMAKE_ASM_COMPILER})
@@ -40,7 +53,7 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
     endif()
 
     ExternalProject_Add(ext_llvm
-        DEPENDS clang
+        DEPENDS clang openmp
         GIT_REPOSITORY https://github.com/llvm-mirror/llvm.git
         GIT_TAG ${RELEASE_TAG}
         CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -51,7 +64,8 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
                    -DLLVM_INCLUDE_EXAMPLES=OFF
                    -DLLVM_BUILD_TOOLS=ON
                    -DLLVM_TARGETS_TO_BUILD=X86
-                   -DLLVM_EXTERNAL_CLANG_SOURCE_DIR:PATH=${SOURCE_DIR}
+                   -DLLVM_EXTERNAL_CLANG_SOURCE_DIR:PATH=${CLANG_SOURCE_DIR}
+                   -DLLVM_ENABLE_PROJECTS=openmp
         UPDATE_COMMAND ""
     )
 
@@ -61,6 +75,10 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
     message("SOURCE_DIR = ${SOURCE_DIR}")
     message("BINARY_DIR = ${BINARY_DIR}")
     message("INSTALL_DIR = ${INSTALL_DIR}")
+
+    # For some reason LLVM insists on having the openmp directory be a
+    # "neighbor" of the llvm directory, so we have to set a symlink.
+    execute_process (COMMAND ln -s "${OPENMP_SOURCE_DIR}" "${SOURCE_DIR}/../openmp")
 
     set(LLVM_INCLUDE_DIR "${INSTALL_DIR}/include" PARENT_SCOPE)
     set(LLVM_INCLUDE_DIR "${SOURCE_DIR}/include")  # used by other external projects in current scope
