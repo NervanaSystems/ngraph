@@ -202,7 +202,6 @@ endif()
 	          runtime/gpu_interpreter/int_external_function.cpp
 	          runtime/gpu_interpreter/int_kernels.cpp
 	          runtime/gpu_interpreter/int_manager.cpp
-	          runtime/gpu_interpreter/int_tensor_view.cpp
 	          runtime/gpu_interpreter/gpu_kernel/abs.cu
             runtime/gpu/gpu_util.cpp
             )
