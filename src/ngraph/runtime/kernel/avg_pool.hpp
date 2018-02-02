@@ -108,8 +108,8 @@ namespace ngraph
                     {
                         if (source_window_transform.has_source_coordinate(source_window_coord))
                         {
-                            size_t index = source_window_transform.index(source_window_coord);
-                            out[index] +=
+                            size_t out_index = source_window_transform.index(source_window_coord);
+                            out[out_index] +=
                                 delta[delta_transform.index(delta_coord)] / num_elements_in_window;
                         }
                     }
