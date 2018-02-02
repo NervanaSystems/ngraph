@@ -23,14 +23,14 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu_gpu_interpreter
+        namespace gpu_interpreter
         {
             class INT_TensorView;
         }
     }
 }
 
-class ngraph::runtime::gpu_gpu_interpreter::INT_TensorView : public ngraph::runtime::TensorView
+class ngraph::runtime::gpu_interpreter::INT_TensorView : public ngraph::runtime::TensorView
 {
 public:
     INT_TensorView(const ngraph::element::Type& element_type,
