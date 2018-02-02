@@ -54,7 +54,6 @@ namespace ngraph
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
-            bool is_functionally_identical(const Node&) const override;
         };
     }
 }

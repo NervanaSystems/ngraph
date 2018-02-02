@@ -21,8 +21,3 @@ void ngraph::op::Negative::generate_adjoints(autodiff::Adjoints& adjoints,
 
     adjoints.add_delta(x, -delta);
 }
-
-bool ngraph::op::Negative::is_functionally_identical(const Node& other) const
-{
-    return test_identical(other);
-}
