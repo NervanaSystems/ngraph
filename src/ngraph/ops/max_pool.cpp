@@ -232,12 +232,14 @@ op::MaxPoolBackprop::MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,
-                                     const Shape& padding_above)
+                                     const Shape& padding_above,
+                                     const std::shared_ptr<op::MaxPool>& forward_op)
     : RequiresTensorViewArgs("MaxPoolBackprop", {arg_forward, delta})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
+    , m_forward_op(forward_op)
 {
     // --
     // TODO: de-duplicate this code from MaxPool::MaxPool.
@@ -379,6 +381,11 @@ op::MaxPoolBackprop::MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,
     set_value_type_checked(get_input_element_type(0), arg_forward_shape);
 }
 
+std::shared_ptr<op::MaxPool> op::MaxPoolBackprop::get_forward_op() const
+{
+    return m_forward_op.lock();
+}
+
 bool op::MaxPoolBackprop::is_functionally_identical(const Node& other) const
 {
     bool rc = true;
@@ -389,6 +396,7 @@ bool op::MaxPoolBackprop::is_functionally_identical(const Node& other) const
         rc &= m_window_movement_strides == rhs.m_window_movement_strides;
         rc &= m_padding_below == rhs.m_padding_below;
         rc &= m_padding_above == rhs.m_padding_above;
+        rc &= m_forward_op.lock() == rhs.m_forward_op.lock();
     }
     else
     {
