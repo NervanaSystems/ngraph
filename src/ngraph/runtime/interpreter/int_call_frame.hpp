@@ -245,7 +245,7 @@ private:
             kernel::allreduce<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
                                  reinterpret_cast<T*>(out[0]->get_data_ptr()),
                                  args[0]->get_element_type(),
-                                 args[0]->get_element_count());
+                                 static_cast<int>(args[0]->get_element_count()));
         }
 #endif
         else if (node_op == "Asin")

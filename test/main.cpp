@@ -30,7 +30,7 @@ class MpiEnvironment : public ::testing::Environment
 protected:
     virtual void SetUp() { MPI::Init(); }
     virtual void TearDown() { MPI::Finalize(); }
-    virtual ~MpiEnvironment(){};
+    virtual ~MpiEnvironment() {}
 };
 
 #endif
