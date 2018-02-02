@@ -222,40 +222,186 @@ bool op::MaxPool::is_functionally_identical(const Node& other) const
     return rc;
 }
 
+op::MaxPoolBackprop::MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,
+                                     const std::shared_ptr<Node>& delta,
+                                     const Shape& window_shape,
+                                     const Strides& window_movement_strides,
+                                     const Shape& padding_below,
+                                     const Shape& padding_above)
+    : RequiresTensorViewArgs("MaxPoolBackprop", {arg_forward, delta})
+    , m_window_shape(window_shape)
+    , m_window_movement_strides(window_movement_strides)
+    , m_padding_below(padding_below)
+    , m_padding_above(padding_above)
+{
+    // --
+    // TODO: de-duplicate this code from MaxPool::MaxPool.
+    // --
+
+    if (get_input_element_type(0) != get_input_element_type(1))
+    {
+        throw ngraph_error("Max-pool backprop: data batch and delta element types do not match.");
+    }
+
+    auto& arg_forward_shape = get_input_shape(0);
+    auto& delta_shape = get_input_shape(1);
+
+    //
+    // Make sure arg: NCDi for some Di of rank>0, N != 0, C != 0.
+    //
+    if (arg_forward_shape.size() < 3)
+    {
+        throw ngraph_error(
+            "Max-pool backprop: data batch shape must have rank of at least 3 (one batch axis, "
+            "one channel axis, at least one spatial dimension).");
+    }
+
+    size_t batch_size = arg_forward_shape[0];
+    if (batch_size == 0)
+    {
+        throw ngraph_error("Max-pool backprop: data batch size is zero.");
+    }
+
+    size_t channel_count = arg_forward_shape[1];
+    if (channel_count == 0)
+    {
+        throw ngraph_error("Max-pool backprop: requires at least one feature channel.");
+    }
+
+    size_t spatial_dimension_count = arg_forward_shape.size() - 2;
+
+    //
+    // Make sure window shape, window movement strides, and padding have same rank as Di.
+    //
+    if (window_shape.size() != spatial_dimension_count)
+    {
+        throw ngraph_error(
+            "Max-pool backprop: window shape rank does not match number of spatial "
+            "dimensions.");
+    }
+
+    if (window_movement_strides.size() != spatial_dimension_count)
+    {
+        throw ngraph_error(
+            "Max-pool backprop: window movement stride rank does not match number of spatial "
+            "dimensions.");
+    }
+
+    if (padding_below.size() != spatial_dimension_count)
+    {
+        throw ngraph_error(
+            "Max-pool backprop: below-padding rank does not match number of spatial "
+            "dimensions.");
+    }
+
+    if (padding_above.size() != spatial_dimension_count)
+    {
+        throw ngraph_error(
+            "Max-pool backprop: above-padding rank does not match number of spatial "
+            "dimensions.");
+    }
+
+    //
+    // Extract input item shape Di and make sure all dimensions are larger than 0.
+    //
+    Shape input_item_virtual_shape;
+
+    for (size_t i = 0; i < spatial_dimension_count; i++)
+    {
+        size_t dim_size = arg_forward_shape[1 + 1 + i];
+        size_t virtual_dim_size = padding_below[i] + dim_size + padding_above[i];
+        input_item_virtual_shape.push_back(virtual_dim_size);
+
+        if (virtual_dim_size == 0)
+        {
+            throw ngraph_error(
+                "Max-pool backprop: data batch spatial dimension is zero even after padding.");
+        }
+    }
+
+    //
+    // Make sure window shape dimensions are all larger than 0.
+    //
+    for (size_t i = 0; i < spatial_dimension_count; i++)
+    {
+        if (window_shape[i] == 0)
+        {
+            throw ngraph_error("Max-pool backprop: window shape has a zero-length axis.");
+        }
+    }
+
+    //
+    // Make the max pooling window fits within the spatial dimensions.
+    //
+    for (size_t i = 0; i < spatial_dimension_count; i++)
+    {
+        if (window_shape[i] > input_item_virtual_shape[i])
+        {
+            throw ngraph_error(
+                "Max-pool backprop: window shape is larger than the spatial dimensions even after "
+                "padding.");
+        }
+    }
+
+    //
+    // Compute output item shape Do, checking at the same time that all window movement strides are larger than 0.
+    //
+    Shape output_item_shape;
+
+    for (size_t i = 0; i < spatial_dimension_count; i++)
+    {
+        if (window_movement_strides[i] == 0)
+        {
+            throw ngraph_error("Max-pool backprop: window axis movement stride is zero.");
+        }
+        output_item_shape.push_back(ceil_div(input_item_virtual_shape[i] - window_shape[i] + 1,
+                                             window_movement_strides[i]));
+    }
+
+    //
+    // Construct result shape: NCDo.
+    //
+    Shape forward_result_shape(1 + 1 + spatial_dimension_count);
+    forward_result_shape[0] = batch_size;
+    forward_result_shape[1] = channel_count;
+    std::copy(output_item_shape.begin(), output_item_shape.end(), forward_result_shape.begin() + 2);
+
+    if (forward_result_shape != delta_shape)
+    {
+        throw ngraph_error("Max-pool backprop: forward result shape does not match delta shape.");
+    }
+
+    set_value_type_checked(get_input_element_type(0), arg_forward_shape);
+}
+
+bool op::MaxPoolBackprop::is_functionally_identical(const Node& other) const
+{
+    bool rc = true;
+    if (Node::is_functionally_identical(other))
+    {
+        const MaxPoolBackprop& rhs = dynamic_cast<const MaxPoolBackprop&>(other);
+        rc &= m_window_shape == rhs.m_window_shape;
+        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
+        rc &= m_padding_below == rhs.m_padding_below;
+        rc &= m_padding_above == rhs.m_padding_above;
+    }
+    else
+    {
+        rc = false;
+    }
+    return rc;
+}
+
 void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints,
                                     const std::shared_ptr<Node>& delta)
 {
-    auto shape_sel_a = Shape{};
-    auto etype = delta->get_element_type();
-
-    //Select Max
-    auto SEL_A = make_shared<op::Parameter>(etype, shape_sel_a);
-    auto shape_sel_b = Shape{};
-    auto SEL_B = make_shared<op::Parameter>(etype, shape_sel_b);
-    auto sel_f = std::make_shared<Function>(std::make_shared<op::Greater>(SEL_A, SEL_B),
-                                            op::Parameters{SEL_A, SEL_B});
-
-    //Update Cell
-    auto shape_scatter_a = Shape{};
-    auto SCATTER_A = make_shared<op::Parameter>(etype, shape_scatter_a);
-    auto shape_scatter_b = Shape{};
-    auto SCATTER_B = make_shared<op::Parameter>(etype, shape_scatter_b);
-    auto scatter_f =
-        make_shared<Function>(SCATTER_A + SCATTER_B, op::Parameters{SCATTER_A, SCATTER_B});
-
     auto operand = get_input_op(0);
-    auto init_value =
-        std::make_shared<op::Constant>(etype, Shape{}, std::vector<std::string>({"0"}));
+    auto backprop = std::make_shared<op::MaxPoolBackprop>(operand,
+                                                          delta,
+                                                          m_window_shape,
+                                                          m_window_movement_strides,
+                                                          m_padding_below,
+                                                          m_padding_above);
 
-    Strides strides{1, 1};
-    strides.push_back(m_window_movement_strides.at(0));
-    strides.push_back(m_window_movement_strides.at(1));
-
-    Shape shape{1, 1};
-    shape.push_back(m_window_shape.at(0));
-    shape.push_back(m_window_shape.at(1));
-
-    auto sas = std::make_shared<op::SelectAndScatter>(
-        operand, delta, init_value, sel_f, scatter_f, shape, strides);
-    adjoints.add_delta(operand, sas);
+    adjoints.add_delta(operand, backprop);
 }

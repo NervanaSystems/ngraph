@@ -498,6 +498,21 @@ private:
                                 max_pool->get_padding_below(),
                                 max_pool->get_padding_above());
         }
+        else if (node_op == "MaxPoolBackprop")
+        {
+            ngraph::op::MaxPoolBackprop* max_pool_backprop =
+                dynamic_cast<ngraph::op::MaxPoolBackprop*>(&node);
+
+            kernel::max_pool_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                         reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                         reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                         args[1]->get_shape(),
+                                         out[0]->get_shape(),
+                                         max_pool_backprop->get_window_shape(),
+                                         max_pool_backprop->get_window_movement_strides(),
+                                         max_pool_backprop->get_padding_below(),
+                                         max_pool_backprop->get_padding_above());
+        }
         else if (node_op == "Minimum")
         {
             kernel::minimum<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),

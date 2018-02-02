@@ -201,6 +201,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::AvgPool), &runtime::cpu::CPU_Emitter::EmitAvgPool},
     {TI(ngraph::op::AvgPoolBackprop), &runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop},
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::EmitPad},
+    {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(

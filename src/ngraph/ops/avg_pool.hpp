@@ -149,6 +149,7 @@ namespace ngraph
                 return std::shared_ptr<op::AvgPoolBackprop>(avpn);
             }
 
+            const Shape& get_forward_arg_shape() const { return m_forward_arg_shape; }
             const Shape& get_window_shape() const { return m_window_shape; }
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Shape& get_padding_below() const { return m_padding_below; }

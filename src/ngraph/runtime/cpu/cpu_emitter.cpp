@@ -2096,10 +2096,23 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
 
     auto result_shape = out[0].get_shape();
 
+    bool has_padding = false;
+
+    for (auto p : max_pool->get_padding_below())
+    {
+        has_padding |= (p != 0);
+    }
+    for (auto p : max_pool->get_padding_above())
+    {
+        has_padding |= (p != 0);
+    }
+
+    // TODO(amprocte): Support padding
+
     // TODO(jmenon): Optimize for 1D
 
     // TODO(jmenon): Remove element type restriction
-    if (arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
+    if (!has_padding && arg_rank == 4 && max_pool->get_window_shape().size() == 2 &&
         args[0].get_element_type() == element::f32)
     {
         const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
@@ -2136,7 +2149,9 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
         writer << "                 {" << join(arg_shape) << "},\n";
         writer << "                 {" << join(result_shape) << "},\n";
         writer << "                 {" << join(max_pool->get_window_shape()) << "},\n";
-        writer << "                 {" << join(max_pool->get_window_movement_strides()) << "});\n";
+        writer << "                 {" << join(max_pool->get_window_movement_strides()) << "},\n";
+        writer << "                 {" << join(max_pool->get_padding_below()) << "},\n";
+        writer << "                 {" << join(max_pool->get_padding_above()) << "});\n";
     }
 }
 
@@ -2349,19 +2364,42 @@ void runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop(
 {
     auto apb = static_cast<const op::AvgPoolBackprop*>(n);
 
-    auto arg_shape = args[0].get_shape();
-    auto delta_shape = args[1].get_shape();
+    auto delta_shape = args[0].get_shape();
+    auto out_shape = out[0].get_shape();
 
     writer << "kernel::avg_pool_backprop<" << out[0].get_type() << ">(" << args[0].get_name()
            << ",\n";
-    writer << "                 " << args[1].get_name() << ",\n";
     writer << "                 " << out[0].get_name() << ",\n";
-    writer << "                 {" << join(arg_shape) << "},\n";
     writer << "                 {" << join(delta_shape) << "},\n";
+    writer << "                 {" << join(out_shape) << "},\n";
     writer << "                 {" << join(apb->get_window_shape()) << "},\n";
     writer << "                 {" << join(apb->get_window_movement_strides()) << "},\n";
     writer << "                 {" << join(apb->get_padding_below()) << "},\n";
     writer << "                 {" << join(apb->get_padding_above()) << "},\n";
+    writer << "                 true);\n";
+}
+
+void runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop(
+    codegen::CodeWriter& writer,
+    const ngraph::Node* n,
+    const vector<runtime::cpu::TensorViewWrapper>& args,
+    const vector<runtime::cpu::TensorViewWrapper>& out)
+{
+    auto mpb = static_cast<const op::MaxPoolBackprop*>(n);
+
+    auto delta_shape = args[1].get_shape();
+    auto out_shape = out[0].get_shape();
+
+    writer << "kernel::max_pool_backprop<" << out[0].get_type() << ">(" << args[0].get_name()
+           << ",\n";
+    writer << "                 " << args[1].get_name() << ",\n";
+    writer << "                 " << out[0].get_name() << ",\n";
+    writer << "                 {" << join(delta_shape) << "},\n";
+    writer << "                 {" << join(out_shape) << "},\n";
+    writer << "                 {" << join(mpb->get_window_shape()) << "},\n";
+    writer << "                 {" << join(mpb->get_window_movement_strides()) << "},\n";
+    writer << "                 {" << join(mpb->get_padding_below()) << "},\n";
+    writer << "                 {" << join(mpb->get_padding_above()) << "},\n";
     writer << "                 true);\n";
 }
 

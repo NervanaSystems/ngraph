@@ -343,6 +343,21 @@ static shared_ptr<ngraph::Function>
             node = make_shared<op::AvgPool>(
                 args[0], window_shape, window_movement_strides, padding_below, padding_above);
         }
+        else if (node_op == "AvgPoolBackprop")
+        {
+            auto forward_arg_shape = node_js.at("forward_arg_shape").get<vector<size_t>>();
+            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+            auto window_movement_strides =
+                node_js.at("window_movement_strides").get<vector<size_t>>();
+            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+            node = make_shared<op::AvgPoolBackprop>(forward_arg_shape,
+                                                    args[0],
+                                                    window_shape,
+                                                    window_movement_strides,
+                                                    padding_below,
+                                                    padding_above);
+        }
         else if (node_op == "Broadcast")
         {
             auto shape = node_js.at("shape").get<vector<size_t>>();
@@ -552,6 +567,20 @@ static shared_ptr<ngraph::Function>
             {
                 node = make_shared<op::MaxPool>(args[0], window_shape, window_movement_strides);
             }
+        }
+        else if (node_op == "MaxPoolBackprop")
+        {
+            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+            auto window_movement_strides =
+                node_js.at("window_movement_strides").get<vector<size_t>>();
+            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+            node = make_shared<op::MaxPoolBackprop>(args[0],
+                                                    args[1],
+                                                    window_shape,
+                                                    window_movement_strides,
+                                                    padding_below,
+                                                    padding_above);
         }
         else if (node_op == "Maximum")
         {
@@ -778,6 +807,15 @@ static json write(const Node& n)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
     }
+    else if (node_op == "AvgPoolBackprop")
+    {
+        auto tmp = dynamic_cast<const op::AvgPoolBackprop*>(&n);
+        node["forward_arg_shape"] = tmp->get_forward_arg_shape();
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+    }
     else if (node_op == "Broadcast")
     {
         auto tmp = dynamic_cast<const op::Broadcast*>(&n);
@@ -881,6 +919,14 @@ static json write(const Node& n)
     else if (node_op == "MaxPool")
     {
         auto tmp = dynamic_cast<const op::MaxPool*>(&n);
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+    }
+    else if (node_op == "MaxPoolBackprop")
+    {
+        auto tmp = dynamic_cast<const op::MaxPoolBackprop*>(&n);
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["padding_below"] = tmp->get_padding_below();
