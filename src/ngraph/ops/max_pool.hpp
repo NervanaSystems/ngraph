@@ -63,7 +63,6 @@ namespace ngraph
                 return std::make_shared<MaxPool>(
                     new_args.at(0), m_window_shape, m_window_movement_strides);
             }
-            bool is_functionally_identical(const Node&) const override;
 
             /// \return The window shape.
             const Shape& get_window_shape() const { return m_window_shape; }
