@@ -134,10 +134,6 @@ private:
     void call(std::shared_ptr<Function> function,
               const std::vector<std::shared_ptr<runtime::HostTensorView>>& input_tvs,
               const std::vector<std::shared_ptr<runtime::HostTensorView>>& output_tvs);
-    void handle_output_alias(
-        const Node& node,
-        const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>& output_alias_map,
-        const std::vector<std::shared_ptr<runtime::HostTensorView>>& output_tvs);
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensorView>>&,
                                   const Node* op = nullptr);
