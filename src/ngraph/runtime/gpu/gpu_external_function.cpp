@@ -553,7 +553,8 @@ void runtime::gpu::GPU_ExternalFunction::compile()
             size_t temp_pool_size = current_function->get_temporary_pool_size();
             writer << "// Allocate the memory pool\n";
             // TODO memory pool malloc.
-            writer << "void** pool_base_ptr;\n";
+            writer << "void** pool_base_ptr = runtime::gpu::create_gpu_buffer(" << temp_pool_size
+                   << ");\n";
 
             // Add temporaries to the variable name map
             for (shared_ptr<Node> node : current_function->get_ordered_ops())
