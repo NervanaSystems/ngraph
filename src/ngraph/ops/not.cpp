@@ -22,8 +22,3 @@ op::Not::Not(const shared_ptr<Node>& arg)
     : op::UnaryElementwise("Not", arg->get_element_type(), arg)
 {
 }
-
-bool ngraph::op::Not::is_functionally_identical(const Node& other) const
-{
-    return test_identical(other);
-}

@@ -61,8 +61,6 @@ namespace ngraph
             }
 
             const element::Type& get_convert_element_type() const { return m_element_type; }
-            bool is_functionally_identical(const Node&) const override;
-
         protected:
             const ngraph::element::Type m_element_type;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
