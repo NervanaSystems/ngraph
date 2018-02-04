@@ -162,7 +162,8 @@ void iterate_files_worker(const string& path,
     }
     else
     {
-        throw std::runtime_error("error enumerating file " + path);
+        //throw std::runtime_error("error enumerating file " + path);
+        std::cerr << "cannot open " << path << ", skipping" << std::endl;
     }
 }
 
