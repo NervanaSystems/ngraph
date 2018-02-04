@@ -100,8 +100,8 @@ if (NOT DEFINED NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_ENABLE TRUE)
 endif()
 
-if (NOT NGRAPH_CPU_ENABLE)
-    set(NGRAPH_TBB_ENABLE FALSE)
+if (NOT DEFINED NGRAPH_TBB_ENABLE)
+    set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
 #-----------------------------------------------------------------------------------------------
