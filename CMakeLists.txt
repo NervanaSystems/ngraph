@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required (VERSION 2.8.12.2)
+cmake_minimum_required (VERSION 3.1)
 
 set(NGRAPH_INCLUDE_PATH
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -101,15 +101,6 @@ if (NOT DEFINED NGRAPH_CPU_ENABLE)
 endif()
 
 if (NOT NGRAPH_CPU_ENABLE)
-    set(NGRAPH_TBB_ENABLE FALSE)
-endif()
-
-# We have to disable TBB if CMake < 3.1, due to a version requirement in TBB's
-# build scripts.
-if (NOT DEFINED NGRAPH_TBB_ENABLE AND NOT (CMAKE_VERSION VERSION_LESS 3.1))
-    set(NGRAPH_TBB_ENABLE TRUE)
-elseif(NGRAPH_TBB_ENABLE AND (CMAKE_VERSION VERSION_LESS 3.1))
-    message(WARNING "TBB build requires CMake version 3.1 or above. Ignoring NGRAPH_TBB_ENABLE")
     set(NGRAPH_TBB_ENABLE FALSE)
 endif()
 

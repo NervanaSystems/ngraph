@@ -299,7 +299,7 @@ if (NOT APPLE)
         DESTINATION "${NGRAPH_INSTALL_LIB}"
     )
 
-    if (NGRAPH_CPU_ENABLE AND NGRAPH_TBB_ENABLE)
+    if (NGRAPH_TBB_ENABLE)
         install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
             DESTINATION ${NGRAPH_INSTALL_LIB}
             FILES_MATCHING PATTERN "libtbb.so.*"
