@@ -90,8 +90,7 @@ static const string& get_mkldnn_data_type(const string& type)
 
 void runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(codegen::CodeWriter& writer)
 {
-    writer << "using namespace mkldnn;\n";
-    writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
+    writer << "using namespace mkldnn;\n\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitNop(codegen::CodeWriter& writer,
@@ -1922,6 +1921,7 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         writer << "{\n";
         writer.indent++;
 
+        writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
         writer << "auto input_data_desc = memory::desc({" << join(arg0_shape) << "}, " << et
                << ", memory::format::nchw);\n";
         writer << "auto weights_desc = memory::desc({" << join(arg1_shape) << "}, " << et
@@ -1964,6 +1964,7 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         writer << "{\n";
         writer.indent++;
 
+        writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
         writer << "auto input_data_desc = memory::desc({" << join(arg0_shape) << "}, " << et
                << ", memory::format::nchw);\n";
         writer << "auto weights_desc = memory::desc({" << join(arg1_shape) << "}, " << et
@@ -2107,6 +2108,7 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
         writer << "{\n";
         writer.indent++;
 
+        writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
         writer << "auto input_data_desc = memory::desc({" << join(arg_shape) << "}, " << et
                << ", memory::format::nchw);\n";
         writer << "auto result_desc = memory::desc({" << join(result_shape) << "}, " << et
@@ -2284,6 +2286,7 @@ void runtime::cpu::CPU_Emitter::EmitAvgPool(codegen::CodeWriter& writer,
         writer << "{\n";
         writer.indent++;
 
+        writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
         writer << "auto input_data_desc = memory::desc({" << join(arg_shape) << "}, " << et
                << ", memory::format::nchw);\n";
         writer << "auto result_desc = memory::desc({" << join(result_shape) << "}, " << et

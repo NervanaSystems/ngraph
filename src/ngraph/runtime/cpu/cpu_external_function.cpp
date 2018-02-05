@@ -364,6 +364,8 @@ using namespace ngraph::runtime;
         }
     }
 
+    runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(writer);
+
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
     {
@@ -455,8 +457,6 @@ using namespace ngraph::runtime;
             // TODO: This should be static but we don't codegen statics correctly yet
             writer << "tbb::flow::graph G;\n\n";
         }
-
-        runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(writer);
 
         bool temporaries_used = false;
         size_t worst_case_tmp_size = 0;
