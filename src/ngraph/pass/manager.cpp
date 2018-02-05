@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <algorithm>
 #include <iostream>
 #include <memory>
 
@@ -41,18 +42,18 @@ void ngraph::pass::Manager::initialize_default_passes()
 void ngraph::pass::Manager::run_passes(shared_ptr<Function> func)
 {
     // find all functions
-    set<shared_ptr<Function>> tfs;
-    traverse_functions(func, [&](shared_ptr<Function> f) { tfs.insert(f); });
+    vector<shared_ptr<Function>> fs;
+    traverse_functions(func, [&](shared_ptr<Function> f) { fs.push_back(f); });
+
+    set<shared_ptr<Function>> tfs(begin(fs), end(fs));
     get_state().set_functions(tfs);
 
-    vector<shared_ptr<Function>> fs;
     for (shared_ptr<Function> f : get_state().get_functions())
     {
         for (size_t i = 0; i < f->get_output_size(); ++i)
         {
             f->get_output_op(i)->set_is_output();
         }
-        fs.push_back(f);
     }
 
     for (shared_ptr<PassBase> pass : m_pass_list)
