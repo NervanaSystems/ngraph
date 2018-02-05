@@ -211,9 +211,9 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     auto channel_axis = input_shape[1];
     // create a vector of vector to hold the gamma and bias
     //writer << "auto weight_et =" <<  batchnorm->get_input_element_type(1) << ";\n" ;
-    writer << "auto weight_size ="  << args[1].get_shape().size() << ";\n";
+    writer << "auto weight_size = 3;\n"; // << args[1].get_shape().size() << ";\n";
     writer << "std::vector< std::vector<float> >bn_weights(2)\n;"; 
-    auto weights_shape = Shape{2, args[1].get_shape().size()};
+    auto weights_shape = Shape{2, 3};
 
     //push gamma and beta
     writer << "auto gamma = " << args[1].get_name() << ";\n";
@@ -223,10 +223,17 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     writer << "bn_weights[0].push_back(gamma[i]);\n";
     writer << "bn_weights[1].push_back(beta[i]);\n";
     writer << "} \n";
-    
+   
+    //debug weights
+//    writer << "for(auto& row:bn_weights){ \n"
+//           << "for(auto& col:row){ \n "
+//           << "std::cout << col ;\n"
+//           << "}\n;"
+//           << "}\n;";
+
     // get the eps value from the bn node
     //writer << "float epsilon = static_cast<float>(" << args[0].get_name() << ");\n";
-	writer << "float epsilon = 0.1;\n";
+	writer << "double  epsilon = 0.01;\n";
     //Bind to CPU engine
     writer << "using namespace mkldnn; \n";
     writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
@@ -255,14 +262,15 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     writer << "auto result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
 
     // create batchnorm descriptor 
-    writer << "auto bn_fprop_desc = batch_normalization_forward::desc(mkldnn::prop_kind::forward_training,"
-           << "input_data_desc, epsilon, mkldnn::batch_normalization_flag::mkldnn_use_global_stats);\n";
+    writer << "auto bn_fprop_desc = batch_normalization_forward::desc(forward_training,"
+           << "input_data_desc, epsilon, use_global_stats|use_scale_shift);\n";
     // bn fprop primitive descriptor
     writer << "auto bn_fprop_prim_desc = batch_normalization_forward::primitive_desc(bn_fprop_desc, cpu_engine);\n";
 
     // create a batchnorm fprop primitive
     writer << "auto bn_fprop = batch_normalization_forward(bn_fprop_prim_desc, input_data, mean, variance,"
-           << "weights, result); \n";
+    << "weights, result); \n";
+   
 
     // create stream and execute
     writer << "auto s = stream(stream::kind::eager);\n"
