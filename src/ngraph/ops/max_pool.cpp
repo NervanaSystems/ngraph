@@ -363,25 +363,6 @@ std::shared_ptr<op::MaxPool> op::MaxPoolBackprop::get_forward_op() const
     return m_forward_op.lock();
 }
 
-bool op::MaxPoolBackprop::is_functionally_identical(const Node& other) const
-{
-    bool rc = true;
-    if (Node::is_functionally_identical(other))
-    {
-        const MaxPoolBackprop& rhs = dynamic_cast<const MaxPoolBackprop&>(other);
-        rc &= m_window_shape == rhs.m_window_shape;
-        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
-        rc &= m_padding_below == rhs.m_padding_below;
-        rc &= m_padding_above == rhs.m_padding_above;
-        rc &= m_forward_op.lock() == rhs.m_forward_op.lock();
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
-}
-
 void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints,
                                     const std::shared_ptr<Node>& delta)
 {

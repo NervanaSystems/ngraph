@@ -131,7 +131,6 @@ namespace ngraph
             ///         `nullptr` if no such pointer was provided at construction time, or if the
             ///         forward op has been freed due to graph rewriting.
             std::shared_ptr<op::MaxPool> get_forward_op() const;
-            bool is_functionally_identical(const Node&) const override;
 
         protected:
             Shape m_window_shape;
