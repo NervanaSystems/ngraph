@@ -23,6 +23,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/ops/result.hpp"
 
 using namespace std;
 
@@ -109,9 +110,17 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
                           std::shared_ptr<Node> replacement,
                           bool replace_output)
 {
-    if (target->is_output() && !replace_output)
+    if (target->is_output())
     {
-        return;
+        for (descriptor::Output& output : replacement->get_outputs())
+        {
+            output.get_tensor().set_is_output();
+        }
+    }
+
+    if (std::dynamic_pointer_cast<op::Result>(target))
+    {
+        throw ngraph_error("Internal Error: replacee is a Result node!");
     }
 
     //fix input/output descriptors

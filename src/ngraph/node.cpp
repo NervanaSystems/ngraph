@@ -21,6 +21,7 @@
 #include "ngraph/descriptor/layout/tensor_view_layout.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/result.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -30,7 +31,6 @@ atomic<size_t> Node::m_next_instance_id(0);
 Node::Node(const std::string& node_type, const std::vector<shared_ptr<Node>>& arguments)
     : m_node_type(node_type)
     , m_instance_id(m_next_instance_id.fetch_add(1))
-    , m_is_output(false)
     , m_arguments(arguments)
 {
     // Add this node as a user of each argument.
@@ -64,7 +64,7 @@ void Node::add_output(const element::Type& element_type, const Shape& shape)
     auto tensor_view_descriptor = make_shared<descriptor::PrimaryTensorView>(
         tensor_view_type,
         ngraph::descriptor::Tensor::make_tensor_name(this, i),
-        is_output(),
+        false,
         is_parameter(),
         is_constant());
     m_outputs.emplace_back(this, i, tensor_view_descriptor);
@@ -92,16 +92,16 @@ bool Node::is_parameter() const
 
 bool Node::is_output() const
 {
-    return m_is_output;
-}
-
-void Node::set_is_output()
-{
-    m_is_output = true;
-    for (descriptor::Output& output : get_outputs())
+    if (!m_users.size())
     {
-        output.get_tensor().set_is_output();
+        if (dynamic_cast<const op::Result*>(this) !=
+            nullptr) //this could be refactored into a virtual function on Result
+        {
+            throw ngraph_error("is_output is called on an internal node");
+        }
+        return false;
     }
+    return !(*begin(m_users))->m_users.size();
 }
 
 bool Node::is_constant() const

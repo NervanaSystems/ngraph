@@ -90,7 +90,6 @@ namespace ngraph
 
         bool is_parameter() const;
         bool is_output() const;
-        void set_is_output();
         virtual bool is_constant() const;
         virtual bool is_commutative() { return false; }
         size_t get_instance_id() const { return m_instance_id; }
@@ -180,7 +179,6 @@ namespace ngraph
         static std::atomic<size_t> m_next_instance_id;
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
-        bool m_is_output;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
 
     private:
