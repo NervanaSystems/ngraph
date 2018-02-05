@@ -15,69 +15,45 @@ include(ExternalProject)
 
 if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") AND
                          (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows"))
-    set(CMAKE_DISABLE_SOURCE_CHANGES ON)
-    set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+    message(STATUS "Fetching LLVM from llvm.org")
 
-    set(RELEASE_TAG release_50)
-
-    set(EXTERNAL_INSTALL_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/ext_llvm-prefix)
-
-    ExternalProject_Add(clang
-        GIT_REPOSITORY https://github.com/llvm-mirror/clang.git
-        GIT_TAG ${RELEASE_TAG}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        UPDATE_COMMAND ""
-    )
-
-    ExternalProject_Get_Property(clang SOURCE_DIR)
-    set(CLANG_SOURCE_DIR ${SOURCE_DIR})
-
-    ExternalProject_Add(openmp
-        GIT_REPOSITORY https://github.com/llvm-mirror/openmp.git
-        GIT_TAG ${RELEASE_TAG}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        UPDATE_COMMAND ""
-    )
-
-    ExternalProject_Get_Property(openmp SOURCE_DIR)
-    set(OPENMP_SOURCE_DIR ${SOURCE_DIR})
-
-    if(DEFINED CMAKE_ASM_COMPILER)
-        set(LLVM_CMAKE_ASM_COMPILER ${CMAKE_ASM_COMPILER})
-    else()
-        set(LLVM_CMAKE_ASM_COMPILER ${CMAKE_C_COMPILER})
+    # Override default LLVM binaries
+    if(NOT DEFINED LLVM_TARBALL_URL)
+        set(LLVM_TARBALL_URL http://releases.llvm.org/5.0.1/clang+llvm-5.0.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz)
     endif()
 
-    ExternalProject_Add(ext_llvm
-        DEPENDS clang openmp
-        GIT_REPOSITORY https://github.com/llvm-mirror/llvm.git
-        GIT_TAG ${RELEASE_TAG}
-        CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                   -DCMAKE_ASM_COMPILER=${LLVM_CMAKE_ASM_COMPILER}
-                   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                   -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
-                   -DCMAKE_BUILD_TYPE=Release
-                   -DLLVM_ENABLE_ASSERTIONS=OFF
-                   -DLLVM_INCLUDE_TESTS=OFF
-                   -DLLVM_INCLUDE_EXAMPLES=OFF
-                   -DLLVM_BUILD_TOOLS=ON
-                   -DLLVM_TARGETS_TO_BUILD=X86
-                   -DLLVM_EXTERNAL_CLANG_SOURCE_DIR=${CLANG_SOURCE_DIR}
-                   -DLLVM_EXTERNAL_OPENMP_SOURCE_DIR=${OPENMP_SOURCE_DIR}
-        UPDATE_COMMAND ""
-    )
+    if(NOT DEFINED LLVM_SHA1_HASH)
+        set(LLVM_SHA1_HASH 2fddf9a90b182fa594786be6923e58f5ead71e9c)
+    endif()
 
-    ExternalProject_Get_Property(ext_llvm SOURCE_DIR)
-    ExternalProject_Get_Property(ext_llvm BINARY_DIR)
-    ExternalProject_Get_Property(ext_llvm INSTALL_DIR)
+    # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
+    if(${CMAKE_VERSION} VERSION_LESS 3.2)
+        ExternalProject_Add(
+            ext_llvm
+            URL ${LLVM_TARBALL_URL}
+            URL_HASH SHA1=${LLVM_SHA1_HASH}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ""
+            INSTALL_COMMAND ""
+            UPDATE_COMMAND ""
+            )
+    else()
+        ExternalProject_Add(
+            ext_llvm
+            URL ${LLVM_TARBALL_URL}
+            URL_HASH SHA1=${LLVM_SHA1_HASH}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ""
+            INSTALL_COMMAND ""
+            UPDATE_COMMAND ""
+            BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/ext_llvm-prefix/src/ext_llvm/lib/libLLVMCore.a"
+            )
+    endif()
 
-    set(LLVM_INCLUDE_DIR "${INSTALL_DIR}/include" PARENT_SCOPE)
-    set(LLVM_INCLUDE_DIR "${SOURCE_DIR}/include")  # used by other external projects in current scope
-    set(LLVM_LIB_DIR "${INSTALL_DIR}/lib" PARENT_SCOPE)
+    ExternalProject_Get_Property(ext_llvm source_dir)
+    set(LLVM_INCLUDE_DIR "${source_dir}/include" PARENT_SCOPE)
+    set(LLVM_INCLUDE_DIR "${source_dir}/include")  # used by other external projects in current scope
+    set(LLVM_LIB_DIR "${source_dir}/lib" PARENT_SCOPE)
 
     set(LLVM_LINK_LIBS
         clangTooling
@@ -157,4 +133,5 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
         z
         m
         PARENT_SCOPE)
+
 endif()
