@@ -157,22 +157,6 @@ op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg, const Shape& window_shape
 {
 }
 
-bool op::MaxPool::is_functionally_identical(const Node& other) const
-{
-    bool rc = true;
-    if (Node::test_identical(other))
-    {
-        const MaxPool& rhs = dynamic_cast<const MaxPool&>(other);
-        rc &= m_window_shape == rhs.m_window_shape;
-        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
-}
-
 void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints,
                                     const std::shared_ptr<Node>& delta)
 {
