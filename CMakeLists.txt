@@ -39,6 +39,10 @@ else()
     message(WARNING "You are using an unsupported compiler! Compilation has only been tested with Clang ( ${CLANG_MIN_VERSION} and up) and GCC ( ${GCC_MIN_VERSION} and up). ")
 endif()
 
+if($ENV{NGRAPH_USE_PREBUILT_LLVM})
+    set(NGRAPH_USE_PREBUILT_LLVM TRUE)
+endif()
+
 # These variables are undocumented but useful.
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
