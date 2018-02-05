@@ -204,29 +204,6 @@ op::MaxPool::MaxPool(const std::shared_ptr<Node>& arg, const Shape& window_shape
 {
 }
 
-bool op::MaxPool::is_functionally_identical(const Node& other) const
-{
-    // TODO: temporary workaround for MKLDNN issue
-    //       remove 'return false' and uncomment below when fixed
-    return false;
-    /*
-    bool rc = true;
-    if (Node::test_identical(other))
-    {
-        const MaxPool& rhs = dynamic_cast<const MaxPool&>(other);
-        rc &= m_window_shape == rhs.m_window_shape;
-        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
-        rc &= m_padding_below == rhs.m_padding_below;
-        rc &= m_padding_above == rhs.m_padding_above;
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
-    */
-}
-
 op::MaxPoolBackprop::MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,
                                      const std::shared_ptr<Node>& delta,
                                      const Shape& window_shape,

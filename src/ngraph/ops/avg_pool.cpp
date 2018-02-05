@@ -199,29 +199,6 @@ op::AvgPool::AvgPool(const std::shared_ptr<Node>& arg, const Shape& window_shape
 {
 }
 
-bool op::AvgPool::is_functionally_identical(const Node& other) const
-{
-    // TODO: temporary workaround for MKLDNN issue
-    //       remove 'return false' and uncomment below when fixed
-    return false;
-    /*
-    bool rc = true;
-    if (Node::is_functionally_identical(other))
-    {
-        const AvgPool& rhs = dynamic_cast<const AvgPool&>(other);
-        rc &= m_window_shape == rhs.m_window_shape;
-        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
-        rc &= m_padding_below == rhs.m_padding_below;
-        rc &= m_padding_above == rhs.m_padding_above;
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
-    */
-}
-
 op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
                                      const std::shared_ptr<Node>& delta,
                                      const Shape& window_shape,
@@ -369,25 +346,6 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
     }
 
     set_value_type_checked(get_input_element_type(0), forward_arg_shape);
-}
-
-bool op::AvgPoolBackprop::is_functionally_identical(const Node& other) const
-{
-    bool rc = true;
-    if (Node::is_functionally_identical(other))
-    {
-        const AvgPoolBackprop& rhs = dynamic_cast<const AvgPoolBackprop&>(other);
-        rc &= m_forward_arg_shape == rhs.m_forward_arg_shape;
-        rc &= m_window_shape == rhs.m_window_shape;
-        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
-        rc &= m_padding_below == rhs.m_padding_below;
-        rc &= m_padding_above == rhs.m_padding_above;
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
 }
 
 void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints,

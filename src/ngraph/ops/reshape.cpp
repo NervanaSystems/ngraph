@@ -99,19 +99,3 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints,
 
     adjoints.add_delta(get_input_op(0), reshape);
 }
-
-bool op::Reshape::is_functionally_identical(const Node& other) const
-{
-    bool rc = true;
-    if (Node::test_identical(other))
-    {
-        const Reshape& reshape = dynamic_cast<const Reshape&>(other);
-        rc &= m_input_order == reshape.m_input_order;
-        rc &= m_output_shape == reshape.m_output_shape;
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
-}

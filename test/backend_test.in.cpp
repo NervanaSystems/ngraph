@@ -36,7 +36,8 @@ TEST(${BACKEND_NAME}, aliased_output)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = A + B;
-    auto f = make_shared<Function>(Nodes{C, C}, op::Parameters{A, B});
+    auto D = A * B;
+    auto f = make_shared<Function>(Nodes{C, C, D, D, C}, op::Parameters{A, B});
 
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
@@ -48,14 +49,21 @@ TEST(${BACKEND_NAME}, aliased_output)
     shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
     shared_ptr<runtime::TensorView> out1 = backend->make_primary_tensor_view(element::f32, shape);
     shared_ptr<runtime::TensorView> out2 = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> out3 = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> out4 = backend->make_primary_tensor_view(element::f32, shape);
+    shared_ptr<runtime::TensorView> out5 = backend->make_primary_tensor_view(element::f32, shape);
 
     copy_data(a, vector<float>{0, 1, 2, 3});
     copy_data(b, vector<float>{1, 2, 3, 4});
-    vector<float> expected{1, 3, 5, 7};
+    vector<float> expectedC{1, 3, 5, 7};
+    vector<float> expectedD{0, 2, 6, 12};
 
-    cf->call({a, b}, {out1, out2});
-    EXPECT_EQ(expected, read_vector<float>(out1));
-    EXPECT_EQ(expected, read_vector<float>(out2));
+    cf->call({a, b}, {out1, out2, out3, out4, out5});
+    EXPECT_EQ(expectedC, read_vector<float>(out1));
+    EXPECT_EQ(expectedC, read_vector<float>(out2));
+    EXPECT_EQ(expectedD, read_vector<float>(out3));
+    EXPECT_EQ(expectedD, read_vector<float>(out4));
+    EXPECT_EQ(expectedC, read_vector<float>(out5));
 }
 
 TEST(${BACKEND_NAME}, parameter_as_output)
