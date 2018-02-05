@@ -211,9 +211,9 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     auto channel_axis = input_shape[1];
     // create a vector of vector to hold the gamma and bias
     //writer << "auto weight_et =" <<  batchnorm->get_input_element_type(1) << ";\n" ;
-    writer << "auto weight_size = 3;\n"; // << args[1].get_shape().size() << ";\n";
+    writer << "auto weight_size = " << args[1].get_shape().size() << ";\n";
     writer << "std::vector< std::vector<float> >bn_weights(2)\n;"; 
-    auto weights_shape = Shape{2, 3};
+    auto weights_shape = Shape{2, args[1].get_shape().size()};
 
     //push gamma and beta
     writer << "auto gamma = " << args[1].get_name() << ";\n";

@@ -208,30 +208,30 @@ void ngraph::pass::CPUFusion::construct_fprop_bn()
         //Gamma
         auto gamma_label = std::make_shared<pattern::op::Label>(element::f32, Shape{3});
         auto gamma_with_broadcast = std::make_shared<op::Broadcast>(gamma_label, Shape{2, 3}, AxisSet{0});
-        auto gamma = std::make_shared<pattern::op::Label>(gamma_with_broadcast, nullptr, Nodes{gamma_with_broadcast});
-        auto multiply_gamma =  std::make_shared<op::Multiply>(gamma, divide_mean_variance);
+        //auto gamma = std::make_shared<pattern::op::Label>(gamma_with_broadcast, nullptr, Nodes{gamma_with_broadcast});
+        auto multiply_gamma =  std::make_shared<op::Multiply>(gamma_with_broadcast, divide_mean_variance);
         
         //Beta
         auto beta_label = std::make_shared<pattern::op::Label>(element::f32, Shape{3});
         auto beta_with_broadcast = std::make_shared<op::Broadcast>(beta_label, Shape{2, 3}, AxisSet{0});
-        auto beta = std::make_shared<pattern::op::Label>(beta_with_broadcast, nullptr, Nodes{beta_with_broadcast});
+        //auto beta = std::make_shared<pattern::op::Label>(beta_with_broadcast, nullptr, Nodes{beta_with_broadcast});
 
-        auto add_beta =  std::make_shared<op::Add>(beta, multiply_gamma);
+        auto add_beta =  std::make_shared<op::Add>(beta_with_broadcast, multiply_gamma);
         // This completes fprop bn pattern
 
-        ngraph::pattern::gr_callback_fn callback = [variance_label, mean_label, input, eps_label, gamma, beta](pattern::Matcher& m) {
+        ngraph::pattern::gr_callback_fn callback = [variance_label, mean_label, input, eps_label, gamma_label, beta_label](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
                          << m.match_root()->get_name();
 
             std::shared_ptr<Node> nn = nullptr;
             //TODO - add assert's based on the matched node
             auto pattern_map = m.get_pattern_map();
-            NGRAPH_DEBUG << "Input: " << pattern_map[input]->get_name(); 
-            NGRAPH_DEBUG << "Variance: " << pattern_map[variance_label]->get_name();
-            NGRAPH_DEBUG << "Mean: "  <<  pattern_map[mean_label]->get_name();
-            NGRAPH_DEBUG << "eps: " << pattern_map[eps_label]->get_name();
-            NGRAPH_DEBUG << "gamma: " << pattern_map[gamma]->get_name();
-            NGRAPH_DEBUG << "beta: " << pattern_map[beta]->get_name();
+            NGRAPH_DEBUG << "Input: " << pattern_map[input]->get_name() << " " << pattern_map[input]->get_shape().size();
+            NGRAPH_DEBUG << "Variance: " << pattern_map[variance_label]->get_name() << " " << pattern_map[variance_label]->get_shape().size();
+            NGRAPH_DEBUG << "Mean: "  <<  pattern_map[mean_label]->get_name() << " " <<  pattern_map[mean_label]->get_shape().size();
+            NGRAPH_DEBUG << "eps: " << pattern_map[eps_label]->get_name() << " " <<  pattern_map[eps_label]->get_shape().size();
+            NGRAPH_DEBUG << "gamma: " << pattern_map[gamma_label]->get_name() << " " <<  pattern_map[gamma_label]->get_shape().size();
+            NGRAPH_DEBUG << "beta: " << pattern_map[beta_label]->get_name() << " " <<  pattern_map[beta_label]->get_shape().size();
 
             // dont fuse if the inout doesnt have 4dims 
             if (pattern_map[input]->get_shape().size()!=4)
@@ -245,8 +245,8 @@ void ngraph::pass::CPUFusion::construct_fprop_bn()
             const auto& variance_et = pattern_map[variance_label]->get_element_type();
             const auto& mean_et = pattern_map[mean_label]->get_element_type();
             auto bn_node = std::shared_ptr<Node>(new op::BatchnormFprop(pattern_map[eps_label],
-                                                                       pattern_map[gamma],
-                                                                       pattern_map[beta],
+                                                                       pattern_map[gamma_label],
+                                                                       pattern_map[beta_label],
                                                                        pattern_map[input],
                                                                        pattern_map[mean_label],
                                                                        pattern_map[variance_label],
