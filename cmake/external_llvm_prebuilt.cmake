@@ -18,12 +18,11 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
     message(STATUS "Fetching LLVM from llvm.org")
 
     # Override default LLVM binaries
-    if(DEFINED LLVM_TARBALL_URL)
-        if(NOT DEFINED LLVM_SHA1_HASH)
-            message(FATAL_ERROR "LLVM_TARBALL_URL was specified but LLVM_SHA1_HASH was not.")
-        endif()
-    else()
+    if(NOT DEFINED LLVM_TARBALL_URL)
         set(LLVM_TARBALL_URL http://releases.llvm.org/5.0.1/clang+llvm-5.0.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz)
+    endif()
+
+    if(NOT DEFINED LLVM_SHA1_HASH)
         set(LLVM_SHA1_HASH 2fddf9a90b182fa594786be6923e58f5ead71e9c)
     endif()
 
