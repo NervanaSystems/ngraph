@@ -110,17 +110,17 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
                           std::shared_ptr<Node> replacement,
                           bool replace_output)
 {
+    if (std::dynamic_pointer_cast<op::Result>(target))
+    {
+        throw ngraph_error("Internal Error: replacee is a Result node!");
+    }
+
     if (target->is_output())
     {
         for (descriptor::Output& output : replacement->get_outputs())
         {
             output.get_tensor().set_is_output();
         }
-    }
-
-    if (std::dynamic_pointer_cast<op::Result>(target))
-    {
-        throw ngraph_error("Internal Error: replacee is a Result node!");
     }
 
     //fix input/output descriptors
