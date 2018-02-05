@@ -66,8 +66,8 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
                    -DLLVM_INCLUDE_EXAMPLES=OFF
                    -DLLVM_BUILD_TOOLS=ON
                    -DLLVM_TARGETS_TO_BUILD=X86
-                   -DLLVM_EXTERNAL_CLANG_SOURCE_DIR:PATH=${CLANG_SOURCE_DIR}
-                   -DLLVM_ENABLE_PROJECTS=openmp
+                   -DLLVM_EXTERNAL_CLANG_SOURCE_DIR=${CLANG_SOURCE_DIR}
+                   -DLLVM_EXTERNAL_OPENMP_SOURCE_DIR=${OPENMP_SOURCE_DIR}
         UPDATE_COMMAND ""
     )
 
@@ -77,10 +77,6 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
     message("SOURCE_DIR = ${SOURCE_DIR}")
     message("BINARY_DIR = ${BINARY_DIR}")
     message("INSTALL_DIR = ${INSTALL_DIR}")
-
-    # For some reason LLVM insists on having the openmp directory be a
-    # "neighbor" of the llvm directory, so we have to set a symlink.
-    execute_process (COMMAND ln -sf "${OPENMP_SOURCE_DIR}" "${SOURCE_DIR}/../openmp")
 
     set(LLVM_INCLUDE_DIR "${INSTALL_DIR}/include" PARENT_SCOPE)
     set(LLVM_INCLUDE_DIR "${SOURCE_DIR}/include")  # used by other external projects in current scope
