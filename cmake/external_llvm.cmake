@@ -74,9 +74,6 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
     ExternalProject_Get_Property(ext_llvm SOURCE_DIR)
     ExternalProject_Get_Property(ext_llvm BINARY_DIR)
     ExternalProject_Get_Property(ext_llvm INSTALL_DIR)
-    message("SOURCE_DIR = ${SOURCE_DIR}")
-    message("BINARY_DIR = ${BINARY_DIR}")
-    message("INSTALL_DIR = ${INSTALL_DIR}")
 
     set(LLVM_INCLUDE_DIR "${INSTALL_DIR}/include" PARENT_SCOPE)
     set(LLVM_INCLUDE_DIR "${SOURCE_DIR}/include")  # used by other external projects in current scope
