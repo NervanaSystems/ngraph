@@ -297,7 +297,7 @@ def unary_op(op_str, a):
     elif op_str == 'negative':
         return Negative(a)
     elif op_str == 'Reverse':
-        return Reverse(a, {0})
+        return Reverse(a, {1})
     elif op_str == 'Sign':
         return Sign(a)
     elif op_str == 'Sin':
@@ -352,9 +352,11 @@ def unary_op_ref(op_str, a):
 
 
 def unary_op_exec(op_str, input_list):
-    """input_list needs to have deep length of 4"""
+    """
+    input_list needs to have deep length of 4
+    """
     element_type = Type.f32
-    shape = [2, 2]
+    shape = np.array(input_list).shape
     A = Parameter(element_type, shape)
     parameter_list = [A]
     function = Function([unary_op(op_str, A)], parameter_list, 'test')
@@ -365,7 +367,7 @@ def unary_op_exec(op_str, input_list):
 
     a.write(util.numpy_to_c(np.array(input_list, dtype=np.float32)), 0, 16)
 
-    result_arr = np.array([0, 0, 0, 0], dtype=np.float32)
+    result_arr = np.zeros(shape, dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 16)
     cf.call([a], [result])
     result.read(util.numpy_to_c(result_arr), 0, 16)
@@ -479,7 +481,6 @@ def test_tanh():
 
 
 def test_reverse():
-    return
     input_list = [[-1, 0], [0.5, 1]]
     op_str = 'Reverse'
     unary_op_exec(op_str, input_list)
