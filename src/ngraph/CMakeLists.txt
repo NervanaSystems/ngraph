@@ -78,6 +78,7 @@ set (SRC
     ops/unary_elementwise.cpp
     pass/dump_sorted.cpp
     pass/graph_rewrite.cpp
+    pass/inliner.cpp
     pass/liveness.cpp
     pass/manager.cpp
     pass/manager_state.cpp
