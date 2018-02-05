@@ -42,35 +42,35 @@ def absolute(node, name=None):  # type: (Node, str) -> Node
 
 @nameable_op
 def sqrt(node, name=None):  # type: (Node, str) -> Node
-    """Return node which applies f(x) = Sqrt(x) to the input node elementwise."""
+    """Return node which applies square root to the input node elementwise."""
     return Sqrt(node)
 
 
 @nameable_op
 def exp(node, name=None):  # type: (Node, str) -> Node
-    """Return node which applies f(x) = Exp(x) to the input node elementwise."""
+    """Return node which applies exp to the input node elementwise."""
     return Exp(node)
 
 
 @nameable_op
 def log(node, name=None):  # type: (Node, str) -> Node
-    """Return node which applies f(x) = Log(x) to the input node elementwise."""
+    """Return node which applies natural logarithm to the input node elementwise."""
     return Log(node)
 
 
 @nameable_op
 def negative(node, name=None):  # type: (Node, str) -> Node
-    """Return node which applies f(x) = neg(x) to the input node elementwise."""
+    """Return node which applies f(x) = -x to the input node elementwise."""
     return Negative(node)
 
 
 @nameable_op
 def floor(node, name=None):  # type: (Node, str) -> Node
-    """Return node which applies f(x) = Floor(x) to the input node elementwise."""
+    """Return node which applies floor to the input node elementwise."""
     return Floor(node)
 
 
 @nameable_op
 def ceil(node, name=None):  # type: (Node, str) -> Node
-    """Return node which applies f(x) = Ceil(x) to the input node elementwise."""
+    """Return node which applies ceiling to the input node elementwise."""
     return Ceiling(node)
