@@ -84,7 +84,6 @@ namespace ngraph
                 return std::make_shared<Dot>(
                     new_args.at(0), new_args.at(1), m_reduction_axes_count);
             }
-            bool is_functionally_identical(const Node&) const override;
 
         protected:
             size_t m_reduction_axes_count;

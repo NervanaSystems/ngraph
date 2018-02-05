@@ -59,8 +59,6 @@ namespace ngraph
 
             /// \return The index of the one-hot axis.
             size_t get_one_hot_axis() const { return m_one_hot_axis; }
-            bool is_functionally_identical(const Node&) const override;
-
         protected:
             Shape m_shape;
             size_t m_one_hot_axis;

@@ -132,20 +132,3 @@ void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints,
     adjoints.add_delta(
         y, std::make_shared<op::Slice>(delta, m_lower_bounds, m_upper_bounds, m_strides));
 }
-
-bool op::ReplaceSlice::is_functionally_identical(const Node& other) const
-{
-    bool rc = true;
-    if (Node::test_identical(other))
-    {
-        const ReplaceSlice& slice = dynamic_cast<const ReplaceSlice&>(other);
-        rc &= m_lower_bounds == slice.m_lower_bounds;
-        rc &= m_upper_bounds == slice.m_upper_bounds;
-        rc &= m_strides == slice.m_strides;
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
-}

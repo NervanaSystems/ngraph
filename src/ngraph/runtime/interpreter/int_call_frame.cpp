@@ -41,49 +41,40 @@ void runtime::interpreter::INT_CallFrame::call(
         perform_nan_check(input_tvs);
     }
     unordered_map<descriptor::TensorView*, shared_ptr<runtime::HostTensorView>> tensor_map;
-
     size_t arg_index = 0;
     for (shared_ptr<op::Parameter> param : function->get_parameters())
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
             descriptor::TensorView* tv = param->get_output_tensor_view(i).get();
-            string name = tv->get_tensor().get_name();
             tensor_map.insert({tv, input_tvs[arg_index++]});
         }
     }
+    std::vector<size_t> aliased_outputs;
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        descriptor::TensorView* tv = function->get_output_op(i)->get_output_tensor_view(0).get();
+        shared_ptr<Node> op = function->get_output_op(i);
+        descriptor::TensorView* tv = op->get_output_tensor_view(0).get();
         string name = tv->get_tensor().get_name();
         if (contains_key(tensor_map, tv))
         {
-            // Here we handle the special case where an output is just a copy of an input
-            memcpy(output_tvs[i]->get_data_ptr(),
-                   tensor_map.at(tv)->get_data_ptr(),
-                   tv->get_tensor().size());
+            if (op->description() == "Parameter")
+            {
+                // Here we handle the special case where an output is just a copy of an input
+                memcpy(output_tvs[i]->get_data_ptr(),
+                       tensor_map.at(tv)->get_data_ptr(),
+                       tv->get_tensor().size());
+            }
+            else
+            {
+                // This is a computed value returned more than once and will need to be copied at the end
+                aliased_outputs.push_back(i);
+            }
         }
         else
         {
             tensor_map.insert({tv, output_tvs[i]});
         }
-    }
-
-    // create alias list
-    size_t output_index = 0;
-    unordered_map<descriptor::TensorView*, vector<size_t>> output_alias_map;
-    vector<size_t> aliases;
-    for (size_t i = 0; i < function->get_output_size(); ++i)
-    {
-        shared_ptr<descriptor::TensorView> otv =
-            function->get_output_op(i)->get_output_tensor_view(0);
-        vector<size_t>& al = output_alias_map[otv.get()];
-        al.push_back(output_index);
-        if (al.size() > 1)
-        {
-            aliases.push_back(output_index);
-        }
-        output_index++;
     }
 
     // Invoke computation
@@ -157,8 +148,6 @@ void runtime::interpreter::INT_CallFrame::call(
             perform_nan_check(outputs, op.get());
         }
 
-        handle_output_alias(*op, output_alias_map, output_tvs);
-
         // Delete any obsolete tensors
         for (const descriptor::Tensor* t : op->liveness_free_list)
         {
@@ -172,30 +161,28 @@ void runtime::interpreter::INT_CallFrame::call(
             }
         }
     }
-}
 
-void runtime::interpreter::INT_CallFrame::handle_output_alias(
-    const Node& node,
-    const unordered_map<descriptor::TensorView*, vector<size_t>>& output_alias_map,
-    const vector<shared_ptr<runtime::HostTensorView>>& output_tvs)
-{
-    for (size_t i = 0; i < node.get_output_size(); ++i)
+    for (size_t i : aliased_outputs)
     {
-        shared_ptr<descriptor::TensorView> otv = node.get_output_tensor_view(i);
-        auto it = output_alias_map.find(otv.get());
-        if (it != output_alias_map.end())
+        shared_ptr<Node> op = function->get_output_op(i);
+        size_t first_output;
+        for (first_output = 0; first_output <= i; ++first_output)
         {
-            const vector<size_t>& outputs = it->second;
-            if (outputs.size() > 1)
+            if (function->get_output_op(first_output) == op)
             {
-                for (size_t j = 1; j < outputs.size(); j++)
-                {
-                    memcpy(static_cast<void*>(output_tvs[j]->get_data_ptr()),
-                           static_cast<void*>(output_tvs[0]->get_data_ptr()),
-                           otv->get_tensor().size());
-                }
+                break;
             }
         }
+        if (first_output == i)
+        {
+            throw ngraph_error("Internal error: duplicate output missing");
+        }
+        descriptor::TensorView* tv = op->get_output_tensor_view(0).get();
+        string name = tv->get_tensor().get_name();
+        // Here we handle the special case where an output is just a copy of an input
+        memcpy(output_tvs[i]->get_data_ptr(),
+               output_tvs[first_output]->get_data_ptr(),
+               tv->get_tensor().size());
     }
 }
 

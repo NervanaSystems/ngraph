@@ -45,19 +45,3 @@ void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints,
 
     adjoints.add_delta(x, make_shared<op::Sum>(delta, m_broadcast_axes));
 }
-
-bool op::Broadcast::is_functionally_identical(const Node& other) const
-{
-    bool rc = true;
-    if (Node::test_identical(other))
-    {
-        const Broadcast& obj = dynamic_cast<const Broadcast&>(other);
-        rc &= m_shape == obj.m_shape;
-        rc &= m_broadcast_axes == obj.m_broadcast_axes;
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
-}

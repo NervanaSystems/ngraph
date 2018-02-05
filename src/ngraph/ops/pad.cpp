@@ -78,23 +78,6 @@ std::shared_ptr<Node> op::Pad::copy_with_new_args(const Nodes& new_args) const
         new_args.at(0), new_args.at(1), m_padding_below, m_padding_above, m_padding_interior);
 }
 
-bool op::Pad::is_functionally_identical(const Node& other) const
-{
-    bool rc = true;
-    if (Node::is_functionally_identical(other))
-    {
-        const Pad& rhs = dynamic_cast<const Pad&>(other);
-        rc &= m_padding_below == rhs.m_padding_below;
-        rc &= m_padding_above == rhs.m_padding_above;
-        rc &= m_padding_interior == rhs.m_padding_interior;
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
-}
-
 /* The "y" half of this is going to be a bit tricky... best way to handle it, I think,
    is to ReplaceSlice the non-padded values in the incoming delta tensor with a zero
    broadcasted to x's shape; then sum that and backprop the result to y.
