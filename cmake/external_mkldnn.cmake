@@ -36,6 +36,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR}
+                -DCMAKE_BUILD_TYPE=Debug
             )
     else()
         ExternalProject_Add(
@@ -49,6 +50,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR}
+                -DCMAKE_BUILD_TYPE=Debug
             BUILD_BYPRODUCTS "${MKLDNN_INSTALL_DIR}/include/mkldnn.hpp"
             )
     endif()

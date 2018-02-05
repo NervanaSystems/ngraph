@@ -199,8 +199,8 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     auto gamma_shape = args[1].get_shape();
     auto beta_shape = args[2].get_shape();
     auto input_shape = args[3].get_shape();
-    auto mean_shape = batchnorm->get_mean_shape();
-    auto variance_shape = batchnorm->get_variance_shape();
+    auto mean_shape = args[4].get_shape();
+    auto variance_shape = args[5].get_shape();
     auto result_shape = out[0].get_shape();
 
     string et = "memory::data_type::f32";
@@ -209,47 +209,44 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
 
     // read the shape of the input and extract channel axis (N, C, H, W)
     auto channel_axis = input_shape[1];
-
     // create a vector of vector to hold the gamma and bias
-    writer << "auto weight_et =" <<  batchnorm->get_input_element_type(1) << ";\n" ;
-    writer << "auto weight_size ="  << batchnorm->get_input_shape(1).size() << ";\n";
-    writer << "auto vector<vector<weight_et> > bn_weights(2);\n";
-    auto weights_shape = Shape{2, batchnorm->get_input_shape(1).size()};
+    //writer << "auto weight_et =" <<  batchnorm->get_input_element_type(1) << ";\n" ;
+    writer << "auto weight_size ="  << args[1].get_shape().size() << ";\n";
+    writer << "std::vector< std::vector<float> >bn_weights(2)\n;"; 
+    auto weights_shape = Shape{2, args[1].get_shape().size()};
 
     //push gamma and beta
-    writer << "auto& gamma = " << args[1].get_name() << ";\n";
-    writer << "auto& beta = " << args[2].get_name() << ";\n";
-    writer << "for (auto i :weight_size) \n";
+    writer << "auto gamma = " << args[1].get_name() << ";\n";
+    writer << "auto beta = " << args[2].get_name() << ";\n";
+    writer << "for (auto i=0; i<weight_size; i++) \n";
     writer << "{ \n";
-    writer << "bn_weights[0].push_back(gamma[j]);\n";
-    writer << "bn_weights[1].push_back(beta[j]);\n";
+    writer << "bn_weights[0].push_back(gamma[i]);\n";
+    writer << "bn_weights[1].push_back(beta[i]);\n";
     writer << "} \n";
     
     // get the eps value from the bn node
-    writer << "float epsilon = static_cast<float>(" << args[0].get_name() << ";\n";
-	
+    //writer << "float epsilon = static_cast<float>(" << args[0].get_name() << ");\n";
+	writer << "float epsilon = 0.1;\n";
     //Bind to CPU engine
     writer << "using namespace mkldnn; \n";
     writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
-
     // create memory descriptors 
-    writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
     writer << "auto input_data_desc = memory::desc({" << join(input_shape) << "}, " << et
            << ", memory::format::nchw);\n";
     // TODO define weights by stacking gamma and beta values
     writer << "auto weights_desc = memory::desc({" << join(weights_shape) << "}, " << et
-           << ", memory::format::oihw);\n";    
+           << ", memory::format::nc);\n";    
     writer << "auto result_desc = memory::desc({" << join(result_shape) << "}, " << et
            << ", memory::format::nchw);\n";
     writer << "auto mean_desc = memory::desc({" << join(mean_shape) << "}, " << et
-           << ", memory::format::nc);\n";
+           << ", memory::format::x);\n";
     writer << "auto variance_desc = memory::desc({" << join(variance_shape) << "}, " << et
-           << ", memory::format::nc);\n";       
+           << ", memory::format::x);\n";       
 
     // Define memory for the user data
-    writer << "auto input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+    writer << "auto input_data = memory({input_data_desc, cpu_engine}, " << args[3].get_name()
            << ");\n";
-    writer << "auto weights = memory({weights_desc, cpu_engine}, bn_weights" 
+    writer << "auto weights = memory({weights_desc, cpu_engine}, bn_weights.data()" 
            << ");\n";
     writer << "auto mean = memory({mean_desc, cpu_engine}, " << args[4].get_name()
            << ");\n";
@@ -258,8 +255,8 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(codegen::CodeWriter& writer,
     writer << "auto result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
 
     // create batchnorm descriptor 
-    writer << "auto bn_fprop_desc = batch_normalization_forward::desc(mkldnn::prop_kind::froward_training,"
-           << "input_data_desc, epsilon, mkldnn::batch_normalization_flag::use_scale_shift);\n";
+    writer << "auto bn_fprop_desc = batch_normalization_forward::desc(mkldnn::prop_kind::forward_training,"
+           << "input_data_desc, epsilon, mkldnn::batch_normalization_flag::mkldnn_use_global_stats);\n";
     // bn fprop primitive descriptor
     writer << "auto bn_fprop_prim_desc = batch_normalization_forward::primitive_desc(bn_fprop_desc, cpu_engine);\n";
 

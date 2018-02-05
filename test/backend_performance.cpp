@@ -151,6 +151,12 @@ TEST(benchmark, mxnet_seq2seq_backward)
     run_benchmark(json_path, "CPU", 10);
 }
 
+TEST(benchmark, bn_fprop)
+{   
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_4.json");
+    run_benchmark(json_path, "CPU", 1);
+}
+
 //
 // Benchmarks a graph that concatenates six 32x1x200 arrays along the middle axis.
 //

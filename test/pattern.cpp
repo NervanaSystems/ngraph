@@ -37,6 +37,11 @@
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/batchnorm.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/file_util.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
+#include "ngraph/serializer.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -565,19 +570,19 @@ TEST(pattern, sum)
     ASSERT_EQ(n.get_pattern_map()[reduce_label], sum_graph);
 }
 
-//TEST(batchnorm,  fuse_fprop_bn)
-//{
-//    pass::Manager pass_manager;
-//    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_before_fusion.png");
-//    pass_manager.register_pass<pass::CPUFusion>();
-//    pass_manager.register_pass<TestGraphRewrite>();
-//    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_after_fusion.png");
-//    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/bn_fprop.json");
-//    const string json_string = file_util::read_file_to_string(json_path);
-//    stringstream ss(json_string);
-//    shared_ptr<Function> func = ngraph::deserialize(ss);
-//    pass_manager.run_passes(func);
-//}
+TEST(batchnorm,  fuse_fprop_bn)
+{
+   pass::Manager pass_manager;
+   pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_before_fusion.pdf");
+   pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
+   pass_manager.register_pass<pass::CPUFusion>();
+   pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_after_fusion.pdf");
+   const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_4.json");
+   const string json_string = file_util::read_file_to_string(json_path);
+   stringstream ss(json_string);
+   shared_ptr<Function> func = ngraph::deserialize(ss);
+   pass_manager.run_passes(func);
+}
 //
 //
 //TEST(batchnorm,  fuse_bprop_bn)
