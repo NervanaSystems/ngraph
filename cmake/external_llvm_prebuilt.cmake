@@ -16,23 +16,22 @@ include(ExternalProject)
 if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") AND
                          (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows"))
     message(STATUS "Fetching LLVM from llvm.org")
-    set(LLVM_RELEASE_URL http://releases.llvm.org/5.0.0/clang+llvm-5.0.0-linux-x86_64-ubuntu16.04.tar.xz)
-    set(LLVM_SHA1_HASH 9cb81c92aa4d3f9707a9b8413c4d24b8dee90c59)
 
     # Override default LLVM binaries
-    if(PREBUILT_LLVM)
-        if(NOT DEFINED PREBUILT_LLVM_HASH)
-            message(FATAL_ERROR "SHA1 hash of prebuilt llvm tarball not provided in PREBUILT_LLVM_HASH.")
+    if(DEFINED LLVM_TARBALL_URL)
+        if(NOT DEFINED LLVM_SHA1_HASH)
+            message(FATAL_ERROR "LLVM_TARBALL_URL was specified but LLVM_SHA1_HASH was not.")
         endif()
-        set(LLVM_RELEASE_URL ${PREBUILT_LLVM})
-        set(LLVM_SHA1_HASH ${PREBUILT_LLVM_HASH})
+    else()
+        set(LLVM_TARBALL_URL http://releases.llvm.org/5.0.1/clang+llvm-5.0.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz)
+        set(LLVM_SHA1_HASH 2fddf9a90b182fa594786be6923e58f5ead71e9c)
     endif()
 
     # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
     if(${CMAKE_VERSION} VERSION_LESS 3.2)
         ExternalProject_Add(
             ext_llvm
-            URL ${LLVM_RELEASE_URL}
+            URL ${LLVM_TARBALL_URL}
             URL_HASH SHA1=${LLVM_SHA1_HASH}
             CONFIGURE_COMMAND ""
             BUILD_COMMAND ""
@@ -42,7 +41,7 @@ if((NGRAPH_CPU_ENABLE OR NGRAPH_GPU_ENABLE) AND (NOT ${CMAKE_SYSTEM_NAME} MATCHE
     else()
         ExternalProject_Add(
             ext_llvm
-            URL ${LLVM_RELEASE_URL}
+            URL ${LLVM_TARBALL_URL}
             URL_HASH SHA1=${LLVM_SHA1_HASH}
             CONFIGURE_COMMAND ""
             BUILD_COMMAND ""
