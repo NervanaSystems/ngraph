@@ -49,18 +49,3 @@ public:
         return is_match;
     }
 };
-
-template <typename T>
-size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
-{
-    size_t count = 0;
-    for (auto op : f->get_ops())
-    {
-        if (std::dynamic_pointer_cast<T>(op))
-        {
-            count++;
-        }
-    }
-
-    return count;
-}
