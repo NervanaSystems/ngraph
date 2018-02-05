@@ -242,6 +242,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
+#include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/kernel/avg_pool.hpp"
 #include "ngraph/runtime/kernel/broadcast.hpp"
 #include "ngraph/runtime/kernel/concat.hpp"
@@ -367,7 +368,8 @@ using namespace ngraph::runtime;
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
     {
-        writer << "extern \"C\" void " << f->get_name() << "(void** inputs, void** outputs);\n";
+        writer << "extern \"C\" void " << f->get_name()
+               << "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx);\n";
     }
     writer << "\n";
 
@@ -446,7 +448,7 @@ using namespace ngraph::runtime;
         }
 
         writer << "extern \"C\" void " << current_function->get_name();
-        writer << "(void** inputs, void** outputs)\n";
+        writer << "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx)\n";
         writer << "{\n";
         writer.indent++;
 
@@ -457,6 +459,10 @@ using namespace ngraph::runtime;
         }
 
         runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(writer);
+
+        // Profiling
+        writer << "cpu::Timestamp start_ts;\n"
+               << "int profiler_count = 0;\n\n";
 
         bool temporaries_used = false;
         size_t worst_case_tmp_size = 0;
@@ -581,12 +587,14 @@ using namespace ngraph::runtime;
                 throw ngraph_error("Unhandled op during code generation : " + node->description());
             }
             vector<TensorViewWrapper> in;
+            vector<string> node_input_names, node_output_names;
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
                 in.push_back(
                     TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
+                node_input_names.emplace_back(tv->get_tensor().get_name());
             }
             vector<TensorViewWrapper> out;
             for (const descriptor::Output& output : node->get_outputs())
@@ -594,11 +602,13 @@ using namespace ngraph::runtime;
                 shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
                 out.push_back(
                     TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
+                node_output_names.emplace_back(tv->get_tensor().get_name());
             }
 
             // Emit operation prologue
             if (!node->is_parameter() && !node->is_constant())
             {
+                op_attrs.emplace_back(node->description(), node_output_names, node_input_names);
                 if (m_use_tbb)
                 {
                     writer << "tbb::flow::continue_node<tbb::flow::continue_msg> "
@@ -611,6 +621,7 @@ using namespace ngraph::runtime;
                 {
                     emit_debug_function_entry(writer, node.get(), in, out);
                 }
+                writer << "start_ts = cpu::Clock::now();\n";
             }
 
             // Emit operation body
@@ -646,6 +657,9 @@ using namespace ngraph::runtime;
                 {
                     emit_debug_function_exit(writer, node.get(), in, out);
                 }
+                writer << "ctx->op_durations[profiler_count++] = "
+                       << "(std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() - "
+                          "start_ts)).count();\n";
                 if (m_use_tbb)
                 {
                     writer.indent--;

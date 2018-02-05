@@ -1004,7 +1004,7 @@ void runtime::cpu::CPU_Emitter::EmitFunctionCall(
         writer << "\n};\n";
 
         writer << "\n";
-        writer << function->get_name() << "(args, out);\n";
+        writer << function->get_name() << "(args, out, ctx);\n";
     }
     writer.indent--;
     writer << "}\n";
@@ -1089,7 +1089,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << type << " result;\n";
             writer << "void* args[] = {&x, &y};\n";
             writer << "void* out[] = {&result};\n";
-            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << reduction_function->get_name() << "(args, out, ctx);\n";
             writer << "return result;\n";
             writer.indent--;
             writer << "};\n";
@@ -1125,7 +1125,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << type << " result;\n";
             writer << "void* args[] = {&x, &y};\n";
             writer << "void* out[] = {&result};\n";
-            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << reduction_function->get_name() << "(args, out, ctx);\n";
             writer << "return result;\n";
             writer.indent--;
             writer << "};\n";
@@ -1157,7 +1157,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << type << " result;\n";
             writer << "void* args[] = {&x, &y};\n";
             writer << "void* out[] = {&result};\n";
-            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << reduction_function->get_name() << "(args, out, ctx);\n";
             writer << "return result;\n";
             writer.indent--;
             writer << "};\n";
@@ -1179,7 +1179,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
         writer << type << " result;\n";
         writer << "void* args[] = {&x, &y};\n";
         writer << "void* out[] = {&result};\n";
-        writer << reduction_function->get_name() << "(args, out);\n";
+        writer << reduction_function->get_name() << "(args, out, ctx);\n";
         writer << "return result;\n";
         writer.indent--;
         writer << "};\n";
@@ -1207,7 +1207,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
     writer << type << " result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << reduction_function->get_name() << "(args, out);\n";
+    writer << reduction_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
@@ -2180,7 +2180,7 @@ void runtime::cpu::CPU_Emitter::EmitReduceWindow(
     writer << type << " result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << reduction_function->get_name() << "(args, out);\n";
+    writer << reduction_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
@@ -2224,7 +2224,7 @@ void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
     writer << "char result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << selection_function->get_name() << "(args, out);\n";
+    writer << selection_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
@@ -2235,7 +2235,7 @@ void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
     writer << type << " result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << scatter_function->get_name() << "(args, out);\n";
+    writer << scatter_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
