@@ -31,6 +31,10 @@
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/placement.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/ops/result.hpp"
+#include "ngraph/ops/result_vector.hpp"
+
+#include <iostream>
 
 using namespace std;
 using namespace ngraph;
@@ -118,9 +122,9 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
                           std::shared_ptr<Node> replacement,
                           bool replace_output)
 {
-    if (target->is_output() && !replace_output)
+    if (target->is_output())
     {
-        return;
+        throw ngraph_error("Result nodes cannot be replaced.");
     }
 
     // Fix input/output descriptors
@@ -197,6 +201,15 @@ std::list<std::shared_ptr<ngraph::Node>>
     return result_list;
 }
 
+void ngraph::NodeMap::update(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> val)
+{
+    if (!exists(orig))
+    {
+        throw ngraph_error("Node doesn't exist!");
+    }
+    m_node_map[orig] = val;
+}
+
 void ngraph::NodeMap::add(std::shared_ptr<ngraph::Node> orig,
                           std::shared_ptr<ngraph::Node> replacement)
 {
@@ -252,10 +265,15 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     clone_nodes(func->get_ops(), node_map);
 
     // get cloned function results and parameters
-    NodeVector cloned_results;
+    ResultVector cloned_results;
     for (shared_ptr<Node> node : func->get_results())
     {
-        cloned_results.push_back(node_map.get(node));
+        auto result = std::dynamic_pointer_cast<op::Result>(node_map.get(node));
+        if (!result)
+        {
+            throw ngraph_error("Results should be of type op::Result");
+        }
+        cloned_results.push_back(result);
     }
     std::vector<std::shared_ptr<op::Parameter>> cloned_params;
     for (auto param : func->get_parameters())
@@ -417,8 +435,11 @@ static shared_ptr<Function> build_largest_colocated_function(
                     if (map_source_node_to_parameter.find(input_op) ==
                         map_source_node_to_parameter.end())
                     {
+                        
                         shared_ptr<op::Parameter> p = make_shared<op::Parameter>(
                             input_op->get_output_element_type(0), input_op->get_output_shape(0));
+                        std::cout << "created parm = " << p->get_name() << " for " << input_op->get_name() 
+                            << " in " << &map_parameter_to_source_node  << std::endl;
                         p->set_placement(function_placement);
                         insert_parameter_split_between(input_op, n, p);
                         map_source_node_to_parameter[input_op] = p;
@@ -435,8 +456,23 @@ static shared_ptr<Function> build_largest_colocated_function(
             }
         }
     }
+    auto func = make_shared<Function>(outputs, collected_parameters);
 
-    return make_shared<Function>(outputs, collected_parameters);
+    /*
+    for (size_t i = 0; i < outputs.size(); i++)
+    {
+        auto result = func->get_results().at(i);
+        auto src_node = outputs.at(i);
+        if (result->get_input_op(0) != src_node)
+        {
+            throw ngraph_error("new_key's input should be equal to output");
+        }
+        
+        auto parm = map_source_node_to_parameter[src_node];
+        map_parameter_to_source_node[parm] = result;
+    }
+    */
+    return func;
 }
 
 // The returned nodes contains the node N with highest order. If N is placed at P, the returned
@@ -528,7 +564,7 @@ vector<shared_ptr<Function>> ngraph::split_function_by_placement(
         // Remove input-output and constant-output aliasing
         if (f_parameters.count(node) == 0 && node->description() != "Constant")
         {
-            unvisited_outputs.insert(node);
+            unvisited_outputs.insert(node->get_input_op(0));
         }
     }
 
@@ -570,6 +606,31 @@ vector<shared_ptr<Function>> ngraph::split_function_by_placement(
         }
         unvisited_outputs = updated_unvisited_outputs;
     }
+
+
+    unordered_map<shared_ptr<Node>, shared_ptr<Node>> map_source_node_to_result;
+    for (auto cf : colocated_functions)
+    {
+        for (auto r : cf->get_results())
+        {
+            map_source_node_to_result[r->get_input_op(0)] = r;
+        }
+    }
+
+    for ( auto it = map_source_node_to_result.begin(); it != map_source_node_to_result.end(); ++it )
+        std::cout << " map_source_node_to_result = " << it->first->get_name() << ":" << it->second->get_name() << std::endl;
+
+    for (auto it = map_parameter_to_source_node.begin(); it != map_parameter_to_source_node.end(); ++it)
+    {
+        if (map_source_node_to_result.count(it->second) != 0)
+        {
+            std::cout << "Replacing " << it->second << " with " << map_source_node_to_result[it->second] << std::endl;
+            it->second = map_source_node_to_result[it->second];
+        }
+    }
+
+    for ( auto it = map_parameter_to_source_node.begin(); it != map_parameter_to_source_node.end(); ++it )
+        std::cout << " after_replace = " << it->first->get_name() << ":" << it->second->get_name() << std::endl;
 
     // The colocated_functions should be called in reversed order
     reverse(colocated_functions.begin(), colocated_functions.end());

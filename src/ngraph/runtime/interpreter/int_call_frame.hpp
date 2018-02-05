@@ -39,6 +39,7 @@
 #include "ngraph/ops/reduce_window.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/result.hpp"
 #include "ngraph/ops/reverse.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/slice.hpp"
@@ -89,6 +90,7 @@
 #include "ngraph/runtime/kernel/relu.hpp"
 #include "ngraph/runtime/kernel/replace_slice.hpp"
 #include "ngraph/runtime/kernel/reshape.hpp"
+#include "ngraph/runtime/kernel/result.hpp"
 #include "ngraph/runtime/kernel/reverse.hpp"
 #include "ngraph/runtime/kernel/select.hpp"
 #include "ngraph/runtime/kernel/select_and_scatter.hpp"
@@ -719,6 +721,13 @@ private:
                             args[0]->get_shape(),
                             reshape->get_input_order(),
                             out[0]->get_shape());
+        }
+        else if (node_op == "Result")
+        {
+            ngraph::op::Result* res = dynamic_cast<ngraph::op::Result*>(&node);
+            kernel::result(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                           reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                           shape_size(res->get_shape()));
         }
         else if (node_op == "Reverse")
         {

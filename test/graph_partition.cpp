@@ -71,6 +71,8 @@ public:
         , m_map_parameter_to_index(map_parameter_to_index)
         , m_map_result_to_index(map_result_to_index)
     {
+        for ( auto it = m_map_parameter_to_source_node.begin(); it != m_map_parameter_to_source_node.end(); ++it )
+            std::cout << " m_map_parameter_to_source_node = " << it->first->get_name() << ":" << it->second->get_name() << std::endl;
     }
 
     void call(const vector<shared_ptr<runtime::TensorView>>& inputs,
@@ -128,7 +130,9 @@ public:
                     // output TensorView, or parameter placed on a different device.
                     auto tv = backend->make_primary_tensor_view(parameter->get_element_type(),
                                                                 parameter->get_shape());
+                    std::cout << " looking up parameter :" << parameter->get_name() << " in " << &m_map_parameter_to_source_node << std::endl;
                     auto source_node = m_map_parameter_to_source_node.at(parameter);
+                    std::cout << " source_node = " << source_node->get_name() << std::endl;
                     auto source_tv = map_node_to_tensor_view.at(source_node);
                     copy_data(tv, read_vector<float>(source_tv));
 
@@ -162,7 +166,21 @@ public:
             }
 
             // Call
+
+        
+            std::cout << "parm inputs : \n";
+            for (auto tv : parameter_tensor_views)
+            {
+                std::cout << vector_to_string(read_vector<float>(tv)) << std::endl;
+            }
+
             call_frame->call(parameter_tensor_views, result_tensor_views);
+
+            std::cout << "result inputs : \n";
+            for (auto tv : result_tensor_views)
+            {
+                std::cout << vector_to_string(read_vector<float>(tv)) << std::endl;
+            }
         }
 
         // Copy to HybridCallFrame's output TensorView
@@ -218,11 +236,6 @@ public:
         {
             map_parameter_to_index[f->get_parameters().at(i)] = i;
         }
-        unordered_map<shared_ptr<Node>, size_t> map_result_to_index;
-        for (size_t i = 0; i < f->get_results().size(); ++i)
-        {
-            map_result_to_index[f->get_results().at(i)] = i;
-        }
 
         // Parameter's source is either itself, or the output node of the upstream function
         unordered_map<shared_ptr<op::Parameter>, shared_ptr<Node>> map_parameter_to_source_node;
@@ -230,6 +243,13 @@ public:
         // Split to functions
         vector<shared_ptr<Function>> funcs =
             split_function_by_placement(f, map_parameter_to_source_node);
+
+        auto main_func = funcs.back();
+        unordered_map<shared_ptr<Node>, size_t> map_result_to_index;
+        for (size_t i = 0; i < main_func->get_results().size(); ++i)
+        {
+            map_result_to_index[main_func->get_results().at(i)] = i;
+        }
 
         // Make call frames
         vector<shared_ptr<runtime::CallFrame>> call_frames;
@@ -243,6 +263,8 @@ public:
             call_frames.push_back(call_frame);
         }
 
+         for ( auto it = map_parameter_to_source_node.begin(); it != map_parameter_to_source_node.end(); ++it )
+            std::cout << " map_parameter_to_source_node = " << it->first->get_name() << ":" << it->second->get_name() << std::endl;
         return make_shared<HybridCallFrame>(funcs,
                                             call_frames,
                                             map_parameter_to_source_node,
@@ -429,6 +451,12 @@ TEST(graph_partition, hybrid_backend_abc)
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
+
+    for (auto n : f->get_ordered_ops())
+    {
+        std::cout << " n :" << n->get_name() << std::endl;
+    }
+
     pass_manager.run_passes(f);
 
     auto backend = make_shared<HybridBackend>();

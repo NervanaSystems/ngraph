@@ -78,6 +78,8 @@ namespace ngraph
             return (m_node_map.count(orig) != 0);
         }
 
+        void update(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> val);
+
         const std::unordered_map<std::shared_ptr<ngraph::Node>, std::shared_ptr<ngraph::Node>>&
             get_node_map() const
         {

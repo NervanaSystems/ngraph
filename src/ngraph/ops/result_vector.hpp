@@ -19,34 +19,39 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/ops/result.hpp"
+
 namespace ngraph
 {
-    class Node;
-
-    namespace op
-    {
-        class Result;
-    }
-
     /// \brief Zero or more nodes.
-    class NodeVector : public std::vector<std::shared_ptr<Node>>
+    class ResultVector : public std::vector<std::shared_ptr<op::Result>>
     {
     public:
-        NodeVector(const std::initializer_list<std::shared_ptr<Node>>& nodes)
-            : std::vector<std::shared_ptr<Node>>(nodes)
+        // ResultVector(std::vector<std::shared_ptr<op::Result>>::iterator begin, std::vector<std::shared_ptr<op::Result>>::iterator end)
+        //     : std::vector<std::shared_ptr<op::Result>>(begin, end)
+        // {
+        // }
+
+        ResultVector(size_t size)
+            : std::vector<std::shared_ptr<op::Result>>(size)
         {
         }
 
-        NodeVector(const std::vector<std::shared_ptr<Node>>& nodes)
-            : std::vector<std::shared_ptr<Node>>(nodes)
+        ResultVector(const std::initializer_list<std::shared_ptr<op::Result>>& nodes)
+            : std::vector<std::shared_ptr<op::Result>>(nodes)
         {
         }
 
-        NodeVector(const NodeVector& nodes)
-            : std::vector<std::shared_ptr<Node>>(nodes)
+        ResultVector(const std::vector<std::shared_ptr<op::Result>>& nodes)
+            : std::vector<std::shared_ptr<op::Result>>(nodes)
         {
         }
 
-        NodeVector() {}
+        ResultVector(const ResultVector& nodes)
+            : std::vector<std::shared_ptr<op::Result>>(nodes)
+        {
+        }
+
+        ResultVector() {}
     };
 }
