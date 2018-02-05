@@ -92,6 +92,7 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
@@ -462,9 +463,12 @@ using namespace ngraph::runtime;
 
         runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(writer);
 
-        // Profiling
-        writer << "cpu::Timestamp start_ts;\n"
-               << "int profiler_count = 0;\n\n";
+        // Execution tracing support
+        if (runtime::cpu::IsTracingEnabled())
+        {
+            writer << "cpu::Timestamp start_ts;\n"
+                   << "int profiler_count = 0;\n\n";
+        }
 
         bool temporaries_used = false;
         size_t worst_case_tmp_size = 0;
@@ -623,7 +627,10 @@ using namespace ngraph::runtime;
                 {
                     emit_debug_function_entry(writer, node.get(), in, out);
                 }
-                writer << "start_ts = cpu::Clock::now();\n";
+                if (runtime::cpu::IsTracingEnabled())
+                {
+                    writer << "start_ts = cpu::Clock::now();\n";
+                }
             }
 
             // Emit operation body
@@ -659,9 +666,12 @@ using namespace ngraph::runtime;
                 {
                     emit_debug_function_exit(writer, node.get(), in, out);
                 }
-                writer << "ctx->op_durations[profiler_count++] = "
-                       << "(std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() - "
-                          "start_ts)).count();\n";
+                if (runtime::cpu::IsTracingEnabled())
+                {
+                    writer << "ctx->op_durations[profiler_count++] = "
+                           << "(std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() - "
+                              "start_ts)).count();\n";
+                }
                 if (m_use_tbb)
                 {
                     writer.indent--;
