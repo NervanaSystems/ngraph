@@ -243,7 +243,7 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
     size_t spatial_dimension_count = forward_arg_shape.size() - 2;
 
     //
-    // Make sure window shape, window movement strides, and  have same rank as Di.
+    // Make sure window shape, window movement strides, and padding have same rank as Di.
     //
     if (window_shape.size() != spatial_dimension_count)
     {
