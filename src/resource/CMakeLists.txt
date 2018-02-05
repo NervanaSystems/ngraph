@@ -25,12 +25,21 @@ if (NGRAPH_CPU_ENABLE AND NOT APPLE)
     set(HEADER_PATHS
         "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
         "MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\""
-        "CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\""
-        "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\""
+        "CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\""
         "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
     )
 
+    if(NGRAPH_TBB_ENABLE)
+        list(APPEND HEADER_PATHS "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\"")
+    endif()
+
+    if(NGRAPH_TBB_ENABLE)
+        set(NGRAPH_TBB_OPTION "NGRAPH_TBB_ENABLE")
+    else()
+        set(NGRAPH_TBB_OPTION "")
+    endif()
+
     message("HEADER_PATHS ${HEADER_PATHS}")
 
-    set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_PATHS}")
+    set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_PATHS};${NGRAPH_TBB_OPTION}")
 endif()
