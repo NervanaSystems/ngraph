@@ -47,6 +47,12 @@ namespace ngraph
         {
         }
 
+        template <class InputIterator>
+        Shape(InputIterator first, InputIterator last)
+            : std::vector<size_t>(first, last)
+        {
+        }
+
         Shape() {}
         Shape& operator=(const Shape& v)
         {

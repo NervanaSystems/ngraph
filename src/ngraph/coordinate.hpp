@@ -52,6 +52,12 @@ namespace ngraph
         {
         }
 
+        template <class InputIterator>
+        Coordinate(InputIterator first, InputIterator last)
+            : std::vector<size_t>(first, last)
+        {
+        }
+
         Coordinate& operator=(const Coordinate& v)
         {
             static_cast<std::vector<size_t>*>(this)->operator=(v);

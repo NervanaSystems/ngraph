@@ -43,6 +43,12 @@ namespace ngraph
         {
         }
 
+        template <class InputIterator>
+        AxisVector(InputIterator first, InputIterator last)
+            : std::vector<size_t>(first, last)
+        {
+        }
+
         AxisVector() {}
         AxisVector& operator=(const AxisVector& v)
         {

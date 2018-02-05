@@ -43,6 +43,12 @@ namespace ngraph
         {
         }
 
+        template <class InputIterator>
+        CoordinateDiff(InputIterator first, InputIterator last)
+            : std::vector<std::ptrdiff_t>(first, last)
+        {
+        }
+
         CoordinateDiff() {}
         CoordinateDiff& operator=(const CoordinateDiff& v)
         {

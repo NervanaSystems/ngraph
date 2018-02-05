@@ -42,6 +42,12 @@ namespace ngraph
         {
         }
 
+        template <class InputIterator>
+        Strides(InputIterator first, InputIterator last)
+            : std::vector<size_t>(first, last)
+        {
+        }
+
         Strides() {}
         Strides& operator=(const Strides& v)
         {
