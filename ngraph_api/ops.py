@@ -17,7 +17,8 @@
 
 import numpy as np
 
-from pyngraph.op import Parameter
+from pyngraph import Node
+from pyngraph.op import Abs, Parameter, Sqrt, Exp, Log, Negative, Floor, Ceiling
 
 from ngraph_api.utils.input_validation import assert_list_of_ints
 from ngraph_api.utils.types import get_element_type, py_numeric_type, tensor_shape
@@ -31,3 +32,45 @@ def parameter(shape, dtype=np.float32, name=None):
     assert_list_of_ints(shape, 'Parameter shape must be a list of integer values.')
     element_type = get_element_type(dtype)
     return Parameter(element_type, shape)
+
+
+@nameable_op
+def absolute(node, name=None):  # type: (Node, str) -> Node
+    """Return node which applies f(x) = abs(x) to the input node elementwise."""
+    return Abs(node)
+
+
+@nameable_op
+def sqrt(node, name=None):  # type: (Node, str) -> Node
+    """Return node which applies square root to the input node elementwise."""
+    return Sqrt(node)
+
+
+@nameable_op
+def exp(node, name=None):  # type: (Node, str) -> Node
+    """Return node which applies exp to the input node elementwise."""
+    return Exp(node)
+
+
+@nameable_op
+def log(node, name=None):  # type: (Node, str) -> Node
+    """Return node which applies natural logarithm to the input node elementwise."""
+    return Log(node)
+
+
+@nameable_op
+def negative(node, name=None):  # type: (Node, str) -> Node
+    """Return node which applies f(x) = -x to the input node elementwise."""
+    return Negative(node)
+
+
+@nameable_op
+def floor(node, name=None):  # type: (Node, str) -> Node
+    """Return node which applies floor to the input node elementwise."""
+    return Floor(node)
+
+
+@nameable_op
+def ceiling(node, name=None):  # type: (Node, str) -> Node
+    """Return node which applies ceiling to the input node elementwise."""
+    return Ceiling(node)
