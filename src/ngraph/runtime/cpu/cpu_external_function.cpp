@@ -200,8 +200,9 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::ReduceWindow), &runtime::cpu::CPU_Emitter::EmitReduceWindow},
     {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPU_Emitter::EmitSelectAndScatter},
     {TI(ngraph::op::AvgPool), &runtime::cpu::CPU_Emitter::EmitAvgPool},
-    {TI(ngraph::op::AvgPoolBprop), &runtime::cpu::CPU_Emitter::EmitAvgPoolBprop},
+    {TI(ngraph::op::AvgPoolBackprop), &runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop},
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::EmitPad},
+    {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
