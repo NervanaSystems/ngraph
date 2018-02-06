@@ -71,6 +71,6 @@ def floor(node, name=None):  # type: (Node, str) -> Node
 
 
 @nameable_op
-def ceil(node, name=None):  # type: (Node, str) -> Node
+def ceiling(node, name=None):  # type: (Node, str) -> Node
     """Return node which applies ceiling to the input node elementwise."""
     return Ceiling(node)
