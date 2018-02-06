@@ -622,7 +622,7 @@ using namespace ngraph::runtime;
             {
                 if (current_function->get_name() == function_name)
                 {
-                    op_attrs.emplace_back(node->description(), node_output_names, node_input_names);
+                    m_op_attrs.emplace_back(node->description(), node_output_names, node_input_names);
                 }
                 if (m_use_tbb)
                 {

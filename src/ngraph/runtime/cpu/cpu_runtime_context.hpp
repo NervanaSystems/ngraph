@@ -16,7 +16,6 @@
 
 #include <chrono>
 #include <cstdint>
-#include <mkldnn.hpp>
 
 namespace ngraph
 {

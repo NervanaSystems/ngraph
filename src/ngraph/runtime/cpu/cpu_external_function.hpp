@@ -72,7 +72,7 @@ namespace ngraph
                                      bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
-                const std::vector<OpAttributes>& get_op_attrs() const { return op_attrs; }
+                const std::vector<OpAttributes>& get_op_attrs() const { return m_op_attrs; }
             protected:
                 void compile();
 
@@ -104,7 +104,7 @@ namespace ngraph
                 bool m_emit_timing;
                 bool m_use_tbb;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
-                std::vector<OpAttributes> op_attrs;
+                std::vector<OpAttributes> m_op_attrs;
             };
         }
     }
