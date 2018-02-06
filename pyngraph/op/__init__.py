@@ -36,6 +36,7 @@ from _pyngraph.op import Ceiling
 from _pyngraph.op import Concat
 from _pyngraph.op import Constant
 from _pyngraph.op import Convert
+from _pyngraph.op import Convolution
 from _pyngraph.op import Cos
 from _pyngraph.op import Cosh
 from _pyngraph.op import Divide
@@ -48,6 +49,7 @@ from _pyngraph.op import GreaterEq
 from _pyngraph.op import Less
 from _pyngraph.op import LessEq
 from _pyngraph.op import Log
+from _pyngraph.op import MaxPool
 from _pyngraph.op import Maximum
 from _pyngraph.op import Minimum
 from _pyngraph.op import Multiply
@@ -58,12 +60,14 @@ from _pyngraph.op import OneHot
 from _pyngraph.op import Parameter
 from _pyngraph.op import Power
 from _pyngraph.op import Reduce
+from _pyngraph.op import ReplaceSlice
 from _pyngraph.op import Reshape
 from _pyngraph.op import Reverse
 from _pyngraph.op import Select
 from _pyngraph.op import Sign
 from _pyngraph.op import Sin
 from _pyngraph.op import Sinh
+from _pyngraph.op import Slice
 from _pyngraph.op import Sqrt
 from _pyngraph.op import Subtract
 from _pyngraph.op import Sum

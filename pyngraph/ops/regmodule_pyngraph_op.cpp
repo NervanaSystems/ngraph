@@ -37,6 +37,7 @@ void regmodule_pyngraph_op(py::module m){
     regclass_pyngraph_op_Concat(m_op);
     regclass_pyngraph_op_Constant(m_op);
     regclass_pyngraph_op_Convert(m_op);
+    regclass_pyngraph_op_Convolution(m_op);
     regclass_pyngraph_op_Divide(m_op);
     regclass_pyngraph_op_Dot(m_op);
     regclass_pyngraph_op_Equal(m_op);
@@ -47,6 +48,7 @@ void regmodule_pyngraph_op(py::module m){
     regclass_pyngraph_op_Less(m_op);
     regclass_pyngraph_op_LessEq(m_op);
     regclass_pyngraph_op_Log(m_op);
+    regclass_pyngraph_op_MaxPool(m_op);
     regclass_pyngraph_op_Maximum(m_op);
     regclass_pyngraph_op_Minimum(m_op);
     regclass_pyngraph_op_Multiply(m_op);
@@ -57,12 +59,14 @@ void regmodule_pyngraph_op(py::module m){
     regclass_pyngraph_op_Power(m_op);
     regclass_pyngraph_op_OneHot(m_op);
     regclass_pyngraph_op_Reduce(m_op);
+    regclass_pyngraph_op_ReplaceSlice(m_op);
     regclass_pyngraph_op_Reshape(m_op);
     regclass_pyngraph_op_Reverse(m_op);
     regclass_pyngraph_op_Select(m_op);
     regclass_pyngraph_op_Sign(m_op);
     regclass_pyngraph_op_Sin(m_op);
     regclass_pyngraph_op_Sinh(m_op);
+    regclass_pyngraph_op_Slice(m_op);
     regclass_pyngraph_op_Sqrt(m_op);
     regclass_pyngraph_op_Subtract(m_op);
     regclass_pyngraph_op_Sum(m_op);

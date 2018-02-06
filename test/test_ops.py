@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # ----------------------------------------------------------------------------
-# Copyright 2016 Nervana Systems Inc.
+# Copyright 2018 Nervana Systems Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -29,6 +29,7 @@ from pyngraph.op import Constant, Abs, Exp, Log, Sum
 from pyngraph.op import Greater, Less, Equal, NotEqual, GreaterEq, LessEq, Not
 from pyngraph.op import OneHot, Broadcast, Reshape, Convert, Reduce
 from pyngraph.op import Concat, Select
+from pyngraph.op import Reverse, MaxPool, Convolution, ReplaceSlice, Slice
 
 
 def make_backend_call_frame(function):
@@ -296,7 +297,7 @@ def unary_op(op_str, a):
     elif op_str == 'negative':
         return Negative(a)
     elif op_str == 'Reverse':
-        return Reverse(a, {0})
+        return Reverse(a, {1})
     elif op_str == 'Sign':
         return Sign(a)
     elif op_str == 'Sin':
@@ -351,9 +352,11 @@ def unary_op_ref(op_str, a):
 
 
 def unary_op_exec(op_str, input_list):
-    """input_list needs to have deep length of 4"""
+    """
+    input_list needs to have deep length of 4
+    """
     element_type = Type.f32
-    shape = [2, 2]
+    shape = np.array(input_list).shape
     A = Parameter(element_type, shape)
     parameter_list = [A]
     function = Function([unary_op(op_str, A)], parameter_list, 'test')
@@ -364,7 +367,7 @@ def unary_op_exec(op_str, input_list):
 
     a.write(util.numpy_to_c(np.array(input_list, dtype=np.float32)), 0, 16)
 
-    result_arr = np.array([0, 0, 0, 0], dtype=np.float32)
+    result_arr = np.zeros(shape, dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 16)
     cf.call([a], [result])
     result.read(util.numpy_to_c(result_arr), 0, 16)
@@ -478,7 +481,6 @@ def test_tanh():
 
 
 def test_reverse():
-    return
     input_list = [[-1, 0], [0.5, 1]]
     op_str = 'Reverse'
     unary_op_exec(op_str, input_list)
@@ -766,5 +768,312 @@ def test_select():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-if __name__ == '__main__':
-    test_cos()
+def test_slice():
+
+    element_type = Type.f32
+    shape = [6, 6]
+    A = Parameter(element_type, shape)
+    parameter_list = [A]
+
+    input_arr = np.arange(36, dtype=np.float32).reshape(6, 6)
+    lower_bounds = [1, 1]
+    upper_bounds = [5, 5]
+
+    function = Function([Slice(A,  lower_bounds, upper_bounds)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(element_type, shape)
+    result = backend.make_primary_tensor_view(element_type, [4, 4])
+
+    a.write(util.numpy_to_c(input_arr), 0, 36*4)
+
+    result_arr = np.zeros(16, dtype=np.float32).reshape(4, 4)
+    result.write(util.numpy_to_c(result_arr), 0, 16*4)
+    cf.call([a], [result])
+    result.read(util.numpy_to_c(result_arr), 0, 64)
+
+    result_arr_ref = input_arr[lower_bounds[0]:upper_bounds[0], lower_bounds[1]:upper_bounds[1]]
+
+    assert np.allclose(result_arr, result_arr_ref)
+
+
+    #test with strides
+    strides = [1, 2]
+
+    function = Function([Slice(A, lower_bounds, upper_bounds, strides)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    result = backend.make_primary_tensor_view(element_type, [4, 2])
+    result_arr = np.zeros(8, dtype=np.float32).reshape(4, 2)
+
+    result.write(util.numpy_to_c(result_arr), 0, 8*4)
+    cf.call([a], [result])
+    result.read(util.numpy_to_c(result_arr), 0, 32)
+
+    result_arr_ref = result_arr_ref[::strides[0], ::strides[1]]
+
+    assert np.allclose(result_arr, result_arr_ref)
+
+
+def test_replace_slice():
+
+    element_type = Type.f32
+    A = Parameter(element_type, [6, 4])
+    B = Parameter(element_type, [3, 2])
+    parameter_list = [A, B]
+
+    input_arr_a = np.zeros(24, dtype=np.float32).reshape(6, 4)
+    input_arr_b = np.ones(6, dtype=np.float32).reshape(3, 2)
+    lower_bounds = [0, 1]
+    upper_bounds = [3, 3]
+
+    function = Function([ReplaceSlice(A, B, lower_bounds, upper_bounds)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(element_type, [6, 4])
+    b = backend.make_primary_tensor_view(element_type, [3, 2])
+    result = backend.make_primary_tensor_view(element_type, [6, 4])
+
+    a.write(util.numpy_to_c(input_arr_a), 0, 24*4)
+    b.write(util.numpy_to_c(input_arr_b), 0, 6*4)
+
+    result_arr = np.zeros(24, dtype=np.float32).reshape(6, 4)
+    result.write(util.numpy_to_c(result_arr), 0, 24*4)
+    cf.call([a, b], [result])
+    result.read(util.numpy_to_c(result_arr), 0, 24*4)
+
+    result_arr_ref = np.copy(input_arr_a)
+    result_arr_ref[lower_bounds[0]:upper_bounds[0], lower_bounds[1]:upper_bounds[1]] = input_arr_b
+
+    assert np.allclose(result_arr, result_arr_ref)
+
+    #test with strides
+    lower_bounds = [0, 0]
+    upper_bounds = [5, 3]
+    strides = [2, 2]
+
+    function = Function([ReplaceSlice(A, B, lower_bounds, upper_bounds, strides)],
+                        parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    cf.call([a, b], [result])
+    result.read(util.numpy_to_c(result_arr), 0, 24*4)
+
+    result_arr_ref = np.copy(input_arr_a)
+    result_arr_ref[::strides[0], ::strides[1]] = input_arr_b
+
+    assert np.allclose(result_arr, result_arr_ref)
+
+
+def test_max_pool():
+
+    #test 1d
+    element_type = Type.f32
+    shape = [1, 1, 10]
+    A = Parameter(element_type, shape)
+    parameter_list = [A]
+
+    input_arr = np.arange(10, dtype=np.float32).reshape(1, 1, 10)
+    window_shape = [3]
+
+    function = Function([MaxPool(A, window_shape)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(element_type, shape)
+    result = backend.make_primary_tensor_view(element_type, [1, 1, 8])
+
+    a.write(util.numpy_to_c(input_arr), 0, 10*4)
+
+    result_arr = np.zeros(8, dtype=np.float32).reshape(1, 1, 8)
+    result.write(util.numpy_to_c(result_arr), 0, 8*4)
+    cf.call([a], [result])
+    result.read(util.numpy_to_c(result_arr), 0, 32)
+
+    result_arr_ref = (np.arange(8) + 2).reshape(1, 1, 8)
+    assert np.allclose(result_arr, result_arr_ref)
+
+    #test 1d with strides
+    strides = [2]
+
+    function = Function([MaxPool(A, window_shape, strides)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    size = 4
+    result = backend.make_primary_tensor_view(element_type, [1, 1, size])
+    result_arr = np.zeros(size, dtype=np.float32).reshape(1, 1, size)
+
+    result.write(util.numpy_to_c(result_arr), 0, size*4)
+    cf.call([a], [result])
+    result.read(util.numpy_to_c(result_arr), 0, size*4)
+
+    result_arr_ref = ((np.arange(size) + 1) * 2).reshape(1, 1, size)
+    assert np.allclose(result_arr, result_arr_ref)
+
+    #test 2d
+    element_type = Type.f32
+    shape = [1, 1, 10, 10]
+    A = Parameter(element_type, shape)
+    parameter_list = [A]
+
+    input_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
+    window_shape = [3, 3]
+
+    function = Function([MaxPool(A, window_shape)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(element_type, shape)
+    result = backend.make_primary_tensor_view(element_type, [1, 1, 8, 8])
+
+    a.write(util.numpy_to_c(input_arr), 0, 10*10*4)
+
+    result_arr = np.zeros(64, dtype=np.float32).reshape(1, 1, 8, 8)
+    result.write(util.numpy_to_c(result_arr), 0, 8*8*4)
+    cf.call([a], [result])
+    result.read(util.numpy_to_c(result_arr), 0, 8*8*4)
+
+    result_arr_ref = ((np.arange(100).reshape(10, 10))[2:, 2:]).reshape(1, 1, 8, 8)
+    assert np.allclose(result_arr, result_arr_ref)
+
+    #test 2d with strides
+    strides = [2, 2]
+
+    function = Function([MaxPool(A, window_shape, strides)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    size = 4
+    result = backend.make_primary_tensor_view(element_type, [1, 1, size, size])
+    result_arr = np.zeros(size*size, dtype=np.float32).reshape(1, 1, size, size)
+
+    result.write(util.numpy_to_c(result_arr), 0, size*size*4)
+    cf.call([a], [result])
+    result.read(util.numpy_to_c(result_arr), 0, size*size*4)
+
+    result_arr_ref = ((np.arange(100).reshape(10, 10))[2::2, 2::2]).reshape(1, 1, size, size)
+    assert np.allclose(result_arr, result_arr_ref)
+
+
+def convolution2d(image, filterit, strides=(1, 1), dilation=(0, 0)):
+    i_m, i_n = image.shape
+    f_m, f_n = filterit.shape
+
+    new_filter = np.zeros((f_m + dilation[0]) * (f_n + dilation[1]),
+                          dtype=np.float32).reshape(f_m + dilation[0], f_n + dilation[1])
+    new_filter[(dilation[0] // 2) : (dilation[0] // 2) + f_m,
+               (dilation[1] // 2) : (dilation[1] // 2) + f_n] = filterit
+    filterit = new_filter
+    f_m, f_n = filterit.shape
+
+    #result_shape
+    r_m = i_m - f_m + 1
+    r_n = i_n - f_n + 1
+    r_m //= strides[0]
+    r_n //= strides[1]
+
+    result = np.zeros(r_m * r_n, dtype=np.float32).reshape(r_m, r_n)
+
+    for i in range(r_m):
+        for j in range(r_n):
+            sub_m = image[i * strides[0] : i * strides[0] + f_m,
+                          j * strides[1] : j * strides[1] + f_n]
+            result[i][j] = np.sum(sub_m * filterit)
+    return result
+
+
+def test_convolution():
+
+    element_type = Type.f32
+    image_shape = [1, 1, 10, 10]
+    filter_shape = [1, 1, 3, 3]
+    A = Parameter(element_type, image_shape)
+    B = Parameter(element_type, filter_shape)
+    parameter_list = [A, B]
+
+    image_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
+    filter_arr = np.zeros(9, dtype=np.float32).reshape(1, 1, 3, 3)
+    filter_arr[0][0][1][1] = 1
+    result_arr = np.zeros(64, dtype=np.float32).reshape(1, 1, 8, 8)
+
+    function = Function([Convolution(A, B)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(element_type, image_shape)
+    b = backend.make_primary_tensor_view(element_type, filter_shape)
+
+    a.write(util.numpy_to_c(image_arr), 0, 10*10*4)
+    b.write(util.numpy_to_c(filter_arr), 0, 3*3*4)
+
+    result = backend.make_primary_tensor_view(element_type, [1, 1, 8, 8])
+    result.write(util.numpy_to_c(result_arr), 0, 8*8*4)
+    cf.call([a, b], [result])
+    result.read(util.numpy_to_c(result_arr), 0, 8*8*4)
+
+    result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0]).reshape(1, 1, 8, 8)
+    assert np.allclose(result_arr, result_arr_ref)
+
+
+def test_convolution_with_strides():
+
+    element_type = Type.f32
+    image_shape = [1, 1, 10, 10]
+    filter_shape = [1, 1, 3, 3]
+    A = Parameter(element_type, image_shape)
+    B = Parameter(element_type, filter_shape)
+    parameter_list = [A, B]
+
+    image_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
+    filter_arr = np.zeros(9, dtype=np.float32).reshape(1, 1, 3, 3)
+    filter_arr[0][0][1][1] = 1
+    strides = [2, 2]
+
+    function = Function([Convolution(A, B, strides)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(element_type, image_shape)
+    b = backend.make_primary_tensor_view(element_type, filter_shape)
+
+    a.write(util.numpy_to_c(image_arr), 0, 10*10*4)
+    b.write(util.numpy_to_c(filter_arr), 0, 3*3*4)
+
+    result_arr = np.zeros(16, dtype=np.float32).reshape(1, 1, 4, 4)
+    result = backend.make_primary_tensor_view(element_type, [1, 1, 4, 4])
+    result.write(util.numpy_to_c(result_arr), 0, 4*4*4)
+    cf.call([a, b], [result])
+
+    result.read(util.numpy_to_c(result_arr), 0, 4*4*4)
+    result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides).reshape(1, 1, 4, 4)
+    assert np.allclose(result_arr, result_arr_ref)
+
+
+def test_convolution_with_dilation():
+
+    element_type = Type.f32
+    image_shape = [1, 1, 10, 10]
+    filter_shape = [1, 1, 3, 3]
+    A = Parameter(element_type, image_shape)
+    B = Parameter(element_type, filter_shape)
+    parameter_list = [A, B]
+
+    image_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
+    filter_arr = np.zeros(9, dtype=np.float32).reshape(1, 1, 3, 3)
+    filter_arr[0][0][1][1] = 1
+    strides = [1, 1]
+    dilation = [2, 2]
+
+    function = Function([Convolution(A, B, strides, dilation)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(element_type, image_shape)
+    b = backend.make_primary_tensor_view(element_type, filter_shape)
+
+    a.write(util.numpy_to_c(image_arr), 0, 10*10*4)
+    b.write(util.numpy_to_c(filter_arr), 0, 3*3*4)
+
+    result_arr = np.zeros(36, dtype=np.float32).reshape(1, 1, 6, 6)
+    result = backend.make_primary_tensor_view(element_type, [1, 1, 6, 6])
+    result.write(util.numpy_to_c(result_arr), 0, 6*6*4)
+    cf.call([a, b], [result])
+
+    result.read(util.numpy_to_c(result_arr), 0, 6*6*4)
+    result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
+                                   dilation).reshape(1, 1, 6, 6)
+    assert np.allclose(result_arr, result_arr_ref)
