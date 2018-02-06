@@ -29,6 +29,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/ops/parameter.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -306,23 +307,13 @@ Placement ngraph::get_colocated_function_placement(shared_ptr<Function> func)
 {
     Placement placement = Placement::DEFAULT;
     traverse_nodes(func, [&](shared_ptr<Node> node) {
-        if (node->description() == "Parameter")
+        if (placement == Placement::DEFAULT)
         {
-            if (node->get_placement() != Placement::DEFAULT)
-            {
-                throw ngraph_error("Parameter node must have DEFAULT placement");
-            }
+            placement = node->get_placement();
         }
-        else
+        if (placement != node->get_placement())
         {
-            if (placement == Placement::DEFAULT)
-            {
-                placement = node->get_placement();
-            }
-            if (placement != node->get_placement())
-            {
-                throw ngraph_error("Function contains nodes of two different placements");
-            }
+            throw ngraph_error("Function contains nodes of two different placements");
         }
     });
     return placement;
@@ -341,34 +332,33 @@ shared_ptr<Function> ngraph::build_largest_colocated_function(
         throw ngraph_error("Function has no output");
     }
 
-    // Outputs shall all have same placement except parameter as output
+    // Currently we require outputs to have the same placement, stored in function_placement
     Placement function_placement = Placement::DEFAULT;
     for (auto output : outputs)
     {
-        if (output->description() == "Parameter")
+        if (function_placement == Placement::DEFAULT)
         {
-            if (output->get_placement() != Placement::DEFAULT)
-            {
-                throw ngraph_error("Parameter must have DEFAULT placement");
-            }
+            function_placement = output->get_placement();
         }
-        else
+        if (output->get_placement() != function_placement)
         {
-            if (function_placement == Placement::DEFAULT)
-            {
-                function_placement = output->get_placement();
-            }
-            if (output->get_placement() != function_placement)
-            {
-                throw ngraph_error(
-                    "Function placement invalid, all nodes in the same function should be place on "
-                    "the same device.");
-            }
+            throw ngraph_error(
+                "Function placement invalid, all nodes in the same function should be place on "
+                "the same device.");
         }
     }
 
-    // If all nodes are parameters, just return that function
-    if (function_placement == Placement::DEFAULT)
+    // If all nodes are all parameters, just return that function
+    bool is_all_parameter = true;
+    for (auto output : outputs)
+    {
+        if (output->description() != "Parameter")
+        {
+            is_all_parameter = false;
+            break;
+        }
+    }
+    if (is_all_parameter)
     {
         vector<shared_ptr<op::Parameter>> outputs_as_parameters;
         for (auto output : outputs)
@@ -403,9 +393,11 @@ shared_ptr<Function> ngraph::build_largest_colocated_function(
 
         if (n->description() == "Parameter")
         {
-            if (n->get_placement() != Placement::DEFAULT)
+            // Since we traversed from the outputs to this parameter, the parameter must have the
+            // same placement as the outputs
+            if (n->get_placement() != function_placement)
             {
-                throw ngraph_error("Parameter must have DEFAULT placement");
+                throw ngraph_error("Parameter's placement must be the same as outputs");
             }
             collected_parameters.push_back(static_pointer_cast<op::Parameter>(n));
             map_node_to_source_node[n] = n; // Can add sanity check here
@@ -414,8 +406,7 @@ shared_ptr<Function> ngraph::build_largest_colocated_function(
         {
             for (auto input_op : n->get_input_ops())
             {
-                if (input_op->get_placement() == function_placement ||
-                    input_op->get_placement() == Placement::DEFAULT)
+                if (input_op->get_placement() == function_placement)
                 {
                     // If same placement the same, only add to stack if unseen, as we only need to
                     // visit all nodes but not all edges
@@ -432,6 +423,7 @@ shared_ptr<Function> ngraph::build_largest_colocated_function(
                     {
                         shared_ptr<op::Parameter> p = make_shared<op::Parameter>(
                             input_op->get_output_element_type(0), input_op->get_output_shape(0));
+                        p->set_placement(function_placement);
                         insert_parameter_split_between(input_op, n, p);
                         map_source_node_to_parameter[input_op] = p;
                         map_node_to_source_node[p] = input_op;
@@ -448,8 +440,7 @@ shared_ptr<Function> ngraph::build_largest_colocated_function(
         }
     }
 
-    auto func = make_shared<Function>(outputs, collected_parameters);
-    return func;
+    return make_shared<Function>(outputs, collected_parameters);
 }
 
 // Split function by placement, maximizing the span each subgraph. Each subgraph will be placed in
