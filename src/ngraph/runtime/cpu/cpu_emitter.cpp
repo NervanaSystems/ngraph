@@ -106,6 +106,11 @@ void runtime::cpu::CPU_Emitter::EmitAdd(codegen::CodeWriter& writer,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     // TODO: Audit all uses of Add and fix this to use
     // the right alignment instead of Eigen::Unaligned
     writer << "{   // " << n->get_name() << "\n";
@@ -271,6 +276,11 @@ void runtime::cpu::CPU_Emitter::EmitMultiply(codegen::CodeWriter& writer,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -326,6 +336,11 @@ void runtime::cpu::CPU_Emitter::EmitAbs(codegen::CodeWriter& writer,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -459,13 +474,18 @@ void runtime::cpu::CPU_Emitter::EmitDivide(codegen::CodeWriter& writer,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
     if (n->get_element_type().is_real() == false)
     {
         // Check for divide by zero for integer types only
         size_t element_count = args[1].get_size();
-        writer << "for (size_t i=0; i<" << element_count << "; i++)\n";
+        writer << "for (size_t i=0; i < " << element_count << "; i++)\n";
         writer << "{\n";
         writer << "    if (" << args.at(1).get_name()
                << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
@@ -492,6 +512,11 @@ void runtime::cpu::CPU_Emitter::EmitEqual(codegen::CodeWriter& writer,
                                           const vector<runtime::cpu::TensorViewWrapper>& args,
                                           const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -515,6 +540,11 @@ void runtime::cpu::CPU_Emitter::EmitGreater(codegen::CodeWriter& writer,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << " xxx\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -538,6 +568,11 @@ void runtime::cpu::CPU_Emitter::EmitGreaterEq(codegen::CodeWriter& writer,
                                               const vector<runtime::cpu::TensorViewWrapper>& args,
                                               const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -561,6 +596,11 @@ void runtime::cpu::CPU_Emitter::EmitLess(codegen::CodeWriter& writer,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -584,6 +624,11 @@ void runtime::cpu::CPU_Emitter::EmitLessEq(codegen::CodeWriter& writer,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -607,6 +652,11 @@ void runtime::cpu::CPU_Emitter::EmitLog(codegen::CodeWriter& writer,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -628,6 +678,11 @@ void runtime::cpu::CPU_Emitter::EmitMaximum(codegen::CodeWriter& writer,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -652,6 +707,11 @@ void runtime::cpu::CPU_Emitter::EmitMinimum(codegen::CodeWriter& writer,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -676,6 +736,11 @@ void runtime::cpu::CPU_Emitter::EmitNegative(codegen::CodeWriter& writer,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -697,6 +762,11 @@ void runtime::cpu::CPU_Emitter::EmitNotEqual(codegen::CodeWriter& writer,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -720,6 +790,11 @@ void runtime::cpu::CPU_Emitter::EmitSelect(codegen::CodeWriter& writer,
                                            const vector<runtime::cpu::TensorViewWrapper>& args,
                                            const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -744,6 +819,11 @@ void runtime::cpu::CPU_Emitter::EmitSubtract(codegen::CodeWriter& writer,
                                              const vector<runtime::cpu::TensorViewWrapper>& args,
                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -855,6 +935,11 @@ void runtime::cpu::CPU_Emitter::EmitConvert(codegen::CodeWriter& writer,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     auto& result_element_type = out[0].get_element_type();
 
     writer << "{   // " << n->get_name() << "\n";
@@ -1231,6 +1316,11 @@ void runtime::cpu::CPU_Emitter::EmitSign(codegen::CodeWriter& writer,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1410,6 +1500,11 @@ void runtime::cpu::CPU_Emitter::EmitExp(codegen::CodeWriter& writer,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1431,6 +1526,11 @@ void runtime::cpu::CPU_Emitter::EmitSin(codegen::CodeWriter& writer,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1452,6 +1552,11 @@ void runtime::cpu::CPU_Emitter::EmitSinh(codegen::CodeWriter& writer,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1473,6 +1578,11 @@ void runtime::cpu::CPU_Emitter::EmitCos(codegen::CodeWriter& writer,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1494,6 +1604,11 @@ void runtime::cpu::CPU_Emitter::EmitCosh(codegen::CodeWriter& writer,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1515,6 +1630,11 @@ void runtime::cpu::CPU_Emitter::EmitTan(codegen::CodeWriter& writer,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1536,6 +1656,11 @@ void runtime::cpu::CPU_Emitter::EmitTanh(codegen::CodeWriter& writer,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     // Eigen's generic_fast_tanh_float<float> is currently miscompiled by Clang/LLVM
     // so we fall-back to tanh
     // TODO: Implement our own internal fast/approximate tanh if this actually gets used
@@ -1558,6 +1683,11 @@ void runtime::cpu::CPU_Emitter::EmitAsin(codegen::CodeWriter& writer,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1579,6 +1709,11 @@ void runtime::cpu::CPU_Emitter::EmitAcos(codegen::CodeWriter& writer,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1600,6 +1735,11 @@ void runtime::cpu::CPU_Emitter::EmitAtan(codegen::CodeWriter& writer,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1621,6 +1761,11 @@ void runtime::cpu::CPU_Emitter::EmitPower(codegen::CodeWriter& writer,
                                           const vector<runtime::cpu::TensorViewWrapper>& args,
                                           const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1833,6 +1978,11 @@ void runtime::cpu::CPU_Emitter::EmitCeiling(codegen::CodeWriter& writer,
                                             const vector<runtime::cpu::TensorViewWrapper>& args,
                                             const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
     size_t element_count = out[0].get_size();
@@ -1852,6 +2002,11 @@ void runtime::cpu::CPU_Emitter::EmitFloor(codegen::CodeWriter& writer,
                                           const vector<runtime::cpu::TensorViewWrapper>& args,
                                           const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
     size_t element_count = out[0].get_size();
@@ -1871,6 +2026,11 @@ void runtime::cpu::CPU_Emitter::EmitSqrt(codegen::CodeWriter& writer,
                                          const vector<runtime::cpu::TensorViewWrapper>& args,
                                          const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
     size_t element_count = out[0].get_size();
