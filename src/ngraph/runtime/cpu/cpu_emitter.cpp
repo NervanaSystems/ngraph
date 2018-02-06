@@ -90,6 +90,8 @@ static const string& get_mkldnn_data_type(const string& type)
 
 void runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(codegen::CodeWriter& writer)
 {
+    writer << "// MKLDNN Preamble\n";
+    writer << "#include <mkldnn.hpp>;\n";
     writer << "using namespace mkldnn;\n\n";
 }
 
