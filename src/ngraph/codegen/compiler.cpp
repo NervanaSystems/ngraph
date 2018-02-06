@@ -270,6 +270,9 @@ std::unique_ptr<codegen::Module>
                                      const string& source)
 {
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
+
+    preprocessor_options.RetainRemappedFileBuffers = true;
+
     if (!m_precompiled_header_valid && m_precomiled_header_source.empty() == false)
     {
         generate_pch(m_precomiled_header_source);

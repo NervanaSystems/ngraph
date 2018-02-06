@@ -88,7 +88,9 @@ if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
 endif()
 
 if(NGRAPH_ARGON_ENABLE)
+    include_directories(SYSTEM ${ARGON_TRANSFORMER_INCLUDE_DIR})
     set(BACKEND_NAMES ${BACKEND_NAMES} "ARGON")
+    set(SRC ${SRC} argon_fusion.cpp)
 endif()
 
 foreach(BACKEND_NAME ${BACKEND_NAMES})
