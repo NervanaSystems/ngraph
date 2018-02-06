@@ -124,6 +124,8 @@ codegen::StaticCompiler::StaticCompiler()
     , m_debuginfo_enabled(false)
     , m_enable_diag_output((std::getenv("NGRAPH_COMPILER_DIAG_ENABLE") != nullptr))
     , m_source_name("code.cpp")
+    , diagnostics_output(make_unique<llvm::raw_fd_ostream>(
+          "codegen-diagnostics.txt", diagnostics_output_ec, llvm::sys::fs::F_Text))
 {
     initialize();
 }
@@ -158,19 +160,16 @@ void codegen::StaticCompiler::initialize()
     // Create and initialize CompilerInstance
     m_compiler = std::unique_ptr<CompilerInstance>(new CompilerInstance());
     DiagnosticConsumer* diag_consumer;
-    if (m_enable_diag_output)
-    {
-        diag_consumer = new TextDiagnosticPrinter(errs(), &*diag_options);
-    }
-    else
-    {
-        diag_consumer = new IgnoringDiagConsumer();
-    }
+    diag_consumer = new TextDiagnosticPrinter(*diagnostics_output, &*diag_options);
     m_compiler->createDiagnostics(diag_consumer);
 
     // Initialize CompilerInvocation
     CompilerInvocation::CreateFromArgs(
         m_compiler->getInvocation(), &args[0], &args[0] + args.size(), diag_engine);
+
+    // Suppress warning/error counts written to the default LLVM
+    // error stream.
+    m_compiler->getDiagnosticOpts().ShowCarets = false;
 
     configure_search_path();
 
