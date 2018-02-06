@@ -313,7 +313,7 @@ void runtime::interpreter::INT_CallFrame::perform_nan_check(
             const float* data = reinterpret_cast<float*>(tv->get_data_ptr());
             for (size_t i = 0; i < tv->get_element_count(); i++)
             {
-                if (isnan(data[i]))
+                if (std::isnan(data[i]))
                 {
                     if (op)
                     {
@@ -332,7 +332,7 @@ void runtime::interpreter::INT_CallFrame::perform_nan_check(
             const double* data = reinterpret_cast<double*>(tv->get_data_ptr());
             for (size_t i = 0; i < tv->get_element_count(); i++)
             {
-                if (isnan(data[i]))
+                if (std::isnan(data[i]))
                 {
                     if (op)
                     {
