@@ -31,6 +31,7 @@ set (SRC
     eigen.cpp
     element_type.cpp
     file_util.cpp
+    inliner.cpp
     input_output_assign.cpp
     main.cpp
     op.cpp
