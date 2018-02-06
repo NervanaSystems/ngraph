@@ -947,11 +947,15 @@ void runtime::cpu::CPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
             writer << "}\n";
         }
     }
-    // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
+    // Other cases
     else
     {
-        throw ngraph_error(
-            "Axis permutation in reshape is not implemented yet for tensors with rank>2");
+        writer << "kernel::reshape<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        writer << "                " << out[0].get_name() << ",\n";
+        writer << "               {" << join(args[0].get_shape()) << "},\n";
+        writer << "               {" << join(reshape->get_input_order()) << "},\n";
+        writer << "               {" << join(out[0].get_shape()) << "}\n";
+        writer << "               );\n";
     }
 #else
     kernel::emit_reshape(writer,
