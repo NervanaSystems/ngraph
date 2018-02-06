@@ -464,7 +464,7 @@ using namespace ngraph::runtime;
         runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(writer);
 
         // Execution tracing support
-        if (runtime::cpu::IsTracingEnabled())
+        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == function_name)
         {
             writer << "cpu::Timestamp start_ts;\n"
                    << "int profiler_count = 0;\n\n";
@@ -614,7 +614,10 @@ using namespace ngraph::runtime;
             // Emit operation prologue
             if (!node->is_parameter() && !node->is_constant())
             {
-                op_attrs.emplace_back(node->description(), node_output_names, node_input_names);
+                if (current_function->get_name() == function_name)
+                {
+                    op_attrs.emplace_back(node->description(), node_output_names, node_input_names);
+                }
                 if (m_use_tbb)
                 {
                     writer << "tbb::flow::continue_node<tbb::flow::continue_msg> "
@@ -627,7 +630,8 @@ using namespace ngraph::runtime;
                 {
                     emit_debug_function_entry(writer, node.get(), in, out);
                 }
-                if (runtime::cpu::IsTracingEnabled())
+                if (runtime::cpu::IsTracingEnabled() &&
+                    current_function->get_name() == function_name)
                 {
                     writer << "start_ts = cpu::Clock::now();\n";
                 }
@@ -655,7 +659,7 @@ using namespace ngraph::runtime;
                 {
                     names.push_back(tv.get_name());
                 }
-                writer << func_name << "(" << join(names) << ");\n";
+                writer << func_name << "(" << join(names) << ", ctx);\n";
             }
 
             // Emit operation epilogue
@@ -666,7 +670,8 @@ using namespace ngraph::runtime;
                 {
                     emit_debug_function_exit(writer, node.get(), in, out);
                 }
-                if (runtime::cpu::IsTracingEnabled())
+                if (runtime::cpu::IsTracingEnabled() &&
+                    current_function->get_name() == function_name)
                 {
                     writer << "ctx->op_durations[profiler_count++] = "
                            << "(std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() - "
@@ -864,6 +869,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
         writer << tvw.get_type() << "* " << tvw.get_name();
         out.push_back(tvw);
     }
+    writer << ",\ncpu::CPURuntimeContext* ctx";
     writer.indent--;
     writer << "\n)\n";
     writer << "{\n";

@@ -1083,7 +1083,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << "{   // " << n->get_name() << " 3\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
-            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
             writer.indent++;
             writer << "\n";
             writer << type << " result;\n";
@@ -1119,7 +1119,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << "{   // " << n->get_name() << " 5\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
-            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
             writer.indent++;
             writer << "\n";
             writer << type << " result;\n";
@@ -1151,7 +1151,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << "{   // " << n->get_name() << " 7\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
-            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
             writer.indent++;
             writer << "\n";
             writer << type << " result;\n";
@@ -1173,7 +1173,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
         writer.indent++;
 
         string type = f_result_element_type.c_type_string();
-        writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+        writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
         writer.indent++;
         writer << "\n";
         writer << type << " result;\n";
@@ -1201,7 +1201,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
 
     string type = f_result_element_type.c_type_string();
 
-    writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
     writer.indent++;
     writer << "\n";
     writer << type << " result;\n";
@@ -2174,7 +2174,7 @@ void runtime::cpu::CPU_Emitter::EmitReduceWindow(
     writer.indent++;
 
     string type = f_result_element_type.c_type_string();
-    writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
     writer.indent++;
     writer << "\n";
     writer << type << " result;\n";
@@ -2218,7 +2218,7 @@ void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
 
     string type = n->get_output_element_type(0).c_type_string();
 
-    writer << "auto f_select = [](" << type << " x, " << type << " y) -> char\n{";
+    writer << "auto f_select = [&](" << type << " x, " << type << " y) -> char\n{";
     writer.indent++;
     writer << "\n";
     writer << "char result;\n";
@@ -2229,7 +2229,7 @@ void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
     writer.indent--;
     writer << "};\n";
 
-    writer << "auto f_scatter = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer << "auto f_scatter = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
     writer.indent++;
     writer << "\n";
     writer << type << " result;\n";
