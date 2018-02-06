@@ -51,6 +51,11 @@ namespace ngraph
         const Shape& get_mean_shape() const{
             return mkl_mean_shape;
         }
+
+        const float get_eps_value() const{
+            return epsilon;
+        }
+
         virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override; 
 
@@ -61,6 +66,7 @@ namespace ngraph
                 Shape mkl_mean_shape;
                 const element::Type& mean_element_type;
                 const element::Type& variance_element_type;
+                float epsilon;
 
         };
     }

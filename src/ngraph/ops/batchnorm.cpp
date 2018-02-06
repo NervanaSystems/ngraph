@@ -13,6 +13,7 @@
 // ----------------------------------------------------------------------------
 
 #include "ngraph/ops/batchnorm.hpp"
+#include "ngraph/ops/constant.hpp"
 
 
 ngraph::op::BatchnormFprop::BatchnormFprop(std::shared_ptr<ngraph::Node> eps,
@@ -33,7 +34,11 @@ ngraph::op::BatchnormFprop::BatchnormFprop(std::shared_ptr<ngraph::Node> eps,
             ,variance_element_type(variance_et)
 {
         add_output(input->get_element_type(), mkl_output_shape);
-	//TODO add the sanity checkers for the inputs to bn
+	    //TODO add the sanity checkers for the inputs to bn
+
+        auto eps_ptr = std::dynamic_pointer_cast<op::Constant>(eps);
+        const float* p = reinterpret_cast<const float*>(eps_ptr->get_data_ptr());
+        epsilon = *p;
 }
 
 std::shared_ptr<ngraph::Node> ngraph::op::BatchnormFprop::copy_with_new_args(
