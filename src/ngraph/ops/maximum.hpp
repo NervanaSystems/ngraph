@@ -53,6 +53,7 @@ namespace ngraph
                 return std::make_shared<Maximum>(new_args.at(0), new_args.at(1));
             }
 
+            virtual bool is_commutative() override { return true; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;

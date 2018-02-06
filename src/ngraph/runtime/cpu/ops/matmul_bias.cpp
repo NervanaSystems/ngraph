@@ -35,7 +35,7 @@ ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
                                    Shape shape_x,
                                    bool transpose_w,
                                    bool transpose_x)
-    : RequiresTensorViewArgs("CblassGemm", {W, x, b})
+    : RequiresTensorViewArgs("MatMulBias", {W, x, b})
     , m_shape_w(shape_w)
     , m_shape_x(shape_x)
     , m_transpose_w(transpose_w)
