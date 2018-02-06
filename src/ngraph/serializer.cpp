@@ -225,10 +225,7 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
     for (json func : js)
     {
         shared_ptr<Function> f = read_function(func, function_map);
-        if (rc == nullptr)
-        {
-            rc = f;
-        }
+        rc = f;
     }
 
     return rc;
