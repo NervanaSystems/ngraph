@@ -2368,8 +2368,8 @@ void runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop(
     writer << "                 {" << join(apb->get_window_shape()) << "},\n";
     writer << "                 {" << join(apb->get_window_movement_strides()) << "},\n";
     writer << "                 {" << join(apb->get_padding_below()) << "},\n";
-    writer << "                 {" << join(apb->get_padding_above()) << "},\n";
-    writer << "                 true);\n";
+    writer << "                 {" << join(apb->get_padding_above()) << "}\n";
+    writer << "                 );\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop(
@@ -2392,8 +2392,8 @@ void runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop(
     writer << "                 {" << join(mpb->get_window_shape()) << "},\n";
     writer << "                 {" << join(mpb->get_window_movement_strides()) << "},\n";
     writer << "                 {" << join(mpb->get_padding_below()) << "},\n";
-    writer << "                 {" << join(mpb->get_padding_above()) << "},\n";
-    writer << "                 true);\n";
+    writer << "                 {" << join(mpb->get_padding_above()) << "}\n";
+    writer << "                 );\n";
 }
 
 //------------------------------------------------------------------------------------------------
