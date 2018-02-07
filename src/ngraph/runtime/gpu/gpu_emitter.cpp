@@ -49,6 +49,7 @@ void runtime::gpu::GPU_Emitter::EmitNop(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitAbs(codegen::CodeWriter& writer,
@@ -56,6 +57,7 @@ void runtime::gpu::GPU_Emitter::EmitAbs(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitAdd(codegen::CodeWriter& writer,
@@ -65,52 +67,46 @@ void runtime::gpu::GPU_Emitter::EmitAdd(codegen::CodeWriter& writer,
 {
     const Shape& arg0_shape = args[0].get_shape();
     const Shape& arg1_shape = args[1].get_shape();
-    if (arg0_shape.empty() || arg1_shape.empty())
-    {
-        auto& first = (arg0_shape.empty() ? args[0] : args[1]);
-        auto& second = (arg0_shape.empty() ? args[1] : args[0]);
-    }
-
-    // clang-format off
     else if ((arg0_shape.size() <= 2) && (arg1_shape.size() <= 2))
     {
-      // TODO Assert arg0_shape[0] == arg1_shape[0]?
-      writer << "{   // " << n->get_name() << "\n";
-      writer.indent++;
-      writer << "static const float alpha = 1.0;\n";
-      writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";;
-      writer << "cublasScopy("
-          << "cublas_handle,"
-          << out[0].get_size() << ","
-          << args[0].get_name() << ","
-          // Todo handle striding?
-          << "1,"
-          << out[0].get_name() << ","
-          << "1);\n";
-      writer << "cublasSaxpy("
-             << "cublas_handle,"
-             << out[0].get_size() << ","
-             << "&alpha," //alpha
-             << args[1].get_name() << ","
-        // Todo handle striding?
-             << "1,"
-             << out[0].get_name() << ","
-             << "1);\n";
-      writer.indent--;
-      writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";;
-      writer << "}\n";
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << "static const float alpha = 1.0;\n";
+        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+        // clang-format off
+        writer << "cublasScopy("
+            << "cublas_handle,"
+            << out[0].get_size() << ","
+            << args[0].get_name() << ","
+            << "1,"
+            << out[0].get_name() << ","
+            << "1);\n";
+        writer << "cublasSaxpy("
+            << "cublas_handle,"
+            << out[0].get_size() << ","
+            << "&alpha,"
+            << args[1].get_name() << ","
+            << "1,"
+            << out[0].get_name() << ","
+            << "1);\n";
+        // clang-format on
+        writer.indent--;
+        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
+        writer << "}\n";
     }
-    // clang-format on
     else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
     {
+        throw ngraph_error("Argument shape not supported");
     }
     else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
     {
         // GEMM Call
+        throw ngraph_error("Argument shape not supported");
     }
     else
     {
         // General ND Call?
+        throw ngraph_error("Argument shape not supported");
     }
 }
 
@@ -136,13 +132,13 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         writer.indent++;
         // clang-format off
         writer << "cublasSdot("
-               << "cublas_handle,"
-               << second.get_size() << ","
-               << first.get_name() << ","
-               << "1,"
-               << second.get_name() << ","
-               << "1,"
-               << out[0].get_name() << ");\n";
+            << "cublas_handle,"
+            << second.get_size() << ","
+            << first.get_name() << ","
+            << "1,"
+            << second.get_name() << ","
+            << "1,"
+            << out[0].get_name() << ");\n";
         // clang-format on
         writer.indent--;
         writer << "}\n";
@@ -172,24 +168,22 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         writer << "static const float alpha = 1.0;\n";
         writer << "static const float beta  = 1.0;\n";
         writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
-        ;
         // clang-format off
         writer << "cublasSgemv("
             << "cublas_handle,"
             << "CUBLAS_OP_T,"
             << arg0_shape[0] << ","
             << arg0_shape[1] << ","
-            << "&alpha,"                      // Alpha
+            << "&alpha,"
             << args[0].get_name() << ","
             << arg0_shape[1] << ","
             << args[1].get_name() << ","
             << "1,"
-            << "&beta,"                      // beta
+            << "&beta,"
             << out[0].get_name() << ","
             << "1);\n";
         // clang-format on
         writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
-        ;
         writer.indent--;
         writer << "}\n";
     }
@@ -209,20 +203,20 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
         // clang-format off
         writer << "cublasSgemm("
-             << "cublas_handle,"
-             << "CUBLAS_OP_N,"
-             << "CUBLAS_OP_N,"
-             << "n,"
-             << "m,"
-             << "k,"
-             << "&alpha,"                      // Alpha
-             << args[1].get_name() << ","
-             << "n,"
-             << args[0].get_name() << ","
-             << "k,"
-             << "&beta,"                      // beta
-             << out[0].get_name() << ","
-             << "n);\n";
+            << "cublas_handle,"
+            << "CUBLAS_OP_N,"
+            << "CUBLAS_OP_N,"
+            << "n,"
+            << "m,"
+            << "k,"
+            << "&alpha,"
+            << args[1].get_name() << ","
+            << "n,"
+            << args[0].get_name() << ","
+            << "k,"
+            << "&beta,"
+            << out[0].get_name() << ","
+            << "n);\n";
         // clang-format on
         writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
         writer.indent--;
@@ -239,6 +233,7 @@ void runtime::gpu::GPU_Emitter::EmitDivide(codegen::CodeWriter& writer,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitEqual(codegen::CodeWriter& writer,
@@ -246,6 +241,7 @@ void runtime::gpu::GPU_Emitter::EmitEqual(codegen::CodeWriter& writer,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitGreater(codegen::CodeWriter& writer,
@@ -253,6 +249,7 @@ void runtime::gpu::GPU_Emitter::EmitGreater(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitGreaterEq(
@@ -261,6 +258,7 @@ void runtime::gpu::GPU_Emitter::EmitGreaterEq(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitLess(codegen::CodeWriter& writer,
@@ -268,6 +266,7 @@ void runtime::gpu::GPU_Emitter::EmitLess(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitLessEq(codegen::CodeWriter& writer,
@@ -275,6 +274,7 @@ void runtime::gpu::GPU_Emitter::EmitLessEq(codegen::CodeWriter& writer,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitLog(codegen::CodeWriter& writer,
@@ -282,6 +282,7 @@ void runtime::gpu::GPU_Emitter::EmitLog(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitMaximum(codegen::CodeWriter& writer,
@@ -291,12 +292,10 @@ void runtime::gpu::GPU_Emitter::EmitMaximum(codegen::CodeWriter& writer,
 {
     const Shape& arg0_shape = args[0].get_shape();
     const Shape& arg1_shape = args[1].get_shape();
-    // clang-format off
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
-      writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";;
-      writer +=  R"(
+    writer += R"(
       float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
               cudnnHandle_t cudnnHandle;
               (cudnnCreate(&cudnnHandle));
@@ -318,25 +317,20 @@ void runtime::gpu::GPU_Emitter::EmitMaximum(codegen::CodeWriter& writer,
                                           CUDNN_NOT_PROPAGATE_NAN));
       )";
 
-      writer  << "cudnnOpTensor(cudnnHandle,"
-              <<                      "opTensorDesc,"
-              <<                         "&alpha1,"
-              <<                         "descriptor,"
-              <<                         args[0].get_name() << ","
-              <<                         "&alpha2,"
-              <<                         "descriptor,"
-              <<                         args[1].get_name() << ","
-              <<                         "&beta,"
-              <<                         "descriptor,"
-              <<                         out[0].get_name() << ");\n";
+    writer << "cudnnOpTensor(cudnnHandle,"
+           << "opTensorDesc,"
+           << "&alpha1,"
+           << "descriptor," << args[0].get_name() << ","
+           << "&alpha2,"
+           << "descriptor," << args[1].get_name() << ","
+           << "&beta,"
+           << "descriptor," << out[0].get_name() << ");\n";
 
-        writer +=  R"(
+    writer += R"(
                 cudnnDestroy(cudnnHandle);
       )";
-        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";;
-        writer.indent--;
-        writer << "}\n";
-    // clang-format on
+    writer.indent--;
+    writer << "}\n";
 }
 
 void runtime::gpu::GPU_Emitter::EmitMinimum(codegen::CodeWriter& writer,
@@ -344,6 +338,7 @@ void runtime::gpu::GPU_Emitter::EmitMinimum(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitNegative(
@@ -352,6 +347,7 @@ void runtime::gpu::GPU_Emitter::EmitNegative(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitNotEqual(
@@ -360,12 +356,14 @@ void runtime::gpu::GPU_Emitter::EmitNotEqual(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 void runtime::gpu::GPU_Emitter::EmitSelect(codegen::CodeWriter& writer,
                                            const ngraph::Node* n,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSubtract(
@@ -374,6 +372,7 @@ void runtime::gpu::GPU_Emitter::EmitSubtract(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitBroadcast(
@@ -382,6 +381,7 @@ void runtime::gpu::GPU_Emitter::EmitBroadcast(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitConvert(codegen::CodeWriter& writer,
@@ -389,6 +389,7 @@ void runtime::gpu::GPU_Emitter::EmitConvert(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitConstant(
@@ -397,6 +398,7 @@ void runtime::gpu::GPU_Emitter::EmitConstant(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
@@ -437,31 +439,31 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
     // If there *is* a layout change in the 2D case, we transpose the input.
     else if (arg_rank == 2)
     {
+        // TODO Assert arg0_shape[0] == arg1_shape[0]?
+        writer << "{   // " << n->get_name() << "\n";
+        writer.indent++;
+        writer << "static const float alpha = 1.0;\n";
+        writer << "static const float beta = 0.0;\n";
+        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
         // clang-format off
-          // TODO Assert arg0_shape[0] == arg1_shape[0]?
-          writer << "{   // " << n->get_name() << "\n";
-          writer.indent++;
-          writer << "static const float alpha = 1.0;\n";
-          writer << "static const float beta = 0.0;\n";
-          writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";;
           writer << "cublasSgeam("
                  << "cublas_handle,"
                  << "CUBLAS_OP_T,"
                  << "CUBLAS_OP_T,"
                  << arg_shape[0] << ","
                  << arg_shape[1] << ","
-                 << "&alpha,"                      // Alpha
+                 << "&alpha,"
                  << args[0].get_name() << ","
                  << arg_shape[1] << ","
-                 << "&beta,"                      // beta
+                 << "&beta,"
                  << args[0].get_name() << ","
                  << arg_shape[1] << ","
                  << out[0].get_name() << ","
                  << out[0].get_shape()[1] << ");\n";
-          writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";;
+          //clang-format on
+          writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
           writer.indent--;
           writer << "}\n";
-          //clang-format on
     }
     // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
     else
@@ -479,6 +481,8 @@ void runtime::gpu::GPU_Emitter::EmitFunctionCall(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error(
+                     "Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
@@ -486,6 +490,8 @@ void runtime::gpu::GPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error(
+                     "Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSign(codegen::CodeWriter& writer,
@@ -493,6 +499,8 @@ void runtime::gpu::GPU_Emitter::EmitSign(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error(
+                     "Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSlice(codegen::CodeWriter& writer,
@@ -500,6 +508,8 @@ void runtime::gpu::GPU_Emitter::EmitSlice(codegen::CodeWriter& writer,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error(
+                     "Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSum(codegen::CodeWriter& writer,
@@ -516,11 +526,10 @@ void runtime::gpu::GPU_Emitter::EmitMultiply(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     const Shape& arg0_shape = args[0].get_shape();
-    const Shape& arg1_shape = args[1].get_shape();
+      const Shape& arg1_shape = args[1].get_shape();
     // Until we have EW kernel gen, use cuBLAS
     // From https://stackoverflow.com/questions/7621520/element-wise-vector-vector-multiplication-in-bl as/7634831
 
-    // clang-format off
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
     writer << "static const float alpha = 1.0;\n";
@@ -531,19 +540,18 @@ void runtime::gpu::GPU_Emitter::EmitMultiply(
            << "CUBLAS_FILL_MODE_LOWER," // Corresponds to FORTRAN "L"
            << out[0].get_size() << ","  // N = input size
            << "0,"                      // k = super-diagonal i.e. just use the diagonal of A
-           << "&alpha,"                      // Alpha
+           << "&alpha,"                 // alpha
            << args[0].get_name() << "," // vec A (broadcast to a matrix)
            << "1,"                      // LDA = 1
            << args[1].get_name() << "," // vector x
            << "1,"                      // Stride x
-           << "&beta,"                      // beta
+           << "&beta,"                  // beta
            << out[0].get_name() << ","  // y
-           << "1"                      // Stride y
+           << "1"                       // Stride y
            << ");\n";
     writer.indent--;
     writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";;
     writer << "}\n";
-    // clang-format on
 }
 
 void runtime::gpu::GPU_Emitter::EmitExp(codegen::CodeWriter& writer,
@@ -551,6 +559,7 @@ void runtime::gpu::GPU_Emitter::EmitExp(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSin(codegen::CodeWriter& writer,
@@ -558,6 +567,7 @@ void runtime::gpu::GPU_Emitter::EmitSin(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSinh(codegen::CodeWriter& writer,
@@ -565,6 +575,7 @@ void runtime::gpu::GPU_Emitter::EmitSinh(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitCos(codegen::CodeWriter& writer,
@@ -572,6 +583,7 @@ void runtime::gpu::GPU_Emitter::EmitCos(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitCosh(codegen::CodeWriter& writer,
@@ -579,6 +591,7 @@ void runtime::gpu::GPU_Emitter::EmitCosh(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitTan(codegen::CodeWriter& writer,
@@ -586,6 +599,7 @@ void runtime::gpu::GPU_Emitter::EmitTan(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitTanh(codegen::CodeWriter& writer,
@@ -593,6 +607,7 @@ void runtime::gpu::GPU_Emitter::EmitTanh(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitAsin(codegen::CodeWriter& writer,
@@ -600,6 +615,7 @@ void runtime::gpu::GPU_Emitter::EmitAsin(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitAcos(codegen::CodeWriter& writer,
@@ -607,6 +623,7 @@ void runtime::gpu::GPU_Emitter::EmitAcos(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitAtan(codegen::CodeWriter& writer,
@@ -614,6 +631,7 @@ void runtime::gpu::GPU_Emitter::EmitAtan(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitPower(codegen::CodeWriter& writer,
@@ -621,6 +639,7 @@ void runtime::gpu::GPU_Emitter::EmitPower(codegen::CodeWriter& writer,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitReplaceSlice(
@@ -629,6 +648,7 @@ void runtime::gpu::GPU_Emitter::EmitReplaceSlice(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitOneHot(codegen::CodeWriter& writer,
@@ -636,6 +656,7 @@ void runtime::gpu::GPU_Emitter::EmitOneHot(codegen::CodeWriter& writer,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitCeiling(codegen::CodeWriter& writer,
@@ -643,6 +664,7 @@ void runtime::gpu::GPU_Emitter::EmitCeiling(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitFloor(codegen::CodeWriter& writer,
@@ -650,6 +672,7 @@ void runtime::gpu::GPU_Emitter::EmitFloor(codegen::CodeWriter& writer,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSqrt(codegen::CodeWriter& writer,
@@ -657,6 +680,7 @@ void runtime::gpu::GPU_Emitter::EmitSqrt(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitConvolution(
@@ -665,6 +689,7 @@ void runtime::gpu::GPU_Emitter::EmitConvolution(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitNot(codegen::CodeWriter& writer,
@@ -672,6 +697,7 @@ void runtime::gpu::GPU_Emitter::EmitNot(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
@@ -679,6 +705,7 @@ void runtime::gpu::GPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitReverse(codegen::CodeWriter& writer,
@@ -686,6 +713,7 @@ void runtime::gpu::GPU_Emitter::EmitReverse(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitReduceWindow(
@@ -694,6 +722,7 @@ void runtime::gpu::GPU_Emitter::EmitReduceWindow(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSelectAndScatter(
@@ -702,4 +731,5 @@ void runtime::gpu::GPU_Emitter::EmitSelectAndScatter(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+  throw ngraph_error("Op not supported in GPU Backend");
 }
