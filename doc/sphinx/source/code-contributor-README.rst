@@ -7,17 +7,8 @@ Core Contributor Guidelines
 Code formatting
 ================
 
-All C/C++ source code in the ``libngraph`` repository, including the test code 
-when practical, should adhere to the project's source-code formatting guidelines.
-
-The script ``maint/apply-code-format.sh`` enforces that formatting at the C/C++ 
-syntactic level. 
-
-The script at ``maint/check-code-format.sh`` verifies that the formatting rules 
-are met by all C/C++ code (again, at the syntax level.)  The script has an exit 
-code of ``0`` when this all code meets the standard; and non-zero otherwise.  
-This script does *not* modify the source code.
-
+All C/C++ source code in the ``libngraph`` repository, including the test code,
+must adhere to the project's source-code formatting and style guidelines.
 
 Core Ops
 --------
@@ -32,7 +23,184 @@ be added by adding functions that build sub-graphs from existing core ops.
 Coding style  
 -------------
 
-.. TODO:  add the core coding style Google Doc collab here when final
+We have a coding standard to help us to get development done. If part
+of the standard is impeding progress, we we adjust that part or remove
+it.  To this end, we use the coding standards to make it easier to
+understand what nGraph components are doing. Programs are easiest to
+understand if most parts of them can be understood locally, and if
+most local changes have local impact, and you do not need to dig
+through multiple files to understand what something does.
+
+Names
+.....
+
+Names should *briefly* describe the thing being named. For example,
+
+- Case:
+
+  - Class/type names are in ``CamelCase``.
+
+  - Template parameters are ``UPPER_SNAKE_CASE``.
+
+  - Variable and function names are in ``snake_case``.
+
+- Names:
+    
+  - Access method names for simple values are prefixed by ``get_`` or ``set_``
+    and should have simple O(1) implementations.
+
+    - A ``get_`` method should be externally idempotent. It may perform some
+      simple initialization and cache the result for later use.
+
+    - ``is_`` may be used instead of ``get_`` for boolean accessors.
+
+      - Trivial ``get_`` methods may be defined in a header file.
+
+    - A ``set_`` method should change the value returned by the corresponding
+      ``get_`` method.
+
+      - Use ``set_is_`` if using ``is_`` to get a value.
+
+      - Trivial ``set_`` methods may be defined in a header file.
+
+    - Variable names should indicate what the variable is being usef for.
+
+      - Member variables should be prefixed with ``m_``.
+
+      - Static member variables should be rare and be prefixed with ``s_``.
+
+    - Do not use ``using`` to define a type alias at top-level in header file.
+
+      - C++ does not enforce the abstraction. For example if ``X`` and ``Y`` are aliases for
+	the same type, you can pass an ``X`` to something expecting a ``Y``.
+
+      - If one of the aliases were later changed, or turned into a real type, many
+	callers could require changes.
+
+      - If the abstraction is useful, give it a class.
+
+Namespaces
+..........
+
+- ``ngraph`` is for the public API.
+
+  - This is not currently enforced; there is public API not in ``ngraph`` and
+    non-public API in ``ngraph``.
+
+    - Use a nested namespace for implementation classes.
+
+    - Use an unnamed namespace or ``static`` for file-local names.
+
+      - This helps prevent unintended name collisions during linking and when
+	using shared and dynamically loaded libraries.
+
+    - Never use ``using`` at top-level in a header file.
+
+      - Doing so leaks into users of the header, including headers that follow.
+
+      - It is okay to use ``using`` with local scope, such as inside a class definiton.
+
+    - Be careful of C++'s implicit namespace inclusions. For example, if a parameter's
+      type is from another namespace, that namespace can be visible in the body.
+
+    - Only use ``using std`` and/or ``using ngraph`` in ``.cpp`` files.
+
+      - Also ``using`` a nested namespace has can result in unexpected behavior.
+
+File Names
+..........
+
+- Do not use the same file name in multiple directories. This is because
+  at least one IDE/debugger ignores the directory name when setting breakpoints.
+
+- Use ``.hpp`` for headers and ``.cpp`` for implementation.
+
+- Reflect namespace nesting in directory.
+
+- Unit test files are in the ``tests`` directory
+
+  - Tranformer-dependent tests (run on default transformer or specify
+    the transformer) use the form ``TEST(file_name, test_name)``
+
+  - Transformer-independent tests
+
+    - File name is ``file_name.in.cpp``
+
+    - Use ``TEST(${BACKEND_NAME}, test_name)`` for each test. Fies will be
+      generated for each transformer and the ``{BACKEND_NAME}`` will be replaced
+      with the transformer name.
+
+Formatting
+..........
+
+Things that look different should look different because they are
+different.  We use clang format to enforce certain
+formatting. Although not always ideal, it is automatically enforced
+and reduces merge conflicts.
+
+- The file ``.clang-format`` specifies our format and is in the root of the project.
+
+  - The script ``maint/apply-code-format.sh`` enforces that formatting
+    at the C/C++ syntactic level.
+
+  - The script at ``maint/check-code-format.sh`` verifies that the formatting rules 
+    are met by all C/C++ code (again, at the syntax level.)  The script has an exit 
+    code of ``0`` when this all code meets the standard; and non-zero otherwise.  
+    This script does *not* modify the source code.
+
+- ``#include`` files:
+
+  - Put headers in groups separated by a blank line. Groups should work
+    their way down from "system" to "3rd-party" to "ngraph".
+
+  - Formatting will keep the files in each group in alphabetic order.
+
+  - Use ``#include <file>`` for files that do not change; they will not be checked for
+    changes during builds. Normally, this is everything but the ngraph files.
+
+  - Use ``#include "file"`` for files that are changing during
+    development, i.e. the ngraph headers.
+
+  - Use ``#include <c...>`` for system C headers with C++ wrappers.
+
+- Use ``#pragma once`` to guard against multiple inclusion.
+
+  - We are not using ``#define X_H`` style inclusion prevention.
+
+- Prefer ``Foo x{4, 5}`` to ``Foo x(4, 5)``
+
+- Indentation should be accompanied by braces.
+
+  - This includes single-line bodies for conditionals and loops.
+
+- Exception checking
+
+  - Throw an exception to report a problem.
+
+  - Nothing that calls ``abort``, ``exit`` or ``terminate`` should be used.
+
+    - ngraph is a guest of the framework.
+
+  - Do not use exclamation points in messages!
+
+  - Be as specific as practical. Keep in mind that the person who sees the error is
+    likely to be on the other side of the framework and the message might be all
+    the information we get about the problem.
+
+- If you use ``auto``, know what you are doing
+
+  - ``auto`` uses the same type-stripping rules as template parameters. If something
+    returns a reference, ``auto`` will strip the reference unless you use ``auto&``.
+
+  - Don't do things like ``auto s = Shape{2,3};``
+
+    - Just say ``Shape s{2, 3};``
+
+  - Indicate the type in the variable name
+
+- One variable declaration/definition per line
+
+  - Don't use the C-style ``int x, y, *z;``
 
 
 GitHub  
