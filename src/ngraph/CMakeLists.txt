@@ -276,7 +276,7 @@ endif()
 
 # Argon
 if (NGRAPH_ARGON_ENABLE)
-    target_link_libraries(ngraph PRIVATE ${ARGON_TRANSFORMER_LIB_DIR}/libargon.a)
+    target_link_libraries(ngraph PRIVATE ${ARGON_TRANSFORMER_LIB_DIR}/libargon.so)
     target_link_libraries(ngraph PRIVATE ${ARGON_API_LIBS})
     add_dependencies(ngraph ext_argon_transformer)
     add_dependencies(ext_argon_transformer ext_llvm)
