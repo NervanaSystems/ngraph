@@ -44,7 +44,7 @@ standards:
 - Assign template parameters with ``UPPER_SNAKE_CASE``.
 - Case variable and function names with ``snake_case``.
     
-Access method names for simple values are prefixed by ``get_`` or ``set_`` and 
+Method names for basic acceesors are prefixed by ``get_`` or ``set_`` and 
 should have simple *O(1)* implementations:
 
 - A ``get_`` method should be externally idempotent. It may perform some simple 
@@ -59,24 +59,24 @@ should have simple *O(1)* implementations:
   * Use ``set_is_`` if using ``is_`` to get a value.
   * Trivial ``set_`` methods may be defined in a header file.
 
-- Names of variables should indicate what the variable is being used for.
+- Names of variables should indicate the use of the variable.
   
   * Member variables should be prefixed with ``m_``.
   * Static member variables should be rare and be prefixed with ``s_``.
 
 - Do not use ``using`` to define a type alias at top-level in header file.
+  If the abstraction is useful, give it a class.
   
   * C++ does not enforce the abstraction. For example if ``X`` and ``Y`` are
     aliases for the same type, you can pass an ``X`` to something expecting a ``Y``.
   * If one of the aliases were later changed, or turned into a real type, many
-	  callers could require changes.
-  * If the abstraction is useful, give it a class.
+    callers could require changes.
 
 
 Namespaces
 ~~~~~~~~~~
 
-- ``ngraph`` is for the public API although this is not currently enforced.  
+- ``ngraph`` is for the public API, although this is not currently enforced.
   
   * Use a nested namespace for implementation classes.
   * Use an unnamed namespace or ``static`` for file-local names. This helps 
@@ -84,14 +84,15 @@ Namespaces
     and dynamically-loaded libraries.
   * Never use ``using`` at top-level in a header file.
   
-    - Doing so leaks into users of the header, including headers that follow.
+    - Doing so leaks the alias into users of the header, including headers that
+      follow.
     - It is okay to use ``using`` with local scope, such as inside a class 
       definiton.
   * Be careful of C++'s implicit namespace inclusions. For example, if a 
     parameter's type is from another namespace, that namespace can be visible 
-    in the body.
-  * Only use ``using std`` and/or ``using ngraph`` in ``.cpp`` files.
-    - Also ``using`` a nested namespace has can result in unexpected behavior.
+    in the body. 
+  * Only use ``using std`` and/or ``using ngraph`` in ``.cpp`` files. ``using`` a
+    nested namespace has can result in unexpected behavior.
 
 
 File Names
@@ -102,17 +103,28 @@ File Names
 
 - Use ``.hpp`` for headers and ``.cpp`` for implementation.
 
-- Reflect namespace nesting in directory.
+- Reflect the namespace nesting in the directory hierarchy.
 
 - Unit test files are in the ``tests`` directory.
   
   * Tranformer-dependent tests are tests running on the default transformer or 
-    specifying a transformer. For these, use the form ``TEST(file_name, test_name)``
+    specifying a transformer. For these, use the form
+
+    .. code-block:: cpp
+
+     TEST(file_name, test_name)
+
   * Transformer-independent tests:
   
     - File name is ``file_name.in.cpp``
-    - Use ``TEST(${BACKEND_NAME}, test_name)`` for each test. Fies will be
-      generated for each transformer and the ``{BACKEND_NAME}`` will be replaced
+    - Use
+
+      .. code-block:: sh
+
+         TEST(${BACKEND_NAME}, test_name)
+
+      for each test. Fies will be
+      generated for each transformer and the `${BACKEND_NAME}` will be replaced
       with the transformer name.
 
 
@@ -166,7 +178,17 @@ it is automatically enforced and reduces merge conflicts.
 
      #pragma once
 
-- ``Foo x{4, 5}`` is preferred over ``Foo x(4, 5)``.
+- The initializrion
+
+  .. code-block:: cpp
+
+     Foo x{4, 5};
+
+is preferred over
+
+  .. code-block:: cpp
+
+     Foo x(4, 5);
 
 - Indentation should be accompanied by braces; this includes single-line bodies 
   for conditionals and loops.
@@ -185,11 +207,33 @@ it is automatically enforced and reduces merge conflicts.
   type-stripping rules as template parameters. If something returns a reference, 
   ``auto`` will strip the reference unless you use ``auto&``:
   
-  * Don't do things like ``auto s = Shape{2,3};``. 
-  * Instead use ``Shape s{2, 3};``.
+  * Don't do things like
+
+    .. code-block:: cpp
+
+       auto s = Shape{2,3};
+
+   Instead, use
+
+   .. code-block:: cpp
+
+      Shape s{2, 3};
+
   * Indicate the type in the variable name.
 
 - One variable declaration/definition per line
 
-  - Don't use the C-style ``int x, y, *z;``
+  - Don't use the C-style
+
+    .. code-block:: cpp
+
+       int x, y, *z;
+
+    Instead, use:
+
+    .. code-block:: cpp
+
+       int x;
+       int y;
+       int* z;
 
