@@ -5717,6 +5717,47 @@ TEST(${BACKEND_NAME}, zero_sized_subtract)
     make_binary_empty_test<op::Subtract>("${BACKEND_NAME}");
 }
 
+TEST(${BACKEND_NAME}, convolution_outlining)
+{
+    auto shape_a = Shape{1, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{2, 2, 1, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_r = Shape{1, 2, 2, 2};
+    auto conv1 = make_shared<op::Convolution>(A,
+                                              B,
+                                              Strides{1, 1},
+                                              Strides{1, 1},
+                                              CoordinateDiff{0, 0},
+                                              CoordinateDiff{0, 0},
+                                              Strides{1, 1});
+    auto conv2 = make_shared<op::Convolution>(conv1,
+                                              B,
+                                              Strides{1, 1},
+                                              Strides{1, 1},
+                                              CoordinateDiff{0, 0},
+                                              CoordinateDiff{0, 0},
+                                              Strides{1, 1});
+    auto f = make_shared<Function>(conv2, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f});
+    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    copy_data(b, vector<float>{1.0f, 1.0f, 1.0f, 1.0f});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    vector<float> expected_result{4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f};
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
+}
+
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
 {
     auto shape_a = Shape{1, 1, 14};
