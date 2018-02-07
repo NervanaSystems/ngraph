@@ -63,54 +63,27 @@ void runtime::gpu::GPU_Emitter::EmitAdd(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    const Shape& arg0_shape = args[0].get_shape();
-    const Shape& arg1_shape = args[1].get_shape();
-    if (arg0_shape.empty() || arg1_shape.empty())
-    {
-        auto& first = (arg0_shape.empty() ? args[0] : args[1]);
-        auto& second = (arg0_shape.empty() ? args[1] : args[0]);
-    }
-
-    // clang-format off
-    else if ((arg0_shape.size() <= 2) && (arg1_shape.size() <= 2))
     {
       // TODO Assert arg0_shape[0] == arg1_shape[0]?
       writer << "{   // " << n->get_name() << "\n";
       writer.indent++;
-      writer << "static const float alpha = 1.0;\n";
-      writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";;
-      writer << "cublasScopy("
-          << "cublas_handle,"
-          << out[0].get_size() << ","
+      writer << "const float alpha = 1.0;\n";
+      writer << "const float beta = 1.0;\n";
+      writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";
+      writer << "cublasSgeam("
+          << "cublas_handle, CUBLAS_OP_N, CUBLAS_OP_N,\n"
+          << out[0].get_size() << "," 
+          << " 1, \n"
+          << " &alpha, "
           << args[0].get_name() << ","
-          // Todo handle striding?
-          << "1,"
+          << args[0].get_size() << ",\n"
+          << " &beta, "
+          << args[1].get_name() << ","
+          << args[1].get_size() << ",\n"
           << out[0].get_name() << ","
-          << "1);\n";
-      writer << "cublasSaxpy("
-             << "cublas_handle,"
-             << out[0].get_size() << ","
-             << "&alpha," //alpha
-             << args[1].get_name() << ","
-        // Todo handle striding?
-             << "1,"
-             << out[0].get_name() << ","
-             << "1);\n";
+          << out[0].get_size() << ");\n";
       writer.indent--;
-      writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";;
       writer << "}\n";
-    }
-    // clang-format on
-    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
-    {
-    }
-    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
-    {
-        // GEMM Call
-    }
-    else
-    {
-        // General ND Call?
     }
 }
 
@@ -188,7 +161,6 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
             << out[0].get_name() << ","
             << "1);\n";
         // clang-format on
-        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
         ;
         writer.indent--;
         writer << "}\n";
@@ -224,7 +196,6 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
              << out[0].get_name() << ","
              << "n);\n";
         // clang-format on
-        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";
         writer.indent--;
         writer << "}\n";
     }
@@ -333,7 +304,6 @@ void runtime::gpu::GPU_Emitter::EmitMaximum(codegen::CodeWriter& writer,
         writer +=  R"(
                 cudnnDestroy(cudnnHandle);
       )";
-        writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";;
         writer.indent--;
         writer << "}\n";
     // clang-format on
@@ -458,7 +428,6 @@ void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
                  << arg_shape[1] << ","
                  << out[0].get_name() << ","
                  << out[0].get_shape()[1] << ");\n";
-          writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";;
           writer.indent--;
           writer << "}\n";
           //clang-format on
@@ -541,7 +510,6 @@ void runtime::gpu::GPU_Emitter::EmitMultiply(
            << "1"                      // Stride y
            << ");\n";
     writer.indent--;
-    writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_DEVICE);\n";;
     writer << "}\n";
     // clang-format on
 }

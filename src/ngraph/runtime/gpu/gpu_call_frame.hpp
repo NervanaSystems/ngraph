@@ -35,8 +35,8 @@ namespace ngraph
             class GPU_CallFrame;
             class GPU_ExternalFunction;
 
-            using EntryPoint_t = void(void*** inputs,
-                                      void*** outputs,
+            using EntryPoint_t = void(void** inputs,
+                                      void** outputs,
                                       cublasHandle_t& cublas_handle);
 
             using EntryPoint = std::function<EntryPoint_t>;
@@ -48,7 +48,7 @@ namespace ngraph
                 GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction> external_function,
                               EntryPoint compiled_function);
 
-                ~GPU_CallFrame() override = default;
+                ~GPU_CallFrame() override;
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///

@@ -17,7 +17,7 @@
 #include <stdio.h>
 
 #include <cuda_runtime.h>
-#include "cublas_v2.h"
+#include "cublas.h"
 
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
@@ -32,12 +32,18 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     , m_compiled_function(compiled_function)
 {
     cublasStatus_t stat = cublasCreate(&m_cublas_handle);
-    if (stat != cudaSuccess)
+    if (stat != CUBLAS_STATUS_SUCCESS)
     {
         throw runtime_error("cuBLAS create failed");
     }
+    cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_HOST);
     // Pass scalars as reference on the device
     cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_DEVICE);
+}
+
+runtime::gpu::GPU_CallFrame::~GPU_CallFrame()
+{
+    cublasDestroy(m_cublas_handle);
 }
 
 void runtime::gpu::GPU_CallFrame::tensor_call(
@@ -45,8 +51,8 @@ void runtime::gpu::GPU_CallFrame::tensor_call(
     const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& output_tvs)
 {
     // Host tensors
-    vector<void**> inputs;
-    vector<void**> outputs;
+    vector<void*> inputs;
+    vector<void*> outputs;
 
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
