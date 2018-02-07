@@ -212,6 +212,7 @@ endif()
 
 if (NGRAPH_ARGON_ENABLE)
     link_directories(${ARGON_TRANSFORMER_LIB_DIR})
+    include_directories(${ARGON_TRANSFORMER_INCLUDE_DIR})
 endif()
 
 add_library(ngraph SHARED ${SRC})
@@ -315,6 +316,14 @@ if (NOT APPLE)
         install(DIRECTORY ${ARGON_TRANSFORMER_LIB_DIR}/
             DESTINATION ${NGRAPH_INSTALL_LIB}
             FILES_MATCHING PATTERN "*.so"
+        )
+        install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+            DESTINATION ${NGRAPH_INSTALL_INCLUDE}
+            FILES_MATCHING PATTERN "*.hpp"
+        )
+        install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+            DESTINATION ${NGRAPH_INSTALL_INCLUDE}
+            FILES_MATCHING PATTERN "*.h"
         )
     endif()
 endif()

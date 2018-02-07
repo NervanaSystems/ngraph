@@ -37,7 +37,7 @@ if (NGRAPH_ARGON_ENABLE)
     #   commit.
     # - After we have ngraph CI job for argon transformer, ngraph master will be compatible with
     #   argon transformer guaranteed by CI.
-    set(ARGON_TRANSFORMER_CMAKE_GIT_TAG cpp-master)
+    set(ARGON_TRANSFORMER_CMAKE_GIT_TAG yixing/argon-link)
 
     # Determines where argon-transformer will be located
     set(ARGON_TRANSFORMER_CMAKE_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/argon_transformer)
@@ -107,7 +107,7 @@ if (NGRAPH_ARGON_ENABLE)
     endif()
 
     ExternalProject_Get_Property(ext_argon_transformer source_dir)
-    set(ARGON_TRANSFORMER_INCLUDE_DIR ${source_dir}/src PARENT_SCOPE)
+    set(ARGON_TRANSFORMER_INCLUDE_DIR ${ARGON_TRANSFORMER_CMAKE_PREFIX}/include PARENT_SCOPE)
     set(ARGON_TRANSFORMER_LIB_DIR ${ARGON_TRANSFORMER_CMAKE_PREFIX}/lib PARENT_SCOPE)
     set(ARGON_API_INCLUDE_DIR ${NGRAPH_PREBUILD_ARGON_API_PATH}/include PARENT_SCOPE)
     set(ARGON_API_LIB_DIR ${NGRAPH_PREBUILD_ARGON_API_PATH}/lib) # Used by find_library below
