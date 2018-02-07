@@ -1,5 +1,5 @@
 .. ---------------------------------------------------------------------------
-.. Copyright 2017 Intel Corporation
+.. Copyright 2018 Intel Corporation
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -13,10 +13,28 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-.. Intel nGraph library core documentation master file, created on Mon Dec 25 13:04:12 2017.
+#############################
+Intel nGraph library project
+#############################
 
-Intel nGraph library
-====================
+Welcome to the Intel nGraph project, an open source C++ library for developers
+of :abbr:`Deep Learning (DL)` (DL) systems. Here you will find a suite of 
+components, APIs, and documentation that can be used to compile and run  
+:abbr:`Deep Neural Network (DNN)` (DNN) models defined in a variety of frameworks.  
+
+For this early release, we provide :doc:`framework-integration-guides` to compile 
+and run MXNet and TensorFlow-based projects.
+
+The nGraph library translates a framework’s representation of computations into 
+an :abbr:`Intermediate Representation (IR)` designed to promote computational 
+efficiency on target hardware. Initially-supported backends include Intel 
+Architecture CPUs (CPU), the Intel® Nervana Neural Network Processor™ (NNP), 
+and NVIDIA\* GPUs. Currently-supported compiler optimizations include efficient 
+memory management and data layout abstraction. 
+
+Further overview details can be found on our :doc:`about` page. 
+
+=======
 
 .. toctree::
    :maxdepth: 1
@@ -26,19 +44,12 @@ Intel nGraph library
    installation.rst
    testing-libngraph.rst
    framework-integration-guides.rst
-   build-a-functiongraph.rst
+   graph-basics.rst
 
 .. toctree::
    :maxdepth: 1
-   :caption: Models 
-   :name: Models
-
-   training.rst
-   model-phases.rst
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Backend Components
+   :caption: Algorithms 
+   :name: 
 
 .. toctree::
    :maxdepth: 1
@@ -50,8 +61,15 @@ Intel nGraph library
 
 .. toctree::
    :maxdepth: 1
+   :caption: Ops
+
+   ops/convolution.rst
+
+.. toctree::
+   :maxdepth: 1
    :caption: Project Docs
 
+   about.rst
    release-notes.rst
    code-contributor-README.rst
 
@@ -63,8 +81,9 @@ Intel nGraph library
    doc-contributor-README.rst
 
 
-
 Indices and tables
 ==================
 
    * :ref:`search`   
+   * :ref:`genindex`
+     

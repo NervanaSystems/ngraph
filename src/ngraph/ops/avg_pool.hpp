@@ -22,8 +22,9 @@ namespace ngraph
     {
         /// \brief Batched average pooling operation, with optional padding and window stride.
         ///
-        /// Average pooling takes as its input an image batch tensor of shape \f$(N,C,d_1,\dots,d_n)\f$ where \f$n > 0\f$, every \f$d_i > 0\f$, and where \f$N\f$ is
-        /// the batch size, and \f$C > 0\f$ is the number of channels (sometimes called features). It also takes four parameters:
+        /// Average pooling takes as its input an data batch tensor of shape \f$(N,C,d_1,\dots,d_n)\f$ where \f$n > 0\f$, every \f$d_i > 0\f$, and where \f$N\f$ is
+        /// the batch size, and \f$C > 0\f$ is the number of channels (sometimes called features). The dimensions \f$(d_1,\dots,d_n)\f$ correspond to the shape of
+        /// an \f$n\f$-dimensional data item in a batch. For example, where \f$n=2\f$, the data may represent a two-dimensional image. It also takes four parameters:
         ///
         /// 1. <i>(the window shape)</i> a size vector \f$(w_1,\dots,w_n)\f$ where every \f$w_i \le d_i\f$; and
         /// 2. <i>(the window movement strides, optional)</i> a vector of positive integers \f$(s_1,\dots,s_n)\f$.
@@ -32,7 +33,7 @@ namespace ngraph
         ///
         /// The output has the shape \f$(N,C,d'_1,\dots,d'_n)\f$, where \f$d'_n = \lceil \frac{p_i + d_i + q_i - w_i + 1}{s_i} \rceil\f$.
         ///
-        /// *In the absence of padding*, given an input image batch tensor \f$T_\textit{in}\f$, the output tensor is defined by the equation
+        /// *In the absence of padding*, given an input data batch tensor \f$T_\textit{in}\f$, the output tensor is defined by the equation
         ///
         /// \f[
         ///      T_\textit{out}[a,c,i_1,\dots,i_n] = \frac{\sum_{j_1 = s_1 i_1, \dots, j_n = s_n i_n}^{j_1 = s_1 i_1 + w_1 - 1, \dots, j_n = s_n i_n + w_n - 1} T_\textit{in}[a,c,j_1,\dots,j_n]}{\prod_{i=1}^n{w_n}}
@@ -65,7 +66,7 @@ namespace ngraph
         public:
             /// \brief Constructs a batched average pooling operation.
             ///
-            /// \param arg The node producing the input image batch tensor.
+            /// \param arg The node producing the input data batch tensor.
             /// \param window_shape The window shape.
             /// \param window_movement_strides The window movement strides.
             /// \param padding_below The below-padding shape.
@@ -78,7 +79,7 @@ namespace ngraph
 
             /// \brief Constructs a batched, unpadded average pooling operation (i.e., all padding shapes are set to 0).
             ///
-            /// \param arg The node producing the input image batch tensor.
+            /// \param arg The node producing the input data batch tensor.
             /// \param window_shape The window shape.
             /// \param window_movement_strides The window movement strides.
             AvgPool(const std::shared_ptr<Node>& arg,
@@ -87,7 +88,7 @@ namespace ngraph
 
             /// \brief Constructs an unstrided batched convolution operation (i.e., all window movement strides are 1 and all padding shapes are set to 0).
             ///
-            /// \param arg The node producing the input image batch tensor.
+            /// \param arg The node producing the input data batch tensor.
             /// \param window_shape The window shape.
             AvgPool(const std::shared_ptr<Node>& arg, const Shape& window_shape);
 
@@ -96,12 +97,16 @@ namespace ngraph
             {
                 if (new_args.size() != 1)
                     throw ngraph_error("Incorrect number of new arguments");
+
                 return std::make_shared<AvgPool>(new_args.at(0),
                                                  m_window_shape,
                                                  m_window_movement_strides,
                                                  m_padding_below,
                                                  m_padding_above);
             }
+
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const std::shared_ptr<Node>& delta) override;
 
             /// \return The window shape.
             const Shape& get_window_shape() const { return m_window_shape; }
@@ -111,38 +116,49 @@ namespace ngraph
             const Shape& get_padding_below() const { return m_padding_below; }
             /// \return The above-padding shape.
             const Shape& get_padding_above() const { return m_padding_above; }
-            /// \return The number of image channels.
-            size_t get_channel_count() const { return m_channel_count; }
-            /// \return The input image physical shape, not including padding.
-            const Shape& get_input_image_physical_shape() const
-            {
-                return m_input_image_physical_shape;
-            }
-            /// \return The input image virtual shape, including padding.
-            const Shape& get_input_image_virtual_shape() const
-            {
-                return m_input_image_virtual_shape;
-            }
-            /// \return The output image shape.
-            const Shape& get_output_image_shape() const { return m_output_image_shape; }
-            /// \return The batch size.
-            size_t get_batch_size() const { return m_batch_size; }
-            /// \return The number of image dimensions.
-            size_t get_image_dimension_count() const { return m_image_dimension_count; }
-            bool is_functionally_identical(const Node&) const override;
-
         protected:
             Shape m_window_shape;
             Strides m_window_movement_strides;
             Shape m_padding_below;
             Shape m_padding_above;
+        };
 
-            size_t m_channel_count;
-            Shape m_input_image_physical_shape;
-            Shape m_input_image_virtual_shape;
-            Shape m_output_image_shape;
-            size_t m_batch_size;
-            size_t m_image_dimension_count;
+        class AvgPoolBackprop : public RequiresTensorViewArgs
+        {
+        public:
+            AvgPoolBackprop(const Shape& forward_arg_shape,
+                            const std::shared_ptr<Node>& delta,
+                            const Shape& window_shape,
+                            const Strides& window_movement_strides,
+                            const Shape& padding_below,
+                            const Shape& padding_above);
+
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override
+            {
+                if (new_args.size() != 1)
+                    throw ngraph_error("Incorrect number of new arguments");
+
+                AvgPoolBackprop* avpn = new AvgPoolBackprop(m_forward_arg_shape,
+                                                            new_args.at(0),
+                                                            m_window_shape,
+                                                            m_window_movement_strides,
+                                                            m_padding_below,
+                                                            m_padding_above);
+                return std::shared_ptr<op::AvgPoolBackprop>(avpn);
+            }
+
+            const Shape& get_forward_arg_shape() const { return m_forward_arg_shape; }
+            const Shape& get_window_shape() const { return m_window_shape; }
+            const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
+            const Shape& get_padding_below() const { return m_padding_below; }
+            const Shape& get_padding_above() const { return m_padding_above; }
+        protected:
+            Shape m_forward_arg_shape;
+            Shape m_window_shape;
+            Strides m_window_movement_strides;
+            Shape m_padding_below;
+            Shape m_padding_above;
         };
     }
 }

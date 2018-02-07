@@ -105,12 +105,15 @@ void ngraph::free_nodes(shared_ptr<Function> p)
     }
 }
 
-void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
+void ngraph::replace_node(std::shared_ptr<Node> target,
+                          std::shared_ptr<Node> replacement,
+                          bool replace_output)
 {
-    if (target->is_output()) //this restriction can be lifted when we find an use case for it
+    if (target->is_output() && !replace_output)
     {
         return;
     }
+
     //fix input/output descriptors
     assert(target->get_outputs().size() == replacement->get_outputs().size());
     for (size_t i = 0; i < target->get_outputs().size(); i++)
@@ -236,8 +239,12 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     // clone function operations
     clone_nodes(func->get_ops(), node_map);
 
-    // get cloned function result and parameters
-    auto cloned_result = node_map.get(func->get_result());
+    // get cloned function results and parameters
+    Nodes cloned_results;
+    for (shared_ptr<Node> node : func->get_results())
+    {
+        cloned_results.push_back(node_map.get(node));
+    }
     std::vector<std::shared_ptr<op::Parameter>> cloned_params;
     for (auto param : func->get_parameters())
     {
@@ -245,5 +252,5 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(std::shared_ptr<ngraph:
     }
 
     // create and return cloned function
-    return std::make_shared<ngraph::Function>(cloned_result, cloned_params);
+    return std::make_shared<ngraph::Function>(cloned_results, cloned_params);
 }

@@ -28,46 +28,10 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "util/matcher.hpp"
 
 using namespace ngraph;
 using namespace std;
-
-//this is for more nuanced testing
-class TestMatcher : public pattern::Matcher
-{
-    using pattern::Matcher::Matcher;
-    bool virtual match_node(const std::shared_ptr<Node>& pattern_node,
-                            const std::shared_ptr<Node>& graph_node,
-                            PatternMap& pattern_map) override
-    {
-        if (std::dynamic_pointer_cast<::ngraph::op::Parameter>(pattern_node))
-        {
-            return pattern_node.get() == dynamic_cast<::ngraph::op::Parameter*>(graph_node.get());
-        }
-
-        return this->pattern::Matcher::match_node(pattern_node, graph_node, pattern_map);
-    }
-
-public:
-    bool match(const std::shared_ptr<Node>& pattern_node, const std::shared_ptr<Node>& graph_node)
-    {
-        assert(
-            pattern_node &&
-            graph_node); //the same condition throws an exception in the non-test version of `match`
-        NGRAPH_DEBUG << "Starting match pattern = " << pattern_node->get_name()
-                     << " , graph_node = " << graph_node->get_name();
-
-        m_pattern_map.clear();
-        m_match_root.reset();
-
-        bool is_match = match_node(pattern_node, graph_node, m_pattern_map);
-        if (is_match)
-        {
-            m_match_root = graph_node;
-        }
-        return is_match;
-    }
-};
 
 template <typename T>
 std::shared_ptr<Node> create_reduction(const std::shared_ptr<Node>& node,
@@ -181,13 +145,13 @@ public:
             auto second_node = m.match_root()->get_input_ops().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
-            ASSERT_TRUE(const_node);
 
+            std::shared_ptr<ngraph::Node> nn = nullptr;
             if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
                 pattern_map[pattern]->get_shape() != const_node->get_shape())
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";
-                return;
+                return nn;
             }
 
             auto const_values = const_node->get_vector<int32_t>();
@@ -197,9 +161,9 @@ public:
             if (!all_ones)
             {
                 NGRAPH_DEBUG << "Constant vector's values aren't equal to 1";
-                return;
+                return nn;
             }
-            ngraph::replace_node(m.match_root(), pattern_map[pattern]);
+            return pattern_map[pattern];
         };
 
         auto m = make_shared<TestMatcher>(pattern * iconst1, callback);
@@ -212,7 +176,7 @@ public:
         auto iconst0 = construct_constant_node(0);
         auto pattern = std::make_shared<pattern::op::Label>(iconst0);
 
-        ngraph::pattern::gr_callback_fn callback = [pattern](pattern::Matcher& m) {
+        auto callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_add_zero against "
                          << m.match_root()->get_name();
             assert(m.match_root()->get_input_ops().size() == 2);
@@ -225,13 +189,15 @@ public:
             auto second_node = m.match_root()->get_input_ops().at(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
-            ASSERT_NE(nullptr, const_node);
 
+            //ASSERT_NE(nullptr, const_node);
+
+            std::shared_ptr<ngraph::Node> nn = nullptr;
             if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
                 pattern_map[pattern]->get_shape() != const_node->get_shape())
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";
-                return;
+                return nn;
             }
 
             auto const_values = const_node->get_vector<int>();
@@ -241,10 +207,10 @@ public:
             if (!all_zeros)
             {
                 NGRAPH_DEBUG << "Constant vector's values aren't equal to 0";
-                return;
+                return nn;
             }
 
-            ngraph::replace_node(m.match_root(), pattern_map[pattern]);
+            return pattern_map[pattern];
         };
 
         auto m = make_shared<TestMatcher>(pattern + iconst0, callback);
@@ -261,8 +227,9 @@ public:
             auto reduce = std::dynamic_pointer_cast<op::Reduce>(m.match_root());
             auto reducee = reduce->get_inputs().at(0).get_output().get_node();
             NGRAPH_DEBUG << "reducee = " << reducee->get_name();
-            auto sum = std::make_shared<op::Sum>(reducee, reduce->get_reduction_axes());
-            ngraph::replace_node(reduce, sum);
+            auto sum =
+                std::shared_ptr<ngraph::Node>(new op::Sum(reducee, reduce->get_reduction_axes()));
+            return sum;
         };
 
         auto m = make_shared<TestMatcher>(sum_pattern, callback);
@@ -290,8 +257,26 @@ TEST(pattern, graph_rewrite)
 {
     auto shape = Shape{};
     pass::Manager pass_manager;
-
     pass_manager.register_pass<TestGraphRewrite>();
+
+    {
+        auto a = make_shared<op::Parameter>(element::i32, shape);
+        auto b = make_shared<op::Parameter>(element::i32, shape);
+        auto c = make_shared<op::Parameter>(element::i32, shape);
+        auto iconst0 = construct_constant_node(0);
+        auto graph_a = a + iconst0;
+        auto graph_b = b + iconst0;
+
+        auto f = std::make_shared<Function>(ngraph::Nodes{a, b, graph_a, c, graph_b},
+                                            op::Parameters{a, b, c});
+        pass_manager.run_passes(f);
+
+        ASSERT_TRUE(graph_a->get_output_inputs(0).empty());
+        ASSERT_TRUE(graph_b->get_output_inputs(0).empty());
+
+        auto expected = ngraph::Nodes{a, b, a, c, b};
+        ASSERT_TRUE(f->get_results() == expected);
+    }
 
     {
         auto a = make_shared<op::Parameter>(element::i32, shape);

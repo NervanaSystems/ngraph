@@ -93,8 +93,6 @@ namespace ngraph
 
             /// \return The axis positions (0-based) to be eliminated through summation.
             const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
-            bool is_functionally_identical(const Node&) const override;
-
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;

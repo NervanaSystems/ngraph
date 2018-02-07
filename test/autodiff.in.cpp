@@ -24,6 +24,8 @@
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/random.hpp"
 
+#include "ngraph/runtime/kernel/avg_pool.hpp"
+
 using namespace std;
 using namespace ngraph;
 
@@ -117,6 +119,263 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
+TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    auto padding = Shape{1, 1};
+
+    auto shape_a = Shape{1, 1, 2, 2};
+    auto avgpool_shape = Shape{1, 1, 2, 2};
+
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto window_shape = Shape{2, 2};
+    auto window_movement_strides = Strides{2, 2};
+    auto avgpool =
+        make_shared<op::AvgPool>(A, window_shape, window_movement_strides, padding, padding);
+    auto f = make_shared<Function>(avgpool, op::Parameters{A});
+
+    shared_ptr<runtime::TensorView> ep =
+        backend->make_primary_tensor_view(element::i32, avgpool_shape);
+    vector<int> dataEp(shape_size(avgpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    shared_ptr<runtime::TensorView> output =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    vector<int> dataInput{4, 8, 12, 16};
+
+    vector<int> expected{1, 2, 3, 4};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
+    auto df = autodiff::backprop_function(f);
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+    cf->tensor_call({input, ep}, {output});
+    ASSERT_TRUE(read_vector<int>(output) == dataEp);
+}
+
+TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    auto shape_a = Shape{1, 1, 4, 4};
+    auto avgpool_shape = Shape{1, 1, 3, 3};
+
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto window_shape = Shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
+    auto f = make_shared<Function>(avgpool, op::Parameters{A});
+
+    shared_ptr<runtime::TensorView> ep =
+        backend->make_primary_tensor_view(element::i32, avgpool_shape);
+    vector<int> dataEp(shape_size(avgpool_shape), 4);
+
+    shared_ptr<runtime::TensorView> input =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    shared_ptr<runtime::TensorView> output =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    vector<int> dataInput{1, 3, 1, 3, 1, 3, 1, 3, 3, 5, 3, 5, 3, 5, 3, 5};
+
+    vector<int> expected{1, 2, 2, 1, 2, 4, 4, 2, 2, 4, 4, 2, 1, 2, 2, 1};
+
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
+    auto df = autodiff::backprop_function(f);
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+    cf->tensor_call({input, ep}, {output});
+    ASSERT_TRUE(read_vector<int>(output) == expected);
+}
+
+TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+
+    auto shape_a = Shape{2, 2, 4, 4};
+    auto avgpool_shape = Shape{2, 2, 2, 2};
+
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto window_shape = Shape{2, 2};
+    auto window_movement_strides = Strides{2, 2};
+    auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
+    auto f = make_shared<Function>(avgpool, op::Parameters{A});
+
+    shared_ptr<runtime::TensorView> ep =
+        backend->make_primary_tensor_view(element::i32, avgpool_shape);
+    vector<int> dataEp(shape_size(avgpool_shape), 12);
+
+    shared_ptr<runtime::TensorView> input =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    shared_ptr<runtime::TensorView> output =
+        backend->make_primary_tensor_view(element::i32, shape_a);
+
+    vector<int> dataInput{//i1c1
+                          1,
+                          2,
+                          6,
+                          7,
+                          3,
+                          4,
+                          4,
+                          3,
+                          19,
+                          1,
+                          2,
+                          3,
+                          18,
+                          2,
+                          3,
+                          2,
+                          //i1c2
+                          4,
+                          1,
+                          5,
+                          5,
+                          1,
+                          4,
+                          5,
+                          5,
+                          12,
+                          8,
+                          2,
+                          3,
+                          15,
+                          5,
+                          3,
+                          2,
+                          //i2c1
+                          2,
+                          3,
+                          7,
+                          7,
+                          3,
+                          2,
+                          3,
+                          3,
+                          13,
+                          7,
+                          1,
+                          2,
+                          7,
+                          13,
+                          3,
+                          4,
+                          //i2c2
+                          1,
+                          1,
+                          2,
+                          2,
+                          7,
+                          1,
+                          2,
+                          14,
+                          6,
+                          16,
+                          4,
+                          1,
+                          14,
+                          4,
+                          4,
+                          1};
+
+    vector<int> expected(shape_size(shape_a), 3);
+    copy_data(ep, dataEp);
+    copy_data(input, dataInput);
+
+    auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
+    auto df = autodiff::backprop_function(f);
+    auto external = manager->compile(df);
+    auto cf = backend->make_call_frame(external);
+    cf->tensor_call({input, ep}, {output});
+    ASSERT_TRUE(read_vector<int>(output) == expected);
+}
+
+TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+    auto shape_a = Shape{2, 2, 4, 4};
+    test::Uniform<float> rng(1.0f, 10.0f);
+
+    auto make_graph = [shape_a]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto window_shape = Shape{2, 2};
+        auto window_movement_strides = Strides{2, 2};
+        auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
+        return make_shared<Function>(avgpool, op::Parameters{A});
+
+    };
+
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
+    {
+        auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+    }
+}
+
+TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+    auto shape_a = Shape{2, 2, 4, 4};
+    test::Uniform<float> rng(1.0f, 10.0f);
+
+    auto make_graph = [shape_a]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto window_shape = Shape{2, 2};
+        auto window_movement_strides = Strides{1, 1};
+        auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
+        return make_shared<Function>(avgpool, op::Parameters{A});
+
+    };
+
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
+    {
+        auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+    }
+}
+
+TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_numeric)
+{
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto backend = manager->allocate_backend();
+    auto shape_a = Shape{2, 2, 4, 4};
+    test::Uniform<float> rng(1.0f, 10.0f);
+
+    auto make_graph = [shape_a]() {
+        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto window_shape = Shape{2, 2};
+        auto padding = Shape{1, 1};
+        auto window_movement_strides = Strides{2, 2};
+        auto avgpool =
+            make_shared<op::AvgPool>(A, window_shape, window_movement_strides, padding, padding);
+        return make_shared<Function>(avgpool, op::Parameters{A});
+
+    };
+
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
+    {
+        auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
+        EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
+    }
+}
+
 TEST(${BACKEND_NAME}, backwards_abs)
 {
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -134,7 +393,7 @@ TEST(${BACKEND_NAME}, backwards_abs)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x_neg = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -311,7 +570,7 @@ TEST(${BACKEND_NAME}, backwards_ceiling)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x_minusone = rng_minusone.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -343,7 +602,7 @@ TEST(${BACKEND_NAME}, backwards_cos)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -364,7 +623,7 @@ TEST(${BACKEND_NAME}, backwards_cosh)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -578,7 +837,7 @@ TEST(${BACKEND_NAME}, backwards_floor)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x_minusone = rng_minusone.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -732,12 +991,6 @@ TEST(${BACKEND_NAME}, backwards_power)
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
 
-    x0 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
-    x1 = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
-
-    EXPECT_TRUE(
-        autodiff_numeric_compare<float>(manager, backend, make_graph, {x0, x1}, .01f, .01f));
-
     x0 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
     x1 = rng_pos.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -761,7 +1014,7 @@ TEST(${BACKEND_NAME}, backwards_replace_slice)
             std::vector<std::shared_ptr<op::Parameter>>{X, Y});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape_x));
         auto y = rng.initialize(backend->make_primary_tensor_view<float>(shape_y));
@@ -803,7 +1056,7 @@ TEST(${BACKEND_NAME}, backwards_select)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
         write_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
@@ -836,7 +1089,7 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
         write_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
@@ -871,7 +1124,7 @@ TEST(${BACKEND_NAME}, backwards_sign)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x_neg = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -898,7 +1151,7 @@ TEST(${BACKEND_NAME}, backwards_sin)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -919,7 +1172,7 @@ TEST(${BACKEND_NAME}, backwards_sinh)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -940,7 +1193,7 @@ TEST(${BACKEND_NAME}, backwards_slice)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -962,7 +1215,7 @@ TEST(${BACKEND_NAME}, backwards_sqrt)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -1077,7 +1330,7 @@ TEST(${BACKEND_NAME}, backwards_tan)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x_r = rng_r.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -1104,7 +1357,7 @@ TEST(${BACKEND_NAME}, backwards_tanh)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 

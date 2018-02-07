@@ -1,4 +1,4 @@
-# Copyright 2017 Nervana Systems Inc.
+# Copyright 2018 Nervana Systems Inc.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -23,7 +23,7 @@ endif()
 
 project (ngraph)
 
-SET( GCC_MIN_VERSION 4.9)
+SET( GCC_MIN_VERSION 4.8)
 SET( CLANG_MIN_VERSION 3.8)
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -37,6 +37,10 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     endif()
 else()
     message(WARNING "You are using an unsupported compiler! Compilation has only been tested with Clang ( ${CLANG_MIN_VERSION} and up) and GCC ( ${GCC_MIN_VERSION} and up). ")
+endif()
+
+if($ENV{NGRAPH_USE_PREBUILT_LLVM})
+    set(NGRAPH_USE_PREBUILT_LLVM TRUE)
 endif()
 
 # These variables are undocumented but useful.
@@ -78,9 +82,6 @@ set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/doc")
 # Compiler-specific logic...
 #-----------------------------------------------------------------------------------------------
 
-# Default values...
-set(NGRAPH_CXX_WARNING_FLAGS "")
-
 # Compiler-specific logic...
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     message( STATUS "Setting clang flags...")
@@ -100,25 +101,33 @@ endif()
 
 # Set true if CPU backend is built by default
 if (NOT DEFINED NGRAPH_CPU_ENABLE)
-    SET(NGRAPH_CPU_ENABLE TRUE)
+    set(NGRAPH_CPU_ENABLE TRUE)
+endif()
+
+if (NOT DEFINED NGRAPH_TBB_ENABLE)
+    set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
 #-----------------------------------------------------------------------------------------------
 # GPU support
 #-----------------------------------------------------------------------------------------------
 # Setup CUDA and cuDNN if NGRAPH_GPU_ENABLE=TRUE
-if(NGRAPH_GPU_ENABLE)
-  find_package(CUDA 8 REQUIRED)
-  find_package(CUDNN 5 QUIET REQUIRED)
-  include_directories(${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
-  if (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND
+find_package(CUDA 8 QUIET)
+if(CUDA_FOUND AND (NOT DEFINED NGRAPH_GPU_ENABLE OR NGRAPH_GPU_ENABLE))
+    message(STATUS "GPU Backend Enabled")
+    set(NGRAPH_GPU_ENABLE TRUE)
+    find_package(CUDNN 5 QUIET REQUIRED)
+    include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR} ${LLVM_INCLUDE_DIR})
+    if (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND
         NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 6.0 AND
         CUDA_HOST_COMPILER STREQUAL CMAKE_C_COMPILER)
-      message(FATAL_ERROR
+        message(FATAL_ERROR
         "CUDA 8.0 is not compatible with GCC version >= 6.\n"
         "Please select a correct compiler version\n"
         )
     endif()
+elseif(NGRAPH_GPU_ENABLE)
+    message(FATAL_ERROR "GPU was required but CUDA library was not found")
 endif()
 
 #-----------------------------------------------------------------------------------------------
