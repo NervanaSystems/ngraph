@@ -1939,7 +1939,8 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
                << ");\n";
         writer << "memory weights = memory({weights_desc, cpu_engine}, " << args[1].get_name()
                << ");\n";
-        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
+        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
         writer << "convolution_forward conv = convolution_forward({"
                << "{prop_kind::forward, algorithm::convolution_direct, input_data_desc, "
                   "weights_desc, result_desc, {"
@@ -1982,7 +1983,8 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
                << ");\n";
         writer << "memory weights = memory({weights_desc, cpu_engine}, " << args[1].get_name()
                << ");\n";
-        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
+        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
         writer << "convolution_forward conv = convolution_forward({"
                << "{prop_kind::forward, algorithm::convolution_direct, input_data_desc, "
                   "weights_desc, result_desc, {"
@@ -2122,7 +2124,8 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
 
         writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
                << ");\n";
-        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
+        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
 
         // TODO(jmenon): Use a workspace
         writer << "pooling_forward max_pooling = pooling_forward({"
@@ -2304,7 +2307,8 @@ void runtime::cpu::CPU_Emitter::EmitAvgPool(codegen::CodeWriter& writer,
 
         writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
                << ");\n";
-        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
+        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
 
         // TODO(jmenon): Use a workspace
         writer << "pooling_forward avg_pooling = pooling_forward({"
