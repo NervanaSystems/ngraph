@@ -1680,7 +1680,7 @@ a.wy-text-warning:hover {
 }
 
 a.wy-text-info:hover {
-  color: #409ad5 !important;
+  color: #018791 !important;
 }
 
 .wy-text-success {
@@ -1726,21 +1726,23 @@ h1 {
 
 h2, .rst-content .toctree-wrapper p.caption {
   font-size: 139%;
+  font-weight: lighter;
 }
 
 h3 {
   font-size: 127%;
-  font-weight: lighter;
+  color: #5F5F5F;
+  text-decoration: underline 2px;
 }
 
 h4 {
-  font-size: 100%;
-  font-weight: lighter;
+  font-size: 115%;
+  color: #898288;
 
 }
 
 h5 {
-  font-size: 100%;
+  font-size: 107%;
 }
 
 h6 {
