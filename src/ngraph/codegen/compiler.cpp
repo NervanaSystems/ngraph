@@ -257,11 +257,6 @@ bool codegen::StaticCompiler::is_version_number(const string& path)
 
 void codegen::StaticCompiler::add_header_search_path(const string& path)
 {
-    for (auto s : m_extra_search_path_list)
-    {
-        NGRAPH_INFO << "Current path " << s;
-    }
-    NGRAPH_INFO << "To add " << path;
     if (!contains(m_extra_search_path_list, path))
     {
         m_extra_search_path_list.push_back(path);
