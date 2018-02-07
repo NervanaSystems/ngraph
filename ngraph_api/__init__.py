@@ -16,6 +16,7 @@
 
 from ngraph_api.ops import absolute
 from ngraph_api.ops import absolute as abs
+from ngraph_api.ops import add
 from ngraph_api.ops import broadcast
 from ngraph_api.ops import ceiling
 from ngraph_api.ops import ceiling as ceil
