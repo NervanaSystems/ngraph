@@ -78,22 +78,16 @@ codegen::Module::Module(std::unique_ptr<llvm::Module> module)
 {
 }
 
-codegen::Module::~Module()
-{
-}
+codegen::Module::~Module() {}
 
 std::unique_ptr<llvm::Module> codegen::Module::take_module()
 {
     return move(m_module);
 }
 
-codegen::Compiler::Compiler()
-{
-}
+codegen::Compiler::Compiler() {}
 
-codegen::Compiler::~Compiler()
-{
-}
+codegen::Compiler::~Compiler() {}
 
 void codegen::Compiler::set_precompiled_header_source(const std::string& source)
 {
@@ -257,6 +251,11 @@ bool codegen::StaticCompiler::is_version_number(const string& path)
 
 void codegen::StaticCompiler::add_header_search_path(const string& path)
 {
+    for (auto s : m_extra_search_path_list)
+    {
+        NGRAPH_INFO << "Current path " << s;
+    }
+    NGRAPH_INFO << "To add " << path;
     if (!contains(m_extra_search_path_list, path))
     {
         m_extra_search_path_list.push_back(path);
