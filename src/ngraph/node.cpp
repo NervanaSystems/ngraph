@@ -142,6 +142,16 @@ void Node::set_name(const string& name)
     }
 }
 
+Placement Node::get_placement() const
+{
+    return m_placement;
+}
+
+void Node::set_placement(Placement placement)
+{
+    m_placement = placement;
+}
+
 void Node::assert_argument_list_equivalency(const Nodes& b)
 {
     bool arguments_equal = true;
@@ -334,4 +344,28 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
         }
     }
     return true;
+}
+
+descriptor::Input* Node::get_input_from(const shared_ptr<Node>& src)
+{
+    for (size_t i = 0; i < this->get_input_size(); ++i)
+    {
+        if (this->get_input_op(i) == src)
+        {
+            return &(this->get_inputs().at(i));
+        }
+    }
+    throw ngraph_error("Error: src is not one of self's input Node");
+}
+
+descriptor::Output* Node::get_output_to(const shared_ptr<Node>& dst)
+{
+    for (size_t i = 0; i < dst->get_input_size(); ++i)
+    {
+        if (dst->get_input_op(i).get() == this)
+        {
+            return &(dst->get_inputs().at(i).get_output());
+        }
+    }
+    throw ngraph_error("Error: dst is not one of self's output Node");
 }

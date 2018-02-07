@@ -270,3 +270,15 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
 
     return fprop_cache;
 }
+
+std::string ngraph::placement_to_string(Placement placement)
+{
+    switch (placement)
+    {
+    case Placement::DEFAULT: return "DEFAULT";
+    case Placement::INTERPRETER: return "INTERPRETER";
+    case Placement::CPU: return "CPU";
+    case Placement::GPU: return "GPU";
+    case Placement::ARGON: return "ARGON";
+    }
+}

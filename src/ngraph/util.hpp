@@ -33,6 +33,7 @@ namespace ngraph
     class Node;
     class Function;
     class stopwatch;
+    enum class Placement;
 
     namespace runtime
     {
@@ -248,11 +249,11 @@ namespace ngraph
     size_t round_up(size_t size, size_t alignment);
 
     /*
-    * Return type struct for cache_fprop, with the modified fprop and bprop
-    * functions
-    * and a list of the nodes that have been appended to fprop output/bprop
-    * input
-    */
+     * Return type struct for cache_fprop, with the modified fprop and bprop
+     * functions
+     * and a list of the nodes that have been appended to fprop output/bprop
+     * input
+     */
     struct FpropCache
     {
         std::shared_ptr<Function> fprop;
@@ -261,14 +262,17 @@ namespace ngraph
     };
 
     /**
-    * This utility takes forward-propogation and back-propogation XLAunctions
-    * and turns them into clone functions where the intermediate values of 
-    * the forward prop are added to the output of fprop and the input of the bprop
-    * to avoid repeat calcualtions.
-    * The last argument is the adjoints coming into the bprop function, the output
-    * bprop function will have these nodes as the first N input parameters
-    **/
+     * This utility takes forward-propogation and back-propogation XLAunctions
+     * and turns them into clone functions where the intermediate values of
+     * the forward prop are added to the output of fprop and the input of the bprop
+     * to avoid repeat calcualtions.
+     * The last argument is the adjoints coming into the bprop function, the output
+     * bprop function will have these nodes as the first N input parameters
+     **/
     FpropCache cache_fprop(std::shared_ptr<Function> fprop,
                            std::shared_ptr<Function> bprop,
                            std::vector<std::shared_ptr<Node>> adjoints);
+
+    std::string placement_to_string(Placement placement);
+
 } // end namespace ngraph

@@ -35,6 +35,7 @@ set (SRC
     input_output_assign.cpp
     main.cpp
     op.cpp
+    graph_partition.cpp
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp

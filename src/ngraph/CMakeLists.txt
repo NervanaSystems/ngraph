@@ -77,6 +77,7 @@ set (SRC
     ops/tanh.cpp
     ops/unary_elementwise_arithmetic.cpp
     ops/unary_elementwise.cpp
+    pass/assign_placement.cpp
     pass/dump_sorted.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp
