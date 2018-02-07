@@ -192,6 +192,8 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(n);
+
     const Shape& arg0_shape = args[0].get_shape();
     const Shape& arg1_shape = args[1].get_shape();
     if (arg0_shape.empty() || arg1_shape.empty())
@@ -206,7 +208,8 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         writer.indent--;
         writer << "}\n";
     }
-    else if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
+    else if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1) &&
+             dot->get_reduction_axes_count() == 1)
     {
         writer << "{   // " << n->get_name() << "\n";
         writer.indent++;
@@ -215,7 +218,8 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         writer.indent--;
         writer << "}\n";
     }
-    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
+    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
+             dot->get_reduction_axes_count() == 1)
     {
         writer << "{   // " << n->get_name() << "\n";
         writer.indent++;
@@ -224,7 +228,8 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         writer.indent--;
         writer << "}\n";
     }
-    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
+    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2) &&
+             dot->get_reduction_axes_count() == 1)
     {
         // Emit an MKL SGEMM call if possible
         // clang-format off
@@ -255,8 +260,6 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
     }
     else
     {
-        const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(n);
-
         writer << "kernel::dot(" << args[0].get_name() << ",\n";
         writer << "            " << args[1].get_name() << ",\n";
         writer << "            " << out[0].get_name() << ",\n";
