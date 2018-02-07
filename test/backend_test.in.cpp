@@ -5487,10 +5487,11 @@ void make_unary_empty_test(const string& backend_name)
     auto in_vec = read_vector<T>(a);
     auto out_vec = read_vector<T>(result);
 
-    EXPECT_EQ(in_vec, out_vec);
+    EXPECT_EQ(in_vec.size(), 0);
+    EXPECT_EQ(out_vec.size(), 0);
 }
 
-template <typename OP, typename T>
+template <typename OP, typename T, typename U = T>
 void make_binary_empty_test(const string& backend_name)
 {
     auto shape = Shape{0};
@@ -5505,14 +5506,15 @@ void make_binary_empty_test(const string& backend_name)
 
     auto a = backend->make_primary_tensor_view(element::from<T>(), shape);
     auto b = backend->make_primary_tensor_view(element::from<T>(), shape);
-    auto result = backend->make_primary_tensor_view(element::from<T>(), shape);
+    auto result = backend->make_primary_tensor_view(element::from<U>(), shape);
 
     cf->call({a, b}, {result});
 
     auto in_vec = read_vector<T>(a);
-    auto out_vec = read_vector<T>(result);
+    auto out_vec = read_vector<U>(result);
 
-    EXPECT_EQ(in_vec, out_vec);
+    EXPECT_EQ(in_vec.size(), 0);
+    EXPECT_EQ(out_vec.size(), 0);
 }
 
 template <typename OP>
@@ -5528,6 +5530,21 @@ void make_binary_empty_test(const string& backend_name)
     make_binary_empty_test<OP, uint16_t>(backend_name);
     make_binary_empty_test<OP, uint32_t>(backend_name);
     make_binary_empty_test<OP, uint64_t>(backend_name);
+}
+
+template <typename OP>
+void make_binary_empty_comparison_test(const string& backend_name)
+{
+    make_binary_empty_test<OP, float, char>(backend_name);
+    make_binary_empty_test<OP, double, char>(backend_name);
+    make_binary_empty_test<OP, int8_t, char>(backend_name);
+    make_binary_empty_test<OP, int16_t, char>(backend_name);
+    make_binary_empty_test<OP, int32_t, char>(backend_name);
+    make_binary_empty_test<OP, int64_t, char>(backend_name);
+    make_binary_empty_test<OP, uint8_t, char>(backend_name);
+    make_binary_empty_test<OP, uint16_t, char>(backend_name);
+    make_binary_empty_test<OP, uint32_t, char>(backend_name);
+    make_binary_empty_test<OP, uint64_t, char>(backend_name);
 }
 
 template <typename OP>
@@ -5647,27 +5664,27 @@ TEST(${BACKEND_NAME}, zero_sized_divide)
 
 TEST(${BACKEND_NAME}, zero_sized_eq)
 {
-    make_binary_empty_test<op::Equal>("${BACKEND_NAME}");
+    make_binary_empty_comparison_test<op::Equal>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_greater)
 {
-    make_binary_empty_test<op::Greater>("${BACKEND_NAME}");
+    make_binary_empty_comparison_test<op::Greater>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_greatereq)
 {
-    make_binary_empty_test<op::GreaterEq>("${BACKEND_NAME}");
+    make_binary_empty_comparison_test<op::GreaterEq>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_less)
 {
-    make_binary_empty_test<op::Less>("${BACKEND_NAME}");
+    make_binary_empty_comparison_test<op::Less>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_lesseq)
 {
-    make_binary_empty_test<op::LessEq>("${BACKEND_NAME}");
+    make_binary_empty_comparison_test<op::LessEq>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_maximum)
@@ -5687,7 +5704,7 @@ TEST(${BACKEND_NAME}, zero_sized_multiply)
 
 TEST(${BACKEND_NAME}, zero_sized_not_equal)
 {
-    make_binary_empty_test<op::NotEqual>("${BACKEND_NAME}");
+    make_binary_empty_comparison_test<op::NotEqual>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_power)
