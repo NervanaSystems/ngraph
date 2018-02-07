@@ -15,7 +15,8 @@
 """Generic utilities. Factor related functions out to separate files."""
 
 from functools import wraps
-from typing import Callable, Any
+from typing import Callable, Any, Optional, Set
+from ngraph_api.utils.types import TensorShape
 
 
 def nameable_op(op_factory_function):  # type: (Callable) -> Callable
@@ -27,3 +28,24 @@ def nameable_op(op_factory_function):  # type: (Callable) -> Callable
             op.name = kwds['name']
         return op
     return wrapper
+
+
+def get_broadcast_axes(left_shape, right_shape, axis):
+    # type: (TensorShape, TensorShape, Optional[int]) -> Set[int]
+    """Generate a list of broadcast axes for ngraph++ broadcast.
+
+    Informally, a broadcast "adds" axes to the input tensor,
+    replicating elements from the input tensor as needed to fill the new dimensions.
+    Function calculate which of the output axes is being so added.
+    For example, an output shape of `{2,5,6,2,8}` and input shape of `{2,6}` means
+    that the broadcast axes must be `{1,3,4}`.
+    """
+    axes_indexes = list(range(0, len(left_shape)))
+    if(axis is None):
+        right_begin = len(left_shape) - len(right_shape)
+    else:
+        right_begin = axis
+    right_axes_indexes = list(range(right_begin, right_begin + len(right_shape)))
+    for index in reversed(right_axes_indexes):
+        del axes_indexes[index]
+    return set(axes_indexes)
