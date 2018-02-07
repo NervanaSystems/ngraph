@@ -31,6 +31,7 @@ set (SRC
     eigen.cpp
     element_type.cpp
     file_util.cpp
+    inliner.cpp
     input_output_assign.cpp
     main.cpp
     op.cpp
@@ -88,7 +89,9 @@ if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
 endif()
 
 if(NGRAPH_ARGON_ENABLE)
+    include_directories(SYSTEM ${ARGON_TRANSFORMER_INCLUDE_DIR})
     set(BACKEND_NAMES ${BACKEND_NAMES} "ARGON")
+    set(SRC ${SRC} argon_fusion.cpp)
 endif()
 
 foreach(BACKEND_NAME ${BACKEND_NAMES})

@@ -116,7 +116,6 @@ namespace ngraph
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override;
-            bool is_functionally_identical(const Node&) const override;
             void generate_adjoints(autodiff::Adjoints& adjoints,
                                    const std::shared_ptr<Node>& delta) override;
 
@@ -167,7 +166,6 @@ namespace ngraph
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override;
-            bool is_functionally_identical(const Node&) const override;
 
             /// \return The data batch shape.
             const Shape& get_data_batch_shape() const { return m_data_batch_shape; }
@@ -263,7 +261,6 @@ namespace ngraph
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override;
-            bool is_functionally_identical(const Node&) const override;
 
             /// \return The filters tensor shape.
             const Shape& get_filters_shape() const { return m_filters_shape; }

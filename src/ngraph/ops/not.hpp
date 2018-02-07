@@ -48,7 +48,6 @@ namespace ngraph
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<Not>(new_args.at(0));
             }
-            bool is_functionally_identical(const Node&) const override;
         };
     }
 }
