@@ -41,7 +41,7 @@ MaxFn = Function([Maximum(MaxParam1, MaxParam2)],
 
 def make_scalar_constant(elem_type, scalar, shape=[], axis_set=set()):
     # type: (int, float, List[int], Set[int]) -> float
-    """TODO."""
+    """Create a Constant node for scalar value."""
     scalar_shape = []  # type: List[int]
     constant_op = Constant(elem_type, scalar_shape, [scalar])
     constant_broadcast = Broadcast(constant_op, shape, axis_set)
@@ -50,12 +50,12 @@ def make_scalar_constant(elem_type, scalar, shape=[], axis_set=set()):
 
 def make_float32_constant(scalar, shape=[], axis_set=set()):
     # type: (float, List[int], Set[int]) -> float
-    """TODO."""
+    """Create a Constant node for float value."""
     return make_scalar_constant(Type.f32, scalar, shape, axis_set)
 
 
 def make_float32_constant_like(scalar, op):  # type: (float, Node) -> float
-    """TODO."""
+    """Create a Constant node for float value."""
     v = set()
     shape = op.get_shape()
     for i in range(len(shape)):
