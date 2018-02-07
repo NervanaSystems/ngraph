@@ -178,7 +178,7 @@ it is automatically enforced and reduces merge conflicts.
 
      #pragma once
 
-- The initializrion
+- The initialization
 
   .. code-block:: cpp
 
