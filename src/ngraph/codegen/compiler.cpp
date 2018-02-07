@@ -78,16 +78,22 @@ codegen::Module::Module(std::unique_ptr<llvm::Module> module)
 {
 }
 
-codegen::Module::~Module() {}
+codegen::Module::~Module()
+{
+}
 
 std::unique_ptr<llvm::Module> codegen::Module::take_module()
 {
     return move(m_module);
 }
 
-codegen::Compiler::Compiler() {}
+codegen::Compiler::Compiler()
+{
+}
 
-codegen::Compiler::~Compiler() {}
+codegen::Compiler::~Compiler()
+{
+}
 
 void codegen::Compiler::set_precompiled_header_source(const std::string& source)
 {
