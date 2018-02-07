@@ -23,8 +23,3 @@ void ngraph::op::Sqrt::generate_adjoints(autodiff::Adjoints& adjoints,
 
     adjoints.add_delta(x, delta / (shared_from_this() + shared_from_this()));
 }
-
-bool ngraph::op::Sqrt::is_functionally_identical(const Node& other) const
-{
-    return test_identical(other);
-}
