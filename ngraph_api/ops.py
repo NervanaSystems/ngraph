@@ -20,7 +20,8 @@ import numpy as np
 from typing import Optional, Set
 
 from pyngraph import Node
-from pyngraph.op import Abs, Parameter, Sqrt, Exp, Log, Negative, Floor, Ceiling, Divide, Broadcast
+from pyngraph.op import Abs, Parameter, Sqrt, Exp, Log, Negative, Floor, Ceiling, Divide, \
+    Broadcast, Multiply
 
 from ngraph_api.utils.input_validation import assert_list_of_ints
 from ngraph_api.utils.types import get_element_type, py_numeric_type, TensorShape
@@ -82,6 +83,12 @@ def ceiling(node, name=None):  # type: (Node, str) -> Node
 def divide(node_l, node_r, name=None):  # type: (Node, Node, str) -> Node
     """Return node which applies f(x) = A/B to the input node elementwise."""
     return Divide(node_l, node_r)
+
+
+@nameable_op
+def multiply(node_l, node_r, name=None):  # type: (Node, Node, str) -> Node
+    """Return node which applies f(x) = A*B to the input node elementwise."""
+    return Multiply(node_l, node_r)
 
 
 def get_broadcast_axes(left_shape, right_shape, axis):
