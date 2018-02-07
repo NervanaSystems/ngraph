@@ -37,7 +37,7 @@ if (NGRAPH_ARGON_ENABLE)
     #   commit.
     # - After we have ngraph CI job for argon transformer, ngraph master will be compatible with
     #   argon transformer guaranteed by CI.
-    set(ARGON_TRANSFORMER_CMAKE_GIT_TAG yixing/argon-link)
+    set(ARGON_TRANSFORMER_CMAKE_GIT_TAG cpp-master)
 
     # Determines where argon-transformer will be located
     set(ARGON_TRANSFORMER_CMAKE_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/argon_transformer)
