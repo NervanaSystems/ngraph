@@ -17,17 +17,19 @@
 
 import numpy as np
 
+from typing import Optional, Set
+
 from pyngraph import Node
-from pyngraph.op import Abs, Parameter, Sqrt, Exp, Log, Negative, Floor, Ceiling
+from pyngraph.op import Abs, Parameter, Sqrt, Exp, Log, Negative, Floor, Ceiling, Broadcast
 
 from ngraph_api.utils.input_validation import assert_list_of_ints
-from ngraph_api.utils.types import get_element_type, py_numeric_type, tensor_shape
+from ngraph_api.utils.types import get_element_type, py_numeric_type, TensorShape
 from ngraph_api.utils import nameable_op
 
 
 @nameable_op
 def parameter(shape, dtype=np.float32, name=None):
-    # type: (tensor_shape, py_numeric_type, str) -> Parameter
+    # type: (TensorShape, py_numeric_type, str) -> Parameter
     """Return an ngraph Parameter object."""
     assert_list_of_ints(shape, 'Parameter shape must be a list of integer values.')
     element_type = get_element_type(dtype)
@@ -74,3 +76,23 @@ def floor(node, name=None):  # type: (Node, str) -> Node
 def ceiling(node, name=None):  # type: (Node, str) -> Node
     """Return node which applies ceiling to the input node elementwise."""
     return Ceiling(node)
+
+
+def get_broadcast_axes(left_shape, right_shape, axis):
+    # type: (TensorShape, TensorShape, Optional[int]) -> Set[int]
+    """Cut of axes to broadcast needed for ngraph++."""
+    axes_indexes = list(range(0, len(left_shape)))
+    if(axis is None):
+        right_begin = len(left_shape) - len(right_shape)
+    else:
+        right_begin = axis
+    right_axes_indexes = list(range(right_begin, right_begin + len(right_shape)))
+    for index in reversed(right_axes_indexes):
+        del axes_indexes[index]
+    return set(axes_indexes)
+
+
+@nameable_op
+def broadcast(node, nshape, axis=None, name=None):  # type: (Node, TensorShape, int, str) -> Node
+    """Return node which is broadcasted to shape."""
+    return Broadcast(node, nshape, get_broadcast_axes(nshape, node.shape, axis))

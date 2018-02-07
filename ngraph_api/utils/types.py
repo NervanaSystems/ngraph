@@ -15,7 +15,7 @@
 """Functions related to converting between Python and numpy types and ngraph types."""
 
 import logging
-from typing import Union, Iterable
+from typing import Union, List
 
 import numpy as np
 
@@ -25,7 +25,7 @@ from ngraph_api.exceptions import NgraphTypeError
 
 log = logging.getLogger(__file__)
 
-tensor_shape = Iterable[int]
+TensorShape = List[int]
 py_numeric_data = Union[int, float, np.ndarray]
 py_numeric_type = Union[type, np.dtype]
 
