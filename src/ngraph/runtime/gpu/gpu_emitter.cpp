@@ -260,53 +260,45 @@ void runtime::gpu::GPU_Emitter::EmitMaximum(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    const Shape& arg0_shape = args[0].get_shape();
-    const Shape& arg1_shape = args[1].get_shape();
-    // clang-format off
     writer << "{   // " << n->get_name() << "\n";
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
-      writer << "cublasSetPointerMode(cublas_handle, CUBLAS_POINTER_MODE_HOST);\n";;
+    writer +=  R"(
+float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
+cudnnTensorDescriptor_t descriptor;
+(cudnnCreateTensorDescriptor(&descriptor));
+(cudnnSetTensor4dDescriptor(descriptor,
+                            /*format=*/CUDNN_TENSOR_NHWC,
+                            /*dataType=*/CUDNN_DATA_FLOAT,
+                            /*batch_size=*/1,
+                            /*channels=*/1,
+                            /*image_height=*/1,
+                            /*image_width=*/count));
+
+cudnnOpTensorDescriptor_t opTensorDesc;
+(cudnnCreateOpTensorDescriptor(&opTensorDesc));
+(cudnnSetOpTensorDescriptor(opTensorDesc,
+                            CUDNN_OP_TENSOR_MAX,
+                            CUDNN_DATA_FLOAT,
+                            CUDNN_NOT_PROPAGATE_NAN));
+    )";
+
+    writer  << "cudnnOpTensor(cudnn_handle,"
+            << "opTensorDesc,"
+            << "&alpha1,"
+            << "descriptor,"
+            <<  args[0].get_name() << ","
+            << "&alpha2,"
+            << "descriptor,"
+            << args[1].get_name() << ","
+            << "&beta,"
+            << "descriptor,"
+            << out[0].get_name() << ");\n";
+
       writer +=  R"(
-      float alpha1 = 1.0, alpha2 = 1.0, beta = 0;
-              cudnnHandle_t cudnnHandle;
-              (cudnnCreate(&cudnnHandle));
-              cudnnTensorDescriptor_t descriptor;
-              (cudnnCreateTensorDescriptor(&descriptor));
-              (cudnnSetTensor4dDescriptor(descriptor,
-                                          /*format=*/CUDNN_TENSOR_NHWC,
-                                          /*dataType=*/CUDNN_DATA_FLOAT,
-                                          /*batch_size=*/1,
-                                          /*channels=*/1,
-                                          /*image_height=*/1,
-                                          /*image_width=*/count));
-
-              cudnnOpTensorDescriptor_t opTensorDesc;
-              (cudnnCreateOpTensorDescriptor(&opTensorDesc));
-              (cudnnSetOpTensorDescriptor(opTensorDesc,
-                                          CUDNN_OP_TENSOR_MAX,
-                                          CUDNN_DATA_FLOAT,
-                                          CUDNN_NOT_PROPAGATE_NAN));
-      )";
-
-      writer  << "cudnnOpTensor(cudnnHandle,"
-              <<                      "opTensorDesc,"
-              <<                         "&alpha1,"
-              <<                         "descriptor,"
-              <<                         args[0].get_name() << ","
-              <<                         "&alpha2,"
-              <<                         "descriptor,"
-              <<                         args[1].get_name() << ","
-              <<                         "&beta,"
-              <<                         "descriptor,"
-              <<                         out[0].get_name() << ");\n";
-
-        writer +=  R"(
-                cudnnDestroy(cudnnHandle);
-      )";
-        writer.indent--;
-        writer << "}\n";
-    // clang-format on
+    )";
+    writer.indent--;
+    writer << "}\n";
 }
 
 void runtime::gpu::GPU_Emitter::EmitMinimum(codegen::CodeWriter& writer,

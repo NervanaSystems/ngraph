@@ -18,7 +18,9 @@
 #include <memory>
 #include <vector>
 
+#include <cuda_runtime.h>
 #include "cublas_v2.h"
+#include <cudnn.h>
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/call_frame.hpp"
@@ -37,7 +39,8 @@ namespace ngraph
 
             using EntryPoint_t = void(void** inputs,
                                       void** outputs,
-                                      cublasHandle_t& cublas_handle);
+                                      cublasHandle_t& cublas_handle,
+                                      cudnnHandle_t& cudnn_handle);
 
             using EntryPoint = std::function<EntryPoint_t>;
 
@@ -66,6 +69,7 @@ namespace ngraph
                 std::shared_ptr<GPU_ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
                 cublasHandle_t m_cublas_handle;
+                cudnnHandle_t m_cudnn_handle;
             };
         }
     }
