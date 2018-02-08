@@ -93,8 +93,8 @@ if(NGRAPH_ARGON_ENABLE)
     set(SRC ${SRC} argon_fusion.cpp)
 
     # enable additional Argon backend test 
-    message(STATUS "ARGON_ADDITIONAL_BACKEND_TESTS path: ${ARGON_TRANSFORMER_SOURCE_DIR}")
     set(ARGON_ADDITIONAL_BACKEND_TESTS ${ARGON_TRANSFORMER_SOURCE_DIR}/test/test_argon_backend)
+    message(STATUS "ARGON_ADDITIONAL_BACKEND_TESTS path: ${ARGON_ADDITIONAL_BACKEND_TESTS}")
     set(SRC ${SRC} 
             ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_reduce_sum.cpp
             ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_dot.cpp
