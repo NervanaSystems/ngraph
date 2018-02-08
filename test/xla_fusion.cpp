@@ -14,11 +14,14 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <list>
 #include <memory>
+#include <sstream>
 
 #include "gtest/gtest.h"
+#include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
@@ -28,14 +31,8 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "util/test_tools.hpp"
-
-//
-#include <fstream>
-#include <sstream>
-#include "ngraph/file_util.hpp"
-#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/serializer.hpp"
+#include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -148,19 +145,11 @@ public:
 TEST(xla_fusion, avgpool)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("avgpool_before.pdf");
     pass_manager.register_pass<XLAFusion>();
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/avgpool.json");
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "tf/avgpool.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
-
-    string js = serialize(func, 4);
-    {
-        ofstream f("avgpool.js");
-        f << js;
-    }
-
     pass_manager.run_passes(func);
     ASSERT_GT(count_ops_of_type<op::AvgPool>(func), 0);
 }
