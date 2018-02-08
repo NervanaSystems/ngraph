@@ -22,7 +22,7 @@ from pyngraph import Function, Node, TensorViewType, util
 from pyngraph.runtime import Manager
 from pyngraph.op import Parameter
 
-from ngraph_api.utils.types import py_numeric_type, get_dtype, py_numeric_data
+from ngraph_api.utils.types import get_dtype, NumericData
 
 log = logging.getLogger(__file__)
 
@@ -46,7 +46,7 @@ class Runtime:
     def __repr__(self):  # type: () -> str
         return '<Runtime: Manager=\'{}\'>'.format(self.manager_name)
 
-    def computation(self, node, *inputs):  # type: (Node, py_numeric_type) -> 'Computation'
+    def computation(self, node, *inputs):  # type: (Node, *Node) -> 'Computation'
         """Return a callable Computation object."""
         return Computation(self, node, *inputs)
 
@@ -54,7 +54,7 @@ class Runtime:
 class Computation:
     """ngraph callable computation object."""
 
-    def __init__(self, runtime, node, *parameters):  # type: (Runtime, Node, Parameter) -> None
+    def __init__(self, runtime, node, *parameters):  # type: (Runtime, Node, *Parameter) -> None
         self.runtime = runtime
         self.node = node
         self.parameters = parameters
@@ -68,8 +68,8 @@ class Computation:
         params_string = ', '.join([param.name for param in self.parameters])
         return '<Computation: {}({})>'.format(self.node.name, params_string)
 
-    def __call__(self, *input_values):  # type: (py_numeric_data) -> py_numeric_data
-        """Q&D logic implementation needed to calculate and return a value of the computation."""
+    def __call__(self, *input_values):  # type: (*NumericData) -> NumericData
+        """Run computation on input values and return result."""
         for tensor_view, value in zip(self.tensor_views, input_values):
             if not isinstance(value, np.ndarray):
                 value = np.array(value)

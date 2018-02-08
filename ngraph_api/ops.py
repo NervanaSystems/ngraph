@@ -21,20 +21,29 @@ from typing import Optional, Set
 
 from pyngraph import Node
 from pyngraph.op import Abs, Parameter, Sqrt, Exp, Log, Negative, Floor, Ceiling, Divide, \
-    Broadcast, Multiply, Subtract, Add
+    Broadcast, Multiply, Subtract, Add, Constant
 
 from ngraph_api.utils.input_validation import assert_list_of_ints
-from ngraph_api.utils.types import get_element_type, py_numeric_type, TensorShape
+from ngraph_api.utils.types import NumericType, NumericData, TensorShape
+from ngraph_api.utils.types import get_element_type, get_ndarray
 from ngraph_api.utils import nameable_op, get_broadcast_axes
 
 
 @nameable_op
 def parameter(shape, dtype=np.float32, name=None):
-    # type: (TensorShape, py_numeric_type, str) -> Parameter
+    # type: (TensorShape, NumericType, str) -> Parameter
     """Return an ngraph Parameter object."""
     assert_list_of_ints(shape, 'Parameter shape must be a list of integer values.')
     element_type = get_element_type(dtype)
     return Parameter(element_type, shape)
+
+
+@nameable_op
+def constant(value, name=None):  # type: (NumericData, str) -> Constant
+    """Return an ngraph Constant object with the specified value."""
+    ndarray = get_ndarray(value)
+    element_type = get_element_type(ndarray.dtype)
+    return Constant(element_type, ndarray.shape, ndarray.flatten().data)
 
 
 @nameable_op
