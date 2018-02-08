@@ -49,6 +49,7 @@ set (SRC
     util/test_tools.cpp
     util.cpp
     uuid.cpp
+    xla_fusion.cpp
 )
 
 add_subdirectory(models)
