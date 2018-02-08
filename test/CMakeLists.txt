@@ -94,6 +94,16 @@ if(NGRAPH_ARGON_ENABLE)
     include_directories(SYSTEM ${ARGON_TRANSFORMER_INCLUDE_DIR})
     set(BACKEND_NAMES ${BACKEND_NAMES} "ARGON")
     set(SRC ${SRC} argon_fusion.cpp)
+
+    # enable additional Argon backend test 
+    set(ARGON_ADDITIONAL_BACKEND_TESTS ${ARGON_TRANSFORMER_SOURCE_DIR}/test/test_argon_backend)
+    message(STATUS "ARGON_ADDITIONAL_BACKEND_TESTS path: ${ARGON_ADDITIONAL_BACKEND_TESTS}")
+    set(SRC ${SRC} 
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_reduce_sum.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_dot.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_broadcast.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_conv.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_binary_ew.cpp)
 endif()
 
 foreach(BACKEND_NAME ${BACKEND_NAMES})
