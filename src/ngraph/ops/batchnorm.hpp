@@ -14,16 +14,16 @@
 
 #pragma once
 
+#include <memory>
 #include "ngraph/node.hpp"
 #include "ngraph/ops/op.hpp"
 #include "ngraph/util.hpp"
-#include <memory>
 
 namespace ngraph
 {
     namespace op
     {
-        class BatchnormFprop: public RequiresTensorViewArgs
+        class BatchnormFprop : public RequiresTensorViewArgs
         {
         public:
             BatchnormFprop(std::shared_ptr<Node> eps,
@@ -34,36 +34,20 @@ namespace ngraph
                            std::shared_ptr<Node> variance,
                            Shape output_shape);
 
-        const Shape& get_inputs_shape() const{
-            return bn_input_shape;
-        }
-
-        const Shape& get_output_shape() const{
-            return bn_output_shape;
-        }
-
-        const Shape& get_variance_shape() const{
-            return bn_variance_shape;
-        }
-
-        const Shape& get_mean_shape() const{
-            return bn_mean_shape;
-        }
-
-        const float get_eps_value() const{
-            return epsilon;
-        }
-
-        virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override; 
+            const Shape& get_inputs_shape() const { return bn_input_shape; }
+            const Shape& get_output_shape() const { return bn_output_shape; }
+            const Shape& get_variance_shape() const { return bn_variance_shape; }
+            const Shape& get_mean_shape() const { return bn_mean_shape; }
+            const float get_eps_value() const { return epsilon; }
+            virtual std::shared_ptr<Node> copy_with_new_args(
+                const std::vector<std::shared_ptr<Node>>& new_args) const override;
 
         private:
-                Shape bn_input_shape;
-                Shape bn_output_shape;
-                Shape bn_variance_shape;
-                Shape bn_mean_shape;
-                float epsilon;
-
+            Shape bn_input_shape;
+            Shape bn_output_shape;
+            Shape bn_variance_shape;
+            Shape bn_mean_shape;
+            float epsilon;
         };
     }
 }

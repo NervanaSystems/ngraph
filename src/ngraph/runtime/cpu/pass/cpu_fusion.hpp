@@ -31,7 +31,7 @@ public:
         : GraphRewrite()
     {
         construct_gemm_pattern();
-	    construct_fprop_bn();
+        construct_fprop_bn();
     }
 
 private:

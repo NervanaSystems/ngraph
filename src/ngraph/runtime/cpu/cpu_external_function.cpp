@@ -38,8 +38,8 @@
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
-#include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/batchnorm.hpp"
+#include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/cblas_gemm.hpp"
 #include "ngraph/ops/ceiling.hpp"
 #include "ngraph/ops/concatenate.hpp"
@@ -91,14 +91,14 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
-#include "ngraph/pass/visualize_tree.hpp"
 
 using namespace std;
 using namespace ngraph;
