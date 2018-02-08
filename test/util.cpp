@@ -340,3 +340,20 @@ TEST(util, round_up)
     EXPECT_EQ(4, round_up(4, 4));
     EXPECT_EQ(8, round_up(5, 4));
 }
+
+TEST(util, parse_string)
+{
+    EXPECT_FLOAT_EQ(2, parse_string<float>("2"));
+    EXPECT_FLOAT_EQ(2.125, parse_string<float>("2.125"));
+    EXPECT_FLOAT_EQ(numeric_limits<float>::infinity(), parse_string<float>("INFINITY"));
+    EXPECT_FLOAT_EQ(numeric_limits<float>::infinity(), parse_string<float>("infinity"));
+    EXPECT_FLOAT_EQ(-numeric_limits<float>::infinity(), parse_string<float>("-INFINITY"));
+    EXPECT_TRUE(isnan(parse_string<float>("NaN")));
+
+    EXPECT_FLOAT_EQ(2, parse_string<double>("2"));
+    EXPECT_FLOAT_EQ(2.125, parse_string<double>("2.125"));
+    EXPECT_FLOAT_EQ(numeric_limits<double>::infinity(), parse_string<double>("INFINITY"));
+    EXPECT_FLOAT_EQ(numeric_limits<double>::infinity(), parse_string<double>("infinity"));
+    EXPECT_FLOAT_EQ(-numeric_limits<double>::infinity(), parse_string<double>("-INFINITY"));
+    EXPECT_TRUE(isnan(parse_string<double>("NaN")));
+}

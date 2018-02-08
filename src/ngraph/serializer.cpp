@@ -225,10 +225,7 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
     for (json func : js)
     {
         shared_ptr<Function> f = read_function(func, function_map);
-        if (rc == nullptr)
-        {
-            rc = f;
-        }
+        rc = f;
     }
 
     return rc;
@@ -772,6 +769,7 @@ static json write(const Node& n)
     // TODO Multiple outputs
     json inputs = json::array();
     json outputs = json::array();
+
     for (const descriptor::Input& input : n.get_inputs())
     {
         inputs.push_back(input.get_output().get_node()->get_name());
@@ -780,8 +778,19 @@ static json write(const Node& n)
     {
         outputs.push_back(n.get_output_tensor(i).get_name());
     }
+
     node["inputs"] = inputs;
     node["outputs"] = outputs;
+
+    if (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr)
+    {
+        json output_shapes = json::array();
+        for (size_t i = 0; i < n.get_output_size(); ++i)
+        {
+            output_shapes.push_back(n.get_output_shape(i));
+        }
+        node["output_shapes"] = output_shapes;
+    }
 
     string node_op = n.description();
     if (node_op == "Abs")
