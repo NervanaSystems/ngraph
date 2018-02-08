@@ -2488,8 +2488,9 @@ div[class^='highlight'] pre {
   line-height: normal;
 }
 .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
-  font-size: 90% !important;
-  color: #000;
+  font-size: 102% !important;
+  color: #6699BE;
+  background-color: #fbfbfb;
 }
 .rst-content tt.xref, a .rst-content tt, .rst-content tt.xref, .rst-content code.xref, a .rst-content tt, a .rst-content code {
   font-weight: bold;
