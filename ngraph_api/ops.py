@@ -39,10 +39,14 @@ def parameter(shape, dtype=np.float32, name=None):
 
 
 @nameable_op
-def constant(value, name=None):  # type: (NumericData, str) -> Constant
+def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, str) -> Constant
     """Return an ngraph Constant object with the specified value."""
     ndarray = get_ndarray(value)
-    element_type = get_element_type(ndarray.dtype)
+    if dtype:
+        element_type = get_element_type(dtype)
+    else:
+        element_type = get_element_type(ndarray.dtype)
+
     return Constant(element_type, ndarray.shape, ndarray.flatten().data)
 
 
