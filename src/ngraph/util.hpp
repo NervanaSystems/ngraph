@@ -28,6 +28,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ngraph/common.hpp"
+
 namespace ngraph
 {
     class Node;
@@ -246,6 +248,9 @@ namespace ngraph
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
     size_t round_up(size_t size, size_t alignment);
+
+    template <typename T>
+    std::vector<T> apply_permutation(std::vector<T> input, ngraph::AxisVector order);
 
     /*
     * Return type struct for cache_fprop, with the modified fprop and bprop

@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <list>
 #include <memory>
 #include <sstream>
@@ -33,6 +34,9 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/test_tools.hpp"
+
+//
+#include "ngraph/pass/visualize_tree.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -117,6 +121,10 @@ public:
                 }
             }
 
+            NGRAPH_DEBUG << " ap_shape " << vector_to_string(ap_shape);
+            NGRAPH_DEBUG << " number_channel " << vector_to_string(number_channel);
+            NGRAPH_DEBUG << " image_dims " << vector_to_string(image_dims);
+
             if (ap_shape.size() != 2)
             {
                 return nn;
@@ -129,16 +137,37 @@ public:
                 NGRAPH_DEBUG << "constant = " << m.match_root()->get_input_op(1)->get_name();
 				return nn;
 			}
-*/
+            */
 
             auto pattern_map = m.get_pattern_map();
             std::copy(image_dims.begin(), image_dims.end(), back_inserter(number_channel));
-            auto reshape = make_shared<op::Reshape>(
-                pattern_map[input], number_channel, pattern_map[input]->get_shape());
+
+            const auto& input_shape = pattern_map[input]->get_shape();
+            std::vector<std::size_t> reshape_shape;
+            std::transform(number_channel.begin(),
+                           number_channel.end(),
+                           std::back_inserter(reshape_shape),
+                           [&input_shape](size_t i) { return input_shape.at(i); });
+
+            auto reshape =
+                make_shared<op::Reshape>(pattern_map[input], number_channel, reshape_shape);
 
             auto ap = std::shared_ptr<Node>(new op::AvgPool(reshape, ap_shape, ap_strides));
-            NGRAPH_DEBUG << "Created ap = " << ap->get_name();
-            return ap;
+
+            //compute inverse axis order to revert layout to what it used to be
+            AxisVector inverse_reshape_axis_order;
+            for (size_t i = 0; i < reshape_shape.size(); i++)
+            {
+                auto pos = std::find(begin(number_channel), end(number_channel), i);
+                inverse_reshape_axis_order.push_back(std::distance(begin(number_channel), pos));
+            }
+
+            auto inverse_output_shape =
+                ngraph::apply_permutation(ap->get_shape(), inverse_reshape_axis_order);
+            auto inverse_reshape = std::shared_ptr<Node>(
+                new op::Reshape(ap, inverse_reshape_axis_order, inverse_output_shape));
+
+            return inverse_reshape;
         };
 
         auto m = make_shared<ngraph::pattern::Matcher>(division, callback);
@@ -155,7 +184,9 @@ public:
 TEST(xla_fusion, avgpool)
 {
     pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("avgpool_before.pdf");
     pass_manager.register_pass<XLAFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("avgpool_after.pdf");
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "tf/avgpool.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
