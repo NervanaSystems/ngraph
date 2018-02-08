@@ -91,7 +91,7 @@ static const string& get_mkldnn_data_type(const string& type)
 void runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(codegen::CodeWriter& writer)
 {
     writer << "// MKLDNN Preamble\n";
-    writer << "#include <mkldnn.hpp>;\n";
+    writer << "#include <mkldnn.hpp>\n";
     writer << "using namespace mkldnn;\n\n";
 }
 
@@ -260,6 +260,7 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
     }
     else
     {
+        //if (dot->get_reduction_axes_count() == 
         writer << "kernel::dot(" << args[0].get_name() << ",\n";
         writer << "            " << args[1].get_name() << ",\n";
         writer << "            " << out[0].get_name() << ",\n";
