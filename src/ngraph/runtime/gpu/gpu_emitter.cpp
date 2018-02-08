@@ -49,7 +49,6 @@ void runtime::gpu::GPU_Emitter::EmitNop(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
 }
 
 void runtime::gpu::GPU_Emitter::EmitAbs(codegen::CodeWriter& writer,
@@ -543,7 +542,6 @@ void runtime::gpu::GPU_Emitter::EmitFunctionCall(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
 }
 
 void runtime::gpu::GPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
@@ -750,7 +748,43 @@ void runtime::gpu::GPU_Emitter::EmitSqrt(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    writer << "{  // " << n->get_name() << "\n";
+    writer.indent++;
+    writer << "int count = " << out[0].get_size() << ";\n";
+    writer << "if(count == 0) return;\n";
+    writer +=  R"(
+float alpha1 = 1.0, alpha2 = 0, beta = 0;
+cudnnTensorDescriptor_t descriptor;
+cudnnCreateTensorDescriptor(&descriptor);
+cudnnSetTensor4dDescriptor(descriptor,
+                            /*format=*/CUDNN_TENSOR_NHWC,
+                            /*dataType=*/CUDNN_DATA_FLOAT,
+                            /*batch_size=*/1,
+                            /*channels=*/1,
+                            /*image_height=*/1,
+                            /*image_width=*/count);
+
+cudnnOpTensorDescriptor_t opTensorDesc;
+cudnnCreateOpTensorDescriptor(&opTensorDesc);
+cudnnSetOpTensorDescriptor(opTensorDesc,
+                            CUDNN_OP_TENSOR_SQRT,
+                            CUDNN_DATA_FLOAT,
+                            CUDNN_NOT_PROPAGATE_NAN);
+    )";
+
+    writer  << "cudnnOpTensor(cudnn_handle,"
+            << "opTensorDesc,"
+            << "&alpha1,"
+            << "descriptor,"
+            <<  args[0].get_name() << ","
+            << "&alpha2,"
+            << "descriptor,"
+            << args[0].get_name() << ","
+            << "&beta,"
+            << "descriptor,"
+            << out[0].get_name() << ");\n";
+   writer.indent--;
+   writer << "}\n"; 
 }
 
 void runtime::gpu::GPU_Emitter::EmitConvolution(
