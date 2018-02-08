@@ -113,7 +113,7 @@ endif()
 #-----------------------------------------------------------------------------------------------
 # Setup CUDA and cuDNN if NGRAPH_GPU_ENABLE=TRUE
 find_package(CUDA 8 QUIET)
-if(CUDA_FOUND AND (NOT DEFINED NGRAPH_GPU_ENABLE OR NGRAPH_GPU_ENABLE))
+if(CUDA_FOUND AND NGRAPH_GPU_ENABLE)
     message(STATUS "GPU Backend Enabled")
     set(NGRAPH_GPU_ENABLE TRUE)
     find_package(CUDNN 5 QUIET REQUIRED)
