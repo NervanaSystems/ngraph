@@ -130,6 +130,8 @@ void iterate_files_worker(const string& path,
 {
     DIR* dir;
     struct dirent* ent;
+
+    // If we cannot open the directory, we silently ignore it.
     if ((dir = opendir(path.c_str())) != nullptr)
     {
         while ((ent = readdir(dir)) != nullptr)
@@ -159,10 +161,6 @@ void iterate_files_worker(const string& path,
             }
         }
         closedir(dir);
-    }
-    else
-    {
-        throw std::runtime_error("error enumerating file " + path);
     }
 }
 

@@ -31,6 +31,7 @@ set (SRC
     eigen.cpp
     element_type.cpp
     file_util.cpp
+    inliner.cpp
     input_output_assign.cpp
     main.cpp
     op.cpp
@@ -88,7 +89,9 @@ if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
 endif()
 
 if(NGRAPH_ARGON_ENABLE)
+    include_directories(SYSTEM ${ARGON_TRANSFORMER_INCLUDE_DIR})
     set(BACKEND_NAMES ${BACKEND_NAMES} "ARGON")
+    set(SRC ${SRC} argon_fusion.cpp)
 endif()
 
 foreach(BACKEND_NAME ${BACKEND_NAMES})
@@ -97,15 +100,23 @@ foreach(BACKEND_NAME ${BACKEND_NAMES})
     set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp)
     set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp)
 
+    # Some---but not all---autodiff tests go through multiple iterations with
+    # different random seeds. On the CPU backend this is currently very slow
+    # because the autodiff tests recompile with each iteration. That behavior
+    # can be changed, but it's a bit involved, so for the time being we just
+    # reduce the number of test iterations on non-INTERPRETER backends.
+    if(${BACKEND_NAME} MATCHES ^INTERPRETER$)
+        set(TEST_LOOPS 100)
+    else()
+        set(TEST_LOOPS 2)
+    endif()
+
+    configure_file(autodiff.in.cpp autodiff_${BACKEND_NAME}.cpp)
+    set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp)
+
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
-# <special case>
-# This is a special case as the autodiff test recompile the graph multiple times per
-# test which is slow on the CPU
-set(BACKEND_NAME "INTERPRETER")
-configure_file(autodiff.in.cpp autodiff_${BACKEND_NAME}.cpp)
-set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp)
-# </special cast>
+
 include_directories(".")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")

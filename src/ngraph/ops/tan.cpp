@@ -26,8 +26,3 @@ void ngraph::op::Tan::generate_adjoints(autodiff::Adjoints& adjoints,
 
     adjoints.add_delta(x, delta / (c * c));
 }
-
-bool ngraph::op::Tan::is_functionally_identical(const Node& other) const
-{
-    return test_identical(other);
-}
