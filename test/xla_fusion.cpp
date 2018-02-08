@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#include <fstream>
+#include <sstream>
 #include <algorithm>
 #include <cstdio>
-#include <fstream>
 #include <iostream>
 #include <list>
 #include <memory>
-#include <sstream>
 
 #include "gtest/gtest.h"
-#include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
@@ -31,8 +30,9 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/serializer.hpp"
 #include "util/test_tools.hpp"
+#include "ngraph/file_util.hpp"
+#include "ngraph/serializer.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -63,7 +63,6 @@ public:
         auto divisor = std::make_shared<pattern::op::Any>(
             div_constant, element::f32, Shape{2, 21, 21, 32}, broadcast_pred);
 
-        //auto divisor = make_shared<op::Broadcast>(div_constant, Shape{ 2, 21, 21, 32 }, AxisSet{ 0, 1, 2, 3 });
         auto division = rw / divisor;
 
         ngraph::pattern::gr_callback_fn callback = [input](pattern::Matcher& m) {
