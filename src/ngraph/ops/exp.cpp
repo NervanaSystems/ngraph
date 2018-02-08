@@ -22,8 +22,3 @@ void ngraph::op::Exp::generate_adjoints(autodiff::Adjoints& adjoints,
 
     adjoints.add_delta(x, delta * shared_from_this());
 }
-
-bool ngraph::op::Exp::is_functionally_identical(const Node& other) const
-{
-    return test_identical(other);
-}

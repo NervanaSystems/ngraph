@@ -361,7 +361,7 @@ big, small {
   display: inline-block;
   font: normal normal normal 1.011em/1 NeoSansIntel;
   font-size: inherit;
-  letter-spacing: -0.41em;
+  letter-spacing: -0.05em;
   text-rendering: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -495,14 +495,6 @@ big, small {
   transform: scale(1, -1);
 }
 
-:root .fa-rotate-90,
-:root .fa-rotate-180,
-:root .fa-rotate-270,
-:root .fa-flip-horizontal,
-:root .fa-flip-vertical {
-  filter: none;
-}
-
 .fa-stack {
   position: relative;
   display: inline-block;
@@ -585,8 +577,10 @@ a .fa, a .rst-content .admonition-title, .rst-content a .admonition-title, a .rs
   color: #fff;
   background: #6ab0de;
   margin: -12px;
-  padding: 6px 12px;
-  margin-bottom: 12px;
+  font-family: 'NeoSansIntel', sans;
+  letter-spacing: 0.05em;
+  padding: 0.33em 0.74em;
+  margin-bottom: 0.33em;
 }
 
 .wy-alert.wy-alert-danger, .rst-content .wy-alert-danger.note, .rst-content .wy-alert-danger.attention, .rst-content .wy-alert-danger.caution, .rst-content .danger, .rst-content .error, .rst-content .wy-alert-danger.hint, .rst-content .wy-alert-danger.important, .rst-content .wy-alert-danger.tip, .rst-content .wy-alert-danger.warning, .rst-content .wy-alert-danger.seealso, .rst-content .wy-alert-danger.admonition-todo {
@@ -1686,7 +1680,7 @@ a.wy-text-warning:hover {
 }
 
 a.wy-text-info:hover {
-  color: #409ad5 !important;
+  color: #018791 !important;
 }
 
 .wy-text-success {
@@ -1716,7 +1710,7 @@ a.wy-text-neutral:hover {
 h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
   margin-top: 0;
   font-weight: 700;
-  font-family: "NeoSansIntel", "Roboto Slab", "ff-tisa-web-pro", "Georgia", Arial, sans-serif;
+  font-family: "NeoSansIntel", "RobotoSlab", "ff-tisa-web-pro", "Georgia", Arial, sans;
 }
 
 p {
@@ -1731,19 +1725,24 @@ h1 {
 }
 
 h2, .rst-content .toctree-wrapper p.caption {
-  font-size: 141%;
+  font-size: 139%;
+  font-weight: lighter;
 }
 
 h3 {
   font-size: 127%;
+  color: #5F5F5F;
+  text-decoration: underline 2px;
 }
 
 h4 {
-  font-size: 100%;
+  font-size: 115%;
+  color: #898288;
+
 }
 
 h5 {
-  font-size: 100%;
+  font-size: 107%;
 }
 
 h6 {

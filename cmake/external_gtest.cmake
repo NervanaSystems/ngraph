@@ -31,6 +31,7 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         # Disable install step
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
+        CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         )
 else()
     ExternalProject_Add(
@@ -41,6 +42,7 @@ else()
         # Disable install step
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
+        CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/gtest/src/gtest-build/googlemock/gtest/libgtest.a"
         )
 endif()

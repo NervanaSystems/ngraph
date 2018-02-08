@@ -127,8 +127,3 @@ op::ReduceWindow::ReduceWindow(const std::shared_ptr<Node>& arg_reductee,
 
     set_value_type_checked(input_reductee.get_element_type(), result_shape);
 }
-
-bool op::ReduceWindow::is_functionally_identical(const Node& other) const
-{
-    return false;
-}

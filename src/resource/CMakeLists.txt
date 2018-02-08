@@ -11,24 +11,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set (SRC
-    main.cpp
-    util.cpp
-    uncomment.cpp
-    header_rewrite.cpp
-)
+if (NGRAPH_CPU_ENABLE AND NOT APPLE)
+    set (SRC
+        main.cpp
+        util.cpp
+        uncomment.cpp
+        header_rewrite.cpp
+    )
 
-add_executable(resource_generator ${SRC})
-add_dependencies(resource_generator ext_llvm eigen ext_mkldnn)
+    add_executable(resource_generator ${SRC})
+    add_dependencies(resource_generator ext_llvm eigen ext_mkldnn)
 
-set(HEADER_PATHS
-    "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
-    "MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\""
-    "CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.0/include\""
-    "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\""
-    "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
-)
+    set(HEADER_PATHS
+        "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
+        "MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\""
+        "CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\""
+        "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
+    )
 
-message("HEADER_PATHS ${HEADER_PATHS}")
+    if(NGRAPH_TBB_ENABLE)
+        list(APPEND HEADER_PATHS "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\"")
+    endif()
 
-set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_PATHS}")
+    if(NGRAPH_TBB_ENABLE)
+        set(NGRAPH_TBB_OPTION "NGRAPH_TBB_ENABLE")
+    else()
+        set(NGRAPH_TBB_OPTION "")
+    endif()
+
+    message("HEADER_PATHS ${HEADER_PATHS}")
+
+    set_source_files_properties(main.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_PATHS};${NGRAPH_TBB_OPTION}")
+endif()

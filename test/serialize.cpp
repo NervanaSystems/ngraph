@@ -26,6 +26,7 @@
 
 using namespace std;
 using namespace ngraph;
+using json = nlohmann::json;
 
 TEST(serialize, main)
 {
