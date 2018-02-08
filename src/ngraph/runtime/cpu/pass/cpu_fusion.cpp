@@ -95,7 +95,7 @@ static std::vector<T> apply_permutation(std::vector<T> input, ngraph::AxisVector
     return output;
 }
 
-void ngraph::pass::CPUFusion::construct_gemm_pattern()
+void ngraph::runtime::cpu::pass::CPUFusion::construct_gemm_pattern()
 {
     auto shape_w = Shape{2, 4};
     auto shape_x = Shape{4, 1};

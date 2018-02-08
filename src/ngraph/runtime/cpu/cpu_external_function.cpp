@@ -226,20 +226,13 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     string function_name = m_function->get_name();
 
-<<<<<<< HEAD
     ngraph::pass::Manager pass_manager;
 
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(MemoryPoolAlignment);
-=======
-    pass::Manager pass_manager;
-    // For now, just make everyone row-major.
-    pass_manager.register_pass<pass::CPUFusion>();
-    pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
-    pass_manager.register_pass<pass::Liveness>();
-    pass_manager.register_pass<pass::MemoryLayout>(64);
->>>>>>> master
+
     pass_manager.run_passes(m_function);
 
     codegen::CodeWriter writer;
