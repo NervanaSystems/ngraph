@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include <fstream>
-#include <sstream>
 #include <algorithm>
 #include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <list>
 #include <memory>
+#include <sstream>
 
 #include "gtest/gtest.h"
+#include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
@@ -30,9 +31,8 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "util/test_tools.hpp"
-#include "ngraph/file_util.hpp"
 #include "ngraph/serializer.hpp"
+#include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -101,16 +101,23 @@ public:
             Shape ap_shape;
             Strides ap_strides;
 
+            AxisVector number_channel;
+            AxisVector image_dims;
             for (size_t i = 0; i < mrw->get_shape().size(); i++)
             {
                 if (mrw->get_window_shape().at(i) != 1)
                 {
                     ap_shape.push_back(mrw->get_window_shape().at(i));
                     ap_strides.push_back(mrw->get_window_movement_strides().at(i));
+                    image_dims.push_back(i);
+                }
+                else
+                {
+                    number_channel.push_back(i);
                 }
             }
 
-            if (!ap_shape.size())
+            if (ap_shape.size() != 2)
             {
                 return nn;
             }
@@ -123,9 +130,13 @@ public:
 				return nn;
 			}
 */
+
             auto pattern_map = m.get_pattern_map();
-            auto ap =
-                std::shared_ptr<Node>(new op::AvgPool(pattern_map[input], ap_shape, ap_strides));
+            std::copy(image_dims.begin(), image_dims.end(), back_inserter(number_channel));
+            auto reshape = make_shared<op::Reshape>(
+                pattern_map[input], number_channel, pattern_map[input]->get_shape());
+
+            auto ap = std::shared_ptr<Node>(new op::AvgPool(reshape, ap_shape, ap_strides));
             NGRAPH_DEBUG << "Created ap = " << ap->get_name();
             return ap;
         };
