@@ -91,6 +91,15 @@ if(NGRAPH_ARGON_ENABLE)
     include_directories(SYSTEM ${ARGON_TRANSFORMER_INCLUDE_DIR})
     set(BACKEND_NAMES ${BACKEND_NAMES} "ARGON")
     set(SRC ${SRC} argon_fusion.cpp)
+    
+    # not the bestway to eanble additional Argon backend test 
+    set(ARGON_ADDITIONAL_BACKEND_TESTS ${CMAKE_BINARY_DIR}/third-party/argon_transformer/src/ext_argon_transformer/test/test_argon_backend)
+    set(SRC ${SRC} 
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_reduce_sum.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_dot.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_broadcast.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_conv.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_binary_ew.cpp)
 endif()
 
 foreach(BACKEND_NAME ${BACKEND_NAMES})
