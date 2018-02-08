@@ -23,7 +23,7 @@ endif()
 
 project (ngraph)
 
-SET( GCC_MIN_VERSION 4.9)
+SET( GCC_MIN_VERSION 4.8)
 SET( CLANG_MIN_VERSION 3.8)
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -37,6 +37,10 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     endif()
 else()
     message(WARNING "You are using an unsupported compiler! Compilation has only been tested with Clang ( ${CLANG_MIN_VERSION} and up) and GCC ( ${GCC_MIN_VERSION} and up). ")
+endif()
+
+if($ENV{NGRAPH_USE_PREBUILT_LLVM})
+    set(NGRAPH_USE_PREBUILT_LLVM TRUE)
 endif()
 
 # These variables are undocumented but useful.
@@ -97,7 +101,11 @@ endif()
 
 # Set true if CPU backend is built by default
 if (NOT DEFINED NGRAPH_CPU_ENABLE)
-    SET(NGRAPH_CPU_ENABLE TRUE)
+    set(NGRAPH_CPU_ENABLE TRUE)
+endif()
+
+if (NOT DEFINED NGRAPH_TBB_ENABLE)
+    set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -105,7 +113,7 @@ endif()
 #-----------------------------------------------------------------------------------------------
 # Setup CUDA and cuDNN if NGRAPH_GPU_ENABLE=TRUE
 find_package(CUDA 8 QUIET)
-if(CUDA_FOUND AND (NOT DEFINED NGRAPH_GPU_ENABLE OR NGRAPH_GPU_ENABLE))
+if(CUDA_FOUND AND NGRAPH_GPU_ENABLE)
     message(STATUS "GPU Backend Enabled")
     set(NGRAPH_GPU_ENABLE TRUE)
     find_package(CUDNN 5 QUIET REQUIRED)

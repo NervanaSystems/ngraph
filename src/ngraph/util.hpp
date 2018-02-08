@@ -183,6 +183,13 @@ namespace ngraph
         return result;
     }
 
+    /// template specializations for float and double to handle INFINITY, -INFINITY
+    /// and NaN values.
+    template <>
+    float parse_string<float>(const std::string& s);
+    template <>
+    double parse_string<double>(const std::string& s);
+
     /// Parses a list of strings containing literals of the underlying type.
     template <typename T>
     std::vector<T> parse_string(const std::vector<std::string>& ss)
@@ -262,7 +269,7 @@ namespace ngraph
 
     /**
     * This utility takes forward-propogation and back-propogation XLAunctions
-    * and turns them into clone functions where the intermediate values of 
+    * and turns them into clone functions where the intermediate values of
     * the forward prop are added to the output of fprop and the input of the bprop
     * to avoid repeat calcualtions.
     * The last argument is the adjoints coming into the bprop function, the output

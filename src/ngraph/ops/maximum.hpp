@@ -53,8 +53,8 @@ namespace ngraph
                     throw ngraph_error("Incorrect number of new arguments");
                 return std::make_shared<Maximum>(new_args.at(0), new_args.at(1));
             }
-            bool is_functionally_identical(const Node&) const override;
 
+            virtual bool is_commutative() override { return true; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;

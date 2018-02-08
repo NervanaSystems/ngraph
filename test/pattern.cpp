@@ -649,10 +649,10 @@ TEST(pattern, variance)
 TEST(pattern, fuse_fprop_bn)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_before_fusion.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_before_fusion.png");
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CPUFusion>();
-    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_after_fusion.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_after_fusion.png");
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/bn_fprop_b2c3h2w2.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);

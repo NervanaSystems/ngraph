@@ -94,9 +94,10 @@ namespace ngraph
                 static void EMITTER_DECL(EmitReduceWindow);
                 static void EMITTER_DECL(EmitSelectAndScatter);
                 static void EMITTER_DECL(EmitAvgPool);
-                static void EMITTER_DECL(EmitAvgPoolBprop);
+                static void EMITTER_DECL(EmitAvgPoolBackprop);
                 static void EMITTER_DECL(EmitPad);
                 static void EMITTER_DECL(EmitBatchnormFprop);
+                static void EMITTER_DECL(EmitMaxPoolBackprop);
 
                 static void EmitMKLDNNPreamble(codegen::CodeWriter& writer);
 
