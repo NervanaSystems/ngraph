@@ -270,3 +270,32 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
 
     return fprop_cache;
 }
+
+namespace ngraph
+{
+    template <>
+    float parse_string<float>(const std::string& s)
+    {
+        const char* tmp = s.c_str();
+        char* end;
+        float result = strtof(tmp, &end);
+        if (*end != 0)
+        {
+            throw std::runtime_error("Could not parse literal '" + s + "'");
+        }
+        return result;
+    }
+
+    template <>
+    double parse_string<double>(const std::string& s)
+    {
+        const char* tmp = s.c_str();
+        char* end;
+        double result = strtod(tmp, &end);
+        if (*end != 0)
+        {
+            throw std::runtime_error("Could not parse literal '" + s + "'");
+        }
+        return result;
+    }
+}

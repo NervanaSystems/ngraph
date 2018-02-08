@@ -19,7 +19,10 @@
 #include <memory>
 
 #include "gtest/gtest.h"
+
+#include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/json.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -28,9 +31,6 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
-//
-#include "ngraph/file_util.hpp"
-#include "ngraph/json.hpp"
 #include "ngraph/runtime/argon/ops/relu.hpp"
 #include "ngraph/runtime/argon/pass/argon_fusion.hpp"
 #include "ngraph/serializer.hpp"

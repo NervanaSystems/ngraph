@@ -26,6 +26,7 @@
 
 using namespace std;
 using namespace ngraph;
+using json = nlohmann::json;
 
 TEST(serialize, main)
 {
@@ -64,7 +65,7 @@ TEST(serialize, main)
     istringstream in(js);
     shared_ptr<Function> sfunc = deserialize(in);
 
-    // Now call g on some test vectors.
+    // Now call h on some test vectors.
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(sfunc);
     auto backend = manager->allocate_backend();
@@ -79,13 +80,13 @@ TEST(serialize, main)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({x, y, z}, {result});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
     cf->call({y, x, z}, {result});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
     cf->call({x, z, y}, {result});
-    EXPECT_EQ((vector<float>{50, 72, 98, 128}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{200, 288, 392, 512}), read_vector<float>(result));
 }
 
 TEST(serialize, existing_models)
