@@ -20,10 +20,13 @@ from ngraph_api.ops import add
 from ngraph_api.ops import broadcast
 from ngraph_api.ops import ceiling
 from ngraph_api.ops import ceiling as ceil
+from ngraph_api.ops import constant
 from ngraph_api.ops import divide
 from ngraph_api.ops import exp
 from ngraph_api.ops import floor
 from ngraph_api.ops import log
+from ngraph_api.ops import maximum
+from ngraph_api.ops import minimum
 from ngraph_api.ops import multiply
 from ngraph_api.ops import negative
 from ngraph_api.ops import parameter

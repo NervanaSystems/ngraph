@@ -26,8 +26,8 @@ from ngraph_api.exceptions import NgraphTypeError
 log = logging.getLogger(__file__)
 
 TensorShape = List[int]
-py_numeric_data = Union[int, float, np.ndarray]
-py_numeric_type = Union[type, np.dtype]
+NumericData = Union[int, float, np.ndarray]
+NumericType = Union[type, np.dtype]
 
 ngraph_to_numpy_types_map = [
     (NgraphType.f32, np.float32),
@@ -43,7 +43,7 @@ ngraph_to_numpy_types_map = [
 ]
 
 
-def get_element_type(data_type):  # type: (py_numeric_type) -> NgraphType
+def get_element_type(data_type):  # type: (NumericType) -> NgraphType
     """Return an ngraph element type for a Python type or numpy.dtype."""
     if data_type == int:
         log.warning('Converting int type of undefined bitwidth to 32-bit ngraph integer.')
@@ -70,3 +70,10 @@ def get_dtype(ngraph_type):  # type: (NgraphType) -> np.dtype
         return np.dtype(np_type)
 
     raise NgraphTypeError('Unidentified data type %s', ngraph_type)
+
+
+def get_ndarray(data):  # type: (NumericData) -> np.ndarray
+    """Wrap data into a numpy ndarray."""
+    if type(data) == np.ndarray:
+        return data
+    return np.array(data)
