@@ -136,6 +136,32 @@ std::shared_ptr<pattern::op::Label> construct_sum_pattern() //for the sake of ex
     return std::make_shared<pattern::op::Label>(element::i32, Shape{}, sum_predicate);
 }
 
+static std::shared_ptr<pattern::op::Label> construct_variance_graph(){
+    // construct varaiance
+    auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
+    auto input_sq = std::make_shared<op::Multiply>(input, input);
+    auto sum_input = std::make_shared<op::Sum>(input, AxisSet{0});
+    auto square_sumed_input = std::make_shared<op::Multiply>(sum_input, sum_input);
+    auto sum_squared_input = std::make_shared<op::Sum>(input_sq, AxisSet{0});
+    auto avg_input_sum_sq = std::make_shared<op::Divide>(square_sumed_input, N);
+    auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
+    auto variance  = std::make_shared<op::Divide>(xmu, N);
+    auto variance_label = std::make_shared<pattern::op::Label>(variance, nullptr, Nodes{variance});
+
+    return variance_label;
+}
+
+static std::shared_ptr<pattern::op::Label> construct_mean_graph(){
+    //construct mean;
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
+    auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
+    auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
+    auto mean = std::make_shared<op::Divide>(sum_input1, N);
+    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, Nodes{mean});
+    return mean_label;
+}
+
 class TestGraphRewrite : public ngraph::pass::GraphRewrite
 {
 public:
@@ -249,7 +275,7 @@ public:
         this->add_matcher(m);
     }
 
-   void construct_fprop_bn()
+    void construct_fprop_bn()
     {
         // construct varaiance
         auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
@@ -282,7 +308,6 @@ public:
         //Gamma
         auto gamma_label = std::make_shared<pattern::op::Label>(element::f32, Shape{3});
         auto gamma_with_broadcast = std::make_shared<op::Broadcast>(gamma_label, Shape{2, 3}, AxisSet{0});
-
         auto multiply_gamma =  std::make_shared<op::Multiply>(gamma_with_broadcast, divide_mean_variance);
         
         //Beta
@@ -292,38 +317,36 @@ public:
         auto add_beta =  std::make_shared<op::Add>(beta_with_broadcast, multiply_gamma);
         // This completes fprop bn pattern
 
+        //Define a call back that needs to called once the DFG matches the pattern 
         ngraph::pattern::gr_callback_fn callback = [variance_label, mean_label, input, eps_label, gamma_label, beta_label](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
                          << m.match_root()->get_name();
 
             std::shared_ptr<Node> nn = nullptr;
-            //TODO - add assert's based on the matched node
             auto pattern_map = m.get_pattern_map();
-            NGRAPH_DEBUG << "Variance: " << pattern_map[variance_label]->get_name();
-            NGRAPH_DEBUG << "Mean: "  <<  pattern_map[mean_label]->get_name();
-            NGRAPH_DEBUG << "eps: " << pattern_map[eps_label]->get_name();
-            NGRAPH_DEBUG << "gamma: " << pattern_map[gamma_label]->get_name();
-            NGRAPH_DEBUG << "beta: " << pattern_map[beta_label]->get_name();
+            NGRAPH_DEBUG << "Input: " << pattern_map[input]->get_name() << " " << pattern_map[input]->get_shape().size();
+            NGRAPH_DEBUG << "Variance: " << pattern_map[variance_label]->get_name() << " " << pattern_map[variance_label]->get_shape().size();
+            NGRAPH_DEBUG << "Mean: "  <<  pattern_map[mean_label]->get_name() << " " <<  pattern_map[mean_label]->get_shape().size();
+            NGRAPH_DEBUG << "eps: " << pattern_map[eps_label]->get_name() << " " <<  pattern_map[eps_label]->get_shape().size();
+            NGRAPH_DEBUG << "gamma: " << pattern_map[gamma_label]->get_name() << " " <<  pattern_map[gamma_label]->get_shape().size();
+            NGRAPH_DEBUG << "beta: " << pattern_map[beta_label]->get_name() << " " <<  pattern_map[beta_label]->get_shape().size();
 
-            // //check if the root node matched by the Matcher and pattern_map are of same type
-            // if (pattern_map[variance_label]->get_element_type() != m.match_root()->get_element_type()){
-            //     NGRAPH_DEBUG << "Operand's types don't match";
-            //     return nn;
-            // }
+            // dont fuse if the inout doesnt have 4dims 
+            if (pattern_map[input]->get_shape().size()!=4)
+            {
+                 NGRAPH_DEBUG << "Input to bn doesnt not have 4dims, so not fusing";
+                 return nn;
+             }
             Shape bn_output_shape{m.match_root()->get_shape()};
             Shape bn_mean_shape{pattern_map[mean_label]->get_shape()};
             Shape bn_variance_shape{pattern_map[variance_label]->get_shape()};
-            const auto& variance_et = pattern_map[variance_label]->get_element_type();
-            const auto& mean_et = pattern_map[mean_label]->get_element_type();
             auto bn_node = std::shared_ptr<Node>(new op::BatchnormFprop(pattern_map[eps_label],
                                                                        pattern_map[gamma_label],
                                                                        pattern_map[beta_label],
                                                                        pattern_map[input],
                                                                        pattern_map[mean_label],
                                                                        pattern_map[variance_label],
-                                                                       bn_output_shape,
-                                                                       mean_et,
-                                                                       variance_et));
+                                                                       bn_output_shape));
 
             return bn_node;
         };
@@ -338,7 +361,7 @@ public:
         construct_multiply_by_one();
         construct_add_zero();
         construct_sum();
-	construct_fprop_bn();
+	    construct_fprop_bn();
     }
 };
 
@@ -570,31 +593,50 @@ TEST(pattern, sum)
     ASSERT_EQ(n.get_pattern_map()[reduce_label], sum_graph);
 }
 
-TEST(batchnorm,  fuse_fprop_bn)
+TEST(pattern, mean)
+{
+    //construct mean
+    TestMatcher n(nullptr);
+
+    auto input = std::make_shared<op::Parameter>(element::f32, Shape{2, 3});
+    auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
+    auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
+    auto mean = std::make_shared<op::Divide>(sum_input1, N);
+
+    auto mean_graph = construct_mean_graph();
+    ASSERT_TRUE(n.match(mean_graph, mean));
+    ASSERT_EQ(n.get_pattern_map()[mean_graph], mean);    
+}
+
+TEST(pattern, variance)
+{
+    //construct variance
+    TestMatcher n(nullptr);
+    auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
+    auto input_sq = std::make_shared<op::Multiply>(input, input);
+    auto sum_input = std::make_shared<op::Sum>(input, AxisSet{0});
+    auto square_sumed_input = std::make_shared<op::Multiply>(sum_input, sum_input);
+    auto sum_squared_input = std::make_shared<op::Sum>(input_sq, AxisSet{0});
+    auto avg_input_sum_sq = std::make_shared<op::Divide>(square_sumed_input, N);
+    auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
+    auto variance  = std::make_shared<op::Divide>(xmu, N);
+
+    auto var_graph = construct_variance_graph();
+    ASSERT_TRUE(n.match(var_graph, variance));
+    ASSERT_EQ(n.get_pattern_map()[var_graph], variance);    
+}
+
+TEST(pattern,  fuse_fprop_bn)
 {
    pass::Manager pass_manager;
    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_before_fusion.pdf");
    pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
    pass_manager.register_pass<pass::CPUFusion>();
    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_after_fusion.pdf");
-   const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_4.json");
+   const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/bn_fprop_b2c3h2w2.json");
    const string json_string = file_util::read_file_to_string(json_path);
    stringstream ss(json_string);
    shared_ptr<Function> func = ngraph::deserialize(ss);
    pass_manager.run_passes(func);
 }
-//
-//
-//TEST(batchnorm,  fuse_bprop_bn)
-//{
-//    pass::Manager pass_manager;
-//    pass_manager.register_pass<pass::VisualizeTree>("bn_bprop_before_fusion.png");
-//    pass_manager.register_pass<pass::CPUFusion>();
-//    pass_manager.register_pass<TestGraphRewrite>();
-//    pass_manager.register_pass<pass::VisualizeTree>("bn_bprop_after.after.png");
-//    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/bn_bprop.json");
-//    const string json_string = file_util::read_file_to_string(json_path);
-//    stringstream ss(json_string);
-//    shared_ptr<Function> func = ngraph::deserialize(ss);
-//    pass_manager.run_passes(func);
-//}

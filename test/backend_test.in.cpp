@@ -6435,9 +6435,9 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
     EXPECT_EQ(expected, read_vector<float>(result));
 }
 
-TEST (${BACKEND_NAME}, batchnorm_fprop)
+TEST (${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
 {
-    auto input_shape = Shape{3, 2, 1, 1};
+    auto input_shape = Shape{1, 2, 2, 2};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);
     auto mean_shape = Shape{2};
     auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
@@ -6448,16 +6448,14 @@ TEST (${BACKEND_NAME}, batchnorm_fprop)
     auto beta_shape = Shape{2};
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     auto eps = op::Constant::create(element::f32, Shape{}, {0.001});
-    auto shape_r = Shape{3,2,1,1};
+    auto shape_r = Shape{1,2,2,2};
     auto bn = make_shared<op::BatchnormFprop>(eps,
                                               gamma,
                                               beta,
                                               input,
                                               mean,
                                               var,
-					                          shape_r,
-                                              mean->get_element_type(),
-                                              var->get_element_type());
+					                          shape_r);
 
     auto f = make_shared<Function>(bn, op::Parameters{mean, var, input, gamma, beta});
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
@@ -6466,20 +6464,67 @@ TEST (${BACKEND_NAME}, batchnorm_fprop)
     auto cf = backend->make_call_frame(external);
 
     // Create some tensors for input/output
-    auto _input = backend->make_primary_tensor_view(element::f32, input_shape);
-    copy_data(_input, vector<float>{ 0.54881352f, 0.71518934f,  0.60276335f,  0.54488319f, 0.42365479f, 0.64589411f});
+    auto _input = backend->make_primary_tensor_view(element::f32, Shape{1, 2, 2, 2});
+
+    copy_data(_input, vector<float>{ 0.54881352f, 0.71518934f,  0.60276335f,  0.54488319f, 0.42365479f, 0.64589411f, 0.4375872 , 0.89177299});
     auto _mean = backend->make_primary_tensor_view(element::f32, mean_shape);
-    copy_data(_mean, vector<float>{0.62225538f, 0.53814405f});
+    copy_data(_mean, vector<float>{ 0.60291237, 0.59972727});
     auto _var = backend->make_primary_tensor_view(element::f32, var_shape);
-    copy_data(_var, vector<float>{0.00480346f, 0.00825443f});
+    copy_data(_var, vector<float>{0.00472505, 0.03617825});
     auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
     copy_data(_gamma, vector<float>{1.0f, 1.0f});
     auto _beta = backend->make_primary_tensor_view(element::f32, beta_shape);
     copy_data(_beta, vector<float>{0.0f, 0.0f});
     auto result = backend->make_primary_tensor_view(element::f32, shape_r);
 
-    vector<float> expected_result{4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f};
+    vector<float> expected_result{-0.71498716,  1.48388731, -0.00196938, -0.76693159, -0.91316032,  0.23943391, -0.84090298,  1.51462936};
     cf->call({_mean, _var, _input, _gamma, _beta}, {result});
-    EXPECT_EQ(expected_result, read_vector<float>(result));
+    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result)));
+
+}
+
+TEST (${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
+{
+    auto input_shape = Shape{2, 2, 2, 1};
+    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto mean_shape = Shape{2};
+    auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
+    auto var_shape = Shape{2};
+    auto var = make_shared<op::Parameter>(element::f32, var_shape);
+    auto gamma_shape = Shape{2};
+    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto beta_shape = Shape{2};
+    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    auto eps = op::Constant::create(element::f32, Shape{}, {0.001});
+    auto shape_r = Shape{2, 2, 2, 1};
+    auto bn = make_shared<op::BatchnormFprop>(eps,
+                                              gamma,
+                                              beta,
+                                              input,
+                                              mean,
+                                              var,
+					                          shape_r);
+
+    auto f = make_shared<Function>(bn, op::Parameters{mean, var, input, gamma, beta});
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+    // Create some tensors for input/output
+    auto _input = backend->make_primary_tensor_view(element::f32, Shape{2, 2, 2, 1});
+    copy_data(_input, vector<float>{ 0.54881352f, 0.71518934f,  0.60276335f,  0.54488319f, 0.42365479f, 0.64589411f, 0.4375872 , 0.89177299});
+    auto _mean = backend->make_primary_tensor_view(element::f32, mean_shape);
+    copy_data(_mean, vector<float>{ 0.60291237, 0.59972727});
+    auto _var = backend->make_primary_tensor_view(element::f32, var_shape);
+    copy_data(_var, vector<float>{0.00472505, 0.03617825});
+    auto _gamma = backend->make_primary_tensor_view(element::f32, gamma_shape);
+    copy_data(_gamma, vector<float>{1.0f, 1.0f});
+    auto _beta = backend->make_primary_tensor_view(element::f32, beta_shape);
+    copy_data(_beta, vector<float>{0.0f, 0.0f});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    vector<float> expected_result{ -0.714987, 1.48389, 0.015746, -0.284436, -2.36912, 0.56806, -0.840903, 1.51463};
+    cf->call({_mean, _var, _input, _gamma, _beta}, {result});
+    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result)));
 
 }

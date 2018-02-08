@@ -32,24 +32,22 @@ namespace ngraph
                            std::shared_ptr<Node> input,
                            std::shared_ptr<Node> mean,
                            std::shared_ptr<Node> variance,
-                           Shape output_shape,
-                           const element::Type& mean_et,
-                           const element::Type& variance_et);
+                           Shape output_shape);
 
         const Shape& get_inputs_shape() const{
-            return mkl_input_shape;
+            return bn_input_shape;
         }
 
         const Shape& get_output_shape() const{
-            return mkl_output_shape;
+            return bn_output_shape;
         }
 
         const Shape& get_variance_shape() const{
-            return mkl_variance_shape;
+            return bn_variance_shape;
         }
 
         const Shape& get_mean_shape() const{
-            return mkl_mean_shape;
+            return bn_mean_shape;
         }
 
         const float get_eps_value() const{
@@ -60,12 +58,10 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override; 
 
         private:
-                Shape mkl_input_shape;
-                Shape mkl_output_shape;
-                Shape mkl_variance_shape;
-                Shape mkl_mean_shape;
-                const element::Type& mean_element_type;
-                const element::Type& variance_element_type;
+                Shape bn_input_shape;
+                Shape bn_output_shape;
+                Shape bn_variance_shape;
+                Shape bn_mean_shape;
                 float epsilon;
 
         };

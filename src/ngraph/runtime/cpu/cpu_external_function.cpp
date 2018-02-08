@@ -235,7 +235,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.register_pass<pass::MemoryLayout>(64);
     pass_manager.run_passes(m_function);
-    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_test.pdf");
     codegen::CodeWriter writer;
 
     writer +=
