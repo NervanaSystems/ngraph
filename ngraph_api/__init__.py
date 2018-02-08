@@ -25,6 +25,8 @@ from ngraph_api.ops import divide
 from ngraph_api.ops import exp
 from ngraph_api.ops import floor
 from ngraph_api.ops import log
+from ngraph_api.ops import maximum
+from ngraph_api.ops import minimum
 from ngraph_api.ops import multiply
 from ngraph_api.ops import negative
 from ngraph_api.ops import parameter

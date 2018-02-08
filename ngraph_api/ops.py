@@ -21,7 +21,7 @@ from typing import Optional, Set
 
 from pyngraph import Node
 from pyngraph.op import Abs, Parameter, Sqrt, Exp, Log, Negative, Floor, Ceiling, Divide, \
-    Broadcast, Multiply, Subtract, Add, Constant
+    Broadcast, Multiply, Subtract, Add, Constant, Minimum, Maximum
 
 from ngraph_api.utils.input_validation import assert_list_of_ints
 from ngraph_api.utils.types import NumericType, NumericData, TensorShape
@@ -46,6 +46,7 @@ def constant(value, name=None):  # type: (NumericData, str) -> Constant
     return Constant(element_type, ndarray.shape, ndarray.flatten().data)
 
 
+# Unary ops
 @nameable_op
 def absolute(node, name=None):  # type: (Node, str) -> Node
     """Return node which applies f(x) = abs(x) to the input node elementwise."""
@@ -88,6 +89,7 @@ def ceiling(node, name=None):  # type: (Node, str) -> Node
     return Ceiling(node)
 
 
+# Binary ops
 @nameable_op
 def divide(left_node, right_node, name=None):  # type: (Node, Node, str) -> Node
     """Return node which applies f(x) = A/B to the input nodes elementwise."""
@@ -112,6 +114,19 @@ def add(left_node, right_node, name=None):  # type: (Node, Node, str) -> Node
     return Add(left_node, right_node)
 
 
+@nameable_op
+def minimum(left_node, right_node, name=None):  # type: (Node, Node, str) -> Node
+    """Return node which applies the minimum operation to input nodes elementwise."""
+    return Minimum(left_node, right_node)
+
+
+@nameable_op
+def maximum(left_node, right_node, name=None):  # type: (Node, Node, str) -> Node
+    """Return node which applies the maximum operation to input nodes elementwise."""
+    return Maximum(left_node, right_node)
+
+
+# Custom ops
 @nameable_op
 def broadcast(node, new_shape, axis=None, name=None):  # type: (Node, TensorShape, int, str) -> Node
     """Return node which is broadcasts input node values to specified shape."""
