@@ -33,7 +33,6 @@ set (SRC
     ops/abs.cpp
     ops/add.cpp
     ops/avg_pool.cpp
-    ops/
     ops/batchnorm.cpp
     ops/binary_elementwise_arithmetic.cpp
     ops/binary_elementwise_comparison.cpp
