@@ -1,15 +1,18 @@
-# Copyright 2017 Nervana Systems Inc.
+#*******************************************************************************
+# Copyright 2017-2018 Intel Corporation
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#*******************************************************************************
 
 include_directories(
     SYSTEM
@@ -91,6 +94,16 @@ if(NGRAPH_ARGON_ENABLE)
     include_directories(SYSTEM ${ARGON_TRANSFORMER_INCLUDE_DIR})
     set(BACKEND_NAMES ${BACKEND_NAMES} "ARGON")
     set(SRC ${SRC} argon_fusion.cpp)
+
+    # enable additional Argon backend test 
+    set(ARGON_ADDITIONAL_BACKEND_TESTS ${ARGON_TRANSFORMER_SOURCE_DIR}/test/test_argon_backend)
+    message(STATUS "ARGON_ADDITIONAL_BACKEND_TESTS path: ${ARGON_ADDITIONAL_BACKEND_TESTS}")
+    set(SRC ${SRC} 
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_reduce_sum.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_dot.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_broadcast.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_conv.cpp
+            ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_binary_ew.cpp)
 endif()
 
 foreach(BACKEND_NAME ${BACKEND_NAMES})
