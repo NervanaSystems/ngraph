@@ -12,7 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ******************************************************************************# flake8: noqa
+# ******************************************************************************
+# flake8: noqa
 import pytest
 import numpy as np
 
@@ -952,16 +953,16 @@ def test_max_pool():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-def convolution2d(image, filterit, strides=[1, 1], dilation=[1, 1], padding_below=[0, 0],
-                  padding_above=[0, 0], data_dilation=[1, 1]):
+def convolution2d(image, filterit, strides=(1, 1), dilation=(1, 1), padding_below=(0, 0),
+                  padding_above=(0, 0), data_dilation=(1, 1)):
 
-    def dilate(arr, dila=(1, 1)):
+    def dilate(arr, dil=(1, 1)):
         m, n = arr.shape
-        new_m, new_n = (m - 1) * dila[0] + 1, (n - 1) * dila[1] + 1
+        new_m, new_n = (m - 1) * dil[0] + 1, (n - 1) * dil[1] + 1
         new_arr = np.zeros(new_m * new_n, dtype=np.float32).reshape(new_m, new_n)
         for i in range(m):
             for j in range(n):
-                new_arr[dila[0] * i][dila[1] * j] = arr[i][j]
+                new_arr[dil[0] * i][dil[1] * j] = arr[i][j]
         return new_arr
 
     i_m, i_n = image.shape
@@ -972,10 +973,10 @@ def convolution2d(image, filterit, strides=[1, 1], dilation=[1, 1], padding_belo
     new_image[padding_below[0] : padding_below[0] + i_m,
               padding_below[1] : padding_below[1] + i_n] = image
     image = new_image
-    image = image if data_dilation == [1, 1] else dilate(image, data_dilation)
+    image = image if data_dilation[0] == data_dilation[1] == 1 else dilate(image, data_dilation)
     i_m, i_n = image.shape
 
-    filterit = filterit if dilation == [1, 1] else dilate(filterit, dilation)
+    filterit = filterit if dilation[0] == dilation[1] == 1 else dilate(filterit, dilation)
     f_m, f_n = filterit.shape
 
     #result_shape
@@ -1208,3 +1209,102 @@ def test_convolution_with_data_dilation():
     assert np.allclose(result_arr, result_arr_ref)
 
 
+def test_convolutionBackpropData():
+
+    element_type = Type.f32
+    image_shape = [1, 1, 10, 10]
+    filter_shape = [1, 1, 3, 3]
+    output_shape = [1, 1, 17, 17]
+
+    image_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
+    filter_arr = np.ones(9, dtype=np.float32).reshape(1, 1, 3, 3)
+    window_strides = [1, 1]
+    window_dilation = [1, 1]
+    padding_below = [0, 0]
+    padding_above = [0, 0]
+    data_dilation = [2, 2]
+
+    output_arr = convolution2d(image_arr[0][0], filter_arr[0][0], window_strides,
+                               window_dilation, padding_below, padding_above,
+                               data_dilation).reshape(1, 1, 17, 17)
+
+    A = Parameter(element_type, filter_shape)
+    B = Parameter(element_type, output_shape)
+    parameter_list = [A, B]
+
+    function = Function([ConvolutionBackpropData(image_shape, A, B, window_strides, window_dilation,
+                                     padding_below, padding_above,
+                                     data_dilation)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(element_type, filter_shape)
+    b = backend.make_primary_tensor_view(element_type, output_shape)
+
+    a.write(util.numpy_to_c(filter_arr), 0, 3*3*4)
+    b.write(util.numpy_to_c(output_arr), 0, 17*17*4)
+
+    result_arr = np.zeros(10*10, dtype=np.float32).reshape(1, 1, 10, 10)
+    result = backend.make_primary_tensor_view(element_type, [1, 1, 10, 10])
+    result.write(util.numpy_to_c(result_arr), 0, 10*10*4)
+    cf.call([a, b], [result])
+
+    result.read(util.numpy_to_c(result_arr), 0, 10*10*4)
+    result_arr_ref = np.array(
+        [[[[  22,   60,   70,   80,   90,  100,  110,  120,  130,   54.],
+           [ 105,  275,  300,  325,  350,  375,  400,  425,  450,  185.],
+           [ 205,  525,  550,  575,  600,  625,  650,  675,  700,  285.],
+           [ 305,  775,  800,  825,  850,  875,  900,  925,  950,  385.],
+           [ 405, 1025, 1050, 1075, 1100, 1125, 1150, 1175, 1200,  485.],
+           [ 505, 1275, 1300, 1325, 1350, 1375, 1400, 1425, 1450,  585.],
+           [ 605, 1525, 1550, 1575, 1600, 1625, 1650, 1675, 1700,  685.],
+           [ 705, 1775, 1800, 1825, 1850, 1875, 1900, 1925, 1950,  785.],
+           [ 805, 2025, 2050, 2075, 2100, 2125, 2150, 2175, 2200,  885.],
+           [ 342,  860,  870,  880,  890,  900,  910,  920,  930,  374.]]]])
+    assert np.allclose(result_arr, result_arr_ref)
+
+
+def test_convolutionBackpropFilters():
+
+    element_type = Type.f32
+    image_shape = [1, 1, 10, 10]
+    filter_shape = [1, 1, 3, 3]
+    output_shape = [1, 1, 17, 17]
+
+    image_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
+    filter_arr = np.ones(9, dtype=np.float32).reshape(1, 1, 3, 3)
+    window_strides = [1, 1]
+    window_dilation = [1, 1]
+    padding_below = [0, 0]
+    padding_above = [0, 0]
+    data_dilation = [2, 2]
+
+    output_arr = convolution2d(image_arr[0][0], filter_arr[0][0], window_strides,
+                               window_dilation, padding_below, padding_above,
+                               data_dilation).reshape(1, 1, 17, 17)
+
+    A = Parameter(element_type, image_shape)
+    B = Parameter(element_type, output_shape)
+    parameter_list = [A, B]
+
+    function = Function([ConvolutionBackpropFilters(A, filter_shape, B, window_strides, window_dilation,
+                                     padding_below, padding_above,
+                                     data_dilation)], parameter_list, 'test')
+    backend, cf = make_backend_call_frame(function)
+
+    a = backend.make_primary_tensor_view(element_type, image_shape)
+    b = backend.make_primary_tensor_view(element_type, output_shape)
+
+    a.write(util.numpy_to_c(image_arr), 0, 10*10*4)
+    b.write(util.numpy_to_c(output_arr), 0, 17*17*4)
+
+    result_arr = np.zeros(3*3, dtype=np.float32).reshape(1, 1, 3, 3)
+    result = backend.make_primary_tensor_view(element_type, [1, 1, 3, 3])
+    result.write(util.numpy_to_c(result_arr), 0, 3*3*4)
+    cf.call([a, b], [result])
+
+    result.read(util.numpy_to_c(result_arr), 0, 3*3*4)
+    result_arr_ref = np.array(
+        [[[[ 923832,  413952,  939870.],
+           [ 425832,  190752,  432960.],
+           [1084212,  485232, 1100250.]]]])
+    assert np.allclose(result_arr, result_arr_ref)

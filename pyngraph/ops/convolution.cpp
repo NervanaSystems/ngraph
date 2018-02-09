@@ -31,16 +31,16 @@ void regclass_pyngraph_op_Convolution(py::module m) {
 		             const std::shared_ptr<ngraph::Node>&,
 		             const ngraph::Strides&,
 		             const ngraph::Strides&,
-                             const ngraph::CoordinateDiff&,
-                             const ngraph::CoordinateDiff&,
+                     const ngraph::CoordinateDiff&,
+                     const ngraph::CoordinateDiff&,
 		             const ngraph::Strides& >());
 
     convolution.def(py::init<const std::shared_ptr<ngraph::Node>&,
 		             const std::shared_ptr<ngraph::Node>&,
 		             const ngraph::Strides&,
 		             const ngraph::Strides&,
-                             const ngraph::CoordinateDiff&,
-                             const ngraph::CoordinateDiff& >());
+                     const ngraph::CoordinateDiff&,
+                     const ngraph::CoordinateDiff& >());
 
     convolution.def(py::init<const std::shared_ptr<ngraph::Node>&,
 		             const std::shared_ptr<ngraph::Node>&,
@@ -65,8 +65,8 @@ void regclass_pyngraph_op_ConvolutionBackpropData(py::module m) {
 		                         const std::shared_ptr<ngraph::Node>&,
 		                         const ngraph::Strides&,
 		                         const ngraph::Strides&,
-                                         const ngraph::CoordinateDiff&,
-                                         const ngraph::CoordinateDiff&,
+                                 const ngraph::CoordinateDiff&,
+                                 const ngraph::CoordinateDiff&,
 		                         const ngraph::Strides& >());
 }
 
@@ -80,7 +80,7 @@ void regclass_pyngraph_op_ConvolutionBackpropFilters(py::module m) {
 		                            const std::shared_ptr<ngraph::Node>&,
 		                            const ngraph::Strides&,
 		                            const ngraph::Strides&,
-                                            const ngraph::CoordinateDiff&,
-                                            const ngraph::CoordinateDiff&,
+                                    const ngraph::CoordinateDiff&,
+                                    const ngraph::CoordinateDiff&,
 		                            const ngraph::Strides& >());
 }
