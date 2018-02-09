@@ -22,7 +22,7 @@ from typing import Optional, Set
 
 from pyngraph import Node
 from pyngraph.op import Abs, Parameter, Sqrt, Exp, Log, Negative, Floor, Ceiling, Divide, \
-    Broadcast, Multiply, Subtract, Add, Constant, Minimum, Maximum
+    Broadcast, Multiply, Subtract, Add, Constant, Minimum, Maximum, Equal
 
 from ngraph_api.utils.input_validation import assert_list_of_ints
 from ngraph_api.utils.types import NumericType, NumericData, TensorShape
@@ -117,6 +117,12 @@ def subtract(left_node, right_node, name=None):  # type: (Node, Node, str) -> No
 def add(left_node, right_node, name=None):  # type: (Node, Node, str) -> Node
     """Return node which applies f(x) = A+B to the input nodes elementwise."""
     return Add(left_node, right_node)
+
+
+@nameable_op
+def equal(left_node, right_node, name=None):  # type: (Node, Node, str) -> Node
+    """Return node which checks if input nodes are equal elementwise."""
+    return Equal(left_node, right_node)
 
 
 @nameable_op
