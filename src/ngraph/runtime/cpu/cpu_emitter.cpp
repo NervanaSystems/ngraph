@@ -2372,18 +2372,60 @@ void runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop(
     auto apb = static_cast<const op::AvgPoolBackprop*>(n);
 
     auto delta_shape = args[0].get_shape();
+    auto delta_rank = delta_shape.size();
     auto out_shape = out[0].get_shape();
 
-    writer << "kernel::avg_pool_backprop<" << out[0].get_type() << ">(" << args[0].get_name()
-           << ",\n";
-    writer << "                 " << out[0].get_name() << ",\n";
-    writer << "                 {" << join(delta_shape) << "},\n";
-    writer << "                 {" << join(out_shape) << "},\n";
-    writer << "                 {" << join(apb->get_window_shape()) << "},\n";
-    writer << "                 {" << join(apb->get_window_movement_strides()) << "},\n";
-    writer << "                 {" << join(apb->get_padding_below()) << "},\n";
-    writer << "                 {" << join(apb->get_padding_above()) << "}\n";
-    writer << "                 );\n";
+    if (delta_rank == 4 && apb->get_window_shape().size() == 2 &&
+        args[0].get_element_type() == element::f32)
+    {
+        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+
+        writer << "{\n";
+        writer.indent++;
+
+        writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+        writer << "memory::desc input_data_desc = memory::desc({" << join(delta_shape) << "}, "
+               << et << ", memory::format::nchw);\n";
+        writer << "memory::desc result_desc = memory::desc({" << join(out_shape) << "}, " << et
+               << ", memory::format::nchw);\n";
+        writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+               << ");\n";
+        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
+        // Dummy forward primitive descriptor to keep MKLDNN happy
+        writer << "pooling_forward::primitive_desc fwd_pd = pooling_forward::primitive_desc("
+               << "{prop_kind::forward, algorithm::pooling_avg_exclude_padding, "
+               << "result_desc, input_data_desc, {" << join(apb->get_window_movement_strides())
+               << "}, {" << join(apb->get_window_shape()) << "}, "
+               << "{" << join(apb->get_padding_below()) << "}, "
+               << "{" << join(apb->get_padding_above()) << "}, "
+               << "padding_kind::zero}, cpu_engine);\n";
+        writer << "auto avg_pooling = pooling_backward(pooling_backward::primitive_desc("
+               << "pooling_backward::desc(algorithm::pooling_avg_exclude_padding, "
+               << "result_desc, input_data_desc, {" << join(apb->get_window_movement_strides())
+               << "}, {" << join(apb->get_window_shape()) << "}, "
+               << "{" << join(apb->get_padding_below()) << "}, "
+               << "{" << join(apb->get_padding_above()) << "}, "
+               << "padding_kind::zero), cpu_engine, fwd_pd), "
+               << "input_data, result);\n";
+        writer << "auto s = stream(stream::kind::eager);\n"
+               << "s.submit({avg_pooling}).wait();\n";
+        writer.indent--;
+        writer << "}\n";
+    }
+    else
+    {
+        writer << "kernel::avg_pool_backprop<" << out[0].get_type() << ">(" << args[0].get_name()
+               << ",\n";
+        writer << "                 " << out[0].get_name() << ",\n";
+        writer << "                 {" << join(delta_shape) << "},\n";
+        writer << "                 {" << join(out_shape) << "},\n";
+        writer << "                 {" << join(apb->get_window_shape()) << "},\n";
+        writer << "                 {" << join(apb->get_window_movement_strides()) << "},\n";
+        writer << "                 {" << join(apb->get_padding_below()) << "},\n";
+        writer << "                 {" << join(apb->get_padding_above()) << "}\n";
+        writer << "                 );\n";
+    }
 }
 
 void runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop(
