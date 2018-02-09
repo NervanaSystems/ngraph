@@ -1,4 +1,4 @@
-#*******************************************************************************
+# ******************************************************************************
 # Copyright 2017-2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#*******************************************************************************
+# ******************************************************************************
 
 include_directories(
     SYSTEM
@@ -99,12 +99,16 @@ if(NGRAPH_ARGON_ENABLE)
     # enable additional Argon backend test 
     set(ARGON_ADDITIONAL_BACKEND_TESTS ${ARGON_TRANSFORMER_SOURCE_DIR}/test/test_argon_backend)
     message(STATUS "ARGON_ADDITIONAL_BACKEND_TESTS path: ${ARGON_ADDITIONAL_BACKEND_TESTS}")
-    set(SRC ${SRC} 
+    set(ADDITIONAL_ARGON_TEST
             ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_reduce_sum.cpp
             ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_dot.cpp
             ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_broadcast.cpp
             ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_conv.cpp
             ${ARGON_ADDITIONAL_BACKEND_TESTS}/test_binary_ew.cpp)
+    
+    # ensures ADDITIONAL_ARGON_TEST are a dependency on argon transformer
+    add_custom_command(OUTPUT ${ADDITIONAL_ARGON_TEST} DEPENDS ext_argon_transformer COMMAND "")
+    set(SRC ${SRC} ${ADDITIONAL_ARGON_TEST})
 endif()
 
 foreach(BACKEND_NAME ${BACKEND_NAMES})
