@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <fstream>
 #include <sstream>
@@ -26,6 +28,7 @@
 
 using namespace std;
 using namespace ngraph;
+using json = nlohmann::json;
 
 TEST(serialize, main)
 {
@@ -64,7 +67,7 @@ TEST(serialize, main)
     istringstream in(js);
     shared_ptr<Function> sfunc = deserialize(in);
 
-    // Now call g on some test vectors.
+    // Now call h on some test vectors.
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(sfunc);
     auto backend = manager->allocate_backend();
@@ -79,13 +82,13 @@ TEST(serialize, main)
     auto result = backend->make_primary_tensor_view(element::f32, shape);
 
     cf->call({x, y, z}, {result});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
     cf->call({y, x, z}, {result});
-    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
     cf->call({x, z, y}, {result});
-    EXPECT_EQ((vector<float>{50, 72, 98, 128}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{200, 288, 392, 512}), read_vector<float>(result));
 }
 
 TEST(serialize, existing_models)

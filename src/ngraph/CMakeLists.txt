@@ -1,15 +1,18 @@
-# Copyright 2017 Nervana Systems Inc.
+#*******************************************************************************
+# Copyright 2017-2018 Intel Corporation
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#*******************************************************************************
 
 set (SRC
     autodiff/adjoints.cpp
@@ -211,6 +214,7 @@ endif()
 
 if (NGRAPH_ARGON_ENABLE)
     link_directories(${ARGON_TRANSFORMER_LIB_DIR})
+    include_directories(${ARGON_TRANSFORMER_INCLUDE_DIR})
 endif()
 
 add_library(ngraph SHARED ${SRC})
@@ -275,7 +279,7 @@ endif()
 
 # Argon
 if (NGRAPH_ARGON_ENABLE)
-    target_link_libraries(ngraph PRIVATE ${ARGON_TRANSFORMER_LIB_DIR}/libargon.a)
+    target_link_libraries(ngraph PRIVATE ${ARGON_TRANSFORMER_LIB_DIR}/libargon.so)
     target_link_libraries(ngraph PRIVATE ${ARGON_API_LIBS})
     add_dependencies(ngraph ext_argon_transformer)
     add_dependencies(ext_argon_transformer ext_llvm)
@@ -314,6 +318,14 @@ if (NOT APPLE)
         install(DIRECTORY ${ARGON_TRANSFORMER_LIB_DIR}/
             DESTINATION ${NGRAPH_INSTALL_LIB}
             FILES_MATCHING PATTERN "*.so"
+        )
+        install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+            DESTINATION ${NGRAPH_INSTALL_INCLUDE}
+            FILES_MATCHING PATTERN "*.hpp"
+        )
+        install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+            DESTINATION ${NGRAPH_INSTALL_INCLUDE}
+            FILES_MATCHING PATTERN "*.h"
         )
     endif()
 endif()

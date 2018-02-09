@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include "ngraph/serializer.hpp"
 #include "ngraph/graph_util.hpp"
@@ -225,10 +227,7 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
     for (json func : js)
     {
         shared_ptr<Function> f = read_function(func, function_map);
-        if (rc == nullptr)
-        {
-            rc = f;
-        }
+        rc = f;
     }
 
     return rc;
@@ -772,6 +771,7 @@ static json write(const Node& n)
     // TODO Multiple outputs
     json inputs = json::array();
     json outputs = json::array();
+
     for (const descriptor::Input& input : n.get_inputs())
     {
         inputs.push_back(input.get_output().get_node()->get_name());
@@ -780,8 +780,19 @@ static json write(const Node& n)
     {
         outputs.push_back(n.get_output_tensor(i).get_name());
     }
+
     node["inputs"] = inputs;
     node["outputs"] = outputs;
+
+    if (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr)
+    {
+        json output_shapes = json::array();
+        for (size_t i = 0; i < n.get_output_size(); ++i)
+        {
+            output_shapes.push_back(n.get_output_shape(i));
+        }
+        node["output_shapes"] = output_shapes;
+    }
 
     string node_op = n.description();
     if (node_op == "Abs")

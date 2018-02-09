@@ -1,4 +1,6 @@
-# Copyright 2018 Nervana Systems Inc.
+#*******************************************************************************
+# Copyright 2017-2018 Intel Corporation
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -10,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#*******************************************************************************
 
 cmake_minimum_required (VERSION 3.1)
 
@@ -113,7 +116,7 @@ endif()
 #-----------------------------------------------------------------------------------------------
 # Setup CUDA and cuDNN if NGRAPH_GPU_ENABLE=TRUE
 find_package(CUDA 8 QUIET)
-if(CUDA_FOUND AND (NOT DEFINED NGRAPH_GPU_ENABLE OR NGRAPH_GPU_ENABLE))
+if(CUDA_FOUND AND NGRAPH_GPU_ENABLE)
     message(STATUS "GPU Backend Enabled")
     set(NGRAPH_GPU_ENABLE TRUE)
     find_package(CUDNN 5 QUIET REQUIRED)
