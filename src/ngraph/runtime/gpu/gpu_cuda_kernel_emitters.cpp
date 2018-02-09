@@ -14,8 +14,55 @@
 #include <algorithm>
 #include <map>
 
-#include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 
+#include <nvrtc.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cublas_v2.h>
+#include <cudnn_v7.h>
+
+#include "ngraph/node.hpp"
+#include "ngraph/ops/broadcast.hpp"
+#include "ngraph/ops/concatenate.hpp"
+#include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/convolution.hpp"
+#include "ngraph/ops/dot.hpp"
+#include "ngraph/ops/function_call.hpp"
+#include "ngraph/ops/get_output_element.hpp"
+#include "ngraph/ops/max_pool.hpp"
+#include "ngraph/ops/one_hot.hpp"
+#include "ngraph/ops/reduce.hpp"
+#include "ngraph/ops/replace_slice.hpp"
+#include "ngraph/ops/reshape.hpp"
+#include "ngraph/ops/reverse.hpp"
+#include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/sum.hpp"
+#include "ngraph/util.hpp"
+
+
+
+#define NVRTC_SAFE_CALL(x) \ 
+do { \ 
+    nvrtcResult result = x; \ 
+        if (result != NVRTC_SUCCESS) { \ 
+            std::cerr << "\nerror: " #x " failed with error " \ 
+                << nvrtcGetErrorString(result) << '\n'; \
+                exit(1); \ 
+        } \
+} while(0) 
+
+#define CUDA_SAFE_CALL(x) \ 
+do { \ 
+    CUresult result = x; \ 
+        if (result != CUDA_SUCCESS) { \ 
+            const char *msg; \ 
+                cuGetErrorName(result, &msg); \ 
+                std::cerr << "\nerror: " #x " failed with error " \ 
+                << msg << '\n'; \ 
+                exit(1); \ 
+        } \ 
+} while(0)
 
 namespace ngraph
 {
@@ -28,9 +75,75 @@ namespace ngraph
                 namespace kernel
                 {
 
-                    void emit_abs(float* in, float* out, size_t count)
+                    void emit_abs(void* in, void* out, size_t count)
                     {
+   const char *op_abs = R"(  
+  extern "C" __global__  
+  void cuda_op_abs(float* in, float* out, size_t n)  
+  {  
+    size_t tid = blockIdx.x * blockDim.x + threadIdx.x;  
+    if(tid < n) 
+    {
+      out[tid] = fabsf(in[tid]);  
+    }
+  })";
 
+        size_t numBlocks = 4; size_t numThreads = 4; 
+    // Create an instance of nvrtcProgram with the code string. 
+
+    nvrtcProgram prog; 
+    NVRTC_SAFE_CALL(nvrtcCreateProgram(&prog, // prog i
+                op_abs, // buffer 
+                "op_abs.cu", // name 
+                0, // numHeaders 
+                NULL, // headers 
+                NULL)); // includeNames
+
+
+    const char *opts[] = {"--gpu-architecture=compute_35",
+        "--relocatable-device-code=true"};
+    nvrtcResult compileResult = nvrtcCompileProgram(prog, // prog 
+            2, // numOptions 
+            opts); // options
+    // Obtain compilation log from the program. 
+
+    size_t logSize; 
+
+    NVRTC_SAFE_CALL(nvrtcGetProgramLogSize(prog, &logSize)); 
+    char *log = new char[logSize]; 
+    NVRTC_SAFE_CALL(nvrtcGetProgramLog(prog, log)); 
+    std::cout << log << '\n'; 
+    delete[] log; 
+
+    if (compileResult != NVRTC_SUCCESS) {
+        exit(1);
+    }
+
+    size_t ptxSize; 
+    NVRTC_SAFE_CALL(nvrtcGetPTXSize(prog, &ptxSize)); 
+    char *ptx = new char[ptxSize]; 
+    NVRTC_SAFE_CALL(nvrtcGetPTX(prog, ptx)); // Destroy the program. 
+    NVRTC_SAFE_CALL(nvrtcDestroyProgram(&prog)); // Load the generated PTX and get a handle to the parent kernel. 
+
+    CUdevice cuDevice; 
+    CUcontext context; 
+    CUmodule module; 
+    CUfunction cuda_op_abs_kernel; 
+    CUDA_SAFE_CALL( cuInit(0)); 
+    CUDA_SAFE_CALL(cuDeviceGet(&cuDevice, 0)); 
+    CUDA_SAFE_CALL(cuCtxCreate(&context, 0, cuDevice)); 
+    CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, 0, 0));
+    CUDA_SAFE_CALL(cuModuleGetFunction(&cuda_op_abs_kernel, module, "cuda_op_abs"));
+
+    void *argsList[] = {In, Out, &count};
+    CUDA_SAFE_CALL(
+    cuLaunchKernel(cuda_op_abs_kernel, 
+       count , 1, 1, // grid dim 
+       1, 1, 1, // block dim 
+       0, NULL, // shared mem and stream 
+      argsList, 0)); // arguments 
+    CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output. 
+    
                     }
                     void emit_broadcast(codegen::CodeWriter& writer,
                             const std::string& element_type,
