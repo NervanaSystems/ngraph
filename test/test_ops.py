@@ -28,7 +28,8 @@ from pyngraph.op import Constant, Abs, Exp, Log, Sum
 from pyngraph.op import Greater, Less, Equal, NotEqual, GreaterEq, LessEq, Not
 from pyngraph.op import OneHot, Broadcast, Reshape, Convert, Reduce
 from pyngraph.op import Concat, Select
-from pyngraph.op import Reverse, MaxPool, Convolution, ReplaceSlice, Slice
+from pyngraph.op import Reverse, MaxPool, ReplaceSlice, Slice
+from pyngraph.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
 
 
 def make_backend_call_frame(function):

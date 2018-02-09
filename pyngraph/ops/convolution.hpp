@@ -21,3 +21,5 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_Convolution(py::module m);
+void regclass_pyngraph_op_ConvolutionBackpropData(py::module m);
+void regclass_pyngraph_op_ConvolutionBackpropFilters(py::module m);
