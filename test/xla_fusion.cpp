@@ -121,10 +121,6 @@ public:
                 }
             }
 
-            NGRAPH_DEBUG << " ap_shape " << vector_to_string(ap_shape);
-            NGRAPH_DEBUG << " number_channel " << vector_to_string(number_channel);
-            NGRAPH_DEBUG << " image_dims " << vector_to_string(image_dims);
-
             if (ap_shape.size() != 2)
             {
                 return nn;
