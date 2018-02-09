@@ -143,7 +143,7 @@ endif()
 target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
-add_dependencies(unit-test ngraph libgtest eigen)
+add_dependencies(unit-test ngraph libgtest ext_eigen)
 
 add_custom_target(style-check
         COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh

@@ -21,7 +21,6 @@ if(NGRAPH_CPU_ENABLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
     set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
     set(MKLDNN_GIT_TAG "3e1f8f5")
-    set(MKLDNN_INSTALL_DIR ${EXTERNAL_INSTALL_DIR}/mkldnn)
 
     # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
     if(${CMAKE_VERSION} VERSION_LESS 3.2)
@@ -35,7 +34,13 @@ if(NGRAPH_CPU_ENABLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             CMAKE_ARGS
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR}
+                -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
+            TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
+            STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
+            DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
+            SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/src"
+            BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
+            INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
             )
     else()
         ExternalProject_Add(
@@ -48,8 +53,14 @@ if(NGRAPH_CPU_ENABLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             CMAKE_ARGS
                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR}
-            BUILD_BYPRODUCTS "${MKLDNN_INSTALL_DIR}/include/mkldnn.hpp"
+                -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
+            TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
+            STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
+            DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
+            SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/src"
+            BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
+            INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
+            BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/mkldnn/include/mkldnn.hpp"
             )
     endif()
 
@@ -64,7 +75,7 @@ if(NGRAPH_CPU_ENABLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         )
 
 
-    set(MKLDNN_INCLUDE_DIR "${MKLDNN_INSTALL_DIR}/include" PARENT_SCOPE)
-    set(MKLDNN_LIB_DIR "${MKLDNN_INSTALL_DIR}/lib" PARENT_SCOPE)
+    set(MKLDNN_INCLUDE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/include" PARENT_SCOPE)
+    set(MKLDNN_LIB_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib" PARENT_SCOPE)
 
 endif()
