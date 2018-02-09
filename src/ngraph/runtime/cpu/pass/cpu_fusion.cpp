@@ -17,6 +17,7 @@
 #include "cpu_fusion.hpp"
 #include <algorithm>
 #include <iostream>
+#include <numeric>
 #include <unordered_set>
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
