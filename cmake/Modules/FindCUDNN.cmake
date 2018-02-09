@@ -1,4 +1,4 @@
-#*******************************************************************************
+# ******************************************************************************
 # Copyright 2017-2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#*******************************************************************************
+# ******************************************************************************
 
 # The remaining code in this file was included from the Caffe 2 project,
 # which was made available under the terms of the Apache 2.0 License.
