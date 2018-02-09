@@ -112,7 +112,7 @@ File Names
 
     .. code-block:: cpp
 
-     TEST(file_name, test_name)
+       TEST(file_name, test_name)
 
   * Transformer-independent tests:
   
@@ -124,7 +124,7 @@ File Names
          TEST(${BACKEND_NAME}, test_name)
 
       for each test. Fies will be
-      generated for each transformer and the `${BACKEND_NAME}` will be replaced
+      generated for each transformer and the ``${BACKEND_NAME}`` will be replaced
       with the transformer name.
 
 
@@ -159,7 +159,7 @@ it is automatically enforced and reduces merge conflicts.
        #include <file>
   
   * Use this syntax for files that **are changing during development**; they will
-    be checked for changes during builds.  Normally this will be ngraph headers:
+    be checked for changes during builds. Normally this will be ngraph headers:
 
     .. code-block:: cpp
 
@@ -184,7 +184,7 @@ it is automatically enforced and reduces merge conflicts.
 
      Foo x{4, 5};
 
-is preferred over
+  is preferred over
 
   .. code-block:: cpp
 
@@ -213,11 +213,11 @@ is preferred over
 
        auto s = Shape{2,3};
 
-   Instead, use
+    Instead, use
 
-   .. code-block:: cpp
+    .. code-block:: cpp
 
-      Shape s{2, 3};
+       Shape s{2, 3};
 
   * Indicate the type in the variable name.
 
