@@ -83,11 +83,12 @@ if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
     link_directories(${LLVM_LIB_DIR})
     link_directories(${CUDA_LIBRARIES})
     link_directories(${CUDA_CUBLAS_LIBRARIES})
+    link_directories(${CUDNN_LIBRARIES})
     set(SRC
         ${SRC}
         cudnn.cpp)
     # Disabled for testing
-    # set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
+    set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
 endif()
 
 if(NGRAPH_ARGON_ENABLE)
