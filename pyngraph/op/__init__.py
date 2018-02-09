@@ -38,6 +38,8 @@ from _pyngraph.op import Concat
 from _pyngraph.op import Constant
 from _pyngraph.op import Convert
 from _pyngraph.op import Convolution
+from _pyngraph.op import ConvolutionBackpropData
+from _pyngraph.op import ConvolutionBackpropFilters
 from _pyngraph.op import Cos
 from _pyngraph.op import Cosh
 from _pyngraph.op import Divide

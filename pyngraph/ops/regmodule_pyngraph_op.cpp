@@ -40,6 +40,8 @@ void regmodule_pyngraph_op(py::module m){
     regclass_pyngraph_op_Constant(m_op);
     regclass_pyngraph_op_Convert(m_op);
     regclass_pyngraph_op_Convolution(m_op);
+    regclass_pyngraph_op_ConvolutionBackpropData(m_op);
+    regclass_pyngraph_op_ConvolutionBackpropFilters(m_op);
     regclass_pyngraph_op_Divide(m_op);
     regclass_pyngraph_op_Dot(m_op);
     regclass_pyngraph_op_Equal(m_op);
