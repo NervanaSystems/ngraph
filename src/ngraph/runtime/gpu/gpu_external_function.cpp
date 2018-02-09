@@ -249,6 +249,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     #include "ngraph/runtime/aligned_buffer.hpp"
     #include "ngraph/runtime/gpu/gpu_util.hpp"
     #include "ngraph/util.hpp"
+    #include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 )";
 
     string pch_header_source = writer.get_code();
