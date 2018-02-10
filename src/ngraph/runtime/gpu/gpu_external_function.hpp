@@ -80,7 +80,6 @@ namespace ngraph
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 bool m_emit_timing;
-                bool m_use_tbb;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
             };
         }
