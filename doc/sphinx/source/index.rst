@@ -63,6 +63,7 @@ Further overview details can be found on our :doc:`about` page.
    :maxdepth: 1
    :caption: Ops
 
+   ops/abs.rst
    ops/convolution.rst
 
 .. toctree::
