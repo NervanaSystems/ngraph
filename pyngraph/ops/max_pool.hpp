@@ -21,3 +21,4 @@
 namespace py = pybind11;
 
 void regclass_pyngraph_op_MaxPool(py::module m);
+void regclass_pyngraph_op_MaxPoolBackprop(py::module m);
