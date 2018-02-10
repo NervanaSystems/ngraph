@@ -40,18 +40,26 @@ MaxFn = Function([Maximum(MaxParam1, MaxParam2)],
                  'mnist')
 
 
-def make_scalar_constant(elem_type, scalar, shape=[], axis_set=set()):
+def make_scalar_constant(elem_type, scalar, shape=None, axis_set=None):
     # type: (int, float, List[int], Set[int]) -> float
     """Create a Constant node for scalar value."""
+    if shape is None:
+        shape = []
+    if axis_set is None:
+        axis_set = set()
     scalar_shape = []  # type: List[int]
     constant_op = Constant(elem_type, scalar_shape, [scalar])
     constant_broadcast = Broadcast(constant_op, shape, axis_set)
     return constant_broadcast
 
 
-def make_float32_constant(scalar, shape=[], axis_set=set()):
+def make_float32_constant(scalar, shape=None, axis_set=None):
     # type: (float, List[int], Set[int]) -> float
     """Create a Constant node for float value."""
+    if shape is None:
+        shape = []
+    if axis_set is None:
+        axis_set = set()
     return make_scalar_constant(Type.f32, scalar, shape, axis_set)
 
 

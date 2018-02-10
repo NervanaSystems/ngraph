@@ -6,3 +6,4 @@ flake8-commas
 flake8-comprehensions
 flake8-docstrings
 flake8-quotes
+flake8-bugbear
