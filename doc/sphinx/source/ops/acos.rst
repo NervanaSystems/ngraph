@@ -1,13 +1,13 @@
-.. abs.rst:
+.. acos.rst:
 
-###
-Abs
-###
+####
+Acos
+####
 
-Elementwise absolute value operation.
+Elementwise acos operation.
 
 Produces a single output tensor of the same element type and shape as the input,
-where the value at each coordinate of the output is the absoloute value of the
+where the value at each coordinate of the output is the acos of the
 value at each input coordinate.
 
 +-----------------+-------------------------+--------------------------------+
@@ -28,20 +28,20 @@ Mathematical Definition
 
 .. math::
 
-   output_{i_0, \ldots, i_{n-1}} = \mathrm{abs}(input_{i_0, \ldots, i_{n-1}})
+   output_{i_0, \ldots, i_{n-1}} = \mathrm{cos}^{-1}(input_{i_0, \ldots, i_{n-1}})
 
 Backprop
 ========
 
 .. math::
 
-   \overline{input} \leftarrow \mathrm{sgn}(input)\Delta
+   \overline{input} \leftarrow -\frac{\Delta}{\sin{output}}
 
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Abs
+.. doxygenclass:: ngraph::op::Acos
    :members:
 
 Python Interface

@@ -63,7 +63,14 @@ Further overview details can be found on our :doc:`about` page.
    :maxdepth: 1
    :caption: Ops
 
+
    ops/abs.rst
+   ops/acos.rst
+   ops/add.rst
+   ops/asin.rst
+   ops/atan.rst
+   ops/avg_pool.rst
+   ops/avg_pool_backprop.rst
    ops/convolution.rst
 
 .. toctree::
