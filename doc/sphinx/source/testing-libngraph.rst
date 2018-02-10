@@ -34,7 +34,7 @@ For this early |release| release, we're providing integration guides for:
 * `TensorFlow`_, and
 * neon™ `frontend framework`_.
 
-Integration guides for other frameworks is tentatively forthcoming.
+Integration guides for other frameworks are tentatively forthcoming.
 
 .. _GTest framework: https://github.com/google/googletest.git
 .. _MXNet: http://mxnet.incubator.apache.org/

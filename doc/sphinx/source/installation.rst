@@ -21,6 +21,18 @@ prerequisites:
    Ubuntu 16.04 (LTS) 64-bit, CLang 4.0, CMake 3.5.1 + GNU Make, officially unsupported, ``build-essential cmake clang-4.0 git libtinfo-dev``
    Clear Linux\* OS for Intel Architecture, CLang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
+If using ``gcc-5.4.0`` or ``clang-3.9``, the recommended option is to add 
+``-DNGRAPH_USE_PREBUILT_LLVM=TRUE`` to the :command:`cmake` command. This 
+gets a pre-built tarball of LLVM+Clang from `llvm.org`_, and substantially 
+reduces build times.
+
+If using ``gcc-4.8``, it may be necessary to add symlinksfrom ``gcc`` to
+``gcc-4.8``, and from ``g++`` to ``g++-4.8``, in your :envvar:`PATH`, even 
+if you explicitly specify the ``CMAKE_C_COMPILER`` and ``CMAKE_CXX_COMPILER`` 
+flags when building. (You should NOT supply the `-DNGRAPH_USE_PREBUILT_LLVM` 
+flag in this case, because the prebuilt tarball supplied on llvm.org is not 
+compatible with a gcc-4.8 based build.)
+
 Support for macOS is limited; see the macOS development prerequisites 
 section at the end of this page for details.
 
@@ -107,4 +119,5 @@ according to those conventions. These scripts require the command
 .. _doxygen: https://www.stack.nl/~dimitri/doxygen/
 .. _Sphinx:  http://www.sphinx-doc.org/en/stable/
 .. _NervanaSystems: https://github.com/NervanaSystems/private-ngraph-cpp/blob/master/README.md
+.. _llvm.org: https://www.llvm.org 
 
