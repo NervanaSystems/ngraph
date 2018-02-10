@@ -53,6 +53,7 @@ from _pyngraph.op import Less
 from _pyngraph.op import LessEq
 from _pyngraph.op import Log
 from _pyngraph.op import MaxPool
+from _pyngraph.op import MaxPoolBackprop
 from _pyngraph.op import Maximum
 from _pyngraph.op import Minimum
 from _pyngraph.op import Multiply

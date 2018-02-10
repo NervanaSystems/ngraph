@@ -27,8 +27,26 @@ void regclass_pyngraph_op_MaxPool(py::module m) {
 
     py::class_<ngraph::op::MaxPool, std::shared_ptr<ngraph::op::MaxPool>, ngraph::op::RequiresTensorViewArgs> max_pool(m, "MaxPool");
     max_pool.def(py::init<const std::shared_ptr<ngraph::Node>&,
-		          const ngraph::Shape&,
-			  const ngraph::Strides& >());
+                  const ngraph::Shape&,
+                  const ngraph::Strides&,
+                  const ngraph::Shape&,
+                  const ngraph::Shape& >());
     max_pool.def(py::init<const std::shared_ptr<ngraph::Node>&,
-		          const ngraph::Shape& >());
+                  const ngraph::Shape&,
+                  const ngraph::Strides& >());
+    max_pool.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                  const ngraph::Shape& >());
 }
+
+void regclass_pyngraph_op_MaxPoolBackprop(py::module m) {
+
+    py::class_<ngraph::op::MaxPoolBackprop, std::shared_ptr<ngraph::op::MaxPoolBackprop>, ngraph::op::RequiresTensorViewArgs> max_pool_backprop(m, "MaxPoolBackprop");
+    max_pool_backprop.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                           const std::shared_ptr<ngraph::Node>&,
+                           const ngraph::Shape&,
+                           const ngraph::Strides&,
+                           const ngraph::Shape&,
+                           const ngraph::Shape&,
+                           const std::shared_ptr<ngraph::op::MaxPool>& >());
+}
+
