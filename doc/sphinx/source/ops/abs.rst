@@ -6,9 +6,6 @@ Abs
 
 Elementwise absolute value operation.
 
-Basic Operation
-===============
-
 Produces a single output tensor of the same element type and shape as the input,
 where the value at each coordinate of the output is the absoloute value of the
 value at each input coordinate.
