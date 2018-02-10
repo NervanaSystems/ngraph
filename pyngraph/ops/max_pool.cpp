@@ -32,10 +32,10 @@ void regclass_pyngraph_op_MaxPool(py::module m) {
                   const ngraph::Shape&,
                   const ngraph::Shape& >());
     max_pool.def(py::init<const std::shared_ptr<ngraph::Node>&,
-		          const ngraph::Shape&,
-			      const ngraph::Strides& >());
+                  const ngraph::Shape&,
+                  const ngraph::Strides& >());
     max_pool.def(py::init<const std::shared_ptr<ngraph::Node>&,
-		          const ngraph::Shape& >());
+                  const ngraph::Shape& >());
 }
 
 void regclass_pyngraph_op_MaxPoolBackprop(py::module m) {
@@ -49,3 +49,4 @@ void regclass_pyngraph_op_MaxPoolBackprop(py::module m) {
                            const ngraph::Shape&,
                            const std::shared_ptr<ngraph::op::MaxPool>& >());
 }
+
