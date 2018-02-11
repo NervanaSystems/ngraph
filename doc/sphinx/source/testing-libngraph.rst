@@ -28,10 +28,11 @@ After building and installing the nGraph library to your system, the next
 logical step is to compile a framework that you can use to run a 
 training/inference model with one of the backends that are now enabled.
 
-For this early |release| release, we're providing integration guides for:
+For this early |release| release, we're providing :doc:`framework-integration-guides`, 
+for:
 
-* `MXNet`_,  
-* `TensorFlow`_, and
+* `MXNet` frameworks,  
+* `TensorFlow` frameworks, and
 * neon™ `frontend framework`_.
 
 Integration guides for other frameworks are tentatively forthcoming.
