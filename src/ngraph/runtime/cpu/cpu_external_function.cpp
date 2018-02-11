@@ -241,6 +241,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
             if (dynamic_cast<op::Convolution*>(node.get()) ||
+                dynamic_cast<op::ConvolutionBackpropData*>(node.get()) ||
+                dynamic_cast<op::ConvolutionBackpropFilters*>(node.get()) ||
                 dynamic_cast<op::AvgPool*>(node.get()) || dynamic_cast<op::MaxPool*>(node.get()) ||
                 dynamic_cast<op::AvgPoolBackprop*>(node.get()))
             {
