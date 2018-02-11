@@ -1,15 +1,18 @@
-# Copyright 2017 Nervana Systems Inc.
+# ******************************************************************************
+# Copyright 2017-2018 Intel Corporation
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# ******************************************************************************
 
 set (SRC
     autodiff/adjoints.cpp
@@ -187,7 +190,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     # GPU backend current requires CPU because they share compiler.cpp,
     # and compiler.cpp requires MKLDNN
     if(NGRAPH_GPU_ENABLE)
-        include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
+        include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
 
         # Add sources for the GPU backend
         # and all its dependencies
@@ -270,7 +273,7 @@ endif()
 
 # Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
 # Argon

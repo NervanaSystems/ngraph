@@ -1,4 +1,6 @@
-# Copyright 2017 Nervana Systems Inc.
+# ******************************************************************************
+# Copyright 2017-2018 Intel Corporation
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -10,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# ******************************************************************************
 
 # To build ngraph with Argon transformer using pre-build Argon API
 # ```
@@ -111,6 +114,7 @@ if (NGRAPH_ARGON_ENABLE)
     endif()
 
     ExternalProject_Get_Property(ext_argon_transformer source_dir)
+    set(ARGON_TRANSFORMER_SOURCE_DIR ${source_dir} PARENT_SCOPE)
     set(ARGON_TRANSFORMER_INCLUDE_DIR ${ARGON_TRANSFORMER_CMAKE_PREFIX}/include PARENT_SCOPE)
     set(ARGON_TRANSFORMER_LIB_DIR ${ARGON_TRANSFORMER_CMAKE_PREFIX}/lib PARENT_SCOPE)
     set(ARGON_API_INCLUDE_DIR ${NGRAPH_PREBUILD_ARGON_API_PATH}/include PARENT_SCOPE)
