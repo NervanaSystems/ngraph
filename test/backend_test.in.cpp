@@ -5550,7 +5550,7 @@ void make_unary_empty_test(const string& backend_name)
 }
 
 template <typename OP>
-void make_binary_empty_test(const string& backend_name, bool is_comparison=false)
+void make_binary_empty_test(const string& backend_name, bool is_comparison = false)
 {
     auto shape = Shape{0};
     op::Parameters A;
