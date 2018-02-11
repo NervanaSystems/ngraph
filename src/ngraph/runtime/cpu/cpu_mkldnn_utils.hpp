@@ -61,7 +61,7 @@ namespace ngraph
                         // begin catch
                         BasicBlockEmitter::block_begin(writer);
                         writer << "std::cerr << \"MKLDNN ERROR (\" << e.status << \"): \" "
-                                            "<< e.message << std::endl;\n"
+                                  "<< e.message << std::endl;\n"
                                   "throw; \n";
                         // end catch
                         BasicBlockEmitter::block_end(writer);
@@ -70,7 +70,7 @@ namespace ngraph
                     }
                 };
 
-                template<typename BlockPolicy = BasicBlockEmitter>
+                template <typename BlockPolicy = BasicBlockEmitter>
                 class ScopedEmitterUtil
                 {
                 public:
@@ -86,17 +86,12 @@ namespace ngraph
                         BlockPolicy::block_begin(m_writer);
                         m_writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
                     }
-                    ~ScopedEmitterUtil()
-                    {
-                        BlockPolicy::block_end(m_writer);
-                    }
-
+                    ~ScopedEmitterUtil() { BlockPolicy::block_end(m_writer); }
                     void emit_memory_desc(const std::string& var,
                                           const std::string& shape,
                                           const std::string& type,
                                           const std::string& layout)
                     {
-
                         m_writer << "memory::desc " << var << " = memory::desc({" << shape << "}, "
                                  << type << ", memory::format::" << layout << ");\n";
                     };
@@ -105,15 +100,12 @@ namespace ngraph
                                      const std::string& desc,
                                      const std::string& data)
                     {
-
                         m_writer << "memory " << var << " = memory({" << desc << ", cpu_engine}, "
-                                 <<  data << ");\n";
+                                 << data << ");\n";
                     };
 
-                    void emit_memory_dims(const std::string& var,
-                                          const std::string& dims)
+                    void emit_memory_dims(const std::string& var, const std::string& dims)
                     {
-
                         m_writer << "memory::dims " << var << "{" << dims << "};\n";
                     };
 
