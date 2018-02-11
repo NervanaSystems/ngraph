@@ -97,8 +97,8 @@ namespace ngraph
                                           const std::string& layout)
                     {
 
-                        m_writer << "memory::desc " + var + " = memory::desc({" + shape + "}, "
-                                    + type + ", memory::format::" + layout + ");\n";
+                        m_writer << "memory::desc " << var << " = memory::desc({" << shape << "}, "
+                                 << type << ", memory::format::" << layout << ");\n";
                     };
 
                     void emit_memory(const std::string& var,
@@ -106,8 +106,8 @@ namespace ngraph
                                      const std::string& data)
                     {
 
-                        m_writer << "memory " + var + " = memory({" + desc + ", cpu_engine}, "
-                                    + data + ");\n";
+                        m_writer << "memory " << var << " = memory({" << desc << ", cpu_engine}, "
+                                 <<  data << ");\n";
                     };
 
                     void emit_memory_dims(const std::string& var,
