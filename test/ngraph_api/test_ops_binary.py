@@ -25,6 +25,7 @@ import ngraph_api as ng
     (ng.divide, np.divide),
     (ng.multiply, np.multiply),
     (ng.subtract, np.subtract),
+    (ng.equal, np.equal),
     (ng.minimum, np.minimum),
     (ng.maximum, np.maximum),
 ])
@@ -52,6 +53,7 @@ def test_binary_op(ng_api_helper, numpy_function):
     (ng.divide, np.divide),
     (ng.multiply, np.multiply),
     (ng.subtract, np.subtract),
+    (ng.equal, np.equal),
     (ng.minimum, np.minimum),
     (ng.maximum, np.maximum),
 ])
