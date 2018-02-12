@@ -1014,7 +1014,7 @@ void runtime::cpu::CPU_Emitter::EmitFunctionCall(
         writer << "\n};\n";
 
         writer << "\n";
-        writer << function->get_name() << "(args, out);\n";
+        writer << function->get_name() << "(args, out, ctx);\n";
     }
     writer.indent--;
     writer << "}\n";
@@ -1093,13 +1093,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << "{   // " << n->get_name() << " 3\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
-            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
             writer.indent++;
             writer << "\n";
             writer << type << " result;\n";
             writer << "void* args[] = {&x, &y};\n";
             writer << "void* out[] = {&result};\n";
-            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << reduction_function->get_name() << "(args, out, ctx);\n";
             writer << "return result;\n";
             writer.indent--;
             writer << "};\n";
@@ -1129,13 +1129,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << "{   // " << n->get_name() << " 5\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
-            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
             writer.indent++;
             writer << "\n";
             writer << type << " result;\n";
             writer << "void* args[] = {&x, &y};\n";
             writer << "void* out[] = {&result};\n";
-            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << reduction_function->get_name() << "(args, out, ctx);\n";
             writer << "return result;\n";
             writer.indent--;
             writer << "};\n";
@@ -1161,13 +1161,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << "{   // " << n->get_name() << " 7\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
-            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
             writer.indent++;
             writer << "\n";
             writer << type << " result;\n";
             writer << "void* args[] = {&x, &y};\n";
             writer << "void* out[] = {&result};\n";
-            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << reduction_function->get_name() << "(args, out, ctx);\n";
             writer << "return result;\n";
             writer.indent--;
             writer << "};\n";
@@ -1183,13 +1183,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
         writer.indent++;
 
         string type = f_result_element_type.c_type_string();
-        writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+        writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
         writer.indent++;
         writer << "\n";
         writer << type << " result;\n";
         writer << "void* args[] = {&x, &y};\n";
         writer << "void* out[] = {&result};\n";
-        writer << reduction_function->get_name() << "(args, out);\n";
+        writer << reduction_function->get_name() << "(args, out, ctx);\n";
         writer << "return result;\n";
         writer.indent--;
         writer << "};\n";
@@ -1211,13 +1211,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
 
     string type = f_result_element_type.c_type_string();
 
-    writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
     writer.indent++;
     writer << "\n";
     writer << type << " result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << reduction_function->get_name() << "(args, out);\n";
+    writer << reduction_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
@@ -2194,13 +2194,13 @@ void runtime::cpu::CPU_Emitter::EmitReduceWindow(
     writer.indent++;
 
     string type = f_result_element_type.c_type_string();
-    writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
     writer.indent++;
     writer << "\n";
     writer << type << " result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << reduction_function->get_name() << "(args, out);\n";
+    writer << reduction_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
@@ -2238,24 +2238,24 @@ void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
 
     string type = n->get_output_element_type(0).c_type_string();
 
-    writer << "auto f_select = [](" << type << " x, " << type << " y) -> char\n{";
+    writer << "auto f_select = [&](" << type << " x, " << type << " y) -> char\n{";
     writer.indent++;
     writer << "\n";
     writer << "char result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << selection_function->get_name() << "(args, out);\n";
+    writer << selection_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
 
-    writer << "auto f_scatter = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer << "auto f_scatter = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
     writer.indent++;
     writer << "\n";
     writer << type << " result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << scatter_function->get_name() << "(args, out);\n";
+    writer << scatter_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
@@ -2372,18 +2372,60 @@ void runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop(
     auto apb = static_cast<const op::AvgPoolBackprop*>(n);
 
     auto delta_shape = args[0].get_shape();
+    auto delta_rank = delta_shape.size();
     auto out_shape = out[0].get_shape();
 
-    writer << "kernel::avg_pool_backprop<" << out[0].get_type() << ">(" << args[0].get_name()
-           << ",\n";
-    writer << "                 " << out[0].get_name() << ",\n";
-    writer << "                 {" << join(delta_shape) << "},\n";
-    writer << "                 {" << join(out_shape) << "},\n";
-    writer << "                 {" << join(apb->get_window_shape()) << "},\n";
-    writer << "                 {" << join(apb->get_window_movement_strides()) << "},\n";
-    writer << "                 {" << join(apb->get_padding_below()) << "},\n";
-    writer << "                 {" << join(apb->get_padding_above()) << "}\n";
-    writer << "                 );\n";
+    if (delta_rank == 4 && apb->get_window_shape().size() == 2 &&
+        args[0].get_element_type() == element::f32)
+    {
+        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+
+        writer << "{\n";
+        writer.indent++;
+
+        writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+        writer << "memory::desc input_data_desc = memory::desc({" << join(delta_shape) << "}, "
+               << et << ", memory::format::nchw);\n";
+        writer << "memory::desc result_desc = memory::desc({" << join(out_shape) << "}, " << et
+               << ", memory::format::nchw);\n";
+        writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+               << ");\n";
+        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
+        // Dummy forward primitive descriptor to keep MKLDNN happy
+        writer << "pooling_forward::primitive_desc fwd_pd = pooling_forward::primitive_desc("
+               << "{prop_kind::forward, algorithm::pooling_avg_exclude_padding, "
+               << "result_desc, input_data_desc, {" << join(apb->get_window_movement_strides())
+               << "}, {" << join(apb->get_window_shape()) << "}, "
+               << "{" << join(apb->get_padding_below()) << "}, "
+               << "{" << join(apb->get_padding_above()) << "}, "
+               << "padding_kind::zero}, cpu_engine);\n";
+        writer << "auto avg_pooling = pooling_backward(pooling_backward::primitive_desc("
+               << "pooling_backward::desc(algorithm::pooling_avg_exclude_padding, "
+               << "result_desc, input_data_desc, {" << join(apb->get_window_movement_strides())
+               << "}, {" << join(apb->get_window_shape()) << "}, "
+               << "{" << join(apb->get_padding_below()) << "}, "
+               << "{" << join(apb->get_padding_above()) << "}, "
+               << "padding_kind::zero), cpu_engine, fwd_pd), "
+               << "input_data, result);\n";
+        writer << "auto s = stream(stream::kind::eager);\n"
+               << "s.submit({avg_pooling}).wait();\n";
+        writer.indent--;
+        writer << "}\n";
+    }
+    else
+    {
+        writer << "kernel::avg_pool_backprop<" << out[0].get_type() << ">(" << args[0].get_name()
+               << ",\n";
+        writer << "                 " << out[0].get_name() << ",\n";
+        writer << "                 {" << join(delta_shape) << "},\n";
+        writer << "                 {" << join(out_shape) << "},\n";
+        writer << "                 {" << join(apb->get_window_shape()) << "},\n";
+        writer << "                 {" << join(apb->get_window_movement_strides()) << "},\n";
+        writer << "                 {" << join(apb->get_padding_below()) << "},\n";
+        writer << "                 {" << join(apb->get_padding_above()) << "}\n";
+        writer << "                 );\n";
+    }
 }
 
 void runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop(
