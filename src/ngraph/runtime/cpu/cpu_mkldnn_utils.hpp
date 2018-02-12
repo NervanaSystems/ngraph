@@ -60,9 +60,8 @@ namespace ngraph
                         writer << "catch (const mkldnn::error& e)\n";
                         // begin catch
                         BasicBlockEmitter::block_begin(writer);
-                        writer << "std::cerr << \"MKLDNN ERROR (\" << e.status << \"): \" "
-                                  "<< e.message << std::endl;\n"
-                                  "throw; \n";
+                        writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
+                                  "e.status) + \"): \" + e.message);\n";
                         // end catch
                         BasicBlockEmitter::block_end(writer);
                         // end block
