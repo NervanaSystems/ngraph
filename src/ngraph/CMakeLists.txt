@@ -195,8 +195,6 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     endif()
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
-    set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-      "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE};")
 
     # GPU backend current requires CPU because they share compiler.cpp,
     # and compiler.cpp requires MKLDNN

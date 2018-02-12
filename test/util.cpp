@@ -357,5 +357,5 @@ TEST(util, parse_string)
     EXPECT_FLOAT_EQ(numeric_limits<double>::infinity(), parse_string<double>("INFINITY"));
     EXPECT_FLOAT_EQ(numeric_limits<double>::infinity(), parse_string<double>("infinity"));
     EXPECT_FLOAT_EQ(-numeric_limits<double>::infinity(), parse_string<double>("-INFINITY"));
-    EXPECT_TRUE(isnan(parse_string<double>("NaN")));
+    EXPECT_TRUE(std::isnan(parse_string<double>("NaN")));
 }
