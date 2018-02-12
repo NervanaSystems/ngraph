@@ -12,11 +12,22 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#include "relu.hpp"
+#include "ngraph/ops/relu.hpp"
 #include "ngraph/ops/multiply.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+op::Relu::Relu(shared_ptr<Node> arg0)
+    : UnaryElementwiseArithmetic("Relu", {arg0})
+{
+    set_value_type_checked(arg0->get_element_type(), arg0->get_shape());
+}
+
+void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
+{
+    adjoints.add_delta(get_input_op(0), delta);
+}
 
 shared_ptr<Node> op::Relu::copy_with_new_args(const vector<shared_ptr<Node>>& new_args) const
 {
@@ -25,10 +36,4 @@ shared_ptr<Node> op::Relu::copy_with_new_args(const vector<shared_ptr<Node>>& ne
         throw ngraph_error("Incorrect number of new arguments");
     }
     return make_shared<Relu>(new_args.at(0));
-}
-
-op::Relu::Relu(shared_ptr<Node> arg0)
-    : UnaryElementwiseArithmetic("Relu", {arg0})
-{
-    set_value_type_checked(arg0->get_element_type(), arg0->get_shape());
 }
