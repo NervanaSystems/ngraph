@@ -88,7 +88,6 @@ namespace ngraph
     }
   })";
 
-        size_t numBlocks = 4; size_t numThreads = 4; 
     // Create an instance of nvrtcProgram with the code string. 
 
     nvrtcProgram prog; 
@@ -125,32 +124,47 @@ namespace ngraph
     NVRTC_SAFE_CALL(nvrtcGetPTX(prog, ptx)); // Destroy the program. 
     NVRTC_SAFE_CALL(nvrtcDestroyProgram(&prog)); // Load the generated PTX and get a handle to the parent kernel. 
 
-    CUdevice cuDevice; 
-    CUcontext context; 
-    CUmodule module; 
-    CUfunction cuda_op_abs_kernel; 
-    CUDA_SAFE_CALL( cuInit(0)); 
-    CUDA_SAFE_CALL(cuDeviceGet(&cuDevice, 0)); 
-    CUDA_SAFE_CALL(cuCtxCreate(&context, 0, cuDevice)); 
-    // CUDA_SAFE_CALL(cuLinkCreate(0, 0 , 0, &linkState)); 
-    //CUDA_SAFE_CALL(cuLinkeAddFile(linkState, CU_JIT_INPUT_LIBRARY, ' ', 0, 0, 0));
-    //CUDA_SAFE_CALL(cuLinkAddData(linkState, CU_JIT_INPUT_PTX, (void *)ptx, ptxSize, "dynamic_parallelism.ptx", 0, 0, 0));
-
-    //size_t cubinSize;
-    //void *cubin;
-    //CUDA_SAFE_CALL(cuLinkComplete(linkState, &cubin, &cubinSize));
+      CUdevice cuDevice;
+      CUcontext context;
+      CUmodule module;
+      CUfunction cuda_op_abs_kernel;
+      CUDA_SAFE_CALL( cuInit(0));
+      CUDA_SAFE_CALL(cuDeviceGet(&cuDevice, 0));
+      CUDA_SAFE_CALL(cuCtxCreate(&context, 0, cuDevice)); 
     CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, 0, 0));
     CUDA_SAFE_CALL(cuModuleGetFunction(&cuda_op_abs_kernel, module, "cuda_op_abs"));
+ 
+    size_t numBlocks = 4;
+    size_t numThreads = 4; 
+    size_t nt = numBlocks * numThreads; 
+    size_t bufferSize = nt * sizeof(float); 
+    float *hOut = new float[nt]; 
+    float *hIn = new float[nt]; 
+    for(int i = 0; i< nt; i++) hIn[i] = -i;
     
-                        void *argsList[] = {In, Out, &count};
+//    void *dOut, *dIn;
+//    cudaMalloc((void**) &dIn, 64);
+//    cudaMalloc((void**) &dOut, 64);   
+    CUdeviceptr dPtrIn, dPtrOut;
+    dPtrIn = (CUdeviceptr)in;
+    dPtrOut = (CUdeviceptr)out;
+    
+                        void *argsList[] = {&dPtrIn, &dPtrOut, &nt};
+  //  cudaLaunchKernel(cuda_op_obs_kernel,
+  //                   {4, 1, 1},
+  //                   {1, 1, 1},
+  //                    argslist, 0, NULL);
+ 
+                 //       void *argsList[] = {dIn, dOut, &nt};
                         CUDA_SAFE_CALL(
                         cuLaunchKernel(cuda_op_abs_kernel, 
-                        count , 1, 1, // grid dim 
-                        1, 1, 1, // block dim 
+                        4 , 1, 1, // grid dim 
+                        4, 1, 1, // block dim 
                         0, NULL, // shared mem and stream 
                         argsList, 0)); // arguments 
                         CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output. 
                     }
+
                     void emit_broadcast(codegen::CodeWriter& writer,
                             const std::string& element_type,
                             const std::string& arg0, // replacement context

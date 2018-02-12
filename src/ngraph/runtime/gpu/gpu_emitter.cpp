@@ -44,6 +44,7 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -89,22 +90,26 @@ void runtime::gpu::GPU_Emitter::EmitAbs(codegen::CodeWriter& writer,
     writer.indent++;
     writer << "int count = " << out[0].get_size() << ";\n";
     writer << "if(count == 0) return;\n";
-    writer << "ngraph::runtime::gpu::cuda::kernel::emit_abs(" << args[0].get_name() <<  ", " << out[0].get_name() << ", count);\n";
+    writer << "ngraph::runtime::gpu::cuda::kernel::emit_abs((void*) " << args[0].get_name() <<  ", (void*) " << out[0].get_name() << ", count);\n";
     writer.indent--;
     writer << "}\n";
 
-    // Generate input for execution, and create output buffers. 
-    //size_t nt = numBlocks * numThreads; 
-    //size_t bufferSize = nt * sizeof(float); 
-    //float *hOut = new float[nt]; 
-    //float *hIn = new float[nt]; 
-    //for(int i = 0; i< nt; i++) hIn[i] = -i;
-    //
-    //CUdeviceptr dOut, dIn;
-    //cuMemAlloc(&dOut, bufferSize); // Execute parent kernel. 
-    //cuMemAlloc(&dIn, bufferSize); // Execute parent kernel. 
-    //cuMemcpyHtoD(dIn, hIn, bufferSize); 
-    //
+//   ngraph::runtime::gpu::cuda::kernel::emit_abs((void*) , (void*) ((float*)(outputs[0])), count);
+    //Generate input for execution, and create output buffers. 
+//    size_t nt = 4; //numBlocks * numThreads; 
+//    size_t bufferSize = nt * sizeof(float); 
+//    float *hOut = new float[nt]; 
+//    float *hIn = new float[nt]; 
+//    for(int i = 0; i< nt; i++) hIn[i] = -i;
+//    
+//    CUdeviceptr dOut, dIn;
+//    cuMemAlloc(&dOut, bufferSize); // Execute parent kernel. 
+//    cuMemAlloc(&dIn, bufferSize); // Execute parent kernel. 
+//    cuMemcpyHtoD(dIn, hIn, bufferSize); 
+//    
+//    ngraph::runtime::gpu::cuda::kernel::emit_abs((void*) dIn , (void*) dOut, nt);
+
+
     //void *argst[] = {&dIn, &dOut, &nt};
     // CUDA_SAFE_CALL(
     // cuLaunchKernel(kernel, 

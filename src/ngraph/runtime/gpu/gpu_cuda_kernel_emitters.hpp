@@ -27,7 +27,7 @@ namespace ngraph
             {
                 namespace kernel
                 {
-                    void emit_abs(void** in, void** out, size_t count);
+                    void emit_abs(void* in, void* out, size_t count);
 
                     void emit_broadcast(codegen::CodeWriter& writer,
                                         const std::string& element_type,

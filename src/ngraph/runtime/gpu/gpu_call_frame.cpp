@@ -1,4 +1,4 @@
-// ----------------------------------------------------------------------------
+//// ----------------------------------------------------------------------------
 // Copyright 2017 Nervana Systems Inc.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,11 +23,41 @@
 using namespace std;
 using namespace ngraph;
 
+#define NVRTC_SAFE_CALL(x) \
+do { \
+    nvrtcResult result = x; \
+        if (result != NVRTC_SUCCESS) { \
+            std::cerr << "\nerror: " #x " failed with error " \
+                << nvrtcGetErrorString(result) << '\n'; \
+                exit(1); \
+        } \
+} while(0)
+
+#define CUDA_SAFE_CALL(x) \
+do { \
+    CUresult result = x; \
+        if (result != CUDA_SUCCESS) { \
+            const char *msg; \
+                cuGetErrorName(result, &msg); \
+                std::cerr << "\nerror: " #x " failed with error " \
+                << msg << '\n'; \
+                exit(1); \
+        } \
+} while(0)
+
 runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction> external_function,
                                            EntryPoint compiled_function)
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
 {
+
+    CUdevice cuDevice;
+    CUcontext context;
+    CUmodule module;
+    CUfunction cuda_op_abs_kernel;
+    CUDA_SAFE_CALL( cuInit(0));
+    CUDA_SAFE_CALL(cuDeviceGet(&cuDevice, 0));
+    CUDA_SAFE_CALL(cuCtxCreate(&context, 0, cuDevice));
     cublasStatus_t cublasStatus  = cublasCreate(&m_cublas_handle);
     if (cublasStatus != CUBLAS_STATUS_SUCCESS)
     {

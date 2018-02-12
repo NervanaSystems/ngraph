@@ -96,6 +96,7 @@
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
+#include "ngraph/runtime/gpu/gpu_cuda_kernel_emitters.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -254,10 +255,10 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     string pch_header_source = writer.get_code();
 
-    writer += R"(
-    using namespace ngraph;
-    using namespace std;
-)";
+//    writer += R"(
+//    using namespace ngraph;
+//    using namespace std;
+//)";
 
     if (m_emit_timing)
     {
