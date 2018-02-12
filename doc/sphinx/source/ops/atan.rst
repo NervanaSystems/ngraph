@@ -1,17 +1,17 @@
-.. abs.rst:
+.. atan.rst:
 
-###
-Abs
-###
+####
+Atan
+####
 
 Description
 ===========
 
-Elementwise absolute value operation.
+Elementwise atan operation.
 
-Produces a single output tensor of the same element type and shape as ``arg``,
-where the value at each coordinate of ``output`` is the absoloute value of the
-value at each ``arg`` coordinate.
+Produces a tensor of the same element type and shape as ``arg``,
+where the value at each coordinate of ``output`` is the inverse tangent of the
+value at the corresponding coordinate of ``arg`` .
 
 Inputs
 ------
@@ -37,19 +37,19 @@ Mathematical Definition
 
 .. math::
 
-   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \left|\mathtt{arg}_{i_0,
-   \ldots, i_{n-1}}\right|
+   \texttt{output}_{i_0, \ldots, i_{n-1}} = \tan^{-1}(\texttt{arg}_{i_0, \ldots, i_{n-1}})
+
 
 Backprop
 ========
 
 .. math::
 
-   \overline{\texttt{arg}} \leftarrow \Delta\ \mathrm{sgn}(\texttt{arg})
+   \overline{\texttt{arg}} \leftarrow \frac{\Delta}{1+\texttt{arg}^2}
 
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Abs
+.. doxygenclass:: ngraph::op::Atan
    :members:

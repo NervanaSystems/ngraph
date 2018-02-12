@@ -17,4 +17,4 @@ See our [install] docs for how to get started.
 For this early release, we provide framework integration guides to compile 
 MXNet and TensorFlow-based projects.  
 
-[install]: doc/sphinx/source/installation.rst
+[install]: http://ngraph.nervanasys.com/docs/cpp/installation.html

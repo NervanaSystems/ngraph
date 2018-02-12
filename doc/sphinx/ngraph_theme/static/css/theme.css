@@ -2220,7 +2220,7 @@ div[class^='highlight'] pre {
   background-color: #272525;
   display: block;
   text-align: right;
-  font-size: 90%;
+  font-size: 95%;
   cursor: pointer;
   color: #27AE60;
   *zoom: 1;
@@ -2488,8 +2488,8 @@ div[class^='highlight'] pre {
   line-height: 1.0em;
 }
 .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
-  font-size: 101% !important;
-  color: #72a1ab;
+  font-size: 100% !important;
+  color: #528481;
   line-height: 0.91em;
 }
 .rst-content tt.xref, a .rst-content tt, .rst-content tt.xref, .rst-content code.xref, a .rst-content tt, a .rst-content code {

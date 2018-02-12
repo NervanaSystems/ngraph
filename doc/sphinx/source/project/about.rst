@@ -8,14 +8,14 @@ of :abbr:`Deep Learning (DL)` (DL) systems. Here you will find a suite of
 components, APIs, and documentation that can be used to compile and run  
 :abbr:`Deep Neural Network (DNN)` models defined in a variety of frameworks.  
 
+.. figure:: ../graphics/ngraph-hub.png  
+
 The nGraph library translates a framework’s representation of computations into 
 an :abbr:`Intermediate Representation (IR)` designed to promote computational 
 efficiency on target hardware. Initially-supported backends include Intel 
 Architecture CPUs, the Intel® Nervana Neural Network Processor™ (NNP), 
 and NVIDIA\* GPUs. Currently-supported compiler optimizations include efficient 
 memory management and data layout abstraction. 
-
-.. figure:: graphics/fig.jpeg  
 
 The *nGraph core* uses a strongly-typed and platform-neutral stateless graph 
 representation for computations. Each node, or *op*, in the graph corresponds
