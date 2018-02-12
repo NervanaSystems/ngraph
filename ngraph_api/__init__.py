@@ -23,6 +23,7 @@ from ngraph_api.ops import ceiling
 from ngraph_api.ops import ceiling as ceil
 from ngraph_api.ops import constant
 from ngraph_api.ops import divide
+from ngraph_api.ops import equal
 from ngraph_api.ops import exp
 from ngraph_api.ops import floor
 from ngraph_api.ops import log
