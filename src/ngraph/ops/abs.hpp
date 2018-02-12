@@ -31,10 +31,11 @@ namespace ngraph
         public:
             /// \brief Constructs an absolute value operation.
             ///
-            /// Output `[d1, ...]`
-            ///
             /// \param arg Node that produces the input tensor.<br>
             /// `[d1, ...]`
+            ///
+            /// Output `[d1, ...]`
+            ///
             Abs(const std::shared_ptr<Node>& arg)
                 : UnaryElementwiseArithmetic("Abs", arg)
             {

@@ -1,17 +1,17 @@
-.. abs.rst:
+.. add.rst:
 
 ###
-Abs
+Add
 ###
 
 Description
 ===========
 
-Elementwise absolute value operation.
+Elementwise add operation.
 
-Produces a single output tensor of the same element type and shape as ``arg``,
-where the value at each coordinate of ``output`` is the absoloute value of the
-value at each ``arg`` coordinate.
+Produces tensor of the same element type and shape as the two inputs,
+where the value at each coordinate of ``output`` is the sum of the
+value at the corresponding input coordinates.
 
 Inputs
 ------
@@ -19,7 +19,9 @@ Inputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``arg``         | Any                     | Any                            |
+| ``arg0``        | any                     | any                            |
++-----------------+-------------------------+--------------------------------+
+| ``arg1``        | same as ``arg0``        | same as ``arg0``               |
 +-----------------+-------------------------+--------------------------------+
 
 Outputs
@@ -28,7 +30,7 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 | Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``arg``         | Same as ``arg``.               |
+| ``output``      | same as ``arg0``        | same as ``arg0``               |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -37,19 +39,19 @@ Mathematical Definition
 
 .. math::
 
-   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \left|\mathtt{arg}_{i_0,
-   \ldots, i_{n-1}}\right|
+   \texttt{output}_{i_0, \ldots, i_{n-1}} = \texttt{arg0}_{i_0, \ldots, i_{n-1}} + \texttt{arg1}_{i_0, \ldots, i_{n-1}}
 
 Backprop
 ========
 
 .. math::
 
-   \overline{\texttt{arg}} \leftarrow \Delta\ \mathrm{sgn}(\texttt{arg})
+   \overline{\texttt{arg0}} &\leftarrow \Delta \\
+   \overline{\texttt{arg1}} &\leftarrow \Delta
 
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Abs
+.. doxygenclass:: ngraph::op::Add
    :members:

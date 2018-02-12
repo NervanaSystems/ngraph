@@ -19,6 +19,7 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tracing.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -28,6 +29,12 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
 {
+    setup_runtime_context();
+}
+
+runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
+{
+    cleanup_runtime_context();
 }
 
 void runtime::cpu::CPU_CallFrame::tensor_call(
@@ -54,7 +61,12 @@ void runtime::cpu::CPU_CallFrame::tensor_call(
     }
 
     // Invoke compiled computation
-    m_compiled_function(inputs.data(), outputs.data());
+    m_compiled_function(inputs.data(), outputs.data(), ctx);
+
+    if (runtime::cpu::IsTracingEnabled())
+    {
+        GenerateTimeline(m_external_function->get_op_attrs(), ctx->op_durations);
+    }
 }
 
 void runtime::cpu::CPU_CallFrame::call(
@@ -115,4 +127,21 @@ vector<runtime::PerformanceCounter> runtime::cpu::CPU_CallFrame::get_performance
         }
     }
     return rc;
+}
+
+void runtime::cpu::CPU_CallFrame::setup_runtime_context()
+{
+    ctx = new CPURuntimeContext;
+
+    ctx->op_durations = nullptr;
+    if (runtime::cpu::IsTracingEnabled())
+    {
+        ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
+    }
+}
+
+void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
+{
+    delete[] ctx->op_durations;
+    delete ctx;
 }
