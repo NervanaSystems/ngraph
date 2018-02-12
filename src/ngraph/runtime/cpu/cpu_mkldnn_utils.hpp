@@ -93,7 +93,7 @@ namespace ngraph
                     {
                         m_writer << "memory::desc " << var << " = memory::desc({" << shape << "}, "
                                  << type << ", memory::format::" << layout << ");\n";
-                    };
+                    }
 
                     void emit_memory(const std::string& var,
                                      const std::string& desc,
@@ -101,12 +101,12 @@ namespace ngraph
                     {
                         m_writer << "memory " << var << " = memory({" << desc << ", cpu_engine}, "
                                  << data << ");\n";
-                    };
+                    }
 
                     void emit_memory_dims(const std::string& var, const std::string& dims)
                     {
                         m_writer << "memory::dims " << var << "{" << dims << "};\n";
-                    };
+                    }
 
                 private:
                     codegen::CodeWriter& m_writer;
