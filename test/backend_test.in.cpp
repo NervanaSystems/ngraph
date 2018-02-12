@@ -4254,26 +4254,6 @@ TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
         read_vector<double>(result)));
 }
 
-TEST(${BACKEND_NAME}, DISABLED_parameter_to_output)
-{
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(A, op::Parameters{A});
-
-    auto manager = runtime::Manager::get("${BACKEND_NAME}");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
-    copy_data(a, vector<float>{1, -2, 0, -4.8f});
-    auto result = backend->make_primary_tensor_view(element::f32, shape);
-
-    cf->call({a}, {result});
-    EXPECT_EQ((vector<float>{1, -2, 0, -4.8f}), read_vector<float>(result));
-}
-
 TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
 {
     Shape shape_a{1, 1, 14};
