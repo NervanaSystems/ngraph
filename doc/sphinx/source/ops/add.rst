@@ -4,22 +4,31 @@
 Add
 ###
 
+Description
+===========
+
 Elementwise add operation.
 
-Produces a single output tensor of the same element type and shape as the input,
-where the value at each coordinate of the output is the acos of the
-value at each input coordinate.
+Produces tensor of the same element type and shape as the two inputs,
+where the value at each coordinate of ``output`` is the sum of the
+value at the corresponding input coordinates.
+
+Inputs
+------
 
 +-----------------+-------------------------+--------------------------------+
-| Input Name      | Element Type            | Shape                          |
+| Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
 | ``arg0``        | any                     | any                            |
 +-----------------+-------------------------+--------------------------------+
 | ``arg1``        | same as ``arg0``        | same as ``arg0``               |
 +-----------------+-------------------------+--------------------------------+
 
+Outputs
+-------
+
 +-----------------+-------------------------+--------------------------------+
-| Output Name     | Element Type            | Shape                          |
+| Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
 | ``output``      | same as ``arg0``        | same as ``arg0``               |
 +-----------------+-------------------------+--------------------------------+
@@ -30,15 +39,15 @@ Mathematical Definition
 
 .. math::
 
-   output_{i_0, \ldots, i_{n-1}} = arg0_{i_0, \ldots, i_{n-1}} + arg1_{i_0, \ldots, i_{n-1}}
+   \texttt{output}_{i_0, \ldots, i_{n-1}} = \texttt{arg0}_{i_0, \ldots, i_{n-1}} + \texttt{arg1}_{i_0, \ldots, i_{n-1}}
 
 Backprop
 ========
 
 .. math::
 
-   \overline{arg0} &\leftarrow \Delta \\
-   \overline{arg1} &\leftarrow \Delta
+   \overline{\texttt{arg0}} &\leftarrow \Delta \\
+   \overline{\texttt{arg1}} &\leftarrow \Delta
 
 
 C++ Interface
@@ -46,8 +55,3 @@ C++ Interface
 
 .. doxygenclass:: ngraph::op::Add
    :members:
-
-Python Interface
-================
-
-is not merged yet, but could go here!
