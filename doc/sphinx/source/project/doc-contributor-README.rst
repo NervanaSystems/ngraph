@@ -56,14 +56,14 @@ source file (``.rst``):
 
 ::
 
-  .. literalinclude:: ../../../src/ngraph/descriptor/primary_tensor_view.cpp
+  .. literalinclude:: ../../../../src/ngraph/descriptor/primary_tensor_view.cpp
      :language: cpp
      :lines: 20-31
 
 And the raw code will render as follows
 
 
-.. literalinclude:: ../../../src/ngraph/descriptor/primary_tensor_view.cpp
+.. literalinclude:: ../../../../src/ngraph/descriptor/primary_tensor_view.cpp
    :language: cpp
    :lines: 20-31
 
@@ -86,7 +86,7 @@ line numbers, and add a caption "One way to define neon axes within the dqn_atar
 
 ::
 
-  .. literalinclude:: ../../../src/ngraph/descriptor/primary_tensor_view.cpp
+  .. literalinclude:: ../../../../src/ngraph/descriptor/primary_tensor_view.cpp
     :language: cpp
     :lines: 20-31
     :caption: 
@@ -94,7 +94,7 @@ line numbers, and add a caption "One way to define neon axes within the dqn_atar
 
 and the generated output will show readers of your helpful documentation
 
-.. literalinclude:: ../../../src/ngraph/descriptor/primary_tensor_view.cpp
+.. literalinclude:: ../../../../src/ngraph/descriptor/primary_tensor_view.cpp
    :language: cpp
    :lines: 20-31
    :caption: 
