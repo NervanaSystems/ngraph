@@ -203,7 +203,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
             runtime/gpu/gpu_tensor_view.cpp
             runtime/gpu/gpu_tensor_view_wrapper.cpp
             runtime/gpu/gpu_util.cpp
-            runtime/gpu/gpu_cuda_kernel_emitter.cpp
+            runtime/gpu/gpu_cuda_kernel_emitters.cpp
             )
         set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
         "CUDA_HEADER_PATHS=\"${CUDA_INCLUDE_DIRS}\";")
