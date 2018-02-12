@@ -242,6 +242,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
             if (dynamic_cast<op::Convolution*>(node.get()) ||
+                dynamic_cast<op::ConvolutionBackpropData*>(node.get()) ||
+                dynamic_cast<op::ConvolutionBackpropFilters*>(node.get()) ||
                 dynamic_cast<op::AvgPool*>(node.get()) || dynamic_cast<op::MaxPool*>(node.get()) ||
                 dynamic_cast<op::AvgPoolBackprop*>(node.get()))
             {
@@ -259,6 +261,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     writer +=
         R"(#include <Eigen/Dense>
 
+#include "ngraph/except.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
