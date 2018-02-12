@@ -35,7 +35,7 @@ Backprop
 
 .. math::
 
-   \overline{input} \leftarrow -\frac{\Delta}{\sin{output}}
+   \overline{input} \leftarrow -\frac{\Delta}{\sqrt{1-input^2}}
 
 
 C++ Interface
