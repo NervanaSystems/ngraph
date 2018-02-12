@@ -123,7 +123,7 @@ static std::string GetExecutablePath(const char* Argv0)
 
 codegen::StaticCompiler::StaticCompiler()
     : m_precompiled_header_valid(false)
-    , m_debuginfo_enabled(false)
+    , m_debuginfo_enabled((std::getenv("NGRAPH_COMPILER_DEBUGINFO_ENABLE") != nullptr))
     , m_enable_diag_output((std::getenv("NGRAPH_COMPILER_DIAG_ENABLE") != nullptr))
     , m_source_name("code.cpp")
 {
@@ -133,9 +133,6 @@ codegen::StaticCompiler::StaticCompiler()
 void codegen::StaticCompiler::initialize()
 {
     m_extra_search_path_list.clear();
-#if NGCPU_DEBUGINFO
-    m_debuginfo_enabled = true;
-#endif
 
     InitializeNativeTarget();
     LLVMInitializeNativeAsmPrinter();
