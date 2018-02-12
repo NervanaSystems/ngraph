@@ -18,29 +18,9 @@
 #include <iostream>
 #include <unordered_set>
 
-#include <numeric>
 #include "graph_rewrite.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/pattern/matcher.hpp"
-//cpufusion headers
-#include "ngraph/graph_util.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/batchnorm.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/cblas_gemm.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/divide.hpp"
-#include "ngraph/ops/dot.hpp"
-#include "ngraph/ops/multiply.hpp"
-#include "ngraph/ops/parameter.hpp"
-#include "ngraph/ops/reshape.hpp"
-#include "ngraph/ops/sqrt.hpp"
-#include "ngraph/ops/subtract.hpp"
-#include "ngraph/ops/sum.hpp"
-#include "ngraph/pattern/op/any.hpp"
-#include "ngraph/pattern/op/label.hpp"
 
 bool ngraph::pass::GraphRewrite::run_matchers_on_nodes_list(
     const std::list<std::shared_ptr<ngraph::Node>>& nodes,

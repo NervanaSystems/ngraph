@@ -100,6 +100,7 @@ void pass::VisualizeTree::render() const
         out.close();
 
         stringstream ss;
+
         const char* format = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT");
         if (!format)
         {

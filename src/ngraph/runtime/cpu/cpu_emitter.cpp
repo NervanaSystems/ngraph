@@ -27,7 +27,6 @@
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/batchnorm.hpp"
 #include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/cblas_gemm.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/convolution.hpp"
@@ -191,14 +190,14 @@ void runtime::cpu::CPU_Emitter::EmitMatmulBias(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(
+void runtime::cpu::CPU_Emitter::EmitBatchNorm(
     codegen::CodeWriter& writer,
     const ngraph::Node* node,
     const vector<runtime::cpu::TensorViewWrapper>& args,
     const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    const ngraph::op::BatchnormFprop* batchnorm =
-        static_cast<const ngraph::op::BatchnormFprop*>(node);
+    const ngraph::op::BatchNorm* batchnorm =
+        static_cast<const ngraph::op::BatchNorm*>(node);
 
     //get the shape of all the inputs and output to batchnorm
     auto gamma_shape = args[1].get_shape();
@@ -218,20 +217,15 @@ void runtime::cpu::CPU_Emitter::EmitBatchnormFprop(
     writer << "std::vector<" << args[1].get_element_type().c_type_string() << ">bn_weights;\n";
     auto weights_shape = Shape{2, input_shape[1]};
 
+
     //push gamma and beta
     writer << "auto gamma = " << args[1].get_name() << ";\n";
     writer << "auto beta = " << args[2].get_name() << ";\n";
-    writer << "for (auto i=0; i<(2*channel_size); i++) \n";
-    writer << "{ \n";
-    writer << "  if (i < channel_size)\n";
-    writer << "  {\n";
-    writer << "      bn_weights.push_back(gamma[i]);\n";
-    writer << "  } \n";
-    writer << "  else\n";
-    writer << "  {\n";
-    writer << "      bn_weights.push_back(beta[i]);\n";
-    writer << "  } \n";
-    writer << "} \n";
+
+    writer << "memcpy(&bn_weights[0], gamma," 
+           <<  args[1].get_size() * args[1].get_element_type().size() << ");\n";
+    writer << "memcpy(&bn_weights[0]+" << args[1].get_size() <<", beta, "
+           << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
     // get the eps value from the bn node
     writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";

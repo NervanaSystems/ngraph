@@ -23,6 +23,7 @@
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/broadcast.hpp"
+#include "ngraph/ops/batchnorm.hpp"
 #include "ngraph/ops/ceiling.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
@@ -64,7 +65,6 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
-#include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
@@ -361,6 +361,15 @@ static shared_ptr<ngraph::Function>
                                                     window_movement_strides,
                                                     padding_below,
                                                     padding_above);
+        }
+        else if (node_op == "BatchNorm")
+        {
+            node = make_shared<op::BatchNorm>(args[0],
+                                              args[1],
+                                              args[2],
+                                              args[3],
+                                              args[4],
+                                              args[5]);  
         }
         else if (node_op == "Broadcast")
         {
@@ -834,6 +843,10 @@ static json write(const Node& n)
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
+    }
+    else if (node_op == "BatchNorm")
+    {
+
     }
     else if (node_op == "Broadcast")
     {

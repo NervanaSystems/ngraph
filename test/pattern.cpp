@@ -366,8 +366,7 @@ public:
                                                                  pattern_map[beta_label],
                                                                  pattern_map[input],
                                                                  pattern_map[mean_label],
-                                                                 pattern_map[variance_label],
-                                                                 bn_output_shape));
+                                                                 pattern_map[variance_label]));
 
                 return bn_node;
             };

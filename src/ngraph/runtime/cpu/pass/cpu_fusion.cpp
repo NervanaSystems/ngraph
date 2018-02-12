@@ -247,19 +247,18 @@ void ngraph::pass::CPUFusion::construct_fprop_bn()
             // dont fuse if the inout doesnt have 4dims
             if (pattern_map[input]->get_shape().size() != 4)
             {
-                NGRAPH_DEBUG << "Input to bn doesnt not have 4dims, so not fusing";
+                NGRAPH_DEBUG << "Input to bn doesnt not have a rank=4, so not fusing";
                 return nn;
             }
             Shape bn_output_shape{m.match_root()->get_shape()};
             Shape bn_mean_shape{pattern_map[mean_label]->get_shape()};
             Shape bn_variance_shape{pattern_map[variance_label]->get_shape()};
-            auto bn_node = std::shared_ptr<Node>(new op::BatchnormFprop(pattern_map[eps_label],
+            auto bn_node = std::shared_ptr<Node>(new op::BatchNorm(pattern_map[eps_label],
                                                                         pattern_map[gamma_label],
                                                                         pattern_map[beta_label],
                                                                         pattern_map[input],
                                                                         pattern_map[mean_label],
-                                                                        pattern_map[variance_label],
-                                                                        bn_output_shape));
+                                                                        pattern_map[variance_label]));
 
             return bn_node;
         };
