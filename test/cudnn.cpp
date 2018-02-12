@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <sstream>
 #include <string>
@@ -260,64 +262,4 @@ const auto str = R"(
     codegen::Compiler compiler;
 
     auto module = compiler.compile(source);
-}
-
-// TEST(cudnn, abc)
-// {
-//     auto shape = Shape{2, 2};
-//     auto A = make_shared<op::Parameter>(element::f32, shape);
-//     auto B = make_shared<op::Parameter>(element::f32, shape);
-//     auto C = make_shared<op::Parameter>(element::f32, shape);
-//     auto f = make_shared<Function>((A + B) * C, op::Parameters{A, B, C});
-
-//     auto manager = runtime::Manager::get("GPU");
-//     auto external = manager->compile(f);
-//     auto backend = manager->allocate_backend();
-//     auto cf = backend->make_call_frame(external);
-
-//     // Create some tensors for input/output
-//     shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shape);
-//     shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shape);
-//     shared_ptr<runtime::TensorView> c = backend->make_primary_tensor_view(element::f32, shape);
-//     shared_ptr<runtime::TensorView> result = backend->make_primary_tensor_view(element::f32, shape);
-
-//     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-//     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
-//     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
-
-//     cf->call({a, b, c}, {result});
-//     EXPECT_EQ(result->read_vector<float>(),
-//               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
-
-//     cf->call({b, a, c}, {result});
-//     EXPECT_EQ(result->read_vector<float>(),
-//               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
-
-//     cf->call({a, c, b}, {result});
-//     EXPECT_EQ(result->read_vector<float>(),
-//               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
-// }
-
-TEST(cudnn, dot1d)
-{
-    auto shape = Shape{4};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto shape_r = Shape{1};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::Parameters{A, B});
-
-    auto manager = runtime::Manager::get("GPU");
-    auto external = manager->compile(f);
-    auto backend = manager->allocate_backend();
-    auto cf = backend->make_call_frame(external);
-
-    // Create some tensors for input/output
-    auto a = backend->make_primary_tensor_view(element::f32, shape);
-    copy_data(a, vector<float>{2, 4, 8, 16});
-    auto b = backend->make_primary_tensor_view(element::f32, shape);
-    copy_data(b, vector<float>{1, 2, 4, 8});
-    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
-
-    cf->call({a, b}, {result});
-    EXPECT_EQ((vector<float>{170}), read_vector<float>(result));
 }

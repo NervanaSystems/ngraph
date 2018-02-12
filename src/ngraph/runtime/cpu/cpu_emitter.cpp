@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <algorithm>
 #include <cmath>
@@ -90,8 +92,9 @@ static const string& get_mkldnn_data_type(const string& type)
 
 void runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(codegen::CodeWriter& writer)
 {
-    writer << "using namespace mkldnn;\n";
-    writer << "auto cpu_engine = engine(engine::cpu, 0);\n";
+    writer << "// MKLDNN Preamble\n";
+    writer << "#include <mkldnn.hpp>\n";
+    writer << "using namespace mkldnn;\n\n";
 }
 
 void runtime::cpu::CPU_Emitter::EmitNop(codegen::CodeWriter& writer,
@@ -191,6 +194,8 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
                                         const vector<runtime::cpu::TensorViewWrapper>& args,
                                         const vector<runtime::cpu::TensorViewWrapper>& out)
 {
+    const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(n);
+
     const Shape& arg0_shape = args[0].get_shape();
     const Shape& arg1_shape = args[1].get_shape();
     if (arg0_shape.empty() || arg1_shape.empty())
@@ -205,7 +210,8 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         writer.indent--;
         writer << "}\n";
     }
-    else if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1))
+    else if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1) &&
+             dot->get_reduction_axes_count() == 1)
     {
         writer << "{   // " << n->get_name() << "\n";
         writer.indent++;
@@ -214,7 +220,8 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         writer.indent--;
         writer << "}\n";
     }
-    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1))
+    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
+             dot->get_reduction_axes_count() == 1)
     {
         writer << "{   // " << n->get_name() << "\n";
         writer.indent++;
@@ -223,7 +230,8 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         writer.indent--;
         writer << "}\n";
     }
-    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2))
+    else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 2) &&
+             dot->get_reduction_axes_count() == 1)
     {
         // Emit an MKL SGEMM call if possible
         // clang-format off
@@ -254,8 +262,6 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
     }
     else
     {
-        const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(n);
-
         writer << "kernel::dot(" << args[0].get_name() << ",\n";
         writer << "            " << args[1].get_name() << ",\n";
         writer << "            " << out[0].get_name() << ",\n";
@@ -947,11 +953,15 @@ void runtime::cpu::CPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
             writer << "}\n";
         }
     }
-    // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
+    // Other cases
     else
     {
-        throw ngraph_error(
-            "Axis permutation in reshape is not implemented yet for tensors with rank>2");
+        writer << "kernel::reshape<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
+        writer << "                " << out[0].get_name() << ",\n";
+        writer << "               {" << join(args[0].get_shape()) << "},\n";
+        writer << "               {" << join(reshape->get_input_order()) << "},\n";
+        writer << "               {" << join(out[0].get_shape()) << "}\n";
+        writer << "               );\n";
     }
 #else
     kernel::emit_reshape(writer,
@@ -1922,19 +1932,21 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         writer << "{\n";
         writer.indent++;
 
-        writer << "auto input_data_desc = memory::desc({" << join(arg0_shape) << "}, " << et
+        writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+        writer << "memory::desc input_data_desc = memory::desc({" << join(arg0_shape) << "}, " << et
                << ", memory::format::nchw);\n";
-        writer << "auto weights_desc = memory::desc({" << join(arg1_shape) << "}, " << et
+        writer << "memory::desc weights_desc = memory::desc({" << join(arg1_shape) << "}, " << et
                << ", memory::format::oihw);\n";
-        writer << "auto result_desc = memory::desc({" << join(result_shape) << "}, " << et
+        writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, " << et
                << ", memory::format::nchw);\n";
 
-        writer << "auto input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+        writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
                << ");\n";
-        writer << "auto weights = memory({weights_desc, cpu_engine}, " << args[1].get_name()
+        writer << "memory weights = memory({weights_desc, cpu_engine}, " << args[1].get_name()
                << ");\n";
-        writer << "auto result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
-        writer << "auto conv = convolution_forward({"
+        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
+        writer << "convolution_forward conv = convolution_forward({"
                << "{prop_kind::forward, algorithm::convolution_direct, input_data_desc, "
                   "weights_desc, result_desc, {"
                << join(convolution->get_window_movement_strides()) << "}, {"
@@ -1942,7 +1954,7 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
                << join(convolution->get_padding_above()) << "}, padding_kind::zero}, cpu_engine}, "
                << "input_data, weights, result);\n";
 
-        writer << "auto s = stream(stream::kind::eager);\n"
+        writer << "stream s = stream(stream::kind::eager);\n"
                << "s.submit({conv}).wait();\n";
         writer.indent--;
         writer << "}\n";
@@ -1964,19 +1976,21 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
         writer << "{\n";
         writer.indent++;
 
-        writer << "auto input_data_desc = memory::desc({" << join(arg0_shape) << "}, " << et
+        writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+        writer << "memory::desc input_data_desc = memory::desc({" << join(arg0_shape) << "}, " << et
                << ", memory::format::nchw);\n";
-        writer << "auto weights_desc = memory::desc({" << join(arg1_shape) << "}, " << et
+        writer << "memory::desc weights_desc = memory::desc({" << join(arg1_shape) << "}, " << et
                << ", memory::format::oihw);\n";
-        writer << "auto result_desc = memory::desc({" << join(result_shape) << "}, " << et
+        writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, " << et
                << ", memory::format::nchw);\n";
 
-        writer << "auto input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+        writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
                << ");\n";
-        writer << "auto weights = memory({weights_desc, cpu_engine}, " << args[1].get_name()
+        writer << "memory weights = memory({weights_desc, cpu_engine}, " << args[1].get_name()
                << ");\n";
-        writer << "auto result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
-        writer << "auto conv = convolution_forward({"
+        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
+        writer << "convolution_forward conv = convolution_forward({"
                << "{prop_kind::forward, algorithm::convolution_direct, input_data_desc, "
                   "weights_desc, result_desc, {"
                << join(convolution->get_window_movement_strides()) << "}, {"
@@ -1985,7 +1999,7 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
                << join(convolution->get_padding_above()) << "}, padding_kind::zero}, cpu_engine}, "
                << "input_data, weights, result);\n";
 
-        writer << "auto s = stream(stream::kind::eager);\n"
+        writer << "stream s = stream(stream::kind::eager);\n"
                << "s.submit({conv}).wait();\n";
         writer.indent--;
         writer << "}\n";
@@ -2107,17 +2121,19 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
         writer << "{\n";
         writer.indent++;
 
-        writer << "auto input_data_desc = memory::desc({" << join(arg_shape) << "}, " << et
+        writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+        writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape) << "}, " << et
                << ", memory::format::nchw);\n";
-        writer << "auto result_desc = memory::desc({" << join(result_shape) << "}, " << et
+        writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, " << et
                << ", memory::format::nchw);\n";
 
-        writer << "auto input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+        writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
                << ");\n";
-        writer << "auto result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
+        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
 
         // TODO(jmenon): Use a workspace
-        writer << "auto max_pooling = pooling_forward({"
+        writer << "pooling_forward max_pooling = pooling_forward({"
                << "{prop_kind::forward_inference, algorithm::pooling_max, "
                << "input_data_desc, result_desc, {" << join(max_pool->get_window_movement_strides())
                << "}, {" << join(max_pool->get_window_shape()) << "}, {"
@@ -2126,7 +2142,7 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
                << "}, padding_kind::zero}, cpu_engine}, "
                << "input_data, result);\n";
 
-        writer << "auto s = stream(stream::kind::eager);\n"
+        writer << "stream s = stream(stream::kind::eager);\n"
                << "s.submit({max_pooling}).wait();\n";
         writer.indent--;
         writer << "}\n";
@@ -2288,17 +2304,19 @@ void runtime::cpu::CPU_Emitter::EmitAvgPool(codegen::CodeWriter& writer,
         writer << "{\n";
         writer.indent++;
 
-        writer << "auto input_data_desc = memory::desc({" << join(arg_shape) << "}, " << et
+        writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+        writer << "memory::desc input_data_desc = memory::desc({" << join(arg_shape) << "}, " << et
                << ", memory::format::nchw);\n";
-        writer << "auto result_desc = memory::desc({" << join(result_shape) << "}, " << et
+        writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, " << et
                << ", memory::format::nchw);\n";
 
-        writer << "auto input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+        writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
                << ");\n";
-        writer << "auto result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
+        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
 
         // TODO(jmenon): Use a workspace
-        writer << "auto avg_pooling = pooling_forward({"
+        writer << "pooling_forward avg_pooling = pooling_forward({"
                << "{prop_kind::forward_inference, algorithm::pooling_avg, "
                << "input_data_desc, result_desc, {" << join(avg_pool->get_window_movement_strides())
                << "}, {" << join(avg_pool->get_window_shape()) << "}, "
@@ -2307,7 +2325,7 @@ void runtime::cpu::CPU_Emitter::EmitAvgPool(codegen::CodeWriter& writer,
                << "padding_kind::zero}, cpu_engine}, "
                << "input_data, result);\n";
 
-        writer << "auto s = stream(stream::kind::eager);\n"
+        writer << "stream s = stream(stream::kind::eager);\n"
                << "s.submit({avg_pooling}).wait();\n";
         writer.indent--;
         writer << "}\n";
@@ -2354,18 +2372,60 @@ void runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop(
     auto apb = static_cast<const op::AvgPoolBackprop*>(n);
 
     auto delta_shape = args[0].get_shape();
+    auto delta_rank = delta_shape.size();
     auto out_shape = out[0].get_shape();
 
-    writer << "kernel::avg_pool_backprop<" << out[0].get_type() << ">(" << args[0].get_name()
-           << ",\n";
-    writer << "                 " << out[0].get_name() << ",\n";
-    writer << "                 {" << join(delta_shape) << "},\n";
-    writer << "                 {" << join(out_shape) << "},\n";
-    writer << "                 {" << join(apb->get_window_shape()) << "},\n";
-    writer << "                 {" << join(apb->get_window_movement_strides()) << "},\n";
-    writer << "                 {" << join(apb->get_padding_below()) << "},\n";
-    writer << "                 {" << join(apb->get_padding_above()) << "},\n";
-    writer << "                 true);\n";
+    if (delta_rank == 4 && apb->get_window_shape().size() == 2 &&
+        args[0].get_element_type() == element::f32)
+    {
+        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+
+        writer << "{\n";
+        writer.indent++;
+
+        writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+        writer << "memory::desc input_data_desc = memory::desc({" << join(delta_shape) << "}, "
+               << et << ", memory::format::nchw);\n";
+        writer << "memory::desc result_desc = memory::desc({" << join(out_shape) << "}, " << et
+               << ", memory::format::nchw);\n";
+        writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+               << ");\n";
+        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
+        // Dummy forward primitive descriptor to keep MKLDNN happy
+        writer << "pooling_forward::primitive_desc fwd_pd = pooling_forward::primitive_desc("
+               << "{prop_kind::forward, algorithm::pooling_avg_exclude_padding, "
+               << "result_desc, input_data_desc, {" << join(apb->get_window_movement_strides())
+               << "}, {" << join(apb->get_window_shape()) << "}, "
+               << "{" << join(apb->get_padding_below()) << "}, "
+               << "{" << join(apb->get_padding_above()) << "}, "
+               << "padding_kind::zero}, cpu_engine);\n";
+        writer << "auto avg_pooling = pooling_backward(pooling_backward::primitive_desc("
+               << "pooling_backward::desc(algorithm::pooling_avg_exclude_padding, "
+               << "result_desc, input_data_desc, {" << join(apb->get_window_movement_strides())
+               << "}, {" << join(apb->get_window_shape()) << "}, "
+               << "{" << join(apb->get_padding_below()) << "}, "
+               << "{" << join(apb->get_padding_above()) << "}, "
+               << "padding_kind::zero), cpu_engine, fwd_pd), "
+               << "input_data, result);\n";
+        writer << "auto s = stream(stream::kind::eager);\n"
+               << "s.submit({avg_pooling}).wait();\n";
+        writer.indent--;
+        writer << "}\n";
+    }
+    else
+    {
+        writer << "kernel::avg_pool_backprop<" << out[0].get_type() << ">(" << args[0].get_name()
+               << ",\n";
+        writer << "                 " << out[0].get_name() << ",\n";
+        writer << "                 {" << join(delta_shape) << "},\n";
+        writer << "                 {" << join(out_shape) << "},\n";
+        writer << "                 {" << join(apb->get_window_shape()) << "},\n";
+        writer << "                 {" << join(apb->get_window_movement_strides()) << "},\n";
+        writer << "                 {" << join(apb->get_padding_below()) << "},\n";
+        writer << "                 {" << join(apb->get_padding_above()) << "}\n";
+        writer << "                 );\n";
+    }
 }
 
 void runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop(
@@ -2388,8 +2448,8 @@ void runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop(
     writer << "                 {" << join(mpb->get_window_shape()) << "},\n";
     writer << "                 {" << join(mpb->get_window_movement_strides()) << "},\n";
     writer << "                 {" << join(mpb->get_padding_below()) << "},\n";
-    writer << "                 {" << join(mpb->get_padding_above()) << "},\n";
-    writer << "                 true);\n";
+    writer << "                 {" << join(mpb->get_padding_above()) << "}\n";
+    writer << "                 );\n";
 }
 
 //------------------------------------------------------------------------------------------------

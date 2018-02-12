@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <algorithm>
 #include <cinttypes>
@@ -5487,10 +5489,11 @@ void make_unary_empty_test(const string& backend_name)
     auto in_vec = read_vector<T>(a);
     auto out_vec = read_vector<T>(result);
 
-    EXPECT_EQ(in_vec, out_vec);
+    EXPECT_EQ(in_vec.size(), 0);
+    EXPECT_EQ(out_vec.size(), 0);
 }
 
-template <typename OP, typename T>
+template <typename OP, typename T, typename U = T>
 void make_binary_empty_test(const string& backend_name)
 {
     auto shape = Shape{0};
@@ -5505,14 +5508,15 @@ void make_binary_empty_test(const string& backend_name)
 
     auto a = backend->make_primary_tensor_view(element::from<T>(), shape);
     auto b = backend->make_primary_tensor_view(element::from<T>(), shape);
-    auto result = backend->make_primary_tensor_view(element::from<T>(), shape);
+    auto result = backend->make_primary_tensor_view(element::from<U>(), shape);
 
     cf->call({a, b}, {result});
 
     auto in_vec = read_vector<T>(a);
-    auto out_vec = read_vector<T>(result);
+    auto out_vec = read_vector<U>(result);
 
-    EXPECT_EQ(in_vec, out_vec);
+    EXPECT_EQ(in_vec.size(), 0);
+    EXPECT_EQ(out_vec.size(), 0);
 }
 
 template <typename OP>
@@ -5528,6 +5532,21 @@ void make_binary_empty_test(const string& backend_name)
     make_binary_empty_test<OP, uint16_t>(backend_name);
     make_binary_empty_test<OP, uint32_t>(backend_name);
     make_binary_empty_test<OP, uint64_t>(backend_name);
+}
+
+template <typename OP>
+void make_binary_empty_comparison_test(const string& backend_name)
+{
+    make_binary_empty_test<OP, float, char>(backend_name);
+    make_binary_empty_test<OP, double, char>(backend_name);
+    make_binary_empty_test<OP, int8_t, char>(backend_name);
+    make_binary_empty_test<OP, int16_t, char>(backend_name);
+    make_binary_empty_test<OP, int32_t, char>(backend_name);
+    make_binary_empty_test<OP, int64_t, char>(backend_name);
+    make_binary_empty_test<OP, uint8_t, char>(backend_name);
+    make_binary_empty_test<OP, uint16_t, char>(backend_name);
+    make_binary_empty_test<OP, uint32_t, char>(backend_name);
+    make_binary_empty_test<OP, uint64_t, char>(backend_name);
 }
 
 template <typename OP>
@@ -5647,27 +5666,27 @@ TEST(${BACKEND_NAME}, zero_sized_divide)
 
 TEST(${BACKEND_NAME}, zero_sized_eq)
 {
-    make_binary_empty_test<op::Equal>("${BACKEND_NAME}");
+    make_binary_empty_comparison_test<op::Equal>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_greater)
 {
-    make_binary_empty_test<op::Greater>("${BACKEND_NAME}");
+    make_binary_empty_comparison_test<op::Greater>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_greatereq)
 {
-    make_binary_empty_test<op::GreaterEq>("${BACKEND_NAME}");
+    make_binary_empty_comparison_test<op::GreaterEq>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_less)
 {
-    make_binary_empty_test<op::Less>("${BACKEND_NAME}");
+    make_binary_empty_comparison_test<op::Less>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_lesseq)
 {
-    make_binary_empty_test<op::LessEq>("${BACKEND_NAME}");
+    make_binary_empty_comparison_test<op::LessEq>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_maximum)
@@ -5687,7 +5706,7 @@ TEST(${BACKEND_NAME}, zero_sized_multiply)
 
 TEST(${BACKEND_NAME}, zero_sized_not_equal)
 {
-    make_binary_empty_test<op::NotEqual>("${BACKEND_NAME}");
+    make_binary_empty_comparison_test<op::NotEqual>("${BACKEND_NAME}");
 }
 
 TEST(${BACKEND_NAME}, zero_sized_power)
@@ -5698,6 +5717,47 @@ TEST(${BACKEND_NAME}, zero_sized_power)
 TEST(${BACKEND_NAME}, zero_sized_subtract)
 {
     make_binary_empty_test<op::Subtract>("${BACKEND_NAME}");
+}
+
+TEST(${BACKEND_NAME}, convolution_outlining)
+{
+    auto shape_a = Shape{1, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto shape_b = Shape{2, 2, 1, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto shape_r = Shape{1, 2, 2, 2};
+    auto conv1 = make_shared<op::Convolution>(A,
+                                              B,
+                                              Strides{1, 1},
+                                              Strides{1, 1},
+                                              CoordinateDiff{0, 0},
+                                              CoordinateDiff{0, 0},
+                                              Strides{1, 1});
+    auto conv2 = make_shared<op::Convolution>(conv1,
+                                              B,
+                                              Strides{1, 1},
+                                              Strides{1, 1},
+                                              CoordinateDiff{0, 0},
+                                              CoordinateDiff{0, 0},
+                                              Strides{1, 1});
+    auto f = make_shared<Function>(conv2, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    // Create some tensors for input/output
+    auto a = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(a, vector<float>{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f});
+    auto b = backend->make_primary_tensor_view(element::f32, shape_b);
+    copy_data(b, vector<float>{1.0f, 1.0f, 1.0f, 1.0f});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_r);
+
+    vector<float> expected_result{4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f};
+
+    cf->call({a, b}, {result});
+    EXPECT_EQ(vector<float>{expected_result}, read_vector<float>(result));
 }
 
 TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)

@@ -1,15 +1,18 @@
-# Copyright 2017 Nervana Systems Inc.
+# ******************************************************************************
+# Copyright 2017-2018 Intel Corporation
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# ******************************************************************************
 
 set (SRC
     autodiff/adjoints.cpp
@@ -184,13 +187,11 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
           "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\";")
     endif()
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
-    set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-      "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE};")
 
     # GPU backend current requires CPU because they share compiler.cpp,
     # and compiler.cpp requires MKLDNN
     if(NGRAPH_GPU_ENABLE)
-        include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
+        include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
 
         # Add sources for the GPU backend
         # and all its dependencies
@@ -213,6 +214,7 @@ endif()
 
 if (NGRAPH_ARGON_ENABLE)
     link_directories(${ARGON_TRANSFORMER_LIB_DIR})
+    include_directories(${ARGON_TRANSFORMER_INCLUDE_DIR})
 endif()
 
 add_library(ngraph SHARED ${SRC})
@@ -272,12 +274,12 @@ endif()
 
 # Nvidia
 if(NGRAPH_GPU_ENABLE AND CUDA_LIBRARIES)
-    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+    target_link_libraries(ngraph PRIVATE ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
 endif()
 
 # Argon
 if (NGRAPH_ARGON_ENABLE)
-    target_link_libraries(ngraph PRIVATE ${ARGON_TRANSFORMER_LIB_DIR}/libargon.a)
+    target_link_libraries(ngraph PRIVATE ${ARGON_TRANSFORMER_LIB_DIR}/libargon.so)
     target_link_libraries(ngraph PRIVATE ${ARGON_API_LIBS})
     add_dependencies(ngraph ext_argon_transformer)
     add_dependencies(ext_argon_transformer ext_llvm)
@@ -316,6 +318,14 @@ if (NOT APPLE)
         install(DIRECTORY ${ARGON_TRANSFORMER_LIB_DIR}/
             DESTINATION ${NGRAPH_INSTALL_LIB}
             FILES_MATCHING PATTERN "*.so"
+        )
+        install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+            DESTINATION ${NGRAPH_INSTALL_INCLUDE}
+            FILES_MATCHING PATTERN "*.hpp"
+        )
+        install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+            DESTINATION ${NGRAPH_INSTALL_INCLUDE}
+            FILES_MATCHING PATTERN "*.h"
         )
     endif()
 endif()
