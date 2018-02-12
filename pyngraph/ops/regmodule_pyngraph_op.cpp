@@ -31,6 +31,8 @@ void regmodule_pyngraph_op(py::module m){
     regclass_pyngraph_op_Acos(m_op);
     regclass_pyngraph_op_Asin(m_op);
     regclass_pyngraph_op_Atan(m_op);
+    regclass_pyngraph_op_AvgPool(m_op);
+    regclass_pyngraph_op_AvgPoolBackprop(m_op);
     regclass_pyngraph_op_Cos(m_op);
     regclass_pyngraph_op_Cosh(m_op);
     regclass_pyngraph_op_Add(m_op);

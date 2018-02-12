@@ -24,6 +24,7 @@
 #include "pyngraph/ops/add.hpp"
 #include "pyngraph/ops/asin.hpp"
 #include "pyngraph/ops/atan.hpp"
+#include "pyngraph/ops/avg_pool.hpp"
 #include "pyngraph/ops/broadcast.hpp"
 #include "pyngraph/ops/ceiling.hpp"
 #include "pyngraph/ops/concatenate.hpp"
