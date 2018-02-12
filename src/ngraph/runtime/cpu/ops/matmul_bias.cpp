@@ -37,7 +37,9 @@ ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
                                    Shape shape_x,
                                    bool transpose_w,
                                    bool transpose_x)
-    : RequiresTensorViewArgs("MatMulBias", {W, x, b})
+    : RequiresTensorViewArgs("MatMulBias",
+                             b == nullptr ? std::vector<std::shared_ptr<Node>>{W, x}
+                                          : std::vector<std::shared_ptr<Node>>{W, x, b})
     , m_shape_w(shape_w)
     , m_shape_x(shape_x)
     , m_transpose_w(transpose_w)
@@ -70,8 +72,12 @@ ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
     }
 
     auto dot_shape = Shape{shape_w.at(1 - dot_dimension_w), shape_x.at(1 - dot_dimension_x)};
-    NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape)
-                 << " , b shape = " << vector_to_string(b->get_shape());
+    NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape);
+
+    if (b)
+    {
+        NGRAPH_DEBUG << "b shape = " << vector_to_string(b->get_shape());
+    }
 
     add_output(W->get_element_type(), dot_shape);
 }

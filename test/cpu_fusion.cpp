@@ -129,6 +129,42 @@ TEST(cpu_fusion, gemm_cpu)
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
 
+TEST(cpu_fusion, gemm_cpu_no_bias)
+{
+    auto shapeA = Shape{3, 2};
+    auto shapeB = Shape{2, 3};
+    auto shapeC = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto B = make_shared<op::Parameter>(element::f32, shapeB);
+
+    auto reshape_w = make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{2, 3});
+    auto reshape_x = make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2});
+
+    auto cg =
+        make_shared<op::MatmulBias>(A, B, nullptr, A->get_shape(), B->get_shape(), true, true);
+
+    auto f = make_shared<Function>(cg, op::Parameters{A, B});
+
+    auto manager = runtime::Manager::get("CPU");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    shared_ptr<runtime::TensorView> a = backend->make_primary_tensor_view(element::f32, shapeA);
+    shared_ptr<runtime::TensorView> b = backend->make_primary_tensor_view(element::f32, shapeB);
+    shared_ptr<runtime::TensorView> result =
+        backend->make_primary_tensor_view(element::f32, shapeC);
+
+    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f, 1.0f, 4.0f};
+    vector<float> dataB{3.0f, 3.0f, 3.0f, 9.0f, 9.0f, 9.0f};
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+
+    cf->call({a, b}, {result});
+    vector<float> expected{9, 27, 36, 108};
+    ASSERT_TRUE(read_vector<float>(result) == expected);
+}
+
 TEST(cpu_fusion, cpu_fusion_pass_basic)
 {
     auto shape = Shape{};
