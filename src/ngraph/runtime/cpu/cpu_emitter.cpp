@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <algorithm>
 #include <cmath>
@@ -91,7 +93,7 @@ static const string& get_mkldnn_data_type(const string& type)
 void runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(codegen::CodeWriter& writer)
 {
     writer << "// MKLDNN Preamble\n";
-    writer << "#include <mkldnn.hpp>;\n";
+    writer << "#include <mkldnn.hpp>\n";
     writer << "using namespace mkldnn;\n\n";
 }
 
@@ -1012,7 +1014,7 @@ void runtime::cpu::CPU_Emitter::EmitFunctionCall(
         writer << "\n};\n";
 
         writer << "\n";
-        writer << function->get_name() << "(args, out);\n";
+        writer << function->get_name() << "(args, out, ctx);\n";
     }
     writer.indent--;
     writer << "}\n";
@@ -1091,13 +1093,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << "{   // " << n->get_name() << " 3\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
-            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
             writer.indent++;
             writer << "\n";
             writer << type << " result;\n";
             writer << "void* args[] = {&x, &y};\n";
             writer << "void* out[] = {&result};\n";
-            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << reduction_function->get_name() << "(args, out, ctx);\n";
             writer << "return result;\n";
             writer.indent--;
             writer << "};\n";
@@ -1127,13 +1129,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << "{   // " << n->get_name() << " 5\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
-            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
             writer.indent++;
             writer << "\n";
             writer << type << " result;\n";
             writer << "void* args[] = {&x, &y};\n";
             writer << "void* out[] = {&result};\n";
-            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << reduction_function->get_name() << "(args, out, ctx);\n";
             writer << "return result;\n";
             writer.indent--;
             writer << "};\n";
@@ -1159,13 +1161,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << "{   // " << n->get_name() << " 7\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
-            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
             writer.indent++;
             writer << "\n";
             writer << type << " result;\n";
             writer << "void* args[] = {&x, &y};\n";
             writer << "void* out[] = {&result};\n";
-            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << reduction_function->get_name() << "(args, out, ctx);\n";
             writer << "return result;\n";
             writer.indent--;
             writer << "};\n";
@@ -1181,13 +1183,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
         writer.indent++;
 
         string type = f_result_element_type.c_type_string();
-        writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+        writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
         writer.indent++;
         writer << "\n";
         writer << type << " result;\n";
         writer << "void* args[] = {&x, &y};\n";
         writer << "void* out[] = {&result};\n";
-        writer << reduction_function->get_name() << "(args, out);\n";
+        writer << reduction_function->get_name() << "(args, out, ctx);\n";
         writer << "return result;\n";
         writer.indent--;
         writer << "};\n";
@@ -1209,13 +1211,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
 
     string type = f_result_element_type.c_type_string();
 
-    writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
     writer.indent++;
     writer << "\n";
     writer << type << " result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << reduction_function->get_name() << "(args, out);\n";
+    writer << reduction_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
@@ -2034,24 +2036,104 @@ void runtime::cpu::CPU_Emitter::EmitConvolutionBackpropFilters(
     auto arg0_shape = args[0].get_shape();
     auto arg1_shape = args[1].get_shape();
     auto result_shape = out[0].get_shape();
+    auto arg0_rank = arg0_shape.size();
+    auto arg1_rank = arg1_shape.size();
 
-    writer << "kernel::convolution<" << out[0].get_type() << ">(" << args[0].get_name() << ",\n";
-    writer << "                         " << args[1].get_name() << ",\n";
-    writer << "                         " << out[0].get_name() << ",\n";
-    writer << "                         {" << join(arg0_shape) << "},\n";
-    writer << "                         {" << join(arg1_shape) << "},\n";
-    writer << "                         {" << join(result_shape) << "},\n";
-    writer << "                         {"
-           << join(convolution->get_window_movement_strides_backward()) << "},\n";
-    writer << "                         {"
-           << join(convolution->get_window_dilation_strides_backward()) << "},\n";
-    writer << "                         {" << join(convolution->get_padding_below_backward())
-           << "},\n";
-    writer << "                         {" << join(convolution->get_padding_above_backward())
-           << "},\n";
-    writer << "                         {"
-           << join(convolution->get_data_dilation_strides_backward()) << "},\n";
-    writer << "                         1, 0, 0, 1, 1, 0, false);\n";
+    bool data_dilated = false;
+    for (size_t s : convolution->get_data_dilation_strides_forward())
+    {
+        data_dilated = data_dilated || (s != 1);
+    }
+
+    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+        args[0].get_element_type() == element::f32)
+    {
+        const string& elem_type = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+        Strides window_dilation_strides_adjusted;
+
+        for (size_t s : convolution->get_window_dilation_strides_forward())
+        {
+            window_dilation_strides_adjusted.push_back(s - 1);
+        }
+        auto emit_memory_desc = [&writer](const std::string& var,
+                                          const std::string& shape,
+                                          const std::string& type,
+                                          const std::string& layout) {
+            writer << "memory::desc " << var << " = memory::desc({" << shape << "}, " << type
+                   << ", memory::format::" << layout << ");\n";
+        };
+
+        auto emit_memory =
+            [&writer](const std::string& var, const std::string& desc, const std::string& data) {
+                writer << "memory " << var << " = memory({" << desc << ", cpu_engine}, " << data
+                       << ");\n";
+            };
+
+        auto emit_memory_dims = [&writer](const std::string& var, const std::string& dims) {
+            writer << "memory::dims " << var << "{" << dims << "};\n";
+        };
+
+        writer << "{\n";
+        writer.indent++;
+        writer << "try {\n";
+        writer.indent++;
+        writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+        emit_memory_desc("data_desc", join(arg0_shape), elem_type, "nchw");
+        emit_memory_desc("delta_desc", join(arg1_shape), elem_type, "nchw");
+        emit_memory_desc("result_desc", join(result_shape), elem_type, "oihw");
+        emit_memory("data", "data_desc", args[0].get_name());
+        emit_memory("delta", "delta_desc", args[1].get_name());
+        emit_memory("result", "result_desc", out[0].get_name());
+        emit_memory_dims("dilates", join(window_dilation_strides_adjusted));
+        emit_memory_dims("strides", join(convolution->get_window_movement_strides_forward()));
+        emit_memory_dims("padding_l", join(convolution->get_padding_below_forward()));
+        emit_memory_dims("padding_r", join(convolution->get_padding_above_forward()));
+
+        writer << "convolution_backward_weights::desc bwd_weights_desc("
+                  "algorithm::convolution_direct, "
+                  "data_desc, result_desc, delta_desc, strides, dilates,"
+                  "padding_l, padding_r, padding_kind::zero);\n"
+                  "convolution_forward::primitive_desc fwd_pd({prop_kind::forward, "
+                  "algorithm::convolution_direct, data_desc, "
+                  "result_desc, delta_desc, strides, dilates, padding_l, padding_r, "
+                  "padding_kind::zero}, cpu_engine);\n"
+                  "convolution_backward_weights::primitive_desc bwd_weights_pd(bwd_weights_desc, "
+                  "cpu_engine, fwd_pd);\n"
+                  "convolution_backward_weights bwd_weights(bwd_weights_pd, data, delta, "
+                  "result);\n"
+                  "stream s = stream(stream::kind::eager);\n"
+                  "s.submit({bwd_weights}).wait();\n";
+        writer.indent--;
+        writer << "} catch (const mkldnn::error& e) {\n";
+        writer.indent++;
+        writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
+                  "e.status) + \"): \" + e.message);\n";
+        writer.indent--;
+        writer << "}\n";
+        writer.indent--;
+        writer << "}\n";
+    }
+    else
+    {
+        writer << "kernel::convolution<" << out[0].get_type() << ">(" << args[0].get_name()
+               << ",\n";
+        writer << "                         " << args[1].get_name() << ",\n";
+        writer << "                         " << out[0].get_name() << ",\n";
+        writer << "                         {" << join(arg0_shape) << "},\n";
+        writer << "                         {" << join(arg1_shape) << "},\n";
+        writer << "                         {" << join(result_shape) << "},\n";
+        writer << "                         {"
+               << join(convolution->get_window_movement_strides_backward()) << "},\n";
+        writer << "                         {"
+               << join(convolution->get_window_dilation_strides_backward()) << "},\n";
+        writer << "                         {" << join(convolution->get_padding_below_backward())
+               << "},\n";
+        writer << "                         {" << join(convolution->get_padding_above_backward())
+               << "},\n";
+        writer << "                         {"
+               << join(convolution->get_data_dilation_strides_backward()) << "},\n";
+        writer << "                         1, 0, 0, 1, 1, 0, false);\n";
+    }
 }
 
 void runtime::cpu::CPU_Emitter::EmitConvolutionBackpropData(
@@ -2065,25 +2147,103 @@ void runtime::cpu::CPU_Emitter::EmitConvolutionBackpropData(
     auto arg0_shape = args[0].get_shape();
     auto arg1_shape = args[1].get_shape();
     auto result_shape = out[0].get_shape();
+    auto arg0_rank = arg0_shape.size();
+    auto arg1_rank = arg1_shape.size();
 
-    // Note that args[1] and args[0] are switched here from the usual order.
-    writer << "kernel::convolution<" << out[0].get_type() << ">(" << args[1].get_name() << ",\n";
-    writer << "                         " << args[0].get_name() << ",\n";
-    writer << "                         " << out[0].get_name() << ",\n";
-    writer << "                         {" << join(arg1_shape) << "},\n";
-    writer << "                         {" << join(arg0_shape) << "},\n";
-    writer << "                         {" << join(result_shape) << "},\n";
-    writer << "                         {"
-           << join(convolution->get_window_movement_strides_backward()) << "},\n";
-    writer << "                         {"
-           << join(convolution->get_window_dilation_strides_backward()) << "},\n";
-    writer << "                         {" << join(convolution->get_padding_below_backward())
-           << "},\n";
-    writer << "                         {" << join(convolution->get_padding_above_backward())
-           << "},\n";
-    writer << "                         {"
-           << join(convolution->get_data_dilation_strides_backward()) << "},\n";
-    writer << "                         0, 1, 0, 1, 0, 1, true);\n";
+    bool data_dilated = false;
+    for (size_t s : convolution->get_data_dilation_strides_forward())
+    {
+        data_dilated = data_dilated || (s != 1);
+    }
+
+    if (!data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
+        args[0].get_element_type() == element::f32)
+    {
+        const string& elem_type = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+        Strides window_dilation_strides_adjusted;
+
+        for (size_t s : convolution->get_window_dilation_strides_forward())
+        {
+            window_dilation_strides_adjusted.push_back(s - 1);
+        }
+
+        auto emit_memory_desc = [&writer](const std::string& var,
+                                          const std::string& shape,
+                                          const std::string& type,
+                                          const std::string& layout) {
+            writer << "memory::desc " << var << " = memory::desc({" << shape << "}, " << type
+                   << ", memory::format::" << layout << ");\n";
+        };
+
+        auto emit_memory =
+            [&writer](const std::string& var, const std::string& desc, const std::string& data) {
+                writer << "memory " << var << " = memory({" << desc << ", cpu_engine}, " << data
+                       << ");\n";
+            };
+
+        auto emit_memory_dims = [&writer](const std::string& var, const std::string& dims) {
+            writer << "memory::dims " << var << "{" << dims << "};\n";
+        };
+
+        writer << "{\n";
+        writer.indent++;
+        writer << "try {\n";
+        writer.indent++;
+        writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+        emit_memory_desc("weight_desc", join(arg0_shape), elem_type, "oihw");
+        emit_memory_desc("delta_desc", join(arg1_shape), elem_type, "nchw");
+        emit_memory_desc("result_desc", join(result_shape), elem_type, "nchw");
+        emit_memory("weight", "weight_desc", args[0].get_name());
+        emit_memory("delta", "delta_desc", args[1].get_name());
+        emit_memory("result", "result_desc", out[0].get_name());
+        emit_memory_dims("dilates", join(window_dilation_strides_adjusted));
+        emit_memory_dims("strides", join(convolution->get_window_movement_strides_forward()));
+        emit_memory_dims("padding_l", join(convolution->get_padding_below_forward()));
+        emit_memory_dims("padding_r", join(convolution->get_padding_above_forward()));
+
+        writer << "convolution_backward_data::desc bwd_data_desc(algorithm::convolution_direct, "
+                  "result_desc, weight_desc, delta_desc, strides, dilates, "
+                  "padding_l, padding_r, padding_kind::zero);\n"
+                  "convolution_forward::primitive_desc fwd_pd({prop_kind::forward, "
+                  "algorithm::convolution_direct, result_desc, weight_desc, delta_desc, "
+                  "strides, dilates, padding_l, padding_r, padding_kind::zero}, cpu_engine);\n"
+                  "convolution_backward_data::primitive_desc bwd_data_pd(bwd_data_desc, "
+                  "cpu_engine, fwd_pd);\n"
+                  "convolution_backward_data bwd_data(bwd_data_pd, delta, weight, result);\n"
+                  "stream s = stream(stream::kind::eager);\n"
+                  "s.submit({bwd_data}).wait();\n";
+        writer.indent--;
+        writer << "} catch (const mkldnn::error& e) {\n";
+        writer.indent++;
+        writer << "throw ngraph::ngraph_error(\"MKLDNN ERROR (\" + std::to_string("
+                  "e.status) + \"): \" + e.message);\n";
+        writer.indent--;
+        writer << "}\n";
+        writer.indent--;
+        writer << "}\n";
+    }
+    else
+    {
+        // Note that args[1] and args[0] are switched here from the usual order.
+        writer << "kernel::convolution<" << out[0].get_type() << ">(" << args[1].get_name()
+               << ",\n";
+        writer << "                         " << args[0].get_name() << ",\n";
+        writer << "                         " << out[0].get_name() << ",\n";
+        writer << "                         {" << join(arg1_shape) << "},\n";
+        writer << "                         {" << join(arg0_shape) << "},\n";
+        writer << "                         {" << join(result_shape) << "},\n";
+        writer << "                         {"
+               << join(convolution->get_window_movement_strides_backward()) << "},\n";
+        writer << "                         {"
+               << join(convolution->get_window_dilation_strides_backward()) << "},\n";
+        writer << "                         {" << join(convolution->get_padding_below_backward())
+               << "},\n";
+        writer << "                         {" << join(convolution->get_padding_above_backward())
+               << "},\n";
+        writer << "                         {"
+               << join(convolution->get_data_dilation_strides_backward()) << "},\n";
+        writer << "                         0, 1, 0, 1, 0, 1, true);\n";
+    }
 }
 
 void runtime::cpu::CPU_Emitter::EmitNot(codegen::CodeWriter& writer,
@@ -2192,13 +2352,13 @@ void runtime::cpu::CPU_Emitter::EmitReduceWindow(
     writer.indent++;
 
     string type = f_result_element_type.c_type_string();
-    writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
     writer.indent++;
     writer << "\n";
     writer << type << " result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << reduction_function->get_name() << "(args, out);\n";
+    writer << reduction_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
@@ -2236,24 +2396,24 @@ void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
 
     string type = n->get_output_element_type(0).c_type_string();
 
-    writer << "auto f_select = [](" << type << " x, " << type << " y) -> char\n{";
+    writer << "auto f_select = [&](" << type << " x, " << type << " y) -> char\n{";
     writer.indent++;
     writer << "\n";
     writer << "char result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << selection_function->get_name() << "(args, out);\n";
+    writer << selection_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
 
-    writer << "auto f_scatter = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer << "auto f_scatter = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
     writer.indent++;
     writer << "\n";
     writer << type << " result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << scatter_function->get_name() << "(args, out);\n";
+    writer << scatter_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
@@ -2370,18 +2530,60 @@ void runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop(
     auto apb = static_cast<const op::AvgPoolBackprop*>(n);
 
     auto delta_shape = args[0].get_shape();
+    auto delta_rank = delta_shape.size();
     auto out_shape = out[0].get_shape();
 
-    writer << "kernel::avg_pool_backprop<" << out[0].get_type() << ">(" << args[0].get_name()
-           << ",\n";
-    writer << "                 " << out[0].get_name() << ",\n";
-    writer << "                 {" << join(delta_shape) << "},\n";
-    writer << "                 {" << join(out_shape) << "},\n";
-    writer << "                 {" << join(apb->get_window_shape()) << "},\n";
-    writer << "                 {" << join(apb->get_window_movement_strides()) << "},\n";
-    writer << "                 {" << join(apb->get_padding_below()) << "},\n";
-    writer << "                 {" << join(apb->get_padding_above()) << "}\n";
-    writer << "                 );\n";
+    if (delta_rank == 4 && apb->get_window_shape().size() == 2 &&
+        args[0].get_element_type() == element::f32)
+    {
+        const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
+
+        writer << "{\n";
+        writer.indent++;
+
+        writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+        writer << "memory::desc input_data_desc = memory::desc({" << join(delta_shape) << "}, "
+               << et << ", memory::format::nchw);\n";
+        writer << "memory::desc result_desc = memory::desc({" << join(out_shape) << "}, " << et
+               << ", memory::format::nchw);\n";
+        writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[0].get_name()
+               << ");\n";
+        writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name()
+               << ");\n";
+        // Dummy forward primitive descriptor to keep MKLDNN happy
+        writer << "pooling_forward::primitive_desc fwd_pd = pooling_forward::primitive_desc("
+               << "{prop_kind::forward, algorithm::pooling_avg_exclude_padding, "
+               << "result_desc, input_data_desc, {" << join(apb->get_window_movement_strides())
+               << "}, {" << join(apb->get_window_shape()) << "}, "
+               << "{" << join(apb->get_padding_below()) << "}, "
+               << "{" << join(apb->get_padding_above()) << "}, "
+               << "padding_kind::zero}, cpu_engine);\n";
+        writer << "auto avg_pooling = pooling_backward(pooling_backward::primitive_desc("
+               << "pooling_backward::desc(algorithm::pooling_avg_exclude_padding, "
+               << "result_desc, input_data_desc, {" << join(apb->get_window_movement_strides())
+               << "}, {" << join(apb->get_window_shape()) << "}, "
+               << "{" << join(apb->get_padding_below()) << "}, "
+               << "{" << join(apb->get_padding_above()) << "}, "
+               << "padding_kind::zero), cpu_engine, fwd_pd), "
+               << "input_data, result);\n";
+        writer << "auto s = stream(stream::kind::eager);\n"
+               << "s.submit({avg_pooling}).wait();\n";
+        writer.indent--;
+        writer << "}\n";
+    }
+    else
+    {
+        writer << "kernel::avg_pool_backprop<" << out[0].get_type() << ">(" << args[0].get_name()
+               << ",\n";
+        writer << "                 " << out[0].get_name() << ",\n";
+        writer << "                 {" << join(delta_shape) << "},\n";
+        writer << "                 {" << join(out_shape) << "},\n";
+        writer << "                 {" << join(apb->get_window_shape()) << "},\n";
+        writer << "                 {" << join(apb->get_window_movement_strides()) << "},\n";
+        writer << "                 {" << join(apb->get_padding_below()) << "},\n";
+        writer << "                 {" << join(apb->get_padding_above()) << "}\n";
+        writer << "                 );\n";
+    }
 }
 
 void runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop(

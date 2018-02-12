@@ -3,8 +3,22 @@
 Graph Basics
 ============
 
-This section describes the basic concepts you need to know when constructing
-a graph.
+This section describes the basic concepts you need to know when 
+constructing a graph.
+
+
+Framework Bridges
+------------------
+
+Frontends (or users who require the flexibility of constructing 
+Ops directly) can utilize a set of graph construction functions 
+to construct graphs. 
+
+A framework bridge constructs a function which is compiled/optimized
+by a sequence of graph transformations that replace subgraphs of the
+computation with more optimal subgraphs. Throughout this process, ops
+represent tensor operations.
+
 
 Tensors
 -------
@@ -149,39 +163,4 @@ exception.
 After the graph is constructed, we create the function, passing the
 `Function` constructor the nodes that are results and the parameters
 that are arguments.
-
-
-Defining ops
-============
-
-A framework bridge constructs a function which is compiled/optimized
-by a sequence of graph transformations that replace subgraphs of the
-computation with more optimal subgraphs. Throughout this process, ops
-represent tensor operations.
-
-*Core ops* are ops that are available and generally useful to all
-framework bridges and that can be compiled by all transformers. A
-framework bridge may define framework-specific ops to simplify graph
-construction, provided that the bridge can enable every transformer to
-replace all such ops with equivalent subgraphs composed of core
-ops. Similary, transformers may define transformer-specific ops to
-represent kernels or other intermediate operations. If a framework
-supports extending the set of ops it offers, a bridge may even expose
-transformer-specific ops to the framework user.
-
-It is easiest to define a new op by adapting an existing op. Some of
-the tasks that must be performed are:
-
-- Op constructor:
-
-  * Checking type-consistency of arguments 
-  * Specifying the result type for a call 
-
-- Serializer/Deserializer
-
-- Transformer handlers:
-
-  * Interpreter (reference) implementation of behavior. The
-    implementation should favor clarity over efficiency.
-
 
