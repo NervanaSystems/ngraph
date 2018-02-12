@@ -25,9 +25,9 @@ using namespace std;
 shared_ptr<runtime::TensorView>
     make_reduce_result(function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&)> func)
 {
-    auto shape_a = Shape{3, 2};
+    Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto shape_rt = Shape{2};
+    Shape shape_rt{2};
     auto f = make_shared<Function>(func(A, {0}), op::Parameters{A});
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
@@ -45,9 +45,9 @@ shared_ptr<runtime::TensorView>
 shared_ptr<runtime::TensorView> make_reduce_result_true(
     function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
-    auto shape_a = Shape{3, 2};
+    Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto shape_rt = Shape{2};
+    Shape shape_rt{2};
     auto f = make_shared<Function>(func(A, {0}, true), op::Parameters{A});
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
@@ -65,9 +65,9 @@ shared_ptr<runtime::TensorView> make_reduce_result_true(
 shared_ptr<runtime::TensorView> make_reduce_result_false(
     function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
-    auto shape_a = Shape{3, 2};
+    Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto shape_rt = Shape{2};
+    Shape shape_rt{2};
     auto f = make_shared<Function>(func(A, {0}, false), op::Parameters{A});
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
