@@ -22,12 +22,12 @@ from pyngraph import Node
 from pyngraph.op import Abs, Add, Broadcast, Ceiling, Constant, Convert, Divide, Equal, Exp, \
     Floor, Log, Maximum, Minimum, Multiply, Negative, Parameter, Sqrt, Subtract
 
-from ngraph_api.utils.input_validation import assert_list_of_ints
-from ngraph_api.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    as_node
-from ngraph_api.utils.types import get_element_type
 from ngraph_api.utils.broadcasting import get_broadcast_axes
 from ngraph_api.utils.decorators import nameable_op, binary_op, unary_op
+from ngraph_api.utils.input_validation import assert_list_of_ints
+from ngraph_api.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
+    as_node, NodeInput
+from ngraph_api.utils.types import get_element_type
 
 
 @nameable_op
@@ -47,87 +47,87 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
 
 # Unary ops
 @unary_op
-def absolute(node, name=None):  # type: (Node, str) -> Node
+def absolute(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies f(x) = abs(x) to the input node elementwise."""
     node = as_node(node)
     return Abs(node)
 
 
 @unary_op
-def sqrt(node, name=None):  # type: (Node, str) -> Node
+def sqrt(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies square root to the input node elementwise."""
     return Sqrt(node)
 
 
 @unary_op
-def exp(node, name=None):  # type: (Node, str) -> Node
+def exp(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies exp to the input node elementwise."""
     return Exp(node)
 
 
 @unary_op
-def log(node, name=None):  # type: (Node, str) -> Node
+def log(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies natural logarithm to the input node elementwise."""
     return Log(node)
 
 
 @unary_op
-def negative(node, name=None):  # type: (Node, str) -> Node
+def negative(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies f(x) = -x to the input node elementwise."""
     return Negative(node)
 
 
 @unary_op
-def floor(node, name=None):  # type: (Node, str) -> Node
+def floor(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies floor to the input node elementwise."""
     return Floor(node)
 
 
 @unary_op
-def ceiling(node, name=None):  # type: (Node, str) -> Node
+def ceiling(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies ceiling to the input node elementwise."""
     return Ceiling(node)
 
 
 # Binary ops
 @binary_op
-def divide(left_node, right_node, name=None):  # type: (Node, Node, str) -> Node
+def divide(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies f(x) = A/B to the input nodes elementwise."""
     return Divide(left_node, right_node)
 
 
 @binary_op
-def multiply(left_node, right_node, name=None):  # type: (Node, Node, str) -> Node
+def multiply(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies f(x) = A*B to the input nodes elementwise."""
     return Multiply(left_node, right_node)
 
 
 @binary_op
-def subtract(left_node, right_node, name=None):  # type: (Node, Node, str) -> Node
+def subtract(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies f(x) = A-B to the input nodes elementwise."""
     return Subtract(left_node, right_node)
 
 
 @binary_op
-def add(left_node, right_node, name=None):  # type: (Node, Node, str) -> Node
+def add(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies f(x) = A+B to the input nodes elementwise."""
     return Add(left_node, right_node)
 
 
 @binary_op
-def equal(left_node, right_node, name=None):  # type: (Node, Node, str) -> Node
+def equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which checks if input nodes are equal elementwise."""
     return Equal(left_node, right_node)
 
 
 @binary_op
-def minimum(left_node, right_node, name=None):  # type: (Node, Node, str) -> Node
+def minimum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies the minimum operation to input nodes elementwise."""
     return Minimum(left_node, right_node)
 
 
 @binary_op
-def maximum(left_node, right_node, name=None):  # type: (Node, Node, str) -> Node
+def maximum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies the maximum operation to input nodes elementwise."""
     return Maximum(left_node, right_node)
 
