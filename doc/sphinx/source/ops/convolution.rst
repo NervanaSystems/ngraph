@@ -9,8 +9,6 @@ A batched convolution operation.
 Basic Operation
 ===============
 
-In the simplest case, (TODO: explain what convolution is in human words.)
-
 +-----------------+-------------------------+--------------------------------+
 | Input Name      | Element Type            | Shape                          |
 +=================+=========================+================================+
@@ -27,12 +25,10 @@ In the simplest case, (TODO: explain what convolution is in human words.)
 
 It must be the case that after dilation and padding are applied, the filter fits within the image.
 
-(TODO: pictorial example of basic convolution.)
+.. TODO image add
 
 Window Parameters
 =================
-
-Two optional parameters affect the... stuff.
 
 +-----------------------------+-----------------------------+------------------------------------+
 | Parameter Name              | Type                        | Meaning                            |
@@ -44,13 +40,11 @@ Two optional parameters affect the... stuff.
 |                             |                             | filters.                           |
 +-----------------------------+-----------------------------+------------------------------------+
 
-(TODO: pictorial example of the effect of window movement stride.)
-(TODO: pictorial example of window before and after dilation.)
+.. TODO: pictorial example of the effect of window movement stride.
+.. TODO: pictorial example of window before and after dilation.
 
 Image Batch Parameters
 ======================
-
-Three optional parameters affect the... stuff.
 
 +----------------------------+-----------------------------+---------------------------------------+
 | Parameter Name             | Type                        | Meaning                               |
@@ -65,7 +59,6 @@ Three optional parameters affect the... stuff.
 |                            |                             | image batch.                          |
 +----------------------------+-----------------------------+---------------------------------------+
 
-(TODO: pictorial examples of the above)
 
 Mathematical Definition
 =======================
@@ -114,7 +107,7 @@ such that
 Convolution
 -----------
 
-TODO.
+.. TODO
 
 Padded, Dilated, Strided Convolution
 ------------------------------------
@@ -126,15 +119,12 @@ Padded, Dilated, Strided Convolution
 Batched, Padded, Dilated, Strided Convolution
 ---------------------------------------------
 
-TODO.
+.. TODO
 
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Convolution
-   :members:
+.. WIP 
+  .. doxygenclass:: ngraph::op::Convolution
+     :members:
 
-Python Interface
-================
-
-is not merged yet, but could go here!
