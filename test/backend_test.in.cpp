@@ -32,6 +32,17 @@
 using namespace std;
 using namespace ngraph;
 
+static const vector<element::Type> s_known_element_types = {element::from<float>(),
+                                                            element::from<double>(),
+                                                            element::from<int8_t>(),
+                                                            element::from<int16_t>(),
+                                                            element::from<int32_t>(),
+                                                            element::from<int64_t>(),
+                                                            element::from<uint8_t>(),
+                                                            element::from<uint16_t>(),
+                                                            element::from<uint32_t>(),
+                                                            element::from<uint64_t>()};
+
 TEST(${BACKEND_NAME}, aliased_output)
 {
     auto shape = Shape{2, 2};
@@ -5469,99 +5480,137 @@ TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
         read_vector<float>(result));
 }
 
-template <typename OP, typename T>
+template <typename OP>
 void make_unary_empty_test(const string& backend_name)
 {
     auto shape = Shape{0};
-    auto A = make_shared<op::Parameter>(element::from<T>(), shape);
-    auto f = make_shared<Function>(make_shared<OP>(A), op::Parameters{A});
+
+    op::Parameters params;
+    Nodes result_list;
+    for (size_t i = 0; i < s_known_element_types.size(); i++)
+    {
+        shared_ptr<op::Parameter> p = make_shared<op::Parameter>(s_known_element_types[i], shape);
+        params.push_back(p);
+        result_list.push_back(make_shared<OP>(p));
+    }
+
+    auto f = make_shared<Function>(result_list, params);
 
     auto manager = runtime::Manager::get(backend_name);
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
-    auto a = backend->make_primary_tensor_view(element::from<T>(), shape);
-    auto result = backend->make_primary_tensor_view(element::from<T>(), shape);
+    vector<shared_ptr<runtime::TensorView>> inputs;
+    vector<shared_ptr<runtime::TensorView>> outputs;
+    for (size_t i = 0; i < s_known_element_types.size(); i++)
+    {
+        inputs.push_back(backend->make_primary_tensor_view(s_known_element_types[i], shape));
+        outputs.push_back(backend->make_primary_tensor_view(s_known_element_types[i], shape));
+    }
 
-    cf->call({a}, {result});
+    cf->call(inputs, outputs);
 
-    auto in_vec = read_vector<T>(a);
-    auto out_vec = read_vector<T>(result);
+    EXPECT_EQ(read_vector<float>(inputs[0]).size(), 0);
+    EXPECT_EQ(read_vector<double>(inputs[1]).size(), 0);
+    EXPECT_EQ(read_vector<int8_t>(inputs[2]).size(), 0);
+    EXPECT_EQ(read_vector<int16_t>(inputs[3]).size(), 0);
+    EXPECT_EQ(read_vector<int32_t>(inputs[4]).size(), 0);
+    EXPECT_EQ(read_vector<int64_t>(inputs[5]).size(), 0);
+    EXPECT_EQ(read_vector<uint8_t>(inputs[6]).size(), 0);
+    EXPECT_EQ(read_vector<uint16_t>(inputs[7]).size(), 0);
+    EXPECT_EQ(read_vector<uint32_t>(inputs[8]).size(), 0);
+    EXPECT_EQ(read_vector<uint64_t>(inputs[9]).size(), 0);
 
-    EXPECT_EQ(in_vec.size(), 0);
-    EXPECT_EQ(out_vec.size(), 0);
+    EXPECT_EQ(read_vector<float>(outputs[0]).size(), 0);
+    EXPECT_EQ(read_vector<double>(outputs[1]).size(), 0);
+    EXPECT_EQ(read_vector<int8_t>(outputs[2]).size(), 0);
+    EXPECT_EQ(read_vector<int16_t>(outputs[3]).size(), 0);
+    EXPECT_EQ(read_vector<int32_t>(outputs[4]).size(), 0);
+    EXPECT_EQ(read_vector<int64_t>(outputs[5]).size(), 0);
+    EXPECT_EQ(read_vector<uint8_t>(outputs[6]).size(), 0);
+    EXPECT_EQ(read_vector<uint16_t>(outputs[7]).size(), 0);
+    EXPECT_EQ(read_vector<uint32_t>(outputs[8]).size(), 0);
+    EXPECT_EQ(read_vector<uint64_t>(outputs[9]).size(), 0);
 }
 
-template <typename OP, typename T, typename U = T>
-void make_binary_empty_test(const string& backend_name)
+template <typename OP>
+void make_binary_empty_test(const string& backend_name, bool is_comparison = false)
 {
     auto shape = Shape{0};
-    auto A = make_shared<op::Parameter>(element::from<T>(), shape);
-    auto B = make_shared<op::Parameter>(element::from<T>(), shape);
-    auto f = make_shared<Function>(make_shared<OP>(A, B), op::Parameters{A, B});
+    op::Parameters A;
+    for (size_t i = 0; i < s_known_element_types.size(); i++)
+    {
+        A.push_back(make_shared<op::Parameter>(s_known_element_types[i], shape));
+    }
+
+    Nodes result_list;
+    for (shared_ptr<op::Parameter> p : A)
+    {
+        result_list.push_back(make_shared<OP>(p, p));
+    }
+
+    auto f = make_shared<Function>(result_list, A);
 
     auto manager = runtime::Manager::get(backend_name);
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
-    auto a = backend->make_primary_tensor_view(element::from<T>(), shape);
-    auto b = backend->make_primary_tensor_view(element::from<T>(), shape);
-    auto result = backend->make_primary_tensor_view(element::from<U>(), shape);
+    vector<shared_ptr<runtime::TensorView>> inputs;
+    vector<shared_ptr<runtime::TensorView>> outputs;
+    for (size_t i = 0; i < s_known_element_types.size(); i++)
+    {
+        inputs.push_back(backend->make_primary_tensor_view(s_known_element_types[i], shape));
+        if (is_comparison)
+        {
+            outputs.push_back(backend->make_primary_tensor_view(element::from<char>(), shape));
+        }
+        else
+        {
+            outputs.push_back(backend->make_primary_tensor_view(s_known_element_types[i], shape));
+        }
+    }
 
-    cf->call({a, b}, {result});
+    cf->call(inputs, outputs);
 
-    auto in_vec = read_vector<T>(a);
-    auto out_vec = read_vector<U>(result);
+    EXPECT_EQ(read_vector<float>(inputs[0]).size(), 0);
+    EXPECT_EQ(read_vector<double>(inputs[1]).size(), 0);
+    EXPECT_EQ(read_vector<int8_t>(inputs[2]).size(), 0);
+    EXPECT_EQ(read_vector<int16_t>(inputs[3]).size(), 0);
+    EXPECT_EQ(read_vector<int32_t>(inputs[4]).size(), 0);
+    EXPECT_EQ(read_vector<int64_t>(inputs[5]).size(), 0);
+    EXPECT_EQ(read_vector<uint8_t>(inputs[6]).size(), 0);
+    EXPECT_EQ(read_vector<uint16_t>(inputs[7]).size(), 0);
+    EXPECT_EQ(read_vector<uint32_t>(inputs[8]).size(), 0);
+    EXPECT_EQ(read_vector<uint64_t>(inputs[9]).size(), 0);
 
-    EXPECT_EQ(in_vec.size(), 0);
-    EXPECT_EQ(out_vec.size(), 0);
-}
-
-template <typename OP>
-void make_binary_empty_test(const string& backend_name)
-{
-    make_binary_empty_test<OP, float>(backend_name);
-    make_binary_empty_test<OP, double>(backend_name);
-    make_binary_empty_test<OP, int8_t>(backend_name);
-    make_binary_empty_test<OP, int16_t>(backend_name);
-    make_binary_empty_test<OP, int32_t>(backend_name);
-    make_binary_empty_test<OP, int64_t>(backend_name);
-    make_binary_empty_test<OP, uint8_t>(backend_name);
-    make_binary_empty_test<OP, uint16_t>(backend_name);
-    make_binary_empty_test<OP, uint32_t>(backend_name);
-    make_binary_empty_test<OP, uint64_t>(backend_name);
-}
-
-template <typename OP>
-void make_binary_empty_comparison_test(const string& backend_name)
-{
-    make_binary_empty_test<OP, float, char>(backend_name);
-    make_binary_empty_test<OP, double, char>(backend_name);
-    make_binary_empty_test<OP, int8_t, char>(backend_name);
-    make_binary_empty_test<OP, int16_t, char>(backend_name);
-    make_binary_empty_test<OP, int32_t, char>(backend_name);
-    make_binary_empty_test<OP, int64_t, char>(backend_name);
-    make_binary_empty_test<OP, uint8_t, char>(backend_name);
-    make_binary_empty_test<OP, uint16_t, char>(backend_name);
-    make_binary_empty_test<OP, uint32_t, char>(backend_name);
-    make_binary_empty_test<OP, uint64_t, char>(backend_name);
-}
-
-template <typename OP>
-void make_unary_empty_test(const string& backend_name)
-{
-    make_unary_empty_test<OP, float>(backend_name);
-    make_unary_empty_test<OP, double>(backend_name);
-    make_unary_empty_test<OP, int8_t>(backend_name);
-    make_unary_empty_test<OP, int16_t>(backend_name);
-    make_unary_empty_test<OP, int32_t>(backend_name);
-    make_unary_empty_test<OP, int64_t>(backend_name);
-    make_unary_empty_test<OP, uint8_t>(backend_name);
-    make_unary_empty_test<OP, uint16_t>(backend_name);
-    make_unary_empty_test<OP, uint32_t>(backend_name);
-    make_unary_empty_test<OP, uint64_t>(backend_name);
+    if (is_comparison)
+    {
+        EXPECT_EQ(read_vector<char>(outputs[0]).size(), 0);
+        EXPECT_EQ(read_vector<char>(outputs[1]).size(), 0);
+        EXPECT_EQ(read_vector<char>(outputs[2]).size(), 0);
+        EXPECT_EQ(read_vector<char>(outputs[3]).size(), 0);
+        EXPECT_EQ(read_vector<char>(outputs[4]).size(), 0);
+        EXPECT_EQ(read_vector<char>(outputs[5]).size(), 0);
+        EXPECT_EQ(read_vector<char>(outputs[6]).size(), 0);
+        EXPECT_EQ(read_vector<char>(outputs[7]).size(), 0);
+        EXPECT_EQ(read_vector<char>(outputs[8]).size(), 0);
+        EXPECT_EQ(read_vector<char>(outputs[9]).size(), 0);
+    }
+    else
+    {
+        EXPECT_EQ(read_vector<float>(outputs[0]).size(), 0);
+        EXPECT_EQ(read_vector<double>(outputs[1]).size(), 0);
+        EXPECT_EQ(read_vector<int8_t>(outputs[2]).size(), 0);
+        EXPECT_EQ(read_vector<int16_t>(outputs[3]).size(), 0);
+        EXPECT_EQ(read_vector<int32_t>(outputs[4]).size(), 0);
+        EXPECT_EQ(read_vector<int64_t>(outputs[5]).size(), 0);
+        EXPECT_EQ(read_vector<uint8_t>(outputs[6]).size(), 0);
+        EXPECT_EQ(read_vector<uint16_t>(outputs[7]).size(), 0);
+        EXPECT_EQ(read_vector<uint32_t>(outputs[8]).size(), 0);
+        EXPECT_EQ(read_vector<uint64_t>(outputs[9]).size(), 0);
+    }
 }
 
 TEST(${BACKEND_NAME}, zero_sized_abs)
@@ -5596,7 +5645,25 @@ TEST(${BACKEND_NAME}, zero_sized_negative)
 
 TEST(${BACKEND_NAME}, zero_sized_not)
 {
-    make_unary_empty_test<op::Not, char>("${BACKEND_NAME}");
+    auto shape = Shape{0};
+    auto A = make_shared<op::Parameter>(element::from<char>(), shape);
+    auto f = make_shared<Function>(make_shared<op::Not>(A), op::Parameters{A});
+
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto a = backend->make_primary_tensor_view(element::from<char>(), shape);
+    auto result = backend->make_primary_tensor_view(element::from<char>(), shape);
+
+    cf->call({a}, {result});
+
+    auto in_vec = read_vector<char>(a);
+    auto out_vec = read_vector<char>(result);
+
+    EXPECT_EQ(in_vec.size(), 0);
+    EXPECT_EQ(out_vec.size(), 0);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_sign)
@@ -5666,27 +5733,27 @@ TEST(${BACKEND_NAME}, zero_sized_divide)
 
 TEST(${BACKEND_NAME}, zero_sized_eq)
 {
-    make_binary_empty_comparison_test<op::Equal>("${BACKEND_NAME}");
+    make_binary_empty_test<op::Equal>("${BACKEND_NAME}", true);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_greater)
 {
-    make_binary_empty_comparison_test<op::Greater>("${BACKEND_NAME}");
+    make_binary_empty_test<op::Greater>("${BACKEND_NAME}", true);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_greatereq)
 {
-    make_binary_empty_comparison_test<op::GreaterEq>("${BACKEND_NAME}");
+    make_binary_empty_test<op::GreaterEq>("${BACKEND_NAME}", true);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_less)
 {
-    make_binary_empty_comparison_test<op::Less>("${BACKEND_NAME}");
+    make_binary_empty_test<op::Less>("${BACKEND_NAME}", true);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_lesseq)
 {
-    make_binary_empty_comparison_test<op::LessEq>("${BACKEND_NAME}");
+    make_binary_empty_test<op::LessEq>("${BACKEND_NAME}", true);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_maximum)
@@ -5706,7 +5773,7 @@ TEST(${BACKEND_NAME}, zero_sized_multiply)
 
 TEST(${BACKEND_NAME}, zero_sized_not_equal)
 {
-    make_binary_empty_comparison_test<op::NotEqual>("${BACKEND_NAME}");
+    make_binary_empty_test<op::NotEqual>("${BACKEND_NAME}", true);
 }
 
 TEST(${BACKEND_NAME}, zero_sized_power)
