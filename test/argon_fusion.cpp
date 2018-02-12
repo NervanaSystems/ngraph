@@ -45,11 +45,11 @@ using namespace std;
 
 TEST(Argon_fusion, fuse_max_with_constant_zero_input_as_relu)
 {
-    auto shape_a = Shape{1, 5};
+    Shape shape_a{1, 5};
     auto A = op::Constant::create(element::f32, shape_a, {0, 0, 0, 0, 0});
     auto B = make_shared<op::Parameter>(element::f32, shape_a);
     auto max = make_shared<op::Maximum>(A, B);
-    auto shape_rt = Shape{1, 5};
+    Shape shape_rt{1, 5};
     auto f = make_shared<Function>(max, op::Parameters{B});
 
     auto manager = runtime::Manager::get("ARGON");

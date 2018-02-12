@@ -206,7 +206,7 @@ TEST(util, all_close)
 TEST(util, traverse_functions)
 {
     // First create "f(A,B,C) = (A+B)*C".
-    auto shape = Shape{2, 2};
+    Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
@@ -320,7 +320,7 @@ TEST_F(CloneTest, clone_function_full)
 
 TEST(graph_util, clone_multiple_results)
 {
-    auto shape = Shape{2, 2};
+    Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);

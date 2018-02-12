@@ -69,7 +69,7 @@ ngraph::op::MatmulBias::MatmulBias(std::shared_ptr<ngraph::Node> W,
         throw ngraph_error("product dimensions are not equal while creating MatmulBias");
     }
 
-    auto dot_shape = Shape{shape_w.at(1 - dot_dimension_w), shape_x.at(1 - dot_dimension_x)};
+    Shape dot_shape{shape_w.at(1 - dot_dimension_w), shape_x.at(1 - dot_dimension_x)};
     NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape)
                  << " , b shape = " << vector_to_string(b->get_shape());
 
