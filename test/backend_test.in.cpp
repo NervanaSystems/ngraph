@@ -32,6 +32,17 @@
 using namespace std;
 using namespace ngraph;
 
+static const vector<element::Type> s_known_element_types = {element::from<float>(),
+                                                            element::from<double>(),
+                                                            element::from<int8_t>(),
+                                                            element::from<int16_t>(),
+                                                            element::from<int32_t>(),
+                                                            element::from<int64_t>(),
+                                                            element::from<uint8_t>(),
+                                                            element::from<uint16_t>(),
+                                                            element::from<uint32_t>(),
+                                                            element::from<uint64_t>()};
+
 TEST(${BACKEND_NAME}, aliased_output)
 {
     auto shape = Shape{2, 2};
@@ -5475,20 +5486,11 @@ void make_unary_empty_test(const string& backend_name)
     auto shape = Shape{0};
 
     op::Parameters params;
-    params.push_back(make_shared<op::Parameter>(element::from<float>(), shape));
-    params.push_back(make_shared<op::Parameter>(element::from<double>(), shape));
-    params.push_back(make_shared<op::Parameter>(element::from<int8_t>(), shape));
-    params.push_back(make_shared<op::Parameter>(element::from<int16_t>(), shape));
-    params.push_back(make_shared<op::Parameter>(element::from<int32_t>(), shape));
-    params.push_back(make_shared<op::Parameter>(element::from<int64_t>(), shape));
-    params.push_back(make_shared<op::Parameter>(element::from<uint8_t>(), shape));
-    params.push_back(make_shared<op::Parameter>(element::from<uint16_t>(), shape));
-    params.push_back(make_shared<op::Parameter>(element::from<uint32_t>(), shape));
-    params.push_back(make_shared<op::Parameter>(element::from<uint64_t>(), shape));
-
     Nodes result_list;
-    for (shared_ptr<op::Parameter> p : params)
+    for (size_t i = 0; i < s_known_element_types.size(); i++)
     {
+        shared_ptr<op::Parameter> p = make_shared<op::Parameter>(s_known_element_types[i], shape);
+        params.push_back(p);
         result_list.push_back(make_shared<OP>(p));
     }
 
@@ -5501,28 +5503,11 @@ void make_unary_empty_test(const string& backend_name)
 
     vector<shared_ptr<runtime::TensorView>> inputs;
     vector<shared_ptr<runtime::TensorView>> outputs;
-
-    inputs.push_back(backend->make_primary_tensor_view(element::from<float>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<double>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<int8_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<int16_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<int32_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<int64_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<uint8_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<uint16_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<uint32_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<uint64_t>(), shape));
-
-    outputs.push_back(backend->make_primary_tensor_view(element::from<float>(), shape));
-    outputs.push_back(backend->make_primary_tensor_view(element::from<double>(), shape));
-    outputs.push_back(backend->make_primary_tensor_view(element::from<int8_t>(), shape));
-    outputs.push_back(backend->make_primary_tensor_view(element::from<int16_t>(), shape));
-    outputs.push_back(backend->make_primary_tensor_view(element::from<int32_t>(), shape));
-    outputs.push_back(backend->make_primary_tensor_view(element::from<int64_t>(), shape));
-    outputs.push_back(backend->make_primary_tensor_view(element::from<uint8_t>(), shape));
-    outputs.push_back(backend->make_primary_tensor_view(element::from<uint16_t>(), shape));
-    outputs.push_back(backend->make_primary_tensor_view(element::from<uint32_t>(), shape));
-    outputs.push_back(backend->make_primary_tensor_view(element::from<uint64_t>(), shape));
+    for (size_t i = 0; i < s_known_element_types.size(); i++)
+    {
+        inputs.push_back(backend->make_primary_tensor_view(s_known_element_types[i], shape));
+        outputs.push_back(backend->make_primary_tensor_view(s_known_element_types[i], shape));
+    }
 
     cf->call(inputs, outputs);
 
@@ -5554,16 +5539,10 @@ void make_binary_empty_test(const string& backend_name, bool is_comparison = fal
 {
     auto shape = Shape{0};
     op::Parameters A;
-    A.push_back(make_shared<op::Parameter>(element::from<float>(), shape));
-    A.push_back(make_shared<op::Parameter>(element::from<double>(), shape));
-    A.push_back(make_shared<op::Parameter>(element::from<int8_t>(), shape));
-    A.push_back(make_shared<op::Parameter>(element::from<int16_t>(), shape));
-    A.push_back(make_shared<op::Parameter>(element::from<int32_t>(), shape));
-    A.push_back(make_shared<op::Parameter>(element::from<int64_t>(), shape));
-    A.push_back(make_shared<op::Parameter>(element::from<uint8_t>(), shape));
-    A.push_back(make_shared<op::Parameter>(element::from<uint16_t>(), shape));
-    A.push_back(make_shared<op::Parameter>(element::from<uint32_t>(), shape));
-    A.push_back(make_shared<op::Parameter>(element::from<uint64_t>(), shape));
+    for (size_t i = 0; i < s_known_element_types.size(); i++)
+    {
+        A.push_back(make_shared<op::Parameter>(s_known_element_types[i], shape));
+    }
 
     Nodes result_list;
     for (shared_ptr<op::Parameter> p : A)
@@ -5580,43 +5559,17 @@ void make_binary_empty_test(const string& backend_name, bool is_comparison = fal
 
     vector<shared_ptr<runtime::TensorView>> inputs;
     vector<shared_ptr<runtime::TensorView>> outputs;
-
-    inputs.push_back(backend->make_primary_tensor_view(element::from<float>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<double>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<int8_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<int16_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<int32_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<int64_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<uint8_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<uint16_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<uint32_t>(), shape));
-    inputs.push_back(backend->make_primary_tensor_view(element::from<uint64_t>(), shape));
-
-    if (is_comparison)
+    for (size_t i = 0; i < s_known_element_types.size(); i++)
     {
-        outputs.push_back(backend->make_primary_tensor_view(element::from<char>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<char>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<char>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<char>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<char>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<char>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<char>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<char>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<char>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<char>(), shape));
-    }
-    else
-    {
-        outputs.push_back(backend->make_primary_tensor_view(element::from<float>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<double>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<int8_t>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<int16_t>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<int32_t>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<int64_t>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<uint8_t>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<uint16_t>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<uint32_t>(), shape));
-        outputs.push_back(backend->make_primary_tensor_view(element::from<uint64_t>(), shape));
+        inputs.push_back(backend->make_primary_tensor_view(s_known_element_types[i], shape));
+        if (is_comparison)
+        {
+            outputs.push_back(backend->make_primary_tensor_view(element::from<char>(), shape));
+        }
+        else
+        {
+            outputs.push_back(backend->make_primary_tensor_view(s_known_element_types[i], shape));
+        }
     }
 
     cf->call(inputs, outputs);
