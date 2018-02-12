@@ -120,6 +120,15 @@ def equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str
     return Equal(left_node, right_node)
 
 
+# Extend Node class to support binary operators
+Node.__mul__ = multiply
+Node.__div__ = divide
+Node.__sub__ = subtract
+Node.__add__ = add
+Node.__eq__ = equal
+Node.__truediv__ = divide
+
+
 @binary_op
 def minimum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies the minimum operation to input nodes elementwise."""
