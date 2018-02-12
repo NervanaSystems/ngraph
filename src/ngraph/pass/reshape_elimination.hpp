@@ -32,11 +32,13 @@ public:
     ReshapeElimination()
         : GraphRewrite()
     {
+        construct_dot_transpose_pattern();
         construct_identity_reshape_pattern();
         construct_reshapex2_pattern();
     }
 
 private:
+    void construct_dot_transpose_pattern();
     void construct_identity_reshape_pattern();
     void construct_reshapex2_pattern();
 };
