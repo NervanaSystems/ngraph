@@ -77,7 +77,7 @@ namespace ngraph
 
                     void emit_abs(void* in, void* out, size_t count)
                     {
-                            const char *op_abs = R"(  
+                        const char *op_abs = R"(  
   extern "C" __global__  
   void cuda_op_abs(float* in, float* out, size_t n)  
   {  
@@ -88,80 +88,62 @@ namespace ngraph
     }
   })";
 
-    // Create an instance of nvrtcProgram with the code string. 
+                            // Create an instance of nvrtcProgram with the code string. 
 
-    nvrtcProgram prog; 
-    NVRTC_SAFE_CALL(nvrtcCreateProgram(&prog, // prog i
-                op_abs, // buffer 
-                "op_abs.cu", // name 
-                0, // numHeaders 
-                NULL, // headers 
-                NULL)); // includeNames
+                        nvrtcProgram prog; 
+                        NVRTC_SAFE_CALL(nvrtcCreateProgram(&prog,
+                                    op_abs, 
+                                    "op_abs.cu", 
+                                    0, // numHeaders 
+                                    NULL, // headers 
+                                    NULL)); // includeNames
 
 
-    const char *opts[] = {"--gpu-architecture=compute_35",
-        "--relocatable-device-code=true"};
-    nvrtcResult compileResult = nvrtcCompileProgram(prog, // prog 
-            2, // numOptions 
-            opts); // options
-    // Obtain compilation log from the program. 
+                        const char *opts[] = {"--gpu-architecture=compute_35",
+                            "--relocatable-device-code=true"};
+                        nvrtcResult compileResult = nvrtcCompileProgram(prog, 
+                                2, 
+                                opts); 
 
-    size_t logSize; 
+                        size_t logSize; 
 
-    NVRTC_SAFE_CALL(nvrtcGetProgramLogSize(prog, &logSize)); 
-    char *log = new char[logSize]; 
-    NVRTC_SAFE_CALL(nvrtcGetProgramLog(prog, log)); 
-    std::cout << log << '\n'; 
-    delete[] log; 
+                        NVRTC_SAFE_CALL(nvrtcGetProgramLogSize(prog, &logSize)); 
+                        char *log = new char[logSize]; 
+                        NVRTC_SAFE_CALL(nvrtcGetProgramLog(prog, log)); 
+                        std::cout << log << '\n'; 
+                        delete[] log; 
 
-    if (compileResult != NVRTC_SUCCESS) {
-        exit(1);
-    }
+                        if (compileResult != NVRTC_SUCCESS) {
+                            exit(1);
+                        }
 
-    size_t ptxSize; 
-    NVRTC_SAFE_CALL(nvrtcGetPTXSize(prog, &ptxSize)); 
-    char *ptx = new char[ptxSize]; 
-    NVRTC_SAFE_CALL(nvrtcGetPTX(prog, ptx)); // Destroy the program. 
-    NVRTC_SAFE_CALL(nvrtcDestroyProgram(&prog)); // Load the generated PTX and get a handle to the parent kernel. 
+                        size_t ptxSize; 
+                        NVRTC_SAFE_CALL(nvrtcGetPTXSize(prog, &ptxSize)); 
+                        char *ptx = new char[ptxSize]; 
+                        NVRTC_SAFE_CALL(nvrtcGetPTX(prog, ptx)); // Destroy the program. 
+                        NVRTC_SAFE_CALL(nvrtcDestroyProgram(&prog)); // Load the generated PTX and get a handle to the parent kernel. 
 
-      CUdevice cuDevice;
-      CUcontext context;
-      CUmodule module;
-      CUfunction cuda_op_abs_kernel;
-      CUDA_SAFE_CALL( cuInit(0));
-      CUDA_SAFE_CALL(cuDeviceGet(&cuDevice, 0));
-      CUDA_SAFE_CALL(cuCtxCreate(&context, 0, cuDevice)); 
-    CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, 0, 0));
-    CUDA_SAFE_CALL(cuModuleGetFunction(&cuda_op_abs_kernel, module, "cuda_op_abs"));
- 
-    size_t numBlocks = 4;
-    size_t numThreads = 4; 
-    size_t nt = numBlocks * numThreads; 
-    size_t bufferSize = nt * sizeof(float); 
-    float *hOut = new float[nt]; 
-    float *hIn = new float[nt]; 
-    for(int i = 0; i< nt; i++) hIn[i] = -i;
-    
-//    void *dOut, *dIn;
-//    cudaMalloc((void**) &dIn, 64);
-//    cudaMalloc((void**) &dOut, 64);   
-    CUdeviceptr dPtrIn, dPtrOut;
-    dPtrIn = (CUdeviceptr)in;
-    dPtrOut = (CUdeviceptr)out;
-    
-                        void *argsList[] = {&dPtrIn, &dPtrOut, &nt};
-  //  cudaLaunchKernel(cuda_op_obs_kernel,
-  //                   {4, 1, 1},
-  //                   {1, 1, 1},
-  //                    argslist, 0, NULL);
- 
-                 //       void *argsList[] = {dIn, dOut, &nt};
+                        CUdevice cuDevice;
+                        CUcontext context;
+                        CUmodule module;
+                        CUfunction cuda_op_abs_kernel;
+                        CUDA_SAFE_CALL( cuInit(0));
+                        CUDA_SAFE_CALL(cuDeviceGet(&cuDevice, 0));
+                        CUDA_SAFE_CALL(cuCtxCreate(&context, 0, cuDevice)); 
+                        CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, 0, 0));
+                        CUDA_SAFE_CALL(cuModuleGetFunction(&cuda_op_abs_kernel, module, "cuda_op_abs"));
+
+                        CUdeviceptr dPtrIn, dPtrOut;
+                        dPtrIn = (CUdeviceptr)in;
+                        dPtrOut = (CUdeviceptr)out;
+
+                        void *argsList[] = {&dPtrIn, &dPtrOut, &count};
                         CUDA_SAFE_CALL(
-                        cuLaunchKernel(cuda_op_abs_kernel, 
-                        4 , 1, 1, // grid dim 
-                        4, 1, 1, // block dim 
-                        0, NULL, // shared mem and stream 
-                        argsList, 0)); // arguments 
+                                cuLaunchKernel(cuda_op_abs_kernel, 
+                                    count ,1, 1, // grid dim 
+                                    1, 1, 1, // block dim 
+                                    0, NULL, // shared mem and stream 
+                                    argsList, 0)); // arguments 
                         CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output. 
                     }
 

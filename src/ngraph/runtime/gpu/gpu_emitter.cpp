@@ -93,35 +93,6 @@ void runtime::gpu::GPU_Emitter::EmitAbs(codegen::CodeWriter& writer,
     writer << "ngraph::runtime::gpu::cuda::kernel::emit_abs((void*) " << args[0].get_name() <<  ", (void*) " << out[0].get_name() << ", count);\n";
     writer.indent--;
     writer << "}\n";
-
-//   ngraph::runtime::gpu::cuda::kernel::emit_abs((void*) , (void*) ((float*)(outputs[0])), count);
-    //Generate input for execution, and create output buffers. 
-//    size_t nt = 4; //numBlocks * numThreads; 
-//    size_t bufferSize = nt * sizeof(float); 
-//    float *hOut = new float[nt]; 
-//    float *hIn = new float[nt]; 
-//    for(int i = 0; i< nt; i++) hIn[i] = -i;
-//    
-//    CUdeviceptr dOut, dIn;
-//    cuMemAlloc(&dOut, bufferSize); // Execute parent kernel. 
-//    cuMemAlloc(&dIn, bufferSize); // Execute parent kernel. 
-//    cuMemcpyHtoD(dIn, hIn, bufferSize); 
-//    
-//    ngraph::runtime::gpu::cuda::kernel::emit_abs((void*) dIn , (void*) dOut, nt);
-
-
-    //void *argst[] = {&dIn, &dOut, &nt};
-    // CUDA_SAFE_CALL(
-    // cuLaunchKernel(kernel, 
-    //    numBlocks , 1, 1, // grid dim 
-    //    numThreads, 1, 1, // block dim 
-    //    0, NULL, // shared mem and stream 
-    //   argst, 0)); // arguments 
-    //CUDA_SAFE_CALL(cuCtxSynchronize()); // Retrieve and print output. 
-    //cuMemcpyDtoH(hOut, dOut, bufferSize); 
-    //for (size_t i = 0; i < nt; ++i) { std::cout << hOut[i] << '\n'; } // Release resources. 
-    //cuMemFree(dOut); 
-    //cuModuleUnload(module); 
 }
 
 void runtime::gpu::GPU_Emitter::EmitAdd(codegen::CodeWriter& writer,
