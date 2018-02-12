@@ -1014,7 +1014,7 @@ void runtime::cpu::CPU_Emitter::EmitFunctionCall(
         writer << "\n};\n";
 
         writer << "\n";
-        writer << function->get_name() << "(args, out);\n";
+        writer << function->get_name() << "(args, out, ctx);\n";
     }
     writer.indent--;
     writer << "}\n";
@@ -1093,13 +1093,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << "{   // " << n->get_name() << " 3\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
-            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
             writer.indent++;
             writer << "\n";
             writer << type << " result;\n";
             writer << "void* args[] = {&x, &y};\n";
             writer << "void* out[] = {&result};\n";
-            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << reduction_function->get_name() << "(args, out, ctx);\n";
             writer << "return result;\n";
             writer.indent--;
             writer << "};\n";
@@ -1129,13 +1129,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << "{   // " << n->get_name() << " 5\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
-            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
             writer.indent++;
             writer << "\n";
             writer << type << " result;\n";
             writer << "void* args[] = {&x, &y};\n";
             writer << "void* out[] = {&result};\n";
-            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << reduction_function->get_name() << "(args, out, ctx);\n";
             writer << "return result;\n";
             writer.indent--;
             writer << "};\n";
@@ -1161,13 +1161,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             writer << "{   // " << n->get_name() << " 7\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
-            writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+            writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
             writer.indent++;
             writer << "\n";
             writer << type << " result;\n";
             writer << "void* args[] = {&x, &y};\n";
             writer << "void* out[] = {&result};\n";
-            writer << reduction_function->get_name() << "(args, out);\n";
+            writer << reduction_function->get_name() << "(args, out, ctx);\n";
             writer << "return result;\n";
             writer.indent--;
             writer << "};\n";
@@ -1183,13 +1183,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
         writer.indent++;
 
         string type = f_result_element_type.c_type_string();
-        writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+        writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
         writer.indent++;
         writer << "\n";
         writer << type << " result;\n";
         writer << "void* args[] = {&x, &y};\n";
         writer << "void* out[] = {&result};\n";
-        writer << reduction_function->get_name() << "(args, out);\n";
+        writer << reduction_function->get_name() << "(args, out, ctx);\n";
         writer << "return result;\n";
         writer.indent--;
         writer << "};\n";
@@ -1211,13 +1211,13 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
 
     string type = f_result_element_type.c_type_string();
 
-    writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
     writer.indent++;
     writer << "\n";
     writer << type << " result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << reduction_function->get_name() << "(args, out);\n";
+    writer << reduction_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
@@ -2194,13 +2194,13 @@ void runtime::cpu::CPU_Emitter::EmitReduceWindow(
     writer.indent++;
 
     string type = f_result_element_type.c_type_string();
-    writer << "auto f = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
     writer.indent++;
     writer << "\n";
     writer << type << " result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << reduction_function->get_name() << "(args, out);\n";
+    writer << reduction_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
@@ -2238,24 +2238,24 @@ void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
 
     string type = n->get_output_element_type(0).c_type_string();
 
-    writer << "auto f_select = [](" << type << " x, " << type << " y) -> char\n{";
+    writer << "auto f_select = [&](" << type << " x, " << type << " y) -> char\n{";
     writer.indent++;
     writer << "\n";
     writer << "char result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << selection_function->get_name() << "(args, out);\n";
+    writer << selection_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
 
-    writer << "auto f_scatter = [](" << type << " x, " << type << " y) -> " << type << "\n{";
+    writer << "auto f_scatter = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
     writer.indent++;
     writer << "\n";
     writer << type << " result;\n";
     writer << "void* args[] = {&x, &y};\n";
     writer << "void* out[] = {&result};\n";
-    writer << scatter_function->get_name() << "(args, out);\n";
+    writer << scatter_function->get_name() << "(args, out, ctx);\n";
     writer << "return result;\n";
     writer.indent--;
     writer << "};\n";
