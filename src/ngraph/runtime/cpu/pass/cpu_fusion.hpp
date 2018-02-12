@@ -32,9 +32,11 @@ public:
     CPUFusion()
         : GraphRewrite()
     {
-        construct_gemm_pattern();
+        construct_matmul_pattern();
+        construct_matmulbias_pattern();
     }
 
 private:
-    void construct_gemm_pattern();
+    void construct_matmul_pattern();
+    void construct_matmulbias_pattern();
 };

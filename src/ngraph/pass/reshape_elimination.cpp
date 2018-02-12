@@ -190,7 +190,7 @@ void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
         auto reshape1_shape = Shape{arg1->get_shape().at(1), arg1->get_shape().at(0)};
         auto reshape1 = std::make_shared<op::Reshape>(arg1, AxisVector{1, 0}, reshape1_shape);
 
-        auto tdot = std::shared_ptr<Node>(new op::Dot(arg1, arg0));
+        auto tdot = std::shared_ptr<Node>(new op::Dot(reshape1, reshape0));
         return tdot;
     };
 
