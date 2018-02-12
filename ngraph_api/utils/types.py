@@ -21,6 +21,9 @@ from typing import Union, List
 import numpy as np
 
 from pyngraph import Type as NgraphType
+from pyngraph import Node
+from pyngraph.op import Constant
+
 from ngraph_api.exceptions import NgraphTypeError
 
 
@@ -29,6 +32,7 @@ log = logging.getLogger(__file__)
 TensorShape = List[int]
 NumericData = Union[int, float, np.ndarray]
 NumericType = Union[type, np.dtype]
+NodeInput = Union[Node, NumericData]
 
 ngraph_to_numpy_types_map = [
     (NgraphType.f32, np.float32),
@@ -78,3 +82,26 @@ def get_ndarray(data):  # type: (NumericData) -> np.ndarray
     if type(data) == np.ndarray:
         return data
     return np.array(data)
+
+
+def make_constant_node(value, dtype=None):  # type: (NumericData, NumericType) -> Constant
+    """Return an ngraph Constant node with the specified value."""
+    ndarray = get_ndarray(value)
+    if dtype:
+        element_type = get_element_type(dtype)
+    else:
+        element_type = get_element_type(ndarray.dtype)
+
+    return Constant(element_type, ndarray.shape, ndarray.flatten().data)
+
+
+def as_node(input_value):  # type: (NodeInput) -> Node
+    """Return input values as nodes. Scalars will be converted to Constant nodes."""
+    if type(input_value) == Node:
+        return input_value
+    return make_constant_node(input_value)
+
+
+def as_nodes(*input_values):  # type: (*NodeInput) -> List[Node]
+    """Return input values as nodes. Scalars will be converted to Constant nodes."""
+    return [as_node(input_value) for input_value in input_values]
