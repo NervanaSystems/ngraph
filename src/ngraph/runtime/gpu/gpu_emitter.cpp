@@ -50,26 +50,26 @@ using namespace std;
 using namespace ngraph;
 
 
-#define NVRTC_SAFE_CALL(x) \ 
-do { \ 
-    nvrtcResult result = x; \ 
-        if (result != NVRTC_SUCCESS) { \ 
-            std::cerr << "\nerror: " #x " failed with error " \ 
+#define NVRTC_SAFE_CALL(x) \
+do { \
+    nvrtcResult result = x; \
+        if (result != NVRTC_SUCCESS) { \
+            std::cerr << "\nerror: " #x " failed with error " \
                 << nvrtcGetErrorString(result) << '\n'; \
-                exit(1); \ 
+                exit(1); \
         } \
-} while(0) 
+} while(0)
 
-#define CUDA_SAFE_CALL(x) \ 
-do { \ 
-    CUresult result = x; \ 
-        if (result != CUDA_SUCCESS) { \ 
-            const char *msg; \ 
-                cuGetErrorName(result, &msg); \ 
-                std::cerr << "\nerror: " #x " failed with error " \ 
-                << msg << '\n'; \ 
-                exit(1); \ 
-        } \ 
+#define CUDA_SAFE_CALL(x) \
+do { \
+    CUresult result = x; \
+        if (result != CUDA_SUCCESS) { \
+            const char *msg; \
+                cuGetErrorName(result, &msg); \
+                std::cerr << "\nerror: " #x " failed with error " \
+                << msg << '\n'; \
+                exit(1); \
+        } \
 } while(0)
 
 
@@ -151,7 +151,7 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
     writer << " // " << n->get_name() << "\n  return;\n";
-    /*
+    
        const Shape& arg0_shape = args[0].get_shape();
        const Shape& arg1_shape = args[1].get_shape();
        if (arg0_shape.empty() || arg1_shape.empty())
@@ -256,7 +256,7 @@ else
 {
     // General ND Call?
 }
-*/
+
 }
 
 void runtime::gpu::GPU_Emitter::EmitDivide(codegen::CodeWriter& writer,

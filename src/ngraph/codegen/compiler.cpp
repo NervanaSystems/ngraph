@@ -65,7 +65,7 @@
 #error "This source file interfaces with LLVM and Clang and must be compiled with RTTI disabled"
 #endif
 
-//#define USE_BUILTIN
+#define USE_BUILTIN
 
 using namespace clang;
 using namespace llvm;
@@ -360,7 +360,6 @@ void codegen::StaticCompiler::configure_search_path()
     add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
     add_header_search_path("/usr/include/x86_64-linux-gnu");
     add_header_search_path("/usr/include");
-    add_header_search_path("/usr/local/cuda/include");
 
     // Search for headers in
     //    /usr/include/x86_64-linux-gnu/c++/N.N
