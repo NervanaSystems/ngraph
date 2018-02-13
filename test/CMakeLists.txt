@@ -88,7 +88,7 @@ if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
         ${SRC}
         cudnn.cpp)
     # Disabled for testing
-    set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
+    #set(BACKEND_NAMES ${BACKEND_NAMES} "GPU")
 endif()
 
 if(NGRAPH_ARGON_ENABLE)
