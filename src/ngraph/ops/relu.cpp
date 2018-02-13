@@ -26,7 +26,7 @@ op::Relu::Relu(shared_ptr<Node> arg)
 
 void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)
 {
-    adjoints.add_delta(get_input_op(0), delta);
+    adjoints.add_delta(0, delta);
 }
 
 shared_ptr<Node> op::Relu::copy_with_new_args(const vector<shared_ptr<Node>>& new_args) const
