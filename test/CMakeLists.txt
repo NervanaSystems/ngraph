@@ -79,7 +79,6 @@ if(NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR)
 endif()
 
 if(NGRAPH_GPU_ENABLE AND LLVM_INCLUDE_DIR)
-    message(STATUS "GPU PATH: ${CUDA_INCLUDE_DIRS} AND ${CUDNN_INCLUDE_DIR}")
     include_directories(SYSTEM /usr/local/cuda/include ${LLVM_INCLUDE_DIR} ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})    
     link_directories(${LLVM_LIB_DIR})
     link_directories(${CUDA_LIBRARIES})
@@ -156,9 +155,7 @@ if(LLVM_INCLUDE_DIR)
 endif()
 
 if(CUDA_INCLUDE_DIRS)
-    message(STATUS "--------------------cuda--------------------------")
-    find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
-    target_link_libraries(unit-test ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+    target_link_libraries(unit-test ${CUDA_LIBRARIES} ${CUDNN_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 
 target_link_libraries(unit-test ngraph libgtest pthread)

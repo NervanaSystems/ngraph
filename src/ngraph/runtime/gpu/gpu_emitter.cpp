@@ -85,13 +85,7 @@ void runtime::gpu::GPU_Emitter::EmitAbs(codegen::CodeWriter& writer,
         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << "{  // " << n->get_name() << "\n";
-    writer.indent++;
-    writer << "int count = " << out[0].get_size() << ";\n";
-    writer << "if(count == 0) return;\n";
-    writer << "ngraph::runtime::gpu::cuda::kernel::emit_abs((void*) " << args[0].get_name() <<  ", (void*) " << out[0].get_name() << ", count);\n";
-    writer.indent--;
-    writer << "}\n";
+    writer << " // " << n->get_name() << "\n  return;\n";
 }
 
 void runtime::gpu::GPU_Emitter::EmitAdd(codegen::CodeWriter& writer,
@@ -264,6 +258,7 @@ void runtime::gpu::GPU_Emitter::EmitDivide(codegen::CodeWriter& writer,
         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    writer << " // " << n->get_name() << "\n  return;\n";
 }
 
 void runtime::gpu::GPU_Emitter::EmitEqual(codegen::CodeWriter& writer,
@@ -271,6 +266,7 @@ void runtime::gpu::GPU_Emitter::EmitEqual(codegen::CodeWriter& writer,
         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    writer << " // " << n->get_name() << "\n  return;\n";
 }
 
 void runtime::gpu::GPU_Emitter::EmitGreater(codegen::CodeWriter& writer,
@@ -278,6 +274,7 @@ void runtime::gpu::GPU_Emitter::EmitGreater(codegen::CodeWriter& writer,
         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
+    writer << " // " << n->get_name() << "\n  return;\n";
 }
 
 void runtime::gpu::GPU_Emitter::EmitGreaterEq(

@@ -37,10 +37,10 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
         throw runtime_error("cuBLAS create handle failed");
     }
     cudnnStatus_t cudnnStatus = cudnnCreate(&m_cudnn_handle);
-    if (cudnnStatus != CUDNN_STATUS_SUCCESS) 
+    if (cudnnStatus != CUDNN_STATUS_SUCCESS)
     {
         throw runtime_error("cuDnn create handle failed");
-    }         
+    }
 
     // Pass scalars as reference on the Host
     cublasSetPointerMode(m_cublas_handle, CUBLAS_POINTER_MODE_HOST);

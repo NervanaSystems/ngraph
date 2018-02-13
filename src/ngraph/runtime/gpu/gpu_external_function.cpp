@@ -22,12 +22,6 @@
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
-
-#include "cuda_runtime.h"
-#include "cudnn_v7.h"
-#include "cublas_v2.h"
-#include "cuda.h"
-
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
@@ -254,11 +248,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 )";
 
     string pch_header_source = writer.get_code();
-
-    writer += R"(
-    using namespace ngraph;
-    using namespace std;
-)";
 
     if (m_emit_timing)
     {
