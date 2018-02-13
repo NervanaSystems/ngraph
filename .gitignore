@@ -55,6 +55,7 @@ nervana_aeon.egg-info/
 # vim
 *.swp
 *.swo
+tags
 
 build/
 
