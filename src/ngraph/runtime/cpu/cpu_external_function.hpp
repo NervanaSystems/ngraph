@@ -18,9 +18,11 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
+#include <vector>
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
@@ -47,6 +49,21 @@ namespace ngraph
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 
+            struct OpAttributes
+            {
+                std::string Description;
+                std::vector<std::string> Outputs;
+                std::vector<std::string> Inputs;
+                OpAttributes(const std::string& desc,
+                             const std::vector<std::string>& outputs,
+                             const std::vector<std::string>& inputs)
+                    : Description(desc)
+                    , Outputs(outputs)
+                    , Inputs(inputs)
+                {
+                }
+            };
+
             class CPU_ExternalFunction : public ngraph::runtime::ExternalFunction,
                                          public std::enable_shared_from_this<CPU_ExternalFunction>
             {
@@ -57,6 +74,7 @@ namespace ngraph
                                      bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
+                const std::vector<OpAttributes>& get_op_attrs() const { return m_op_attrs; }
             protected:
                 void compile();
 
@@ -88,6 +106,7 @@ namespace ngraph
                 bool m_emit_timing;
                 bool m_use_tbb;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
+                std::vector<OpAttributes> m_op_attrs;
             };
         }
     }

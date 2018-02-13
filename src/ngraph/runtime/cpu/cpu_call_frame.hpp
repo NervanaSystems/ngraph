@@ -22,6 +22,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
 namespace ngraph
@@ -35,7 +36,7 @@ namespace ngraph
             class CPU_CallFrame;
             class CPU_ExternalFunction;
 
-            using EntryPoint_t = void(void** inputs, void** outputs);
+            using EntryPoint_t = void(void** inputs, void** outputs, CPURuntimeContext* ctx);
 
             using EntryPoint = std::function<EntryPoint_t>;
 
@@ -45,6 +46,7 @@ namespace ngraph
             public:
                 CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
                               EntryPoint compiled_function);
+                ~CPU_CallFrame();
 
                 /// @brief Invoke the function with values matching the signature of the function.
                 ///
@@ -61,9 +63,13 @@ namespace ngraph
                 std::vector<ngraph::runtime::PerformanceCounter>
                     get_performance_data() const override;
 
+                void setup_runtime_context();
+                void cleanup_runtime_context();
+
             protected:
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
+                CPURuntimeContext* ctx;
             };
         }
     }

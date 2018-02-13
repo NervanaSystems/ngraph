@@ -100,10 +100,10 @@ static std::vector<T> apply_permutation(std::vector<T> input, ngraph::AxisVector
 
 void ngraph::pass::CPUFusion::construct_gemm_pattern()
 {
-    auto shape_w = Shape{2, 4};
-    auto shape_x = Shape{4, 1};
-    auto shape_b = Shape{1};
-    auto shape_dot = Shape{2, 1};
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    Shape shape_b{1};
+    Shape shape_dot{2, 1};
 
     auto W = std::make_shared<pattern::op::Label>(element::f32, shape_w);
     auto x = std::make_shared<pattern::op::Label>(element::f32, shape_x);
