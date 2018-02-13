@@ -43,7 +43,9 @@ Mathematical Definition
 Backprop
 ========
 
-Not defined.
+Not defined by nGraph. The backprop would be zero for non-integer
+input and undefined for integer input, and a zero backprop value has
+no effect.
 
 C++ Interface
 =============

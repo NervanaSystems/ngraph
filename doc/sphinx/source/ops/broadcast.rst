@@ -7,7 +7,7 @@ Broadcast
 Description
 ===========
 
-Operation whose ``output`` tensor that ignores axes not in the ``arg``
+Operation whose ``output`` tensor ignores axes not in the ``arg``
 tensor.
 
 Inputs
@@ -22,13 +22,14 @@ Inputs
 Attributes
 ----------
 
-+---------------------+---------------+
-| Name                | Type          |
-+=====================+===============+
-| ``shape``           | ``Shape``     |
-+---------------------+---------------+
-| ``broadcast_axes``  | ``AxisSet``   |
-+---------------------+---------------+
++---------------------+---------------+------------------------------------+
+| Name                | Type          | Notes                              |
++=====================+===============+====================================+
+| ``shape``           | ``Shape``     | The shape of the output.           |
++---------------------+---------------+------------------------------------+
+| ``broadcast_axes``  | ``AxisSet``   | Axis positions in ``shape`` that   |
+|                     |               | are broadcast.                     |
++---------------------+---------------+------------------------------------+
 
 
 Outputs
@@ -41,6 +42,23 @@ Outputs
 +-----------------+-------------------------+--------------------------------+
 
 The shape of ``arg`` must match ``shape`` with elements in ``broadcast_axes`` removed.
+
+
+For example, if ``arg`` is :math:`[a, b, c]` then
+
+.. math::
+
+   \texttt{Broadcast(arg, Shape{2, 3}, AxisSet{0})} &=
+   \begin{bmatrix}
+   a & b & c\\
+   a & b & c
+   \end{bmatrix}\\
+   \texttt{Broadcast(arg, Shape{3, 2}, AxisSet{1})} &=
+   \begin{bmatrix}
+   a & a\\
+   b & b\\
+   c & c
+   \end{bmatrix}
 
 
 Mathematical Definition
