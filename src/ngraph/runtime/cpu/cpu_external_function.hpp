@@ -29,6 +29,7 @@
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/external_function.hpp"
 
@@ -74,6 +75,9 @@ namespace ngraph
                                      bool release_function = true);
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
+                const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
+                const LayoutDescriptorPtrs& get_result_layout_descriptors();
+
                 const std::vector<OpAttributes>& get_op_attrs() const { return m_op_attrs; }
             protected:
                 void compile();
@@ -106,6 +110,9 @@ namespace ngraph
                 bool m_emit_timing;
                 bool m_use_tbb;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
+
+                LayoutDescriptorPtrs parameter_layout_descriptors;
+                LayoutDescriptorPtrs result_layout_descriptors;
                 std::vector<OpAttributes> m_op_attrs;
             };
         }
