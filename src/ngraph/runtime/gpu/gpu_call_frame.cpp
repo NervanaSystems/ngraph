@@ -17,8 +17,8 @@
 #include <stdio.h>
 
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_view.hpp"
 
 using namespace std;
 using namespace ngraph;
