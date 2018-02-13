@@ -18,10 +18,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Relu::Relu(shared_ptr<Node> arg0)
-    : UnaryElementwiseArithmetic("Relu", {arg0})
+op::Relu::Relu(shared_ptr<Node> arg)
+    : UnaryElementwiseArithmetic("Relu", {arg})
 {
-    set_value_type_checked(arg0->get_element_type(), arg0->get_shape());
+    set_value_type_checked(arg->get_element_type(), arg->get_shape());
 }
 
 void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const std::shared_ptr<Node>& delta)

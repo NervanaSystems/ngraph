@@ -24,15 +24,19 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Elementwise Relu operation for pattern matching.
+        ///
         class Relu : public ngraph::op::UnaryElementwiseArithmetic
         {
         public:
-            Relu(std::shared_ptr<ngraph::Node> arg0);
+            /// \brief Constructs an Relu operation.
+            ///
+            /// \param arg Node that produces the input tensor.
+            Relu(std::shared_ptr<ngraph::Node> arg);
 
             virtual std::shared_ptr<Node> copy_with_new_args(
                 const std::vector<std::shared_ptr<Node>>& new_args) const override;
 
-        protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const std::shared_ptr<Node>& delta) override;
         };
