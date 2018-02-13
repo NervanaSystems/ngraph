@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ******************************************************************************
+import operator
 
 import numpy as np
 import pytest
@@ -68,6 +69,54 @@ def test_binary_op_with_scalar(ng_api_helper, numpy_function):
     parameter_a = ng.parameter(shape, name='A', dtype=np.float32)
 
     model = ng_api_helper(parameter_a, value_b)
+    computation = runtime.computation(model, parameter_a)
+
+    result = computation(value_a)
+    expected = numpy_function(value_a, value_b)
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.parametrize('operator,numpy_function', [
+    (operator.add, np.add),
+    (operator.mul, np.multiply),
+    (operator.sub, np.subtract),
+    (operator.eq, np.equal),
+])
+def test_binary_operators(operator, numpy_function):
+    manager_name = pytest.config.getoption('backend', default='INTERPRETER')
+    runtime = ng.runtime(manager_name=manager_name)
+
+    value_a = np.array([[1, 2], [3, 4]], dtype=np.float32)
+    value_b = np.array([[5, 6], [7, 8]], dtype=np.float32)
+
+    shape = [2, 2]
+    parameter_a = ng.parameter(shape, name='A', dtype=np.float32)
+
+    model = operator(parameter_a, value_b)
+    computation = runtime.computation(model, parameter_a)
+
+    result = computation(value_a)
+    expected = numpy_function(value_a, value_b)
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.parametrize('operator,numpy_function', [
+    (operator.add, np.add),
+    (operator.mul, np.multiply),
+    (operator.sub, np.subtract),
+    (operator.eq, np.equal),
+])
+def test_binary_operators_with_scalar(operator, numpy_function):
+    manager_name = pytest.config.getoption('backend', default='INTERPRETER')
+    runtime = ng.runtime(manager_name=manager_name)
+
+    value_a = np.array([[1, 2], [3, 4]], dtype=np.float32)
+    value_b = np.array([[5, 6], [7, 8]], dtype=np.float32)
+
+    shape = [2, 2]
+    parameter_a = ng.parameter(shape, name='A', dtype=np.float32)
+
+    model = operator(parameter_a, value_b)
     computation = runtime.computation(model, parameter_a)
 
     result = computation(value_a)
