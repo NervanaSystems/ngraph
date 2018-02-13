@@ -21,10 +21,10 @@
 #include <typeinfo>
 #include <unordered_map>
 
-    #include <cuda_runtime.h>
-    #include <cudnn_v7.h>
-    #include "cublas_v2.h"
-    #include "cuda.h"
+#include <cuda_runtime.h>
+#include <cudnn_v7.h>
+#include "cublas_v2.h"
+#include "cuda.h"
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
