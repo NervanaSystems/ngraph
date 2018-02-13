@@ -15,9 +15,9 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
-#include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/shape.hpp"
+#include <mkldnn.hpp>
 
 namespace ngraph
 {
@@ -39,6 +39,7 @@ namespace ngraph
 
             private:
                 std::shared_ptr<CPU_ExternalFunction> external_function;
+                std::vector<mkldnn::primitive> mkldnn_primitives;
             };
         }
     }

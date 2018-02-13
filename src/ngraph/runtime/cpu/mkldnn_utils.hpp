@@ -12,15 +12,20 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
+#pragma once
+
 #include <mkldnn.hpp>
 
-#include "mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-
-mkldnn::engine ngraph::runtime::cpu::mkldnn_utils::global_cpu_engine(mkldnn::engine::cpu, 0);
-
-extern "C" void
-    ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(CPURuntimeContext* ctx,
-                                                                unsigned int primitive_index)
+namespace ngraph
 {
+    namespace runtime
+    {
+        namespace cpu
+        {
+            namespace mkldnn_utils
+            {
+                extern mkldnn::engine global_cpu_engine;
+            }
+        }
+    }
 }

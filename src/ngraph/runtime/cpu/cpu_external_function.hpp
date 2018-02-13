@@ -24,8 +24,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <mkldnn.hpp>
-
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
@@ -44,7 +42,6 @@ namespace ngraph
             class CPU_ExternalFunction;
             class CPU_Emitter;
             class CPU_CallFrame;
-            class MKLDNNEmitter;
 
             using OpFunction = std::function<void(codegen::CodeWriter&,
                                                   const ngraph::Node*,
@@ -79,9 +76,9 @@ namespace ngraph
                 std::shared_ptr<ngraph::runtime::CallFrame> make_call_frame();
 
                 const std::vector<OpAttributes>& get_op_attrs() const { return m_op_attrs; }
-                const std::vector<mkldnn::primitive>& get_mkldnn_primitives() const
+                const std::unique_ptr<MKLDNNEmitter>& get_mkldnn_emitter() const
                 {
-                    return m_mkldnn_primitives;
+                    return m_mkldnn_emitter;
                 }
 
             protected:
@@ -117,8 +114,7 @@ namespace ngraph
                 std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::vector<OpAttributes> m_op_attrs;
 
-                std::vector<mkldnn::primitive> m_mkldnn_primitives;
-                std::unique_ptr<MKLDNNEmitter> mkldnn_emitter;
+                std::unique_ptr<MKLDNNEmitter> m_mkldnn_emitter;
             };
         }
     }
