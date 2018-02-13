@@ -6583,3 +6583,26 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
     cf->call({a, b}, {result});
     EXPECT_EQ(expected, read_vector<float>(result));
 }
+
+TEST(INTERPRETER, Simple_relu)
+{
+    auto shape_a = Shape{1, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto relu = make_shared<op::Relu>(B);
+    auto shape_rt = Shape{1, 5};
+    auto f = make_shared<Function>(relu, op::Parameters{B});
+
+    // currenly hardcode the manager as limited support
+    auto manager = runtime::Manager::get("INTERPRETER");
+    auto external = manager->compile(f);
+    auto backend = manager->allocate_backend();
+    auto cf = backend->make_call_frame(external);
+
+    auto b = backend->make_primary_tensor_view(element::f32, shape_a);
+    copy_data(b, vector<float>{1, 8, -8, 17, -0.5});
+    auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
+    vector<float> expected{1, 8, 0, 17, 0};
+
+    cf->call({b}, {result});
+    EXPECT_EQ(read_vector<float>(result), expected);
+}

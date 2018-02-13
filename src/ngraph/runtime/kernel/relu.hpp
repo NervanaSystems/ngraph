@@ -27,7 +27,7 @@ namespace ngraph
             {
                 for (size_t i = 0; i < count; i++)
                 {
-                    int zero = 0;
+                    T zero = 0;
                     out[i] = arg[i] > zero ? arg[i] : zero;
                 }
             }
