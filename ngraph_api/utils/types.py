@@ -98,7 +98,7 @@ def make_constant_node(value, dtype=None):  # type: (NumericData, NumericType) -
 
 def as_node(input_value):  # type: (NodeInput) -> Node
     """Return input values as nodes. Scalars will be converted to Constant nodes."""
-    if type(input_value) == Node:
+    if issubclass(type(input_value), Node):
         return input_value
     return make_constant_node(input_value)
 

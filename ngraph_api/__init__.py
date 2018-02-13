@@ -26,11 +26,16 @@ from ngraph_api.ops import divide
 from ngraph_api.ops import equal
 from ngraph_api.ops import exp
 from ngraph_api.ops import floor
+from ngraph_api.ops import greater
+from ngraph_api.ops import greater_eq
 from ngraph_api.ops import log
+from ngraph_api.ops import less
+from ngraph_api.ops import less_eq
 from ngraph_api.ops import maximum
 from ngraph_api.ops import minimum
 from ngraph_api.ops import multiply
 from ngraph_api.ops import negative
+from ngraph_api.ops import not_equal
 from ngraph_api.ops import parameter
 from ngraph_api.ops import sqrt
 from ngraph_api.ops import subtract
