@@ -17,24 +17,15 @@
 #include "cpu_fusion.hpp"
 #include <algorithm>
 #include <iostream>
-#include <numeric>
 #include <unordered_set>
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ops/add.hpp"
-#include "ngraph/ops/add.hpp"
-#include "ngraph/ops/batchnorm.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/broadcast.hpp"
-#include "ngraph/ops/constant.hpp"
-#include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
-#include "ngraph/ops/multiply.hpp"
 #include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/reshape.hpp"
-#include "ngraph/ops/sqrt.hpp"
-#include "ngraph/ops/subtract.hpp"
-#include "ngraph/ops/sum.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -108,10 +99,10 @@ static std::vector<T> apply_permutation(std::vector<T> input, ngraph::AxisVector
 
 void ngraph::pass::CPUFusion::construct_gemm_pattern()
 {
-    auto shape_w = Shape{2, 4};
-    auto shape_x = Shape{4, 1};
-    auto shape_b = Shape{1};
-    auto shape_dot = Shape{2, 1};
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    Shape shape_b{1};
+    Shape shape_dot{2, 1};
 
     auto W = std::make_shared<pattern::op::Label>(element::f32, shape_w);
     auto x = std::make_shared<pattern::op::Label>(element::f32, shape_x);

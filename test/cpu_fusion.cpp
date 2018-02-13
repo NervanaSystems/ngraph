@@ -25,7 +25,6 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/ops/sum.hpp"
-#include "ngraph/ops/batchnorm.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -39,7 +38,6 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "util/matcher.hpp"
-#include "util/all_close.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -47,9 +45,9 @@ using namespace std;
 
 TEST(cpu_fusion, gemm_pattern)
 {
-    auto shape_w = Shape{2, 4};
-    auto shape_x = Shape{4, 1};
-    auto shape_b = Shape{1};
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    Shape shape_b{1};
     auto A = make_shared<op::Parameter>(element::f32, shape_w);
     auto B = make_shared<op::Parameter>(element::f32, shape_x);
     auto C = make_shared<op::Parameter>(element::f32, shape_b);
@@ -94,9 +92,9 @@ TEST(cpu_fusion, gemm_pattern)
 
 TEST(cpu_fusion, gemm_cpu)
 {
-    auto shapeA = Shape{3, 2};
-    auto shapeB = Shape{2, 3};
-    auto shapeC = Shape{2, 2};
+    Shape shapeA{3, 2};
+    Shape shapeB{2, 3};
+    Shape shapeC{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shapeA);
     auto B = make_shared<op::Parameter>(element::f32, shapeB);
 
@@ -129,6 +127,40 @@ TEST(cpu_fusion, gemm_cpu)
     cf->call({a, b}, {result});
     vector<float> expected{10, 28, 37, 109};
     ASSERT_TRUE(read_vector<float>(result) == expected);
+}
+
+TEST(cpu_fusion, cpu_fusion_pass_basic)
+{
+    Shape shape{};
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    Shape shape_b{1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_w);
+    auto B = make_shared<op::Parameter>(element::f32, shape_x);
+    auto C = make_shared<op::Parameter>(element::f32, shape_b);
+
+    auto dot = make_shared<op::Dot>(A, B);
+    auto broadcast = make_shared<op::Broadcast>(C, dot->get_shape(), AxisSet{0});
+    auto add = dot + broadcast;
+    auto graph = make_shared<op::Abs>(add);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CPUFusion>();
+    auto func = make_shared<Function>(graph, op::Parameters{A, B, C});
+    pass_manager.run_passes(func);
+    ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_input_op(0)), nullptr);
+}
+
+TEST(cpu_fusion, gemm_mlp)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/mnist_mlp_forward.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CPUFusion>();
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::MatmulBias>(func);
+    ASSERT_EQ(ccg, 3);
 }
 
 TEST(cpu_fusion, cpu_fusion_pass_basic)

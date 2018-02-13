@@ -398,7 +398,7 @@ static void run_passes(pass::Manager& pass_manager,
 
 TEST(pattern, graph_rewrite)
 {
-    auto shape = Shape{};
+    Shape shape{};
     pass::Manager pass_manager;
     pass_manager.register_pass<TestGraphRewrite>();
 
@@ -515,7 +515,7 @@ TEST(pattern, graph_rewrite)
 
 TEST(pattern, matcher)
 {
-    auto shape = Shape{};
+    Shape shape{};
     auto a = make_shared<op::Parameter>(element::i32, shape);
     TestMatcher n(nullptr);
     ASSERT_TRUE(n.match(a, a));
