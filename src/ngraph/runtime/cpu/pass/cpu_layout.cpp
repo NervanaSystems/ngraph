@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <algorithm>
 #include <memory>
@@ -22,9 +24,10 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
-using namespace ngraph::runtime::cpu::pass;
+//using namespace ngraph::runtime::cpu::pass;
+using namespace ngraph;
 
-bool CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
+bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
 {
     for (const auto& node : nodes)
     {
@@ -49,11 +52,11 @@ bool CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
             if (tensor.is_output() || tensor.is_input() || tensor.is_constant())
             {
                 // Set the MKLDNN format to native row-major variants
-                layout->set_mkldnn_format(MKLDNN::CreateNativeDataFormat(*layout));
+                layout->set_mkldnn_format(mkldnn_utils::CreateNativeDataFormat(*layout));
             }
             else
             {
-                if (ngraph::runtime::cpu::MKLDNN::IsMKLDNNOp(*node))
+                if (ngraph::runtime::cpu::mkldnn_utils::IsMKLDNNOp(*node))
                 {
                     // TODO(jmenon): get_inputs is marked as to-be-deprecated
                     // but get_input_ops isn't a suitable API so this needs to be

@@ -14,7 +14,6 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <cassert>
 #include <cstdlib>
 #include <fstream>
 #include <memory>
@@ -95,6 +94,7 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
@@ -105,7 +105,7 @@ using namespace ngraph;
 static const string s_output_dir = "cpu_codegen";
 
 // Temporary Memory Pool alignment
-static const size_t MemoryPoolAlignment = 64;
+static const size_t s_memory_pool_alignment = 4096;
 
 class StaticInitializers
 {
@@ -234,7 +234,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(MemoryPoolAlignment);
+    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
 
     pass_manager.run_passes(m_function);
 
@@ -245,11 +245,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     {
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
-            if (dynamic_cast<op::Convolution*>(node.get()) ||
-                dynamic_cast<op::ConvolutionBackpropData*>(node.get()) ||
-                dynamic_cast<op::ConvolutionBackpropFilters*>(node.get()) ||
-                dynamic_cast<op::AvgPool*>(node.get()) || dynamic_cast<op::MaxPool*>(node.get()) ||
-                dynamic_cast<op::AvgPoolBackprop*>(node.get()))
+            if (ngraph::runtime::cpu::mkldnn_utils::IsMKLDNNOp(*node))
             {
                 include_mkldnn_headers = true;
             }
@@ -524,7 +520,7 @@ using namespace ngraph::runtime;
             writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
             writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
             writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
-                   << MemoryPoolAlignment << ");\n";
+                   << s_memory_pool_alignment << ");\n";
             writer << "size_t pool_base_ptr = (size_t)memory_handler.get_ptr();\n";
             writer << "\n";
 
@@ -772,20 +768,30 @@ using namespace ngraph::runtime;
         for (size_t i = 0; i < parameter->get_output_size(); ++i)
         {
             auto tv = parameter->get_output_tensor_view(i);
-            assert(tv->get_tensor_view_layout());
+            if (tv->get_tensor_view_layout() == nullptr)
+            {
+                throw ngraph_error("layout missing on function parameter's tensor view: " +
+                                   tv->get_name());
+            }
             parameter_layout_descriptors.emplace_back(
                 static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
         }
     }
     // Store layouts assigned for results
-    assert(result_layout_descriptors.empty());
+    if (!result_layout_descriptors.empty())
+    {
+        throw ngraph_error("Function output layouts should not be pre-assigned");
+    }
     for (size_t i = 0; i < m_function->get_output_size(); ++i)
     {
         const auto& output = m_function->get_output_op(i);
         for (size_t j = 0; j < output->get_output_size(); ++j)
         {
             auto tv = output->get_output_tensor_view(j);
-            assert(tv->get_tensor_view_layout());
+            if (tv->get_tensor_view_layout() == nullptr)
+            {
+                throw ngraph_error("layout missing on function output tensor: " + tv->get_name());
+            }
             result_layout_descriptors.emplace_back(
                 static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
         }

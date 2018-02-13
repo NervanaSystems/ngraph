@@ -100,7 +100,11 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
     }
     for (size_t i = 0; i < tvs.size(); i++)
     {
-        assert(layouts[i]);
+        if (layouts[i] == nullptr)
+        {
+            throw ngraph_error(
+                "Error propagating layouts - layout information missing from tensor view");
+        }
         tvs[i]->get_descriptor()->set_tensor_view_layout(layouts[i]);
     }
 }
