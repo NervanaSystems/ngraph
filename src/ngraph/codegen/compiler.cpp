@@ -65,9 +65,7 @@
 #error "This source file interfaces with LLVM and Clang and must be compiled with RTTI disabled"
 #endif
 
-#ifndef __APPLE__
 #define USE_BUILTIN
-#endif
 
 using namespace clang;
 using namespace llvm;
