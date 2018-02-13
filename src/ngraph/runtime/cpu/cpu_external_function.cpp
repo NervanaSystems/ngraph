@@ -226,6 +226,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     string function_name = m_function->get_name();
 
+    mkldnn_emitter.reset(new MKLDNNEmitter(shared_from_this()));
+
     pass::Manager pass_manager;
     // For now, just make everyone row-major.
     pass_manager.register_pass<pass::CPUFusion>();

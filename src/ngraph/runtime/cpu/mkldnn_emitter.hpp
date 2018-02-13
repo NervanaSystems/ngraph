@@ -14,13 +14,10 @@
 
 #pragma once
 
-#include <chrono>
-#include <cstdint>
+#include <memory>
 
-namespace mkldnn
-{
-    class primitive;
-}
+#include "ngraph/codegen/code_writer.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -28,17 +25,21 @@ namespace ngraph
     {
         namespace cpu
         {
-            typedef std::chrono::high_resolution_clock Clock;
-            typedef std::chrono::time_point<Clock> Timestamp;
-            typedef std::chrono::microseconds Timescale;
+            class CPU_ExternalFunction;
 
-            extern "C" {
-            struct CPURuntimeContext
+            class MKLDNNEmitter
             {
-                int64_t* op_durations;
-                mkldnn::primitive* mkldnn_primitives;
+            public:
+                MKLDNNEmitter(std::shared_ptr<CPU_ExternalFunction> ef)
+                    : external_function(ef)
+                {
+                }
+
+                void build_memory_descriptor();
+
+            private:
+                std::shared_ptr<CPU_ExternalFunction> external_function;
             };
-            }
         }
     }
 }

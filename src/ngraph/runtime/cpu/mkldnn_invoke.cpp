@@ -12,33 +12,10 @@
 // See the License for the specific language governing permissions and
 // ----------------------------------------------------------------------------
 
-#pragma once
+#include "mkldnn_invoke.hpp"
 
-#include <chrono>
-#include <cstdint>
-
-namespace mkldnn
+extern "C" void
+    ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(CPURuntimeContext* ctx,
+                                                                unsigned int primitive_index)
 {
-    class primitive;
-}
-
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace cpu
-        {
-            typedef std::chrono::high_resolution_clock Clock;
-            typedef std::chrono::time_point<Clock> Timestamp;
-            typedef std::chrono::microseconds Timescale;
-
-            extern "C" {
-            struct CPURuntimeContext
-            {
-                int64_t* op_durations;
-                mkldnn::primitive* mkldnn_primitives;
-            };
-            }
-        }
-    }
 }

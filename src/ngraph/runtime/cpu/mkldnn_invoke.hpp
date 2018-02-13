@@ -14,30 +14,18 @@
 
 #pragma once
 
-#include <chrono>
-#include <cstdint>
-
-namespace mkldnn
-{
-    class primitive;
-}
-
 namespace ngraph
 {
     namespace runtime
     {
         namespace cpu
         {
-            typedef std::chrono::high_resolution_clock Clock;
-            typedef std::chrono::time_point<Clock> Timestamp;
-            typedef std::chrono::microseconds Timescale;
+            struct CPURuntimeContext;
 
-            extern "C" {
-            struct CPURuntimeContext
+            namespace mkldnn_utils
             {
-                int64_t* op_durations;
-                mkldnn::primitive* mkldnn_primitives;
-            };
+                extern "C" void mkldnn_invoke_primitive(CPURuntimeContext* ctx,
+                                                        unsigned int primitive_index);
             }
         }
     }
