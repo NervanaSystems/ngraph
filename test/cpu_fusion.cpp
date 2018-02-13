@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018 Intel Corporation
+* Copyright 2017-2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -34,6 +34,8 @@
 //
 #include "ngraph/file_util.hpp"
 #include "ngraph/json.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/serializer.hpp"
@@ -269,4 +271,20 @@ TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
         -0.714987, 1.48389, 0.015746, -0.284436, -2.36912, 0.56806, -0.840903, 1.51463};
     cf->call({_mean, _var, _input, _gamma, _beta}, {result});
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result)));
+}
+
+TEST(cpu_fusion, fuse_fprop_bn)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_before_fusion.png");
+    pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
+    pass_manager.register_pass<pass::CPUFusion>();
+    pass_manager.register_pass<pass::VisualizeTree>("bn_fprop_after_fusion.png");
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/bn_fprop_b2c3h2w2.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::BatchNorm>(func);
+    ASSERT_EQ(ccg, 1);
 }

@@ -227,7 +227,6 @@ void runtime::cpu::CPU_Emitter::EmitBatchNorm(codegen::CodeWriter& writer,
     writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";
 
     // Bind to CPU engine
-    writer << "using namespace mkldnn; \n";
     writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
     // create memory descriptors
     writer << "memory::desc input_data_desc = memory::desc({" << join(input_shape) << "}, " << et

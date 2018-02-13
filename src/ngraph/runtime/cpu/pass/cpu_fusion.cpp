@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018 Intel Corporation
+* Copyright 2017-2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -251,8 +251,8 @@ void ngraph::pass::CPUFusion::construct_fprop_bn()
                 return nn;
             }
             Shape bn_output_shape{m.match_root()->get_shape()};
-            Shape bn_mean_shape{pattern_map[mean_label]->get_shape()};
-            Shape bn_variance_shape{pattern_map[variance_label]->get_shape()};
+            Shape m_bn_mean_shape{pattern_map[mean_label]->get_shape()};
+            Shape m_bn_variance_shape{pattern_map[variance_label]->get_shape()};
 
             // get epsilon value
             auto eps_ptr = std::dynamic_pointer_cast<op::Constant>(pattern_map[eps_label]);

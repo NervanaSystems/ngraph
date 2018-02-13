@@ -24,11 +24,11 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/ops/batchnorm.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"
 #include "util/ndarray.hpp"
 #include "util/test_tools.hpp"
+
 using namespace std;
 using namespace ngraph;
 
