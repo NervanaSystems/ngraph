@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 op::Parameter::Parameter(const ngraph::element::Type& element_type, const Shape& shape)
-    : Node("Parameter", {})
+    : Op("Parameter", {})
 {
     add_output(element_type, shape);
 }

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/binary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
@@ -36,7 +36,7 @@ namespace ngraph
         /// | Type                   | Description                                                                                                    |
         /// | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg0}[i_1,\dots,i_n]^{\texttt{arg1}[i_1,\dots,i_n]}\f$ |
-        class Power : public BinaryElementwiseArithmetic
+        class Power : public util::BinaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs an exponentiation operation.

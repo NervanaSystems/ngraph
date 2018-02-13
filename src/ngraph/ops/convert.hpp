@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise.hpp"
 #include "ngraph/types/type.hpp"
 
 namespace ngraph
@@ -45,7 +45,7 @@ namespace ngraph
         /// | Type                    | Description                                                                                               |
         /// | ----------------------- | --------------------------------------------------------------------------------------------------------- |
         /// | \f$E'[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{convert}_{(E,E')}(\texttt{arg}[i_1,\dots,i_n])\f$ |
-        class Convert : public UnaryElementwise
+        class Convert : public util::UnaryElementwise
         {
         public:
             /// \brief Constructs a conversion operation.

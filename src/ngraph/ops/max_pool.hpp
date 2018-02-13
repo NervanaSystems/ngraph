@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -41,7 +41,7 @@ namespace ngraph
         ///      T_\textit{out}[a,c,i_1,\dots,i_n] = \max_{j_1 = s_1 i_1, \dots, j_n = s_n i_n}^{j_1 = s_1 i_1 + w_1 - 1, \dots, j_n = s_n i_n + w_n - 1} (T_\textit{in}[a,c,j_1,\dots,j_n])
         /// \f]
         ///
-        class MaxPool : public RequiresTensorViewArgs
+        class MaxPool : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a batched max pooling operation.
@@ -99,7 +99,7 @@ namespace ngraph
             Shape m_padding_above;
         };
 
-        class MaxPoolBackprop : public RequiresTensorViewArgs
+        class MaxPoolBackprop : public util::RequiresTensorViewArgs
         {
         public:
             MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,

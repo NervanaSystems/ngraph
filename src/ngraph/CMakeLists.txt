@@ -36,9 +36,6 @@ set (SRC
     ops/abs.cpp
     ops/add.cpp
     ops/avg_pool.cpp
-    ops/binary_elementwise_arithmetic.cpp
-    ops/binary_elementwise_comparison.cpp
-    ops/binary_elementwise.cpp
     ops/broadcast.cpp
     ops/concatenate.cpp
     ops/constant.cpp
@@ -78,8 +75,12 @@ set (SRC
     ops/sum.cpp
     ops/tan.cpp
     ops/tanh.cpp
-    ops/unary_elementwise_arithmetic.cpp
-    ops/unary_elementwise.cpp
+    ops/util/binary_elementwise_arithmetic.cpp 
+    ops/util/binary_elementwise_comparison.cpp 
+    ops/util/binary_elementwise.cpp 
+    ops/util/requires_tensor_view_args.cpp 
+    ops/util/unary_elementwise_arithmetic.cpp 
+    ops/util/unary_elementwise.cpp
     pass/dump_sorted.cpp
     pass/graph_rewrite.cpp
     pass/inliner.cpp

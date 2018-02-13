@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
@@ -35,7 +35,7 @@ namespace ngraph
         /// | Type                   | Description                                                                          |
         /// | ---------------------- | ------------------------------------------------------------------------------------ |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \cos(\texttt{arg}[i_1,\dots,i_n])\f$ |
-        class Cos : public UnaryElementwiseArithmetic
+        class Cos : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a cosine operation.

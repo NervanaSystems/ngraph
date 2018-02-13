@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise inverse sine (arcsin) operation.
         ///
-        class Asin : public UnaryElementwiseArithmetic
+        class Asin : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs an arcsin operation.

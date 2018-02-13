@@ -14,13 +14,16 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/not.hpp"
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 
 using namespace ngraph;
-using namespace std;
 
-op::Not::Not(const shared_ptr<Node>& arg)
-    : UnaryElementwise("Not", arg->get_element_type(), arg)
+op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
+                                                                 const std::shared_ptr<Node>& arg)
+    : UnaryElementwise(node_type, arg->get_element_type(), arg)
 {
+    if (arg->get_element_type() == element::boolean)
+    {
+        throw ngraph_error("Operands for arithmetic operators must have numeric element type");
+    }
 }

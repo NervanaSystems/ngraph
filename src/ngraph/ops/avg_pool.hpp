@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/requires_tensor_view_args.hpp"
 
 namespace ngraph
 {
@@ -24,7 +24,7 @@ namespace ngraph
     {
         /// \brief Batched average pooling operation, with optional padding and window stride.
         ///
-        class AvgPool : public RequiresTensorViewArgs
+        class AvgPool : public util::RequiresTensorViewArgs
         {
         public:
             /// \brief Constructs a batched average pooling operation.
@@ -96,7 +96,7 @@ namespace ngraph
             Shape m_padding_above;
         };
 
-        class AvgPoolBackprop : public RequiresTensorViewArgs
+        class AvgPoolBackprop : public util::RequiresTensorViewArgs
         {
         public:
             AvgPoolBackprop(const Shape& forward_arg_shape,

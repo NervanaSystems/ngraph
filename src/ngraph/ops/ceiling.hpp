@@ -16,14 +16,14 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise ceiling operation.
-        class Ceiling : public UnaryElementwiseArithmetic
+        class Ceiling : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a ceiling operation.

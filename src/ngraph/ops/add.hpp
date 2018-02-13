@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/binary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise addition operation.
         ///
-        class Add : public BinaryElementwiseArithmetic
+        class Add : public util::BinaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs an addition operation.

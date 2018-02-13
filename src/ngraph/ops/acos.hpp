@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/ops/util/unary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise inverse cosine (arccos) operation.
         ///
-        class Acos : public UnaryElementwiseArithmetic
+        class Acos : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs an arccos operation.
