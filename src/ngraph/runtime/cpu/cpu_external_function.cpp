@@ -751,7 +751,11 @@ using namespace ngraph::runtime;
     m_execution_engine->add_module(codegen_module);
     m_execution_engine->finalize();
     m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(function_name);
-    assert(m_compiled_function);
+
+    if (m_compiled_function == nullptr)
+    {
+        throw runtime_error("could not find compiled function");
+    }
 
     m_is_compiled = true;
     if (m_release_function)

@@ -338,10 +338,16 @@ void runtime::cpu::CPU_Emitter::EmitAbs(codegen::CodeWriter& writer,
     writer << emit_array1d(out[0]) << " =\n";
     writer << "Eigen::abs(" << emit_array1d(args[0]) << ");\n";
 #else
+    // Some C++ implementations don't like it when we call std::abs on unsigned types, so we will
+    // avoid doing so here.
+    auto& result_element_type = out[0].get_element_type();
+
     writer << "#pragma omp parallel for\n";
     writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
     writer << "{\n";
-    writer << "    " << out[0].get_name() << "[i] = std::abs(" << args[0].get_name() << "[i]);\n";
+    writer << "    " << out[0].get_name()
+           << "[i] = " << (result_element_type.is_signed() ? "std::abs" : "") << "("
+           << args[0].get_name() << "[i]);\n";
     writer << "}\n";
 #endif
     writer.indent--;
