@@ -28,7 +28,7 @@ using namespace std;
 
 TEST(inline, basic)
 {
-    auto shape = Shape{2, 2};
+    Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
@@ -53,7 +53,7 @@ TEST(inline, basic)
 
 TEST(inline, recursive)
 {
-    auto shape = Shape{2, 2};
+    Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B), op::Parameters{A, B});

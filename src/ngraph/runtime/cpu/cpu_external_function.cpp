@@ -94,6 +94,7 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/host_tensor_view.hpp"
@@ -248,6 +249,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
             if (dynamic_cast<op::Convolution*>(node.get()) ||
+                dynamic_cast<op::ConvolutionBackpropData*>(node.get()) ||
+                dynamic_cast<op::ConvolutionBackpropFilters*>(node.get()) ||
                 dynamic_cast<op::AvgPool*>(node.get()) || dynamic_cast<op::MaxPool*>(node.get()) ||
                 dynamic_cast<op::AvgPoolBackprop*>(node.get()))
             {
@@ -265,9 +268,11 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     writer +=
         R"(#include <Eigen/Dense>
 
+#include "ngraph/except.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
+#include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/kernel/avg_pool.hpp"
 #include "ngraph/runtime/kernel/broadcast.hpp"
 #include "ngraph/runtime/kernel/concat.hpp"
@@ -409,7 +414,8 @@ using namespace ngraph::runtime;
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
     {
-        writer << "extern \"C\" void " << f->get_name() << "(void** inputs, void** outputs);\n";
+        writer << "extern \"C\" void " << f->get_name()
+               << "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx);\n";
     }
     writer << "\n";
 
@@ -488,7 +494,7 @@ using namespace ngraph::runtime;
         }
 
         writer << "extern \"C\" void " << current_function->get_name();
-        writer << "(void** inputs, void** outputs)\n";
+        writer << "(void** inputs, void** outputs, cpu::CPURuntimeContext* ctx)\n";
         writer << "{\n";
         writer.indent++;
 
@@ -496,6 +502,13 @@ using namespace ngraph::runtime;
         {
             // TODO: This should be static but we don't codegen statics correctly yet
             writer << "tbb::flow::graph G;\n\n";
+        }
+
+        // Execution tracing support
+        if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == function_name)
+        {
+            writer << "cpu::Timestamp start_ts;\n"
+                   << "int profiler_count = 0;\n\n";
         }
 
         bool temporaries_used = false;
@@ -621,12 +634,14 @@ using namespace ngraph::runtime;
                 throw ngraph_error("Unhandled op during code generation : " + node->description());
             }
             vector<TensorViewWrapper> in;
+            vector<string> node_input_names, node_output_names;
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
                 in.push_back(
                     TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
+                node_input_names.emplace_back(tv->get_tensor().get_name());
             }
             vector<TensorViewWrapper> out;
             for (const descriptor::Output& output : node->get_outputs())
@@ -634,11 +649,17 @@ using namespace ngraph::runtime;
                 shared_ptr<descriptor::TensorView> tv = output.get_tensor_view();
                 out.push_back(
                     TensorViewWrapper(tv, m_variable_name_map[tv->get_tensor().get_name()]));
+                node_output_names.emplace_back(tv->get_tensor().get_name());
             }
 
             // Emit operation prologue
             if (!node->is_parameter() && !node->is_constant())
             {
+                if (current_function->get_name() == function_name)
+                {
+                    m_op_attrs.emplace_back(
+                        node->description(), node_output_names, node_input_names);
+                }
                 if (m_use_tbb)
                 {
                     writer << "tbb::flow::continue_node<tbb::flow::continue_msg> "
@@ -650,6 +671,11 @@ using namespace ngraph::runtime;
                 if (m_emit_timing)
                 {
                     emit_debug_function_entry(writer, node.get(), in, out);
+                }
+                if (runtime::cpu::IsTracingEnabled() &&
+                    current_function->get_name() == function_name)
+                {
+                    writer << "start_ts = cpu::Clock::now();\n";
                 }
             }
 
@@ -675,7 +701,7 @@ using namespace ngraph::runtime;
                 {
                     names.push_back(tv.get_name());
                 }
-                writer << func_name << "(" << join(names) << ");\n";
+                writer << func_name << "(" << join(names) << ", ctx);\n";
             }
 
             // Emit operation epilogue
@@ -685,6 +711,13 @@ using namespace ngraph::runtime;
                 if (m_emit_timing)
                 {
                     emit_debug_function_exit(writer, node.get(), in, out);
+                }
+                if (runtime::cpu::IsTracingEnabled() &&
+                    current_function->get_name() == function_name)
+                {
+                    writer << "ctx->op_durations[profiler_count++] = "
+                           << "(std::chrono::duration_cast<cpu::Timescale>(cpu::Clock::now() - "
+                              "start_ts)).count();\n";
                 }
                 if (m_use_tbb)
                 {
@@ -878,6 +911,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
         writer << tvw.get_type() << "* " << tvw.get_name();
         out.push_back(tvw);
     }
+    writer << ",\ncpu::CPURuntimeContext* ctx";
     writer.indent--;
     writer << "\n)\n";
     writer << "{\n";
