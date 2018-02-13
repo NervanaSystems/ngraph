@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <algorithm>
 #include <functional>
@@ -34,13 +36,13 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
-    auto shape_a = Shape{1, 4, 4, 4}; //in CHWN
-    auto maxpool_shape = Shape{1, 4, 3, 3};
+    Shape shape_a{1, 4, 4, 4}; //in CHWN
+    Shape maxpool_shape{1, 4, 3, 3};
 
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto reshape = make_shared<op::Reshape>(
         A, AxisVector{0, 3, 1, 2}, Shape{1, 4, 4, 4}); //convert CHWN to CNHW
-    auto window_shape = Shape{2, 2};
+    Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
     auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
     auto f = make_shared<Function>(maxpool, op::Parameters{A});
@@ -80,13 +82,13 @@ TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
-    auto shape_a = Shape{1, 5, 5, 2}; //in CHWN
-    auto maxpool_shape = Shape{1, 2, 2, 2};
+    Shape shape_a{1, 5, 5, 2}; //in CHWN
+    Shape maxpool_shape{1, 2, 2, 2};
 
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto reshape = make_shared<op::Reshape>(
         A, AxisVector{0, 3, 1, 2}, Shape{1, 2, 5, 5}); //convert CHWN to CNHW
-    auto window_shape = Shape{3, 3};
+    Shape window_shape{3, 3};
     auto window_movement_strides = Strides{2, 2};
     auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
     auto f = make_shared<Function>(maxpool, op::Parameters{A});
@@ -124,13 +126,13 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
-    auto padding = Shape{1, 1};
+    Shape padding{1, 1};
 
-    auto shape_a = Shape{1, 1, 2, 2};
-    auto avgpool_shape = Shape{1, 1, 2, 2};
+    Shape shape_a{1, 1, 2, 2};
+    Shape avgpool_shape{1, 1, 2, 2};
 
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
-    auto window_shape = Shape{2, 2};
+    Shape window_shape{2, 2};
     auto window_movement_strides = Strides{2, 2};
     auto avgpool =
         make_shared<op::AvgPool>(A, window_shape, window_movement_strides, padding, padding);
@@ -166,11 +168,11 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
-    auto shape_a = Shape{1, 1, 4, 4};
-    auto avgpool_shape = Shape{1, 1, 3, 3};
+    Shape shape_a{1, 1, 4, 4};
+    Shape avgpool_shape{1, 1, 3, 3};
 
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
-    auto window_shape = Shape{2, 2};
+    Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
     auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
     auto f = make_shared<Function>(avgpool, op::Parameters{A});
@@ -205,11 +207,11 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
 
-    auto shape_a = Shape{2, 2, 4, 4};
-    auto avgpool_shape = Shape{2, 2, 2, 2};
+    Shape shape_a{2, 2, 4, 4};
+    Shape avgpool_shape{2, 2, 2, 2};
 
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
-    auto window_shape = Shape{2, 2};
+    Shape window_shape{2, 2};
     auto window_movement_strides = Strides{2, 2};
     auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
     auto f = make_shared<Function>(avgpool, op::Parameters{A});
@@ -309,19 +311,19 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
 {
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
-    auto shape_a = Shape{2, 2, 4, 4};
+    Shape shape_a{2, 2, 4, 4};
     test::Uniform<float> rng(1.0f, 10.0f);
 
     auto make_graph = [shape_a]() {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
-        auto window_shape = Shape{2, 2};
+        Shape window_shape{2, 2};
         auto window_movement_strides = Strides{2, 2};
         auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
         return make_shared<Function>(avgpool, op::Parameters{A});
 
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
@@ -332,19 +334,19 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numeric)
 {
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
-    auto shape_a = Shape{2, 2, 4, 4};
+    Shape shape_a{2, 2, 4, 4};
     test::Uniform<float> rng(1.0f, 10.0f);
 
     auto make_graph = [shape_a]() {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
-        auto window_shape = Shape{2, 2};
+        Shape window_shape{2, 2};
         auto window_movement_strides = Strides{1, 1};
         auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
         return make_shared<Function>(avgpool, op::Parameters{A});
 
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
@@ -355,13 +357,13 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_nume
 {
     auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto backend = manager->allocate_backend();
-    auto shape_a = Shape{2, 2, 4, 4};
+    Shape shape_a{2, 2, 4, 4};
     test::Uniform<float> rng(1.0f, 10.0f);
 
     auto make_graph = [shape_a]() {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
-        auto window_shape = Shape{2, 2};
-        auto padding = Shape{1, 1};
+        Shape window_shape{2, 2};
+        Shape padding{1, 1};
         auto window_movement_strides = Strides{2, 2};
         auto avgpool =
             make_shared<op::AvgPool>(A, window_shape, window_movement_strides, padding, padding);
@@ -369,7 +371,7 @@ TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_padding_nume
 
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_a));
         EXPECT_TRUE(autodiff_numeric_compare<float>(manager, backend, make_graph, {x}, .01f, .01f));
@@ -385,7 +387,7 @@ TEST(${BACKEND_NAME}, backwards_abs)
     // that point by skipping (-0.01,0.01).
     test::Uniform<float> rng_neg(-1.0f, -0.01f);
     test::Uniform<float> rng_pos(0.01f, 1.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -393,7 +395,7 @@ TEST(${BACKEND_NAME}, backwards_abs)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x_neg = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -413,7 +415,7 @@ TEST(${BACKEND_NAME}, backwards_add)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -432,7 +434,7 @@ TEST(${BACKEND_NAME}, backwards_add_nested)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -452,7 +454,7 @@ TEST(${BACKEND_NAME}, backwards_broadcast0)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{3};
+    Shape shape{3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
@@ -469,7 +471,7 @@ TEST(${BACKEND_NAME}, backwards_broadcast1)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{3};
+    Shape shape{3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
@@ -486,11 +488,11 @@ TEST(${BACKEND_NAME}, backwards_concat_vector)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape_0 = Shape{3};
+    Shape shape_0{3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_0));
-    auto shape_1 = Shape{2};
+    Shape shape_1{2};
     auto x1 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_1));
-    auto shape_2 = Shape{1};
+    Shape shape_2{1};
     auto x2 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
@@ -510,11 +512,11 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_0)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape_0 = Shape{3, 2};
+    Shape shape_0{3, 2};
     auto x0 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_0));
-    auto shape_1 = Shape{2, 2};
+    Shape shape_1{2, 2};
     auto x1 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_1));
-    auto shape_2 = Shape{1, 2};
+    Shape shape_2{1, 2};
     auto x2 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
@@ -534,11 +536,11 @@ TEST(${BACKEND_NAME}, backwards_concat_axis_1)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape_0 = Shape{2, 3};
+    Shape shape_0{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_0));
-    auto shape_1 = Shape{2, 2};
+    Shape shape_1{2, 2};
     auto x1 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_1));
-    auto shape_2 = Shape{2, 1};
+    Shape shape_2{2, 1};
     auto x2 = rng.initialize(backend->make_primary_tensor_view(element::f32, shape_2));
 
     auto make_graph = [shape_0, shape_1, shape_2]() {
@@ -562,7 +564,7 @@ TEST(${BACKEND_NAME}, backwards_ceiling)
     test::Uniform<float> rng_minusone(-0.95f, -0.05f);
     test::Uniform<float> rng_plusone(0.05f, 0.95f);
     test::Uniform<float> rng_plustwo(1.05f, 1.95f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -570,7 +572,7 @@ TEST(${BACKEND_NAME}, backwards_ceiling)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x_minusone = rng_minusone.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -595,14 +597,14 @@ TEST(${BACKEND_NAME}, backwards_cos)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Cos>(X),
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -616,14 +618,14 @@ TEST(${BACKEND_NAME}, backwards_cosh)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Cosh>(X),
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -639,7 +641,7 @@ TEST(${BACKEND_NAME}, backwards_divide)
     test::Uniform<float> rng(-1.0f, 1.0f);
     test::Uniform<float> rng1(1.0f, 2.0f);
     test::Uniform<float> rng2(-2.0f, -1.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
     auto x1 = rng1.initialize(backend->make_primary_tensor_view<float>(shape));
     auto x2 = rng2.initialize(backend->make_primary_tensor_view<float>(shape));
@@ -661,8 +663,8 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape0 = Shape{};
-    auto shape1 = Shape{};
+    Shape shape0{};
+    Shape shape1{};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
@@ -682,8 +684,8 @@ TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape0 = Shape{};
-    auto shape1 = Shape{3, 4};
+    Shape shape0{};
+    Shape shape1{3, 4};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
@@ -703,8 +705,8 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape0 = Shape{3, 4};
-    auto shape1 = Shape{};
+    Shape shape0{3, 4};
+    Shape shape1{};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
@@ -724,8 +726,8 @@ TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape0 = Shape{3};
-    auto shape1 = Shape{3};
+    Shape shape0{3};
+    Shape shape1{3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
@@ -745,8 +747,8 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor_vector)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape0 = Shape{4, 3};
-    auto shape1 = Shape{3};
+    Shape shape0{4, 3};
+    Shape shape1{3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
@@ -766,8 +768,8 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape0 = Shape{4, 3};
-    auto shape1 = Shape{3, 5};
+    Shape shape0{4, 3};
+    Shape shape1{3, 5};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
@@ -787,8 +789,8 @@ TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape0 = Shape{2, 4, 3};
-    auto shape1 = Shape{4, 3, 3};
+    Shape shape0{2, 4, 3};
+    Shape shape1{4, 3, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape0));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape1));
 
@@ -808,7 +810,7 @@ TEST(${BACKEND_NAME}, backwards_exp)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
@@ -829,7 +831,7 @@ TEST(${BACKEND_NAME}, backwards_floor)
     test::Uniform<float> rng_minusone(-0.95f, -0.05f);
     test::Uniform<float> rng_plusone(0.05f, 0.95f);
     test::Uniform<float> rng_plustwo(1.05f, 1.95f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -837,7 +839,7 @@ TEST(${BACKEND_NAME}, backwards_floor)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x_minusone = rng_minusone.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -862,7 +864,7 @@ TEST(${BACKEND_NAME}, backwards_log)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(1.0f, 2.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
@@ -879,7 +881,7 @@ TEST(${BACKEND_NAME}, backwards_maximum)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -899,7 +901,7 @@ TEST(${BACKEND_NAME}, backwards_minimum)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -919,7 +921,7 @@ TEST(${BACKEND_NAME}, backwards_multiply)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -938,7 +940,7 @@ TEST(${BACKEND_NAME}, backwards_negative)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
@@ -954,7 +956,7 @@ TEST(${BACKEND_NAME}, backwards_parameter)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -970,7 +972,7 @@ TEST(${BACKEND_NAME}, backwards_power)
 
     test::Uniform<float> rng_neg(-5.0f, -0.5f);
     test::Uniform<float> rng_pos(0.5f, 5.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
@@ -1004,8 +1006,8 @@ TEST(${BACKEND_NAME}, backwards_replace_slice)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
-    auto shape_x = Shape{5, 5};
-    auto shape_y = Shape{2, 2};
+    Shape shape_x{5, 5};
+    Shape shape_y{2, 2};
     auto make_graph = [shape_x, shape_y]() {
         auto X = make_shared<op::Parameter>(element::f32, shape_x);
         auto Y = make_shared<op::Parameter>(element::f32, shape_y);
@@ -1014,7 +1016,7 @@ TEST(${BACKEND_NAME}, backwards_replace_slice)
             std::vector<std::shared_ptr<op::Parameter>>{X, Y});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape_x));
         auto y = rng.initialize(backend->make_primary_tensor_view<float>(shape_y));
@@ -1030,7 +1032,7 @@ TEST(${BACKEND_NAME}, backwards_reshape)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{3, 4};
+    Shape shape{3, 4};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
@@ -1047,7 +1049,7 @@ TEST(${BACKEND_NAME}, backwards_select)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::boolean, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
@@ -1056,7 +1058,7 @@ TEST(${BACKEND_NAME}, backwards_select)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
         write_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
@@ -1080,7 +1082,7 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::boolean, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
@@ -1089,7 +1091,7 @@ TEST(${BACKEND_NAME}, backwards_select_nested)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x0 = backend->make_primary_tensor_view(element::boolean, shape);
         write_vector(x0, vector<char>{0, 1, 0, 1, 0, 1});
@@ -1116,7 +1118,7 @@ TEST(${BACKEND_NAME}, backwards_sign)
     // that point by skipping (-0.01,0.01).
     test::Uniform<float> rng_neg(-1.0f, -0.01f);
     test::Uniform<float> rng_pos(0.01f, 1.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -1124,7 +1126,7 @@ TEST(${BACKEND_NAME}, backwards_sign)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x_neg = rng_neg.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -1144,14 +1146,14 @@ TEST(${BACKEND_NAME}, backwards_sin)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Sin>(X),
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -1165,14 +1167,14 @@ TEST(${BACKEND_NAME}, backwards_sinh)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Sinh>(X),
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -1186,14 +1188,14 @@ TEST(${BACKEND_NAME}, backwards_slice)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
-    auto shape = Shape{5, 5};
+    Shape shape{5, 5};
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Slice>(X, Coordinate{2, 3}, Coordinate{4, 5}),
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -1208,14 +1210,14 @@ TEST(${BACKEND_NAME}, backwards_sqrt)
 
     // Deriv has an asymptote at 0 so we'll stay away from there.
     test::Uniform<float> rng(0.1f, 10.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Sqrt>(X),
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -1229,7 +1231,7 @@ TEST(${BACKEND_NAME}, backwards_subtract)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -1248,7 +1250,7 @@ TEST(${BACKEND_NAME}, backwards_sum_v2s)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{8};
+    Shape shape{8};
     auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
@@ -1265,7 +1267,7 @@ TEST(${BACKEND_NAME}, backwards_sum_m2s)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{8, 9};
+    Shape shape{8, 9};
     auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
@@ -1282,7 +1284,7 @@ TEST(${BACKEND_NAME}, backwards_sum_m2v_0)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{8, 9};
+    Shape shape{8, 9};
     auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
@@ -1299,7 +1301,7 @@ TEST(${BACKEND_NAME}, backwards_sum_m2v_1)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{8, 9};
+    Shape shape{8, 9};
     auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
     auto make_graph = [shape]() {
@@ -1322,7 +1324,7 @@ TEST(${BACKEND_NAME}, backwards_tan)
     test::Uniform<float> rng_r(-pi / 2 + slop, pi / 2 - slop);
     test::Uniform<float> rng_l(pi / 2 + slop, (3 * pi) / 2 - slop);
 
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -1330,7 +1332,7 @@ TEST(${BACKEND_NAME}, backwards_tan)
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x_r = rng_r.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -1350,14 +1352,14 @@ TEST(${BACKEND_NAME}, backwards_tanh)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-10.0f, 10.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Tanh>(X),
                                      std::vector<std::shared_ptr<op::Parameter>>{X});
     };
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < ${TEST_LOOPS}; i++)
     {
         auto x = rng.initialize(backend->make_primary_tensor_view<float>(shape));
 
@@ -1371,7 +1373,7 @@ TEST(${BACKEND_NAME}, backwards_abc)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{2, 3};
+    Shape shape{2, 3};
     auto x0 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
     auto x1 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
     auto x2 = rng.initialize(backend->make_primary_tensor_view<float>(shape));
@@ -1393,7 +1395,7 @@ TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
     auto backend = manager->allocate_backend();
 
     test::Uniform<float> rng(-1.0f, 1.0f);
-    auto shape = Shape{2, 4, 5};
+    Shape shape{2, 4, 5};
     auto x = rng.initialize(backend->make_primary_tensor_view(element::f32, shape));
 
     auto make_graph = [shape]() {

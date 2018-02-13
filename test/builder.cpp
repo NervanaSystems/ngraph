@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
@@ -23,9 +25,9 @@ using namespace std;
 shared_ptr<runtime::TensorView>
     make_reduce_result(function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&)> func)
 {
-    auto shape_a = Shape{3, 2};
+    Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto shape_rt = Shape{2};
+    Shape shape_rt{2};
     auto f = make_shared<Function>(func(A, {0}), op::Parameters{A});
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
@@ -43,9 +45,9 @@ shared_ptr<runtime::TensorView>
 shared_ptr<runtime::TensorView> make_reduce_result_true(
     function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
-    auto shape_a = Shape{3, 2};
+    Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto shape_rt = Shape{2};
+    Shape shape_rt{2};
     auto f = make_shared<Function>(func(A, {0}, true), op::Parameters{A});
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);
@@ -63,9 +65,9 @@ shared_ptr<runtime::TensorView> make_reduce_result_true(
 shared_ptr<runtime::TensorView> make_reduce_result_false(
     function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
-    auto shape_a = Shape{3, 2};
+    Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto shape_rt = Shape{2};
+    Shape shape_rt{2};
     auto f = make_shared<Function>(func(A, {0}, false), op::Parameters{A});
     auto manager = runtime::Manager::get("INTERPRETER");
     auto external = manager->compile(f);

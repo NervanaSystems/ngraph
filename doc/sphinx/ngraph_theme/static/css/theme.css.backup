@@ -1680,7 +1680,7 @@ a.wy-text-warning:hover {
 }
 
 a.wy-text-info:hover {
-  color: #409ad5 !important;
+  color: #018791 !important;
 }
 
 .wy-text-success {
@@ -1726,21 +1726,23 @@ h1 {
 
 h2, .rst-content .toctree-wrapper p.caption {
   font-size: 139%;
+  font-weight: lighter;
 }
 
 h3 {
   font-size: 127%;
-  font-weight: lighter;
+  color: #5F5F5F;
+  text-decoration: underline 2px;
 }
 
 h4 {
-  font-size: 100%;
-  font-weight: lighter;
+  font-size: 115%;
+  color: #898288;
 
 }
 
 h5 {
-  font-size: 100%;
+  font-size: 107%;
 }
 
 h6 {
@@ -2483,11 +2485,12 @@ div[class^='highlight'] pre {
 }
 .rst-content tt big, .rst-content tt em, .rst-content tt big, .rst-content code big, .rst-content tt em, .rst-content code em {
   font-size: 100% !important;
-  line-height: normal;
+  line-height: 1.0em;
 }
 .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
-  font-size: 90% !important;
-  color: #000;
+  font-size: 101% !important;
+  color: #528481;
+  line-height: 0.91em;
 }
 .rst-content tt.xref, a .rst-content tt, .rst-content tt.xref, .rst-content code.xref, a .rst-content tt, a .rst-content code {
   font-weight: bold;

@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <fstream>
 
@@ -66,12 +68,22 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     stringstream ss;
     if (node->is_parameter())
     {
-        ss << "    " << node->get_name() << " [shape=box color=blue]\n";
+        ss << "    " << node->get_name() << " [shape=box color=blue";
     }
     else
     {
-        ss << "    " << node->get_name() << " [shape=ellipse color=black]\n";
+        ss << "    " << node->get_name() << " [shape=ellipse color=black";
     }
+
+    ss << " label=\"" << node->get_name();
+
+    if (std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES") != nullptr)
+    {
+        ss << " " << vector_to_string(node->get_shape());
+    }
+
+    ss << " \"]\n";
+
     return ss.str();
 }
 
@@ -88,7 +100,14 @@ void pass::VisualizeTree::render() const
         out.close();
 
         stringstream ss;
-        ss << "dot -Tpng " << tmp_file << " -o " << m_name;
+
+        const char* format = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT");
+        if (!format)
+        {
+            format = "png";
+        }
+
+        ss << "dot -T" << format << " " << tmp_file << " -o " << m_name;
         auto cmd = ss.str();
         auto stream = popen(cmd.c_str(), "r");
         pclose(stream);
