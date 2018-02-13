@@ -37,7 +37,7 @@ namespace ng = ngraph;
 
 TEST(liveness, constant)
 {
-    auto shape = Shape{1};
+    Shape shape{1};
     auto c = op::Constant::create(element::i32, shape, {5});
     auto f = make_shared<Function>(make_shared<op::Negative>(c), op::Parameters{});
 
