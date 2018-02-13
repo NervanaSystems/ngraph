@@ -1,4 +1,6 @@
 ./build/test/unit-test --gtest_filter=GPU.ab
+./build/test/unit-test --gtest_filter=benchmark.mxnet_mnist_mlp_forward
+./build/test/unit-test --gtest_filter=benchmark.gpu_mxnet_mnist_mlp_forward
 ./build/test/unit-test --gtest_filter=GPU.abc
 ./build/test/unit-test --gtest_filter=GPU.maximum
 ./build/test/unit-test --gtest_filter=GPU.minimum
