@@ -41,7 +41,7 @@ namespace ngraph
             const Shape& get_mean_shape() const { return bn_mean_shape; }
             const float get_eps_value() const { return epsilon; }
             virtual std::shared_ptr<Node> copy_with_new_args(
-            const std::vector<std::shared_ptr<Node>>& new_args) const override;
+                const std::vector<std::shared_ptr<Node>>& new_args) const override;
 
         private:
             Shape bn_input_shape;

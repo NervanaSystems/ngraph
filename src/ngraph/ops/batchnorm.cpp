@@ -18,11 +18,11 @@
 #include "ngraph/ops/constant.hpp"
 
 ngraph::op::BatchNorm::BatchNorm(double eps,
-                                std::shared_ptr<ngraph::Node> gamma,
-                                std::shared_ptr<ngraph::Node> beta,
-                                std::shared_ptr<ngraph::Node> input,
-                                std::shared_ptr<ngraph::Node> mean,
-                                std::shared_ptr<ngraph::Node> variance)
+                                 std::shared_ptr<ngraph::Node> gamma,
+                                 std::shared_ptr<ngraph::Node> beta,
+                                 std::shared_ptr<ngraph::Node> input,
+                                 std::shared_ptr<ngraph::Node> mean,
+                                 std::shared_ptr<ngraph::Node> variance)
     : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input, mean, variance})
     , epsilon(eps)
     , bn_output_shape(input->get_shape())
@@ -32,9 +32,10 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 {
     add_output(input->get_element_type(), bn_output_shape);
 
-    if(bn_input_shape[1] == 0)
+    if (bn_input_shape[1] == 0)
     {
-        throw ngraph_error("input tensor must have atleast one channel axis for batch normalization");
+        throw ngraph_error(
+            "input tensor must have atleast one channel axis for batch normalization");
     }
 
     // assuming input shape (N, C, H, W), check if the size of mean and
@@ -75,10 +76,6 @@ std::shared_ptr<ngraph::Node> ngraph::op::BatchNorm::copy_with_new_args(
 {
     if (new_args.size() != 6)
         throw ngraph_error("Incorrect number of new arguments");
-    return std::make_shared<BatchNorm>(epsilon,
-                                        new_args.at(1),
-                                        new_args.at(2),
-                                        new_args.at(3),
-                                        new_args.at(4),
-                                        new_args.at(5));
+    return std::make_shared<BatchNorm>(
+        epsilon, new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4), new_args.at(5));
 }

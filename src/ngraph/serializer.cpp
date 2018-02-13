@@ -22,8 +22,8 @@
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
-#include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/batchnorm.hpp"
+#include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/ceiling.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
@@ -365,12 +365,7 @@ static shared_ptr<ngraph::Function>
         else if (node_op == "BatchNorm")
         {
             auto epsilon = node_js.at("eps").get<double>();
-            node = make_shared<op::BatchNorm>(epsilon,
-                                              args[0],
-                                              args[1],
-                                              args[2],
-                                              args[3],
-                                              args[4]);  
+            node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2], args[3], args[4]);
         }
         else if (node_op == "Broadcast")
         {

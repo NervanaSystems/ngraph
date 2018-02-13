@@ -190,14 +190,12 @@ void runtime::cpu::CPU_Emitter::EmitMatmulBias(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitBatchNorm(
-    codegen::CodeWriter& writer,
-    const ngraph::Node* node,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EmitBatchNorm(codegen::CodeWriter& writer,
+                                              const ngraph::Node* node,
+                                              const vector<runtime::cpu::TensorViewWrapper>& args,
+                                              const vector<runtime::cpu::TensorViewWrapper>& out)
 {
-    const ngraph::op::BatchNorm* batchnorm =
-        static_cast<const ngraph::op::BatchNorm*>(node);
+    const ngraph::op::BatchNorm* batchnorm = static_cast<const ngraph::op::BatchNorm*>(node);
 
     // get the shape of all the inputs and output to batchnorm
     auto gamma_shape = args[0].get_shape();
@@ -220,9 +218,9 @@ void runtime::cpu::CPU_Emitter::EmitBatchNorm(
     writer << "auto gamma = " << args[0].get_name() << ";\n";
     writer << "auto beta = " << args[1].get_name() << ";\n";
 
-    writer << "memcpy(&bn_weights[0], gamma," 
-           <<  args[1].get_size() * args[0].get_element_type().size() << ");\n";
-    writer << "memcpy(&bn_weights[0]+" << args[1].get_size() <<", beta, "
+    writer << "memcpy(&bn_weights[0], gamma,"
+           << args[1].get_size() * args[0].get_element_type().size() << ");\n";
+    writer << "memcpy(&bn_weights[0]+" << args[1].get_size() << ", beta, "
            << args[1].get_size() * args[1].get_element_type().size() << ");\n";
 
     // get the eps value from the bn node
@@ -255,16 +253,18 @@ void runtime::cpu::CPU_Emitter::EmitBatchNorm(
     writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
 
     // create batchnorm descriptor
-    writer << "batch_normalization_forward::desc bn_fprop_desc = batch_normalization_forward::desc(forward_training,"
+    writer << "batch_normalization_forward::desc bn_fprop_desc = "
+              "batch_normalization_forward::desc(forward_training,"
            << "input_data_desc, epsilon, use_global_stats|use_scale_shift);\n";
     // bn fprop primitive descriptor
     writer << "batch_normalization_forward::primitive_desc bn_fprop_prim_desc = "
               "batch_normalization_forward::primitive_desc(bn_fprop_desc, cpu_engine);\n";
 
     // create a batchnorm fprop primitive
-    writer << "batch_normalization_forward bn_fprop = batch_normalization_forward(bn_fprop_prim_desc, "
-              "primitive::at(input_data),primitive::at(mean), primitive::at(variance),"
-           << "primitive::at(weights), result); \n";
+    writer
+        << "batch_normalization_forward bn_fprop = batch_normalization_forward(bn_fprop_prim_desc, "
+           "primitive::at(input_data),primitive::at(mean), primitive::at(variance),"
+        << "primitive::at(weights), result); \n";
 
     // create stream and execute
     writer << "stream s = stream(stream::kind::eager);\n"

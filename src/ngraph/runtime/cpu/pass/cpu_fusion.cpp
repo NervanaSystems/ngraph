@@ -258,11 +258,11 @@ void ngraph::pass::CPUFusion::construct_fprop_bn()
             auto eps_ptr = std::dynamic_pointer_cast<op::Constant>(pattern_map[eps_label]);
             double epsilon = *(reinterpret_cast<const float*>(eps_ptr->get_data_ptr()));
             auto bn_node = std::shared_ptr<Node>(new op::BatchNorm(epsilon,
-                                                                    pattern_map[gamma_label],
-                                                                    pattern_map[beta_label],
-                                                                    pattern_map[input],
-                                                                    pattern_map[mean_label],
-                                                                    pattern_map[variance_label]));
+                                                                   pattern_map[gamma_label],
+                                                                   pattern_map[beta_label],
+                                                                   pattern_map[input],
+                                                                   pattern_map[mean_label],
+                                                                   pattern_map[variance_label]));
 
             return bn_node;
         };

@@ -24,8 +24,8 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/batchnorm.hpp"
+#include "ngraph/ops/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -38,9 +38,9 @@
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
+#include "util/all_close.hpp"
 #include "util/matcher.hpp"
 #include "util/test_tools.hpp"
-#include "util/all_close.hpp"
 
 using namespace ngraph;
 using namespace std;
