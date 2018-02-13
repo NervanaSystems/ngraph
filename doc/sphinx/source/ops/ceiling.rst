@@ -46,8 +46,8 @@ Backprop
 Not defined by nGraph.
 
 The backprop would be zero for non-integer
-input and undefined for integer input, and a zero backprop would have
-no effect on the backprop to ``arg`` so there is no need for ``Ceiling``
+input and undefined for integer input; a zero backprop would have
+no effect on the backprop to ``arg``, so there is no need for ``Ceiling``
 to define a backprop.
 
 C++ Interface
