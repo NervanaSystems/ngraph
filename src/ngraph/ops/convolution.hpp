@@ -29,8 +29,6 @@ namespace ngraph
         public:
             /// \brief Constructs a batched convolution operation.
             ///
-            /// Output `[N, C_OUT, R1, ... Rf]`
-            ///
             /// \param data_batch The node producing the input data batch tensor.<br>
             /// `[N, C_IN, D1, ... Df]`
             /// \param filters The node producing the filters tensor.<br>
@@ -45,6 +43,9 @@ namespace ngraph
             /// `[f]`
             /// \param data_dilation_strides The data dilation strides.<br>
             /// `[f]`
+            ///
+            /// Output `[N, C_OUT, R1, ... Rf]`
+            ///
             Convolution(const std::shared_ptr<Node>& data_batch,
                         const std::shared_ptr<Node>& filters,
                         const Strides& window_movement_strides,
@@ -67,6 +68,9 @@ namespace ngraph
             /// `[f]`
             /// \param padding_above The padding-above sizes.<br>
             /// `[f]`
+            ///
+            /// Output `[N, C_OUT, R1, ... Rf]`
+            ///
             Convolution(const std::shared_ptr<Node>& data_batch,
                         const std::shared_ptr<Node>& filters,
                         const Strides& window_movement_strides,
@@ -84,6 +88,9 @@ namespace ngraph
             /// `[f]`
             /// \param window_dilation_strides The window dilation strides.<br>
             /// `[f]`
+            ///
+            /// Output `[N, C_OUT, R1, ... Rf]`
+            ///
             Convolution(const std::shared_ptr<Node>& data_batch,
                         const std::shared_ptr<Node>& filters,
                         const Strides& window_movement_strides,
@@ -97,6 +104,9 @@ namespace ngraph
             /// `[C_OUT, C_IN, F1, ... Ff]`
             /// \param window_movement_strides The window movement strides.<br>
             /// `[f]`
+            ///
+            /// Output `[N, C_OUT, R1, ... Rf]`
+            ///
             Convolution(const std::shared_ptr<Node>& data_batch,
                         const std::shared_ptr<Node>& filters,
                         const Strides& window_movement_strides);
@@ -107,6 +117,9 @@ namespace ngraph
             /// `[N, C_IN, D1, ... Df]`
             /// \param filters The node producing the filters tensor.<br>
             /// `[C_OUT, C_IN, F1, ... Ff]`
+            ///
+            /// Output `[N, C_OUT, R1, ... Rf]`
+            ///
             Convolution(const std::shared_ptr<Node>& data_batch,
                         const std::shared_ptr<Node>& filters);
 

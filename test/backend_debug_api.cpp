@@ -30,7 +30,7 @@ using namespace ngraph;
 
 TEST(INTERPRETER, nan_check_input)
 {
-    auto shape = Shape{4};
+    Shape shape{4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::Parameters{A, B});
@@ -56,7 +56,7 @@ TEST(INTERPRETER, nan_check_input)
 
 TEST(INTERPRETER, nan_check_output)
 {
-    auto shape = Shape{4};
+    Shape shape{4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::Parameters{A, B});

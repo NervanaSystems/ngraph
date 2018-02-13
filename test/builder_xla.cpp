@@ -27,7 +27,7 @@ using namespace ngraph;
 
 TEST(builder_xla, simple)
 {
-    auto shape = Shape{2, 2};
+    Shape shape{2, 2};
 
     auto pA = make_shared<op::Parameter>(element::f32, shape);
     auto pB = make_shared<op::Parameter>(element::f32, shape);

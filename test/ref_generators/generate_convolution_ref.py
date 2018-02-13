@@ -212,11 +212,11 @@ def emit_test(t,f):
     template = '''
 TEST (${BACKEND_NAME}, %s)
 {
-    auto shape_a = Shape{%s};
+    Shape shape_a{%s};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto shape_b = Shape{%s};
+    Shape shape_b{%s};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto shape_r = Shape{%s};
+    Shape shape_r{%s};
     auto make_graph = [A, B] {
         return make_shared<Function>(make_shared<op::Convolution>(A, B,
                                                                   Strides{%s},        // move_strides
