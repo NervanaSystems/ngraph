@@ -243,6 +243,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         {
             if (dynamic_cast<op::Convolution*>(node.get()) ||
                 dynamic_cast<op::AvgPool*>(node.get()) || dynamic_cast<op::MaxPool*>(node.get()) ||
+                dynamic_cast<op::BatchNorm*>(node.get()) ||
                 dynamic_cast<op::AvgPoolBackprop*>(node.get()))
             {
                 include_mkldnn_headers = true;
@@ -293,7 +294,6 @@ using namespace ngraph::runtime;
     if (include_mkldnn_headers)
     {
         runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(writer);
-        runtime::cpu::CPU_Emitter::EmitBatchNorm(writer);
     }
 
     string pch_header_source = writer.get_code();

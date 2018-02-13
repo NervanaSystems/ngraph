@@ -25,6 +25,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/ops/sum.hpp"
+#include "ngraph/ops/batchnorm.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -38,6 +39,7 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "util/matcher.hpp"
+#include "util/all_close.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -177,9 +179,9 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
     auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
-    auto eps = op::Constant::create(element::f32, Shape{}, {0.001});
+    double eps = 0.001;
     auto shape_r = Shape{1, 2, 2, 2};
-    auto bn = make_shared<op::BatchnormFprop>(eps, gamma, beta, input, mean, var, shape_r);
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
 
     auto f = make_shared<Function>(bn, op::Parameters{mean, var, input, gamma, beta});
     auto manager = runtime::Manager::get("CPU");
@@ -221,7 +223,7 @@ TEST(cpu_fusion, batchnorm_fprop_b1c2h2w2)
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(result)));
 }
 
-TEST(${cpu_fusion, batchnorm_fprop_b2c2h2w1)
+TEST(cpu_fusion, batchnorm_fprop_b2c2h2w1)
 {
     auto input_shape = Shape{2, 2, 2, 1};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);
@@ -233,9 +235,9 @@ TEST(${cpu_fusion, batchnorm_fprop_b2c2h2w1)
     auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
-    auto eps = op::Constant::create(element::f32, Shape{}, {0.001});
+    double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchnormFprop>(eps, gamma, beta, input, mean, var, shape_r);
+    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
 
     auto f = make_shared<Function>(bn, op::Parameters{mean, var, input, gamma, beta});
     auto manager = runtime::Manager::get("CPU");

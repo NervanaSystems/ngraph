@@ -360,13 +360,16 @@ public:
                 Shape bn_output_shape{m.match_root()->get_shape()};
                 Shape bn_mean_shape{pattern_map[mean_label]->get_shape()};
                 Shape bn_variance_shape{pattern_map[variance_label]->get_shape()};
+                // get epsilon value
+                auto eps_ptr = std::dynamic_pointer_cast<op::Constant>(pattern_map[eps_label]);
+                double epsilon = *(reinterpret_cast<const float*>(eps_ptr->get_data_ptr()));
                 auto bn_node =
-                    std::shared_ptr<Node>(new op::BatchnormFprop(pattern_map[eps_label],
-                                                                 pattern_map[gamma_label],
-                                                                 pattern_map[beta_label],
-                                                                 pattern_map[input],
-                                                                 pattern_map[mean_label],
-                                                                 pattern_map[variance_label]));
+                    std::shared_ptr<Node>(new op::BatchNorm(epsilon,
+                                                            pattern_map[gamma_label],
+                                                            pattern_map[beta_label],
+                                                            pattern_map[input],
+                                                            pattern_map[mean_label],
+                                                            pattern_map[variance_label]));
 
                 return bn_node;
             };

@@ -28,12 +28,12 @@ namespace ngraph
         class BatchNorm : public RequiresTensorViewArgs
         {
         public:
-            BatchNorm(std::shared_ptr<Node> eps,
-                           std::shared_ptr<Node> gamma,
-                           std::shared_ptr<Node> beta,
-                           std::shared_ptr<Node> input,
-                           std::shared_ptr<Node> mean,
-                           std::shared_ptr<Node> variance);
+            BatchNorm(double eps,
+                      std::shared_ptr<Node> gamma,
+                      std::shared_ptr<Node> beta,
+                      std::shared_ptr<Node> input,
+                      std::shared_ptr<Node> mean,
+                      std::shared_ptr<Node> variance);
 
             const Shape& get_inputs_shape() const { return bn_input_shape; }
             const Shape& get_output_shape() const { return bn_output_shape; }
@@ -48,7 +48,7 @@ namespace ngraph
             Shape bn_output_shape;
             Shape bn_variance_shape;
             Shape bn_mean_shape;
-            float epsilon;
+            double epsilon;
         };
     }
 }

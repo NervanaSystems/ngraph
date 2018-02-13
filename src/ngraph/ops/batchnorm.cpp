@@ -17,13 +17,14 @@
 #include "ngraph/ops/batchnorm.hpp"
 #include "ngraph/ops/constant.hpp"
 
-ngraph::op::BatchNorm::BatchNorm(std::shared_ptr<ngraph::Node> eps,
-                                           std::shared_ptr<ngraph::Node> gamma,
-                                           std::shared_ptr<ngraph::Node> beta,
-                                           std::shared_ptr<ngraph::Node> input,
-                                           std::shared_ptr<ngraph::Node> mean,
-                                           std::shared_ptr<ngraph::Node> variance)
-    : RequiresTensorViewArgs("BatchNorm", {eps, gamma, beta, input, mean, variance})
+ngraph::op::BatchNorm::BatchNorm(double eps,
+                                std::shared_ptr<ngraph::Node> gamma,
+                                std::shared_ptr<ngraph::Node> beta,
+                                std::shared_ptr<ngraph::Node> input,
+                                std::shared_ptr<ngraph::Node> mean,
+                                std::shared_ptr<ngraph::Node> variance)
+    : RequiresTensorViewArgs("BatchNorm", {gamma, beta, input, mean, variance})
+    , epsilon(eps)
     , bn_output_shape(input->get_shape())
     , bn_variance_shape(variance->get_shape())
     , bn_mean_shape(mean->get_shape())
@@ -31,18 +32,13 @@ ngraph::op::BatchNorm::BatchNorm(std::shared_ptr<ngraph::Node> eps,
 {
     add_output(input->get_element_type(), bn_output_shape);
 
-    // get epsilon value
-    auto eps_ptr = std::dynamic_pointer_cast<op::Constant>(eps);
-    const float* p = reinterpret_cast<const float*>(eps_ptr->get_data_ptr());
-    epsilon = *p;
-
-    // assuming input shape (N, C, H, W), check if the size of mean and
-    // variance are equal to channel axis
     if(bn_input_shape[1] == 0)
     {
         throw ngraph_error("input tensor must have atleast one channel axis for batch normalization");
     }
 
+    // assuming input shape (N, C, H, W), check if the size of mean and
+    // variance are equal to channel axis
     if (mean->get_shape()[0] != bn_input_shape[1])
     {
         throw ngraph_error("mean size is not equal to input channel size");
@@ -79,10 +75,10 @@ std::shared_ptr<ngraph::Node> ngraph::op::BatchNorm::copy_with_new_args(
 {
     if (new_args.size() != 6)
         throw ngraph_error("Incorrect number of new arguments");
-    return std::make_shared<BatchNorm>(new_args.at(0),
-                                            new_args.at(1),
-                                            new_args.at(2),
-                                            new_args.at(3),
-                                            new_args.at(4),
-                                            new_args.at(5));
+    return std::make_shared<BatchNorm>(epsilon,
+                                        new_args.at(1),
+                                        new_args.at(2),
+                                        new_args.at(3),
+                                        new_args.at(4),
+                                        new_args.at(5));
 }

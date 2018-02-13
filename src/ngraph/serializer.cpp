@@ -364,12 +364,13 @@ static shared_ptr<ngraph::Function>
         }
         else if (node_op == "BatchNorm")
         {
-            node = make_shared<op::BatchNorm>(args[0],
+            auto epsilon = node_js.at("eps").get<double>();
+            node = make_shared<op::BatchNorm>(epsilon,
+                                              args[0],
                                               args[1],
                                               args[2],
                                               args[3],
-                                              args[4],
-                                              args[5]);  
+                                              args[4]);  
         }
         else if (node_op == "Broadcast")
         {
@@ -846,7 +847,8 @@ static json write(const Node& n)
     }
     else if (node_op == "BatchNorm")
     {
-
+        auto tmp = dynamic_cast<const op::BatchNorm*>(&n);
+        node["eps"] = tmp->get_eps_value();
     }
     else if (node_op == "Broadcast")
     {
