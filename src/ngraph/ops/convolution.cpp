@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <numeric>
 
@@ -369,25 +371,6 @@ std::shared_ptr<Node>
                                          m_data_dilation_strides);
 }
 
-bool op::Convolution::is_functionally_identical(const Node& other) const
-{
-    bool rc = true;
-    if (Node::test_identical(other))
-    {
-        const Convolution& rhs = dynamic_cast<const Convolution&>(other);
-        rc &= m_window_movement_strides == rhs.m_window_movement_strides;
-        rc &= m_window_dilation_strides == rhs.m_window_dilation_strides;
-        rc &= m_padding_below == rhs.m_padding_below;
-        rc &= m_padding_above == rhs.m_padding_above;
-        rc &= m_data_dilation_strides == rhs.m_data_dilation_strides;
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
-}
-
 void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
                                         const std::shared_ptr<Node>& delta)
 {
@@ -518,28 +501,6 @@ std::shared_ptr<Node> op::ConvolutionBackpropData::copy_with_new_args(
                                                      m_data_dilation_strides_forward);
 }
 
-bool op::ConvolutionBackpropData::is_functionally_identical(const Node& other) const
-{
-    bool rc = true;
-    if (Node::test_identical(other))
-    {
-        const ConvolutionBackpropData& rhs = dynamic_cast<const ConvolutionBackpropData&>(other);
-        rc &= m_data_batch_shape == rhs.m_data_batch_shape;
-        rc &= m_window_movement_strides_forward == rhs.m_window_movement_strides_forward;
-        rc &= m_window_dilation_strides_forward == rhs.m_window_dilation_strides_forward;
-        rc &= m_padding_below_forward == rhs.m_padding_below_forward;
-        rc &= m_padding_above_forward == rhs.m_padding_above_forward;
-        rc &= m_data_dilation_strides_forward == rhs.m_data_dilation_strides_forward;
-        // The _backward fields do not need to be tested here since they are derived from the
-        // _forward ones.
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
-}
-
 op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     const std::shared_ptr<Node>& data_batch,
     const Shape& filters_shape,
@@ -636,27 +597,4 @@ std::shared_ptr<Node> op::ConvolutionBackpropFilters::copy_with_new_args(
                                                         m_padding_below_forward,
                                                         m_padding_above_forward,
                                                         m_data_dilation_strides_forward);
-}
-
-bool op::ConvolutionBackpropFilters::is_functionally_identical(const Node& other) const
-{
-    bool rc = true;
-    if (Node::test_identical(other))
-    {
-        const ConvolutionBackpropFilters& rhs =
-            dynamic_cast<const ConvolutionBackpropFilters&>(other);
-        rc &= m_filters_shape == rhs.m_filters_shape;
-        rc &= m_window_movement_strides_forward == rhs.m_window_movement_strides_forward;
-        rc &= m_window_dilation_strides_forward == rhs.m_window_dilation_strides_forward;
-        rc &= m_padding_below_forward == rhs.m_padding_below_forward;
-        rc &= m_padding_above_forward == rhs.m_padding_above_forward;
-        rc &= m_data_dilation_strides_forward == rhs.m_data_dilation_strides_forward;
-        // The _backward fields do not need to be tested here since they are derived from the
-        // _forward ones.
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
 }

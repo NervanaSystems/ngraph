@@ -1,26 +1,31 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "gtest/gtest.h"
 
+#include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"
 #include "util/ndarray.hpp"
 
@@ -201,7 +206,7 @@ TEST(util, all_close)
 TEST(util, traverse_functions)
 {
     // First create "f(A,B,C) = (A+B)*C".
-    auto shape = Shape{2, 2};
+    Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
@@ -313,6 +318,21 @@ TEST_F(CloneTest, clone_function_full)
     ASSERT_TRUE(CompareNodes(func->get_ops(), cloned_func->get_ops(), node_map));
 }
 
+TEST(graph_util, clone_multiple_results)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto A_add_B = make_shared<op::Add>(A, B);
+    auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
+
+    auto f = make_shared<Function>(Nodes{A_add_B, A_add_B_mul_C}, op::Parameters{A, B, C});
+
+    NodeMap node_map;
+    auto copy = clone_function(f, node_map);
+}
+
 TEST(util, round_up)
 {
     EXPECT_EQ(0, round_up(0, 4));
@@ -321,4 +341,21 @@ TEST(util, round_up)
     EXPECT_EQ(4, round_up(3, 4));
     EXPECT_EQ(4, round_up(4, 4));
     EXPECT_EQ(8, round_up(5, 4));
+}
+
+TEST(util, parse_string)
+{
+    EXPECT_FLOAT_EQ(2, parse_string<float>("2"));
+    EXPECT_FLOAT_EQ(2.125, parse_string<float>("2.125"));
+    EXPECT_FLOAT_EQ(numeric_limits<float>::infinity(), parse_string<float>("INFINITY"));
+    EXPECT_FLOAT_EQ(numeric_limits<float>::infinity(), parse_string<float>("infinity"));
+    EXPECT_FLOAT_EQ(-numeric_limits<float>::infinity(), parse_string<float>("-INFINITY"));
+    EXPECT_TRUE(isnan(parse_string<float>("NaN")));
+
+    EXPECT_FLOAT_EQ(2, parse_string<double>("2"));
+    EXPECT_FLOAT_EQ(2.125, parse_string<double>("2.125"));
+    EXPECT_FLOAT_EQ(numeric_limits<double>::infinity(), parse_string<double>("INFINITY"));
+    EXPECT_FLOAT_EQ(numeric_limits<double>::infinity(), parse_string<double>("infinity"));
+    EXPECT_FLOAT_EQ(-numeric_limits<double>::infinity(), parse_string<double>("-INFINITY"));
+    EXPECT_TRUE(std::isnan(parse_string<double>("NaN")));
 }

@@ -1,5 +1,5 @@
 .. ---------------------------------------------------------------------------
-.. Copyright 2017 Intel Corporation
+.. Copyright 2018 Intel Corporation
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -13,58 +13,54 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-.. Intel nGraph library core documentation master file, created on Mon Dec 25 13:04:12 2017.
+#############################
+Intel nGraph library project
+#############################
 
-Intel nGraph library
-====================
+Welcome to the Intel nGraph project, an open source C++ library for developers
+of :abbr:`Deep Learning (DL)` (DL) systems. Here you will find a suite of 
+components, APIs, and documentation that can be used to compile and run  
+:abbr:`Deep Neural Network (DNN)` (DNN) models defined in a variety of frameworks.  
+
+.. figure:: graphics/ngraph-hub.png  
+
+
+For this early release, we provide :doc:`framework-integration-guides` to compile 
+and run MXNet and TensorFlow-based projects.
+
+The nGraph library translates a framework’s representation of computations into 
+an :abbr:`Intermediate Representation (IR)` designed to promote computational 
+efficiency on target hardware. Initially-supported backends include Intel 
+Architecture CPUs (CPU), the Intel® Nervana Neural Network Processor™ (NNP), 
+and NVIDIA\* GPUs. Currently-supported compiler optimizations include efficient 
+memory management and data layout abstraction. 
+
+Further project details can be found on our :doc:`project/about` page. 
+
+
+
+=======
+
+Sections
+=========
 
 .. toctree::
    :maxdepth: 1
-   :caption: Table Of Contents
    :name: tocmaster
+   :caption: Table of Contents
 
    installation.rst
    testing-libngraph.rst
    framework-integration-guides.rst
-   build-a-functiongraph.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Models 
-   :name: Models
-
-   training.rst
-   model-phases.rst
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Backend Components
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Reference API
-
-   api.rst
-   autodiff.rst
-   glossary.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Project Docs
-
-   release-notes.rst
-   code-contributor-README.rst
-
-.. toctree::
-   :maxdepth: 0
-   :hidden: 
-   
-   branding-notice.rst
-   doc-contributor-README.rst
-
+   graph-basics.rst
+   ops/index.rst
+   project/index.rst
 
 
 Indices and tables
 ==================
 
    * :ref:`search`   
+   * :ref:`genindex`
+
+     

@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include <iostream>
 
@@ -121,7 +123,7 @@ static std::string GetExecutablePath(const char* Argv0)
 
 codegen::StaticCompiler::StaticCompiler()
     : m_precompiled_header_valid(false)
-    , m_debuginfo_enabled(false)
+    , m_debuginfo_enabled((std::getenv("NGRAPH_COMPILER_DEBUGINFO_ENABLE") != nullptr))
     , m_enable_diag_output((std::getenv("NGRAPH_COMPILER_DIAG_ENABLE") != nullptr))
     , m_source_name("code.cpp")
 {
@@ -131,9 +133,6 @@ codegen::StaticCompiler::StaticCompiler()
 void codegen::StaticCompiler::initialize()
 {
     m_extra_search_path_list.clear();
-#if NGCPU_DEBUGINFO
-    m_debuginfo_enabled = true;
-#endif
 
     InitializeNativeTarget();
     LLVMInitializeNativeAsmPrinter();
@@ -270,6 +269,9 @@ std::unique_ptr<codegen::Module>
                                      const string& source)
 {
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
+
+    preprocessor_options.RetainRemappedFileBuffers = true;
+
     if (!m_precompiled_header_valid && m_precomiled_header_source.empty() == false)
     {
         generate_pch(m_precomiled_header_source);

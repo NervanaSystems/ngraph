@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include "ngraph/ops/pad.hpp"
 #include "ngraph/util.hpp"
@@ -77,23 +79,6 @@ std::shared_ptr<Node>
     }
     return std::make_shared<Pad>(
         new_args.at(0), new_args.at(1), m_padding_below, m_padding_above, m_padding_interior);
-}
-
-bool op::Pad::is_functionally_identical(const Node& other) const
-{
-    bool rc = true;
-    if (Node::is_functionally_identical(other))
-    {
-        const Pad& rhs = dynamic_cast<const Pad&>(other);
-        rc &= m_padding_below == rhs.m_padding_below;
-        rc &= m_padding_above == rhs.m_padding_above;
-        rc &= m_padding_interior == rhs.m_padding_interior;
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
 }
 
 /* The "y" half of this is going to be a bit tricky... best way to handle it, I think,

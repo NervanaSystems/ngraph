@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include "ngraph/ops/slice.hpp"
 
@@ -96,21 +98,4 @@ void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const std::share
     auto x = get_inputs().at(0).get_output().get_node();
 
     adjoints.add_delta_to_slice(x, delta, m_lower_bounds, m_upper_bounds, m_strides);
-}
-
-bool op::Slice::is_functionally_identical(const Node& other) const
-{
-    bool rc = true;
-    if (Node::test_identical(other))
-    {
-        const Slice& slice = dynamic_cast<const Slice&>(other);
-        rc &= m_lower_bounds == slice.m_lower_bounds;
-        rc &= m_upper_bounds == slice.m_upper_bounds;
-        rc &= m_strides == slice.m_strides;
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
 }

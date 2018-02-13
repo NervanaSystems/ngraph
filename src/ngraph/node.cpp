@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include "ngraph/node.hpp"
 #include <memory>
@@ -334,59 +336,4 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
         }
     }
     return true;
-}
-
-bool Node::is_functionally_identical(const Node& other) const
-{
-    return false;
-}
-
-bool Node::test_identical(const Node& other) const
-{
-    bool rc = true;
-    if (this->description() == other.description())
-    {
-        const deque<descriptor::Input>& i1 = this->get_inputs();
-        const deque<descriptor::Input>& i2 = other.get_inputs();
-        const deque<descriptor::Output>& o1 = this->get_outputs();
-        const deque<descriptor::Output>& o2 = other.get_outputs();
-        if (i1.size() == i2.size() && o1.size() == o2.size())
-        {
-            for (size_t i = 0; i < i1.size(); i++)
-            {
-                auto tvl1 = i1[i].get_output().get_tensor_view()->get_tensor_view_layout();
-                auto tvl2 = i2[i].get_output().get_tensor_view()->get_tensor_view_layout();
-                if (tvl1->get_shape() != tvl2->get_shape())
-                {
-                    rc = false;
-                }
-                else if (*tvl1 != *tvl2)
-                {
-                    rc = false;
-                }
-            }
-            for (size_t i = 0; i < o1.size(); i++)
-            {
-                auto tvl1 = o1[i].get_tensor_view()->get_tensor_view_layout();
-                auto tvl2 = o2[i].get_tensor_view()->get_tensor_view_layout();
-                if (tvl1->get_shape() != tvl2->get_shape())
-                {
-                    rc = false;
-                }
-                else if (*tvl1 != *tvl2)
-                {
-                    rc = false;
-                }
-            }
-        }
-        else
-        {
-            rc = false;
-        }
-    }
-    else
-    {
-        rc = false;
-    }
-    return rc;
 }

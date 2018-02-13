@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #pragma once
 
@@ -134,10 +136,6 @@ private:
     void call(std::shared_ptr<Function> function,
               const std::vector<std::shared_ptr<runtime::HostTensorView>>& input_tvs,
               const std::vector<std::shared_ptr<runtime::HostTensorView>>& output_tvs);
-    void handle_output_alias(
-        const Node& node,
-        const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>& output_alias_map,
-        const std::vector<std::shared_ptr<runtime::HostTensorView>>& output_tvs);
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensorView>>&,
                                   const Node* op = nullptr);
@@ -261,6 +259,18 @@ private:
                                 avg_pool->get_window_movement_strides(),
                                 avg_pool->get_padding_below(),
                                 avg_pool->get_padding_above());
+        }
+        else if (node_op == "AvgPoolBackprop")
+        {
+            ngraph::op::AvgPoolBackprop* apb = dynamic_cast<ngraph::op::AvgPoolBackprop*>(&node);
+            kernel::avg_pool_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                         reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                         args[0]->get_shape(),
+                                         out[0]->get_shape(),
+                                         apb->get_window_shape(),
+                                         apb->get_window_movement_strides(),
+                                         apb->get_padding_below(),
+                                         apb->get_padding_above());
         }
         else if (node_op == "Broadcast")
         {
@@ -482,7 +492,24 @@ private:
                                 args[0]->get_shape(),
                                 out[0]->get_shape(),
                                 max_pool->get_window_shape(),
-                                max_pool->get_window_movement_strides());
+                                max_pool->get_window_movement_strides(),
+                                max_pool->get_padding_below(),
+                                max_pool->get_padding_above());
+        }
+        else if (node_op == "MaxPoolBackprop")
+        {
+            ngraph::op::MaxPoolBackprop* max_pool_backprop =
+                dynamic_cast<ngraph::op::MaxPoolBackprop*>(&node);
+
+            kernel::max_pool_backprop<T>(reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                         reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                         reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                         args[1]->get_shape(),
+                                         out[0]->get_shape(),
+                                         max_pool_backprop->get_window_shape(),
+                                         max_pool_backprop->get_window_movement_strides(),
+                                         max_pool_backprop->get_padding_below(),
+                                         max_pool_backprop->get_padding_above());
         }
         else if (node_op == "Minimum")
         {

@@ -1,16 +1,18 @@
-// ----------------------------------------------------------------------------
-// Copyright 2017 Nervana Systems Inc.
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// ----------------------------------------------------------------------------
+/*******************************************************************************
+* Copyright 2017-2018 Intel Corporation
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 #include "ngraph/serializer.hpp"
 #include "ngraph/graph_util.hpp"
@@ -62,6 +64,7 @@
 #include "ngraph/ops/sin.hpp"
 #include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/sqrt.hpp"
 #include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
@@ -224,10 +227,7 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
     for (json func : js)
     {
         shared_ptr<Function> f = read_function(func, function_map);
-        if (rc == nullptr)
-        {
-            rc = f;
-        }
+        rc = f;
     }
 
     return rc;
@@ -341,6 +341,21 @@ static shared_ptr<ngraph::Function>
             auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
             node = make_shared<op::AvgPool>(
                 args[0], window_shape, window_movement_strides, padding_below, padding_above);
+        }
+        else if (node_op == "AvgPoolBackprop")
+        {
+            auto forward_arg_shape = node_js.at("forward_arg_shape").get<vector<size_t>>();
+            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+            auto window_movement_strides =
+                node_js.at("window_movement_strides").get<vector<size_t>>();
+            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+            node = make_shared<op::AvgPoolBackprop>(forward_arg_shape,
+                                                    args[0],
+                                                    window_shape,
+                                                    window_movement_strides,
+                                                    padding_below,
+                                                    padding_above);
         }
         else if (node_op == "Broadcast")
         {
@@ -526,7 +541,45 @@ static shared_ptr<ngraph::Function>
             auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
             auto window_movement_strides =
                 node_js.at("window_movement_strides").get<vector<size_t>>();
-            node = make_shared<op::MaxPool>(args[0], window_shape, window_movement_strides);
+            // For backwards compatibility, both (but not just one) of the padding_ fields may be
+            // omitted.
+            auto padding_below_maybe = node_js["padding_below"];
+            auto padding_above_maybe = node_js["padding_above"];
+            if (padding_below_maybe.empty() && !padding_above_maybe.empty())
+            {
+                throw runtime_error(
+                    "MaxPool: padding_below is absent but padding_above is present");
+            }
+            else if (!padding_below_maybe.empty() && padding_above_maybe.empty())
+            {
+                throw runtime_error(
+                    "MaxPool: padding_below is present but padding_above is absent");
+            }
+            else if (!padding_below_maybe.empty() && !padding_above_maybe.empty())
+            {
+                auto padding_below = padding_below_maybe.get<vector<size_t>>();
+                auto padding_above = padding_above_maybe.get<vector<size_t>>();
+                node = make_shared<op::MaxPool>(
+                    args[0], window_shape, window_movement_strides, padding_below, padding_above);
+            }
+            else
+            {
+                node = make_shared<op::MaxPool>(args[0], window_shape, window_movement_strides);
+            }
+        }
+        else if (node_op == "MaxPoolBackprop")
+        {
+            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+            auto window_movement_strides =
+                node_js.at("window_movement_strides").get<vector<size_t>>();
+            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+            node = make_shared<op::MaxPoolBackprop>(args[0],
+                                                    args[1],
+                                                    window_shape,
+                                                    window_movement_strides,
+                                                    padding_below,
+                                                    padding_above);
         }
         else if (node_op == "Maximum")
         {
@@ -660,6 +713,10 @@ static shared_ptr<ngraph::Function>
             auto strides = node_js.at("strides").get<vector<size_t>>();
             node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
         }
+        else if (node_op == "Sqrt")
+        {
+            node = make_shared<op::Sqrt>(args[0]);
+        }
         else if (node_op == "Subtract")
         {
             node = make_shared<op::Subtract>(args[0], args[1]);
@@ -714,6 +771,7 @@ static json write(const Node& n)
     // TODO Multiple outputs
     json inputs = json::array();
     json outputs = json::array();
+
     for (const descriptor::Input& input : n.get_inputs())
     {
         inputs.push_back(input.get_output().get_node()->get_name());
@@ -722,8 +780,19 @@ static json write(const Node& n)
     {
         outputs.push_back(n.get_output_tensor(i).get_name());
     }
+
     node["inputs"] = inputs;
     node["outputs"] = outputs;
+
+    if (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr)
+    {
+        json output_shapes = json::array();
+        for (size_t i = 0; i < n.get_output_size(); ++i)
+        {
+            output_shapes.push_back(n.get_output_shape(i));
+        }
+        node["output_shapes"] = output_shapes;
+    }
 
     string node_op = n.description();
     if (node_op == "Abs")
@@ -744,6 +813,15 @@ static json write(const Node& n)
     else if (node_op == "AvgPool")
     {
         auto tmp = dynamic_cast<const op::AvgPool*>(&n);
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+    }
+    else if (node_op == "AvgPoolBackprop")
+    {
+        auto tmp = dynamic_cast<const op::AvgPoolBackprop*>(&n);
+        node["forward_arg_shape"] = tmp->get_forward_arg_shape();
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         node["padding_below"] = tmp->get_padding_below();
@@ -854,6 +932,16 @@ static json write(const Node& n)
         auto tmp = dynamic_cast<const op::MaxPool*>(&n);
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
+    }
+    else if (node_op == "MaxPoolBackprop")
+    {
+        auto tmp = dynamic_cast<const op::MaxPoolBackprop*>(&n);
+        node["window_shape"] = tmp->get_window_shape();
+        node["window_movement_strides"] = tmp->get_window_movement_strides();
+        node["padding_below"] = tmp->get_padding_below();
+        node["padding_above"] = tmp->get_padding_above();
     }
     else if (node_op == "Maximum")
     {
@@ -955,6 +1043,9 @@ static json write(const Node& n)
         node["lower_bounds"] = tmp->get_lower_bounds();
         node["upper_bounds"] = tmp->get_upper_bounds();
         node["strides"] = tmp->get_strides();
+    }
+    else if (node_op == "Sqrt")
+    {
     }
     else if (node_op == "Subtract")
     {
