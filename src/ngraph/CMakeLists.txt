@@ -149,7 +149,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
             message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
         else()
             message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
-            endif()
+        endif()
     endif()
 
     include_directories(SYSTEM ${LLVM_INCLUDE_DIR} ${MKLDNN_INCLUDE_DIR})
@@ -170,6 +170,7 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
         runtime/cpu/cpu_emitter.cpp
         runtime/cpu/cpu_external_function.cpp
         runtime/cpu/cpu_tensor_view_wrapper.cpp
+        runtime/cpu/cpu_tracing.cpp
         runtime/cpu/ops/matmul_bias.cpp
         runtime/cpu/pass/cpu_fusion.cpp
     )
@@ -177,17 +178,24 @@ if (NGRAPH_CPU_ENABLE AND LLVM_INCLUDE_DIR AND
     # The built-in headers are in a version-specific directory
     # This must be kept in sync with the LLVM + Clang version in use
     set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
+
+    set(HEADER_SEARCH_DEFINES
+        "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\""
+        "MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\""
+        "CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\""
+        "NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\""
+        "INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\""
+    )
+
     if (NGRAPH_TBB_ENABLE)
-        set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS
-          "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\";TBB_HEADERS_PATH=\"${TBB_ROOT}/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\";NGRAPH_TBB_ENABLE;")
         set_source_files_properties(runtime/cpu/cpu_external_function.cpp PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
-    else()
-        set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS
-          "EIGEN_HEADERS_PATH=\"${EIGEN_INCLUDE_DIR}\";MKLDNN_HEADERS_PATH=\"${MKLDNN_INCLUDE_DIR}\";CLANG_BUILTIN_HEADERS_PATH=\"${LLVM_LIB_DIR}/clang/5.0.1/include\";NGRAPH_HEADERS_PATH=\"${NGRAPH_INCLUDE_PATH}\";INSTALLED_HEADERS_PATH=\"${CMAKE_INSTALL_PREFIX}/include\";")
+        set(HEADER_SEARCH_DEFINES ${HEADER_SEARCH_DEFINES}
+            "TBB_HEADERS_PATH=\"${TBB_ROOT}/include\""
+            "NGRAPH_TBB_ENABLE"
+        )
     endif()
+    set_source_files_properties(codegen/compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADER_SEARCH_DEFINES}")
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
-    set_property(SOURCE codegen/compiler.cpp APPEND_STRING PROPERTY COMPILE_DEFINITIONS
-      "NGCPU_DEBUGINFO=${NGRAPH_CPU_DEBUGINFO_ENABLE};")
 
     # GPU backend current requires CPU because they share compiler.cpp,
     # and compiler.cpp requires MKLDNN

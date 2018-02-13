@@ -45,9 +45,9 @@ using namespace std;
 
 TEST(cpu_fusion, gemm_pattern)
 {
-    auto shape_w = Shape{2, 4};
-    auto shape_x = Shape{4, 1};
-    auto shape_b = Shape{1};
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    Shape shape_b{1};
     auto A = make_shared<op::Parameter>(element::f32, shape_w);
     auto B = make_shared<op::Parameter>(element::f32, shape_x);
     auto C = make_shared<op::Parameter>(element::f32, shape_b);
@@ -92,9 +92,9 @@ TEST(cpu_fusion, gemm_pattern)
 
 TEST(cpu_fusion, gemm_cpu)
 {
-    auto shapeA = Shape{3, 2};
-    auto shapeB = Shape{2, 3};
-    auto shapeC = Shape{2, 2};
+    Shape shapeA{3, 2};
+    Shape shapeB{2, 3};
+    Shape shapeC{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shapeA);
     auto B = make_shared<op::Parameter>(element::f32, shapeB);
 
@@ -131,10 +131,10 @@ TEST(cpu_fusion, gemm_cpu)
 
 TEST(cpu_fusion, cpu_fusion_pass_basic)
 {
-    auto shape = Shape{};
-    auto shape_w = Shape{2, 4};
-    auto shape_x = Shape{4, 1};
-    auto shape_b = Shape{1};
+    Shape shape{};
+    Shape shape_w{2, 4};
+    Shape shape_x{4, 1};
+    Shape shape_b{1};
     auto A = make_shared<op::Parameter>(element::f32, shape_w);
     auto B = make_shared<op::Parameter>(element::f32, shape_x);
     auto C = make_shared<op::Parameter>(element::f32, shape_b);

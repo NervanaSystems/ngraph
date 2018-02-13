@@ -31,8 +31,13 @@ training/inference model with one of the backends that are now enabled.
 For this early |release| release, we're providing :doc:`framework-integration-guides`, 
 for:
 
+<<<<<<< HEAD
 * :doc:`MXNet<framework-integration-guides>` framework,  
 * :doc:`Tensorflow<framework-integration-guides>` framework, and
+=======
+* :doc:`framework-integration-guides` framework,  
+* :doc:`framework-integration-guides` framework, and
+>>>>>>> master
 * neon™ `frontend framework`_.
 
 Integration guides for other frameworks are tentatively forthcoming.
