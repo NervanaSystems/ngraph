@@ -51,11 +51,11 @@ ngraph_to_numpy_types_map = [
 
 def get_element_type(data_type):  # type: (NumericType) -> NgraphType
     """Return an ngraph element type for a Python type or numpy.dtype."""
-    if data_type == int:
+    if data_type is int:
         log.warning('Converting int type of undefined bitwidth to 32-bit ngraph integer.')
         return NgraphType.i32
 
-    if data_type == float:
+    if data_type is float:
         log.warning('Converting float type of undefined bitwidth to 32-bit ngraph float.')
         return NgraphType.f32
 
@@ -93,12 +93,12 @@ def make_constant_node(value, dtype=None):  # type: (NumericData, NumericType) -
     else:
         element_type = get_element_type(ndarray.dtype)
 
-    return Constant(element_type, ndarray.shape, ndarray.flatten())
+    return Constant(element_type, ndarray.shape, ndarray.flatten().tolist())
 
 
 def as_node(input_value):  # type: (NodeInput) -> Node
     """Return input values as nodes. Scalars will be converted to Constant nodes."""
-    if type(input_value) == Node:
+    if issubclass(type(input_value), Node):
         return input_value
     return make_constant_node(input_value)
 

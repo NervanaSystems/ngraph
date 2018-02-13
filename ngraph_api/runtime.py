@@ -95,7 +95,7 @@ class Computation:
 
     @staticmethod
     def _get_buffer_size(element_type, element_count):  # type: (TensorViewType, int) -> int
-        return int((element_type.bitwidth / 8) * element_count)
+        return int((element_type.bitwidth / 8.0) * element_count)
 
     @staticmethod
     def _write_ndarray_to_tensor_view(value, tensor_view):
