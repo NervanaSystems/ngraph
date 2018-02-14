@@ -40,6 +40,7 @@ namespace ngraph
             private:
                 std::shared_ptr<CPU_ExternalFunction> external_function;
                 std::vector<mkldnn::primitive> mkldnn_primitives;
+                std::vector<mkldnn::stream> mkldnn_streams;
             };
         }
     }
