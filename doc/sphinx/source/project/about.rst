@@ -20,28 +20,24 @@ memory management and data layout abstraction.
 Why is this needed?
 --------------------
 
-When Deep Learning (DL) frameworks first emerged as the vehicle for training and
-inference models, they were designed around kernels optimized for a particular 
-platform. As a result, many backend details -- which normally should get 
-encapsulated within the kernel-framework implementation -- instead get muddied 
-up in the framework's language, and sometimes even in the the model itself. This 
-makes the adaptability and portability of DL models to different frameworks or 
-backends inherently complex and expensive. 
+When Deep Learning (DL) frameworks first emerged as the vehicle for training 
+and inference models, they were designed around kernels optimized for a 
+particular platform. As a result, many backend details were being exposed in 
+the model definitions, making the adaptability and portability of DL models 
+to other or more advanced backends inherently complex and expensive.
 
-This problem remains largely unchanged today: an algorithm writer cannot easily 
-adapt her or his model to other frameworks. Nor does the traditional approach 
-allow the freedom to experiment or test a model with different backends or on 
-better hardware; teams get locked into a framework and their model either has 
-to be entirely rewritten for the new framework, or re-optimized with the newer 
-hardware and kernel in mind. Furthermore, any hard-earned optimizations of the 
-model (usually focused on only one aspect, such as training performance) from 
-its original topology break with a change, update, or upgrade to the platform.
+The traditional approach means that an algorithm developer cannot easily adapt 
+his or her model to different backends. Making a model run on a different 
+framework is also problematic because the user must separate the essence of 
+the model from the performance adjustments made for the backend, translate 
+to similar ops in the new framework, and finally make the necessary changes 
+for the preferred backend configuration on the new framework.
 
-We designed the Intel nGraph project to reduce these kinds of engineering 
-complexities. While optimized kernels for deep-learning primitives are provided 
-via libraries like Intel® Math Kernel Library for Deep Neural Networks (Intel
-MKL-DNN), there are also several compiler-inspired ways in which performance 
-can be further optimized. 
+We designed the Intel nGraph project to substantially reduce these kinds of 
+engineering complexities. While optimized kernels for deep-learning primitives 
+are provided through the project and via libraries like Intel® Math Kernel 
+Library (Intel® MKL) for Deep Neural Networks (Intel® MKL-DNN), there are 
+several compiler-inspired ways in which performance can be further optimized.
 
 =======
 
