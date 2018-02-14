@@ -14,12 +14,14 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <string>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_set>
 
 #include "ngraph/node.hpp"
 #include "ngraph/ops/avg_pool.hpp"
+#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/max_pool.hpp"
 
@@ -38,6 +40,7 @@ namespace ngraph
                 const std::unordered_set<std::type_index> s_op_registry{
                     TI(ngraph::op::AvgPool),
                     TI(ngraph::op::AvgPoolBackprop),
+                    TI(ngraph::op::BatchNorm)};
                     TI(ngraph::op::Convolution),
                     TI(ngraph::op::ConvolutionBackpropData),
                     TI(ngraph::op::ConvolutionBackpropFilters),

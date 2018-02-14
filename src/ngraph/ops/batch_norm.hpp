@@ -17,39 +17,36 @@
 #pragma once
 
 #include <memory>
-
+#include "ngraph/node.hpp"
 #include "ngraph/ops/op.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise inverse cosine (arccos) operation.
-        ///
-        class Acos : public UnaryElementwiseArithmetic
+        class BatchNorm : public RequiresTensorViewArgs
         {
         public:
-            /// \brief Constructs an arccos operation.
-            ///
-            /// \param arg Node that produces the input tensor.<br>
-            /// `[d1, ...]`
-            ///
-            /// Output `[d1, ...]`
-            ///
-            Acos(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic("Acos", arg)
-            {
-            }
+            BatchNorm(double eps,
+                      std::shared_ptr<Node> gamma,
+                      std::shared_ptr<Node> beta,
+                      std::shared_ptr<Node> input,
+                      std::shared_ptr<Node> mean,
+                      std::shared_ptr<Node> variance);
 
+            const Shape& get_inputs_shape() const { return m_bn_input_shape; }
+            const Shape& get_variance_shape() const { return m_bn_variance_shape; }
+            const Shape& get_mean_shape() const { return m_bn_mean_shape; }
+            double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
-            {
-                if (new_args.size() != 1)
-                {
-                    throw ngraph_error("Incorrect number of new arguments");
-                }
-                return std::make_shared<Acos>(new_args.at(0));
-            }
+                const std::vector<std::shared_ptr<Node>>& new_args) const override;
+
+        private:
+            Shape m_bn_input_shape;
+            Shape m_bn_variance_shape;
+            Shape m_bn_mean_shape;
+            double m_epsilon;
         };
     }
 }
