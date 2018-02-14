@@ -16,14 +16,7 @@
 
 #pragma once
 
-#include <typeindex>
-#include <typeinfo>
-#include <unordered_set>
-
-#include <mkldnn.hpp>
-
-#include "ngraph/node.hpp"
-#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -31,14 +24,14 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace mkldnn_utils
+            namespace pass
             {
-                extern mkldnn::engine global_cpu_engine;
-
-                bool IsMKLDNNOp(ngraph::Node& op);
-
-                mkldnn::memory::format
-                    CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
+                class CPULayout : public ngraph::pass::CallGraphPass
+                {
+                public:
+                    virtual bool
+                        run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
+                };
             }
         }
     }

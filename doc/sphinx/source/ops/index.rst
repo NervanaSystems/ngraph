@@ -55,4 +55,7 @@ Not currently a comprehensive list.
    atan.rst
    avg_pool.rst
    avg_pool_backprop.rst
+   broadcast.rst
+   ceiling.rst
+   concatenate.rst
    convolution.rst
