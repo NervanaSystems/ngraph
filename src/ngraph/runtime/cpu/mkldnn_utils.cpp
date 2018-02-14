@@ -41,7 +41,8 @@ namespace ngraph
                     TI(ngraph::op::Convolution),
                     TI(ngraph::op::ConvolutionBackpropData),
                     TI(ngraph::op::ConvolutionBackpropFilters),
-                    TI(ngraph::op::MaxPool)};
+                    TI(ngraph::op::MaxPool),
+                    T1(ngraph::op::MaxPoolBackprop)};
 
                 bool IsMKLDNNOp(ngraph::Node& op)
                 {
