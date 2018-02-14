@@ -17,13 +17,13 @@ have recent updates of the following packages and prerequisites:
 
    CentOS 7.4 64-bit, GCC 4.8, CMake 3.2, supported, ``patch diffutils zlib1g-dev libtinfo-dev`` 
    Ubuntu 16.04 (LTS) 64-bit, CLang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 git libtinfo-dev``
-   Ubuntu 16.04 (LTS) 64-bit, CLang 4.0, CMake 3.5.1 + GNU Make, officially unsupported, ``build-essential cmake clang-4.0 git libtinfo-dev``
    Clear Linux\* OS for Intel Architecture, CLang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
-On Ubuntu 16.04 with ``gcc-5.4.0`` or ``clang-3.9``, the recommended option 
-is to add ``-DNGRAPH_USE_PREBUILT_LLVM=TRUE`` to the :command:`cmake` command. 
-This gets a pre-built tarball of LLVM+Clang from `llvm.org`_, and substantially 
-reduces build times.
+Other configurations may work but aren't tested; on Ubuntu 16.04 with 
+``gcc-5.4.0`` or ``clang-3.9``, for exampple, we recommend adding 
+``-DNGRAPH_USE_PREBUILT_LLVM=TRUE`` to the :command:`cmake` command in step 4
+below. This gets a pre-built tarball of LLVM+Clang from `llvm.org`_, and will
+substantially reduce build time.
 
 If using ``gcc-4.8``, it may be necessary to add symlinksfrom ``gcc`` to
 ``gcc-4.8``, and from ``g++`` to ``g++-4.8``, in your :envvar:`PATH`, even 

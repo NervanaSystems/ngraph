@@ -4,23 +4,63 @@
 AvgPool
 #######
 
+Description
+===========
+
 Average Pooling operation.
 
-Average pooling takes as its input an data batch tensor of shape
-:math:`(N,C,d_1,\ldots,d_n)` where :math:`n > 0`, every :math:`d_i >
-0`, and where :math:`N` is the batch size, and :math:`C > 0` is the
+Average pooling windows its input and produces an average for each window.
+
+Inputs
+------
+
++-----------------+----------------+--------------------------------+--------------------+
+| Name            | Element Type   | Shape                          | Notes              |
++=================+================+================================+====================+
+| ``data``        | Any            | :math:`(N,C,d_1,\ldots,d_n)`   | :math:`n>0, d_i>0` |
++-----------------+----------------+--------------------------------+--------------------+
+
+
+Attributes
+----------
+
++----------------------+-----------------+----------------------------------+
+| Name                 | Type            | Notes                            |
++======================+=================+==================================+
+| ``w``                | ``Shape[n]``    | Window shape. :math:`w_i\le d_i` |
++----------------------+-----------------+----------------------------------+
+| ``s``                | ``Strides[n]``  | Window strides.                  |
++----------------------+-----------------+----------------------------------+
+| ``p``                | ``Shape[n]``    | Padding below.                   |
++----------------------+-----------------+----------------------------------+
+| ``q``                | ``Shape[n]``    | Padding above.                   |
++----------------------+-----------------+----------------------------------+
+
+Outputs
+-------
+
++-----------------+-------------------------+--------------------------------+
+| Name            | Element Type            | Shape                          |
++=================+=========================+================================+
+| ``output``      | Any                     | :math:`(N,C,d'_1,\ldots,d'_n)` |
++-----------------+-------------------------+--------------------------------+
+
+
+Average pooling takes as its input a batch tensor `data` of shape
+:math:`(N,C,d_1,\ldots,d_n)` where  where :math:`N` is the batch
+size, and :math:`C > 0` is the
 number of channels (sometimes called features).  The dimensions
 :math:`(d_1,\ldots,d_n)` correspond to the shape of an
 :math:`n`-dimensional data item in a batch. For example, where
 :math:`n=2`, the data may represent a two-dimensional image. It also
-takes four parameters:
+takes four attributes:
         
-1. *(the window shape)* a size vector :math:`(w_1,\ldots,w_n)` where every :math:`w_i \le d_i`; and
-2. *(the window movement strides, optional)* a vector of positive integers :math:`(s_1,\ldots,s_n)`.
-3. *(the padding below, optional)* a vector of positive integers :math:`(p_1,\ldots,p_n)`.
-4. *(the padding above, optional)* a vector of positive integers :math:`(q_1,\ldots,q_n)`.
+1. *window shape*,
+2. *window movement strides*, (optional)
+3. *padding below*, (optional)
+4. *padding above*, (optional).
         
-The output has the shape :math:`(N,C,d'_1,\ldots,d'_n)`, where
+The shape of `output` is :math:`(N,C,d'_1,\ldots,d'_n)`, where
 :math:`d'_n = \lceil \frac{p_i + d_i + q_i - w_i + 1}{s_i} \rceil`.
         
 *In the absence of padding*, given an input data batch tensor
@@ -92,7 +132,3 @@ C++ Interface
 .. doxygenclass:: ngraph::op::AvgPool
    :members:
 
-Python Interface
-================
-
-is not merged yet, but could go here!

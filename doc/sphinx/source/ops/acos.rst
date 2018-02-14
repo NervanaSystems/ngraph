@@ -4,22 +4,31 @@
 Acos
 ####
 
+Description
+===========
+
 Elementwise acos operation.
 
-Produces a single output tensor of the same element type and shape as the input,
-where the value at each coordinate of the output is the acos of the
-value at each input coordinate.
+Produces a tensor of the same element type and shape as ``arg``,
+where the value at each coordinate of ``output`` is the inverse cosine of the
+value at the corresponding coordinate of ``arg`` .
+
+Inputs
+------
 
 +-----------------+-------------------------+--------------------------------+
-| Input Name      | Element Type            | Shape                          |
+| Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``input``       | Any                     | Any                            |
+| ``arg``         | Any                     | Any                            |
 +-----------------+-------------------------+--------------------------------+
 
+Outputs
+-------
+
 +-----------------+-------------------------+--------------------------------+
-| Output Name     | Element Type            | Shape                          |
+| Name            | Element Type            | Shape                          |
 +=================+=========================+================================+
-| ``output``      | Same as ``input``       | Same as input.                 |
+| ``output``      | Same as ``arg``         | Same as ``arg``.               |
 +-----------------+-------------------------+--------------------------------+
 
 
@@ -28,14 +37,14 @@ Mathematical Definition
 
 .. math::
 
-   output_{i_0, \ldots, i_{n-1}} = \mathrm{cos}^{-1}(input_{i_0, \ldots, i_{n-1}})
+   \texttt{output}_{i_0, \ldots, i_{n-1}} = \cos^{-1}(\texttt{arg}_{i_0, \ldots, i_{n-1}})
 
 Backprop
 ========
 
 .. math::
 
-   \overline{input} \leftarrow -\frac{\Delta}{\sin{output}}
+   \overline{\texttt{arg}} \leftarrow -\frac{\Delta}{\sqrt{1-\texttt{arg}^2}}
 
 
 C++ Interface
@@ -43,8 +52,3 @@ C++ Interface
 
 .. doxygenclass:: ngraph::op::Acos
    :members:
-
-Python Interface
-================
-
-is not merged yet, but could go here!
