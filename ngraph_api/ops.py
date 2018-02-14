@@ -21,7 +21,8 @@ import numpy as np
 from pyngraph import Node
 from pyngraph.op import Abs, Add, Broadcast, Ceiling, Constant, Convert, Divide, Equal, Exp, \
     Floor, Greater, GreaterEq, Less, LessEq, Log, Maximum, Minimum, Multiply, Negative, \
-    NotEqual, Parameter, Sqrt, Subtract
+    NotEqual, Parameter, Sqrt, Subtract, Tanh
+
 
 from ngraph_api.utils.broadcasting import get_broadcast_axes
 from ngraph_api.utils.decorators import nameable_op, binary_op, unary_op
@@ -194,3 +195,10 @@ def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Nod
     """Return node which casts input node values to specified type."""
     new_element_type = get_element_type(new_type)
     return Convert(node, new_element_type)
+
+
+# Non-linear ops
+@unary_op
+def tanh(node, name=None):  # type: (Node, str) -> Node
+    """Return node which applies tanh to the input node elementwise."""
+    return Tanh(node)
