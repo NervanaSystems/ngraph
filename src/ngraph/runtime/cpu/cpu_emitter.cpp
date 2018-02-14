@@ -134,12 +134,9 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAdd)
 }
 
 #ifdef NGRAPH_DISTRIBUTED
-void runtime::cpu::CPU_Emitter::EmitAllReduce(codegen::CodeWriter& writer,
-                                              const ngraph::Node* n,
-                                              const vector<runtime::cpu::TensorViewWrapper>& arg,
-                                              const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAllReduce)
 {
-    const element::Type& element_type = arg[0].get_element_type();
+    const element::Type& element_type = args[0].get_element_type();
     auto data_type = "MPI_FLOAT";
 
     if (element_type == element::f32)
@@ -151,9 +148,9 @@ void runtime::cpu::CPU_Emitter::EmitAllReduce(codegen::CodeWriter& writer,
         data_type = "MPI_DOUBLE";
     }
 
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
-    writer << "MPI_Allreduce(" << arg[0].get_name() << ", " << out[0].get_name() << ", "
+    writer << "MPI_Allreduce(" << args[0].get_name() << ", " << out[0].get_name() << ", "
            << out[0].get_size() << ", " << data_type << ", MPI_SUM, MPI_COMM_WORLD);\n";
     writer.indent--;
     writer << "}\n";
