@@ -57,9 +57,7 @@ using namespace ngraph;
         nvrtcResult result = x;                                                                    \
         if (result != NVRTC_SUCCESS)                                                               \
         {                                                                                          \
-            std::cerr << "\nerror: " #x " failed with error " << nvrtcGetErrorString(result)       \
-                      << '\n';                                                                     \
-            exit(1);                                                                               \
+            throw std::runtime_error("\nerror: " #x " failed with error " + nvrtcGetErrorString(result));       \
         }                                                                                          \
     } while (0)
 
@@ -71,8 +69,7 @@ using namespace ngraph;
         {                                                                                          \
             const char* msg;                                                                       \
             cuGetErrorName(result, &msg);                                                          \
-            std::cerr << "\nerror: " #x " failed with error " << msg << '\n';                      \
-            exit(1);                                                                               \
+            throw std::runtime_error("\nerror: " #x " failed with error " + std::string(msg);      \
         }                                                                                          \
     } while (0)
 
@@ -88,7 +85,7 @@ void runtime::gpu::GPU_Emitter::EmitAbs(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitAdd(codegen::CodeWriter& writer,
@@ -144,7 +141,7 @@ void runtime::gpu::GPU_Emitter::EmitDot(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 
     const Shape& arg0_shape = args[0].get_shape();
     const Shape& arg1_shape = args[1].get_shape();
@@ -235,7 +232,7 @@ void runtime::gpu::GPU_Emitter::EmitDivide(codegen::CodeWriter& writer,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitEqual(codegen::CodeWriter& writer,
@@ -243,7 +240,7 @@ void runtime::gpu::GPU_Emitter::EmitEqual(codegen::CodeWriter& writer,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitGreater(codegen::CodeWriter& writer,
@@ -251,7 +248,7 @@ void runtime::gpu::GPU_Emitter::EmitGreater(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitGreaterEq(
@@ -260,7 +257,7 @@ void runtime::gpu::GPU_Emitter::EmitGreaterEq(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitLess(codegen::CodeWriter& writer,
@@ -268,7 +265,7 @@ void runtime::gpu::GPU_Emitter::EmitLess(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitLessEq(codegen::CodeWriter& writer,
@@ -276,7 +273,7 @@ void runtime::gpu::GPU_Emitter::EmitLessEq(codegen::CodeWriter& writer,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitLog(codegen::CodeWriter& writer,
@@ -284,7 +281,7 @@ void runtime::gpu::GPU_Emitter::EmitLog(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitMaximum(codegen::CodeWriter& writer,
@@ -417,14 +414,14 @@ void runtime::gpu::GPU_Emitter::EmitNotEqual(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 void runtime::gpu::GPU_Emitter::EmitSelect(codegen::CodeWriter& writer,
                                            const ngraph::Node* n,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSubtract(
@@ -433,7 +430,7 @@ void runtime::gpu::GPU_Emitter::EmitSubtract(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitBroadcast(
@@ -442,7 +439,7 @@ void runtime::gpu::GPU_Emitter::EmitBroadcast(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitConvert(codegen::CodeWriter& writer,
@@ -450,7 +447,7 @@ void runtime::gpu::GPU_Emitter::EmitConvert(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitConstant(
@@ -459,7 +456,7 @@ void runtime::gpu::GPU_Emitter::EmitConstant(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
@@ -542,7 +539,7 @@ void runtime::gpu::GPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSign(codegen::CodeWriter& writer,
@@ -550,7 +547,7 @@ void runtime::gpu::GPU_Emitter::EmitSign(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSlice(codegen::CodeWriter& writer,
@@ -558,7 +555,7 @@ void runtime::gpu::GPU_Emitter::EmitSlice(codegen::CodeWriter& writer,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSum(codegen::CodeWriter& writer,
@@ -566,7 +563,7 @@ void runtime::gpu::GPU_Emitter::EmitSum(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitMultiply(
@@ -616,7 +613,7 @@ void runtime::gpu::GPU_Emitter::EmitExp(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSin(codegen::CodeWriter& writer,
@@ -624,7 +621,7 @@ void runtime::gpu::GPU_Emitter::EmitSin(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSinh(codegen::CodeWriter& writer,
@@ -632,7 +629,7 @@ void runtime::gpu::GPU_Emitter::EmitSinh(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitCos(codegen::CodeWriter& writer,
@@ -640,7 +637,7 @@ void runtime::gpu::GPU_Emitter::EmitCos(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitCosh(codegen::CodeWriter& writer,
@@ -648,7 +645,7 @@ void runtime::gpu::GPU_Emitter::EmitCosh(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitTan(codegen::CodeWriter& writer,
@@ -656,7 +653,7 @@ void runtime::gpu::GPU_Emitter::EmitTan(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitTanh(codegen::CodeWriter& writer,
@@ -664,7 +661,7 @@ void runtime::gpu::GPU_Emitter::EmitTanh(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitAsin(codegen::CodeWriter& writer,
@@ -672,7 +669,7 @@ void runtime::gpu::GPU_Emitter::EmitAsin(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitAcos(codegen::CodeWriter& writer,
@@ -680,7 +677,7 @@ void runtime::gpu::GPU_Emitter::EmitAcos(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitAtan(codegen::CodeWriter& writer,
@@ -688,7 +685,7 @@ void runtime::gpu::GPU_Emitter::EmitAtan(codegen::CodeWriter& writer,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                          const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitPower(codegen::CodeWriter& writer,
@@ -696,7 +693,7 @@ void runtime::gpu::GPU_Emitter::EmitPower(codegen::CodeWriter& writer,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitReplaceSlice(
@@ -705,7 +702,7 @@ void runtime::gpu::GPU_Emitter::EmitReplaceSlice(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitOneHot(codegen::CodeWriter& writer,
@@ -713,7 +710,7 @@ void runtime::gpu::GPU_Emitter::EmitOneHot(codegen::CodeWriter& writer,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                            const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitCeiling(codegen::CodeWriter& writer,
@@ -721,7 +718,7 @@ void runtime::gpu::GPU_Emitter::EmitCeiling(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitFloor(codegen::CodeWriter& writer,
@@ -729,7 +726,7 @@ void runtime::gpu::GPU_Emitter::EmitFloor(codegen::CodeWriter& writer,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                           const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSqrt(codegen::CodeWriter& writer,
@@ -779,7 +776,7 @@ void runtime::gpu::GPU_Emitter::EmitConvolution(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitNot(codegen::CodeWriter& writer,
@@ -787,7 +784,7 @@ void runtime::gpu::GPU_Emitter::EmitNot(codegen::CodeWriter& writer,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                         const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
@@ -795,7 +792,7 @@ void runtime::gpu::GPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitReverse(codegen::CodeWriter& writer,
@@ -803,7 +800,7 @@ void runtime::gpu::GPU_Emitter::EmitReverse(codegen::CodeWriter& writer,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
                                             const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitReduceWindow(
@@ -812,7 +809,7 @@ void runtime::gpu::GPU_Emitter::EmitReduceWindow(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
 
 void runtime::gpu::GPU_Emitter::EmitSelectAndScatter(
@@ -821,5 +818,5 @@ void runtime::gpu::GPU_Emitter::EmitSelectAndScatter(
     const vector<runtime::gpu::GPU_TensorViewWrapper>& args,
     const vector<runtime::gpu::GPU_TensorViewWrapper>& out)
 {
-    writer << " // " << n->get_name() << "\n  return;\n";
+    throw std::runtime_error(n->get_name() + " is not implemented.");
 }
