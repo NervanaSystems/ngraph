@@ -69,7 +69,9 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
 
                 return std::make_shared<AvgPool>(new_args.at(0),
                                                  m_window_shape,
@@ -110,7 +112,9 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
 
                 AvgPoolBackprop* avpn = new AvgPoolBackprop(m_forward_arg_shape,
                                                             new_args.at(0),
