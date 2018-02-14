@@ -25,8 +25,9 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
 #define EMITTER_DECL(E)                                                                            \
-    E(codegen::CodeWriter& writer,                                                                 \
-      const ngraph::Node* n,                                                                       \
+    E(ngraph::runtime::cpu::CPU_ExternalFunction* external_function,                               \
+      codegen::CodeWriter& writer,                                                                 \
+      const ngraph::Node* node,                                                                    \
       const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& args,                            \
       const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& out)
 
