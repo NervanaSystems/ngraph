@@ -20,7 +20,7 @@ include(ExternalProject)
 # Fetch and install MKL-DNN
 #----------------------------------------------------------------------------------------------------------
 
-if(NGRAPH_CPU_ENABLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if(NGRAPH_CPU_ENABLE)
 
     set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
     set(MKLDNN_GIT_TAG "3e1f8f5")

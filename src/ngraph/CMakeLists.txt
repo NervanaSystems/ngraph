@@ -329,35 +329,33 @@ install(DIRECTORY
     FILES_MATCHING PATTERN "*.hpp"
 )
 
-if (NOT APPLE)
-    install(DIRECTORY
-        ${MKLDNN_LIB_DIR}/
-        DESTINATION "${NGRAPH_INSTALL_LIB}"
+install(DIRECTORY
+    ${MKLDNN_LIB_DIR}/
+    DESTINATION "${NGRAPH_INSTALL_LIB}"
+)
+
+if (NGRAPH_TBB_ENABLE)
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
+        DESTINATION ${NGRAPH_INSTALL_LIB}
+        FILES_MATCHING PATTERN "libtbb.so.*"
     )
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
+        DESTINATION ${NGRAPH_INSTALL_LIB}
+        FILES_MATCHING PATTERN "libtbb_debug.so.*"
+    )
+endif()
 
-    if (NGRAPH_TBB_ENABLE)
-        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
-            DESTINATION ${NGRAPH_INSTALL_LIB}
-            FILES_MATCHING PATTERN "libtbb.so.*"
-        )
-        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
-            DESTINATION ${NGRAPH_INSTALL_LIB}
-            FILES_MATCHING PATTERN "libtbb_debug.so.*"
-        )
-    endif()
-
-    if (NGRAPH_ARGON_ENABLE)
-        install(DIRECTORY ${ARGON_TRANSFORMER_LIB_DIR}/
-            DESTINATION ${NGRAPH_INSTALL_LIB}
-            FILES_MATCHING PATTERN "*.so"
-        )
-        install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
-            DESTINATION ${NGRAPH_INSTALL_INCLUDE}
-            FILES_MATCHING PATTERN "*.hpp"
-        )
-        install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
-            DESTINATION ${NGRAPH_INSTALL_INCLUDE}
-            FILES_MATCHING PATTERN "*.h"
-        )
-    endif()
+if (NGRAPH_ARGON_ENABLE)
+    install(DIRECTORY ${ARGON_TRANSFORMER_LIB_DIR}/
+        DESTINATION ${NGRAPH_INSTALL_LIB}
+        FILES_MATCHING PATTERN "*.so"
+    )
+    install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+        DESTINATION ${NGRAPH_INSTALL_INCLUDE}
+        FILES_MATCHING PATTERN "*.hpp"
+    )
+    install(DIRECTORY ${ARGON_TRANSFORMER_INCLUDE_DIR}/
+        DESTINATION ${NGRAPH_INSTALL_INCLUDE}
+        FILES_MATCHING PATTERN "*.h"
+    )
 endif()
