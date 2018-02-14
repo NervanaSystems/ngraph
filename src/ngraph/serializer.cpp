@@ -72,6 +72,10 @@
 #include "ngraph/ops/tanh.hpp"
 #include "ngraph/util.hpp"
 
+#ifdef NGRAPH_DISTRIBUTED
+#include "ngraph/ops/allreduce.hpp"
+#endif
+
 using namespace ngraph;
 using namespace std;
 using json = nlohmann::json;
@@ -325,6 +329,12 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Add>(args[0], args[1]);
         }
+#ifdef NGRAPH_DISTRIBUTED
+        else if (node_op == "AllReduce")
+        {
+            node = make_shared<op::AllReduce>(args[0]);
+        }
+#endif
         else if (node_op == "Asin")
         {
             node = make_shared<op::Asin>(args[0]);
@@ -808,6 +818,9 @@ static json write(const Node& n)
     {
     }
     else if (node_op == "Add")
+    {
+    }
+    else if (node_op == "AllReduce")
     {
     }
     else if (node_op == "Asin")

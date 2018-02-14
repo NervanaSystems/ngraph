@@ -46,7 +46,13 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
+#include "ngraph/types/element_type.hpp"
 #include "ngraph/util.hpp"
+
+#ifdef NGRAPH_DISTRIBUTED
+#include <mpi.h>
+#include "ngraph/ops/allreduce.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -127,6 +133,30 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAdd)
     writer.indent--;
     writer << "}\n";
 }
+
+#ifdef NGRAPH_DISTRIBUTED
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAllReduce)
+{
+    const element::Type& element_type = args[0].get_element_type();
+    auto data_type = "MPI_FLOAT";
+
+    if (element_type == element::f32)
+    {
+        data_type = "MPI_FLOAT";
+    }
+    else if (element_type == element::f64)
+    {
+        data_type = "MPI_DOUBLE";
+    }
+
+    writer << "{   // " << node->get_name() << "\n";
+    writer.indent++;
+    writer << "MPI_Allreduce(" << args[0].get_name() << ", " << out[0].get_name() << ", "
+           << out[0].get_size() << ", " << data_type << ", MPI_SUM, MPI_COMM_WORLD);\n";
+    writer.indent--;
+    writer << "}\n";
+}
+#endif
 
 //TODO: This could be further optimized to reduce the impact of memcpy by either
 //a) emitting customized code for initializing output/bias

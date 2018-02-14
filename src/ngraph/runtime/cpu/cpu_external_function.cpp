@@ -100,6 +100,10 @@
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 
+#ifdef NGRAPH_DISTRIBUTED
+#include "ngraph/ops/allreduce.hpp"
+#endif
+
 using namespace std;
 using namespace ngraph;
 
@@ -152,6 +156,9 @@ static StaticInitializers s_static_initializers;
 
 static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::EmitAdd},
+#ifdef NGRAPH_DISTRIBUTED
+    {TI(ngraph::op::AllReduce), &runtime::cpu::CPU_Emitter::EmitAllReduce},
+#endif
     {TI(ngraph::op::MatmulBias), &runtime::cpu::CPU_Emitter::EmitMatmulBias},
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::EmitDot},
     {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::EmitMultiply},
@@ -289,6 +296,10 @@ using namespace ngraph::runtime::cpu::eigen;
 using namespace ngraph::runtime;
 
 )";
+
+#ifdef NGRAPH_DISTRIBUTED
+    writer << "#include <mpi.h>\n\n";
+#endif
 
     if (m_use_tbb)
     {
