@@ -17,10 +17,11 @@
 Intel nGraph library project
 #############################
 
-Welcome to the Intel nGraph project, an open source C++ library for developers
-of :abbr:`Deep Learning (DL)` (DL) systems. Here you will find a suite of 
-components, APIs, and documentation that can be used to compile and run  
-:abbr:`Deep Neural Network (DNN)` (DNN) models defined in a variety of frameworks.  
+Welcome to Intel nGraph, an open source C++ library for developers of 
+:abbr:`Deep Learning (DL)` (DL) systems. Here you will find a suite 
+of components, APIs, and documentation that can be used to compile 
+and run :abbr:`Deep Neural Network (DNN)` (DNN) models defined in a 
+variety of frameworks.  
 
 .. figure:: graphics/ngraph-hub.png  
 
