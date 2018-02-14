@@ -59,7 +59,6 @@ def test_binary_op(ng_api_helper, numpy_function):
     (ng.divide, np.divide),
     (ng.multiply, np.multiply),
     (ng.subtract, np.subtract),
-    (ng.divide, np.divide),
     (ng.minimum, np.minimum),
     (ng.maximum, np.maximum),
     (ng.equal, np.equal),

@@ -39,5 +39,6 @@ from ngraph_api.ops import not_equal
 from ngraph_api.ops import parameter
 from ngraph_api.ops import sqrt
 from ngraph_api.ops import subtract
+from ngraph_api.ops import tanh
 
 from ngraph_api.runtime import runtime
