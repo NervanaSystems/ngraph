@@ -41,8 +41,6 @@ pickle:
 
 json: prep
 	$(SPHINXBUILD) -t $(DOC_TAG) -b json $(ALLSPHINXOPTS) $(BUILDDIR)/json
-	@rm -rf samples
-	@rm -rf boards
 	@echo
 	@echo "Build finished; now you can process the JSON files."
 
