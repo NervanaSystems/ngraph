@@ -27,7 +27,6 @@
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/descriptor/input.hpp"
-#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/file_util.hpp"
@@ -85,7 +84,6 @@
 #include "ngraph/ops/sum.hpp"
 #include "ngraph/ops/tan.hpp"
 #include "ngraph/ops/tanh.hpp"
-#include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -94,15 +92,20 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
-#include "ngraph/runtime/host_tensor_view.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 static const string s_output_dir = "cpu_codegen";
+
+// Temporary Memory Pool alignment
+static const size_t s_memory_pool_alignment = 4096;
 
 class StaticInitializers
 {
@@ -226,12 +229,13 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
     string function_name = m_function->get_name();
 
-    pass::Manager pass_manager;
-    // For now, just make everyone row-major.
-    pass_manager.register_pass<pass::CPUFusion>();
-    pass_manager.register_pass<pass::AssignLayout<descriptor::layout::DenseTensorViewLayout>>();
-    pass_manager.register_pass<pass::Liveness>();
-    pass_manager.register_pass<pass::MemoryLayout>(64);
+    ngraph::pass::Manager pass_manager;
+
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPULayout>();
+    pass_manager.register_pass<ngraph::pass::Liveness>();
+    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
+
     pass_manager.run_passes(m_function);
 
     codegen::CodeWriter writer;
@@ -241,11 +245,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     {
         for (shared_ptr<Node> node : current_function->get_ordered_ops())
         {
-            if (dynamic_cast<op::Convolution*>(node.get()) ||
-                dynamic_cast<op::ConvolutionBackpropData*>(node.get()) ||
-                dynamic_cast<op::ConvolutionBackpropFilters*>(node.get()) ||
-                dynamic_cast<op::AvgPool*>(node.get()) || dynamic_cast<op::MaxPool*>(node.get()) ||
-                dynamic_cast<op::AvgPoolBackprop*>(node.get()))
+            if (ngraph::runtime::cpu::mkldnn_utils::IsMKLDNNOp(*node))
             {
                 include_mkldnn_headers = true;
             }
@@ -520,7 +520,7 @@ using namespace ngraph::runtime;
             writer << "// Memory pool size is " << temp_pool_size << " bytes\n";
             writer << "// Worst case size is " << worst_case_tmp_size << " bytes\n";
             writer << "ngraph::runtime::AlignedBuffer memory_handler(" << temp_pool_size << ", "
-                   << ngraph::runtime::alignment << ");\n";
+                   << s_memory_pool_alignment << ");\n";
             writer << "size_t pool_base_ptr = (size_t)memory_handler.get_ptr();\n";
             writer << "\n";
 
@@ -677,7 +677,7 @@ using namespace ngraph::runtime;
             }
             if (func_name.empty())
             {
-                handler->second(writer, node.get(), in, out);
+                handler->second(this, writer, node.get(), in, out);
             }
             else
             {
@@ -762,6 +762,41 @@ using namespace ngraph::runtime;
         writer += "}\n\n";
     }
 
+    // Store layouts assigned for arguments
+    for (const auto& parameter : m_function->get_parameters())
+    {
+        for (size_t i = 0; i < parameter->get_output_size(); ++i)
+        {
+            auto tv = parameter->get_output_tensor_view(i);
+            if (tv->get_tensor_view_layout() == nullptr)
+            {
+                throw ngraph_error("layout missing on function parameter's tensor view: " +
+                                   tv->get_name());
+            }
+            parameter_layout_descriptors.emplace_back(
+                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
+        }
+    }
+    // Store layouts assigned for results
+    if (!result_layout_descriptors.empty())
+    {
+        throw ngraph_error("Function output layouts should not be pre-assigned");
+    }
+    for (size_t i = 0; i < m_function->get_output_size(); ++i)
+    {
+        const auto& output = m_function->get_output_op(i);
+        for (size_t j = 0; j < output->get_output_size(); ++j)
+        {
+            auto tv = output->get_output_tensor_view(j);
+            if (tv->get_tensor_view_layout() == nullptr)
+            {
+                throw ngraph_error("layout missing on function output tensor: " + tv->get_name());
+            }
+            result_layout_descriptors.emplace_back(
+                static_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_view_layout()));
+        }
+    }
+
     // TODO: Cleanup and make this a utility function
 
     file_util::make_directory(s_output_dir);
@@ -838,6 +873,18 @@ shared_ptr<ngraph::runtime::CallFrame> runtime::cpu::CPU_ExternalFunction::make_
                                                             m_compiled_function);
 }
 
+const runtime::cpu::LayoutDescriptorPtrs&
+    runtime::cpu::CPU_ExternalFunction::get_parameter_layout_descriptors()
+{
+    return parameter_layout_descriptors;
+}
+
+const runtime::cpu::LayoutDescriptorPtrs&
+    runtime::cpu::CPU_ExternalFunction::get_result_layout_descriptors()
+{
+    return result_layout_descriptors;
+}
+
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     codegen::CodeWriter& writer,
     Node* node,
@@ -909,7 +956,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     writer << "\n)\n";
     writer << "{\n";
     writer.indent++;
-    handler->second(writer, &node, in, out);
+    handler->second(this, writer, &node, in, out);
     writer.indent--;
     writer << "}\n";
 
