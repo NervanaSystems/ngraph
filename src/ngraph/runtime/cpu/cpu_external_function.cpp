@@ -36,6 +36,7 @@
 #include "ngraph/ops/abs.hpp"
 #include "ngraph/ops/acos.hpp"
 #include "ngraph/ops/add.hpp"
+#include "ngraph/ops/allreduce.hpp"
 #include "ngraph/ops/asin.hpp"
 #include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
@@ -54,6 +55,7 @@
 #include "ngraph/ops/exp.hpp"
 #include "ngraph/ops/floor.hpp"
 #include "ngraph/ops/function_call.hpp"
+#include "ngraph/ops/get_output_element.hpp"
 #include "ngraph/ops/greater.hpp"
 #include "ngraph/ops/greater_eq.hpp"
 #include "ngraph/ops/less.hpp"
@@ -67,10 +69,13 @@
 #include "ngraph/ops/not.hpp"
 #include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/one_hot.hpp"
+#include "ngraph/ops/op.hpp"
 #include "ngraph/ops/pad.hpp"
+#include "ngraph/ops/parameter.hpp"
 #include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
+#include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/reverse.hpp"
@@ -155,69 +160,69 @@ static StaticInitializers s_static_initializers;
 #define TI(x) type_index(typeid(x))
 
 static const runtime::cpu::OpMap dispatcher{
-    {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::EmitAdd},
+    {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::emit<op::Add>},
 #ifdef NGRAPH_DISTRIBUTED
-    {TI(ngraph::op::AllReduce), &runtime::cpu::CPU_Emitter::EmitAllReduce},
+    {TI(ngraph::op::AllReduce), &runtime::cpu::CPU_Emitter::emit<op::AllReduce>},
 #endif
-    {TI(ngraph::op::MatmulBias), &runtime::cpu::CPU_Emitter::EmitMatmulBias},
-    {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::EmitDot},
-    {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::EmitMultiply},
-    {TI(ngraph::op::Parameter), &runtime::cpu::CPU_Emitter::EmitNop},
-    {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::EmitAbs},
-    {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::EmitConcat},
-    {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::EmitDivide},
-    {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::EmitEqual},
-    {TI(ngraph::op::Greater), &runtime::cpu::CPU_Emitter::EmitGreater},
-    {TI(ngraph::op::GreaterEq), &runtime::cpu::CPU_Emitter::EmitGreaterEq},
-    {TI(ngraph::op::Less), &runtime::cpu::CPU_Emitter::EmitLess},
-    {TI(ngraph::op::LessEq), &runtime::cpu::CPU_Emitter::EmitLessEq},
-    {TI(ngraph::op::Log), &runtime::cpu::CPU_Emitter::EmitLog},
-    {TI(ngraph::op::Maximum), &runtime::cpu::CPU_Emitter::EmitMaximum},
-    {TI(ngraph::op::Minimum), &runtime::cpu::CPU_Emitter::EmitMinimum},
-    {TI(ngraph::op::Negative), &runtime::cpu::CPU_Emitter::EmitNegative},
-    {TI(ngraph::op::NotEqual), &runtime::cpu::CPU_Emitter::EmitNotEqual},
-    {TI(ngraph::op::Power), &runtime::cpu::CPU_Emitter::EmitPower},
-    {TI(ngraph::op::Select), &runtime::cpu::CPU_Emitter::EmitSelect},
-    {TI(ngraph::op::Subtract), &runtime::cpu::CPU_Emitter::EmitSubtract},
-    {TI(ngraph::op::Broadcast), &runtime::cpu::CPU_Emitter::EmitBroadcast},
-    {TI(ngraph::op::Convert), &runtime::cpu::CPU_Emitter::EmitConvert},
-    {TI(ngraph::op::Constant), &runtime::cpu::CPU_Emitter::EmitConstant},
-    {TI(ngraph::op::Reshape), &runtime::cpu::CPU_Emitter::EmitReshape},
-    {TI(ngraph::op::FunctionCall), &runtime::cpu::CPU_Emitter::EmitFunctionCall},
-    {TI(ngraph::op::Reduce), &runtime::cpu::CPU_Emitter::EmitReduce},
-    {TI(ngraph::op::Sign), &runtime::cpu::CPU_Emitter::EmitSign},
-    {TI(ngraph::op::Slice), &runtime::cpu::CPU_Emitter::EmitSlice},
-    {TI(ngraph::op::Sum), &runtime::cpu::CPU_Emitter::EmitSum},
-    {TI(ngraph::op::Exp), &runtime::cpu::CPU_Emitter::EmitExp},
-    {TI(ngraph::op::Sin), &runtime::cpu::CPU_Emitter::EmitSin},
-    {TI(ngraph::op::Sinh), &runtime::cpu::CPU_Emitter::EmitSinh},
-    {TI(ngraph::op::Cos), &runtime::cpu::CPU_Emitter::EmitCos},
-    {TI(ngraph::op::Cosh), &runtime::cpu::CPU_Emitter::EmitCosh},
-    {TI(ngraph::op::Tan), &runtime::cpu::CPU_Emitter::EmitTan},
-    {TI(ngraph::op::Tanh), &runtime::cpu::CPU_Emitter::EmitTanh},
-    {TI(ngraph::op::Asin), &runtime::cpu::CPU_Emitter::EmitAsin},
-    {TI(ngraph::op::Acos), &runtime::cpu::CPU_Emitter::EmitAcos},
-    {TI(ngraph::op::Atan), &runtime::cpu::CPU_Emitter::EmitAtan},
-    {TI(ngraph::op::ReplaceSlice), &runtime::cpu::CPU_Emitter::EmitReplaceSlice},
-    {TI(ngraph::op::OneHot), &runtime::cpu::CPU_Emitter::EmitOneHot},
-    {TI(ngraph::op::Floor), &runtime::cpu::CPU_Emitter::EmitFloor},
-    {TI(ngraph::op::Ceiling), &runtime::cpu::CPU_Emitter::EmitCeiling},
-    {TI(ngraph::op::Sqrt), &runtime::cpu::CPU_Emitter::EmitSqrt},
-    {TI(ngraph::op::Convolution), &runtime::cpu::CPU_Emitter::EmitConvolution},
+    {TI(ngraph::op::MatmulBias), &runtime::cpu::CPU_Emitter::emit<op::MatmulBias>},
+    {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::emit<op::Dot>},
+    {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::emit<op::Multiply>},
+    {TI(ngraph::op::Parameter), &runtime::cpu::CPU_Emitter::nop},
+    {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::emit<op::Abs>},
+    {TI(ngraph::op::Concat), &runtime::cpu::CPU_Emitter::emit<op::Concat>},
+    {TI(ngraph::op::Divide), &runtime::cpu::CPU_Emitter::emit<op::Divide>},
+    {TI(ngraph::op::Equal), &runtime::cpu::CPU_Emitter::emit<op::Equal>},
+    {TI(ngraph::op::Greater), &runtime::cpu::CPU_Emitter::emit<op::Greater>},
+    {TI(ngraph::op::GreaterEq), &runtime::cpu::CPU_Emitter::emit<op::GreaterEq>},
+    {TI(ngraph::op::Less), &runtime::cpu::CPU_Emitter::emit<op::Less>},
+    {TI(ngraph::op::LessEq), &runtime::cpu::CPU_Emitter::emit<op::LessEq>},
+    {TI(ngraph::op::Log), &runtime::cpu::CPU_Emitter::emit<op::Log>},
+    {TI(ngraph::op::Maximum), &runtime::cpu::CPU_Emitter::emit<op::Maximum>},
+    {TI(ngraph::op::Minimum), &runtime::cpu::CPU_Emitter::emit<op::Minimum>},
+    {TI(ngraph::op::Negative), &runtime::cpu::CPU_Emitter::emit<op::Negative>},
+    {TI(ngraph::op::NotEqual), &runtime::cpu::CPU_Emitter::emit<op::NotEqual>},
+    {TI(ngraph::op::Power), &runtime::cpu::CPU_Emitter::emit<op::Power>},
+    {TI(ngraph::op::Select), &runtime::cpu::CPU_Emitter::emit<op::Select>},
+    {TI(ngraph::op::Subtract), &runtime::cpu::CPU_Emitter::emit<op::Subtract>},
+    {TI(ngraph::op::Broadcast), &runtime::cpu::CPU_Emitter::emit<op::Broadcast>},
+    {TI(ngraph::op::Convert), &runtime::cpu::CPU_Emitter::emit<op::Convert>},
+    {TI(ngraph::op::Constant), &runtime::cpu::CPU_Emitter::emit<op::Constant>},
+    {TI(ngraph::op::Reshape), &runtime::cpu::CPU_Emitter::emit<op::Reshape>},
+    {TI(ngraph::op::FunctionCall), &runtime::cpu::CPU_Emitter::emit<op::FunctionCall>},
+    {TI(ngraph::op::Reduce), &runtime::cpu::CPU_Emitter::emit<op::Reduce>},
+    {TI(ngraph::op::Sign), &runtime::cpu::CPU_Emitter::emit<op::Sign>},
+    {TI(ngraph::op::Slice), &runtime::cpu::CPU_Emitter::emit<op::Slice>},
+    {TI(ngraph::op::Sum), &runtime::cpu::CPU_Emitter::emit<op::Sum>},
+    {TI(ngraph::op::Exp), &runtime::cpu::CPU_Emitter::emit<op::Exp>},
+    {TI(ngraph::op::Sin), &runtime::cpu::CPU_Emitter::emit<op::Sin>},
+    {TI(ngraph::op::Sinh), &runtime::cpu::CPU_Emitter::emit<op::Sinh>},
+    {TI(ngraph::op::Cos), &runtime::cpu::CPU_Emitter::emit<op::Cos>},
+    {TI(ngraph::op::Cosh), &runtime::cpu::CPU_Emitter::emit<op::Cosh>},
+    {TI(ngraph::op::Tan), &runtime::cpu::CPU_Emitter::emit<op::Tan>},
+    {TI(ngraph::op::Tanh), &runtime::cpu::CPU_Emitter::emit<op::Tanh>},
+    {TI(ngraph::op::Asin), &runtime::cpu::CPU_Emitter::emit<op::Asin>},
+    {TI(ngraph::op::Acos), &runtime::cpu::CPU_Emitter::emit<op::Acos>},
+    {TI(ngraph::op::Atan), &runtime::cpu::CPU_Emitter::emit<op::Atan>},
+    {TI(ngraph::op::ReplaceSlice), &runtime::cpu::CPU_Emitter::emit<op::ReplaceSlice>},
+    {TI(ngraph::op::OneHot), &runtime::cpu::CPU_Emitter::emit<op::OneHot>},
+    {TI(ngraph::op::Floor), &runtime::cpu::CPU_Emitter::emit<op::Floor>},
+    {TI(ngraph::op::Ceiling), &runtime::cpu::CPU_Emitter::emit<op::Ceiling>},
+    {TI(ngraph::op::Sqrt), &runtime::cpu::CPU_Emitter::emit<op::Sqrt>},
+    {TI(ngraph::op::Convolution), &runtime::cpu::CPU_Emitter::emit<op::Convolution>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
-     &runtime::cpu::CPU_Emitter::EmitConvolutionBackpropFilters},
+     &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropFilters>},
     {TI(ngraph::op::ConvolutionBackpropData),
-     &runtime::cpu::CPU_Emitter::EmitConvolutionBackpropData},
-    {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::EmitNot},
-    {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::EmitMaxPool},
-    {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::EmitReverse},
-    {TI(ngraph::op::ReduceWindow), &runtime::cpu::CPU_Emitter::EmitReduceWindow},
-    {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPU_Emitter::EmitSelectAndScatter},
-    {TI(ngraph::op::AvgPool), &runtime::cpu::CPU_Emitter::EmitAvgPool},
-    {TI(ngraph::op::AvgPoolBackprop), &runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop},
-    {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::EmitPad},
-    {TI(ngraph::op::BatchNorm), &runtime::cpu::CPU_Emitter::EmitBatchNorm},
-    {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop},
+     &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropData},
+    {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::emit<op::Not},
+    {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::emit<op::MaxPool},
+    {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::emit<op::Reverse},
+    {TI(ngraph::op::ReduceWindow), &runtime::cpu::CPU_Emitter::emit<op::ReduceWindow},
+    {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPU_Emitter::emit<op::SelectAndScatter},
+    {TI(ngraph::op::AvgPool), &runtime::cpu::CPU_Emitter::emit<op::AvgPool},
+    {TI(ngraph::op::AvgPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::AvgPoolBackprop},
+    {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::emit<op::Pad},
+    {TI(ngraph::op::BatchNorm), &runtime::cpu::CPU_Emitter::emit<op::BatchNorm},
+    {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolBackprop},
 };
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
@@ -308,7 +313,7 @@ using namespace ngraph::runtime;
 
     if (include_mkldnn_headers)
     {
-        runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(writer);
+        runtime::cpu::CPU_Emitter::emit_mkldnn_preamble(writer);
     }
 
     string pch_header_source = writer.get_code();

@@ -24,27 +24,66 @@
 #include <unordered_map>
 #include <vector>
 #include "ngraph/node.hpp"
+#include "ngraph/ops/abs.hpp"
+#include "ngraph/ops/acos.hpp"
+#include "ngraph/ops/add.hpp"
+#include "ngraph/ops/allreduce.hpp"
+#include "ngraph/ops/asin.hpp"
+#include "ngraph/ops/atan.hpp"
 #include "ngraph/ops/avg_pool.hpp"
 #include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/broadcast.hpp"
+#include "ngraph/ops/ceiling.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
+#include "ngraph/ops/convert.hpp"
 #include "ngraph/ops/convolution.hpp"
+#include "ngraph/ops/cos.hpp"
+#include "ngraph/ops/cosh.hpp"
+#include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/dot.hpp"
+#include "ngraph/ops/equal.hpp"
+#include "ngraph/ops/exp.hpp"
+#include "ngraph/ops/floor.hpp"
 #include "ngraph/ops/function_call.hpp"
 #include "ngraph/ops/get_output_element.hpp"
+#include "ngraph/ops/greater.hpp"
+#include "ngraph/ops/greater_eq.hpp"
+#include "ngraph/ops/less.hpp"
+#include "ngraph/ops/less_eq.hpp"
+#include "ngraph/ops/log.hpp"
 #include "ngraph/ops/max_pool.hpp"
+#include "ngraph/ops/maximum.hpp"
+#include "ngraph/ops/minimum.hpp"
+#include "ngraph/ops/multiply.hpp"
+#include "ngraph/ops/negative.hpp"
+#include "ngraph/ops/not.hpp"
+#include "ngraph/ops/not_equal.hpp"
 #include "ngraph/ops/one_hot.hpp"
+#include "ngraph/ops/op.hpp"
 #include "ngraph/ops/pad.hpp"
+#include "ngraph/ops/parameter.hpp"
+#include "ngraph/ops/power.hpp"
 #include "ngraph/ops/reduce.hpp"
 #include "ngraph/ops/reduce_window.hpp"
+#include "ngraph/ops/remainder.hpp"
 #include "ngraph/ops/replace_slice.hpp"
 #include "ngraph/ops/reshape.hpp"
 #include "ngraph/ops/reverse.hpp"
+#include "ngraph/ops/select.hpp"
 #include "ngraph/ops/select_and_scatter.hpp"
+#include "ngraph/ops/sign.hpp"
+#include "ngraph/ops/sin.hpp"
+#include "ngraph/ops/sinh.hpp"
 #include "ngraph/ops/slice.hpp"
+#include "ngraph/ops/sqrt.hpp"
+#include "ngraph/ops/subtract.hpp"
 #include "ngraph/ops/sum.hpp"
+#include "ngraph/ops/tan.hpp"
+#include "ngraph/ops/tanh.hpp"
+#include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
+#include "ngraph/runtime/cpu/ops/convert_layout.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/types/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -97,18 +136,15 @@ static const string& get_mkldnn_data_type(const string& type)
     return it->second;
 }
 
-void runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(codegen::CodeWriter& writer)
+void runtime::cpu::CPU_Emitter::emit_mkldnn_preamble(codegen::CodeWriter& writer)
 {
     writer << "// MKLDNN Preamble\n";
     writer << "#include <mkldnn.hpp>\n";
     writer << "using namespace mkldnn;\n\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitNop)
-{
-}
-
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAdd)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Add)
 {
     // TODO: Audit all uses of Add and fix this to use
     // the right alignment instead of Eigen::Unaligned
@@ -135,7 +171,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAdd)
 }
 
 #ifdef NGRAPH_DISTRIBUTED
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAllReduce)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::AllReduce)
 {
     const element::Type& element_type = args[0].get_element_type();
     auto data_type = "MPI_FLOAT";
@@ -162,7 +199,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAllReduce)
 //a) emitting customized code for initializing output/bias
 //b) emitting two cblas calls (one for gemm on W and x and the second for gemm on Bias and E^T + the result of the first gemm)
 //@jbobba suggests b) is more efficient but we should benchmark both
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMatmulBias)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::MatmulBias)
 {
     const ngraph::op::MatmulBias* cg = static_cast<const ngraph::op::MatmulBias*>(node);
 
@@ -370,7 +408,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitDot)
     }
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMultiply)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Multiply)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -390,9 +429,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMultiply)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitGetOutputElement)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::GetOutputElement)
 {
-    auto get_tuple_element = static_cast<const op::GetOutputElement*>(node);
+    auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
 
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -402,20 +442,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitGetOutputElement)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitTuple)
-{
-    writer << "{   // " << node->get_name() << "\n";
-    writer.indent++;
-    for (size_t i = 0; i < args.size(); ++i)
-    {
-        writer << "memcpy(" << out.at(i).get_name() << ", " << args.at(i).get_name() << ", "
-               << out[i].get_size() * out[i].get_element_type().size() << ");\n";
-    }
-    writer.indent--;
-    writer += "}\n";
-}
-
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAbs)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Abs)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -439,7 +467,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAbs)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConcat)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Concat)
 {
     auto result_shape = out[0].get_shape();
 
@@ -527,7 +556,7 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConcat)
         }
     }
 #else
-    auto axis = (dynamic_cast<const op::Concat*>(node))->get_concatenation_axis();
+    auto axis = (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
 
     std::vector<std::string> arg_names;
     std::vector<Shape> arg_shapes;
@@ -548,7 +577,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConcat)
 #endif
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitDivide)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Divide)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -578,7 +608,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitDivide)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitEqual)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Equal)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -598,7 +629,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitEqual)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitGreater)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Greater)
 {
     writer << "{   // " << node->get_name() << " xxx\n";
     writer.indent++;
@@ -618,7 +650,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitGreater)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitGreaterEq)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::GreaterEq)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -638,7 +671,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitGreaterEq)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitLess)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Less)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -658,7 +692,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitLess)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitLessEq)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::LessEq)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -678,7 +713,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitLessEq)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitLog)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Log)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -696,7 +732,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitLog)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaximum)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Maximum)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -717,7 +754,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaximum)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMinimum)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Minimum)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -738,7 +776,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMinimum)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitNegative)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Negative)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -756,7 +795,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitNegative)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitNotEqual)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::NotEqual)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -776,7 +816,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitNotEqual)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSelect)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Select)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -797,7 +838,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSelect)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSubtract)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Subtract)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -817,9 +859,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSubtract)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBroadcast)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Broadcast)
 {
-    auto broadcast = static_cast<const op::Broadcast*>(node);
+    auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
 
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -902,7 +945,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBroadcast)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvert)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Convert)
 {
     auto& result_element_type = out[0].get_element_type();
 
@@ -924,13 +968,15 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvert)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConstant)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Constant)
 {
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReshape)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Reshape)
 {
-    auto reshape = static_cast<const op::Reshape*>(node);
+    auto reshape = static_cast<const ngraph::op::Reshape*>(node);
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1013,9 +1059,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReshape)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitFunctionCall)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::FunctionCall)
 {
-    auto function_call = static_cast<const op::FunctionCall*>(node);
+    auto function_call = static_cast<const ngraph::op::FunctionCall*>(node);
     shared_ptr<Function> function = function_call->get_functions()[0];
 
     writer << "{   // Call " << function->get_name() << "\n";
@@ -1059,9 +1106,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitFunctionCall)
 // the compiled version of these ops is intended to have semantics identical
 // to what's seen there (for now atleast)
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReduce)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Reduce)
 {
-    auto reduce = static_cast<const op::Reduce*>(node);
+    auto reduce = static_cast<const ngraph::op::Reduce*>(node);
     auto reduction_function = reduce->get_functions()[0];
 
     auto reductee_shape = args[0].get_shape();
@@ -1266,7 +1314,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReduce)
 #endif
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSign)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Sign)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1285,9 +1334,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSign)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSlice)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Slice)
 {
-    const op::Slice* slice = static_cast<const op::Slice*>(node);
+    const ngraph::op::Slice* slice = static_cast<const ngraph::op::Slice*>(node);
 
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1366,9 +1416,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSlice)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSum)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Sum)
 {
-    const op::Sum* sum = static_cast<const op::Sum*>(node);
+    const ngraph::op::Sum* sum = static_cast<const ngraph::op::Sum*>(node);
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1436,7 +1487,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSum)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitExp)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Exp)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1454,7 +1506,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitExp)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSin)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Sin)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1472,7 +1525,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSin)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSinh)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Sinh)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1490,7 +1544,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSinh)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitCos)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Cos)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1508,7 +1563,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitCos)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitCosh)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Cosh)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1526,7 +1582,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitCosh)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitTan)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Tan)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1544,7 +1601,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitTan)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitTanh)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Tanh)
 {
     // Eigen's generic_fast_tanh_float<float> is currently miscompiled by Clang/LLVM
     // so we fall-back to tanh
@@ -1563,7 +1621,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitTanh)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAsin)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Asin)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1581,7 +1640,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAsin)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAcos)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Acos)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1599,7 +1659,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAcos)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAtan)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Atan)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1617,7 +1678,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAtan)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitPower)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Power)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1639,9 +1701,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitPower)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReplaceSlice)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::ReplaceSlice)
 {
-    auto replace_slice = static_cast<const op::Slice*>(node);
+    auto replace_slice = static_cast<const ngraph::op::Slice*>(node);
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
@@ -1727,9 +1790,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReplaceSlice)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitOneHot)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::OneHot)
 {
-    auto oh = static_cast<const op::OneHot*>(node);
+    auto oh = static_cast<const ngraph::op::OneHot*>(node);
 
     auto arg_rank = args[0].get_shape().size();
 
@@ -1819,7 +1883,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitOneHot)
     }
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitCeiling)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Ceiling)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1835,7 +1900,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitCeiling)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitFloor)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Floor)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1851,7 +1917,8 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitFloor)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSqrt)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Sqrt)
 {
     writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
@@ -1867,9 +1934,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSqrt)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolution)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Convolution)
 {
-    auto convolution = static_cast<const op::Convolution*>(node);
+    auto convolution = static_cast<const ngraph::op::Convolution*>(node);
 
     auto arg0_shape = args[0].get_shape();
     auto arg1_shape = args[1].get_shape();
@@ -1994,9 +2062,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolution)
     }
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolutionBackpropFilters)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::ConvolutionBackpropFilters)
 {
-    auto convolution = static_cast<const op::ConvolutionBackpropFilters*>(node);
+    auto convolution = static_cast<const ngraph::op::ConvolutionBackpropFilters*>(node);
 
     auto arg0_shape = args[0].get_shape();
     auto arg1_shape = args[1].get_shape();
@@ -2101,9 +2170,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolutionBackpropFilters)
     }
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolutionBackpropData)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::ConvolutionBackpropData)
 {
-    auto convolution = static_cast<const op::ConvolutionBackpropData*>(node);
+    auto convolution = static_cast<const ngraph::op::ConvolutionBackpropData*>(node);
 
     auto arg0_shape = args[0].get_shape();
     auto arg1_shape = args[1].get_shape();
@@ -2207,16 +2277,18 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolutionBackpropData)
     }
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitNot)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Not)
 {
     writer << "kernel::logical_not(" << args[0].get_name() << ",\n"
            << "                    " << out[0].get_name() << ",\n"
            << "                    " << out[0].get_size() << ");\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPool)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::MaxPool)
 {
-    auto max_pool = static_cast<const op::MaxPool*>(node);
+    auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
 
     auto arg_shape = args[0].get_shape();
     auto arg_rank = arg_shape.size();
@@ -2273,9 +2345,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPool)
     }
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReverse)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Reverse)
 {
-    auto reverse = static_cast<const op::Reverse*>(node);
+    auto reverse = static_cast<const ngraph::op::Reverse*>(node);
 
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
@@ -2287,9 +2360,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReverse)
     writer << "                {" << join(reverse->get_reversed_axes()) << "});\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReduceWindow)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::ReduceWindow)
 {
-    auto reduce_window = static_cast<const op::ReduceWindow*>(node);
+    auto reduce_window = static_cast<const ngraph::op::ReduceWindow*>(node);
 
     auto arg_reductee_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
@@ -2325,9 +2399,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReduceWindow)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSelectAndScatter)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::SelectAndScatter)
 {
-    auto select_and_scatter = static_cast<const op::SelectAndScatter*>(node);
+    auto select_and_scatter = static_cast<const ngraph::op::SelectAndScatter*>(node);
     auto selection_function = select_and_scatter->get_functions()[0];
     auto scatter_function = select_and_scatter->get_functions()[1];
 
@@ -2380,9 +2455,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSelectAndScatter)
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAvgPool)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::AvgPool)
 {
-    auto avg_pool = static_cast<const op::AvgPool*>(node);
+    auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
 
     auto arg_shape = args[0].get_shape();
     auto arg_rank = arg_shape.size();
@@ -2442,9 +2518,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAvgPool)
     }
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitPad)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::Pad)
 {
-    auto pad = static_cast<const op::Pad*>(node);
+    auto pad = static_cast<const ngraph::op::Pad*>(node);
 
     auto arg0_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
@@ -2459,9 +2536,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitPad)
     writer << "            {" << join(pad->get_padding_interior()) << "});\n";
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAvgPoolBackprop)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::AvgPoolBackprop)
 {
-    auto apb = static_cast<const op::AvgPoolBackprop*>(node);
+    auto apb = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
 
     auto delta_shape = args[0].get_shape();
     auto delta_rank = delta_shape.size();
@@ -2520,9 +2598,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAvgPoolBackprop)
     }
 }
 
-void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPoolBackprop)
+template <>
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(op::MaxPoolBackprop)
 {
-    auto mpb = static_cast<const op::MaxPoolBackprop*>(node);
+    auto mpb = static_cast<const ngraph::op::MaxPoolBackprop*>(node);
 
     auto delta_shape = args[1].get_shape();
     auto out_shape = out[0].get_shape();
