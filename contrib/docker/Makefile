@@ -79,19 +79,9 @@ build_docker_image: expand_dockerfile_templates
 build_docker: build_docker_image
 
 # Build docs
-docs: sphinx_doc doxygen_doc
+docs: sphinx_doc
 
-doxygen_doc:
-	# doxygen html docs build
-	docker run --rm --tty \
-            ${VOLUME} \
-	    ${DOCKER_RUN_ENV} \
-            --env RUN_UID="$(shell id -u)" \
-            --env RUN_CMD="set -e ; set -o pipefail ; cd ${DOCKUSER_HOME}/ngraph-cpp-test/doc/doxygen; env VERBOSE=1 make html 2>&1 | tee make_sphinx_html.log" \
-            "build_ngraph_cpp:${DBUILD_VERSION}" \
-	    sh -c "${DOCKUSER_HOME}/ngraph-cpp-test/contrib/docker/run_as_user.sh"
-
-sphinx_doc:
+sphinx_doc: build_docker_image
 	# sphinx html docs build
 	docker run --rm --tty \
             ${VOLUME} \
