@@ -14,16 +14,18 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <numeric>
 #include <string>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-
 #include "ngraph/node.hpp"
 #include "ngraph/ops/avg_pool.hpp"
+#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
@@ -42,7 +44,6 @@
 #include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
-#include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
 #include "ngraph/types/element_type.hpp"
@@ -206,6 +207,85 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMatmulBias)
            << "        1.0f, " << args[0].get_name() << ", " << max(1UL, lda) << ", "
            << args[1].get_name() << ", " << max(1UL, ldb) << ", 1.0f,\n"
            << "        " << out[0].get_name() << ", " << max(1UL, arg2_shape[1]) << ");\n";
+    writer.indent--;
+    writer << "}\n";
+}
+
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBatchNorm)
+{
+    const ngraph::op::BatchNorm* batchnorm = static_cast<const ngraph::op::BatchNorm*>(node);
+
+    // get the shape of all the inputs and output to batchnorm
+    auto gamma_shape = args[0].get_shape();
+    auto beta_shape = args[1].get_shape();
+    auto input_shape = args[2].get_shape();
+    auto mean_shape = args[3].get_shape();
+    auto variance_shape = args[4].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    // get input element type
+    const string& et = get_mkldnn_data_type(args[2].get_element_type().c_type_string());
+    writer << "{\n";
+    writer.indent++;
+
+    // define weights
+    writer << "std::vector<" << args[0].get_element_type().c_type_string() << ">bn_weights(2);\n";
+    auto weights_shape = Shape{2, input_shape[1]};
+
+    // push gamma and beta
+    writer << "auto gamma = " << args[0].get_name() << ";\n";
+    writer << "auto beta = " << args[1].get_name() << ";\n";
+
+    writer << "memcpy(&bn_weights[0], gamma,"
+           << args[1].get_size() * args[0].get_element_type().size() << ");\n";
+    writer << "memcpy(&bn_weights[0]+" << args[1].get_size() << ", beta, "
+           << args[1].get_size() * args[1].get_element_type().size() << ");\n";
+
+    // get the eps value from the bn node
+    writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";
+
+    // Bind to CPU engine
+    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+    // create memory descriptors
+    writer << "memory::desc input_data_desc = memory::desc({" << join(input_shape) << "}, " << et
+           << ", memory::format::nchw);\n";
+    // TODO define weights by stacking gamma and beta values
+    writer << "memory::desc weights_desc = memory::desc({" << join(weights_shape) << "}, " << et
+           << ", memory::format::nc);\n";
+    writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, " << et
+           << ", memory::format::nchw);\n";
+    writer << "memory::desc mean_desc = memory::desc({" << join(mean_shape) << "}, " << et
+           << ", memory::format::x);\n";
+    writer << "memory::desc variance_desc = memory::desc({" << join(variance_shape) << "}, " << et
+           << ", memory::format::x);\n";
+
+    // Define memory for the user data
+    writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[2].get_name()
+           << ");\n";
+    writer << "memory weights = memory({weights_desc, cpu_engine}, bn_weights.data()"
+           << ");\n";
+    writer << "memory mean = memory({mean_desc, cpu_engine}, " << args[3].get_name() << ");\n";
+    writer << "memory variance = memory({variance_desc, cpu_engine}, " << args[4].get_name()
+           << ");\n";
+    writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
+
+    // create batchnorm descriptor
+    writer << "batch_normalization_forward::desc bn_fprop_desc = "
+              "batch_normalization_forward::desc(forward_training,"
+           << "input_data_desc, epsilon, use_global_stats|use_scale_shift);\n";
+    // bn fprop primitive descriptor
+    writer << "batch_normalization_forward::primitive_desc bn_fprop_prim_desc = "
+              "batch_normalization_forward::primitive_desc(bn_fprop_desc, cpu_engine);\n";
+
+    // create a batchnorm fprop primitive
+    writer
+        << "batch_normalization_forward bn_fprop = batch_normalization_forward(bn_fprop_prim_desc, "
+           "primitive::at(input_data),primitive::at(mean), primitive::at(variance),"
+        << "primitive::at(weights), result); \n";
+
+    // create stream and execute
+    writer << "stream s = stream(stream::kind::eager);\n"
+           << "s.submit({bn_fprop}).wait();\n";
     writer.indent--;
     writer << "}\n";
 }
