@@ -26,7 +26,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/ops/add.hpp"
-#include "ngraph/ops/batchnorm.hpp"
+#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/constant.hpp"
 #include "ngraph/ops/divide.hpp"
 #include "ngraph/ops/multiply.hpp"

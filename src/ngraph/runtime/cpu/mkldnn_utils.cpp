@@ -20,7 +20,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/ops/avg_pool.hpp"
-#include "ngraph/ops/batchnorm.hpp"
+#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/convolution.hpp"
 #include "ngraph/ops/max_pool.hpp"
 

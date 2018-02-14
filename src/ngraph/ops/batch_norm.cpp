@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/ops/batchnorm.hpp"
+#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/constant.hpp"
 
 ngraph::op::BatchNorm::BatchNorm(double eps,
@@ -89,8 +89,8 @@ ngraph::op::BatchNorm::BatchNorm(double eps,
 std::shared_ptr<ngraph::Node> ngraph::op::BatchNorm::copy_with_new_args(
     const std::vector<std::shared_ptr<ngraph::Node>>& new_args) const
 {
-    if (new_args.size() != 6)
+    if (new_args.size() != 5)
         throw ngraph_error("Incorrect number of new arguments");
     return std::make_shared<BatchNorm>(
-        m_epsilon, new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4), new_args.at(5));
+        m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4));
 }
