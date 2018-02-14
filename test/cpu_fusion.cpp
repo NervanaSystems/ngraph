@@ -144,7 +144,7 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     auto add = dot + broadcast;
     auto graph = make_shared<op::Abs>(add);
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     auto func = make_shared<Function>(graph, op::Parameters{A, B, C});
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::MatmulBias>(graph->get_input_op(0)), nullptr);
@@ -157,7 +157,7 @@ TEST(cpu_fusion, gemm_mlp)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::CPUFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.run_passes(func);
     size_t ccg = count_ops_of_type<op::MatmulBias>(func);
     ASSERT_EQ(ccg, 3);
