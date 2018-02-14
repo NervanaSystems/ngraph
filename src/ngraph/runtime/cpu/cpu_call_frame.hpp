@@ -22,6 +22,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/tensor_view.hpp"
 
@@ -59,6 +60,9 @@ namespace ngraph
                 /// tensor views.
                 void tensor_call(const std::vector<std::shared_ptr<TensorView>>& inputs,
                                  const std::vector<std::shared_ptr<TensorView>>& outputs) override;
+
+                void propagate_layouts(const std::vector<std::shared_ptr<runtime::TensorView>>& tvs,
+                                       const LayoutDescriptorPtrs& layouts) const;
 
                 std::vector<ngraph::runtime::PerformanceCounter>
                     get_performance_data() const override;
