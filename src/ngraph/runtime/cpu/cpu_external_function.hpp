@@ -43,7 +43,8 @@ namespace ngraph
             class CPU_Emitter;
             class CPU_CallFrame;
 
-            using OpFunction = std::function<void(codegen::CodeWriter&,
+            using OpFunction = std::function<void(CPU_ExternalFunction* external_function,
+                                                  codegen::CodeWriter&,
                                                   const ngraph::Node*,
                                                   const std::vector<TensorViewWrapper>& inputs,
                                                   const std::vector<TensorViewWrapper>& outputs)>;
