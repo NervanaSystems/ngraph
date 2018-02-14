@@ -677,7 +677,7 @@ using namespace ngraph::runtime;
             }
             if (func_name.empty())
             {
-                handler->second(writer, node.get(), in, out);
+                handler->second(this, writer, node.get(), in, out);
             }
             else
             {
@@ -952,7 +952,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     writer << "\n)\n";
     writer << "{\n";
     writer.indent++;
-    handler->second(writer, &node, in, out);
+    handler->second(this, writer, &node, in, out);
     writer.indent--;
     writer << "}\n";
 
