@@ -23,10 +23,10 @@
 #include <typeinfo>
 #include <unordered_map>
 
-    #include <cuda_runtime.h>
-    #include <cudnn_v7.h>
-    #include "cublas_v2.h"
-    #include "cuda.h"
+#include <cuda_runtime.h>
+#include <cudnn_v7.h>
+#include "cublas_v2.h"
+#include "cuda.h"
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
@@ -359,8 +359,9 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     writer << "// Declare all functions\n";
     for (shared_ptr<Function> f : pass_manager.get_state().get_functions())
     {
-        writer << "extern \"C\" void " << f->get_name()
-               << "(void** inputs, void** outputs, cublasHandle_t& cublas_handle, cudnnHandle_t& cudnn_handle);\n";
+        writer << "extern \"C\" void " << f->get_name() << "(void** inputs, void** outputs, "
+                                                           "cublasHandle_t& cublas_handle, "
+                                                           "cudnnHandle_t& cudnn_handle);\n";
     }
 
     writer << "\n";
@@ -478,7 +479,8 @@ void runtime::gpu::GPU_ExternalFunction::compile()
         }
 
         writer << "extern \"C\" void " << current_function->get_name();
-        writer << "(void** inputs, void** outputs, cublasHandle_t& cublas_handle, cudnnHandle_t& cudnn_handle)\n";
+        writer << "(void** inputs, void** outputs, cublasHandle_t& cublas_handle, cudnnHandle_t& "
+                  "cudnn_handle)\n";
         writer << "{\n";
         writer.indent++;
 

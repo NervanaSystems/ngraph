@@ -30,7 +30,7 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     : m_external_function(external_function)
     , m_compiled_function(compiled_function)
 {
-    cublasStatus_t cublasStatus  = cublasCreate(&m_cublas_handle);
+    cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
     if (cublasStatus != CUBLAS_STATUS_SUCCESS)
     {
         std::cout << "error : " << (int)cublasStatus << std::endl;
