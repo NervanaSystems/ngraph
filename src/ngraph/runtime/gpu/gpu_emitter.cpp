@@ -57,7 +57,8 @@ using namespace ngraph;
         nvrtcResult result = x;                                                                    \
         if (result != NVRTC_SUCCESS)                                                               \
         {                                                                                          \
-            throw std::runtime_error("\nerror: " #x " failed with error " + nvrtcGetErrorString(result));       \
+            throw std::runtime_error("\nerror: " #x " failed with error " +                        \
+                                     nvrtcGetErrorString(result));                                 \
         }                                                                                          \
     } while (0)
 

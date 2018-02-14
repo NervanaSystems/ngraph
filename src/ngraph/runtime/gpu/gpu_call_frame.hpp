@@ -16,12 +16,12 @@
 
 #pragma once
 
+#include <cublas_v2.h>
+#include <cuda_runtime.h>
+#include <cudnn.h>
 #include <functional>
 #include <memory>
 #include <vector>
-#include <cuda_runtime.h>
-#include <cudnn.h>
-#include <cublas_v2.h>
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/call_frame.hpp"
