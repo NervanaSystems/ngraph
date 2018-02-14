@@ -88,4 +88,3 @@ C++ Interface
 
 .. doxygenclass:: ngraph::op::Broadcast
    :members:
-
