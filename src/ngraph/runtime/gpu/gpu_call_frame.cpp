@@ -33,7 +33,6 @@ runtime::gpu::GPU_CallFrame::GPU_CallFrame(std::shared_ptr<GPU_ExternalFunction>
     cublasStatus_t cublasStatus = cublasCreate(&m_cublas_handle);
     if (cublasStatus != CUBLAS_STATUS_SUCCESS)
     {
-        std::cout << "error : " << (int)cublasStatus << std::endl;
         throw runtime_error("cuBLAS create handle failed");
     }
     cudnnStatus_t cudnnStatus = cudnnCreate(&m_cudnn_handle);
