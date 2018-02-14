@@ -317,10 +317,6 @@ static shared_ptr<ngraph::Function>
         {
             node = make_shared<op::Abs>(args[0]);
         }
-        if (node_op == "Sqrt")
-        {
-            node = make_shared<op::Sqrt>(args[0]);
-        }
         else if (node_op == "Acos")
         {
             node = make_shared<op::Acos>(args[0]);
@@ -809,9 +805,6 @@ static json write(const Node& n)
     {
     }
     else if (node_op == "Acos")
-    {
-    }
-    else if (node_op == "Sqrt")
     {
     }
     else if (node_op == "Add")
