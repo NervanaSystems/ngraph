@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include <algorithm>
+#include <numeric>
 
 #include "cpu_layout_descriptor.hpp"
 

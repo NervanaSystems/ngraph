@@ -14,6 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include <string>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_set>
