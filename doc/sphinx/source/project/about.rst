@@ -17,7 +17,6 @@ Architecture CPUs, the Intel® Nervana Neural Network Processor™ (NNP),
 and NVIDIA\* GPUs. Currently-supported compiler optimizations include efficient 
 memory management and data layout abstraction. 
 
-<<<<<<< HEAD:doc/sphinx/source/project/about.rst
 Why is this needed?
 --------------------
 
@@ -45,7 +44,7 @@ MKL-DNN), there are also several compiler-inspired ways in which performance
 can be further optimized. 
 
 =======
->>>>>>> master:doc/sphinx/source/project/about.rst
+
 The *nGraph core* uses a strongly-typed and platform-neutral stateless graph 
 representation for computations. Each node, or *op*, in the graph corresponds
 to one step in a computation, where each step produces zero or more tensor
