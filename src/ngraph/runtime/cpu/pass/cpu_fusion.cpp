@@ -106,7 +106,7 @@ static std::vector<T> apply_permutation(std::vector<T> input, ngraph::AxisVector
     return output;
 }
 
-void ngraph::pass::CPUFusion::construct_gemm_pattern()
+void ngraph::runtime::cpu::pass::CPUFusion::construct_gemm_pattern()
 {
     Shape shape_w{2, 4};
     Shape shape_x{4, 1};
@@ -176,7 +176,7 @@ void ngraph::pass::CPUFusion::construct_gemm_pattern()
     this->add_matcher(m);
 }
 
-void ngraph::pass::CPUFusion::construct_fprop_bn()
+void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
 {
     // construct varaiance
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
@@ -256,7 +256,7 @@ void ngraph::pass::CPUFusion::construct_fprop_bn()
 
             // get epsilon value
             auto eps_ptr = std::dynamic_pointer_cast<op::Constant>(pattern_map[eps_label]);
-            double epsilon = *(reinterpret_cast<const float*>(eps_ptr->get_data_ptr()));
+            double epsilon = *(reinterpret_cast<const double*>(eps_ptr->get_data_ptr()));
             auto bn_node = std::shared_ptr<Node>(new op::BatchNorm(epsilon,
                                                                    pattern_map[gamma_label],
                                                                    pattern_map[beta_label],
