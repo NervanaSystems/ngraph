@@ -6584,24 +6584,29 @@ TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
     EXPECT_EQ(expected, read_vector<float>(result));
 }
 
-TEST(INTERPRETER, Simple_relu)
+TEST(${BACKEND_NAME}, Simple_relu)
 {
-    auto shape_a = Shape{1, 5};
+    if ("${BACKEND_NAME}" != "INTERPRETER")
+    {
+        NGRAPH_INFO << "Skipping test on backend ${BACKEND_NAME}";
+        return;
+    }
+    auto shape_a = Shape{2, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto relu = make_shared<op::Relu>(A);
-    auto shape_rt = Shape{1, 5};
+    auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(relu, op::Parameters{A});
 
-    // currenly hardcode the manager as limited support
-    auto manager = runtime::Manager::get("INTERPRETER");
+    // currenly supported only for interpreter
+    auto manager = runtime::Manager::get("${BACKEND_NAME}");
     auto external = manager->compile(f);
     auto backend = manager->allocate_backend();
     auto cf = backend->make_call_frame(external);
 
     auto a = backend->make_primary_tensor_view(element::f32, shape_a);
-    copy_data(a, vector<float>{1, 8, -8, 17, -0.5});
+    copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5});
     auto result = backend->make_primary_tensor_view(element::f32, shape_rt);
-    vector<float> expected{1, 8, 0, 17, 0};
+    vector<float> expected{1, 8, 0, 17, 0, 1, 8, 0, 17, 0};
 
     cf->call({a}, {result});
     EXPECT_EQ(read_vector<float>(result), expected);
