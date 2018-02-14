@@ -14,9 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <algorithm>
-
 #include "cpu_layout_descriptor.hpp"
+#include <algorithm>
+#include <numeric>
 
 namespace ngraph
 {
