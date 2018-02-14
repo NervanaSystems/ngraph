@@ -19,8 +19,8 @@ have recent updates of the following packages and prerequisites:
    Ubuntu 16.04 (LTS) 64-bit, CLang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 git libtinfo-dev``
    Clear Linux\* OS for Intel Architecture, CLang 5.0.1, CMake 3.10.2, experimental, bundles ``machine-learning-basic dev-utils python3-basic python-basic-dev``
 
-Other configurations may work but aren't tested; on Ubuntu 16.04 with 
-``gcc-5.4.0`` or ``clang-3.9``, for exampple, we recommend adding 
+Other configurations may work, but aren't tested; on Ubuntu 16.04 with 
+``gcc-5.4.0`` or ``clang-3.9``, for example, we recommend adding 
 ``-DNGRAPH_USE_PREBUILT_LLVM=TRUE`` to the :command:`cmake` command in step 4
 below. This gets a pre-built tarball of LLVM+Clang from `llvm.org`_, and will
 substantially reduce build time.
