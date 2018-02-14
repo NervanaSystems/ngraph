@@ -2461,7 +2461,7 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPoolBackprop)
                << ");\n";
 
         // Dummy forward primitive descriptor to keep MKLDNN happy, use this to query the workspace
-        // TODO: we need to develop global context to keep the mapping of fprop annd bprop corrosponding 
+        // TODO: we need to develop global context to keep the mapping of fprop annd bprop corrosponding
         // mkldnn kernels and use it to query the workspace requirement during bprop
         writer << "pooling_forward::primitive_desc pool_fwd_pd = pooling_forward::primitive_desc("
                << "{prop_kind::forward, algorithm::pooling_max, "
@@ -2470,10 +2470,11 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPoolBackprop)
                << "{" << join(mpb->get_padding_below()) << "}, "
                << "{" << join(mpb->get_padding_above()) << "}, "
                << "padding_kind::zero}, cpu_engine);\n";
-        
+
         // query the workspace from the forward primitive desc
-        writer << "memory max_pool_workspace_memory = memory(pool_fwd_pd.workspace_primitive_desc());\n";
-        
+        writer << "memory max_pool_workspace_memory = "
+                  "memory(pool_fwd_pd.workspace_primitive_desc());\n";
+
         writer << "auto avg_pooling = pooling_backward(pooling_backward::primitive_desc("
                << "pooling_backward::desc(algorithm::pooling_max, "
                << "result_desc, input_data_desc, {" << join(mpb->get_window_movement_strides())
@@ -2490,7 +2491,7 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPoolBackprop)
     else
     {
         writer << "kernel::max_pool_backprop<" << out[0].get_type() << ">(" << args[0].get_name()
-            << ",\n";
+               << ",\n";
         writer << "                 " << args[1].get_name() << ",\n";
         writer << "                 " << out[0].get_name() << ",\n";
         writer << "                 {" << join(delta_shape) << "},\n";
