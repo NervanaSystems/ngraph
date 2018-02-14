@@ -74,4 +74,3 @@ C++ Interface
 
 .. doxygenclass:: ngraph::op::Concatenate
    :members:
-

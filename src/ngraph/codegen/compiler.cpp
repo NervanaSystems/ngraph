@@ -400,6 +400,10 @@ void codegen::StaticCompiler::configure_search_path()
     // Only needed for GPU backend
     add_header_search_path(CUDA_HEADER_PATHS);
 #endif
+
+#ifdef NGRAPH_DISTRIBUTED
+    add_header_search_path(MPI_HEADER_PATH);
+#endif
 }
 
 void codegen::StaticCompiler::load_headers_from_resource()

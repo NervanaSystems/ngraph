@@ -16,31 +16,23 @@
 
 #pragma once
 
-#include "ngraph/ops/op.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace runtime
     {
-        /// \brief Elementwise ceiling operation.
-        class Ceiling : public UnaryElementwiseArithmetic
+        namespace cpu
         {
-        public:
-            /// \brief Constructs a ceiling operation.
-            ///
-            /// \param arg Node that produces the input tensor.
-            Ceiling(const std::shared_ptr<Node>& arg)
-                : UnaryElementwiseArithmetic("Ceiling", arg)
+            namespace pass
             {
+                class CPULayout : public ngraph::pass::CallGraphPass
+                {
+                public:
+                    virtual bool
+                        run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
+                };
             }
-
-            virtual std::shared_ptr<Node> copy_with_new_args(
-                const std::vector<std::shared_ptr<Node>>& new_args) const override
-            {
-                if (new_args.size() != 1)
-                    throw ngraph_error("Incorrect number of new arguments");
-                return std::make_shared<Ceiling>(new_args.at(0));
-            }
-        };
+        }
     }
 }

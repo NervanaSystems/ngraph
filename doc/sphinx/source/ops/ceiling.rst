@@ -55,4 +55,3 @@ C++ Interface
 
 .. doxygenclass:: ngraph::op::Ceiling
    :members:
-

@@ -25,8 +25,9 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
 #define EMITTER_DECL(E)                                                                            \
-    E(codegen::CodeWriter& writer,                                                                 \
-      const ngraph::Node* n,                                                                       \
+    E(ngraph::runtime::cpu::CPU_ExternalFunction* external_function,                               \
+      codegen::CodeWriter& writer,                                                                 \
+      const ngraph::Node* node,                                                                    \
       const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& args,                            \
       const std::vector<ngraph::runtime::cpu::TensorViewWrapper>& out)
 
@@ -41,6 +42,9 @@ namespace ngraph
             public:
                 static void EMITTER_DECL(EmitNop);
                 static void EMITTER_DECL(EmitAdd);
+#ifdef NGRAPH_DISTRIBUTED
+                static void EMITTER_DECL(EmitAllReduce);
+#endif
                 static void EMITTER_DECL(EmitDot);
                 static void EMITTER_DECL(EmitMultiply);
                 static void EMITTER_DECL(EmitGetOutputElement);
