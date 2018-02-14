@@ -19,12 +19,6 @@ help:
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-
-doxy-code:
-	$(Q)(cat ngraph.doxyfile ; echo "STRIP_FROM_PATH=${NGRAPH_BASE}" ) | doxygen -  2>&1 | tee doc.log
-
-doxy: doxy-code
-
 clean:
 	@rm -rf $(BUILDDIR)/*
 	@rm -rf html
@@ -32,7 +26,10 @@ clean:
 	@rm -rf doxygen
 	@rm -rf latex
 
-htmldocs: doxy html
+doxy-code:
+	$(Q)(cat ngraph.doxyfile ; echo "STRIP_FROM_PATH=${NGRAPH_BASE}" ) | doxygen -  2>&1 | tee doc.log
+
+html: doxy-code
 
 pickle:
 	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) $(BUILDDIR)/pickle
