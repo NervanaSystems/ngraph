@@ -148,14 +148,14 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # Root for external installs, when using `make`, e.g.
-# ${EXTERNAL_INSTALL_DIR}
-# ├── eigen               <-- ${EIGEN_INSTALL_DIR}
+# ${EXTERNAL_PROJECTS_ROOT}
+# ├── eigen
 # │   ├── include
 # │   │   └── eigen3      <-- ${EIGEN_INCLUDE_DIR}
 # │   │       ├── Eigen
 # │   ...
 # │
-# └── mkldnn              <-- ${MKLDNN_INSTALL_DIR}
+# └── mkldnn
 #     ├── include         <-- ${MKLDNN_INCLUDE_DIR}
 #     │   ├── mkldnn.h
 #     │   ...
