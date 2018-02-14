@@ -111,6 +111,15 @@ if(NGRAPH_ARGON_ENABLE)
     set(SRC ${SRC} ${ADDITIONAL_ARGON_TEST})
 endif()
 
+if(NGRAPH_DISTRIBUTED_ENABLE AND MPI_C_INCLUDE_PATH)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    foreach(BACKEND_NAME ${BACKEND_NAMES})
+        configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
+        set(SRC ${SRC} ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp)
+endforeach()
+endif()
+
 foreach(BACKEND_NAME ${BACKEND_NAMES})
     configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
     configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)
@@ -144,6 +153,10 @@ endif()
 
 add_executable(unit-test ${SRC})
 
+if(MPI_C_INCLUDE_PATH)
+    target_link_libraries(unit-test ${MPI_CXX_LIBRARIES})
+endif()
+
 if(MKLDNN_INCLUDE_DIR)
     target_link_libraries(unit-test mkldnn)
     add_dependencies(unit-test ext_mkldnn)
@@ -161,7 +174,7 @@ endif()
 target_link_libraries(unit-test ngraph libgtest pthread)
 target_link_libraries(unit-test ${CMAKE_DL_LIBS})
 
-add_dependencies(unit-test ngraph libgtest eigen)
+add_dependencies(unit-test ngraph libgtest ext_eigen)
 
 add_custom_target(style-check
         COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh

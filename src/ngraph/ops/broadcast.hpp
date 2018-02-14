@@ -40,7 +40,9 @@ namespace ngraph
                 const std::vector<std::shared_ptr<Node>>& new_args) const override
             {
                 if (new_args.size() != 1)
+                {
                     throw ngraph_error("Incorrect number of new arguments");
+                }
                 return std::make_shared<Broadcast>(new_args.at(0), m_shape, m_broadcast_axes);
             }
 
