@@ -16,14 +16,11 @@
 
 #pragma once
 
-#include <typeindex>
-#include <typeinfo>
-#include <unordered_set>
-
 #include <mkldnn.hpp>
 
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/types/element_type.hpp"
 
 namespace ngraph
 {
@@ -34,6 +31,8 @@ namespace ngraph
             namespace mkldnn_utils
             {
                 extern mkldnn::engine global_cpu_engine;
+
+                mkldnn::memory::data_type GetDataType(const ngraph::element::Type& et);
 
                 bool IsMKLDNNOp(ngraph::Node& op);
 

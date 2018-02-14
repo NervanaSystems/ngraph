@@ -26,6 +26,7 @@ namespace ngraph
         namespace cpu
         {
             class CPU_ExternalFunction;
+            class TensorViewWrapper;
 
             class MKLDNNEmitter
             {
@@ -35,7 +36,8 @@ namespace ngraph
                 {
                 }
 
-                void build_memory_descriptor();
+                // TODO(jmenon): Get rid of TensorViewWrappers at some point
+                mkldnn::memory::desc build_memory_descriptor(const TensorViewWrapper& tvw);
 
             private:
                 std::shared_ptr<CPU_ExternalFunction> external_function;

@@ -1780,6 +1780,7 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolution)
     if (!filter_dilated && !data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
         args[0].get_element_type() == element::f32)
     {
+#if 0
         const string& et = get_mkldnn_data_type(args[0].get_element_type().c_type_string());
 
         writer << "{\n";
@@ -1811,6 +1812,10 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolution)
                << "s.submit({conv}).wait();\n";
         writer.indent--;
         writer << "}\n";
+#else
+        auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+        auto input_data_desc = mkldnn_emitter->build_memory_descriptor(args[0]);
+#endif
     }
     else if (filter_dilated && !data_dilated && arg0_rank == 4 && arg1_rank == 4 &&
              args[0].get_element_type() == element::f32)
