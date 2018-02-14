@@ -39,14 +39,14 @@ TEST(test, SequenceMask)
    
     // replace select seq with mask
     shared_ptr<Node> r{A};
-    for (size_t j = 0; j < 2; ++j)
+    for (size_t j = 0; j < input_shape[1]; ++j)
     {
-        for (size_t i = 0; i < 3; ++i)
+        for (size_t i = 0; i < input_shape[0]; ++i)
         {
             if (i < sr[j])
                 continue;
             r = make_shared<op::ReplaceSlice>(
-                r, mask_seq, Coordinate{i, j, 0}, Coordinate{i + 1, j + 1, 3});
+                r, mask_seq, Coordinate{i, j, 0}, Coordinate{i + 1, j + 1, input_shape[2]});
         }
     }
     auto f = make_shared<Function>(r, op::Parameters{A});
