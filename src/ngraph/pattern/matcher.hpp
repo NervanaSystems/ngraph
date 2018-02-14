@@ -19,6 +19,7 @@
 #include <cassert>
 #include <memory.h>
 #include "ngraph/node.hpp"
+#include "ngraph/ops/constant.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/label.hpp"
 
@@ -69,6 +70,8 @@ namespace ngraph
             std::shared_ptr<Node> match_root();
             PatternMap get_pattern_map() { return PatternMap{m_pattern_map}; }
             friend op::Label; //TODO: refine to match_class
+            bool is_equal_to_const_value(std::string const_value,
+                                         std::shared_ptr<Node> reduce_constant);
 
         protected:
             bool virtual match_node(const std::shared_ptr<Node>& pattern_node,

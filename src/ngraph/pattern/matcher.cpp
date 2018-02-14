@@ -260,5 +260,28 @@ namespace ngraph
             }
             return is_match;
         }
+
+        bool Matcher::is_equal_to_const_value(std::string const_value,
+                                              std::shared_ptr<Node> reduce_constant)
+        {
+            if (auto rc = std::dynamic_pointer_cast<ngraph::op::Constant>(reduce_constant))
+            {
+                auto cshape = rc->get_shape();
+                size_t n = shape_size(cshape);
+                // way to construct a constant of a given type, shape, value
+                std::vector<std::string> vector_zero{n, const_value};
+                auto constant_val_op = std::make_shared<ngraph::op::Constant>(
+                    rc->get_element_type(), cshape, vector_zero);
+
+                // way to compare elements to const_value
+                size_t n_bytes = n * rc->get_element_type().size();
+                NGRAPH_DEBUG << "Comparing " << n_bytes << " bytes";
+                return !memcmp(constant_val_op->get_data_ptr(), rc->get_data_ptr(), n_bytes);
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }
