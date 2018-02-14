@@ -1,9 +1,0 @@
-./build/test/unit-test --gtest_filter=GPU.ab
-./build/test/unit-test --gtest_filter=benchmark.mxnet_mnist_mlp_forward
-./build/test/unit-test --gtest_filter=benchmark.gpu_mxnet_mnist_mlp_forward
-./build/test/unit-test --gtest_filter=GPU.abc
-./build/test/unit-test --gtest_filter=GPU.maximum
-./build/test/unit-test --gtest_filter=GPU.minimum
-./build/test/unit-test --gtest_filter=GPU.multiple*
-##./build/test/unit-test --gtest_filter=GPU.abs
-#./build/test/unit-test --gtest_filter=GPU.dot*
