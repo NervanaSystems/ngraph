@@ -20,13 +20,19 @@
 
 namespace ngraph
 {
-    namespace pass
+    namespace runtime
     {
-        class CPUFusion;
+        namespace cpu
+        {
+            namespace pass
+            {
+                class CPUFusion;
+            }
+        }
     }
 }
 
-class ngraph::pass::CPUFusion : public ngraph::pass::GraphRewrite
+class ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
 {
 public:
     CPUFusion()
