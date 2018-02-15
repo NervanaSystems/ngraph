@@ -14,16 +14,18 @@
 * limitations under the License.
 *******************************************************************************/
 
+#include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <numeric>
 #include <string>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-
 #include "ngraph/node.hpp"
 #include "ngraph/ops/avg_pool.hpp"
+#include "ngraph/ops/batch_norm.hpp"
 #include "ngraph/ops/broadcast.hpp"
 #include "ngraph/ops/concatenate.hpp"
 #include "ngraph/ops/constant.hpp"
@@ -42,10 +44,15 @@
 #include "ngraph/ops/select_and_scatter.hpp"
 #include "ngraph/ops/slice.hpp"
 #include "ngraph/ops/sum.hpp"
-#include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/ops/matmul_bias.hpp"
+#include "ngraph/types/element_type.hpp"
 #include "ngraph/util.hpp"
+
+#ifdef NGRAPH_DISTRIBUTED
+#include <mpi.h>
+#include "ngraph/ops/allreduce.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -97,21 +104,15 @@ void runtime::cpu::CPU_Emitter::EmitMKLDNNPreamble(codegen::CodeWriter& writer)
     writer << "using namespace mkldnn;\n\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitNop(codegen::CodeWriter& writer,
-                                        const ngraph::Node* n,
-                                        const vector<runtime::cpu::TensorViewWrapper>& args,
-                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitNop)
 {
 }
 
-void runtime::cpu::CPU_Emitter::EmitAdd(codegen::CodeWriter& writer,
-                                        const ngraph::Node* n,
-                                        const vector<runtime::cpu::TensorViewWrapper>& args,
-                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAdd)
 {
     // TODO: Audit all uses of Add and fix this to use
     // the right alignment instead of Eigen::Unaligned
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << "Eigen::Map<Eigen::Array<" << out[0].get_element_type().c_type_string() << ", "
@@ -133,14 +134,35 @@ void runtime::cpu::CPU_Emitter::EmitAdd(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
+#ifdef NGRAPH_DISTRIBUTED
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAllReduce)
+{
+    const element::Type& element_type = args[0].get_element_type();
+    auto data_type = "MPI_FLOAT";
+
+    if (element_type == element::f32)
+    {
+        data_type = "MPI_FLOAT";
+    }
+    else if (element_type == element::f64)
+    {
+        data_type = "MPI_DOUBLE";
+    }
+
+    writer << "{   // " << node->get_name() << "\n";
+    writer.indent++;
+    writer << "MPI_Allreduce(" << args[0].get_name() << ", " << out[0].get_name() << ", "
+           << out[0].get_size() << ", " << data_type << ", MPI_SUM, MPI_COMM_WORLD);\n";
+    writer.indent--;
+    writer << "}\n";
+}
+#endif
+
 //TODO: This could be further optimized to reduce the impact of memcpy by either
 //a) emitting customized code for initializing output/bias
 //b) emitting two cblas calls (one for gemm on W and x and the second for gemm on Bias and E^T + the result of the first gemm)
 //@jbobba suggests b) is more efficient but we should benchmark both
-void runtime::cpu::CPU_Emitter::EmitMatmulBias(codegen::CodeWriter& writer,
-                                               const ngraph::Node* node,
-                                               const vector<runtime::cpu::TensorViewWrapper>& args,
-                                               const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMatmulBias)
 {
     const ngraph::op::MatmulBias* cg = static_cast<const ngraph::op::MatmulBias*>(node);
 
@@ -189,12 +211,88 @@ void runtime::cpu::CPU_Emitter::EmitMatmulBias(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
-                                        const ngraph::Node* n,
-                                        const vector<runtime::cpu::TensorViewWrapper>& args,
-                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBatchNorm)
 {
-    const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(n);
+    const ngraph::op::BatchNorm* batchnorm = static_cast<const ngraph::op::BatchNorm*>(node);
+
+    // get the shape of all the inputs and output to batchnorm
+    auto gamma_shape = args[0].get_shape();
+    auto beta_shape = args[1].get_shape();
+    auto input_shape = args[2].get_shape();
+    auto mean_shape = args[3].get_shape();
+    auto variance_shape = args[4].get_shape();
+    auto result_shape = out[0].get_shape();
+
+    // get input element type
+    const string& et = get_mkldnn_data_type(args[2].get_element_type().c_type_string());
+    writer << "{\n";
+    writer.indent++;
+
+    // define weights
+    writer << "std::vector<" << args[0].get_element_type().c_type_string() << ">bn_weights(2);\n";
+    auto weights_shape = Shape{2, input_shape[1]};
+
+    // push gamma and beta
+    writer << "auto gamma = " << args[0].get_name() << ";\n";
+    writer << "auto beta = " << args[1].get_name() << ";\n";
+
+    writer << "memcpy(&bn_weights[0], gamma,"
+           << args[1].get_size() * args[0].get_element_type().size() << ");\n";
+    writer << "memcpy(&bn_weights[0]+" << args[1].get_size() << ", beta, "
+           << args[1].get_size() * args[1].get_element_type().size() << ");\n";
+
+    // get the eps value from the bn node
+    writer << "auto epsilon = " << batchnorm->get_eps_value() << ";\n";
+
+    // Bind to CPU engine
+    writer << "engine cpu_engine = engine(engine::cpu, 0);\n";
+    // create memory descriptors
+    writer << "memory::desc input_data_desc = memory::desc({" << join(input_shape) << "}, " << et
+           << ", memory::format::nchw);\n";
+    // TODO define weights by stacking gamma and beta values
+    writer << "memory::desc weights_desc = memory::desc({" << join(weights_shape) << "}, " << et
+           << ", memory::format::nc);\n";
+    writer << "memory::desc result_desc = memory::desc({" << join(result_shape) << "}, " << et
+           << ", memory::format::nchw);\n";
+    writer << "memory::desc mean_desc = memory::desc({" << join(mean_shape) << "}, " << et
+           << ", memory::format::x);\n";
+    writer << "memory::desc variance_desc = memory::desc({" << join(variance_shape) << "}, " << et
+           << ", memory::format::x);\n";
+
+    // Define memory for the user data
+    writer << "memory input_data = memory({input_data_desc, cpu_engine}, " << args[2].get_name()
+           << ");\n";
+    writer << "memory weights = memory({weights_desc, cpu_engine}, bn_weights.data()"
+           << ");\n";
+    writer << "memory mean = memory({mean_desc, cpu_engine}, " << args[3].get_name() << ");\n";
+    writer << "memory variance = memory({variance_desc, cpu_engine}, " << args[4].get_name()
+           << ");\n";
+    writer << "memory result = memory({result_desc, cpu_engine}, " << out[0].get_name() << ");\n";
+
+    // create batchnorm descriptor
+    writer << "batch_normalization_forward::desc bn_fprop_desc = "
+              "batch_normalization_forward::desc(forward_training,"
+           << "input_data_desc, epsilon, use_global_stats|use_scale_shift);\n";
+    // bn fprop primitive descriptor
+    writer << "batch_normalization_forward::primitive_desc bn_fprop_prim_desc = "
+              "batch_normalization_forward::primitive_desc(bn_fprop_desc, cpu_engine);\n";
+
+    // create a batchnorm fprop primitive
+    writer
+        << "batch_normalization_forward bn_fprop = batch_normalization_forward(bn_fprop_prim_desc, "
+           "primitive::at(input_data),primitive::at(mean), primitive::at(variance),"
+        << "primitive::at(weights), result); \n";
+
+    // create stream and execute
+    writer << "stream s = stream(stream::kind::eager);\n"
+           << "s.submit({bn_fprop}).wait();\n";
+    writer.indent--;
+    writer << "}\n";
+}
+
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitDot)
+{
+    const ngraph::op::Dot* dot = static_cast<const ngraph::op::Dot*>(node);
 
     const Shape& arg0_shape = args[0].get_shape();
     const Shape& arg1_shape = args[1].get_shape();
@@ -203,7 +301,7 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         auto& first = (arg0_shape.empty() ? args[0] : args[1]);
         auto& second = (arg0_shape.empty() ? args[1] : args[0]);
 
-        writer << "{   // " << n->get_name() << "\n";
+        writer << "{   // " << node->get_name() << "\n";
         writer.indent++;
         writer << emit_vector(out[0]) << "\n    = ";
         writer << first.get_name() << "[0]\n    * " << emit_vector(second) << ";\n";
@@ -213,7 +311,7 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
     else if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1) &&
              dot->get_reduction_axes_count() == 1)
     {
-        writer << "{   // " << n->get_name() << "\n";
+        writer << "{   // " << node->get_name() << "\n";
         writer.indent++;
         writer << emit_vector(out[0]) << " << \n"
                << "    " << emit_vector(args[0]) << ".dot(" << emit_vector(args[1]) << ");\n";
@@ -223,7 +321,7 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
     else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
              dot->get_reduction_axes_count() == 1)
     {
-        writer << "{   // " << n->get_name() << "\n";
+        writer << "{   // " << node->get_name() << "\n";
         writer.indent++;
         writer << emit_vector(out[0]) << " = \n"
                << "    " << emit_matrix(args[0]) << " * " << emit_vector(args[1]) << ";\n";
@@ -237,7 +335,7 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         // clang-format off
         if (args[0].get_element_type() == element::f32)
         {
-            writer << "{   // " << n->get_name() << "\n";
+            writer << "{   // " << node->get_name() << "\n";
             writer.indent++;
             writer << "cblas::cblas_sgemm("
                << "cblas::Layout::RowMajor, "
@@ -252,7 +350,7 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
         // clang-format on
         else
         {
-            writer << "{   // " << n->get_name() << "\n";
+            writer << "{   // " << node->get_name() << "\n";
             writer.indent++;
             writer << emit_matrix(out[0]) << " = \n"
                    << "    " << emit_matrix(args[0]) << " * " << emit_matrix(args[1]) << ";\n";
@@ -272,12 +370,9 @@ void runtime::cpu::CPU_Emitter::EmitDot(codegen::CodeWriter& writer,
     }
 }
 
-void runtime::cpu::CPU_Emitter::EmitMultiply(codegen::CodeWriter& writer,
-                                             const ngraph::Node* n,
-                                             const vector<runtime::cpu::TensorViewWrapper>& args,
-                                             const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMultiply)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -295,15 +390,11 @@ void runtime::cpu::CPU_Emitter::EmitMultiply(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitGetOutputElement(
-    codegen::CodeWriter& writer,
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitGetOutputElement)
 {
-    auto get_tuple_element = static_cast<const op::GetOutputElement*>(n);
+    auto get_tuple_element = static_cast<const op::GetOutputElement*>(node);
 
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
     writer << "memcpy(" << out[0].get_name() << ", " << args[get_tuple_element->get_n()].get_name()
            << ", " << out[0].get_size() * out[0].get_element_type().size() << ");\n";
@@ -311,12 +402,9 @@ void runtime::cpu::CPU_Emitter::EmitGetOutputElement(
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitTuple(codegen::CodeWriter& writer,
-                                          const ngraph::Node* n,
-                                          const vector<runtime::cpu::TensorViewWrapper>& args,
-                                          const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitTuple)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
     for (size_t i = 0; i < args.size(); ++i)
     {
@@ -327,38 +415,38 @@ void runtime::cpu::CPU_Emitter::EmitTuple(codegen::CodeWriter& writer,
     writer += "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitAbs(codegen::CodeWriter& writer,
-                                        const ngraph::Node* n,
-                                        const vector<runtime::cpu::TensorViewWrapper>& args,
-                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAbs)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n";
     writer << "Eigen::abs(" << emit_array1d(args[0]) << ");\n";
 #else
+    // Some C++ implementations don't like it when we call std::abs on unsigned types, so we will
+    // avoid doing so here.
+    auto& result_element_type = out[0].get_element_type();
+
     writer << "#pragma omp parallel for\n";
     writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
     writer << "{\n";
-    writer << "    " << out[0].get_name() << "[i] = std::abs(" << args[0].get_name() << "[i]);\n";
+    writer << "    " << out[0].get_name()
+           << "[i] = " << (result_element_type.is_signed() ? "std::abs" : "") << "("
+           << args[0].get_name() << "[i]);\n";
     writer << "}\n";
 #endif
     writer.indent--;
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitConcat(codegen::CodeWriter& writer,
-                                           const ngraph::Node* n,
-                                           const vector<runtime::cpu::TensorViewWrapper>& args,
-                                           const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConcat)
 {
     auto result_shape = out[0].get_shape();
 
 #if PREFER_EIGEN == 1
     if (result_shape.size() == 1)
     {
-        writer << "{   // " << n->get_name() << "\n";
+        writer << "{   // " << node->get_name() << "\n";
         writer.indent++;
         writer << emit_vector(out[0], "out_vector") << ";\n";
 
@@ -374,9 +462,9 @@ void runtime::cpu::CPU_Emitter::EmitConcat(codegen::CodeWriter& writer,
     }
     else if (result_shape.size() == 2)
     {
-        auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+        auto axis = (dynamic_cast<const op::Concat*>(node))->get_concatenation_axis();
 
-        writer << "{   // " << n->get_name() << "\n";
+        writer << "{   // " << node->get_name() << "\n";
         writer.indent++;
         writer << emit_matrix(out[0], "out_matrix") << ";\n";
 
@@ -439,7 +527,7 @@ void runtime::cpu::CPU_Emitter::EmitConcat(codegen::CodeWriter& writer,
         }
     }
 #else
-    auto axis = (dynamic_cast<const op::Concat*>(n))->get_concatenation_axis();
+    auto axis = (dynamic_cast<const op::Concat*>(node))->get_concatenation_axis();
 
     std::vector<std::string> arg_names;
     std::vector<Shape> arg_shapes;
@@ -460,14 +548,11 @@ void runtime::cpu::CPU_Emitter::EmitConcat(codegen::CodeWriter& writer,
 #endif
 }
 
-void runtime::cpu::CPU_Emitter::EmitDivide(codegen::CodeWriter& writer,
-                                           const ngraph::Node* n,
-                                           const vector<runtime::cpu::TensorViewWrapper>& args,
-                                           const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitDivide)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
-    if (n->get_element_type().is_real() == false)
+    if (node->get_element_type().is_real() == false)
     {
         // Check for divide by zero for integer types only
         size_t element_count = args[1].get_size();
@@ -493,12 +578,9 @@ void runtime::cpu::CPU_Emitter::EmitDivide(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitEqual(codegen::CodeWriter& writer,
-                                          const ngraph::Node* n,
-                                          const vector<runtime::cpu::TensorViewWrapper>& args,
-                                          const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitEqual)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -516,12 +598,9 @@ void runtime::cpu::CPU_Emitter::EmitEqual(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitGreater(codegen::CodeWriter& writer,
-                                            const ngraph::Node* n,
-                                            const vector<runtime::cpu::TensorViewWrapper>& args,
-                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitGreater)
 {
-    writer << "{   // " << n->get_name() << " xxx\n";
+    writer << "{   // " << node->get_name() << " xxx\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -539,12 +618,9 @@ void runtime::cpu::CPU_Emitter::EmitGreater(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitGreaterEq(codegen::CodeWriter& writer,
-                                              const ngraph::Node* n,
-                                              const vector<runtime::cpu::TensorViewWrapper>& args,
-                                              const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitGreaterEq)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -562,12 +638,9 @@ void runtime::cpu::CPU_Emitter::EmitGreaterEq(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitLess(codegen::CodeWriter& writer,
-                                         const ngraph::Node* n,
-                                         const vector<runtime::cpu::TensorViewWrapper>& args,
-                                         const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitLess)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -585,12 +658,9 @@ void runtime::cpu::CPU_Emitter::EmitLess(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitLessEq(codegen::CodeWriter& writer,
-                                           const ngraph::Node* n,
-                                           const vector<runtime::cpu::TensorViewWrapper>& args,
-                                           const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitLessEq)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -608,12 +678,9 @@ void runtime::cpu::CPU_Emitter::EmitLessEq(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitLog(codegen::CodeWriter& writer,
-                                        const ngraph::Node* n,
-                                        const vector<runtime::cpu::TensorViewWrapper>& args,
-                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitLog)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -629,12 +696,9 @@ void runtime::cpu::CPU_Emitter::EmitLog(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitMaximum(codegen::CodeWriter& writer,
-                                            const ngraph::Node* n,
-                                            const vector<runtime::cpu::TensorViewWrapper>& args,
-                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaximum)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -653,12 +717,9 @@ void runtime::cpu::CPU_Emitter::EmitMaximum(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitMinimum(codegen::CodeWriter& writer,
-                                            const ngraph::Node* n,
-                                            const vector<runtime::cpu::TensorViewWrapper>& args,
-                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMinimum)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -677,12 +738,9 @@ void runtime::cpu::CPU_Emitter::EmitMinimum(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitNegative(codegen::CodeWriter& writer,
-                                             const ngraph::Node* n,
-                                             const vector<runtime::cpu::TensorViewWrapper>& args,
-                                             const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitNegative)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -698,12 +756,9 @@ void runtime::cpu::CPU_Emitter::EmitNegative(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitNotEqual(codegen::CodeWriter& writer,
-                                             const ngraph::Node* n,
-                                             const vector<runtime::cpu::TensorViewWrapper>& args,
-                                             const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitNotEqual)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -721,12 +776,9 @@ void runtime::cpu::CPU_Emitter::EmitNotEqual(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSelect(codegen::CodeWriter& writer,
-                                           const ngraph::Node* n,
-                                           const vector<runtime::cpu::TensorViewWrapper>& args,
-                                           const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSelect)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -745,12 +797,9 @@ void runtime::cpu::CPU_Emitter::EmitSelect(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSubtract(codegen::CodeWriter& writer,
-                                             const ngraph::Node* n,
-                                             const vector<runtime::cpu::TensorViewWrapper>& args,
-                                             const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSubtract)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -768,14 +817,11 @@ void runtime::cpu::CPU_Emitter::EmitSubtract(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitBroadcast(codegen::CodeWriter& writer,
-                                              const ngraph::Node* n,
-                                              const vector<runtime::cpu::TensorViewWrapper>& args,
-                                              const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitBroadcast)
 {
-    auto broadcast = static_cast<const op::Broadcast*>(n);
+    auto broadcast = static_cast<const op::Broadcast*>(node);
 
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     auto arg_shape = args[0].get_shape();
@@ -783,7 +829,7 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(codegen::CodeWriter& writer,
 
     if (broadcast->get_broadcast_axes().empty())
     {
-        writer << "{   // " << n->get_name() << "\n";
+        writer << "{   // " << node->get_name() << "\n";
         writer.indent++;
         writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                << out[0].get_size() * out[0].get_element_type().size() << ");\n";
@@ -792,7 +838,7 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(codegen::CodeWriter& writer,
     }
     else if (arg_shape.size() == 0)
     {
-        writer << "{   // " << n->get_name() << "\n";
+        writer << "{   // " << node->get_name() << "\n";
         writer.indent++;
         writer << emit_array1d(out[0]) << " =\n"
                << "    " << emit_array1d(args[0]) << "(0, 0);\n";
@@ -803,7 +849,7 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(codegen::CodeWriter& writer,
     {
         if (broadcast->get_broadcast_axes() == AxisSet{1})
         {
-            writer << "{   // " << n->get_name() << "\n";
+            writer << "{   // " << node->get_name() << "\n";
             writer.indent++;
             writer << emit_matrix(out[0]) << ".colwise() =\n"
                    << "    " << emit_vector(args[0]) << ";\n";
@@ -812,7 +858,7 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(codegen::CodeWriter& writer,
         }
         else if (broadcast->get_broadcast_axes() == AxisSet{0})
         {
-            writer << "{   // " << n->get_name() << "\n";
+            writer << "{   // " << node->get_name() << "\n";
             writer.indent++;
 
             writer << "Eigen::Map<Eigen::Matrix<" << out[0].get_element_type().c_type_string()
@@ -856,14 +902,11 @@ void runtime::cpu::CPU_Emitter::EmitBroadcast(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitConvert(codegen::CodeWriter& writer,
-                                            const ngraph::Node* n,
-                                            const vector<runtime::cpu::TensorViewWrapper>& args,
-                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvert)
 {
     auto& result_element_type = out[0].get_element_type();
 
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -881,20 +924,14 @@ void runtime::cpu::CPU_Emitter::EmitConvert(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitConstant(codegen::CodeWriter& writer,
-                                             const ngraph::Node* n,
-                                             const vector<runtime::cpu::TensorViewWrapper>& args,
-                                             const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConstant)
 {
 }
 
-void runtime::cpu::CPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
-                                            const ngraph::Node* n,
-                                            const vector<runtime::cpu::TensorViewWrapper>& args,
-                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReshape)
 {
-    auto reshape = static_cast<const op::Reshape*>(n);
-    writer << "{   // " << n->get_name() << "\n";
+    auto reshape = static_cast<const op::Reshape*>(node);
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     auto arg_shape = args[0].get_shape();
@@ -917,7 +954,7 @@ void runtime::cpu::CPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
     //  we can just copy.
     if (same_layout || result_shape_product < 2)
     {
-        writer << "{   // " << n->get_name() << " 1\n";
+        writer << "{   // " << node->get_name() << " 1\n";
         writer.indent++;
         writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                << out[0].get_size() * out[0].get_element_type().size() << ");\n";
@@ -931,7 +968,7 @@ void runtime::cpu::CPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
         // clang-format off
         if (result_element_type == ngraph::element::f32)
         {
-            writer << "{   // " << n->get_name() << " 2\n";
+            writer << "{   // " << node->get_name() << " 2\n";
             writer.indent++;
             writer << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0]) << ",\n" <<
                 "                   " << to_string(arg_shape[1]) << ", 1.0f,\n" <<
@@ -945,7 +982,7 @@ void runtime::cpu::CPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
         // clang-format on
         else
         {
-            writer << "{   // " << n->get_name() << " 3\n";
+            writer << "{   // " << node->get_name() << " 3\n";
             writer.indent++;
             writer << emit_matrix(out[0]) << " =\n"
                    << "        " << emit_matrix(args[0]) << ".transpose();\n";
@@ -976,13 +1013,9 @@ void runtime::cpu::CPU_Emitter::EmitReshape(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitFunctionCall(
-    codegen::CodeWriter& writer,
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitFunctionCall)
 {
-    auto function_call = static_cast<const op::FunctionCall*>(n);
+    auto function_call = static_cast<const op::FunctionCall*>(node);
     shared_ptr<Function> function = function_call->get_functions()[0];
 
     writer << "{   // Call " << function->get_name() << "\n";
@@ -1026,12 +1059,9 @@ void runtime::cpu::CPU_Emitter::EmitFunctionCall(
 // the compiled version of these ops is intended to have semantics identical
 // to what's seen there (for now atleast)
 
-void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
-                                           const ngraph::Node* n,
-                                           const vector<runtime::cpu::TensorViewWrapper>& args,
-                                           const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReduce)
 {
-    auto reduce = static_cast<const op::Reduce*>(n);
+    auto reduce = static_cast<const op::Reduce*>(node);
     auto reduction_function = reduce->get_functions()[0];
 
     auto reductee_shape = args[0].get_shape();
@@ -1044,7 +1074,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
     // Trivial case: no reduction axes (this includes the scalar-reductee case).
     if (reduction_axes.empty())
     {
-        writer << "{   // " << n->get_name() << " 1\n";
+        writer << "{   // " << node->get_name() << " 1\n";
         writer.indent++;
         writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                << out[0].get_size() * out[0].get_element_type().size() << ");\n";
@@ -1081,7 +1111,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
     {
         if (reductee_shape.at(0) == 0 || (reductee_shape.size() == 2 && reductee_shape.at(1) == 0))
         {
-            writer << "{   // " << n->get_name() << " 2\n";
+            writer << "{   // " << node->get_name() << " 2\n";
             writer.indent++;
             writer << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
                    << out[0].get_size() * out[0].get_element_type().size() << ");\n";
@@ -1090,7 +1120,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
         }
         else
         {
-            writer << "{   // " << n->get_name() << " 3\n";
+            writer << "{   // " << node->get_name() << " 3\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
             writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
@@ -1113,7 +1143,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
     {
         if (reductee_shape.at(1) == 0)
         {
-            writer << "{   // " << n->get_name() << " 4\n";
+            writer << "{   // " << node->get_name() << " 4\n";
             writer.indent++;
             writer << emit_array1d(out[0]) << " =\n"
                    << "    " << emit_array1d(args[1]) << "(0, 0);\n";
@@ -1126,7 +1156,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
             //     dynamic_pointer_cast<CallFrame>(external->make_call_frame());
             // ef->get_callees().emplace_back(cf);
 
-            writer << "{   // " << n->get_name() << " 5\n";
+            writer << "{   // " << node->get_name() << " 5\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
             writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
@@ -1149,7 +1179,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
     {
         if (reductee_shape.at(0) == 0)
         {
-            writer << "{   // " << n->get_name() << " 6\n";
+            writer << "{   // " << node->get_name() << " 6\n";
             writer.indent++;
             writer << emit_array1d(out[0]) << " =\n"
                    << "    " << emit_array1d(args[1]) << "(0, 0);\n";
@@ -1158,7 +1188,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
         }
         else
         {
-            writer << "{   // " << n->get_name() << " 7\n";
+            writer << "{   // " << node->get_name() << " 7\n";
             writer.indent++;
             string type = f_result_element_type.c_type_string();
             writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type << "\n{";
@@ -1179,7 +1209,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
     }
     else
     {
-        writer << "{   // " << n->get_name() << "\n";
+        writer << "{   // " << node->get_name() << "\n";
         writer.indent++;
 
         string type = f_result_element_type.c_type_string();
@@ -1206,7 +1236,7 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
         writer << "}\n";
     }
 #else
-    writer << "{   // " << n->get_name() << " 1\n";
+    writer << "{   // " << node->get_name() << " 1\n";
     writer.indent++;
 
     string type = f_result_element_type.c_type_string();
@@ -1236,12 +1266,9 @@ void runtime::cpu::CPU_Emitter::EmitReduce(codegen::CodeWriter& writer,
 #endif
 }
 
-void runtime::cpu::CPU_Emitter::EmitSign(codegen::CodeWriter& writer,
-                                         const ngraph::Node* n,
-                                         const vector<runtime::cpu::TensorViewWrapper>& args,
-                                         const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSign)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -1258,14 +1285,11 @@ void runtime::cpu::CPU_Emitter::EmitSign(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSlice(codegen::CodeWriter& writer,
-                                          const ngraph::Node* n,
-                                          const vector<runtime::cpu::TensorViewWrapper>& args,
-                                          const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSlice)
 {
-    const op::Slice* slice = static_cast<const op::Slice*>(n);
+    const op::Slice* slice = static_cast<const op::Slice*>(node);
 
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     size_t arg_rank = args[0].get_shape().size();
@@ -1286,7 +1310,7 @@ void runtime::cpu::CPU_Emitter::EmitSlice(codegen::CodeWriter& writer,
     // Scalar slice is necessarily just a copy.
     if (!strided && arg_rank == 0)
     {
-        writer << "{   // " << n->get_name() << " 1\n";
+        writer << "{   // " << node->get_name() << " 1\n";
         writer.indent++;
         writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                << out[0].get_size() * out[0].get_element_type().size() << ");\n";
@@ -1295,7 +1319,7 @@ void runtime::cpu::CPU_Emitter::EmitSlice(codegen::CodeWriter& writer,
     }
     else if (!strided && arg_rank == 1)
     {
-        writer << "{   // " << n->get_name() << " 2\n";
+        writer << "{   // " << node->get_name() << " 2\n";
         writer.indent++;
         writer << emit_vector(out[0]) << " =\n"
                << "    " << emit_vector(args[0]) << ".segment(\n"
@@ -1306,7 +1330,7 @@ void runtime::cpu::CPU_Emitter::EmitSlice(codegen::CodeWriter& writer,
     }
     else if (!strided && arg_rank == 2)
     {
-        writer << "{   // " << n->get_name() << " 3\n";
+        writer << "{   // " << node->get_name() << " 3\n";
         writer.indent++;
         writer << emit_matrix(out[0]) << " = \n"
                << "        " << emit_matrix(args[0]) << ".block(" << to_string(lower_bounds[0])
@@ -1342,13 +1366,10 @@ void runtime::cpu::CPU_Emitter::EmitSlice(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSum(codegen::CodeWriter& writer,
-                                        const ngraph::Node* n,
-                                        const vector<runtime::cpu::TensorViewWrapper>& args,
-                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSum)
 {
-    const op::Sum* sum = static_cast<const op::Sum*>(n);
-    writer << "{   // " << n->get_name() << "\n";
+    const op::Sum* sum = static_cast<const op::Sum*>(node);
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     const Shape& arg_shape = args[0].get_shape();
@@ -1358,7 +1379,7 @@ void runtime::cpu::CPU_Emitter::EmitSum(codegen::CodeWriter& writer,
     // Trivial case: no reduction axes.
     if (reduction_axes.size() == 0)
     {
-        writer << "{   // " << n->get_name() << "\n";
+        writer << "{   // " << node->get_name() << "\n";
         writer.indent++;
         writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                << out[0].get_size() * out[0].get_element_type().size() << ");\n";
@@ -1369,7 +1390,7 @@ void runtime::cpu::CPU_Emitter::EmitSum(codegen::CodeWriter& writer,
     else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
              (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
     {
-        writer << "{   // " << n->get_name() << "\n";
+        writer << "{   // " << node->get_name() << "\n";
         writer.indent++;
         writer << emit_array1d(out[0]) << " =\n"
                << "    " << emit_array1d(args[0]) << ".sum();\n";
@@ -1378,7 +1399,7 @@ void runtime::cpu::CPU_Emitter::EmitSum(codegen::CodeWriter& writer,
     }
     else if (arg_rank == 2 && reduction_axes == AxisSet{1})
     {
-        writer << "{   // " << n->get_name() << "\n";
+        writer << "{   // " << node->get_name() << "\n";
         writer.indent++;
         writer << emit_vector(out[0]) << " =\n"
                << "    " << emit_matrix(args[0]) << ".rowwise().sum();\n";
@@ -1387,7 +1408,7 @@ void runtime::cpu::CPU_Emitter::EmitSum(codegen::CodeWriter& writer,
     }
     else if (arg_rank == 2 && reduction_axes == AxisSet{0})
     {
-        writer << "{   // " << n->get_name() << "\n";
+        writer << "{   // " << node->get_name() << "\n";
         writer.indent++;
         writer << emit_vector(out[0]) << " =\n"
                << "    " << emit_matrix(args[0]) << ".colwise().sum();\n";
@@ -1415,12 +1436,9 @@ void runtime::cpu::CPU_Emitter::EmitSum(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitExp(codegen::CodeWriter& writer,
-                                        const ngraph::Node* n,
-                                        const vector<runtime::cpu::TensorViewWrapper>& args,
-                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitExp)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -1436,12 +1454,9 @@ void runtime::cpu::CPU_Emitter::EmitExp(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSin(codegen::CodeWriter& writer,
-                                        const ngraph::Node* n,
-                                        const vector<runtime::cpu::TensorViewWrapper>& args,
-                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSin)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -1457,12 +1472,9 @@ void runtime::cpu::CPU_Emitter::EmitSin(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSinh(codegen::CodeWriter& writer,
-                                         const ngraph::Node* n,
-                                         const vector<runtime::cpu::TensorViewWrapper>& args,
-                                         const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSinh)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -1478,12 +1490,9 @@ void runtime::cpu::CPU_Emitter::EmitSinh(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitCos(codegen::CodeWriter& writer,
-                                        const ngraph::Node* n,
-                                        const vector<runtime::cpu::TensorViewWrapper>& args,
-                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitCos)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -1499,12 +1508,9 @@ void runtime::cpu::CPU_Emitter::EmitCos(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitCosh(codegen::CodeWriter& writer,
-                                         const ngraph::Node* n,
-                                         const vector<runtime::cpu::TensorViewWrapper>& args,
-                                         const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitCosh)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -1520,12 +1526,9 @@ void runtime::cpu::CPU_Emitter::EmitCosh(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitTan(codegen::CodeWriter& writer,
-                                        const ngraph::Node* n,
-                                        const vector<runtime::cpu::TensorViewWrapper>& args,
-                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitTan)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -1541,16 +1544,13 @@ void runtime::cpu::CPU_Emitter::EmitTan(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitTanh(codegen::CodeWriter& writer,
-                                         const ngraph::Node* n,
-                                         const vector<runtime::cpu::TensorViewWrapper>& args,
-                                         const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitTanh)
 {
     // Eigen's generic_fast_tanh_float<float> is currently miscompiled by Clang/LLVM
     // so we fall-back to tanh
     // TODO: Implement our own internal fast/approximate tanh if this actually gets used
     // by models
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 0
     writer << "#pragma omp parallel for\n";
@@ -1563,12 +1563,9 @@ void runtime::cpu::CPU_Emitter::EmitTanh(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitAsin(codegen::CodeWriter& writer,
-                                         const ngraph::Node* n,
-                                         const vector<runtime::cpu::TensorViewWrapper>& args,
-                                         const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAsin)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -1584,12 +1581,9 @@ void runtime::cpu::CPU_Emitter::EmitAsin(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitAcos(codegen::CodeWriter& writer,
-                                         const ngraph::Node* n,
-                                         const vector<runtime::cpu::TensorViewWrapper>& args,
-                                         const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAcos)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -1605,12 +1599,9 @@ void runtime::cpu::CPU_Emitter::EmitAcos(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitAtan(codegen::CodeWriter& writer,
-                                         const ngraph::Node* n,
-                                         const vector<runtime::cpu::TensorViewWrapper>& args,
-                                         const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAtan)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " =\n"
@@ -1626,12 +1617,9 @@ void runtime::cpu::CPU_Emitter::EmitAtan(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitPower(codegen::CodeWriter& writer,
-                                          const ngraph::Node* n,
-                                          const vector<runtime::cpu::TensorViewWrapper>& args,
-                                          const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitPower)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     writer << emit_array1d(out[0]) << " = \n";
@@ -1651,14 +1639,10 @@ void runtime::cpu::CPU_Emitter::EmitPower(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
-    codegen::CodeWriter& writer,
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReplaceSlice)
 {
-    auto replace_slice = static_cast<const op::Slice*>(n);
-    writer << "{   // " << n->get_name() << "\n";
+    auto replace_slice = static_cast<const op::Slice*>(node);
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 #if PREFER_EIGEN == 1
     size_t arg0_rank = args[0].get_shape().size();
@@ -1679,7 +1663,7 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
     // Scalar slice is necessarily just a copy.
     if (!strided && arg0_rank == 0)
     {
-        writer << "{   // " << n->get_name() << " 1\n";
+        writer << "{   // " << node->get_name() << " 1\n";
         writer.indent++;
         writer << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
                << out[0].get_size() * out[0].get_element_type().size() << ");\n";
@@ -1688,7 +1672,7 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
     }
     else if (!strided && arg0_rank == 1)
     {
-        writer << "{   // " << n->get_name() << " 2\n";
+        writer << "{   // " << node->get_name() << " 2\n";
         writer.indent++;
         writer << emit_vector(out[0]) << " =\n"
                << "    " << emit_vector(args[0]) << ";\n"
@@ -1701,7 +1685,7 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
     }
     else if (!strided && arg0_rank == 2)
     {
-        writer << "{   // " << n->get_name() << " 3\n";
+        writer << "{   // " << node->get_name() << " 3\n";
         writer.indent++;
         writer << emit_matrix(out[0]) << " =\n"
                << "    " << emit_matrix(args[0]) << ";\n"
@@ -1743,12 +1727,9 @@ void runtime::cpu::CPU_Emitter::EmitReplaceSlice(
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitOneHot(codegen::CodeWriter& writer,
-                                           const ngraph::Node* n,
-                                           const vector<runtime::cpu::TensorViewWrapper>& args,
-                                           const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitOneHot)
 {
-    auto oh = static_cast<const op::OneHot*>(n);
+    auto oh = static_cast<const op::OneHot*>(node);
 
     auto arg_rank = args[0].get_shape().size();
 
@@ -1756,7 +1737,7 @@ void runtime::cpu::CPU_Emitter::EmitOneHot(codegen::CodeWriter& writer,
 
     if (arg_rank == 0)
     {
-        writer << "{   // " << n->get_name() << " 1\n";
+        writer << "{   // " << node->get_name() << " 1\n";
         writer.indent++;
 
         writer << emit_vector(out[0], "out_vector") << ";\n";
@@ -1787,7 +1768,7 @@ void runtime::cpu::CPU_Emitter::EmitOneHot(codegen::CodeWriter& writer,
     }
     else if (arg_rank == 1)
     {
-        writer << "{   // " << n->get_name() << " 1\n";
+        writer << "{   // " << node->get_name() << " 1\n";
         writer.indent++;
 
         writer << emit_vector(args[0], "arg_vector") << ";\n";
@@ -1838,12 +1819,9 @@ void runtime::cpu::CPU_Emitter::EmitOneHot(codegen::CodeWriter& writer,
     }
 }
 
-void runtime::cpu::CPU_Emitter::EmitCeiling(codegen::CodeWriter& writer,
-                                            const ngraph::Node* n,
-                                            const vector<runtime::cpu::TensorViewWrapper>& args,
-                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitCeiling)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
     size_t element_count = out[0].get_size();
 #if PREFER_EIGEN == 0
@@ -1857,12 +1835,9 @@ void runtime::cpu::CPU_Emitter::EmitCeiling(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitFloor(codegen::CodeWriter& writer,
-                                          const ngraph::Node* n,
-                                          const vector<runtime::cpu::TensorViewWrapper>& args,
-                                          const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitFloor)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
     size_t element_count = out[0].get_size();
 #if PREFER_EIGEN == 0
@@ -1876,12 +1851,9 @@ void runtime::cpu::CPU_Emitter::EmitFloor(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSqrt(codegen::CodeWriter& writer,
-                                         const ngraph::Node* n,
-                                         const vector<runtime::cpu::TensorViewWrapper>& args,
-                                         const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSqrt)
 {
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
     size_t element_count = out[0].get_size();
 #if PREFER_EIGEN == 0
@@ -1895,12 +1867,9 @@ void runtime::cpu::CPU_Emitter::EmitSqrt(codegen::CodeWriter& writer,
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
-                                                const ngraph::Node* n,
-                                                const vector<runtime::cpu::TensorViewWrapper>& args,
-                                                const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolution)
 {
-    auto convolution = static_cast<const op::Convolution*>(n);
+    auto convolution = static_cast<const op::Convolution*>(node);
 
     auto arg0_shape = args[0].get_shape();
     auto arg1_shape = args[1].get_shape();
@@ -2025,13 +1994,9 @@ void runtime::cpu::CPU_Emitter::EmitConvolution(codegen::CodeWriter& writer,
     }
 }
 
-void runtime::cpu::CPU_Emitter::EmitConvolutionBackpropFilters(
-    codegen::CodeWriter& writer,
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolutionBackpropFilters)
 {
-    auto convolution = static_cast<const op::ConvolutionBackpropFilters*>(n);
+    auto convolution = static_cast<const op::ConvolutionBackpropFilters*>(node);
 
     auto arg0_shape = args[0].get_shape();
     auto arg1_shape = args[1].get_shape();
@@ -2136,13 +2101,9 @@ void runtime::cpu::CPU_Emitter::EmitConvolutionBackpropFilters(
     }
 }
 
-void runtime::cpu::CPU_Emitter::EmitConvolutionBackpropData(
-    codegen::CodeWriter& writer,
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolutionBackpropData)
 {
-    auto convolution = static_cast<const op::ConvolutionBackpropData*>(n);
+    auto convolution = static_cast<const op::ConvolutionBackpropData*>(node);
 
     auto arg0_shape = args[0].get_shape();
     auto arg1_shape = args[1].get_shape();
@@ -2246,22 +2207,16 @@ void runtime::cpu::CPU_Emitter::EmitConvolutionBackpropData(
     }
 }
 
-void runtime::cpu::CPU_Emitter::EmitNot(codegen::CodeWriter& writer,
-                                        const ngraph::Node* n,
-                                        const vector<runtime::cpu::TensorViewWrapper>& args,
-                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitNot)
 {
     writer << "kernel::logical_not(" << args[0].get_name() << ",\n"
            << "                    " << out[0].get_name() << ",\n"
            << "                    " << out[0].get_size() << ");\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
-                                            const ngraph::Node* n,
-                                            const vector<runtime::cpu::TensorViewWrapper>& args,
-                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPool)
 {
-    auto max_pool = static_cast<const op::MaxPool*>(n);
+    auto max_pool = static_cast<const op::MaxPool*>(node);
 
     auto arg_shape = args[0].get_shape();
     auto arg_rank = arg_shape.size();
@@ -2318,12 +2273,9 @@ void runtime::cpu::CPU_Emitter::EmitMaxPool(codegen::CodeWriter& writer,
     }
 }
 
-void runtime::cpu::CPU_Emitter::EmitReverse(codegen::CodeWriter& writer,
-                                            const ngraph::Node* n,
-                                            const vector<runtime::cpu::TensorViewWrapper>& args,
-                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReverse)
 {
-    auto reverse = static_cast<const op::Reverse*>(n);
+    auto reverse = static_cast<const op::Reverse*>(node);
 
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
@@ -2335,20 +2287,16 @@ void runtime::cpu::CPU_Emitter::EmitReverse(codegen::CodeWriter& writer,
     writer << "                {" << join(reverse->get_reversed_axes()) << "});\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitReduceWindow(
-    codegen::CodeWriter& writer,
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitReduceWindow)
 {
-    auto reduce_window = static_cast<const op::ReduceWindow*>(n);
+    auto reduce_window = static_cast<const op::ReduceWindow*>(node);
 
     auto arg_reductee_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
     auto reduction_function = reduce_window->get_functions()[0];
     auto& f_result_element_type = out[0].get_element_type();
 
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 
     string type = f_result_element_type.c_type_string();
@@ -2377,13 +2325,9 @@ void runtime::cpu::CPU_Emitter::EmitReduceWindow(
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
-    codegen::CodeWriter& writer,
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitSelectAndScatter)
 {
-    auto select_and_scatter = static_cast<const op::SelectAndScatter*>(n);
+    auto select_and_scatter = static_cast<const op::SelectAndScatter*>(node);
     auto selection_function = select_and_scatter->get_functions()[0];
     auto scatter_function = select_and_scatter->get_functions()[1];
 
@@ -2391,10 +2335,10 @@ void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
     auto arg1_shape = args[1].get_shape();
     auto result_shape = out[0].get_shape();
 
-    writer << "{   // " << n->get_name() << "\n";
+    writer << "{   // " << node->get_name() << "\n";
     writer.indent++;
 
-    string type = n->get_output_element_type(0).c_type_string();
+    string type = node->get_output_element_type(0).c_type_string();
 
     writer << "auto f_select = [&](" << type << " x, " << type << " y) -> char\n{";
     writer.indent++;
@@ -2436,12 +2380,9 @@ void runtime::cpu::CPU_Emitter::EmitSelectAndScatter(
     writer << "}\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitAvgPool(codegen::CodeWriter& writer,
-                                            const ngraph::Node* n,
-                                            const vector<runtime::cpu::TensorViewWrapper>& args,
-                                            const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAvgPool)
 {
-    auto avg_pool = static_cast<const op::AvgPool*>(n);
+    auto avg_pool = static_cast<const op::AvgPool*>(node);
 
     auto arg_shape = args[0].get_shape();
     auto arg_rank = arg_shape.size();
@@ -2501,12 +2442,9 @@ void runtime::cpu::CPU_Emitter::EmitAvgPool(codegen::CodeWriter& writer,
     }
 }
 
-void runtime::cpu::CPU_Emitter::EmitPad(codegen::CodeWriter& writer,
-                                        const ngraph::Node* n,
-                                        const vector<runtime::cpu::TensorViewWrapper>& args,
-                                        const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitPad)
 {
-    auto pad = static_cast<const op::Pad*>(n);
+    auto pad = static_cast<const op::Pad*>(node);
 
     auto arg0_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
@@ -2521,13 +2459,9 @@ void runtime::cpu::CPU_Emitter::EmitPad(codegen::CodeWriter& writer,
     writer << "            {" << join(pad->get_padding_interior()) << "});\n";
 }
 
-void runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop(
-    codegen::CodeWriter& writer,
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitAvgPoolBackprop)
 {
-    auto apb = static_cast<const op::AvgPoolBackprop*>(n);
+    auto apb = static_cast<const op::AvgPoolBackprop*>(node);
 
     auto delta_shape = args[0].get_shape();
     auto delta_rank = delta_shape.size();
@@ -2586,13 +2520,9 @@ void runtime::cpu::CPU_Emitter::EmitAvgPoolBackprop(
     }
 }
 
-void runtime::cpu::CPU_Emitter::EmitMaxPoolBackprop(
-    codegen::CodeWriter& writer,
-    const ngraph::Node* n,
-    const vector<runtime::cpu::TensorViewWrapper>& args,
-    const vector<runtime::cpu::TensorViewWrapper>& out)
+void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitMaxPoolBackprop)
 {
-    auto mpb = static_cast<const op::MaxPoolBackprop*>(n);
+    auto mpb = static_cast<const op::MaxPoolBackprop*>(node);
 
     auto delta_shape = args[1].get_shape();
     auto out_shape = out[0].get_shape();

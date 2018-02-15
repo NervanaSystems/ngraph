@@ -14,19 +14,30 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <memory>
+#pragma once
 
-#include "ngraph/ops/op.hpp"
+#include <string>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_set>
 
-using namespace std;
-using namespace ngraph;
+#include <mkldnn.hpp>
 
-op::UnaryElementwise::UnaryElementwise(const std::string& node_type,
-                                       const element::Type& result_element_type,
-                                       const std::shared_ptr<Node>& arg)
-    : RequiresTensorViewArgs(node_type, Nodes{arg})
+#include "ngraph/node.hpp"
+#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+
+namespace ngraph
 {
-    auto& input = get_inputs().at(0);
-
-    set_value_type_checked(result_element_type, input.get_shape());
+    namespace runtime
+    {
+        namespace cpu
+        {
+            namespace mkldnn_utils
+            {
+                bool IsMKLDNNOp(ngraph::Node& op);
+                mkldnn::memory::format
+                    CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
+            }
+        }
+    }
 }
