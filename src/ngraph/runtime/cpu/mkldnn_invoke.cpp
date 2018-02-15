@@ -21,6 +21,6 @@ mkldnn::engine ngraph::runtime::cpu::mkldnn_utils::global_cpu_engine(mkldnn::eng
 
 extern "C" void
     ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(CPURuntimeContext* ctx,
-                                                                unsigned int primitive_index)
+                                                                size_t primitive_index)
 {
 }

@@ -19,6 +19,8 @@
 
 #include <mkldnn.hpp>
 
+#include "ngraph/common.hpp"
+
 namespace ngraph
 {
     namespace runtime
@@ -37,8 +39,17 @@ namespace ngraph
                 }
 
                 // TODO(jmenon): Get rid of TensorViewWrappers at some point
+                mkldnn::memory::desc build_memory_descriptor(const TensorViewWrapper& tvw, mkldnn::memory::format fmt);
                 mkldnn::memory::desc build_memory_descriptor(const TensorViewWrapper& tvw);
+                mkldnn::memory build_memory_primitive(const TensorViewWrapper& tvw);
+                mkldnn::memory build_memory_primitive(const mkldnn::memory::desc& desc);
 
+                size_t build_convolution_forward(const mkldnn::memory::desc& input_data_desc,
+                                                       const mkldnn::memory::desc& weights_desc,
+                                                       const mkldnn::memory::desc& result_desc,
+                                                       const ngraph::Strides& strides,
+                                                       const ngraph::CoordinateDiff& padding_below,
+                                                       const ngraph::CoordinateDiff& padding_above);
             private:
                 std::shared_ptr<CPU_ExternalFunction> external_function;
                 std::vector<mkldnn::primitive> mkldnn_primitives;

@@ -1814,7 +1814,17 @@ void runtime::cpu::CPU_Emitter::EMITTER_DECL(EmitConvolution)
         writer << "}\n";
 #else
         auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-        auto input_data_desc = mkldnn_emitter->build_memory_descriptor(args[0]);
+        auto input_data_desc = mkldnn_emitter->build_memory_descriptor(args[0], mkldnn::memory::format::nchw);
+        auto weights_desc = mkldnn_emitter->build_memory_descriptor(args[1], mkldnn::memory::format::oihw);
+        auto result_desc = mkldnn_emitter->build_memory_descriptor(out[0], mkldnn::memory::format::nchw);
+
+        size_t conv_index = mkldnn_emitter->build_convolution_forward(input_data_desc, weights_desc, result_desc,
+                                                                      convolution->get_window_movement_strides(),
+                                                                      convolution->get_padding_below(),
+                                                                      convolution->get_padding_above());
+
+
+        writer << "mkldnn_utils::mkldnn_invoke(ctx, " << to_string(conv_index) << ");\n";
 #endif
     }
     else if (filter_dilated && !data_dilated && arg0_rank == 4 && arg1_rank == 4 &&

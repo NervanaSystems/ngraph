@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 namespace ngraph
 {
     namespace runtime
@@ -25,7 +27,7 @@ namespace ngraph
             namespace mkldnn_utils
             {
                 extern "C" void mkldnn_invoke_primitive(CPURuntimeContext* ctx,
-                                                        unsigned int primitive_index);
+                                                        size_t primitive_index);
             }
         }
     }
