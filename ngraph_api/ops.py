@@ -20,7 +20,9 @@ import numpy as np
 
 from pyngraph import Node
 from pyngraph.op import Abs, Add, Broadcast, Ceiling, Constant, Convert, Divide, Equal, Exp, \
-    Floor, Log, Maximum, Minimum, Multiply, Negative, Parameter, Sqrt, Subtract
+    Floor, Greater, GreaterEq, Less, LessEq, Log, Maximum, Minimum, Multiply, Negative, \
+    NotEqual, Parameter, Sqrt, Subtract, Tanh
+
 
 from ngraph_api.utils.broadcasting import get_broadcast_axes
 from ngraph_api.utils.decorators import nameable_op, binary_op, unary_op
@@ -115,12 +117,6 @@ def add(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) 
 
 
 @binary_op
-def equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which checks if input nodes are equal elementwise."""
-    return Equal(left_node, right_node)
-
-
-@binary_op
 def minimum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies the minimum operation to input nodes elementwise."""
     return Minimum(left_node, right_node)
@@ -130,6 +126,61 @@ def minimum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, s
 def maximum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which applies the maximum operation to input nodes elementwise."""
     return Maximum(left_node, right_node)
+
+
+@binary_op
+def equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Return node which checks if input nodes are equal elementwise."""
+    return Equal(left_node, right_node)
+
+
+@binary_op
+def not_equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Return node which checks if input nodes are unequal elementwise."""
+    return NotEqual(left_node, right_node)
+
+
+@binary_op
+def greater(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Return node which checks if left input node is greater than the right node elementwise."""
+    return Greater(left_node, right_node)
+
+
+@binary_op
+def greater_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Return node which checks if left node is greater or equal to the right node elementwise."""
+    return GreaterEq(left_node, right_node)
+
+
+@binary_op
+def less(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Return node which checks if left input node is less than the right node elementwise."""
+    return Less(left_node, right_node)
+
+
+@binary_op
+def less_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Return node which checks if left node is less or equal to the right node elementwise."""
+    return LessEq(left_node, right_node)
+
+
+# Extend Node class to support binary operators
+Node.__add__ = add
+Node.__sub__ = subtract
+Node.__mul__ = multiply
+Node.__div__ = divide
+Node.__truediv__ = divide
+Node.__radd__ = lambda left, right: add(right, left)
+Node.__rsub__ = lambda left, right: subtract(right, left)
+Node.__rmul__ = lambda left, right: multiply(right, left)
+Node.__rdiv__ = lambda left, right: divide(right, left)
+Node.__rtruediv__ = lambda left, right: divide(right, left)
+Node.__eq__ = equal
+Node.__ne__ = not_equal
+Node.__lt__ = less
+Node.__le__ = less_eq
+Node.__gt__ = greater
+Node.__ge__ = greater_eq
 
 
 # Custom ops
@@ -144,3 +195,10 @@ def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Nod
     """Return node which casts input node values to specified type."""
     new_element_type = get_element_type(new_type)
     return Convert(node, new_element_type)
+
+
+# Non-linear ops
+@unary_op
+def tanh(node, name=None):  # type: (Node, str) -> Node
+    """Return node which applies tanh to the input node elementwise."""
+    return Tanh(node)

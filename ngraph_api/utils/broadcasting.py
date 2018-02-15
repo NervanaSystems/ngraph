@@ -16,6 +16,7 @@
 import logging
 from typing import Optional, Set, List
 
+import ngraph_api as ng
 import numpy as np
 
 from pyngraph import Node
@@ -50,12 +51,8 @@ def as_elementwise_compatible_nodes(*input_values):  # type: (*NodeInput) -> Lis
 
     Scalar values will be converted to ngraph Constant Nodes.
     """
-    input_scalars = [scalar for scalar in input_values if not issubclass(type(scalar), Node)]
     input_nodes = [node for node in input_values
                    if issubclass(type(node), Node)]  # type: List[Node]
-
-    if not input_scalars:
-        return list(input_values)
 
     if not input_nodes:
         raise NotImplementedError('Operations on scalars only are not supported.')
@@ -68,12 +65,14 @@ def as_elementwise_compatible_nodes(*input_values):  # type: (*NodeInput) -> Lis
     if len(types) > 1:
         log.warning('More than one different data type in input nodes %s.', input_nodes)
 
-    broadcast_shape = shapes.pop()
+    sorted_shapes = sorted(shapes, key=len)
+    broadcast_shape = sorted_shapes.pop()
     broadcast_dtype = get_dtype(types.pop())
 
     output_nodes = []
     for input_value in input_values:
         if issubclass(type(input_value), Node):
+            input_value = ng.broadcast(input_value, broadcast_shape)
             output_nodes.append(input_value)
         else:
             input_ndarray = np.broadcast_to(input_value, broadcast_shape)
