@@ -19,9 +19,10 @@
 import numpy as np
 
 from pyngraph import Node
+
 from pyngraph.op import Abs, Add, Broadcast, Ceiling, Constant, Convert, Divide, Equal, Exp, \
     Floor, Greater, GreaterEq, Less, LessEq, Log, Maximum, Minimum, Multiply, Negative, \
-    NotEqual, Parameter, Sqrt, Subtract, Tanh
+    Not, NotEqual, Parameter, Sqrt, Subtract, Tanh
 
 
 from ngraph_api.utils.broadcasting import get_broadcast_axes
@@ -128,6 +129,7 @@ def maximum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, s
     return Maximum(left_node, right_node)
 
 
+# Logical ops
 @binary_op
 def equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which checks if input nodes are equal elementwise."""
@@ -162,6 +164,12 @@ def less(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str)
 def less_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     """Return node which checks if left node is less or equal to the right node elementwise."""
     return LessEq(left_node, right_node)
+
+
+@unary_op
+def logical_not(node, name=None):  # type: (Node, str) -> Node
+    """Return node which applies logical negation to the input node elementwise."""
+    return Not(node)
 
 
 # Extend Node class to support binary operators
