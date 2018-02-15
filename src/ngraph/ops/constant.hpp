@@ -29,20 +29,6 @@ namespace ngraph
     namespace op
     {
         /// \brief Class for constants.
-        ///
-        /// ## Parameters
-        ///
-        /// |                 | Description                                                                                                                                                                    |
-        /// | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-        /// | `type`          | The ngraph::element::Type of the tensor constant.                                                                                                                              |
-        /// | `shape`         | The ngraph::Shape of the tensor constant.                                                                                                                                      |
-        /// | `values`        | A list of values to initialize the underlying tensor constant. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                   | Description                                                           |
-        /// | ---------------------- | --------------------------------------------------------------------- |
-        /// | \f$E[d_1,\dots,d_n]\f$ | A constant tensor with the specified element type, shape, and values. |
         class Constant : public Node
         {
         public:
