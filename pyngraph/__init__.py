@@ -27,10 +27,12 @@ else:
     flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
 sys.setdlopenflags(flags)
 
-from _pyngraph import *
-"""
 from _pyngraph import Function
 from _pyngraph import Node
 from _pyngraph import Type
 from _pyngraph import TensorViewType
-"""
+
+from _pyngraph import op
+from _pyngraph import runtime
+from _pyngraph import serialize
+from _pyngraph import util
